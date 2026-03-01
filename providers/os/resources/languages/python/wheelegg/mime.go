@@ -31,6 +31,18 @@ func extractMimeDeps(deps []string) []string {
 	return parsedDeps
 }
 
+// parseProjectUrls parses Project-URL header values which have the format "Label, URL"
+func parseProjectUrls(values []string) map[string]string {
+	urls := make(map[string]string, len(values))
+	for _, v := range values {
+		label, url, ok := strings.Cut(v, ",")
+		if ok {
+			urls[strings.TrimSpace(label)] = strings.TrimSpace(url)
+		}
+	}
+	return urls
+}
+
 func ParseMIME(r io.Reader, pythonMIMEFilepath string) (*python.PackageDetails, error) {
 	textReader := textproto.NewReader(bufio.NewReader(r))
 	mimeData, err := textReader.ReadMIMEHeader()
@@ -39,17 +51,20 @@ func ParseMIME(r io.Reader, pythonMIMEFilepath string) (*python.PackageDetails, 
 	}
 
 	deps := extractMimeDeps(mimeData.Values("Requires-Dist"))
+	projectUrls := parseProjectUrls(mimeData.Values("Project-Url"))
 
 	return &python.PackageDetails{
-		Name:         mimeData.Get("Name"),
-		Summary:      mimeData.Get("Summary"),
-		Author:       mimeData.Get("Author"),
-		AuthorEmail:  mimeData.Get("Author-email"),
-		License:      mimeData.Get("License"),
-		Version:      mimeData.Get("Version"),
-		Dependencies: deps,
-		File:         pythonMIMEFilepath,
-		Purl:         python.NewPackageUrl(mimeData.Get("Name"), mimeData.Get("Version")),
-		Cpes:         python.NewCpes(mimeData.Get("Name"), mimeData.Get("Version")),
+		Name:           mimeData.Get("Name"),
+		Summary:        mimeData.Get("Summary"),
+		Author:         mimeData.Get("Author"),
+		AuthorEmail:    mimeData.Get("Author-email"),
+		License:        mimeData.Get("License"),
+		Version:        mimeData.Get("Version"),
+		RequiresPython: mimeData.Get("Requires-Python"),
+		ProjectUrls:    projectUrls,
+		Dependencies:   deps,
+		File:           pythonMIMEFilepath,
+		Purl:           python.NewPackageUrl(mimeData.Get("Name"), mimeData.Get("Version")),
+		Cpes:           python.NewCpes(mimeData.Get("Name"), mimeData.Get("Version")),
 	}, nil
 }

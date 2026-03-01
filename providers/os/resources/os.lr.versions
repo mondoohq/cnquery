@@ -786,7 +786,9 @@ python.package.file 9.0.1
 python.package.id 9.0.1
 python.package.license 9.0.1
 python.package.name 9.0.1
+python.package.projectUrls 11.8.10
 python.package.purl 9.0.1
+python.package.requiresPython 11.8.10
 python.package.summary 9.0.1
 python.package.version 9.0.1
 python.packages 11.4.86

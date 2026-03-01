@@ -1763,6 +1763,10 @@ python.package @defaults("name version") {
   authorEmail string
   // Short package description
   summary string
+  // Required Python version (e.g., ">=3.6")
+  requiresPython string
+  // Project URLs by label (e.g., Homepage, Repository, Documentation)
+  projectUrls map[string]string
   // Package URL
   purl string
   // Common Platform Enumeration (CPE) for the package

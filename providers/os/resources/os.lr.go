@@ -2793,6 +2793,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"python.package.summary": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPythonPackage).GetSummary()).ToDataRes(types.String)
 	},
+	"python.package.requiresPython": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPythonPackage).GetRequiresPython()).ToDataRes(types.String)
+	},
+	"python.package.projectUrls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPythonPackage).GetProjectUrls()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"python.package.purl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPythonPackage).GetPurl()).ToDataRes(types.String)
 	},
@@ -6659,6 +6665,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"python.package.summary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPythonPackage).Summary, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"python.package.requiresPython": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPythonPackage).RequiresPython, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"python.package.projectUrls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPythonPackage).ProjectUrls, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"python.package.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -18403,17 +18417,19 @@ type mqlPythonPackage struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlPythonPackageInternal
-	Id           plugin.TValue[string]
-	Name         plugin.TValue[string]
-	File         plugin.TValue[*mqlFile]
-	Version      plugin.TValue[string]
-	License      plugin.TValue[string]
-	Author       plugin.TValue[string]
-	AuthorEmail  plugin.TValue[string]
-	Summary      plugin.TValue[string]
-	Purl         plugin.TValue[string]
-	Cpes         plugin.TValue[[]any]
-	Dependencies plugin.TValue[[]any]
+	Id             plugin.TValue[string]
+	Name           plugin.TValue[string]
+	File           plugin.TValue[*mqlFile]
+	Version        plugin.TValue[string]
+	License        plugin.TValue[string]
+	Author         plugin.TValue[string]
+	AuthorEmail    plugin.TValue[string]
+	Summary        plugin.TValue[string]
+	RequiresPython plugin.TValue[string]
+	ProjectUrls    plugin.TValue[map[string]any]
+	Purl           plugin.TValue[string]
+	Cpes           plugin.TValue[[]any]
+	Dependencies   plugin.TValue[[]any]
 }
 
 // createPythonPackage creates a new instance of this resource
@@ -18483,6 +18499,14 @@ func (c *mqlPythonPackage) GetAuthorEmail() *plugin.TValue[string] {
 
 func (c *mqlPythonPackage) GetSummary() *plugin.TValue[string] {
 	return &c.Summary
+}
+
+func (c *mqlPythonPackage) GetRequiresPython() *plugin.TValue[string] {
+	return &c.RequiresPython
+}
+
+func (c *mqlPythonPackage) GetProjectUrls() *plugin.TValue[map[string]any] {
+	return &c.ProjectUrls
 }
 
 func (c *mqlPythonPackage) GetPurl() *plugin.TValue[string] {

@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/afero"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 	"go.mondoo.com/mql/v13/providers/os/fsutil"
 	"go.mondoo.com/mql/v13/providers/os/resources/languages/python"
@@ -305,16 +306,18 @@ func newMqlPythonPackage(runtime *plugin.Runtime, ppd python.PackageDetails) (pl
 	}
 
 	r, err := CreateResource(runtime, "python.package", map[string]*llx.RawData{
-		"id":          llx.StringData(ppd.File),
-		"name":        llx.StringData(ppd.Name),
-		"version":     llx.StringData(ppd.Version),
-		"author":      llx.StringData(ppd.Author),
-		"authorEmail": llx.StringData(ppd.AuthorEmail),
-		"summary":     llx.StringData(ppd.Summary),
-		"license":     llx.StringData(ppd.License),
-		"file":        llx.ResourceData(f, f.MqlName()),
-		"purl":        llx.StringData(ppd.Purl),
-		"cpes":        llx.ArrayData(cpes, types.Resource("cpe")),
+		"id":             llx.StringData(ppd.File),
+		"name":           llx.StringData(ppd.Name),
+		"version":        llx.StringData(ppd.Version),
+		"author":         llx.StringData(ppd.Author),
+		"authorEmail":    llx.StringData(ppd.AuthorEmail),
+		"summary":        llx.StringData(ppd.Summary),
+		"license":        llx.StringData(ppd.License),
+		"requiresPython": llx.StringData(ppd.RequiresPython),
+		"projectUrls":    llx.MapData(convert.MapToInterfaceMap(ppd.ProjectUrls), types.String),
+		"file":           llx.ResourceData(f, f.MqlName()),
+		"purl":           llx.StringData(ppd.Purl),
+		"cpes":           llx.ArrayData(cpes, types.Resource("cpe")),
 	})
 	if err != nil {
 		log.Error().AnErr("err", err).Msg("error while creating MQL resource")
@@ -372,6 +375,8 @@ func initPythonPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 		args["authorEmail"] = llx.StringData(pkg.AuthorEmail)
 		args["summary"] = llx.StringData(pkg.Summary)
 		args["license"] = llx.StringData(pkg.License)
+		args["requiresPython"] = llx.StringData(pkg.RequiresPython)
+		args["projectUrls"] = llx.MapData(convert.MapToInterfaceMap(pkg.ProjectUrls), types.String)
 		args["purl"] = llx.StringData(pkg.Purl)
 		args["cpes"] = llx.ArrayData(cpes, types.Resource("cpe"))
 
