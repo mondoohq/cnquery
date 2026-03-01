@@ -635,6 +635,93 @@
         },
         {
           "Resource": "file",
+          "ID": "/etc/rsyslog.conf",
+          "Fields": {
+            "content": {
+              "type": "\u0007",
+              "value": "# /etc/rsyslog.conf\n# rsyslog configuration file\n\n$ModLoad imuxsock\n$ModLoad imklog\n\n# Use traditional timestamp format\n$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat\n\n# Set the default permissions for all log files.\n$FileOwner root\n$FileGroup adm\n$FileCreateMode 0640\n$DirCreateMode 0755\n$Umask 0022\n\n# Log anything (except mail) of level info or higher\n*.info;mail.none;authpriv.none;cron.none /var/log/messages\n\n# The authpriv file has restricted access.\nauthpriv.* /var/log/secure\n\n# Log all the mail messages in one place.\nmail.* -/var/log/maillog\n\n# Log cron stuff\ncron.* /var/log/cron\n\n# Everybody gets emergency messages\n*.emerg :omusrmsg:*\n\n# Include all config files in /etc/rsyslog.d/\n$IncludeConfig /etc/rsyslog.d/*.conf\n"
+            },
+            "exists": {
+              "type": "\u0004",
+              "value": true
+            },
+            "path": {
+              "type": "\u0007",
+              "value": "/etc/rsyslog.conf"
+            },
+            "permissions": {
+              "type": "\u001bfile.permissions",
+              "value": {
+                "Name": "file.permissions",
+                "ID": "-rw-r--r--"
+              }
+            },
+            "size": {
+              "type": "\u0005",
+              "value": 700
+            }
+          }
+        },
+        {
+          "Resource": "file",
+          "ID": "/etc/rsyslog.d",
+          "Fields": {
+            "exists": {
+              "type": "\u0004",
+              "value": true
+            },
+            "path": {
+              "type": "\u0007",
+              "value": "/etc/rsyslog.d"
+            }
+          }
+        },
+        {
+          "Resource": "file",
+          "ID": "/etc/rsyslog.d/50-default.conf",
+          "Fields": {
+            "content": {
+              "type": "\u0007",
+              "value": "# Default rules for rsyslog.\n\n# Log kernel messages to the console.\nkern.* /var/log/kern.log\n\n# Log authentication messages.\nauth,authpriv.* /var/log/auth.log\n\n# First some standard log files. Log by facility.\nuser.* -/var/log/user.log\ndaemon.* -/var/log/daemon.log\n"
+            },
+            "exists": {
+              "type": "\u0004",
+              "value": true
+            },
+            "path": {
+              "type": "\u0007",
+              "value": "/etc/rsyslog.d/50-default.conf"
+            },
+            "permissions": {
+              "type": "\u001bfile.permissions",
+              "value": {
+                "Name": "file.permissions",
+                "ID": "-rw-r--r--"
+              }
+            },
+            "size": {
+              "type": "\u0005",
+              "value": 300
+            }
+          }
+        },
+        {
+          "Resource": "files.find",
+          "ID": "/etc/rsyslog.d -xdev type=file permissions=0",
+          "Fields": {
+            "list": {
+              "type": "\u0019\u001bfile",
+              "value": [
+                {
+                  "Name": "file",
+                  "ID": "/etc/rsyslog.d/50-default.conf"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Resource": "file",
           "ID": "/etc/ssl/cert.pem",
           "Fields": {
             "content": {
