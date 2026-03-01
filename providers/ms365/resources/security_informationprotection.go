@@ -14,7 +14,10 @@ import (
 )
 
 func (r *mqlMicrosoftSecurity) informationProtection() (*mqlMicrosoftSecurityInformationProtection, error) {
-	resource, err := CreateResource(r.MqlRuntime, ResourceMicrosoftSecurityInformationProtection, map[string]*llx.RawData{})
+	conn := r.MqlRuntime.Connection.(*connection.Ms365Connection)
+	resource, err := CreateResource(r.MqlRuntime, ResourceMicrosoftSecurityInformationProtection, map[string]*llx.RawData{
+		"__id": llx.StringData("microsoft.security.informationProtection/" + conn.TenantId()),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -38,6 +41,9 @@ func (r *mqlMicrosoftSecurityInformationProtection) sensitivityLabels() ([]any, 
 	labels := resp.GetValue()
 	for i := range labels {
 		label := labels[i]
+		if label == nil {
+			continue
+		}
 		mqlResource, err := createSensitivityLabelResource(r.MqlRuntime, label)
 		if err != nil {
 			return nil, err
@@ -48,10 +54,6 @@ func (r *mqlMicrosoftSecurityInformationProtection) sensitivityLabels() ([]any, 
 }
 
 func createSensitivityLabelResource(runtime *plugin.Runtime, label security.SensitivityLabelable) (plugin.Resource, error) {
-	if label == nil {
-		return nil, nil
-	}
-
 	var contentFormats []any
 	if formats := label.GetContentFormats(); formats != nil {
 		for _, format := range formats {
