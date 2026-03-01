@@ -1,13 +1,6 @@
 name: Trigger provider release
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "providers/**"
-      - "!providers/core/**"
-      - "!providers/*/config/config.go"
   release:
     types: [published]
   workflow_dispatch:
