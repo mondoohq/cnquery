@@ -38,15 +38,97 @@ type DnsRecord struct {
 	Error error `json:"error"`
 }
 
-func New(fqdn string) (*DnsClient, error) {
+type DnsServer struct {
+	IP    string
+	Owner string
+}
+
+var CommonDnsServers = []DnsServer{
+	// Google
+	{IP: "8.8.8.8", Owner: "Google"},
+	{IP: "8.8.4.4", Owner: "Google"},
+	// Cloudflare
+	{IP: "1.1.1.1", Owner: "Cloudflare"},
+	{IP: "1.0.0.1", Owner: "Cloudflare"},
+	{IP: "1.1.1.2", Owner: "Cloudflare (malware blocking)"},
+	{IP: "1.0.0.2", Owner: "Cloudflare (malware blocking)"},
+	{IP: "1.1.1.3", Owner: "Cloudflare (malware + adult content blocking)"},
+	{IP: "1.0.0.3", Owner: "Cloudflare (malware + adult content blocking)"},
+	// Quad9
+	{IP: "9.9.9.9", Owner: "Quad9"},
+	{IP: "149.112.112.112", Owner: "Quad9"},
+	// OpenDNS (Cisco)
+	{IP: "208.67.222.222", Owner: "OpenDNS (Cisco)"},
+	{IP: "208.67.220.220", Owner: "OpenDNS (Cisco)"},
+	{IP: "208.67.222.123", Owner: "OpenDNS FamilyShield (Cisco)"},
+	{IP: "208.67.220.123", Owner: "OpenDNS FamilyShield (Cisco)"},
+	// Comodo Secure DNS
+	{IP: "8.26.56.26", Owner: "Comodo Secure DNS"},
+	{IP: "8.20.247.20", Owner: "Comodo Secure DNS"},
+	// Verisign
+	{IP: "64.6.64.6", Owner: "Verisign"},
+	{IP: "64.6.65.6", Owner: "Verisign"},
+	// AdGuard
+	{IP: "94.140.14.14", Owner: "AdGuard"},
+	{IP: "94.140.15.15", Owner: "AdGuard"},
+	{IP: "94.140.14.15", Owner: "AdGuard (family protection)"},
+	{IP: "94.140.15.16", Owner: "AdGuard (family protection)"},
+	// CleanBrowsing
+	{IP: "185.228.168.9", Owner: "CleanBrowsing (security)"},
+	{IP: "185.228.169.9", Owner: "CleanBrowsing (security)"},
+	{IP: "185.228.168.168", Owner: "CleanBrowsing (adult filter)"},
+	{IP: "185.228.169.168", Owner: "CleanBrowsing (adult filter)"},
+	{IP: "185.228.168.10", Owner: "CleanBrowsing (family)"},
+	{IP: "185.228.169.11", Owner: "CleanBrowsing (family)"},
+	// DNS.WATCH
+	{IP: "84.200.69.80", Owner: "DNS.WATCH"},
+	{IP: "84.200.70.40", Owner: "DNS.WATCH"},
+	// Neustar UltraDNS (Vercara)
+	{IP: "156.154.70.1", Owner: "Neustar UltraDNS (Vercara)"},
+	{IP: "156.154.71.1", Owner: "Neustar UltraDNS (Vercara)"},
+	// Level3 / Lumen
+	{IP: "4.2.2.1", Owner: "Level3 (Lumen)"},
+	{IP: "4.2.2.2", Owner: "Level3 (Lumen)"},
+	// Yandex
+	{IP: "77.88.8.8", Owner: "Yandex"},
+	{IP: "77.88.8.1", Owner: "Yandex"},
+	// AliDNS (Alibaba)
+	{IP: "223.5.5.5", Owner: "AliDNS (Alibaba)"},
+	{IP: "223.6.6.6", Owner: "AliDNS (Alibaba)"},
+	// 114DNS (China)
+	{IP: "114.114.114.114", Owner: "114DNS"},
+	{IP: "114.114.115.115", Owner: "114DNS"},
+	// Freenom World
+	{IP: "80.80.80.80", Owner: "Freenom World"},
+	{IP: "80.80.81.81", Owner: "Freenom World"},
+	// Alternate DNS
+	{IP: "76.76.19.19", Owner: "Alternate DNS"},
+	{IP: "76.223.122.150", Owner: "Alternate DNS"},
+	// Control D
+	{IP: "76.76.2.0", Owner: "Control D"},
+	{IP: "76.76.10.0", Owner: "Control D"},
+}
+
+type Config struct {
+	Servers []string
+}
+
+func New(fqdn string, conf *Config) (*DnsClient, error) {
 	// use Google DNS for now
-	config := &dns.ClientConfig{}
-	config.Servers = []string{"8.8.8.8", "8.8.4.4"}
-	config.Search = []string{}
-	config.Port = "53"
-	config.Ndots = 1
-	config.Timeout = 5
-	config.Attempts = 2
+	config := &dns.ClientConfig{
+		Search:   []string{},
+		Port:     "53",
+		Ndots:    1,
+		Timeout:  5,
+		Attempts: 2,
+	}
+	if conf != nil && len(conf.Servers) > 0 {
+		config.Servers = conf.Servers
+	} else {
+		for i := 0; i < 3 && i < len(CommonDnsServers); i++ {
+			config.Servers = append(config.Servers, CommonDnsServers[i].IP)
+		}
+	}
 
 	// try to load unix dns server
 	// TODO: this does not work on windows https://github.com/go-acme/lego/issues/1015
