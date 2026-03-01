@@ -342,76 +342,42 @@ func initPythonPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 		if err != nil {
 			return nil, nil, err
 		}
+
+		// Parse the metadata file to populate all fields upfront
+		content := file.GetContent()
+		if content.Error != nil {
+			return nil, nil, content.Error
+		}
+		pkg, err := wheelegg.ParseMIME(strings.NewReader(content.Data), file.Path.Data)
+		if err != nil {
+			return nil, nil, fmt.Errorf("error parsing python package data: %s", err)
+		}
+
+		cpes := []any{}
+		for i := range pkg.Cpes {
+			cpe, err := runtime.CreateSharedResource("cpe", map[string]*llx.RawData{
+				"uri": llx.StringData(pkg.Cpes[i]),
+			})
+			if err != nil {
+				return nil, nil, err
+			}
+			cpes = append(cpes, cpe)
+		}
+
 		args["id"] = llx.StringData(path)
-		args["file"] = llx.ResourceData(file, "file")
+		args["file"] = llx.ResourceData(file, file.MqlName())
+		args["name"] = llx.StringData(pkg.Name)
+		args["version"] = llx.StringData(pkg.Version)
+		args["author"] = llx.StringData(pkg.Author)
+		args["authorEmail"] = llx.StringData(pkg.AuthorEmail)
+		args["summary"] = llx.StringData(pkg.Summary)
+		args["license"] = llx.StringData(pkg.License)
+		args["purl"] = llx.StringData(pkg.Purl)
+		args["cpes"] = llx.ArrayData(cpes, types.Resource("cpe"))
 
 		delete(args, "path")
 	}
 	return args, nil, nil
-}
-
-func (r *mqlPythonPackage) name() (string, error) {
-	err := r.populateData()
-	if err != nil {
-		return "", err
-	}
-	return r.Name.Data, nil
-}
-
-func (r *mqlPythonPackage) version() (string, error) {
-	err := r.populateData()
-	if err != nil {
-		return "", err
-	}
-	return r.Version.Data, nil
-}
-
-func (r *mqlPythonPackage) license() (string, error) {
-	err := r.populateData()
-	if err != nil {
-		return "", err
-	}
-	return r.License.Data, nil
-}
-
-func (r *mqlPythonPackage) author() (string, error) {
-	err := r.populateData()
-	if err != nil {
-		return "", err
-	}
-	return r.Author.Data, nil
-}
-
-func (r *mqlPythonPackage) authorEmail() (string, error) {
-	err := r.populateData()
-	if err != nil {
-		return "", err
-	}
-	return r.AuthorEmail.Data, nil
-}
-
-func (r *mqlPythonPackage) summary() (string, error) {
-	err := r.populateData()
-	if err != nil {
-		return "", err
-	}
-	return r.Summary.Data, nil
-}
-
-func (r *mqlPythonPackage) purl() (string, error) {
-	err := r.populateData()
-	if err != nil {
-		return "", err
-	}
-	return r.Purl.Data, nil
-}
-
-func (r *mqlPythonPackage) cpes() ([]any, error) {
-	err := r.populateData()
-	if err != nil {
-		return nil, err
-	}
-	return r.Cpes.Data, nil
 }
 
 type mqlPythonPackageInternal struct {
@@ -439,52 +405,4 @@ func (r *mqlPythonPackage) dependencies() ([]any, error) {
 		}
 	}
 	return deps, nil
-}
-
-func (r *mqlPythonPackage) populateData() error {
-	file := r.GetFile()
-	if file.Error != nil {
-		return file.Error
-	}
-
-	if file.Data == nil || file.Data.Path.Data == "" {
-		return fmt.Errorf("file path is empty")
-	}
-
-	pkg, err := wheelegg.ParseMIME(strings.NewReader(file.Data.Content.Data), file.Data.Path.Data)
-	if err != nil {
-		return fmt.Errorf("error parsing python package data: %s", err)
-	}
-
-	r.Name = plugin.TValue[string]{Data: pkg.Name, State: plugin.StateIsSet}
-	r.Version = plugin.TValue[string]{Data: pkg.Version, State: plugin.StateIsSet}
-	r.Author = plugin.TValue[string]{Data: pkg.Author, State: plugin.StateIsSet}
-	r.AuthorEmail = plugin.TValue[string]{Data: pkg.AuthorEmail, State: plugin.StateIsSet}
-	r.Summary = plugin.TValue[string]{Data: pkg.Summary, State: plugin.StateIsSet}
-	r.License = plugin.TValue[string]{Data: pkg.License, State: plugin.StateIsSet}
-
-	obj, err := CreateResource(r.MqlRuntime, "python", nil)
-	if err != nil {
-		return err
-	}
-	py := obj.(*mqlPython)
-	pkgs := py.GetPackages()
-	if pkgs.Error != nil {
-		return pkgs.Error
-	}
-
-	cpes := []any{}
-	for i := range pkg.Cpes {
-		cpe, err := r.MqlRuntime.CreateSharedResource("cpe", map[string]*llx.RawData{
-			"uri": llx.StringData(pkg.Cpes[i]),
-		})
-		if err != nil {
-			return err
-		}
-		cpes = append(cpes, cpe)
-	}
-
-	r.Cpes = plugin.TValue[[]any]{Data: cpes, State: plugin.StateIsSet}
-	r.Purl = plugin.TValue[string]{Data: pkg.Purl, State: plugin.StateIsSet}
-	return nil
 }
