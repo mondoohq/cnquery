@@ -322,6 +322,17 @@ func TestPoposDetector(t *testing.T) {
 	assert.Equal(t, []string{"debian", "linux", "unix", "os"}, di.Family)
 }
 
+func TestLedeDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-lede.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "lede", di.Name, "os name should be identified")
+	assert.Equal(t, "LEDE Reboot 17.01.6", di.Title, "os title should be identified")
+	assert.Equal(t, "17.01.6", di.Version, "os version should be identified")
+	assert.Equal(t, "aarch64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
+}
+
 func TestOpenWrtDetector(t *testing.T) {
 	di, err := detectPlatformFromMock("./testdata/detect-openwrt.toml")
 	assert.Nil(t, err, "was able to create the provider")

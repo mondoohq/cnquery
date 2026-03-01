@@ -1,0 +1,30 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "aarch64"
+
+[commands."uname -r"]
+stdout = "4.4.198"
+
+[files."/etc/os-release"]
+content = """
+NAME="LEDE"
+VERSION="17.01.6, Reboot"
+ID="lede"
+ID_LIKE="lede openwrt"
+PRETTY_NAME="LEDE Reboot 17.01.6"
+VERSION_ID="17.01.6"
+HOME_URL="http://lede-project.org/"
+BUG_URL="http://bugs.lede-project.org/"
+SUPPORT_URL="http://forum.lede-project.org/"
+BUILD_ID="r3979-2252731af4"
+LEDE_BOARD="mtk/mt7622"
+LEDE_ARCH="aarch64_cortex-a53_neon-vfpv4"
+LEDE_TAINTS="no-all mklibs busybox"
+LEDE_DEVICE_MANUFACTURER="LEDE"
+LEDE_DEVICE_MANUFACTURER_URL="http://lede-project.org/"
+LEDE_DEVICE_PRODUCT="Generic"
+LEDE_DEVICE_REVISION="v0"
+LEDE_RELEASE="LEDE Reboot 17.01.6 r3979-2252731af4"
+"""

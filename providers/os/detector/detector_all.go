@@ -783,6 +783,17 @@ var mxlinux = &PlatformResolver{
 	},
 }
 
+var lede = &PlatformResolver{
+	Name:     "lede",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		if pf.Name == "lede" {
+			return true, nil
+		}
+		return false, nil
+	},
+}
+
 var openwrt = &PlatformResolver{
 	Name:     "openwrt",
 	IsFamily: false,
@@ -1190,7 +1201,7 @@ var eulerFamily = &PlatformResolver{
 var linuxFamily = &PlatformResolver{
 	Name:     inventory.FAMILY_LINUX,
 	IsFamily: true,
-	Children: []*PlatformResolver{archFamily, redhatFamily, debianFamily, suseFamily, eulerFamily, bottlerocket, amazonlinux, alpine, gentoo, busybox, photon, windriver, openwrt, plcnext, mageia, azurelinux, flatcar, defaultLinux},
+	Children: []*PlatformResolver{archFamily, redhatFamily, debianFamily, suseFamily, eulerFamily, bottlerocket, amazonlinux, alpine, gentoo, busybox, photon, windriver, lede, openwrt, plcnext, mageia, azurelinux, flatcar, defaultLinux},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		detected := false
 		osrd := NewOSReleaseDetector(conn)
