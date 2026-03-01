@@ -186,7 +186,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		}
 
 		// verify the connection only once
-		_, _, err = s.Memoize(fmt.Sprintf("conn_%d", conn.Hash), func() (any, error) {
+		_, _, err = s.Memoize(fmt.Sprintf("conn_%d", conn.OptionsHash), func() (any, error) {
 			log.Debug().Msg("verifying github connection client")
 			err := conn.Verify()
 			return nil, err
