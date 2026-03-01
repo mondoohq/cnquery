@@ -5166,7 +5166,7 @@ private aws.ec2.keypair @defaults("name type region") {
 
 // Amazon EC2 image (AMI)
 private aws.ec2.image @defaults("ownerAlias id name") {
-  // ARN for the AMI
+  // Deprecated: AMIs do not have ARNs. Use `id` instead.
   arn string
   // ID of the image
   id string
