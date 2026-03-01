@@ -43,6 +43,7 @@ const (
 	ResourceGcpProjectComputeServiceZone                                              string = "gcp.project.computeService.zone"
 	ResourceGcpProjectComputeServiceMachineType                                       string = "gcp.project.computeService.machineType"
 	ResourceGcpProjectComputeServiceInstance                                          string = "gcp.project.computeService.instance"
+	ResourceGcpProjectComputeServiceInstanceShieldedInstanceConfig                    string = "gcp.project.computeService.instance.shieldedInstanceConfig"
 	ResourceGcpProjectComputeServiceServiceaccount                                    string = "gcp.project.computeService.serviceaccount"
 	ResourceGcpProjectComputeServiceDisk                                              string = "gcp.project.computeService.disk"
 	ResourceGcpProjectComputeServiceAttachedDisk                                      string = "gcp.project.computeService.attachedDisk"
@@ -297,6 +298,10 @@ func init() {
 		"gcp.project.computeService.instance": {
 			Init:   initGcpProjectComputeServiceInstance,
 			Create: createGcpProjectComputeServiceInstance,
+		},
+		"gcp.project.computeService.instance.shieldedInstanceConfig": {
+			// to override args, implement: initGcpProjectComputeServiceInstanceShieldedInstanceConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectComputeServiceInstanceShieldedInstanceConfig,
 		},
 		"gcp.project.computeService.serviceaccount": {
 			// to override args, implement: initGcpProjectComputeServiceServiceaccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1921,6 +1926,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.instance.scheduling": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstance).GetScheduling()).ToDataRes(types.Dict)
 	},
+	"gcp.project.computeService.instance.shieldedInstanceConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetShieldedInstanceConfig()).ToDataRes(types.Resource("gcp.project.computeService.instance.shieldedInstanceConfig"))
+	},
 	"gcp.project.computeService.instance.enableIntegrityMonitoring": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstance).GetEnableIntegrityMonitoring()).ToDataRes(types.Bool)
 	},
@@ -1959,6 +1967,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.instance.zone": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstance).GetZone()).ToDataRes(types.Resource("gcp.project.computeService.zone"))
+	},
+	"gcp.project.computeService.instance.shieldedInstanceConfig.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceShieldedInstanceConfig).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.shieldedInstanceConfig.enableIntegrityMonitoring": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceShieldedInstanceConfig).GetEnableIntegrityMonitoring()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.instance.shieldedInstanceConfig.enableSecureBoot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceShieldedInstanceConfig).GetEnableSecureBoot()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.instance.shieldedInstanceConfig.enableVtpm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceShieldedInstanceConfig).GetEnableVtpm()).ToDataRes(types.Bool)
 	},
 	"gcp.project.computeService.serviceaccount.email": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceServiceaccount).GetEmail()).ToDataRes(types.String)
@@ -7386,6 +7406,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceInstance).Scheduling, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.instance.shieldedInstanceConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).ShieldedInstanceConfig, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceInstanceShieldedInstanceConfig](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.instance.enableIntegrityMonitoring": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceInstance).EnableIntegrityMonitoring, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -7436,6 +7460,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.instance.zone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceInstance).Zone, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceZone](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.shieldedInstanceConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceShieldedInstanceConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.computeService.instance.shieldedInstanceConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceShieldedInstanceConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.shieldedInstanceConfig.enableIntegrityMonitoring": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceShieldedInstanceConfig).EnableIntegrityMonitoring, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.shieldedInstanceConfig.enableSecureBoot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceShieldedInstanceConfig).EnableSecureBoot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.shieldedInstanceConfig.enableVtpm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceShieldedInstanceConfig).EnableVtpm, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.serviceaccount.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16834,6 +16878,7 @@ type mqlGcpProjectComputeServiceInstance struct {
 	ResourcePolicies           plugin.TValue[[]any]
 	PhysicalHostResourceStatus plugin.TValue[string]
 	Scheduling                 plugin.TValue[any]
+	ShieldedInstanceConfig     plugin.TValue[*mqlGcpProjectComputeServiceInstanceShieldedInstanceConfig]
 	EnableIntegrityMonitoring  plugin.TValue[bool]
 	EnableSecureBoot           plugin.TValue[bool]
 	EnableVtpm                 plugin.TValue[bool]
@@ -16990,6 +17035,10 @@ func (c *mqlGcpProjectComputeServiceInstance) GetScheduling() *plugin.TValue[any
 	return &c.Scheduling
 }
 
+func (c *mqlGcpProjectComputeServiceInstance) GetShieldedInstanceConfig() *plugin.TValue[*mqlGcpProjectComputeServiceInstanceShieldedInstanceConfig] {
+	return &c.ShieldedInstanceConfig
+}
+
 func (c *mqlGcpProjectComputeServiceInstance) GetEnableIntegrityMonitoring() *plugin.TValue[bool] {
 	return &c.EnableIntegrityMonitoring
 }
@@ -17052,6 +17101,65 @@ func (c *mqlGcpProjectComputeServiceInstance) GetMachineType() *plugin.TValue[*m
 
 func (c *mqlGcpProjectComputeServiceInstance) GetZone() *plugin.TValue[*mqlGcpProjectComputeServiceZone] {
 	return &c.Zone
+}
+
+// mqlGcpProjectComputeServiceInstanceShieldedInstanceConfig for the gcp.project.computeService.instance.shieldedInstanceConfig resource
+type mqlGcpProjectComputeServiceInstanceShieldedInstanceConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectComputeServiceInstanceShieldedInstanceConfigInternal it will be used here
+	Id                        plugin.TValue[string]
+	EnableIntegrityMonitoring plugin.TValue[bool]
+	EnableSecureBoot          plugin.TValue[bool]
+	EnableVtpm                plugin.TValue[bool]
+}
+
+// createGcpProjectComputeServiceInstanceShieldedInstanceConfig creates a new instance of this resource
+func createGcpProjectComputeServiceInstanceShieldedInstanceConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectComputeServiceInstanceShieldedInstanceConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.computeService.instance.shieldedInstanceConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceShieldedInstanceConfig) MqlName() string {
+	return "gcp.project.computeService.instance.shieldedInstanceConfig"
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceShieldedInstanceConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceShieldedInstanceConfig) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceShieldedInstanceConfig) GetEnableIntegrityMonitoring() *plugin.TValue[bool] {
+	return &c.EnableIntegrityMonitoring
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceShieldedInstanceConfig) GetEnableSecureBoot() *plugin.TValue[bool] {
+	return &c.EnableSecureBoot
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceShieldedInstanceConfig) GetEnableVtpm() *plugin.TValue[bool] {
+	return &c.EnableVtpm
 }
 
 // mqlGcpProjectComputeServiceServiceaccount for the gcp.project.computeService.serviceaccount resource
