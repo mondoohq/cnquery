@@ -7,6 +7,7 @@ const (
 	IdDetector_Hostname     = "hostname"
 	IdDetector_MachineID    = "machine-id"
 	IdDetector_SerialNumber = "serialnumber"
+	IdDetector_BiosUUID     = "bios-uuid"
 	IdDetector_CloudDetect  = "cloud-detect"
 	IdDetector_SshHostkey   = "ssh-host-key"
 	IdDetector_AwsEcs       = "aws-ecs"

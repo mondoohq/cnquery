@@ -82,9 +82,16 @@ const (
 	// status: default
 	AutoUpdateEngine Feature = 14
 
+	// Use BIOS UUID as the asset ID. Preferred over SerialNumber for VMs
+	// since some hypervisors (e.g., OpenStack) pass through the host's
+	// serial number to VMs, making it non-unique.
+	// start:  v13.x
+	// status: new
+	BiosUUIDAsID Feature = 15
+
 	// Placeholder to indicate how many feature flags exist. This number
 	// is changing with every new feature and cannot be used as a featureflag itself.
-	MAX_FEATURES byte = 15
+	MAX_FEATURES byte = 16
 )
 
 var FeaturesValue = map[string]Feature{
@@ -102,6 +109,7 @@ var FeaturesValue = map[string]Feature{
 	"FailIfNoEntryPoints":  FailIfNoEntryPoints,
 	"UploadResultsV2":      UploadResultsV2,
 	"AutoUpdateEngine":     AutoUpdateEngine,
+	"BiosUUIDAsID":         BiosUUIDAsID,
 }
 
 // DefaultFeatures are a set of default flags that are active
@@ -117,4 +125,5 @@ var DefaultFeatures = Features{
 var AvailableFeatures = Features{
 	byte(MQLAssetContext),
 	byte(UploadResultsV2),
+	byte(BiosUUIDAsID),
 }
