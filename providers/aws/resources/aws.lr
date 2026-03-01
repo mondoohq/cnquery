@@ -4114,6 +4114,198 @@ private aws.redshift.snapshot @defaults("arn clusterIdentifier status createdAt"
   kmsKey() aws.kms.key
 }
 
+// Amazon Route 53 DNS service
+aws.route53 {
+  // List of all hosted zones in the account
+  hostedZones() []aws.route53.hostedZone
+  // List of all health checks in the account
+  healthChecks() []aws.route53.healthCheck
+  // List of all query logging configurations
+  queryLoggingConfigs() []aws.route53.queryLoggingConfig
+}
+
+// Route 53 hosted zone
+private aws.route53.hostedZone @defaults("id name type isPrivate") {
+  // Unique identifier for the hosted zone (e.g., /hostedzone/Z1234567890ABC)
+  id string
+  // Name of the domain (e.g., example.com.)
+  name string
+  // Number of resource record sets in the hosted zone
+  resourceRecordSetCount int
+  // Hosted zone type: PUBLIC or PRIVATE
+  type string
+  // Hosted zone configuration including comment and private zone settings
+  config dict
+  // Whether this is a private hosted zone
+  isPrivate bool
+  // Comment associated with the hosted zone
+  comment string
+  // List of VPCs associated with a private hosted zone
+  vpcs() []dict
+  // ARN of the hosted zone
+  arn string
+  // Tags associated with the hosted zone
+  tags map[string]string
+  // DNS resource record sets in this hosted zone
+  records() []aws.route53.record
+  // Nameservers for this hosted zone
+  nameServers() []string
+  // Query logging configuration, if enabled
+  queryLoggingConfig() aws.route53.queryLoggingConfig
+  // DNSSEC status for this zone
+  dnssecStatus() dict
+  // Key signing keys for DNSSEC
+  keySigningKeys() []aws.route53.keySigningKey
+}
+
+// Route 53 DNS resource record set
+private aws.route53.record @defaults("name type") {
+  // Hosted zone ID this record belongs to
+  hostedZoneId string
+  // Fully qualified domain name (e.g., www.example.com.)
+  name string
+  // DNS record type (A, AAAA, CNAME, MX, TXT, SOA, NS, SRV, PTR, CAA, etc.)
+  type string
+  // Time to live in seconds
+  ttl int
+  // List of resource record values (IP addresses, domain names, etc.)
+  resourceRecords() []string
+  // Alias target configuration (for AWS resource aliases)
+  aliasTarget() dict
+  // Whether this is an alias record
+  isAlias bool
+  // DNS name of the alias target (if alias record)
+  aliasTargetDnsName string
+  // Hosted zone ID of the alias target
+  aliasTargetHostedZoneId string
+  // Whether to evaluate target health for alias records
+  aliasEvaluateTargetHealth bool
+  // Routing policy identifier (for weighted, latency, failover, geolocation routing)
+  setIdentifier string
+  // Weight for weighted routing policy (0-255)
+  weight int
+  // AWS region for latency-based routing
+  region string
+  // Failover type: PRIMARY or SECONDARY
+  failover string
+  // Geographic location for geolocation routing
+  geoLocation() dict
+  // Geographic proximity routing bias
+  geoProximityLocation() dict
+  // Multi-value answer routing flag
+  multiValueAnswer bool
+  // Associated health check ID
+  healthCheckId string
+  // Health check details
+  healthCheck() aws.route53.healthCheck
+  // CIDR routing configuration
+  cidrRoutingConfig() dict
+  // Traffic policy instance ID (if managed by traffic policy)
+  trafficPolicyInstanceId string
+}
+
+// Route 53 health check
+private aws.route53.healthCheck @defaults("id type protocol") {
+  // Unique identifier for the health check
+  id string
+  // ARN of the health check
+  arn string
+  // Tags associated with the health check
+  tags map[string]string
+  // Health check type: HTTP, HTTPS, TCP, CALCULATED, CLOUDWATCH_METRIC
+  type string
+  // Protocol: HTTP, HTTPS, or TCP. Empty for non-endpoint types (CALCULATED, CLOUDWATCH_METRIC, RECOVERY_CONTROL)
+  protocol string
+  // IP address of the endpoint
+  ipAddress string
+  // Fully qualified domain name of the endpoint
+  fullyQualifiedDomainName string
+  // Port to check (default: 80 for HTTP, 443 for HTTPS, 80 for TCP)
+  port int
+  // Path to request for HTTP/HTTPS health checks
+  resourcePath string
+  // Search string for HTTP/HTTPS health checks
+  searchString string
+  // Request interval in seconds (10 or 30)
+  requestInterval int
+  // Number of consecutive checks before changing status (2-10)
+  failureThreshold int
+  // Whether to measure latency
+  measureLatency bool
+  // Whether to enable SNI for HTTPS checks
+  enableSNI bool
+  // Regions to check from
+  regions() []string
+  // Health check status (e.g., "Success: HTTP Status Code 200, OK")
+  status() string
+  // For CALCULATED health checks: child health check IDs
+  childHealthChecks() []string
+  // Minimum number of healthy children required
+  healthThreshold int
+  // For CLOUDWATCH_METRIC health checks: alarm configuration
+  cloudWatchAlarmConfiguration() dict
+  // Whether the health check is inverted
+  inverted bool
+  // Whether health checks are disabled
+  disabled bool
+  // Caller reference (unique client identifier)
+  callerReference string
+}
+
+// Route 53 query logging configuration
+private aws.route53.queryLoggingConfig @defaults("id hostedZoneId") {
+  // Unique identifier for the configuration
+  id string
+  // Hosted zone ID being logged
+  hostedZoneId string
+  // CloudWatch Logs log group ARN where queries are logged
+  cloudWatchLogsLogGroupArn string
+  // Associated hosted zone
+  hostedZone() aws.route53.hostedZone
+}
+
+// Route 53 DNSSEC key signing key
+private aws.route53.keySigningKey @defaults("name status") {
+  // Name of the key signing key
+  name string
+  // ARN of the KMS key used for signing
+  kmsArn string
+  // Hosted zone ID
+  hostedZoneId string
+  // Flag value (always 257 for KSK)
+  flag int
+  // Signing algorithm name
+  signingAlgorithmMnemonic string
+  // Signing algorithm type
+  signingAlgorithmType int
+  // Digest algorithm name
+  digestAlgorithmMnemonic string
+  // Digest algorithm type
+  digestAlgorithmType int
+  // Key tag
+  keyTag int
+  // Digest value (base64)
+  digestValue string
+  // Public key (base64)
+  publicKey string
+  // DS record for parent zone
+  dsRecord string
+  // DNSKEY record
+  dnskeyRecord string
+  // Status: ACTIVE, INACTIVE, DELETING, ACTION_NEEDED, INTERNAL_FAILURE
+  status string
+  // Status message
+  statusMessage string
+  // Creation timestamp
+  createdDate time
+  // Last modification timestamp
+  lastModifiedDate time
+  // Associated hosted zone
+  hostedZone() aws.route53.hostedZone
+  // KMS key resource
+  kmsKey() aws.kms.key
+}
+
 // AWS Elastic Container Registry (ECR)
 aws.ecr {
   // List of private repositories
