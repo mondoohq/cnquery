@@ -542,10 +542,21 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 	var enableIntegrityMonitoring bool
 	var enableSecureBoot bool
 	var enableVtpm bool
+	var mqlShieldedInstanceConfig plugin.Resource
 	if instance.ShieldedInstanceConfig != nil {
 		enableIntegrityMonitoring = instance.ShieldedInstanceConfig.EnableIntegrityMonitoring
 		enableSecureBoot = instance.ShieldedInstanceConfig.EnableSecureBoot
 		enableVtpm = instance.ShieldedInstanceConfig.EnableVtpm
+		var err error
+		mqlShieldedInstanceConfig, err = CreateResource(runtime, "gcp.project.computeService.instance.shieldedInstanceConfig", map[string]*llx.RawData{
+			"id":                        llx.StringData(fmt.Sprintf("%d/shieldedInstanceConfig", instance.Id)),
+			"enableIntegrityMonitoring": llx.BoolData(enableIntegrityMonitoring),
+			"enableSecureBoot":          llx.BoolData(enableSecureBoot),
+			"enableVtpm":                llx.BoolData(enableVtpm),
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	var enableDisplay bool
@@ -630,6 +641,7 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 		"resourcePolicies":           llx.ArrayData(convert.SliceAnyToInterface(instance.ResourcePolicies), types.String),
 		"physicalHostResourceStatus": llx.StringData(physicalHost),
 		"scheduling":                 llx.DictData(scheduling),
+		"shieldedInstanceConfig":     llx.ResourceData(mqlShieldedInstanceConfig, "gcp.project.computeService.instance.shieldedInstanceConfig"),
 		"enableIntegrityMonitoring":  llx.BoolData(enableIntegrityMonitoring),
 		"enableSecureBoot":           llx.BoolData(enableSecureBoot),
 		"enableVtpm":                 llx.BoolData(enableVtpm),

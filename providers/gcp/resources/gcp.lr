@@ -769,11 +769,13 @@ private gcp.project.computeService.instance @defaults("name") {
   physicalHostResourceStatus string
   // Scheduling options including preemptibility, automatic restart, and maintenance behavior
   scheduling dict
-  // Whether Shielded Instance integrity monitoring is enabled
+  // Shielded Instance configuration
+  shieldedInstanceConfig gcp.project.computeService.instance.shieldedInstanceConfig
+  // Deprecated: Use shieldedInstanceConfig.enableIntegrityMonitoring instead
   enableIntegrityMonitoring bool
-  // Whether Shielded Instance secure boot is enabled
+  // Deprecated: Use shieldedInstanceConfig.enableSecureBoot instead
   enableSecureBoot bool
-  // Whether Shielded Instance vTPM is enabled
+  // Deprecated: Use shieldedInstanceConfig.enableVtpm instead
   enableVtpm bool
   // Whether VM has been restricted from starting because Compute Engine has detected suspicious activity
   startRestricted bool
@@ -795,6 +797,18 @@ private gcp.project.computeService.instance @defaults("name") {
   machineType() gcp.project.computeService.machineType
   // Instance zone
   zone gcp.project.computeService.zone
+}
+
+// Google Cloud (GCP) Compute Shielded Instance configuration
+private gcp.project.computeService.instance.shieldedInstanceConfig @defaults("enableSecureBoot enableVtpm") {
+  // Internal ID
+  id string
+  // Whether integrity monitoring is enabled
+  enableIntegrityMonitoring bool
+  // Whether secure boot is enabled
+  enableSecureBoot bool
+  // Whether vTPM is enabled
+  enableVtpm bool
 }
 
 // Google Cloud (GCP) Compute service account

@@ -717,6 +717,11 @@ gcp.project.computeService.instance.reservationAffinity 9.0.0
 gcp.project.computeService.instance.resourcePolicies 9.0.0
 gcp.project.computeService.instance.scheduling 9.0.0
 gcp.project.computeService.instance.serviceAccounts 9.0.0
+gcp.project.computeService.instance.shieldedInstanceConfig 11.6.3
+gcp.project.computeService.instance.shieldedInstanceConfig.enableIntegrityMonitoring 11.6.3
+gcp.project.computeService.instance.shieldedInstanceConfig.enableSecureBoot 11.6.3
+gcp.project.computeService.instance.shieldedInstanceConfig.enableVtpm 11.6.3
+gcp.project.computeService.instance.shieldedInstanceConfig.id 11.6.3
 gcp.project.computeService.instance.sourceMachineImage 9.0.0
 gcp.project.computeService.instance.startRestricted 9.0.0
 gcp.project.computeService.instance.status 9.0.0
