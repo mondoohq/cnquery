@@ -2299,7 +2299,7 @@ func (g *mqlGithubRepository) spdxSbom() (*mqlGithubRepositorySbom, error) {
 			"filesAnalyzed":    llx.BoolDataPtr(pkg.FilesAnalyzed),
 			"licenseConcluded": llx.StringDataPtr(pkg.LicenseConcluded),
 			"licenseDeclared":  llx.StringDataPtr(pkg.LicenseDeclared),
-			"externalRefs":     llx.ArrayData(externalRefs, types.Dict),
+			"externalRefs":     llx.ArrayData(externalRefs, types.Resource(ResourceGithubRepositorySbomPackageExternalRef)),
 		})
 		if err != nil {
 			return nil, err
@@ -2328,7 +2328,6 @@ func (g *mqlGithubRepository) spdxSbom() (*mqlGithubRepositorySbom, error) {
 		"name":              llx.StringDataPtr(info.Name),
 		"dataLicense":       llx.StringDataPtr(info.DataLicense),
 		"documentNamespace": llx.StringDataPtr(info.DocumentNamespace),
-		"comment":           llx.StringData(""),
 		"createdAt":         llx.TimeDataPtr(createdAt),
 		"creators":          llx.ArrayData(creators, types.String),
 		"packages":          llx.ArrayData(packages, types.Resource(ResourceGithubRepositorySbomPackage)),

@@ -884,9 +884,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.repository.sbom.documentNamespace": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepositorySbom).GetDocumentNamespace()).ToDataRes(types.String)
 	},
-	"github.repository.sbom.comment": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGithubRepositorySbom).GetComment()).ToDataRes(types.String)
-	},
 	"github.repository.sbom.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepositorySbom).GetCreatedAt()).ToDataRes(types.Time)
 	},
@@ -921,7 +918,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlGithubRepositorySbomPackage).GetLicenseDeclared()).ToDataRes(types.String)
 	},
 	"github.repository.sbom.package.externalRefs": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGithubRepositorySbomPackage).GetExternalRefs()).ToDataRes(types.Array(types.Resource("github.repository.sbom.externalRef")))
+		return (r.(*mqlGithubRepositorySbomPackage).GetExternalRefs()).ToDataRes(types.Array(types.Resource("github.repository.sbom.package.externalRef")))
 	},
 	"github.repository.sbom.package.externalRef.referenceCategory": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepositorySbomPackageExternalRef).GetReferenceCategory()).ToDataRes(types.String)
@@ -2512,10 +2509,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"github.repository.sbom.documentNamespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubRepositorySbom).DocumentNamespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"github.repository.sbom.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubRepositorySbom).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"github.repository.sbom.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5758,7 +5751,6 @@ type mqlGithubRepositorySbom struct {
 	Name              plugin.TValue[string]
 	DataLicense       plugin.TValue[string]
 	DocumentNamespace plugin.TValue[string]
-	Comment           plugin.TValue[string]
 	CreatedAt         plugin.TValue[*time.Time]
 	Creators          plugin.TValue[[]any]
 	Packages          plugin.TValue[[]any]
@@ -5815,10 +5807,6 @@ func (c *mqlGithubRepositorySbom) GetDataLicense() *plugin.TValue[string] {
 
 func (c *mqlGithubRepositorySbom) GetDocumentNamespace() *plugin.TValue[string] {
 	return &c.DocumentNamespace
-}
-
-func (c *mqlGithubRepositorySbom) GetComment() *plugin.TValue[string] {
-	return &c.Comment
 }
 
 func (c *mqlGithubRepositorySbom) GetCreatedAt() *plugin.TValue[*time.Time] {

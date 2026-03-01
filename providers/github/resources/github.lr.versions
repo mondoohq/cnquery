@@ -378,7 +378,6 @@ github.repository.pushedAt 9.0.0
 github.repository.releases 9.0.0
 github.repository.runners 11.4.123
 github.repository.sbom 11.4.129
-github.repository.sbom.comment 11.4.129
 github.repository.sbom.createdAt 11.4.129
 github.repository.sbom.creators 11.4.129
 github.repository.sbom.dataLicense 11.4.129

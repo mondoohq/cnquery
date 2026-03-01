@@ -436,8 +436,6 @@ private github.repository.sbom @defaults("name spdxVersion") {
   dataLicense string
   // Namespace URI for the document
   documentNamespace string
-  // Optional comment about the document
-  comment string
   // Time when the SBOM was generated
   createdAt time
   // List of creators of the SBOM
@@ -465,7 +463,7 @@ private github.repository.sbom.package @defaults("name versionInfo") {
   // License declared by the package author
   licenseDeclared string
   // External references (e.g., purl)
-  externalRefs []github.repository.sbom.externalRef
+  externalRefs []github.repository.sbom.package.externalRef
 }
 
 // An external reference for a package in a GitHub repository SBOM
@@ -474,7 +472,7 @@ private github.repository.sbom.package.externalRef {
   referenceCategory string
   // A locator for the particular external resource this reference refers to. E.g. `pkg:gem/rails@6.0.1`.
   referenceLocator string
-  // The category of reference to an external resource this reference refers to. E.g. `purl`.
+  // The type of the external reference. E.g. `purl`.
   referenceType string
 }
 
