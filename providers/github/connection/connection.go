@@ -41,7 +41,7 @@ type GithubConnection struct {
 	ctx    context.Context
 
 	// Used to avoid verifying a client with the same options more than once
-	Hash uint64
+	OptionsHash uint64
 }
 
 type githubConnectionOptions struct {
@@ -127,11 +127,11 @@ func NewGithubConnection(id uint32, asset *inventory.Asset) (*GithubConnection, 
 	hash, err := hashstructure.Hash(connectionOpts, hashstructure.FormatV2, nil)
 
 	return &GithubConnection{
-		Connection: plugin.NewConnection(id, asset),
-		asset:      asset,
-		client:     client,
-		ctx:        ctx,
-		Hash:       hash,
+		Connection:  plugin.NewConnection(id, asset),
+		asset:       asset,
+		client:      client,
+		ctx:         ctx,
+		OptionsHash: hash,
 	}, nil
 }
 
