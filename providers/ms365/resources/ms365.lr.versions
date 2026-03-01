@@ -292,6 +292,10 @@ microsoft.devicemanagement.manageddevice.userId 11.1.40
 microsoft.devicemanagement.manageddevice.userPrincipalName 11.1.40
 microsoft.devicemanagement.manageddevice.wiFiMacAddress 11.1.40
 microsoft.devicemanagement.manageddevice.windowsProtectionState 11.1.40
+microsoft.devicemanagement.settings 13.0.3
+microsoft.devicemanagement.settings.deviceComplianceCheckinThresholdDays 13.0.3
+microsoft.devicemanagement.settings.isScheduledActionEnabled 13.0.3
+microsoft.devicemanagement.settings.secureByDefault 13.0.3
 microsoft.devices 11.1.21
 microsoft.devices.filter 11.1.21
 microsoft.devices.list 11.1.21

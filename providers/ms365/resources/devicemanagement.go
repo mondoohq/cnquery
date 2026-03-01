@@ -5,7 +5,13 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"time"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/microsoftgraph/msgraph-sdk-go/devicemanagement"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"go.mondoo.com/mql/v13/llx"
@@ -444,4 +450,71 @@ func getComplianceProperties(compliance models.DeviceCompliancePolicyable) map[s
 		}
 	}
 	return props
+}
+
+func (m *mqlMicrosoftDevicemanagementSettings) id() (string, error) {
+	return "microsoft.devicemanagement.settings", nil
+}
+
+// deviceManagementSettings maps the JSON response from the Graph API
+// deviceManagement/settings endpoint.
+type deviceManagementSettings struct {
+	SecureByDefault                      bool  `json:"secureByDefault"`
+	IsScheduledActionEnabled             bool  `json:"isScheduledActionEnabled"`
+	DeviceComplianceCheckinThresholdDays int64 `json:"deviceComplianceCheckinThresholdDays"`
+}
+
+// settings fetches device management settings via raw HTTP because the
+// Microsoft Graph SDK does not expose a typed method for this endpoint.
+func (a *mqlMicrosoftDevicemanagement) settings() (*mqlMicrosoftDevicemanagementSettings, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+
+	ctx := context.Background()
+	graphToken, err := conn.Token().GetToken(ctx, policy.TokenRequestOptions{
+		Scopes: []string{connection.DefaultMSGraphScope},
+	})
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	// NOTE: The base URL is hardcoded because the Graph SDK connection does not
+	// expose a configurable endpoint. National/sovereign cloud support would
+	// require a connection-level base URL setting.
+	const settingsURL = "https://graph.microsoft.com/v1.0/deviceManagement/settings"
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, settingsURL, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", graphToken.Token))
+	req.Header.Set("Accept", "application/json")
+
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, transformError(err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 1024))
+		return nil, fmt.Errorf("graph API returned status %d for deviceManagement/settings: %s", resp.StatusCode, body)
+	}
+
+	var settings deviceManagementSettings
+	if err := json.NewDecoder(resp.Body).Decode(&settings); err != nil {
+		return nil, fmt.Errorf("failed to decode device management settings: %w", err)
+	}
+
+	mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.devicemanagement.settings",
+		map[string]*llx.RawData{
+			"__id":                                 llx.StringData("microsoft.devicemanagement.settings"),
+			"secureByDefault":                      llx.BoolData(settings.SecureByDefault),
+			"isScheduledActionEnabled":             llx.BoolData(settings.IsScheduledActionEnabled),
+			"deviceComplianceCheckinThresholdDays": llx.IntData(settings.DeviceComplianceCheckinThresholdDays),
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	return mqlResource.(*mqlMicrosoftDevicemanagementSettings), nil
 }
