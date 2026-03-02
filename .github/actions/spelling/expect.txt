@@ -29,6 +29,7 @@ CHAPv
 clcerts
 cloudflare
 Clusterwide
+codespaces
 cmek
 cmnd
 cooldown
