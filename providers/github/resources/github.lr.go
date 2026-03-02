@@ -6876,7 +6876,7 @@ func (c *mqlGithubRepositoryRuleset) GetUpdatedAt() *plugin.TValue[*time.Time] {
 type mqlGithubRepositoryActionsSettings struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlGithubRepositoryActionsSettingsInternal
+	// optional: if you define mqlGithubRepositoryActionsSettingsInternal it will be used here
 	Enabled                      plugin.TValue[bool]
 	AllowedActions               plugin.TValue[string]
 	ShaPinningRequired           plugin.TValue[bool]
@@ -6945,7 +6945,7 @@ func (c *mqlGithubRepositoryActionsSettings) GetCanApprovePullRequestReviews() *
 type mqlGithubOrganizationActionsSettings struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlGithubOrganizationActionsSettingsInternal
+	// optional: if you define mqlGithubOrganizationActionsSettingsInternal it will be used here
 	EnabledRepositories          plugin.TValue[string]
 	AllowedActions               plugin.TValue[string]
 	ShaPinningRequired           plugin.TValue[bool]

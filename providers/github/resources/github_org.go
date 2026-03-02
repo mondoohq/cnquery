@@ -664,15 +664,8 @@ func (g *mqlGithubOrganization) installations() ([]any, error) {
 	return res, nil
 }
 
-type mqlGithubOrganizationActionsSettingsInternal struct {
-	orgLogin string
-}
-
 func (g *mqlGithubOrganizationActionsSettings) id() (string, error) {
-	if g.orgLogin == "" {
-		return "", errors.New("orgLogin is required to compute organizationActionsSettings id")
-	}
-	return "github.organizationActionsSettings/" + g.orgLogin, nil
+	return g.__id, nil
 }
 
 func (g *mqlGithubOrganization) actionsSettings() (*mqlGithubOrganizationActionsSettings, error) {
@@ -719,7 +712,5 @@ func (g *mqlGithubOrganization) actionsSettings() (*mqlGithubOrganizationActions
 	if err != nil {
 		return nil, err
 	}
-	settings := res.(*mqlGithubOrganizationActionsSettings)
-	settings.orgLogin = orgLogin
-	return settings, nil
+	return res.(*mqlGithubOrganizationActionsSettings), nil
 }

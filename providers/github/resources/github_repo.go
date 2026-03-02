@@ -2430,10 +2430,7 @@ func (g *mqlGithubRepository) spdxSbom() (*mqlGithubRepositorySbom, error) {
 }
 
 func (g *mqlGithubRepositoryRuleset) id() (string, error) {
-	if g.Id.Error != nil {
-		return "", g.Id.Error
-	}
-	return "github.repositoryRuleset/" + strconv.FormatInt(g.Id.Data, 10), nil
+	return g.__id, nil
 }
 
 func (g *mqlGithubRepository) rulesets() ([]any, error) {
@@ -2525,16 +2522,8 @@ func (g *mqlGithubRepository) rulesets() ([]any, error) {
 	return res, nil
 }
 
-type mqlGithubRepositoryActionsSettingsInternal struct {
-	ownerLogin string
-	repoName   string
-}
-
 func (g *mqlGithubRepositoryActionsSettings) id() (string, error) {
-	if g.ownerLogin == "" || g.repoName == "" {
-		return "", errors.New("ownerLogin and repoName are required to compute repositoryActionsSettings id")
-	}
-	return "github.repositoryActionsSettings/" + g.ownerLogin + "/" + g.repoName, nil
+	return g.__id, nil
 }
 
 func (g *mqlGithubRepository) actionsSettings() (*mqlGithubRepositoryActionsSettings, error) {
@@ -2589,8 +2578,5 @@ func (g *mqlGithubRepository) actionsSettings() (*mqlGithubRepositoryActionsSett
 	if err != nil {
 		return nil, err
 	}
-	settings := res.(*mqlGithubRepositoryActionsSettings)
-	settings.ownerLogin = ownerLogin
-	settings.repoName = repoName
-	return settings, nil
+	return res.(*mqlGithubRepositoryActionsSettings), nil
 }
