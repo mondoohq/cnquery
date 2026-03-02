@@ -62,18 +62,7 @@ func commonPricingArgs(props *security.PricingProperties, mqlResourceName, subId
 	}
 
 	if props == nil {
-		args["enabled"] = llx.BoolData(false)
-		args["pricingTier"] = llx.StringData("")
-		args["subPlan"] = llx.StringData("")
-		args["enforce"] = llx.BoolData(false)
-		args["deprecated"] = llx.BoolData(false)
-		args["freeTrialRemainingTime"] = llx.StringData("")
-		args["enablementTime"] = llx.TimeDataPtr(nil)
-		args["inherited"] = llx.BoolData(false)
-		args["inheritedFrom"] = llx.StringData("")
-		args["replacedBy"] = llx.ArrayData([]any{}, types.String)
-		args["resourcesCoverageStatus"] = llx.StringData("")
-		return args
+		props = &security.PricingProperties{}
 	}
 
 	enabled := false
@@ -640,7 +629,7 @@ func buildExtensionResources(runtime *plugin.Runtime, extensions []*security.Ext
 		}
 
 		extResource, err := CreateResource(runtime, mqlResourceName, map[string]*llx.RawData{
-			"__id":                   llx.StringData(parentIdPrefix + "/extensions/" + name),
+			"__id":                   llx.StringData(parentIdPrefix + "/extension/" + name),
 			"name":                   llx.StringData(name),
 			"isEnabled":              llx.BoolData(isEnabled),
 			"additionalProperties":   llx.DictData(additionalProps),
