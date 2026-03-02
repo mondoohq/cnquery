@@ -6223,3 +6223,113 @@ private aws.appstream.imageBuilder @defaults("name state platform region") {
   // Region where the image builder exists
   region string
 }
+
+// AWS Directory Service
+aws.directoryservice @defaults("directories") {
+  // List of directories across all enabled regions
+  directories() []aws.directoryservice.directory
+}
+
+// AWS Directory Service directory
+private aws.directoryservice.directory @defaults("directoryId name type stage region") {
+  // Unique identifier of the directory
+  directoryId string
+  // Fully qualified name of the directory (e.g., corp.example.com)
+  name string
+  // NetBIOS short name of the directory (e.g., CORP)
+  shortName string
+  // Description of the directory
+  description string
+  // Directory type: SimpleAD, ADConnector, MicrosoftAD, or SharedMicrosoftAD
+  type string
+  // Directory edition: Enterprise, Standard, or Hybrid
+  edition string
+  // Directory size: Small or Large
+  size string
+  // Alias for the directory (used in access URL)
+  alias string
+  // Access URL for the directory (e.g., alias.awsapps.com)
+  accessUrl string
+  // Current stage of the directory: Active, Creating, Deleted, Deleting, Failed, etc.
+  stage string
+  // Additional detail about the directory stage
+  stageReason string
+  // Time when the stage was last updated
+  stageLastUpdatedDateTime time
+  // Time when the directory was launched
+  launchTime time
+  // DNS IP addresses of the directory
+  dnsIpAddrs []string
+  // Whether single sign-on is enabled
+  ssoEnabled bool
+  // Desired number of domain controllers in the directory
+  desiredNumberOfDomainControllers int
+  // Operating system version: SERVER_2012 or SERVER_2019
+  osVersion string
+  // RADIUS MFA configuration status: Creating, Completed, or Failed
+  radiusStatus string
+  // RADIUS server settings for MFA
+  radiusSettings() aws.directoryservice.radiusSettings
+  // VPC settings for the directory
+  vpcSettings() aws.directoryservice.vpcSettings
+  // AD Connector settings for the directory
+  connectSettings() aws.directoryservice.connectSettings
+  // Owner directory description (for shared directories)
+  ownerDirectoryDescription dict
+  // Directory sharing method: ORGANIZATIONS or HANDSHAKE
+  shareMethod string
+  // Directory sharing status
+  shareStatus string
+  // Notes associated with shared directory
+  shareNotes string
+  // Tags associated with the directory
+  tags() map[string]string
+  // Region where the directory exists
+  region string
+}
+
+// RADIUS server settings for MFA authentication
+private aws.directoryservice.radiusSettings @defaults("authenticationProtocol radiusPort") {
+  // Authentication protocol: PAP, CHAP, MS-CHAPv1, or MS-CHAPv2
+  authenticationProtocol string
+  // Display label for the RADIUS endpoint
+  displayLabel string
+  // Port that the RADIUS server is using
+  radiusPort int
+  // Maximum number of retries for RADIUS requests
+  radiusRetries int
+  // RADIUS server addresses
+  radiusServers []string
+  // Timeout in seconds for RADIUS requests
+  radiusTimeout int
+  // Whether the same username is used for both directory and RADIUS
+  useSameUsername bool
+}
+
+// VPC settings for a Directory Service directory
+private aws.directoryservice.vpcSettings @defaults("vpcId securityGroupId") {
+  // Identifier of the VPC
+  vpcId string
+  // Identifier of the security group for the directory
+  securityGroupId string
+  // Identifiers of the subnets for the directory
+  subnetIds []string
+  // Availability zones of the directory
+  availabilityZones []string
+}
+
+// AD Connector settings for a Directory Service directory
+private aws.directoryservice.connectSettings @defaults("vpcId customerUserName") {
+  // Identifier of the VPC
+  vpcId string
+  // Identifier of the security group for the directory
+  securityGroupId string
+  // Identifiers of the subnets for the directory
+  subnetIds []string
+  // Availability zones of the directory
+  availabilityZones []string
+  // IP addresses of the AD Connector servers
+  connectIps []string
+  // Username of the service account in the directory
+  customerUserName string
+}

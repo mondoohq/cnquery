@@ -25,6 +25,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.35.9
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.61.0
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.61.5
+	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.38.13
 	github.com/aws/aws-sdk-go-v2/service/drs v1.36.9
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.55.0
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.290.0

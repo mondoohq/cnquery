@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -18,6 +19,17 @@ import (
 	"go.mondoo.com/mql/v13/providers/aws/connection"
 	"go.mondoo.com/mql/v13/types"
 )
+
+// isAppstreamRegionError checks if the error indicates the AppStream service
+// is not available or reachable in the given region. This includes DNS failures
+// (covered by IsServiceNotAvailableInRegionError) and context deadline exceeded
+// errors from the per-request timeout used to avoid long waits on regions where
+// the endpoint exists but the service is unavailable.
+func isAppstreamRegionError(err error) bool {
+	return Is400AccessDeniedError(err) ||
+		IsServiceNotAvailableInRegionError(err) ||
+		errors.Is(err, context.DeadlineExceeded)
+}
 
 func (a *mqlAwsAppstream) id() (string, error) {
 	return "aws.appstream", nil
@@ -63,7 +75,7 @@ func (a *mqlAwsAppstream) getFleets(conn *connection.AwsConnection) []*jobpool.J
 				})
 				cancel()
 				if err != nil {
-					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
+					if isAppstreamRegionError(err) {
 						log.Debug().Str("region", region).Msg("error accessing region for AWS AppStream fleet API")
 						return res, nil
 					}
@@ -187,7 +199,7 @@ func (a *mqlAwsAppstream) getStacks(conn *connection.AwsConnection) []*jobpool.J
 				})
 				cancel()
 				if err != nil {
-					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
+					if isAppstreamRegionError(err) {
 						log.Debug().Str("region", region).Msg("error accessing region for AWS AppStream stack API")
 						return res, nil
 					}
@@ -310,7 +322,7 @@ func (a *mqlAwsAppstream) getImageBuilders(conn *connection.AwsConnection) []*jo
 				})
 				cancel()
 				if err != nil {
-					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
+					if isAppstreamRegionError(err) {
 						log.Debug().Str("region", region).Msg("error accessing region for AWS AppStream image builder API")
 						return res, nil
 					}
