@@ -59,6 +59,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb"
 	"github.com/aws/aws-sdk-go-v2/service/timestreamwrite"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
+	"github.com/aws/aws-sdk-go-v2/service/workdocs"
 	"github.com/rs/zerolog/log"
 )
 
@@ -1338,6 +1339,30 @@ func (t *AwsConnection) Account(region string) *account.Client {
 	cfg := t.cfg.Copy()
 	cfg.Region = region
 	client := account.NewFromConfig(cfg)
+
+	// cache it
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) WorkDocs(region string) *workdocs.Client {
+	// if no region value is sent in, use the configured region
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_workdocs_" + region
+
+	// check for cached client and return it if it exists
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached workdocs client")
+		return c.Data.(*workdocs.Client)
+	}
+
+	// create the client
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := workdocs.NewFromConfig(cfg)
 
 	// cache it
 	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
