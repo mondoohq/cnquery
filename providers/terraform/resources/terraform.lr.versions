@@ -71,6 +71,10 @@ terraform.resources.list 11.1.50
 terraform.settings 9.0.0
 terraform.settings.backend 9.0.5
 terraform.settings.block 9.0.0
+terraform.settings.requiredProvider 11.1.92
+terraform.settings.requiredProvider.name 11.1.92
+terraform.settings.requiredProvider.source 11.1.92
+terraform.settings.requiredProvider.version 11.1.92
 terraform.settings.requiredProviders 9.0.0
 terraform.state 9.0.0
 terraform.state.formatVersion 9.0.0

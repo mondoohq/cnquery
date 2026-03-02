@@ -16,22 +16,23 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceTerraform                   string = "terraform"
-	ResourceTerraformResources          string = "terraform.resources"
-	ResourceTerraformFile               string = "terraform.file"
-	ResourceTerraformFileposition       string = "terraform.fileposition"
-	ResourceTerraformBlock              string = "terraform.block"
-	ResourceTerraformModule             string = "terraform.module"
-	ResourceTerraformSettings           string = "terraform.settings"
-	ResourceTerraformState              string = "terraform.state"
-	ResourceTerraformStateOutput        string = "terraform.state.output"
-	ResourceTerraformStateModule        string = "terraform.state.module"
-	ResourceTerraformStateResource      string = "terraform.state.resource"
-	ResourceTerraformPlan               string = "terraform.plan"
-	ResourceTerraformPlanConfiguration  string = "terraform.plan.configuration"
-	ResourceTerraformPlanVariable       string = "terraform.plan.variable"
-	ResourceTerraformPlanResourceChange string = "terraform.plan.resourceChange"
-	ResourceTerraformPlanProposedChange string = "terraform.plan.proposedChange"
+	ResourceTerraform                         string = "terraform"
+	ResourceTerraformResources                string = "terraform.resources"
+	ResourceTerraformFile                     string = "terraform.file"
+	ResourceTerraformFileposition             string = "terraform.fileposition"
+	ResourceTerraformBlock                    string = "terraform.block"
+	ResourceTerraformModule                   string = "terraform.module"
+	ResourceTerraformSettings                 string = "terraform.settings"
+	ResourceTerraformSettingsRequiredProvider string = "terraform.settings.requiredProvider"
+	ResourceTerraformState                    string = "terraform.state"
+	ResourceTerraformStateOutput              string = "terraform.state.output"
+	ResourceTerraformStateModule              string = "terraform.state.module"
+	ResourceTerraformStateResource            string = "terraform.state.resource"
+	ResourceTerraformPlan                     string = "terraform.plan"
+	ResourceTerraformPlanConfiguration        string = "terraform.plan.configuration"
+	ResourceTerraformPlanVariable             string = "terraform.plan.variable"
+	ResourceTerraformPlanResourceChange       string = "terraform.plan.resourceChange"
+	ResourceTerraformPlanProposedChange       string = "terraform.plan.proposedChange"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -65,6 +66,10 @@ func init() {
 		"terraform.settings": {
 			Init:   initTerraformSettings,
 			Create: createTerraformSettings,
+		},
+		"terraform.settings.requiredProvider": {
+			// to override args, implement: initTerraformSettingsRequiredProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createTerraformSettingsRequiredProvider,
 		},
 		"terraform.state": {
 			Init:   initTerraformState,
@@ -276,10 +281,19 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlTerraformSettings).GetBlock()).ToDataRes(types.Resource("terraform.block"))
 	},
 	"terraform.settings.requiredProviders": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlTerraformSettings).GetRequiredProviders()).ToDataRes(types.Dict)
+		return (r.(*mqlTerraformSettings).GetRequiredProviders()).ToDataRes(types.Array(types.Resource("terraform.settings.requiredProvider")))
 	},
 	"terraform.settings.backend": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTerraformSettings).GetBackend()).ToDataRes(types.Dict)
+	},
+	"terraform.settings.requiredProvider.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformSettingsRequiredProvider).GetName()).ToDataRes(types.String)
+	},
+	"terraform.settings.requiredProvider.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformSettingsRequiredProvider).GetSource()).ToDataRes(types.String)
+	},
+	"terraform.settings.requiredProvider.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformSettingsRequiredProvider).GetVersion()).ToDataRes(types.String)
 	},
 	"terraform.state.formatVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTerraformState).GetFormatVersion()).ToDataRes(types.String)
@@ -599,11 +613,27 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"terraform.settings.requiredProviders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlTerraformSettings).RequiredProviders, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		r.(*mqlTerraformSettings).RequiredProviders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"terraform.settings.backend": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTerraformSettings).Backend, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"terraform.settings.requiredProvider.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformSettingsRequiredProvider).__id, ok = v.Value.(string)
+		return
+	},
+	"terraform.settings.requiredProvider.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformSettingsRequiredProvider).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"terraform.settings.requiredProvider.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformSettingsRequiredProvider).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"terraform.settings.requiredProvider.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformSettingsRequiredProvider).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"terraform.state.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1432,7 +1462,7 @@ type mqlTerraformSettings struct {
 	__id       string
 	// optional: if you define mqlTerraformSettingsInternal it will be used here
 	Block             plugin.TValue[*mqlTerraformBlock]
-	RequiredProviders plugin.TValue[any]
+	RequiredProviders plugin.TValue[[]any]
 	Backend           plugin.TValue[any]
 }
 
@@ -1472,12 +1502,66 @@ func (c *mqlTerraformSettings) GetBlock() *plugin.TValue[*mqlTerraformBlock] {
 	return &c.Block
 }
 
-func (c *mqlTerraformSettings) GetRequiredProviders() *plugin.TValue[any] {
+func (c *mqlTerraformSettings) GetRequiredProviders() *plugin.TValue[[]any] {
 	return &c.RequiredProviders
 }
 
 func (c *mqlTerraformSettings) GetBackend() *plugin.TValue[any] {
 	return &c.Backend
+}
+
+// mqlTerraformSettingsRequiredProvider for the terraform.settings.requiredProvider resource
+type mqlTerraformSettingsRequiredProvider struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlTerraformSettingsRequiredProviderInternal it will be used here
+	Name    plugin.TValue[string]
+	Source  plugin.TValue[string]
+	Version plugin.TValue[string]
+}
+
+// createTerraformSettingsRequiredProvider creates a new instance of this resource
+func createTerraformSettingsRequiredProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTerraformSettingsRequiredProvider{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("terraform.settings.requiredProvider", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTerraformSettingsRequiredProvider) MqlName() string {
+	return "terraform.settings.requiredProvider"
+}
+
+func (c *mqlTerraformSettingsRequiredProvider) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTerraformSettingsRequiredProvider) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlTerraformSettingsRequiredProvider) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlTerraformSettingsRequiredProvider) GetVersion() *plugin.TValue[string] {
+	return &c.Version
 }
 
 // mqlTerraformState for the terraform.state resource

@@ -94,9 +94,19 @@ terraform.settings {
   // Settings block
   block terraform.block
   // Provider requirements
-  requiredProviders dict
+  requiredProviders []terraform.settings.requiredProvider
   // Backend configuration
   backend dict
+}
+
+// Terraform required provider
+private terraform.settings.requiredProvider @defaults("name source version") {
+  // Local name of the provider (e.g., "aws", "google")
+  name string
+  // Source address (e.g., "hashicorp/aws")
+  source string
+  // Version constraint (e.g., "~> 3.74", ">= 4.0")
+  version string
 }
 
 // Terraform state
