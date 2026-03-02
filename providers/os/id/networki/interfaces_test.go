@@ -139,6 +139,32 @@ func TestInterfacesLinuxFallbackSysNetFilesystem(t *testing.T) {
 	}
 }
 
+func TestInterfacesLinuxSysfsSymlinks(t *testing.T) {
+	// On real Linux over SFTP, /sys/class/net/ entries are symlinks
+	// and IsDir() returns false. This test verifies sysfs detection
+	// still works when entries are not directories (i.e. symlinks).
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/linux_sys_class_net_symlinks.toml"))
+	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
+
+	interfaces, err := subject.Interfaces(conn, platform)
+	require.NoError(t, err)
+	assert.Len(t, interfaces, 2)
+
+	index := subject.FindInterface(interfaces, subject.Interface{Name: "enp0s3"})
+	if assert.NotEqual(t, -1, index) {
+		enp0s3 := interfaces[index]
+		assert.Equal(t, "enp0s3", enp0s3.Name)
+		assert.Equal(t, "08:00:27:ac:25:39", enp0s3.MACAddress)
+		assert.Equal(t, 1500, enp0s3.MTU)
+		if assert.NotNil(t, enp0s3.Active) {
+			assert.True(t, *enp0s3.Active)
+		}
+		assert.ElementsMatch(t, []string{"MULTICAST", "BROADCAST", "UP"}, enp0s3.Flags)
+	}
+}
+
 func TestInterfacesWindows(t *testing.T) {
 	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/windows_get_net_ip_cmd.toml"))
 	require.NoError(t, err)

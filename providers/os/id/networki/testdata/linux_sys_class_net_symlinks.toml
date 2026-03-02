@@ -1,0 +1,45 @@
+# Simulates /sys/class/net/ entries as symlinks (isdir = false)
+# as they appear over SFTP on real Linux systems like Mageia.
+# On real Linux, entries in /sys/class/net/ are symlinks to device
+# directories (e.g. /sys/devices/...), and SFTP reports IsDir()=false.
+
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "5.7.19-desktop-3.mga8"
+
+[files."/sys/class/net"]
+stat.isdir = true
+
+[files."/sys/class/net/enp0s3"]
+stat.isdir = false
+[files."/sys/class/net/enp0s3/address"]
+content = "08:00:27:ac:25:39"
+[files."/sys/class/net/enp0s3/operstate"]
+content = "up"
+[files."/sys/class/net/enp0s3/mtu"]
+content = "1500"
+[files."/sys/class/net/enp0s3/flags"]
+content = "0x1003"
+
+[files."/sys/class/net/lo"]
+stat.isdir = false
+[files."/sys/class/net/lo/address"]
+content = "00:00:00:00:00:00"
+[files."/sys/class/net/lo/operstate"]
+content = "up"
+
+[commands."ip route show"]
+stdout = """
+default via 10.0.2.2 dev enp0s3 proto dhcp metric 100
+10.0.2.0/24 dev enp0s3 proto kernel scope link src 10.0.2.15 metric 100
+"""
+
+[commands."ip -6 route show"]
+stdout = """
+fe80::/64 dev enp0s3 proto kernel metric 256 pref medium
+"""
