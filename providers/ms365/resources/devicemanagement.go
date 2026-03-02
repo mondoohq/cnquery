@@ -84,6 +84,32 @@ func newMqlMicrosoftManagedDevice(runtime *plugin.Runtime, u models.ManagedDevic
 		return nil, err
 	}
 
+	var complianceState *string
+	if u.GetComplianceState() != nil {
+		s := u.GetComplianceState().String()
+		complianceState = &s
+	}
+	var deviceRegistrationState *string
+	if u.GetDeviceRegistrationState() != nil {
+		s := u.GetDeviceRegistrationState().String()
+		deviceRegistrationState = &s
+	}
+	var managementAgent *string
+	if u.GetManagementAgent() != nil {
+		s := u.GetManagementAgent().String()
+		managementAgent = &s
+	}
+	var deviceEnrollmentType *string
+	if u.GetDeviceEnrollmentType() != nil {
+		s := u.GetDeviceEnrollmentType().String()
+		deviceEnrollmentType = &s
+	}
+	var partnerReportedThreatState *string
+	if u.GetPartnerReportedThreatState() != nil {
+		s := u.GetPartnerReportedThreatState().String()
+		partnerReportedThreatState = &s
+	}
+
 	graphDevice, err := CreateResource(runtime, "microsoft.devicemanagement.manageddevice",
 		map[string]*llx.RawData{
 			"__id":                         llx.StringDataPtr(u.GetId()),
@@ -116,6 +142,19 @@ func newMqlMicrosoftManagedDevice(runtime *plugin.Runtime, u models.ManagedDevic
 			"ethernetMacAddress":           llx.StringDataPtr(u.GetEthernetMacAddress()),
 			"enrollmentProfileName":        llx.StringDataPtr(u.GetEnrollmentProfileName()),
 			"windowsProtectionState":       llx.DictData(protectionState),
+			"complianceState":              llx.StringDataPtr(complianceState),
+			"deviceRegistrationState":      llx.StringDataPtr(deviceRegistrationState),
+			"managementAgent":              llx.StringDataPtr(managementAgent),
+			"lastSyncDateTime":             llx.TimeDataPtr(u.GetLastSyncDateTime()),
+			"freeStorageSpaceInBytes":      llx.IntDataPtr(u.GetFreeStorageSpaceInBytes()),
+			"totalStorageSpaceInBytes":     llx.IntDataPtr(u.GetTotalStorageSpaceInBytes()),
+			"enrolledDateTime":             llx.TimeDataPtr(u.GetEnrolledDateTime()),
+			"deviceEnrollmentType":         llx.StringDataPtr(deviceEnrollmentType),
+			"partnerReportedThreatState":   llx.StringDataPtr(partnerReportedThreatState),
+			"phoneNumber":                  llx.StringDataPtr(u.GetPhoneNumber()),
+			"subscriberCarrier":            llx.StringDataPtr(u.GetSubscriberCarrier()),
+			"complianceGracePeriodExpirationDateTime": llx.TimeDataPtr(u.GetComplianceGracePeriodExpirationDateTime()),
+			"managementCertificateExpirationDate":     llx.TimeDataPtr(u.GetManagementCertificateExpirationDate()),
 		})
 	if err != nil {
 		return nil, err

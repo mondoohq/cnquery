@@ -401,14 +401,15 @@ func newMqlMicrosoftKeyCredential(runtime *plugin.Runtime, app models.KeyCredent
 
 	mqlResource, err := CreateResource(runtime, "microsoft.keyCredential",
 		map[string]*llx.RawData{
-			"__id":        llx.StringData(app.GetKeyId().String()),
-			"keyId":       llx.StringData(app.GetKeyId().String()),
-			"description": llx.StringDataPtr(app.GetDisplayName()),
-			"usage":       llx.StringDataPtr(app.GetUsage()),
-			"thumbprint":  llx.StringData(base64.StdEncoding.EncodeToString(app.GetCustomKeyIdentifier())),
-			"type":        llx.StringDataPtr(app.GetTypeEscaped()),
-			"expires":     llx.TimeDataPtr(endDate),
-			"expired":     llx.BoolData(expired),
+			"__id":          llx.StringData(app.GetKeyId().String()),
+			"keyId":         llx.StringData(app.GetKeyId().String()),
+			"description":   llx.StringDataPtr(app.GetDisplayName()),
+			"usage":         llx.StringDataPtr(app.GetUsage()),
+			"thumbprint":    llx.StringData(base64.StdEncoding.EncodeToString(app.GetCustomKeyIdentifier())),
+			"type":          llx.StringDataPtr(app.GetTypeEscaped()),
+			"expires":       llx.TimeDataPtr(endDate),
+			"expired":       llx.BoolData(expired),
+			"startDateTime": llx.TimeDataPtr(app.GetStartDateTime()),
 		})
 	if err != nil {
 		return nil, err
@@ -426,12 +427,13 @@ func newMqlMicrosoftPasswordCredential(runtime *plugin.Runtime, app models.Passw
 
 	mqlResource, err := CreateResource(runtime, "microsoft.passwordCredential",
 		map[string]*llx.RawData{
-			"__id":        llx.StringData(app.GetKeyId().String()),
-			"keyId":       llx.StringData(app.GetKeyId().String()),
-			"description": llx.StringDataPtr(app.GetDisplayName()),
-			"hint":        llx.StringDataPtr(app.GetHint()),
-			"expires":     llx.TimeDataPtr(endDate),
-			"expired":     llx.BoolData(expired),
+			"__id":          llx.StringData(app.GetKeyId().String()),
+			"keyId":         llx.StringData(app.GetKeyId().String()),
+			"description":   llx.StringDataPtr(app.GetDisplayName()),
+			"hint":          llx.StringDataPtr(app.GetHint()),
+			"expires":       llx.TimeDataPtr(endDate),
+			"expired":       llx.BoolData(expired),
+			"startDateTime": llx.TimeDataPtr(app.GetStartDateTime()),
 		})
 	if err != nil {
 		return nil, err

@@ -493,6 +493,10 @@ private microsoft.conditionalAccess.policy.sessionControls.signInFrequency @defa
   frequencyInterval string
   // Specifies whether the session control is enabled.
   isEnabled bool
+  // The sign-in frequency type (days, hours)
+  type string
+  // The sign-in frequency value
+  value int
 }
 
 // Session control used to enforce cloud app security checks
@@ -600,11 +604,17 @@ private microsoft.conditionalAccess.policy.sessionControls @defaults("id") {
 }
 
 // Microsoft Entra Conditional Access IP named location
-microsoft.conditionalAccess.ipNamedLocation @defaults("name trusted") {
+microsoft.conditionalAccess.ipNamedLocation @defaults("id name trusted") {
+  // Named location ID
+  id string
   // Named location name
   name string
   // Whether the location is marked as trusted
   trusted bool
+  // When the location was created
+  createdDateTime time
+  // When the location was last modified
+  modifiedDateTime time
 }
 
 // Microsoft Entra Conditional Access Country named location
@@ -681,6 +691,10 @@ private microsoft.user @defaults("id displayName userPrincipalName") {
   licenseDetails() []microsoft.user.licenseDetail
   // Authentication requirements information
   authenticationRequirements() microsoft.user.authenticationRequirements
+  // The employee type (e.g., Employee, Contractor, etc.)
+  employeeType string
+  // The date and time when the user was hired
+  employeeHireDate time
 }
 
 // Microsoft user authentication method states
@@ -729,6 +743,22 @@ private microsoft.user.signin {
   resourceDisplayName string
   // Whether the sign-in was interactive
   interactive bool
+  // The application identifier
+  appId string
+  // The resource identifier
+  resourceId string
+  // The IP address of the client
+  ipAddress string
+  // The correlation identifier for the sign-in
+  correlationId string
+  // The user agent used for the sign-in
+  userAgent string
+  // The conditional access status (success, failure, notApplied, unknownFutureValue)
+  conditionalAccessStatus string
+  // The risk detail (none, adminGeneratedTemporaryPassword, userPerformedSecuredPasswordChange, etc.)
+  riskDetail string
+  // The risk state (none, confirmedSafe, remediated, dismissed, atRisk, confirmedCompromised, unknownFutureValue)
+  riskState string
 }
 
 // Microsoft Entra authentication methods
@@ -817,6 +847,26 @@ private microsoft.group @defaults("id displayName") {
   membershipRule string
   // State of the processing for the dynamic membership rule
   membershipRuleProcessingState string
+  // Group creation time
+  createdDateTime time
+  // Group description
+  description string
+  // Expiration time for the group
+  expirationDateTime time
+  // Whether the group can be assigned to an Entra role
+  isAssignableToRole bool
+  // Last time the group was renewed
+  renewedDateTime time
+  // Whether the group is synced from an on-premises directory
+  onPremisesSyncEnabled bool
+  // Last time the group was synced from on-premises
+  onPremisesLastSyncDateTime time
+  // Classification assigned to the group (e.g., low, medium, high)
+  classification string
+  // Soft-delete timestamp for the group
+  deletedDateTime time
+  // Email addresses including aliases for the group
+  proxyAddresses []string
 }
 
 // Group owner (can be a user or service principal)
@@ -1051,6 +1101,8 @@ private microsoft.keyCredential @defaults("thumbprint description expires keyId"
   expires time
   // Whether the secret has expired
   expired bool
+  // Certificate validity start date
+  startDateTime time
 }
 
 // Microsoft Entra AD Application secrets
@@ -1065,6 +1117,8 @@ private microsoft.passwordCredential @defaults("description expires keyId") {
   expires time
   // Whether the secret has expired
   expired bool
+  // Secret validity start date
+  startDateTime time
 }
 
 // Microsoft service principal (Enterprise application)
@@ -1213,6 +1267,10 @@ microsoft.security.riskyUser @defaults("principalName riskLevel riskState lastUp
   riskState string
   // Risk last updated
   lastUpdatedAt time
+  // Whether the user account has been deleted
+  isDeleted bool
+  // Whether the backend is processing the user's risky state
+  isProcessing bool
 }
 
 // Microsoft Security Exchange
@@ -1597,6 +1655,32 @@ private microsoft.devicemanagement.manageddevice {
   enrollmentProfileName string
   // Protection state of the device
   windowsProtectionState dict
+  // Compliance state of the device (compliant, noncompliant, conflict, error, unknown, notApplicable)
+  complianceState string
+  // Device registration state (notRegistered, registered, revoked, keyConflict, approvalPending, certificateReset, notRegisteredPendingEnrollment, unknown)
+  deviceRegistrationState string
+  // Management agent type (eas, mdm, easMdm, intuneClient, easIntuneClient, configurationManagerClient, etc.)
+  managementAgent string
+  // Last time the device contacted Intune
+  lastSyncDateTime time
+  // Available storage in bytes
+  freeStorageSpaceInBytes int
+  // Total storage in bytes
+  totalStorageSpaceInBytes int
+  // Date and time that the device was enrolled
+  enrolledDateTime time
+  // Device enrollment type (unknown, userEnrollment, deviceEnrollmentManager, appleBulkWithUser, appleBulkWithoutUser, windowsAzureADJoin, windowsBulkUserless, windowsAutoEnrollment, windowsBulkAzureDomainJoin, windowsCoManagement, etc.)
+  deviceEnrollmentType string
+  // Threat state reported by a Mobile Threat Defense partner (unknown, activated, deactivated, secured, lowSeverity, mediumSeverity, highSeverity, unresponsive, compromised, misconfigured)
+  partnerReportedThreatState string
+  // Phone number of the device
+  phoneNumber string
+  // Subscriber carrier of the device
+  subscriberCarrier string
+  // Compliance grace period expiration date and time
+  complianceGracePeriodExpirationDateTime time
+  // Management certificate expiration date
+  managementCertificateExpirationDate time
 }
 
 // Microsoft device configuration

@@ -15,10 +15,6 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
-func (m *mqlMicrosoftConditionalAccessIpNamedLocation) id() (string, error) {
-	return m.Name.Data, nil
-}
-
 func (a *mqlMicrosoftConditionalAccessNamedLocations) ipLocations() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
@@ -46,8 +42,12 @@ func (a *mqlMicrosoftConditionalAccessNamedLocations) ipLocations() ([]any, erro
 
 				locationInfo, err := CreateResource(a.MqlRuntime, "microsoft.conditionalAccess.ipNamedLocation",
 					map[string]*llx.RawData{
-						"name":    llx.StringDataPtr(displayName),
-						"trusted": llx.BoolData(trusted),
+						"__id":             llx.StringDataPtr(ipLocation.GetId()),
+						"id":               llx.StringDataPtr(ipLocation.GetId()),
+						"name":             llx.StringDataPtr(displayName),
+						"trusted":          llx.BoolData(trusted),
+						"createdDateTime":  llx.TimeDataPtr(ipLocation.GetCreatedDateTime()),
+						"modifiedDateTime": llx.TimeDataPtr(ipLocation.GetModifiedDateTime()),
 					})
 				if err != nil {
 					return nil, err
@@ -418,11 +418,18 @@ func (a *mqlMicrosoftConditionalAccess) createSessionControlsResource(
 	// Create signInFrequency resource
 	if sessionControls != nil && sessionControls.GetSignInFrequency() != nil {
 		signInFreq := sessionControls.GetSignInFrequency()
+		var freqType *string
+		if signInFreq.GetTypeEscaped() != nil {
+			t := signInFreq.GetTypeEscaped().String()
+			freqType = &t
+		}
 		signInFreqData := map[string]*llx.RawData{
 			"__id":               llx.StringData(policyId + "_session_signInFrequency"),
 			"authenticationType": llx.StringData(signInFreq.GetAuthenticationType().String()),
 			"frequencyInterval":  llx.StringData(signInFreq.GetFrequencyInterval().String()),
 			"isEnabled":          llx.BoolDataPtr(signInFreq.GetIsEnabled()),
+			"type":               llx.StringDataPtr(freqType),
+			"value":              llx.IntDataPtr(signInFreq.GetValue()),
 		}
 		var err error
 		mqlSignInFreq, err = CreateResource(a.MqlRuntime, "microsoft.conditionalAccess.policy.sessionControls.signInFrequency", signInFreqData)
