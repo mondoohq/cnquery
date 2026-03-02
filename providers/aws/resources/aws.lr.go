@@ -299,6 +299,8 @@ const (
 	ResourceAwsCodedeployApplication                                            string = "aws.codedeploy.application"
 	ResourceAwsCodedeployDeploymentGroup                                        string = "aws.codedeploy.deploymentGroup"
 	ResourceAwsCodedeployDeployment                                             string = "aws.codedeploy.deployment"
+	ResourceAwsWorkdocs                                                         string = "aws.workdocs"
+	ResourceAwsWorkdocsUser                                                     string = "aws.workdocs.user"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -1432,6 +1434,14 @@ func init() {
 		"aws.codedeploy.deployment": {
 			// to override args, implement: initAwsCodedeployDeployment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsCodedeployDeployment,
+		},
+		"aws.workdocs": {
+			// to override args, implement: initAwsWorkdocs(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWorkdocs,
+		},
+		"aws.workdocs.user": {
+			// to override args, implement: initAwsWorkdocsUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWorkdocsUser,
 		},
 	}
 }
@@ -8877,6 +8887,63 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.codedeploy.deployment.rollbackInfo": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCodedeployDeployment).GetRollbackInfo()).ToDataRes(types.Dict)
+	},
+	"aws.workdocs.users": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocs).GetUsers()).ToDataRes(types.Array(types.Resource("aws.workdocs.user")))
+	},
+	"aws.workdocs.user.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsUser).GetId()).ToDataRes(types.String)
+	},
+	"aws.workdocs.user.username": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsUser).GetUsername()).ToDataRes(types.String)
+	},
+	"aws.workdocs.user.emailAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsUser).GetEmailAddress()).ToDataRes(types.String)
+	},
+	"aws.workdocs.user.givenName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsUser).GetGivenName()).ToDataRes(types.String)
+	},
+	"aws.workdocs.user.surname": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsUser).GetSurname()).ToDataRes(types.String)
+	},
+	"aws.workdocs.user.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsUser).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.workdocs.user.userType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsUser).GetUserType()).ToDataRes(types.String)
+	},
+	"aws.workdocs.user.createdTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsUser).GetCreatedTimestamp()).ToDataRes(types.Time)
+	},
+	"aws.workdocs.user.modifiedTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsUser).GetModifiedTimestamp()).ToDataRes(types.Time)
+	},
+	"aws.workdocs.user.timeZoneId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsUser).GetTimeZoneId()).ToDataRes(types.String)
+	},
+	"aws.workdocs.user.locale": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsUser).GetLocale()).ToDataRes(types.String)
+	},
+	"aws.workdocs.user.organizationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsUser).GetOrganizationId()).ToDataRes(types.String)
+	},
+	"aws.workdocs.user.storageAllocatedInBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsUser).GetStorageAllocatedInBytes()).ToDataRes(types.Int)
+	},
+	"aws.workdocs.user.storageUtilizedInBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsUser).GetStorageUtilizedInBytes()).ToDataRes(types.Int)
+	},
+	"aws.workdocs.user.storageType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsUser).GetStorageType()).ToDataRes(types.String)
+	},
+	"aws.workdocs.user.recycleBinFolderId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsUser).GetRecycleBinFolderId()).ToDataRes(types.String)
+	},
+	"aws.workdocs.user.rootFolderId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsUser).GetRootFolderId()).ToDataRes(types.String)
+	},
+	"aws.workdocs.user.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsUser).GetRegion()).ToDataRes(types.String)
 	},
 }
 
@@ -19836,6 +19903,90 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.codedeploy.deployment.rollbackInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCodedeployDeployment).RollbackInfo, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocs).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.workdocs.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocs).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsUser).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.workdocs.user.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsUser).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.user.username": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsUser).Username, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.user.emailAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsUser).EmailAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.user.givenName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsUser).GivenName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.user.surname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsUser).Surname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.user.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsUser).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.user.userType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsUser).UserType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.user.createdTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsUser).CreatedTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.user.modifiedTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsUser).ModifiedTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.user.timeZoneId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsUser).TimeZoneId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.user.locale": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsUser).Locale, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.user.organizationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsUser).OrganizationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.user.storageAllocatedInBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsUser).StorageAllocatedInBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.user.storageUtilizedInBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsUser).StorageUtilizedInBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.user.storageType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsUser).StorageType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.user.recycleBinFolderId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsUser).RecycleBinFolderId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.user.rootFolderId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsUser).RootFolderId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.user.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsUser).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -48176,4 +48327,189 @@ func (c *mqlAwsCodedeployDeployment) GetRollbackInfo() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.RollbackInfo, func() (any, error) {
 		return c.rollbackInfo()
 	})
+}
+
+// mqlAwsWorkdocs for the aws.workdocs resource
+type mqlAwsWorkdocs struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsWorkdocsInternal it will be used here
+	Users plugin.TValue[[]any]
+}
+
+// createAwsWorkdocs creates a new instance of this resource
+func createAwsWorkdocs(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWorkdocs{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.workdocs", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWorkdocs) MqlName() string {
+	return "aws.workdocs"
+}
+
+func (c *mqlAwsWorkdocs) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWorkdocs) GetUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Users, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.workdocs", c.__id, "users")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.users()
+	})
+}
+
+// mqlAwsWorkdocsUser for the aws.workdocs.user resource
+type mqlAwsWorkdocsUser struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsWorkdocsUserInternal it will be used here
+	Id                      plugin.TValue[string]
+	Username                plugin.TValue[string]
+	EmailAddress            plugin.TValue[string]
+	GivenName               plugin.TValue[string]
+	Surname                 plugin.TValue[string]
+	Status                  plugin.TValue[string]
+	UserType                plugin.TValue[string]
+	CreatedTimestamp        plugin.TValue[*time.Time]
+	ModifiedTimestamp       plugin.TValue[*time.Time]
+	TimeZoneId              plugin.TValue[string]
+	Locale                  plugin.TValue[string]
+	OrganizationId          plugin.TValue[string]
+	StorageAllocatedInBytes plugin.TValue[int64]
+	StorageUtilizedInBytes  plugin.TValue[int64]
+	StorageType             plugin.TValue[string]
+	RecycleBinFolderId      plugin.TValue[string]
+	RootFolderId            plugin.TValue[string]
+	Region                  plugin.TValue[string]
+}
+
+// createAwsWorkdocsUser creates a new instance of this resource
+func createAwsWorkdocsUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWorkdocsUser{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.workdocs.user", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWorkdocsUser) MqlName() string {
+	return "aws.workdocs.user"
+}
+
+func (c *mqlAwsWorkdocsUser) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWorkdocsUser) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsWorkdocsUser) GetUsername() *plugin.TValue[string] {
+	return &c.Username
+}
+
+func (c *mqlAwsWorkdocsUser) GetEmailAddress() *plugin.TValue[string] {
+	return &c.EmailAddress
+}
+
+func (c *mqlAwsWorkdocsUser) GetGivenName() *plugin.TValue[string] {
+	return &c.GivenName
+}
+
+func (c *mqlAwsWorkdocsUser) GetSurname() *plugin.TValue[string] {
+	return &c.Surname
+}
+
+func (c *mqlAwsWorkdocsUser) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsWorkdocsUser) GetUserType() *plugin.TValue[string] {
+	return &c.UserType
+}
+
+func (c *mqlAwsWorkdocsUser) GetCreatedTimestamp() *plugin.TValue[*time.Time] {
+	return &c.CreatedTimestamp
+}
+
+func (c *mqlAwsWorkdocsUser) GetModifiedTimestamp() *plugin.TValue[*time.Time] {
+	return &c.ModifiedTimestamp
+}
+
+func (c *mqlAwsWorkdocsUser) GetTimeZoneId() *plugin.TValue[string] {
+	return &c.TimeZoneId
+}
+
+func (c *mqlAwsWorkdocsUser) GetLocale() *plugin.TValue[string] {
+	return &c.Locale
+}
+
+func (c *mqlAwsWorkdocsUser) GetOrganizationId() *plugin.TValue[string] {
+	return &c.OrganizationId
+}
+
+func (c *mqlAwsWorkdocsUser) GetStorageAllocatedInBytes() *plugin.TValue[int64] {
+	return &c.StorageAllocatedInBytes
+}
+
+func (c *mqlAwsWorkdocsUser) GetStorageUtilizedInBytes() *plugin.TValue[int64] {
+	return &c.StorageUtilizedInBytes
+}
+
+func (c *mqlAwsWorkdocsUser) GetStorageType() *plugin.TValue[string] {
+	return &c.StorageType
+}
+
+func (c *mqlAwsWorkdocsUser) GetRecycleBinFolderId() *plugin.TValue[string] {
+	return &c.RecycleBinFolderId
+}
+
+func (c *mqlAwsWorkdocsUser) GetRootFolderId() *plugin.TValue[string] {
+	return &c.RootFolderId
+}
+
+func (c *mqlAwsWorkdocsUser) GetRegion() *plugin.TValue[string] {
+	return &c.Region
 }

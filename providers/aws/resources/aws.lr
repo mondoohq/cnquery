@@ -6061,3 +6061,49 @@ private aws.codedeploy.deployment @defaults("deploymentId status applicationName
   // Rollback information if this deployment is a rollback or was rolled back
   rollbackInfo() dict
 }
+
+// Amazon WorkDocs
+aws.workdocs {
+  // List of WorkDocs users across all enabled regions
+  users() []aws.workdocs.user
+}
+
+// Amazon WorkDocs user
+private aws.workdocs.user @defaults("username emailAddress status") {
+  // Internal user ID
+  id string
+  // Username
+  username string
+  // Email address
+  emailAddress string
+  // Given (first) name
+  givenName string
+  // Surname (last name)
+  surname string
+  // User status: ACTIVE, INACTIVE, or PENDING
+  status string
+  // User type: USER, ADMIN, POWERUSER, MINIMALUSER, or WORKSPACESUSER
+  userType string
+  // Time when the user was created
+  createdTimestamp time
+  // Time when the user was last modified
+  modifiedTimestamp time
+  // Time zone ID for the user
+  timeZoneId string
+  // Locale setting for the user
+  locale string
+  // Organization (directory) ID the user belongs to
+  organizationId string
+  // Storage allocated to the user in bytes
+  storageAllocatedInBytes int
+  // Storage used by the user in bytes
+  storageUtilizedInBytes int
+  // Storage rule type: UNLIMITED or QUOTA
+  storageType string
+  // ID of the user's recycle bin folder
+  recycleBinFolderId string
+  // ID of the user's root folder
+  rootFolderId string
+  // Region where this user exists
+  region string
+}
