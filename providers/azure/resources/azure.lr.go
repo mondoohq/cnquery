@@ -1103,6 +1103,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.computeService.vm.licenseType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetLicenseType()).ToDataRes(types.String)
 	},
+	"azure.subscription.computeService.vm.managedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetManagedBy()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.vm.vmId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetVmId()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.vm.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.vm.timeCreated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetTimeCreated()).ToDataRes(types.Time)
+	},
 	"azure.subscription.computeService.disk.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceDisk).GetId()).ToDataRes(types.String)
 	},
@@ -1147,6 +1159,51 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.computeService.disk.dataAccessAuthMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceDisk).GetDataAccessAuthMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.disk.diskState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDisk).GetDiskState()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.disk.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDisk).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.disk.timeCreated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDisk).GetTimeCreated()).ToDataRes(types.Time)
+	},
+	"azure.subscription.computeService.disk.uniqueId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDisk).GetUniqueId()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.disk.burstingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDisk).GetBurstingEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.computeService.disk.diskSizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDisk).GetDiskSizeBytes()).ToDataRes(types.Int)
+	},
+	"azure.subscription.computeService.disk.diskIopsReadWrite": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDisk).GetDiskIopsReadWrite()).ToDataRes(types.Int)
+	},
+	"azure.subscription.computeService.disk.diskMbpsReadWrite": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDisk).GetDiskMbpsReadWrite()).ToDataRes(types.Int)
+	},
+	"azure.subscription.computeService.disk.diskIopsReadOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDisk).GetDiskIopsReadOnly()).ToDataRes(types.Int)
+	},
+	"azure.subscription.computeService.disk.diskMbpsReadOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDisk).GetDiskMbpsReadOnly()).ToDataRes(types.Int)
+	},
+	"azure.subscription.computeService.disk.maxShares": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDisk).GetMaxShares()).ToDataRes(types.Int)
+	},
+	"azure.subscription.computeService.disk.hyperVGeneration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDisk).GetHyperVGeneration()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.disk.tier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDisk).GetTier()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.disk.supportsHibernation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDisk).GetSupportsHibernation()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.computeService.disk.diskAccessId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDisk).GetDiskAccessId()).ToDataRes(types.String)
 	},
 	"azure.subscription.batchService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionBatchService).GetSubscriptionId()).ToDataRes(types.String)
@@ -2363,6 +2420,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.storageService.account.networkRuleVirtualNetworkSubnetIds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetNetworkRuleVirtualNetworkSubnetIds()).ToDataRes(types.Array(types.String))
 	},
+	"azure.subscription.storageService.account.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetCreationTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.storageService.account.accessTier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetAccessTier()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.primaryLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetPrimaryLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.statusOfPrimary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetStatusOfPrimary()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.secondaryLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetSecondaryLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.statusOfSecondary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetStatusOfSecondary()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.defaultToOAuthAuthentication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetDefaultToOAuthAuthentication()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.storageService.account.enableNfsV3": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetEnableNfsV3()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.storageService.account.largeFileSharesState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetLargeFileSharesState()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.lastGeoFailoverTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetLastGeoFailoverTime()).ToDataRes(types.Time)
+	},
 	"azure.subscription.storageService.account.containers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetContainers()).ToDataRes(types.Array(types.Resource("azure.subscription.storageService.account.container")))
 	},
@@ -2521,6 +2611,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.storageService.account.container.denyEncryptionScopeOverride": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountContainer).GetDenyEncryptionScopeOverride()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.storageService.account.container.metadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountContainer).GetMetadata()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.storageService.account.container.lastModifiedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountContainer).GetLastModifiedTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.storageService.account.container.leaseState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountContainer).GetLeaseState()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.container.leaseStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountContainer).GetLeaseStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.container.deleted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountContainer).GetDeleted()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.storageService.account.container.deletedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountContainer).GetDeletedTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.storageService.account.container.remainingRetentionDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountContainer).GetRemainingRetentionDays()).ToDataRes(types.Int)
 	},
 	"azure.subscription.webService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebService).GetSubscriptionId()).ToDataRes(types.String)
@@ -5018,6 +5129,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionComputeServiceVm).LicenseType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.computeService.vm.managedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVm).ManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vm.vmId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVm).VmId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vm.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVm).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vm.timeCreated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVm).TimeCreated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.computeService.disk.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionComputeServiceDisk).__id, ok = v.Value.(string)
 		return
@@ -5080,6 +5207,66 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.computeService.disk.dataAccessAuthMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionComputeServiceDisk).DataAccessAuthMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.disk.diskState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDisk).DiskState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.disk.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDisk).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.disk.timeCreated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDisk).TimeCreated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.disk.uniqueId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDisk).UniqueId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.disk.burstingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDisk).BurstingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.disk.diskSizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDisk).DiskSizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.disk.diskIopsReadWrite": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDisk).DiskIopsReadWrite, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.disk.diskMbpsReadWrite": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDisk).DiskMbpsReadWrite, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.disk.diskIopsReadOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDisk).DiskIopsReadOnly, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.disk.diskMbpsReadOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDisk).DiskMbpsReadOnly, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.disk.maxShares": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDisk).MaxShares, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.disk.hyperVGeneration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDisk).HyperVGeneration, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.disk.tier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDisk).Tier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.disk.supportsHibernation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDisk).SupportsHibernation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.disk.diskAccessId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDisk).DiskAccessId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.batchService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6886,6 +7073,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionStorageServiceAccount).NetworkRuleVirtualNetworkSubnetIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.storageService.account.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccount).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccount).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.accessTier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccount).AccessTier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.primaryLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccount).PrimaryLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.statusOfPrimary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccount).StatusOfPrimary, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.secondaryLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccount).SecondaryLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.statusOfSecondary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccount).StatusOfSecondary, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.defaultToOAuthAuthentication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccount).DefaultToOAuthAuthentication, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.enableNfsV3": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccount).EnableNfsV3, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.largeFileSharesState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccount).LargeFileSharesState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.lastGeoFailoverTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccount).LastGeoFailoverTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.storageService.account.containers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionStorageServiceAccount).Containers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -7140,6 +7371,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.storageService.account.container.denyEncryptionScopeOverride": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionStorageServiceAccountContainer).DenyEncryptionScopeOverride, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.container.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountContainer).Metadata, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.container.lastModifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountContainer).LastModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.container.leaseState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountContainer).LeaseState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.container.leaseStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountContainer).LeaseStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.container.deleted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountContainer).Deleted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.container.deletedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountContainer).DeletedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.container.remainingRetentionDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountContainer).RemainingRetentionDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.webService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11218,6 +11477,10 @@ type mqlAzureSubscriptionComputeServiceVm struct {
 	ComputerName      plugin.TValue[string]
 	AdminUsername     plugin.TValue[string]
 	LicenseType       plugin.TValue[string]
+	ManagedBy         plugin.TValue[string]
+	VmId              plugin.TValue[string]
+	ProvisioningState plugin.TValue[string]
+	TimeCreated       plugin.TValue[*time.Time]
 }
 
 // createAzureSubscriptionComputeServiceVm creates a new instance of this resource
@@ -11383,6 +11646,22 @@ func (c *mqlAzureSubscriptionComputeServiceVm) GetLicenseType() *plugin.TValue[s
 	return &c.LicenseType
 }
 
+func (c *mqlAzureSubscriptionComputeServiceVm) GetManagedBy() *plugin.TValue[string] {
+	return &c.ManagedBy
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVm) GetVmId() *plugin.TValue[string] {
+	return &c.VmId
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVm) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVm) GetTimeCreated() *plugin.TValue[*time.Time] {
+	return &c.TimeCreated
+}
+
 // mqlAzureSubscriptionComputeServiceDisk for the azure.subscription.computeService.disk resource
 type mqlAzureSubscriptionComputeServiceDisk struct {
 	MqlRuntime *plugin.Runtime
@@ -11403,6 +11682,21 @@ type mqlAzureSubscriptionComputeServiceDisk struct {
 	EncryptionType      plugin.TValue[string]
 	DiskEncryptionSetId plugin.TValue[string]
 	DataAccessAuthMode  plugin.TValue[string]
+	DiskState           plugin.TValue[string]
+	ProvisioningState   plugin.TValue[string]
+	TimeCreated         plugin.TValue[*time.Time]
+	UniqueId            plugin.TValue[string]
+	BurstingEnabled     plugin.TValue[bool]
+	DiskSizeBytes       plugin.TValue[int64]
+	DiskIopsReadWrite   plugin.TValue[int64]
+	DiskMbpsReadWrite   plugin.TValue[int64]
+	DiskIopsReadOnly    plugin.TValue[int64]
+	DiskMbpsReadOnly    plugin.TValue[int64]
+	MaxShares           plugin.TValue[int64]
+	HyperVGeneration    plugin.TValue[string]
+	Tier                plugin.TValue[string]
+	SupportsHibernation plugin.TValue[bool]
+	DiskAccessId        plugin.TValue[string]
 }
 
 // createAzureSubscriptionComputeServiceDisk creates a new instance of this resource
@@ -11500,6 +11794,66 @@ func (c *mqlAzureSubscriptionComputeServiceDisk) GetDiskEncryptionSetId() *plugi
 
 func (c *mqlAzureSubscriptionComputeServiceDisk) GetDataAccessAuthMode() *plugin.TValue[string] {
 	return &c.DataAccessAuthMode
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDisk) GetDiskState() *plugin.TValue[string] {
+	return &c.DiskState
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDisk) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDisk) GetTimeCreated() *plugin.TValue[*time.Time] {
+	return &c.TimeCreated
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDisk) GetUniqueId() *plugin.TValue[string] {
+	return &c.UniqueId
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDisk) GetBurstingEnabled() *plugin.TValue[bool] {
+	return &c.BurstingEnabled
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDisk) GetDiskSizeBytes() *plugin.TValue[int64] {
+	return &c.DiskSizeBytes
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDisk) GetDiskIopsReadWrite() *plugin.TValue[int64] {
+	return &c.DiskIopsReadWrite
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDisk) GetDiskMbpsReadWrite() *plugin.TValue[int64] {
+	return &c.DiskMbpsReadWrite
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDisk) GetDiskIopsReadOnly() *plugin.TValue[int64] {
+	return &c.DiskIopsReadOnly
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDisk) GetDiskMbpsReadOnly() *plugin.TValue[int64] {
+	return &c.DiskMbpsReadOnly
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDisk) GetMaxShares() *plugin.TValue[int64] {
+	return &c.MaxShares
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDisk) GetHyperVGeneration() *plugin.TValue[string] {
+	return &c.HyperVGeneration
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDisk) GetTier() *plugin.TValue[string] {
+	return &c.Tier
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDisk) GetSupportsHibernation() *plugin.TValue[bool] {
+	return &c.SupportsHibernation
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDisk) GetDiskAccessId() *plugin.TValue[string] {
+	return &c.DiskAccessId
 }
 
 // mqlAzureSubscriptionBatchService for the azure.subscription.batchService resource
@@ -15850,6 +16204,17 @@ type mqlAzureSubscriptionStorageServiceAccount struct {
 	NetworkRuleBypass                  plugin.TValue[string]
 	NetworkRuleIpRanges                plugin.TValue[[]any]
 	NetworkRuleVirtualNetworkSubnetIds plugin.TValue[[]any]
+	ProvisioningState                  plugin.TValue[string]
+	CreationTime                       plugin.TValue[*time.Time]
+	AccessTier                         plugin.TValue[string]
+	PrimaryLocation                    plugin.TValue[string]
+	StatusOfPrimary                    plugin.TValue[string]
+	SecondaryLocation                  plugin.TValue[string]
+	StatusOfSecondary                  plugin.TValue[string]
+	DefaultToOAuthAuthentication       plugin.TValue[bool]
+	EnableNfsV3                        plugin.TValue[bool]
+	LargeFileSharesState               plugin.TValue[string]
+	LastGeoFailoverTime                plugin.TValue[*time.Time]
 	Containers                         plugin.TValue[[]any]
 	QueueProperties                    plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountServiceProperties]
 	TableProperties                    plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountServiceProperties]
@@ -15981,6 +16346,50 @@ func (c *mqlAzureSubscriptionStorageServiceAccount) GetNetworkRuleIpRanges() *pl
 
 func (c *mqlAzureSubscriptionStorageServiceAccount) GetNetworkRuleVirtualNetworkSubnetIds() *plugin.TValue[[]any] {
 	return &c.NetworkRuleVirtualNetworkSubnetIds
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccount) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccount) GetCreationTime() *plugin.TValue[*time.Time] {
+	return &c.CreationTime
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccount) GetAccessTier() *plugin.TValue[string] {
+	return &c.AccessTier
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccount) GetPrimaryLocation() *plugin.TValue[string] {
+	return &c.PrimaryLocation
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccount) GetStatusOfPrimary() *plugin.TValue[string] {
+	return &c.StatusOfPrimary
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccount) GetSecondaryLocation() *plugin.TValue[string] {
+	return &c.SecondaryLocation
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccount) GetStatusOfSecondary() *plugin.TValue[string] {
+	return &c.StatusOfSecondary
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccount) GetDefaultToOAuthAuthentication() *plugin.TValue[bool] {
+	return &c.DefaultToOAuthAuthentication
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccount) GetEnableNfsV3() *plugin.TValue[bool] {
+	return &c.EnableNfsV3
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccount) GetLargeFileSharesState() *plugin.TValue[string] {
+	return &c.LargeFileSharesState
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccount) GetLastGeoFailoverTime() *plugin.TValue[*time.Time] {
+	return &c.LastGeoFailoverTime
 }
 
 func (c *mqlAzureSubscriptionStorageServiceAccount) GetContainers() *plugin.TValue[[]any] {
@@ -16699,6 +17108,13 @@ type mqlAzureSubscriptionStorageServiceAccountContainer struct {
 	HasLegalHold                plugin.TValue[bool]
 	DefaultEncryptionScope      plugin.TValue[string]
 	DenyEncryptionScopeOverride plugin.TValue[bool]
+	Metadata                    plugin.TValue[map[string]any]
+	LastModifiedTime            plugin.TValue[*time.Time]
+	LeaseState                  plugin.TValue[string]
+	LeaseStatus                 plugin.TValue[string]
+	Deleted                     plugin.TValue[bool]
+	DeletedTime                 plugin.TValue[*time.Time]
+	RemainingRetentionDays      plugin.TValue[int64]
 }
 
 // createAzureSubscriptionStorageServiceAccountContainer creates a new instance of this resource
@@ -16776,6 +17192,34 @@ func (c *mqlAzureSubscriptionStorageServiceAccountContainer) GetDefaultEncryptio
 
 func (c *mqlAzureSubscriptionStorageServiceAccountContainer) GetDenyEncryptionScopeOverride() *plugin.TValue[bool] {
 	return &c.DenyEncryptionScopeOverride
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountContainer) GetMetadata() *plugin.TValue[map[string]any] {
+	return &c.Metadata
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountContainer) GetLastModifiedTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedTime
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountContainer) GetLeaseState() *plugin.TValue[string] {
+	return &c.LeaseState
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountContainer) GetLeaseStatus() *plugin.TValue[string] {
+	return &c.LeaseStatus
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountContainer) GetDeleted() *plugin.TValue[bool] {
+	return &c.Deleted
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountContainer) GetDeletedTime() *plugin.TValue[*time.Time] {
+	return &c.DeletedTime
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountContainer) GetRemainingRetentionDays() *plugin.TValue[int64] {
+	return &c.RemainingRetentionDays
 }
 
 // mqlAzureSubscriptionWebService for the azure.subscription.webService resource

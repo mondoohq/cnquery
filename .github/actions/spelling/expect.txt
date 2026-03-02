@@ -29,7 +29,6 @@ CHAPv
 clcerts
 cloudflare
 Clusterwide
-codespaces
 cmek
 cmnd
 cooldown
@@ -208,6 +207,7 @@ VAULTNAME
 vdcs
 virtualmachine
 vlans
+VGeneration
 vnet
 vrf
 vtpm

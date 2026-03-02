@@ -190,6 +190,14 @@ azure.subscription.computeService.vm @defaults("name location properties.hardwar
   adminUsername string
   // Azure Hybrid Benefit license type. Null if using standard Azure licensing. Possible values: "Windows_Client", "Windows_Server", "RHEL_BYOS", "SLES_BYOS"
   licenseType string
+  // ID of the resource that manages this VM (e.g. VMSS ARM resource ID)
+  managedBy string
+  // Unique 128-bit VM identifier
+  vmId string
+  // Provisioning state of the VM (e.g. Succeeded, Failed, Creating, Updating, Deleting)
+  provisioningState string
+  // When the VM was created
+  timeCreated time
 }
 
 // Azure compute disk resource
@@ -224,6 +232,36 @@ azure.subscription.computeService.disk @defaults("name location properties.osTyp
   diskEncryptionSetId string
   // Data access authentication mode (AzureActiveDirectory, None)
   dataAccessAuthMode string
+  // Current state of the disk (Unattached, Attached, Reserved, ActiveSAS, ReadyToUpload, ActiveUpload, ActiveSASFrozen)
+  diskState string
+  // Provisioning state of the disk
+  provisioningState string
+  // When the disk was created
+  timeCreated time
+  // Unique identifier of the disk (128-bit GUID)
+  uniqueId string
+  // Whether on-demand bursting is enabled for the disk
+  burstingEnabled bool
+  // Exact size of the disk in bytes
+  diskSizeBytes int
+  // Number of IOPS allowed for read/write operations
+  diskIopsReadWrite int
+  // Bandwidth in MB/s allowed for read/write operations
+  diskMbpsReadWrite int
+  // Number of IOPS allowed for read-only operations on shared disks
+  diskIopsReadOnly int
+  // Bandwidth in MB/s allowed for read-only operations on shared disks
+  diskMbpsReadOnly int
+  // Maximum number of VMs that can attach to the disk concurrently
+  maxShares int
+  // Hyper-V generation of the disk (V1, V2)
+  hyperVGeneration string
+  // Performance tier of the disk (P4, P6, P10, P15, P20, P30, P40, P50, P60, P70, P80)
+  tier string
+  // Whether the disk supports hibernation
+  supportsHibernation bool
+  // ARM ID of the DiskAccess resource for private endpoint access
+  diskAccessId string
 }
 
 // Azure Batch
@@ -1218,6 +1256,28 @@ private azure.subscription.storageService.account @defaults("id name location") 
   networkRuleIpRanges []string
   // Virtual network subnet resource IDs allowed by network rules
   networkRuleVirtualNetworkSubnetIds []string
+  // Provisioning state of the storage account
+  provisioningState string
+  // When the storage account was created
+  creationTime time
+  // Access tier of the storage account (Hot, Cool, Cold, Premium)
+  accessTier string
+  // Primary location of the storage account
+  primaryLocation string
+  // Status of the primary location (Available, Unavailable)
+  statusOfPrimary string
+  // Secondary location of the storage account (for geo-redundant accounts)
+  secondaryLocation string
+  // Status of the secondary location (Available, Unavailable)
+  statusOfSecondary string
+  // Whether the storage account defaults to OAuth authentication
+  defaultToOAuthAuthentication bool
+  // Whether NFS v3 protocol is enabled
+  enableNfsV3 bool
+  // Whether large file shares are enabled (Enabled, Disabled)
+  largeFileSharesState string
+  // When the last geo-failover occurred
+  lastGeoFailoverTime time
   // Storage account containers
   containers() []azure.subscription.storageService.account.container
   // Storage account queue properties
@@ -1368,6 +1428,20 @@ private azure.subscription.storageService.account.container @defaults("id name")
   defaultEncryptionScope string
   // Whether encryption scope override is denied
   denyEncryptionScopeOverride bool
+  // Container metadata
+  metadata map[string]string
+  // When the container was last modified
+  lastModifiedTime time
+  // Lease state of the container (Available, Leased, Expired, Breaking, Broken)
+  leaseState string
+  // Lease status of the container (Locked, Unlocked)
+  leaseStatus string
+  // Whether the container has been soft-deleted
+  deleted bool
+  // When the container was deleted
+  deletedTime time
+  // Number of remaining days in the soft delete retention period
+  remainingRetentionDays int
 }
 
 // Azure Web
