@@ -75,6 +75,17 @@ nfpms:
     formats:
       - deb
       - rpm
+    overrides:
+      deb:
+        conflicts:
+          - cnquery (<= 13)
+        replaces:
+          - cnquery (<= 13)
+      rpm:
+        conflicts:
+          - cnquery <= 13
+        obsoletes:
+          - cnquery <= 13
     rpm:
       signature:
         key_file: '{{ .Env.GPG_KEY_PATH }}'
