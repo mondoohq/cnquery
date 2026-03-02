@@ -784,11 +784,10 @@ func initAzureSubscriptionStorageServiceAccountContainer(runtime *plugin.Runtime
 		for _, c := range containers.Data {
 			container := c.(*mqlAzureSubscriptionStorageServiceAccountContainer)
 			if container.Id.Data == id {
-				return args, storageAcc, nil
+				return args, container, nil
 			}
-
 		}
 	}
 
-	return nil, nil, errors.New("azure storage account does not exist")
+	return nil, nil, errors.New("azure storage container does not exist")
 }
