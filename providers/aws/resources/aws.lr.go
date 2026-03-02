@@ -305,6 +305,11 @@ const (
 	ResourceAwsAppstreamFleet                                                   string = "aws.appstream.fleet"
 	ResourceAwsAppstreamStack                                                   string = "aws.appstream.stack"
 	ResourceAwsAppstreamImageBuilder                                            string = "aws.appstream.imageBuilder"
+	ResourceAwsDirectoryservice                                                 string = "aws.directoryservice"
+	ResourceAwsDirectoryserviceDirectory                                        string = "aws.directoryservice.directory"
+	ResourceAwsDirectoryserviceRadiusSettings                                   string = "aws.directoryservice.radiusSettings"
+	ResourceAwsDirectoryserviceVpcSettings                                      string = "aws.directoryservice.vpcSettings"
+	ResourceAwsDirectoryserviceConnectSettings                                  string = "aws.directoryservice.connectSettings"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -1462,6 +1467,26 @@ func init() {
 		"aws.appstream.imageBuilder": {
 			// to override args, implement: initAwsAppstreamImageBuilder(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsAppstreamImageBuilder,
+		},
+		"aws.directoryservice": {
+			// to override args, implement: initAwsDirectoryservice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDirectoryservice,
+		},
+		"aws.directoryservice.directory": {
+			// to override args, implement: initAwsDirectoryserviceDirectory(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDirectoryserviceDirectory,
+		},
+		"aws.directoryservice.radiusSettings": {
+			// to override args, implement: initAwsDirectoryserviceRadiusSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDirectoryserviceRadiusSettings,
+		},
+		"aws.directoryservice.vpcSettings": {
+			// to override args, implement: initAwsDirectoryserviceVpcSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDirectoryserviceVpcSettings,
+		},
+		"aws.directoryservice.connectSettings": {
+			// to override args, implement: initAwsDirectoryserviceConnectSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDirectoryserviceConnectSettings,
 		},
 	}
 }
@@ -9114,6 +9139,141 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.appstream.imageBuilder.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppstreamImageBuilder).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.directoryservice.directories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryservice).GetDirectories()).ToDataRes(types.Array(types.Resource("aws.directoryservice.directory")))
+	},
+	"aws.directoryservice.directory.directoryId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceDirectory).GetDirectoryId()).ToDataRes(types.String)
+	},
+	"aws.directoryservice.directory.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceDirectory).GetName()).ToDataRes(types.String)
+	},
+	"aws.directoryservice.directory.shortName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceDirectory).GetShortName()).ToDataRes(types.String)
+	},
+	"aws.directoryservice.directory.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceDirectory).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.directoryservice.directory.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceDirectory).GetType()).ToDataRes(types.String)
+	},
+	"aws.directoryservice.directory.edition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceDirectory).GetEdition()).ToDataRes(types.String)
+	},
+	"aws.directoryservice.directory.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceDirectory).GetSize()).ToDataRes(types.String)
+	},
+	"aws.directoryservice.directory.alias": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceDirectory).GetAlias()).ToDataRes(types.String)
+	},
+	"aws.directoryservice.directory.accessUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceDirectory).GetAccessUrl()).ToDataRes(types.String)
+	},
+	"aws.directoryservice.directory.stage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceDirectory).GetStage()).ToDataRes(types.String)
+	},
+	"aws.directoryservice.directory.stageReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceDirectory).GetStageReason()).ToDataRes(types.String)
+	},
+	"aws.directoryservice.directory.stageLastUpdatedDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceDirectory).GetStageLastUpdatedDateTime()).ToDataRes(types.Time)
+	},
+	"aws.directoryservice.directory.launchTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceDirectory).GetLaunchTime()).ToDataRes(types.Time)
+	},
+	"aws.directoryservice.directory.dnsIpAddrs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceDirectory).GetDnsIpAddrs()).ToDataRes(types.Array(types.String))
+	},
+	"aws.directoryservice.directory.ssoEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceDirectory).GetSsoEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.directoryservice.directory.desiredNumberOfDomainControllers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceDirectory).GetDesiredNumberOfDomainControllers()).ToDataRes(types.Int)
+	},
+	"aws.directoryservice.directory.osVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceDirectory).GetOsVersion()).ToDataRes(types.String)
+	},
+	"aws.directoryservice.directory.radiusStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceDirectory).GetRadiusStatus()).ToDataRes(types.String)
+	},
+	"aws.directoryservice.directory.radiusSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceDirectory).GetRadiusSettings()).ToDataRes(types.Resource("aws.directoryservice.radiusSettings"))
+	},
+	"aws.directoryservice.directory.vpcSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceDirectory).GetVpcSettings()).ToDataRes(types.Resource("aws.directoryservice.vpcSettings"))
+	},
+	"aws.directoryservice.directory.connectSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceDirectory).GetConnectSettings()).ToDataRes(types.Resource("aws.directoryservice.connectSettings"))
+	},
+	"aws.directoryservice.directory.ownerDirectoryDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceDirectory).GetOwnerDirectoryDescription()).ToDataRes(types.Dict)
+	},
+	"aws.directoryservice.directory.shareMethod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceDirectory).GetShareMethod()).ToDataRes(types.String)
+	},
+	"aws.directoryservice.directory.shareStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceDirectory).GetShareStatus()).ToDataRes(types.String)
+	},
+	"aws.directoryservice.directory.shareNotes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceDirectory).GetShareNotes()).ToDataRes(types.String)
+	},
+	"aws.directoryservice.directory.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceDirectory).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.directoryservice.directory.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceDirectory).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.directoryservice.radiusSettings.authenticationProtocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceRadiusSettings).GetAuthenticationProtocol()).ToDataRes(types.String)
+	},
+	"aws.directoryservice.radiusSettings.displayLabel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceRadiusSettings).GetDisplayLabel()).ToDataRes(types.String)
+	},
+	"aws.directoryservice.radiusSettings.radiusPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceRadiusSettings).GetRadiusPort()).ToDataRes(types.Int)
+	},
+	"aws.directoryservice.radiusSettings.radiusRetries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceRadiusSettings).GetRadiusRetries()).ToDataRes(types.Int)
+	},
+	"aws.directoryservice.radiusSettings.radiusServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceRadiusSettings).GetRadiusServers()).ToDataRes(types.Array(types.String))
+	},
+	"aws.directoryservice.radiusSettings.radiusTimeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceRadiusSettings).GetRadiusTimeout()).ToDataRes(types.Int)
+	},
+	"aws.directoryservice.radiusSettings.useSameUsername": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceRadiusSettings).GetUseSameUsername()).ToDataRes(types.Bool)
+	},
+	"aws.directoryservice.vpcSettings.vpcId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceVpcSettings).GetVpcId()).ToDataRes(types.String)
+	},
+	"aws.directoryservice.vpcSettings.securityGroupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceVpcSettings).GetSecurityGroupId()).ToDataRes(types.String)
+	},
+	"aws.directoryservice.vpcSettings.subnetIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceVpcSettings).GetSubnetIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.directoryservice.vpcSettings.availabilityZones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceVpcSettings).GetAvailabilityZones()).ToDataRes(types.Array(types.String))
+	},
+	"aws.directoryservice.connectSettings.vpcId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceConnectSettings).GetVpcId()).ToDataRes(types.String)
+	},
+	"aws.directoryservice.connectSettings.securityGroupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceConnectSettings).GetSecurityGroupId()).ToDataRes(types.String)
+	},
+	"aws.directoryservice.connectSettings.subnetIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceConnectSettings).GetSubnetIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.directoryservice.connectSettings.availabilityZones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceConnectSettings).GetAvailabilityZones()).ToDataRes(types.Array(types.String))
+	},
+	"aws.directoryservice.connectSettings.connectIps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceConnectSettings).GetConnectIps()).ToDataRes(types.Array(types.String))
+	},
+	"aws.directoryservice.connectSettings.customerUserName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceConnectSettings).GetCustomerUserName()).ToDataRes(types.String)
 	},
 }
 
@@ -20373,6 +20533,206 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.appstream.imageBuilder.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAppstreamImageBuilder).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryservice).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.directoryservice.directories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryservice).Directories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.directory.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceDirectory).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.directoryservice.directory.directoryId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceDirectory).DirectoryId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.directory.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceDirectory).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.directory.shortName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceDirectory).ShortName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.directory.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceDirectory).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.directory.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceDirectory).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.directory.edition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceDirectory).Edition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.directory.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceDirectory).Size, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.directory.alias": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceDirectory).Alias, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.directory.accessUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceDirectory).AccessUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.directory.stage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceDirectory).Stage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.directory.stageReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceDirectory).StageReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.directory.stageLastUpdatedDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceDirectory).StageLastUpdatedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.directory.launchTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceDirectory).LaunchTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.directory.dnsIpAddrs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceDirectory).DnsIpAddrs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.directory.ssoEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceDirectory).SsoEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.directory.desiredNumberOfDomainControllers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceDirectory).DesiredNumberOfDomainControllers, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.directory.osVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceDirectory).OsVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.directory.radiusStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceDirectory).RadiusStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.directory.radiusSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceDirectory).RadiusSettings, ok = plugin.RawToTValue[*mqlAwsDirectoryserviceRadiusSettings](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.directory.vpcSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceDirectory).VpcSettings, ok = plugin.RawToTValue[*mqlAwsDirectoryserviceVpcSettings](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.directory.connectSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceDirectory).ConnectSettings, ok = plugin.RawToTValue[*mqlAwsDirectoryserviceConnectSettings](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.directory.ownerDirectoryDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceDirectory).OwnerDirectoryDescription, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.directory.shareMethod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceDirectory).ShareMethod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.directory.shareStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceDirectory).ShareStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.directory.shareNotes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceDirectory).ShareNotes, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.directory.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceDirectory).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.directory.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceDirectory).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.radiusSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceRadiusSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.directoryservice.radiusSettings.authenticationProtocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceRadiusSettings).AuthenticationProtocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.radiusSettings.displayLabel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceRadiusSettings).DisplayLabel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.radiusSettings.radiusPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceRadiusSettings).RadiusPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.radiusSettings.radiusRetries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceRadiusSettings).RadiusRetries, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.radiusSettings.radiusServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceRadiusSettings).RadiusServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.radiusSettings.radiusTimeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceRadiusSettings).RadiusTimeout, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.radiusSettings.useSameUsername": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceRadiusSettings).UseSameUsername, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.vpcSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceVpcSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.directoryservice.vpcSettings.vpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceVpcSettings).VpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.vpcSettings.securityGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceVpcSettings).SecurityGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.vpcSettings.subnetIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceVpcSettings).SubnetIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.vpcSettings.availabilityZones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceVpcSettings).AvailabilityZones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.connectSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceConnectSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.directoryservice.connectSettings.vpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceConnectSettings).VpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.connectSettings.securityGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceConnectSettings).SecurityGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.connectSettings.subnetIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceConnectSettings).SubnetIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.connectSettings.availabilityZones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceConnectSettings).AvailabilityZones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.connectSettings.connectIps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceConnectSettings).ConnectIps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.connectSettings.customerUserName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceConnectSettings).CustomerUserName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -49376,4 +49736,499 @@ func (c *mqlAwsAppstreamImageBuilder) GetTags() *plugin.TValue[map[string]any] {
 
 func (c *mqlAwsAppstreamImageBuilder) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+// mqlAwsDirectoryservice for the aws.directoryservice resource
+type mqlAwsDirectoryservice struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsDirectoryserviceInternal it will be used here
+	Directories plugin.TValue[[]any]
+}
+
+// createAwsDirectoryservice creates a new instance of this resource
+func createAwsDirectoryservice(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDirectoryservice{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.directoryservice", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDirectoryservice) MqlName() string {
+	return "aws.directoryservice"
+}
+
+func (c *mqlAwsDirectoryservice) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDirectoryservice) GetDirectories() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Directories, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.directoryservice", c.__id, "directories")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.directories()
+	})
+}
+
+// mqlAwsDirectoryserviceDirectory for the aws.directoryservice.directory resource
+type mqlAwsDirectoryserviceDirectory struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsDirectoryserviceDirectoryInternal
+	DirectoryId                      plugin.TValue[string]
+	Name                             plugin.TValue[string]
+	ShortName                        plugin.TValue[string]
+	Description                      plugin.TValue[string]
+	Type                             plugin.TValue[string]
+	Edition                          plugin.TValue[string]
+	Size                             plugin.TValue[string]
+	Alias                            plugin.TValue[string]
+	AccessUrl                        plugin.TValue[string]
+	Stage                            plugin.TValue[string]
+	StageReason                      plugin.TValue[string]
+	StageLastUpdatedDateTime         plugin.TValue[*time.Time]
+	LaunchTime                       plugin.TValue[*time.Time]
+	DnsIpAddrs                       plugin.TValue[[]any]
+	SsoEnabled                       plugin.TValue[bool]
+	DesiredNumberOfDomainControllers plugin.TValue[int64]
+	OsVersion                        plugin.TValue[string]
+	RadiusStatus                     plugin.TValue[string]
+	RadiusSettings                   plugin.TValue[*mqlAwsDirectoryserviceRadiusSettings]
+	VpcSettings                      plugin.TValue[*mqlAwsDirectoryserviceVpcSettings]
+	ConnectSettings                  plugin.TValue[*mqlAwsDirectoryserviceConnectSettings]
+	OwnerDirectoryDescription        plugin.TValue[any]
+	ShareMethod                      plugin.TValue[string]
+	ShareStatus                      plugin.TValue[string]
+	ShareNotes                       plugin.TValue[string]
+	Tags                             plugin.TValue[map[string]any]
+	Region                           plugin.TValue[string]
+}
+
+// createAwsDirectoryserviceDirectory creates a new instance of this resource
+func createAwsDirectoryserviceDirectory(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDirectoryserviceDirectory{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.directoryservice.directory", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDirectoryserviceDirectory) MqlName() string {
+	return "aws.directoryservice.directory"
+}
+
+func (c *mqlAwsDirectoryserviceDirectory) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDirectoryserviceDirectory) GetDirectoryId() *plugin.TValue[string] {
+	return &c.DirectoryId
+}
+
+func (c *mqlAwsDirectoryserviceDirectory) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsDirectoryserviceDirectory) GetShortName() *plugin.TValue[string] {
+	return &c.ShortName
+}
+
+func (c *mqlAwsDirectoryserviceDirectory) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsDirectoryserviceDirectory) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsDirectoryserviceDirectory) GetEdition() *plugin.TValue[string] {
+	return &c.Edition
+}
+
+func (c *mqlAwsDirectoryserviceDirectory) GetSize() *plugin.TValue[string] {
+	return &c.Size
+}
+
+func (c *mqlAwsDirectoryserviceDirectory) GetAlias() *plugin.TValue[string] {
+	return &c.Alias
+}
+
+func (c *mqlAwsDirectoryserviceDirectory) GetAccessUrl() *plugin.TValue[string] {
+	return &c.AccessUrl
+}
+
+func (c *mqlAwsDirectoryserviceDirectory) GetStage() *plugin.TValue[string] {
+	return &c.Stage
+}
+
+func (c *mqlAwsDirectoryserviceDirectory) GetStageReason() *plugin.TValue[string] {
+	return &c.StageReason
+}
+
+func (c *mqlAwsDirectoryserviceDirectory) GetStageLastUpdatedDateTime() *plugin.TValue[*time.Time] {
+	return &c.StageLastUpdatedDateTime
+}
+
+func (c *mqlAwsDirectoryserviceDirectory) GetLaunchTime() *plugin.TValue[*time.Time] {
+	return &c.LaunchTime
+}
+
+func (c *mqlAwsDirectoryserviceDirectory) GetDnsIpAddrs() *plugin.TValue[[]any] {
+	return &c.DnsIpAddrs
+}
+
+func (c *mqlAwsDirectoryserviceDirectory) GetSsoEnabled() *plugin.TValue[bool] {
+	return &c.SsoEnabled
+}
+
+func (c *mqlAwsDirectoryserviceDirectory) GetDesiredNumberOfDomainControllers() *plugin.TValue[int64] {
+	return &c.DesiredNumberOfDomainControllers
+}
+
+func (c *mqlAwsDirectoryserviceDirectory) GetOsVersion() *plugin.TValue[string] {
+	return &c.OsVersion
+}
+
+func (c *mqlAwsDirectoryserviceDirectory) GetRadiusStatus() *plugin.TValue[string] {
+	return &c.RadiusStatus
+}
+
+func (c *mqlAwsDirectoryserviceDirectory) GetRadiusSettings() *plugin.TValue[*mqlAwsDirectoryserviceRadiusSettings] {
+	return plugin.GetOrCompute[*mqlAwsDirectoryserviceRadiusSettings](&c.RadiusSettings, func() (*mqlAwsDirectoryserviceRadiusSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.directoryservice.directory", c.__id, "radiusSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsDirectoryserviceRadiusSettings), nil
+			}
+		}
+
+		return c.radiusSettings()
+	})
+}
+
+func (c *mqlAwsDirectoryserviceDirectory) GetVpcSettings() *plugin.TValue[*mqlAwsDirectoryserviceVpcSettings] {
+	return plugin.GetOrCompute[*mqlAwsDirectoryserviceVpcSettings](&c.VpcSettings, func() (*mqlAwsDirectoryserviceVpcSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.directoryservice.directory", c.__id, "vpcSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsDirectoryserviceVpcSettings), nil
+			}
+		}
+
+		return c.vpcSettings()
+	})
+}
+
+func (c *mqlAwsDirectoryserviceDirectory) GetConnectSettings() *plugin.TValue[*mqlAwsDirectoryserviceConnectSettings] {
+	return plugin.GetOrCompute[*mqlAwsDirectoryserviceConnectSettings](&c.ConnectSettings, func() (*mqlAwsDirectoryserviceConnectSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.directoryservice.directory", c.__id, "connectSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsDirectoryserviceConnectSettings), nil
+			}
+		}
+
+		return c.connectSettings()
+	})
+}
+
+func (c *mqlAwsDirectoryserviceDirectory) GetOwnerDirectoryDescription() *plugin.TValue[any] {
+	return &c.OwnerDirectoryDescription
+}
+
+func (c *mqlAwsDirectoryserviceDirectory) GetShareMethod() *plugin.TValue[string] {
+	return &c.ShareMethod
+}
+
+func (c *mqlAwsDirectoryserviceDirectory) GetShareStatus() *plugin.TValue[string] {
+	return &c.ShareStatus
+}
+
+func (c *mqlAwsDirectoryserviceDirectory) GetShareNotes() *plugin.TValue[string] {
+	return &c.ShareNotes
+}
+
+func (c *mqlAwsDirectoryserviceDirectory) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsDirectoryserviceDirectory) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsDirectoryserviceRadiusSettings for the aws.directoryservice.radiusSettings resource
+type mqlAwsDirectoryserviceRadiusSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsDirectoryserviceRadiusSettingsInternal it will be used here
+	AuthenticationProtocol plugin.TValue[string]
+	DisplayLabel           plugin.TValue[string]
+	RadiusPort             plugin.TValue[int64]
+	RadiusRetries          plugin.TValue[int64]
+	RadiusServers          plugin.TValue[[]any]
+	RadiusTimeout          plugin.TValue[int64]
+	UseSameUsername        plugin.TValue[bool]
+}
+
+// createAwsDirectoryserviceRadiusSettings creates a new instance of this resource
+func createAwsDirectoryserviceRadiusSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDirectoryserviceRadiusSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.directoryservice.radiusSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDirectoryserviceRadiusSettings) MqlName() string {
+	return "aws.directoryservice.radiusSettings"
+}
+
+func (c *mqlAwsDirectoryserviceRadiusSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDirectoryserviceRadiusSettings) GetAuthenticationProtocol() *plugin.TValue[string] {
+	return &c.AuthenticationProtocol
+}
+
+func (c *mqlAwsDirectoryserviceRadiusSettings) GetDisplayLabel() *plugin.TValue[string] {
+	return &c.DisplayLabel
+}
+
+func (c *mqlAwsDirectoryserviceRadiusSettings) GetRadiusPort() *plugin.TValue[int64] {
+	return &c.RadiusPort
+}
+
+func (c *mqlAwsDirectoryserviceRadiusSettings) GetRadiusRetries() *plugin.TValue[int64] {
+	return &c.RadiusRetries
+}
+
+func (c *mqlAwsDirectoryserviceRadiusSettings) GetRadiusServers() *plugin.TValue[[]any] {
+	return &c.RadiusServers
+}
+
+func (c *mqlAwsDirectoryserviceRadiusSettings) GetRadiusTimeout() *plugin.TValue[int64] {
+	return &c.RadiusTimeout
+}
+
+func (c *mqlAwsDirectoryserviceRadiusSettings) GetUseSameUsername() *plugin.TValue[bool] {
+	return &c.UseSameUsername
+}
+
+// mqlAwsDirectoryserviceVpcSettings for the aws.directoryservice.vpcSettings resource
+type mqlAwsDirectoryserviceVpcSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsDirectoryserviceVpcSettingsInternal it will be used here
+	VpcId             plugin.TValue[string]
+	SecurityGroupId   plugin.TValue[string]
+	SubnetIds         plugin.TValue[[]any]
+	AvailabilityZones plugin.TValue[[]any]
+}
+
+// createAwsDirectoryserviceVpcSettings creates a new instance of this resource
+func createAwsDirectoryserviceVpcSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDirectoryserviceVpcSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.directoryservice.vpcSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDirectoryserviceVpcSettings) MqlName() string {
+	return "aws.directoryservice.vpcSettings"
+}
+
+func (c *mqlAwsDirectoryserviceVpcSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDirectoryserviceVpcSettings) GetVpcId() *plugin.TValue[string] {
+	return &c.VpcId
+}
+
+func (c *mqlAwsDirectoryserviceVpcSettings) GetSecurityGroupId() *plugin.TValue[string] {
+	return &c.SecurityGroupId
+}
+
+func (c *mqlAwsDirectoryserviceVpcSettings) GetSubnetIds() *plugin.TValue[[]any] {
+	return &c.SubnetIds
+}
+
+func (c *mqlAwsDirectoryserviceVpcSettings) GetAvailabilityZones() *plugin.TValue[[]any] {
+	return &c.AvailabilityZones
+}
+
+// mqlAwsDirectoryserviceConnectSettings for the aws.directoryservice.connectSettings resource
+type mqlAwsDirectoryserviceConnectSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsDirectoryserviceConnectSettingsInternal it will be used here
+	VpcId             plugin.TValue[string]
+	SecurityGroupId   plugin.TValue[string]
+	SubnetIds         plugin.TValue[[]any]
+	AvailabilityZones plugin.TValue[[]any]
+	ConnectIps        plugin.TValue[[]any]
+	CustomerUserName  plugin.TValue[string]
+}
+
+// createAwsDirectoryserviceConnectSettings creates a new instance of this resource
+func createAwsDirectoryserviceConnectSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDirectoryserviceConnectSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.directoryservice.connectSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDirectoryserviceConnectSettings) MqlName() string {
+	return "aws.directoryservice.connectSettings"
+}
+
+func (c *mqlAwsDirectoryserviceConnectSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDirectoryserviceConnectSettings) GetVpcId() *plugin.TValue[string] {
+	return &c.VpcId
+}
+
+func (c *mqlAwsDirectoryserviceConnectSettings) GetSecurityGroupId() *plugin.TValue[string] {
+	return &c.SecurityGroupId
+}
+
+func (c *mqlAwsDirectoryserviceConnectSettings) GetSubnetIds() *plugin.TValue[[]any] {
+	return &c.SubnetIds
+}
+
+func (c *mqlAwsDirectoryserviceConnectSettings) GetAvailabilityZones() *plugin.TValue[[]any] {
+	return &c.AvailabilityZones
+}
+
+func (c *mqlAwsDirectoryserviceConnectSettings) GetConnectIps() *plugin.TValue[[]any] {
+	return &c.ConnectIps
+}
+
+func (c *mqlAwsDirectoryserviceConnectSettings) GetCustomerUserName() *plugin.TValue[string] {
+	return &c.CustomerUserName
 }

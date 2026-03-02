@@ -11,6 +11,7 @@ Auths
 autoaccept
 autoclose
 autoprovision
+awsapps
 awslogs
 awsvpc
 backupconfiguration
@@ -24,6 +25,7 @@ bytematchstatement
 cavium
 cdn
 certificatechains
+CHAPv
 clcerts
 cloudflare
 Clusterwide
@@ -39,6 +41,7 @@ cyclonedx
 dast
 databricks
 datapath
+directoryservice
 DATAUSER
 datetime
 ddos
