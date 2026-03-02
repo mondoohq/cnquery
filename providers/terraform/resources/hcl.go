@@ -811,6 +811,9 @@ func initTerraformSettings(runtime *plugin.Runtime, args map[string]*llx.RawData
 						if v, ok := m["version"].(string); ok {
 							version = v
 						}
+					} else if v, ok := val.(string); ok {
+						// Shorthand syntax: aws = "~> 3.74"
+						version = v
 					}
 					r, err := CreateResource(runtime, "terraform.settings.requiredProvider",
 						map[string]*llx.RawData{

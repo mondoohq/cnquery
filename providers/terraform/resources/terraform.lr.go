@@ -1531,7 +1531,12 @@ func createTerraformSettingsRequiredProvider(runtime *plugin.Runtime, args map[s
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("terraform.settings.requiredProvider", res.__id)
