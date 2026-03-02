@@ -5,7 +5,9 @@ package resources
 
 import (
 	"errors"
+	"fmt"
 	"sync"
+	"time"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -66,6 +68,16 @@ func (k *mqlK8s) nodes() ([]any, error) {
 			return nil, err
 		}
 
+		capacity, err := convert.JsonToDict(n.Status.Capacity)
+		if err != nil {
+			return nil, err
+		}
+
+		allocatable, err := convert.JsonToDict(n.Status.Allocatable)
+		if err != nil {
+			return nil, err
+		}
+
 		r, err := CreateResource(k.MqlRuntime, "k8s.node", map[string]*llx.RawData{
 			"id":              llx.StringData(objIdFromK8sObj(obj, objT)),
 			"uid":             llx.StringData(string(obj.GetUID())),
@@ -75,6 +87,8 @@ func (k *mqlK8s) nodes() ([]any, error) {
 			"created":         llx.TimeData(ts.Time),
 			"nodeInfo":        llx.DictData(nodeInfo),
 			"kubeletPort":     llx.IntData(n.Status.DaemonEndpoints.KubeletEndpoint.Port),
+			"capacity":        llx.DictData(capacity),
+			"allocatable":     llx.DictData(allocatable),
 		})
 		if err != nil {
 			return nil, err
@@ -97,4 +111,66 @@ func (k *mqlK8sNode) annotations() (map[string]any, error) {
 
 func (k *mqlK8sNode) labels() (map[string]any, error) {
 	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
+}
+
+func (k *mqlK8sNode) taints() ([]any, error) {
+	uid := string(k.obj.GetUID())
+	res := make([]any, 0, len(k.obj.Spec.Taints))
+	for _, t := range k.obj.Spec.Taints {
+		var timeAdded *time.Time
+		if t.TimeAdded != nil {
+			ta := t.TimeAdded.Time
+			timeAdded = &ta
+		}
+		r, err := CreateResource(k.MqlRuntime, "k8s.nodeTaint", map[string]*llx.RawData{
+			"__id":      llx.StringData(fmt.Sprintf("%s/taint/%s/%s", uid, t.Key, t.Effect)),
+			"key":       llx.StringData(t.Key),
+			"value":     llx.StringData(t.Value),
+			"effect":    llx.StringData(string(t.Effect)),
+			"timeAdded": llx.TimeDataPtr(timeAdded),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, r)
+	}
+	return res, nil
+}
+
+func (k *mqlK8sNode) conditions() ([]any, error) {
+	uid := string(k.obj.GetUID())
+	res := make([]any, 0, len(k.obj.Status.Conditions))
+	for _, c := range k.obj.Status.Conditions {
+		r, err := CreateResource(k.MqlRuntime, "k8s.nodeCondition", map[string]*llx.RawData{
+			"__id":               llx.StringData(fmt.Sprintf("%s/condition/%s", uid, c.Type)),
+			"type":               llx.StringData(string(c.Type)),
+			"status":             llx.StringData(string(c.Status)),
+			"lastHeartbeatTime":  llx.TimeData(c.LastHeartbeatTime.Time),
+			"lastTransitionTime": llx.TimeData(c.LastTransitionTime.Time),
+			"reason":             llx.StringData(c.Reason),
+			"message":            llx.StringData(c.Message),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, r)
+	}
+	return res, nil
+}
+
+func (k *mqlK8sNode) addresses() ([]any, error) {
+	uid := string(k.obj.GetUID())
+	res := make([]any, 0, len(k.obj.Status.Addresses))
+	for _, a := range k.obj.Status.Addresses {
+		r, err := CreateResource(k.MqlRuntime, "k8s.nodeAddress", map[string]*llx.RawData{
+			"__id":    llx.StringData(fmt.Sprintf("%s/address/%s", uid, a.Type)),
+			"type":    llx.StringData(string(a.Type)),
+			"address": llx.StringData(a.Address),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, r)
+	}
+	return res, nil
 }

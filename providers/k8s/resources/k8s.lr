@@ -137,6 +137,52 @@ private k8s.node @defaults("name labels['kubernetes.io/arch'] labels['kubernetes
   nodeInfo dict
   // Kubelet port
   kubeletPort int
+  // Node taints for pod scheduling
+  taints() []k8s.nodeTaint
+  // Node health conditions (e.g., Ready, MemoryPressure, DiskPressure)
+  conditions() []k8s.nodeCondition
+  // Node network addresses (e.g., InternalIP, ExternalIP, Hostname)
+  addresses() []k8s.nodeAddress
+  // Total resources available on the node (e.g., cpu, memory, pods)
+  capacity dict
+  // Resources available for scheduling pods on the node
+  allocatable dict
+}
+
+// Kubernetes node taint
+private k8s.nodeTaint @defaults("key value effect") {
+  // Taint key
+  key string
+  // Taint value
+  value string
+  // Taint effect (NoSchedule, PreferNoSchedule, NoExecute)
+  effect string
+  // Time the taint was added
+  timeAdded time
+}
+
+// Kubernetes node condition
+private k8s.nodeCondition @defaults("type status") {
+  // Condition type (Ready, MemoryPressure, DiskPressure, PIDPressure, NetworkUnavailable)
+  type string
+  // Condition status (True, False, Unknown)
+  status string
+  // Last time the condition was updated
+  lastHeartbeatTime time
+  // Last time the condition transitioned between statuses
+  lastTransitionTime time
+  // Brief machine-readable reason for the condition's last transition
+  reason string
+  // Human-readable message with details about the last transition
+  message string
+}
+
+// Kubernetes node address
+private k8s.nodeAddress @defaults("type address") {
+  // Address type (Hostname, ExternalIP, InternalIP, ExternalDNS, InternalDNS)
+  type string
+  // Node address value
+  address string
 }
 
 // Kubernetes Pod

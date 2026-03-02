@@ -21,6 +21,9 @@ const (
 	ResourceK8sApiresource                             string = "k8s.apiresource"
 	ResourceK8sNamespace                               string = "k8s.namespace"
 	ResourceK8sNode                                    string = "k8s.node"
+	ResourceK8sNodeTaint                               string = "k8s.nodeTaint"
+	ResourceK8sNodeCondition                           string = "k8s.nodeCondition"
+	ResourceK8sNodeAddress                             string = "k8s.nodeAddress"
 	ResourceK8sPod                                     string = "k8s.pod"
 	ResourceK8sDeployment                              string = "k8s.deployment"
 	ResourceK8sDaemonset                               string = "k8s.daemonset"
@@ -83,6 +86,18 @@ func init() {
 		"k8s.node": {
 			Init:   initK8sNode,
 			Create: createK8sNode,
+		},
+		"k8s.nodeTaint": {
+			// to override args, implement: initK8sNodeTaint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sNodeTaint,
+		},
+		"k8s.nodeCondition": {
+			// to override args, implement: initK8sNodeCondition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sNodeCondition,
+		},
+		"k8s.nodeAddress": {
+			// to override args, implement: initK8sNodeAddress(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sNodeAddress,
 		},
 		"k8s.pod": {
 			Init:   initK8sPod,
@@ -501,6 +516,57 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.node.kubeletPort": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sNode).GetKubeletPort()).ToDataRes(types.Int)
+	},
+	"k8s.node.taints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNode).GetTaints()).ToDataRes(types.Array(types.Resource("k8s.nodeTaint")))
+	},
+	"k8s.node.conditions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNode).GetConditions()).ToDataRes(types.Array(types.Resource("k8s.nodeCondition")))
+	},
+	"k8s.node.addresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNode).GetAddresses()).ToDataRes(types.Array(types.Resource("k8s.nodeAddress")))
+	},
+	"k8s.node.capacity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNode).GetCapacity()).ToDataRes(types.Dict)
+	},
+	"k8s.node.allocatable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNode).GetAllocatable()).ToDataRes(types.Dict)
+	},
+	"k8s.nodeTaint.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNodeTaint).GetKey()).ToDataRes(types.String)
+	},
+	"k8s.nodeTaint.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNodeTaint).GetValue()).ToDataRes(types.String)
+	},
+	"k8s.nodeTaint.effect": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNodeTaint).GetEffect()).ToDataRes(types.String)
+	},
+	"k8s.nodeTaint.timeAdded": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNodeTaint).GetTimeAdded()).ToDataRes(types.Time)
+	},
+	"k8s.nodeCondition.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNodeCondition).GetType()).ToDataRes(types.String)
+	},
+	"k8s.nodeCondition.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNodeCondition).GetStatus()).ToDataRes(types.String)
+	},
+	"k8s.nodeCondition.lastHeartbeatTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNodeCondition).GetLastHeartbeatTime()).ToDataRes(types.Time)
+	},
+	"k8s.nodeCondition.lastTransitionTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNodeCondition).GetLastTransitionTime()).ToDataRes(types.Time)
+	},
+	"k8s.nodeCondition.reason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNodeCondition).GetReason()).ToDataRes(types.String)
+	},
+	"k8s.nodeCondition.message": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNodeCondition).GetMessage()).ToDataRes(types.String)
+	},
+	"k8s.nodeAddress.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNodeAddress).GetType()).ToDataRes(types.String)
+	},
+	"k8s.nodeAddress.address": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNodeAddress).GetAddress()).ToDataRes(types.String)
 	},
 	"k8s.pod.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPod).GetId()).ToDataRes(types.String)
@@ -2011,6 +2077,86 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.node.kubeletPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sNode).KubeletPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.node.taints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNode).Taints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.node.conditions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNode).Conditions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.node.addresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNode).Addresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.node.capacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNode).Capacity, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.node.allocatable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNode).Allocatable, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.nodeTaint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNodeTaint).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.nodeTaint.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNodeTaint).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.nodeTaint.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNodeTaint).Value, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.nodeTaint.effect": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNodeTaint).Effect, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.nodeTaint.timeAdded": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNodeTaint).TimeAdded, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.nodeCondition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNodeCondition).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.nodeCondition.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNodeCondition).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.nodeCondition.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNodeCondition).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.nodeCondition.lastHeartbeatTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNodeCondition).LastHeartbeatTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.nodeCondition.lastTransitionTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNodeCondition).LastTransitionTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.nodeCondition.reason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNodeCondition).Reason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.nodeCondition.message": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNodeCondition).Message, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.nodeAddress.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNodeAddress).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.nodeAddress.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNodeAddress).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.nodeAddress.address": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNodeAddress).Address, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"k8s.pod.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4631,6 +4777,11 @@ type mqlK8sNode struct {
 	Created         plugin.TValue[*time.Time]
 	NodeInfo        plugin.TValue[any]
 	KubeletPort     plugin.TValue[int64]
+	Taints          plugin.TValue[[]any]
+	Conditions      plugin.TValue[[]any]
+	Addresses       plugin.TValue[[]any]
+	Capacity        plugin.TValue[any]
+	Allocatable     plugin.TValue[any]
 }
 
 // createK8sNode creates a new instance of this resource
@@ -4712,6 +4863,239 @@ func (c *mqlK8sNode) GetNodeInfo() *plugin.TValue[any] {
 
 func (c *mqlK8sNode) GetKubeletPort() *plugin.TValue[int64] {
 	return &c.KubeletPort
+}
+
+func (c *mqlK8sNode) GetTaints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Taints, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.node", c.__id, "taints")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.taints()
+	})
+}
+
+func (c *mqlK8sNode) GetConditions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Conditions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.node", c.__id, "conditions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.conditions()
+	})
+}
+
+func (c *mqlK8sNode) GetAddresses() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Addresses, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.node", c.__id, "addresses")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.addresses()
+	})
+}
+
+func (c *mqlK8sNode) GetCapacity() *plugin.TValue[any] {
+	return &c.Capacity
+}
+
+func (c *mqlK8sNode) GetAllocatable() *plugin.TValue[any] {
+	return &c.Allocatable
+}
+
+// mqlK8sNodeTaint for the k8s.nodeTaint resource
+type mqlK8sNodeTaint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlK8sNodeTaintInternal it will be used here
+	Key       plugin.TValue[string]
+	Value     plugin.TValue[string]
+	Effect    plugin.TValue[string]
+	TimeAdded plugin.TValue[*time.Time]
+}
+
+// createK8sNodeTaint creates a new instance of this resource
+func createK8sNodeTaint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sNodeTaint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.nodeTaint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sNodeTaint) MqlName() string {
+	return "k8s.nodeTaint"
+}
+
+func (c *mqlK8sNodeTaint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sNodeTaint) GetKey() *plugin.TValue[string] {
+	return &c.Key
+}
+
+func (c *mqlK8sNodeTaint) GetValue() *plugin.TValue[string] {
+	return &c.Value
+}
+
+func (c *mqlK8sNodeTaint) GetEffect() *plugin.TValue[string] {
+	return &c.Effect
+}
+
+func (c *mqlK8sNodeTaint) GetTimeAdded() *plugin.TValue[*time.Time] {
+	return &c.TimeAdded
+}
+
+// mqlK8sNodeCondition for the k8s.nodeCondition resource
+type mqlK8sNodeCondition struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlK8sNodeConditionInternal it will be used here
+	Type               plugin.TValue[string]
+	Status             plugin.TValue[string]
+	LastHeartbeatTime  plugin.TValue[*time.Time]
+	LastTransitionTime plugin.TValue[*time.Time]
+	Reason             plugin.TValue[string]
+	Message            plugin.TValue[string]
+}
+
+// createK8sNodeCondition creates a new instance of this resource
+func createK8sNodeCondition(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sNodeCondition{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.nodeCondition", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sNodeCondition) MqlName() string {
+	return "k8s.nodeCondition"
+}
+
+func (c *mqlK8sNodeCondition) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sNodeCondition) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlK8sNodeCondition) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlK8sNodeCondition) GetLastHeartbeatTime() *plugin.TValue[*time.Time] {
+	return &c.LastHeartbeatTime
+}
+
+func (c *mqlK8sNodeCondition) GetLastTransitionTime() *plugin.TValue[*time.Time] {
+	return &c.LastTransitionTime
+}
+
+func (c *mqlK8sNodeCondition) GetReason() *plugin.TValue[string] {
+	return &c.Reason
+}
+
+func (c *mqlK8sNodeCondition) GetMessage() *plugin.TValue[string] {
+	return &c.Message
+}
+
+// mqlK8sNodeAddress for the k8s.nodeAddress resource
+type mqlK8sNodeAddress struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlK8sNodeAddressInternal it will be used here
+	Type    plugin.TValue[string]
+	Address plugin.TValue[string]
+}
+
+// createK8sNodeAddress creates a new instance of this resource
+func createK8sNodeAddress(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sNodeAddress{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.nodeAddress", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sNodeAddress) MqlName() string {
+	return "k8s.nodeAddress"
+}
+
+func (c *mqlK8sNodeAddress) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sNodeAddress) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlK8sNodeAddress) GetAddress() *plugin.TValue[string] {
+	return &c.Address
 }
 
 // mqlK8sPod for the k8s.pod resource
