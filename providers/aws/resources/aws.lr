@@ -6107,3 +6107,119 @@ private aws.workdocs.user @defaults("username emailAddress status") {
   // Region where this user exists
   region string
 }
+
+// Amazon AppStream 2.0
+aws.appstream @defaults("fleets") {
+  // List of AppStream fleets across all enabled regions
+  fleets() []aws.appstream.fleet
+  // List of AppStream stacks across all enabled regions
+  stacks() []aws.appstream.stack
+  // List of AppStream image builders across all enabled regions
+  imageBuilders() []aws.appstream.imageBuilder
+}
+
+// Amazon AppStream 2.0 fleet
+private aws.appstream.fleet @defaults("name state fleetType region") {
+  // ARN of the fleet
+  arn string
+  // Name of the fleet
+  name string
+  // Current state of the fleet: STARTING, RUNNING, STOPPING, or STOPPED
+  state string
+  // Fleet type: ALWAYS_ON, ON_DEMAND, or ELASTIC
+  fleetType string
+  // Instance type used for fleet instances
+  instanceType string
+  // Maximum duration of a streaming session in seconds
+  maxUserDurationInSeconds int
+  // Disconnect timeout in seconds
+  disconnectTimeoutInSeconds int
+  // Idle disconnect timeout in seconds
+  idleDisconnectTimeoutInSeconds int
+  // Whether default internet access is enabled
+  enableDefaultInternetAccess bool
+  // Domain join configuration
+  domainJoinInfo dict
+  // Maximum number of concurrent sessions for the fleet
+  maxConcurrentSessions int
+  // Maximum number of user sessions per instance
+  maxSessionsPerInstance int
+  // VPC configuration (SubnetIds, SecurityGroupIds)
+  vpcConfig dict
+  // ARN of the IAM role applied to the fleet
+  iamRoleArn string
+  // Name of the image used to create the fleet
+  imageName string
+  // ARN of the image used to create the fleet
+  imageArn string
+  // Operating system platform: WINDOWS, WINDOWS_SERVER_2016, WINDOWS_SERVER_2019, WINDOWS_SERVER_2022, AMAZON_LINUX2, or RHEL8
+  platform string
+  // Time when the fleet was created
+  createdAt time
+  // Tags associated with the fleet
+  tags() map[string]string
+  // Region where the fleet exists
+  region string
+}
+
+// Amazon AppStream 2.0 stack
+private aws.appstream.stack @defaults("name region") {
+  // ARN of the stack
+  arn string
+  // Name of the stack
+  name string
+  // Description of the stack
+  description string
+  // Time when the stack was created
+  createdAt time
+  // Access endpoints for the stack
+  accessEndpoints []dict
+  // Application settings for the stack
+  applicationSettings dict
+  // Storage connectors for the stack
+  storageConnectors []dict
+  // User settings for the stack
+  userSettings []dict
+  // Domains where AppStream streaming sessions can be embedded
+  embedHostDomains []string
+  // Tags associated with the stack
+  tags() map[string]string
+  // Region where the stack exists
+  region string
+}
+
+// Amazon AppStream 2.0 image builder
+private aws.appstream.imageBuilder @defaults("name state platform region") {
+  // ARN of the image builder
+  arn string
+  // Name of the image builder
+  name string
+  // Description of the image builder
+  description string
+  // Current state of the image builder
+  state string
+  // Instance type for the image builder
+  instanceType string
+  // Operating system platform
+  platform string
+  // ARN of the image used by the image builder
+  imageArn string
+  // Version of the AppStream agent
+  appstreamAgentVersion string
+  // Whether default internet access is enabled
+  enableDefaultInternetAccess bool
+  // Domain join configuration
+  domainJoinInfo dict
+  // VPC configuration (SubnetIds, SecurityGroupIds)
+  vpcConfig dict
+  // ARN of the IAM role applied to the image builder
+  iamRoleArn string
+  // Network access configuration
+  networkAccessConfiguration dict
+  // Time when the image builder was created
+  createdAt time
+  // Tags associated with the image builder
+  tags() map[string]string
+  // Region where the image builder exists
+  region string
+}
