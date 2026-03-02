@@ -741,7 +741,6 @@ func discoverCosmosDb(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) 
 	return assets, nil
 }
 
-
 func discoverStorageAccounts(runtime *plugin.Runtime, subsWithConfig []subWithConfig) ([]*inventory.Asset, error) {
 	assets := []*inventory.Asset{}
 	for _, subWithConfig := range subsWithConfig {
