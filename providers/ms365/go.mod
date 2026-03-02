@@ -10,8 +10,8 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/microsoft/kiota-abstractions-go v1.9.3
 	github.com/microsoft/kiota-authentication-azure-go v1.3.1
-	github.com/microsoftgraph/msgraph-beta-sdk-go v0.158.0
-	github.com/microsoftgraph/msgraph-sdk-go v1.94.0
+	github.com/microsoftgraph/msgraph-beta-sdk-go v0.159.0
+	github.com/microsoftgraph/msgraph-sdk-go v1.96.0
 	github.com/microsoftgraph/msgraph-sdk-go-core v1.4.0
 	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.11.1
