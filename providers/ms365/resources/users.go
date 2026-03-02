@@ -28,7 +28,7 @@ var userSelectFields = []string{
 	"department", "displayName", "employeeId", "givenName", "jobTitle", "mail",
 	"mobilePhone", "otherMails", "officeLocation", "postalCode", "state", "identities",
 	"streetAddress", "surname", "userPrincipalName", "userType", "creationType",
-	"assignedLicenses",
+	"assignedLicenses", "employeeType", "employeeHireDate",
 }
 
 func (a *mqlMicrosoft) users() (*mqlMicrosoftUsers, error) {
@@ -308,6 +308,8 @@ func newMqlMicrosoftUser(runtime *plugin.Runtime, u models.Userable) (*mqlMicros
 			"creationType":      llx.StringDataPtr(u.GetCreationType()),
 			"identities":        llx.ArrayData(identities, types.ResourceLike),
 			"assignedLicenses":  llx.ArrayData(mqlAssignedLicensesList, types.ResourceLike),
+			"employeeType":      llx.StringDataPtr(u.GetEmployeeType()),
+			"employeeHireDate":  llx.TimeDataPtr(u.GetEmployeeHireDate()),
 		})
 	if err != nil {
 		return nil, err
@@ -491,17 +493,41 @@ func (a *mqlMicrosoftUserAuditlog) lastNonInteractiveSignIn() (*mqlMicrosoftUser
 }
 
 func newMqlMicrosoftSignIn(runtime *plugin.Runtime, signIn betamodels.SignInable) (*mqlMicrosoftUserSignin, error) {
+	var conditionalAccessStatus *string
+	if signIn.GetConditionalAccessStatus() != nil {
+		s := signIn.GetConditionalAccessStatus().String()
+		conditionalAccessStatus = &s
+	}
+	var signInRiskDetail *string
+	if signIn.GetRiskDetail() != nil {
+		s := signIn.GetRiskDetail().String()
+		signInRiskDetail = &s
+	}
+	var signInRiskState *string
+	if signIn.GetRiskState() != nil {
+		s := signIn.GetRiskState().String()
+		signInRiskState = &s
+	}
+
 	mqlSignIn, err := CreateResource(runtime, "microsoft.user.signin",
 		map[string]*llx.RawData{
-			"__id":                llx.StringDataPtr(signIn.GetId()),
-			"id":                  llx.StringDataPtr(signIn.GetId()),
-			"createdDateTime":     llx.TimeDataPtr(signIn.GetCreatedDateTime()),
-			"userId":              llx.StringDataPtr(signIn.GetUserId()),
-			"clientAppUsed":       llx.StringDataPtr(signIn.GetClientAppUsed()),
-			"resourceDisplayName": llx.StringDataPtr(signIn.GetResourceDisplayName()),
-			"userDisplayName":     llx.StringDataPtr(signIn.GetUserDisplayName()),
-			"appDisplayName":      llx.StringDataPtr(signIn.GetAppDisplayName()),
-			"interactive":         llx.BoolDataPtr(signIn.GetIsInteractive()),
+			"__id":                    llx.StringDataPtr(signIn.GetId()),
+			"id":                      llx.StringDataPtr(signIn.GetId()),
+			"createdDateTime":         llx.TimeDataPtr(signIn.GetCreatedDateTime()),
+			"userId":                  llx.StringDataPtr(signIn.GetUserId()),
+			"clientAppUsed":           llx.StringDataPtr(signIn.GetClientAppUsed()),
+			"resourceDisplayName":     llx.StringDataPtr(signIn.GetResourceDisplayName()),
+			"userDisplayName":         llx.StringDataPtr(signIn.GetUserDisplayName()),
+			"appDisplayName":          llx.StringDataPtr(signIn.GetAppDisplayName()),
+			"interactive":             llx.BoolDataPtr(signIn.GetIsInteractive()),
+			"appId":                   llx.StringDataPtr(signIn.GetAppId()),
+			"resourceId":              llx.StringDataPtr(signIn.GetResourceId()),
+			"ipAddress":               llx.StringDataPtr(signIn.GetIpAddress()),
+			"correlationId":           llx.StringDataPtr(signIn.GetCorrelationId()),
+			"userAgent":               llx.StringDataPtr(signIn.GetUserAgent()),
+			"conditionalAccessStatus": llx.StringDataPtr(conditionalAccessStatus),
+			"riskDetail":              llx.StringDataPtr(signInRiskDetail),
+			"riskState":               llx.StringDataPtr(signInRiskState),
 		})
 	if err != nil {
 		return nil, err

@@ -1207,6 +1207,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.conditionalAccess.policy.sessionControls.signInFrequency.isEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency).GetIsEnabled()).ToDataRes(types.Bool)
 	},
+	"microsoft.conditionalAccess.policy.sessionControls.signInFrequency.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency).GetType()).ToDataRes(types.String)
+	},
+	"microsoft.conditionalAccess.policy.sessionControls.signInFrequency.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency).GetValue()).ToDataRes(types.Int)
+	},
 	"microsoft.conditionalAccess.policy.sessionControls.cloudAppSecurity.cloudAppSecurityType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity).GetCloudAppSecurityType()).ToDataRes(types.String)
 	},
@@ -1303,11 +1309,20 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.conditionalAccess.policy.sessionControls.secureSignInSession": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftConditionalAccessPolicySessionControls).GetSecureSignInSession()).ToDataRes(types.Dict)
 	},
+	"microsoft.conditionalAccess.ipNamedLocation.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessIpNamedLocation).GetId()).ToDataRes(types.String)
+	},
 	"microsoft.conditionalAccess.ipNamedLocation.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftConditionalAccessIpNamedLocation).GetName()).ToDataRes(types.String)
 	},
 	"microsoft.conditionalAccess.ipNamedLocation.trusted": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftConditionalAccessIpNamedLocation).GetTrusted()).ToDataRes(types.Bool)
+	},
+	"microsoft.conditionalAccess.ipNamedLocation.createdDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessIpNamedLocation).GetCreatedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.conditionalAccess.ipNamedLocation.modifiedDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessIpNamedLocation).GetModifiedDateTime()).ToDataRes(types.Time)
 	},
 	"microsoft.conditionalAccess.countryNamedLocation.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftConditionalAccessCountryNamedLocation).GetName()).ToDataRes(types.String)
@@ -1411,6 +1426,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.user.authenticationRequirements": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUser).GetAuthenticationRequirements()).ToDataRes(types.Resource("microsoft.user.authenticationRequirements"))
 	},
+	"microsoft.user.employeeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUser).GetEmployeeType()).ToDataRes(types.String)
+	},
+	"microsoft.user.employeeHireDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUser).GetEmployeeHireDate()).ToDataRes(types.Time)
+	},
 	"microsoft.user.authenticationRequirements.perUserMfaState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUserAuthenticationRequirements).GetPerUserMfaState()).ToDataRes(types.String)
 	},
@@ -1458,6 +1479,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.user.signin.interactive": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUserSignin).GetInteractive()).ToDataRes(types.Bool)
+	},
+	"microsoft.user.signin.appId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserSignin).GetAppId()).ToDataRes(types.String)
+	},
+	"microsoft.user.signin.resourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserSignin).GetResourceId()).ToDataRes(types.String)
+	},
+	"microsoft.user.signin.ipAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserSignin).GetIpAddress()).ToDataRes(types.String)
+	},
+	"microsoft.user.signin.correlationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserSignin).GetCorrelationId()).ToDataRes(types.String)
+	},
+	"microsoft.user.signin.userAgent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserSignin).GetUserAgent()).ToDataRes(types.String)
+	},
+	"microsoft.user.signin.conditionalAccessStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserSignin).GetConditionalAccessStatus()).ToDataRes(types.String)
+	},
+	"microsoft.user.signin.riskDetail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserSignin).GetRiskDetail()).ToDataRes(types.String)
+	},
+	"microsoft.user.signin.riskState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUserSignin).GetRiskState()).ToDataRes(types.String)
 	},
 	"microsoft.user.authenticationMethods.count": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUserAuthenticationMethods).GetCount()).ToDataRes(types.Int)
@@ -1572,6 +1617,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.group.membershipRuleProcessingState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftGroup).GetMembershipRuleProcessingState()).ToDataRes(types.String)
+	},
+	"microsoft.group.createdDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftGroup).GetCreatedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.group.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftGroup).GetDescription()).ToDataRes(types.String)
+	},
+	"microsoft.group.expirationDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftGroup).GetExpirationDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.group.isAssignableToRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftGroup).GetIsAssignableToRole()).ToDataRes(types.Bool)
+	},
+	"microsoft.group.renewedDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftGroup).GetRenewedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.group.onPremisesSyncEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftGroup).GetOnPremisesSyncEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.group.onPremisesLastSyncDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftGroup).GetOnPremisesLastSyncDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.group.classification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftGroup).GetClassification()).ToDataRes(types.String)
+	},
+	"microsoft.group.deletedDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftGroup).GetDeletedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.group.proxyAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftGroup).GetProxyAddresses()).ToDataRes(types.Array(types.String))
 	},
 	"microsoft.group.owner.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftGroupOwner).GetId()).ToDataRes(types.String)
@@ -1867,6 +1942,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.keyCredential.expired": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftKeyCredential).GetExpired()).ToDataRes(types.Bool)
 	},
+	"microsoft.keyCredential.startDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftKeyCredential).GetStartDateTime()).ToDataRes(types.Time)
+	},
 	"microsoft.passwordCredential.keyId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftPasswordCredential).GetKeyId()).ToDataRes(types.String)
 	},
@@ -1881,6 +1959,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.passwordCredential.expired": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftPasswordCredential).GetExpired()).ToDataRes(types.Bool)
+	},
+	"microsoft.passwordCredential.startDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPasswordCredential).GetStartDateTime()).ToDataRes(types.Time)
 	},
 	"microsoft.serviceprincipal.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftServiceprincipal).GetId()).ToDataRes(types.String)
@@ -2067,6 +2148,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.security.riskyUser.lastUpdatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftSecurityRiskyUser).GetLastUpdatedAt()).ToDataRes(types.Time)
+	},
+	"microsoft.security.riskyUser.isDeleted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityRiskyUser).GetIsDeleted()).ToDataRes(types.Bool)
+	},
+	"microsoft.security.riskyUser.isProcessing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityRiskyUser).GetIsProcessing()).ToDataRes(types.Bool)
 	},
 	"microsoft.security.exchange.antispam": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftSecurityExchange).GetAntispam()).ToDataRes(types.Resource("microsoft.security.exchange.antispam"))
@@ -2478,6 +2565,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.devicemanagement.manageddevice.windowsProtectionState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetWindowsProtectionState()).ToDataRes(types.Dict)
+	},
+	"microsoft.devicemanagement.manageddevice.complianceState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetComplianceState()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.deviceRegistrationState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetDeviceRegistrationState()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.managementAgent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetManagementAgent()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.lastSyncDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetLastSyncDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.devicemanagement.manageddevice.freeStorageSpaceInBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetFreeStorageSpaceInBytes()).ToDataRes(types.Int)
+	},
+	"microsoft.devicemanagement.manageddevice.totalStorageSpaceInBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetTotalStorageSpaceInBytes()).ToDataRes(types.Int)
+	},
+	"microsoft.devicemanagement.manageddevice.enrolledDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetEnrolledDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.devicemanagement.manageddevice.deviceEnrollmentType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetDeviceEnrollmentType()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.partnerReportedThreatState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetPartnerReportedThreatState()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.phoneNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetPhoneNumber()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.subscriberCarrier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetSubscriberCarrier()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.complianceGracePeriodExpirationDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetComplianceGracePeriodExpirationDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.devicemanagement.manageddevice.managementCertificateExpirationDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetManagementCertificateExpirationDate()).ToDataRes(types.Time)
 	},
 	"microsoft.devicemanagement.deviceconfiguration.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementDeviceconfiguration).GetId()).ToDataRes(types.String)
@@ -3710,6 +3836,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency).IsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"microsoft.conditionalAccess.policy.sessionControls.signInFrequency.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.sessionControls.signInFrequency.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency).Value, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"microsoft.conditionalAccess.policy.sessionControls.cloudAppSecurity.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity).__id, ok = v.Value.(string)
 		return
@@ -3882,12 +4016,24 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftConditionalAccessIpNamedLocation).__id, ok = v.Value.(string)
 		return
 	},
+	"microsoft.conditionalAccess.ipNamedLocation.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessIpNamedLocation).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"microsoft.conditionalAccess.ipNamedLocation.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftConditionalAccessIpNamedLocation).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.conditionalAccess.ipNamedLocation.trusted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftConditionalAccessIpNamedLocation).Trusted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.ipNamedLocation.createdDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessIpNamedLocation).CreatedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.ipNamedLocation.modifiedDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessIpNamedLocation).ModifiedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"microsoft.conditionalAccess.countryNamedLocation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4034,6 +4180,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftUser).AuthenticationRequirements, ok = plugin.RawToTValue[*mqlMicrosoftUserAuthenticationRequirements](v.Value, v.Error)
 		return
 	},
+	"microsoft.user.employeeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUser).EmployeeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.employeeHireDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUser).EmployeeHireDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"microsoft.user.authenticationRequirements.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftUserAuthenticationRequirements).__id, ok = v.Value.(string)
 		return
@@ -4112,6 +4266,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.user.signin.interactive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftUserSignin).Interactive, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.signin.appId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserSignin).AppId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.signin.resourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserSignin).ResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.signin.ipAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserSignin).IpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.signin.correlationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserSignin).CorrelationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.signin.userAgent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserSignin).UserAgent, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.signin.conditionalAccessStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserSignin).ConditionalAccessStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.signin.riskDetail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserSignin).RiskDetail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.signin.riskState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUserSignin).RiskState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.user.authenticationMethods.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4276,6 +4462,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.group.membershipRuleProcessingState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftGroup).MembershipRuleProcessingState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.group.createdDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftGroup).CreatedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.group.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftGroup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.group.expirationDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftGroup).ExpirationDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.group.isAssignableToRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftGroup).IsAssignableToRole, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.group.renewedDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftGroup).RenewedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.group.onPremisesSyncEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftGroup).OnPremisesSyncEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.group.onPremisesLastSyncDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftGroup).OnPremisesLastSyncDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.group.classification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftGroup).Classification, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.group.deletedDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftGroup).DeletedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.group.proxyAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftGroup).ProxyAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"microsoft.group.owner.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4706,6 +4932,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftKeyCredential).Expired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"microsoft.keyCredential.startDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftKeyCredential).StartDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"microsoft.passwordCredential.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftPasswordCredential).__id, ok = v.Value.(string)
 		return
@@ -4728,6 +4958,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.passwordCredential.expired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftPasswordCredential).Expired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.passwordCredential.startDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPasswordCredential).StartDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"microsoft.serviceprincipal.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5000,6 +5234,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.security.riskyUser.lastUpdatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftSecurityRiskyUser).LastUpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.riskyUser.isDeleted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityRiskyUser).IsDeleted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.riskyUser.isProcessing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityRiskyUser).IsProcessing, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"microsoft.security.exchange.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5656,6 +5898,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.devicemanagement.manageddevice.windowsProtectionState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDevicemanagementManageddevice).WindowsProtectionState, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.complianceState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).ComplianceState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.deviceRegistrationState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).DeviceRegistrationState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.managementAgent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).ManagementAgent, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.lastSyncDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).LastSyncDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.freeStorageSpaceInBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).FreeStorageSpaceInBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.totalStorageSpaceInBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).TotalStorageSpaceInBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.enrolledDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).EnrolledDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.deviceEnrollmentType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).DeviceEnrollmentType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.partnerReportedThreatState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).PartnerReportedThreatState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.phoneNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).PhoneNumber, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.subscriberCarrier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).SubscriberCarrier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.complianceGracePeriodExpirationDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).ComplianceGracePeriodExpirationDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.managementCertificateExpirationDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).ManagementCertificateExpirationDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"microsoft.devicemanagement.deviceconfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8843,6 +9137,8 @@ type mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency struct {
 	AuthenticationType plugin.TValue[string]
 	FrequencyInterval  plugin.TValue[string]
 	IsEnabled          plugin.TValue[bool]
+	Type               plugin.TValue[string]
+	Value              plugin.TValue[int64]
 }
 
 // createMicrosoftConditionalAccessPolicySessionControlsSignInFrequency creates a new instance of this resource
@@ -8887,6 +9183,14 @@ func (c *mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency) GetF
 
 func (c *mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency) GetIsEnabled() *plugin.TValue[bool] {
 	return &c.IsEnabled
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency) GetValue() *plugin.TValue[int64] {
+	return &c.Value
 }
 
 // mqlMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity for the microsoft.conditionalAccess.policy.sessionControls.cloudAppSecurity resource
@@ -9454,8 +9758,11 @@ type mqlMicrosoftConditionalAccessIpNamedLocation struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlMicrosoftConditionalAccessIpNamedLocationInternal it will be used here
-	Name    plugin.TValue[string]
-	Trusted plugin.TValue[bool]
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Trusted          plugin.TValue[bool]
+	CreatedDateTime  plugin.TValue[*time.Time]
+	ModifiedDateTime plugin.TValue[*time.Time]
 }
 
 // createMicrosoftConditionalAccessIpNamedLocation creates a new instance of this resource
@@ -9469,12 +9776,7 @@ func createMicrosoftConditionalAccessIpNamedLocation(runtime *plugin.Runtime, ar
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("microsoft.conditionalAccess.ipNamedLocation", res.__id)
@@ -9495,12 +9797,24 @@ func (c *mqlMicrosoftConditionalAccessIpNamedLocation) MqlID() string {
 	return c.__id
 }
 
+func (c *mqlMicrosoftConditionalAccessIpNamedLocation) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
 func (c *mqlMicrosoftConditionalAccessIpNamedLocation) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
 func (c *mqlMicrosoftConditionalAccessIpNamedLocation) GetTrusted() *plugin.TValue[bool] {
 	return &c.Trusted
+}
+
+func (c *mqlMicrosoftConditionalAccessIpNamedLocation) GetCreatedDateTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedDateTime
+}
+
+func (c *mqlMicrosoftConditionalAccessIpNamedLocation) GetModifiedDateTime() *plugin.TValue[*time.Time] {
+	return &c.ModifiedDateTime
 }
 
 // mqlMicrosoftConditionalAccessCountryNamedLocation for the microsoft.conditionalAccess.countryNamedLocation resource
@@ -9594,6 +9908,8 @@ type mqlMicrosoftUser struct {
 	AssignedLicenses           plugin.TValue[[]any]
 	LicenseDetails             plugin.TValue[[]any]
 	AuthenticationRequirements plugin.TValue[*mqlMicrosoftUserAuthenticationRequirements]
+	EmployeeType               plugin.TValue[string]
+	EmployeeHireDate           plugin.TValue[*time.Time]
 }
 
 // createMicrosoftUser creates a new instance of this resource
@@ -9812,6 +10128,14 @@ func (c *mqlMicrosoftUser) GetAuthenticationRequirements() *plugin.TValue[*mqlMi
 	})
 }
 
+func (c *mqlMicrosoftUser) GetEmployeeType() *plugin.TValue[string] {
+	return &c.EmployeeType
+}
+
+func (c *mqlMicrosoftUser) GetEmployeeHireDate() *plugin.TValue[*time.Time] {
+	return &c.EmployeeHireDate
+}
+
 // mqlMicrosoftUserAuthenticationRequirements for the microsoft.user.authenticationRequirements resource
 type mqlMicrosoftUserAuthenticationRequirements struct {
 	MqlRuntime *plugin.Runtime
@@ -10010,14 +10334,22 @@ type mqlMicrosoftUserSignin struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlMicrosoftUserSigninInternal it will be used here
-	Id                  plugin.TValue[string]
-	CreatedDateTime     plugin.TValue[*time.Time]
-	UserId              plugin.TValue[string]
-	UserDisplayName     plugin.TValue[string]
-	ClientAppUsed       plugin.TValue[string]
-	AppDisplayName      plugin.TValue[string]
-	ResourceDisplayName plugin.TValue[string]
-	Interactive         plugin.TValue[bool]
+	Id                      plugin.TValue[string]
+	CreatedDateTime         plugin.TValue[*time.Time]
+	UserId                  plugin.TValue[string]
+	UserDisplayName         plugin.TValue[string]
+	ClientAppUsed           plugin.TValue[string]
+	AppDisplayName          plugin.TValue[string]
+	ResourceDisplayName     plugin.TValue[string]
+	Interactive             plugin.TValue[bool]
+	AppId                   plugin.TValue[string]
+	ResourceId              plugin.TValue[string]
+	IpAddress               plugin.TValue[string]
+	CorrelationId           plugin.TValue[string]
+	UserAgent               plugin.TValue[string]
+	ConditionalAccessStatus plugin.TValue[string]
+	RiskDetail              plugin.TValue[string]
+	RiskState               plugin.TValue[string]
 }
 
 // createMicrosoftUserSignin creates a new instance of this resource
@@ -10082,6 +10414,38 @@ func (c *mqlMicrosoftUserSignin) GetResourceDisplayName() *plugin.TValue[string]
 
 func (c *mqlMicrosoftUserSignin) GetInteractive() *plugin.TValue[bool] {
 	return &c.Interactive
+}
+
+func (c *mqlMicrosoftUserSignin) GetAppId() *plugin.TValue[string] {
+	return &c.AppId
+}
+
+func (c *mqlMicrosoftUserSignin) GetResourceId() *plugin.TValue[string] {
+	return &c.ResourceId
+}
+
+func (c *mqlMicrosoftUserSignin) GetIpAddress() *plugin.TValue[string] {
+	return &c.IpAddress
+}
+
+func (c *mqlMicrosoftUserSignin) GetCorrelationId() *plugin.TValue[string] {
+	return &c.CorrelationId
+}
+
+func (c *mqlMicrosoftUserSignin) GetUserAgent() *plugin.TValue[string] {
+	return &c.UserAgent
+}
+
+func (c *mqlMicrosoftUserSignin) GetConditionalAccessStatus() *plugin.TValue[string] {
+	return &c.ConditionalAccessStatus
+}
+
+func (c *mqlMicrosoftUserSignin) GetRiskDetail() *plugin.TValue[string] {
+	return &c.RiskDetail
+}
+
+func (c *mqlMicrosoftUserSignin) GetRiskState() *plugin.TValue[string] {
+	return &c.RiskState
 }
 
 // mqlMicrosoftUserAuthenticationMethods for the microsoft.user.authenticationMethods resource
@@ -10321,6 +10685,16 @@ type mqlMicrosoftGroup struct {
 	GroupTypes                    plugin.TValue[[]any]
 	MembershipRule                plugin.TValue[string]
 	MembershipRuleProcessingState plugin.TValue[string]
+	CreatedDateTime               plugin.TValue[*time.Time]
+	Description                   plugin.TValue[string]
+	ExpirationDateTime            plugin.TValue[*time.Time]
+	IsAssignableToRole            plugin.TValue[bool]
+	RenewedDateTime               plugin.TValue[*time.Time]
+	OnPremisesSyncEnabled         plugin.TValue[bool]
+	OnPremisesLastSyncDateTime    plugin.TValue[*time.Time]
+	Classification                plugin.TValue[string]
+	DeletedDateTime               plugin.TValue[*time.Time]
+	ProxyAddresses                plugin.TValue[[]any]
 }
 
 // createMicrosoftGroup creates a new instance of this resource
@@ -10430,6 +10804,46 @@ func (c *mqlMicrosoftGroup) GetMembershipRule() *plugin.TValue[string] {
 
 func (c *mqlMicrosoftGroup) GetMembershipRuleProcessingState() *plugin.TValue[string] {
 	return &c.MembershipRuleProcessingState
+}
+
+func (c *mqlMicrosoftGroup) GetCreatedDateTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedDateTime
+}
+
+func (c *mqlMicrosoftGroup) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMicrosoftGroup) GetExpirationDateTime() *plugin.TValue[*time.Time] {
+	return &c.ExpirationDateTime
+}
+
+func (c *mqlMicrosoftGroup) GetIsAssignableToRole() *plugin.TValue[bool] {
+	return &c.IsAssignableToRole
+}
+
+func (c *mqlMicrosoftGroup) GetRenewedDateTime() *plugin.TValue[*time.Time] {
+	return &c.RenewedDateTime
+}
+
+func (c *mqlMicrosoftGroup) GetOnPremisesSyncEnabled() *plugin.TValue[bool] {
+	return &c.OnPremisesSyncEnabled
+}
+
+func (c *mqlMicrosoftGroup) GetOnPremisesLastSyncDateTime() *plugin.TValue[*time.Time] {
+	return &c.OnPremisesLastSyncDateTime
+}
+
+func (c *mqlMicrosoftGroup) GetClassification() *plugin.TValue[string] {
+	return &c.Classification
+}
+
+func (c *mqlMicrosoftGroup) GetDeletedDateTime() *plugin.TValue[*time.Time] {
+	return &c.DeletedDateTime
+}
+
+func (c *mqlMicrosoftGroup) GetProxyAddresses() *plugin.TValue[[]any] {
+	return &c.ProxyAddresses
 }
 
 // mqlMicrosoftGroupOwner for the microsoft.group.owner resource
@@ -11288,13 +11702,14 @@ type mqlMicrosoftKeyCredential struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlMicrosoftKeyCredentialInternal it will be used here
-	KeyId       plugin.TValue[string]
-	Description plugin.TValue[string]
-	Thumbprint  plugin.TValue[string]
-	Type        plugin.TValue[string]
-	Usage       plugin.TValue[string]
-	Expires     plugin.TValue[*time.Time]
-	Expired     plugin.TValue[bool]
+	KeyId         plugin.TValue[string]
+	Description   plugin.TValue[string]
+	Thumbprint    plugin.TValue[string]
+	Type          plugin.TValue[string]
+	Usage         plugin.TValue[string]
+	Expires       plugin.TValue[*time.Time]
+	Expired       plugin.TValue[bool]
+	StartDateTime plugin.TValue[*time.Time]
 }
 
 // createMicrosoftKeyCredential creates a new instance of this resource
@@ -11357,16 +11772,21 @@ func (c *mqlMicrosoftKeyCredential) GetExpired() *plugin.TValue[bool] {
 	return &c.Expired
 }
 
+func (c *mqlMicrosoftKeyCredential) GetStartDateTime() *plugin.TValue[*time.Time] {
+	return &c.StartDateTime
+}
+
 // mqlMicrosoftPasswordCredential for the microsoft.passwordCredential resource
 type mqlMicrosoftPasswordCredential struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlMicrosoftPasswordCredentialInternal it will be used here
-	KeyId       plugin.TValue[string]
-	Description plugin.TValue[string]
-	Hint        plugin.TValue[string]
-	Expires     plugin.TValue[*time.Time]
-	Expired     plugin.TValue[bool]
+	KeyId         plugin.TValue[string]
+	Description   plugin.TValue[string]
+	Hint          plugin.TValue[string]
+	Expires       plugin.TValue[*time.Time]
+	Expired       plugin.TValue[bool]
+	StartDateTime plugin.TValue[*time.Time]
 }
 
 // createMicrosoftPasswordCredential creates a new instance of this resource
@@ -11419,6 +11839,10 @@ func (c *mqlMicrosoftPasswordCredential) GetExpires() *plugin.TValue[*time.Time]
 
 func (c *mqlMicrosoftPasswordCredential) GetExpired() *plugin.TValue[bool] {
 	return &c.Expired
+}
+
+func (c *mqlMicrosoftPasswordCredential) GetStartDateTime() *plugin.TValue[*time.Time] {
+	return &c.StartDateTime
 }
 
 // mqlMicrosoftServiceprincipal for the microsoft.serviceprincipal resource
@@ -11988,6 +12412,8 @@ type mqlMicrosoftSecurityRiskyUser struct {
 	RiskLevel     plugin.TValue[string]
 	RiskState     plugin.TValue[string]
 	LastUpdatedAt plugin.TValue[*time.Time]
+	IsDeleted     plugin.TValue[bool]
+	IsProcessing  plugin.TValue[bool]
 }
 
 // createMicrosoftSecurityRiskyUser creates a new instance of this resource
@@ -12064,6 +12490,14 @@ func (c *mqlMicrosoftSecurityRiskyUser) GetRiskState() *plugin.TValue[string] {
 
 func (c *mqlMicrosoftSecurityRiskyUser) GetLastUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.LastUpdatedAt
+}
+
+func (c *mqlMicrosoftSecurityRiskyUser) GetIsDeleted() *plugin.TValue[bool] {
+	return &c.IsDeleted
+}
+
+func (c *mqlMicrosoftSecurityRiskyUser) GetIsProcessing() *plugin.TValue[bool] {
+	return &c.IsProcessing
 }
 
 // mqlMicrosoftSecurityExchange for the microsoft.security.exchange resource
@@ -13960,35 +14394,48 @@ type mqlMicrosoftDevicemanagementManageddevice struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlMicrosoftDevicemanagementManageddeviceInternal it will be used here
-	Id                           plugin.TValue[string]
-	UserId                       plugin.TValue[string]
-	Name                         plugin.TValue[string]
-	OperatingSystem              plugin.TValue[string]
-	JailBroken                   plugin.TValue[string]
-	OsVersion                    plugin.TValue[string]
-	EasActivated                 plugin.TValue[bool]
-	EasDeviceId                  plugin.TValue[string]
-	AzureADRegistered            plugin.TValue[bool]
-	EmailAddress                 plugin.TValue[string]
-	AzureActiveDirectoryDeviceId plugin.TValue[string]
-	DeviceCategoryDisplayName    plugin.TValue[string]
-	IsSupervised                 plugin.TValue[bool]
-	IsEncrypted                  plugin.TValue[bool]
-	UserPrincipalName            plugin.TValue[string]
-	Model                        plugin.TValue[string]
-	Manufacturer                 plugin.TValue[string]
-	Imei                         plugin.TValue[string]
-	SerialNumber                 plugin.TValue[string]
-	AndroidSecurityPatchLevel    plugin.TValue[string]
-	UserDisplayName              plugin.TValue[string]
-	WiFiMacAddress               plugin.TValue[string]
-	Meid                         plugin.TValue[string]
-	Iccid                        plugin.TValue[string]
-	Udid                         plugin.TValue[string]
-	Notes                        plugin.TValue[string]
-	EthernetMacAddress           plugin.TValue[string]
-	EnrollmentProfileName        plugin.TValue[string]
-	WindowsProtectionState       plugin.TValue[any]
+	Id                                      plugin.TValue[string]
+	UserId                                  plugin.TValue[string]
+	Name                                    plugin.TValue[string]
+	OperatingSystem                         plugin.TValue[string]
+	JailBroken                              plugin.TValue[string]
+	OsVersion                               plugin.TValue[string]
+	EasActivated                            plugin.TValue[bool]
+	EasDeviceId                             plugin.TValue[string]
+	AzureADRegistered                       plugin.TValue[bool]
+	EmailAddress                            plugin.TValue[string]
+	AzureActiveDirectoryDeviceId            plugin.TValue[string]
+	DeviceCategoryDisplayName               plugin.TValue[string]
+	IsSupervised                            plugin.TValue[bool]
+	IsEncrypted                             plugin.TValue[bool]
+	UserPrincipalName                       plugin.TValue[string]
+	Model                                   plugin.TValue[string]
+	Manufacturer                            plugin.TValue[string]
+	Imei                                    plugin.TValue[string]
+	SerialNumber                            plugin.TValue[string]
+	AndroidSecurityPatchLevel               plugin.TValue[string]
+	UserDisplayName                         plugin.TValue[string]
+	WiFiMacAddress                          plugin.TValue[string]
+	Meid                                    plugin.TValue[string]
+	Iccid                                   plugin.TValue[string]
+	Udid                                    plugin.TValue[string]
+	Notes                                   plugin.TValue[string]
+	EthernetMacAddress                      plugin.TValue[string]
+	EnrollmentProfileName                   plugin.TValue[string]
+	WindowsProtectionState                  plugin.TValue[any]
+	ComplianceState                         plugin.TValue[string]
+	DeviceRegistrationState                 plugin.TValue[string]
+	ManagementAgent                         plugin.TValue[string]
+	LastSyncDateTime                        plugin.TValue[*time.Time]
+	FreeStorageSpaceInBytes                 plugin.TValue[int64]
+	TotalStorageSpaceInBytes                plugin.TValue[int64]
+	EnrolledDateTime                        plugin.TValue[*time.Time]
+	DeviceEnrollmentType                    plugin.TValue[string]
+	PartnerReportedThreatState              plugin.TValue[string]
+	PhoneNumber                             plugin.TValue[string]
+	SubscriberCarrier                       plugin.TValue[string]
+	ComplianceGracePeriodExpirationDateTime plugin.TValue[*time.Time]
+	ManagementCertificateExpirationDate     plugin.TValue[*time.Time]
 }
 
 // createMicrosoftDevicemanagementManageddevice creates a new instance of this resource
@@ -14137,6 +14584,58 @@ func (c *mqlMicrosoftDevicemanagementManageddevice) GetEnrollmentProfileName() *
 
 func (c *mqlMicrosoftDevicemanagementManageddevice) GetWindowsProtectionState() *plugin.TValue[any] {
 	return &c.WindowsProtectionState
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetComplianceState() *plugin.TValue[string] {
+	return &c.ComplianceState
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetDeviceRegistrationState() *plugin.TValue[string] {
+	return &c.DeviceRegistrationState
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetManagementAgent() *plugin.TValue[string] {
+	return &c.ManagementAgent
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetLastSyncDateTime() *plugin.TValue[*time.Time] {
+	return &c.LastSyncDateTime
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetFreeStorageSpaceInBytes() *plugin.TValue[int64] {
+	return &c.FreeStorageSpaceInBytes
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetTotalStorageSpaceInBytes() *plugin.TValue[int64] {
+	return &c.TotalStorageSpaceInBytes
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetEnrolledDateTime() *plugin.TValue[*time.Time] {
+	return &c.EnrolledDateTime
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetDeviceEnrollmentType() *plugin.TValue[string] {
+	return &c.DeviceEnrollmentType
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetPartnerReportedThreatState() *plugin.TValue[string] {
+	return &c.PartnerReportedThreatState
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetPhoneNumber() *plugin.TValue[string] {
+	return &c.PhoneNumber
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetSubscriberCarrier() *plugin.TValue[string] {
+	return &c.SubscriberCarrier
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetComplianceGracePeriodExpirationDateTime() *plugin.TValue[*time.Time] {
+	return &c.ComplianceGracePeriodExpirationDateTime
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetManagementCertificateExpirationDate() *plugin.TValue[*time.Time] {
+	return &c.ManagementCertificateExpirationDate
 }
 
 // mqlMicrosoftDevicemanagementDeviceconfiguration for the microsoft.devicemanagement.deviceconfiguration resource

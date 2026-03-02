@@ -134,6 +134,16 @@ func (a *mqlMicrosoftGroups) list() ([]any, error) {
 				"groupTypes":                    llx.ArrayData(llx.TArr2Raw(grp.GetGroupTypes()), types.String),
 				"membershipRule":                llx.StringDataPtr(grp.GetMembershipRule()),
 				"membershipRuleProcessingState": llx.StringDataPtr(grp.GetMembershipRuleProcessingState()),
+				"createdDateTime":               llx.TimeDataPtr(grp.GetCreatedDateTime()),
+				"description":                   llx.StringDataPtr(grp.GetDescription()),
+				"expirationDateTime":            llx.TimeDataPtr(grp.GetExpirationDateTime()),
+				"isAssignableToRole":            llx.BoolDataPtr(grp.GetIsAssignableToRole()),
+				"renewedDateTime":               llx.TimeDataPtr(grp.GetRenewedDateTime()),
+				"onPremisesSyncEnabled":         llx.BoolDataPtr(grp.GetOnPremisesSyncEnabled()),
+				"onPremisesLastSyncDateTime":    llx.TimeDataPtr(grp.GetOnPremisesLastSyncDateTime()),
+				"classification":                llx.StringDataPtr(grp.GetClassification()),
+				"deletedDateTime":               llx.TimeDataPtr(grp.GetDeletedDateTime()),
+				"proxyAddresses":                llx.ArrayData(llx.TArr2Raw(grp.GetProxyAddresses()), types.String),
 			})
 		if err != nil {
 			return nil, err
