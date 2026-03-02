@@ -108,6 +108,45 @@ func TestInterfacesLinux(t *testing.T) {
 	}
 }
 
+func TestInterfacesLinuxPeerInterface(t *testing.T) {
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/linux_peer_interface.toml"))
+	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
+
+	interfaces, err := subject.Interfaces(conn, platform)
+	require.NoError(t, err)
+	assert.Len(t, interfaces, 2)
+
+	// The interface is named eth0@if104 (peer interface) but the routing table
+	// uses the base name eth0. Verify that the gateway is correctly assigned.
+	index := subject.FindInterface(interfaces, subject.Interface{Name: "eth0@if104"})
+	if assert.NotEqual(t, -1, index) {
+		eth0 := interfaces[index]
+		assert.Equal(t, "eth0@if104", eth0.Name)
+		assert.Equal(t, "02:42:ac:11:00:04", eth0.MACAddress)
+		assert.Equal(t, 1500, eth0.MTU)
+		if assert.NotNil(t, eth0.Active) {
+			assert.True(t, *eth0.Active)
+		}
+		if assert.NotEmpty(t, eth0.IPAddresses) {
+			i4 := eth0.FindIP(net.ParseIP("172.17.0.4"))
+			if assert.NotEqual(t, -1, i4) {
+				ipv4 := eth0.IPAddresses[i4]
+				assert.Equal(t, "172.17.0.4", ipv4.IP.String())
+				assert.Equal(t, "172.17.0.4/16", ipv4.CIDR)
+				assert.Equal(t, "172.17.0.0/16", ipv4.Subnet)
+				assert.Equal(t, "172.17.255.255", ipv4.Broadcast)
+				assert.Equal(t, "172.17.0.1", ipv4.Gateway)
+			}
+		}
+	}
+
+	// Also verify that FindInterface can locate the peer interface by its base name
+	index = subject.FindInterface(interfaces, subject.Interface{Name: "eth0"})
+	assert.NotEqual(t, -1, index)
+}
+
 func TestInterfacesLinuxFallbackSysNetFilesystem(t *testing.T) {
 	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/linux_sys_class_net_fs.toml"))
 	require.NoError(t, err)

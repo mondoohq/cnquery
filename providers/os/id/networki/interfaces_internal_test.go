@@ -43,6 +43,43 @@ func TestMergeInterfaces(t *testing.T) {
 	assert.ElementsMatch(t, []string{"UP", "BROADCAST"}, merged.Flags)
 }
 
+func TestBaseInterfaceName(t *testing.T) {
+	tests := []struct {
+		name     string
+		expected string
+	}{
+		{"eth0@if103", "eth0"},
+		{"eth0@if104", "eth0"},
+		{"veth123@if5", "veth123"},
+		{"enX0", "enX0"},
+		{"lo", "lo"},
+		{"", ""},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			assert.Equal(t, test.expected, baseInterfaceName(test.name))
+		})
+	}
+}
+
+func TestFindInterfacePeerName(t *testing.T) {
+	interfaces := []Interface{
+		{Name: "lo"},
+		{Name: "eth0@if104"},
+	}
+
+	// Exact match still works
+	assert.Equal(t, 0, FindInterface(interfaces, Interface{Name: "lo"}))
+	assert.Equal(t, 1, FindInterface(interfaces, Interface{Name: "eth0@if104"}))
+
+	// Base name match: "eth0" finds "eth0@if104"
+	assert.Equal(t, 1, FindInterface(interfaces, Interface{Name: "eth0"}))
+
+	// No match
+	assert.Equal(t, -1, FindInterface(interfaces, Interface{Name: "enX0"}))
+}
+
 func TestAddOrUpdateIP(t *testing.T) {
 	iface := &Interface{Name: "eth0"}
 	ip1 := IPAddress{IP: net.ParseIP("192.168.1.1")}

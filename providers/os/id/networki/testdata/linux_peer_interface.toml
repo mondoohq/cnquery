@@ -1,0 +1,29 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "5.15.0-1043-aws"
+
+[commands."ip addr show"]
+stdout = """
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+103: eth0@if104: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:ac:11:00:04 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 172.17.0.4/16 brd 172.17.255.255 scope global eth0
+       valid_lft forever preferred_lft forever
+"""
+
+[commands."ip route show"]
+stdout = """
+default via 172.17.0.1 dev eth0
+172.17.0.0/16 dev eth0 proto kernel scope link src 172.17.0.4
+"""
+
+[commands."ip -6 route show"]
+stdout = ""

@@ -151,10 +151,31 @@ func mergeInterfaces(i1, i2 Interface) Interface {
 }
 
 // FindInterface finds an interface from a list of interfaces.
+// It first tries an exact name match, then falls back to matching
+// by base interface name to handle peer interfaces (e.g. eth0@if103).
 func FindInterface(interfaces []Interface, iinterface Interface) int {
-	return slices.IndexFunc(interfaces, func(i Interface) bool {
+	// Try exact match first
+	idx := slices.IndexFunc(interfaces, func(i Interface) bool {
 		return i.Name == iinterface.Name
 	})
+	if idx >= 0 {
+		return idx
+	}
+
+	// Fall back to base name match (handles peer interfaces like eth0@if103)
+	base := baseInterfaceName(iinterface.Name)
+	return slices.IndexFunc(interfaces, func(i Interface) bool {
+		return baseInterfaceName(i.Name) == base
+	})
+}
+
+// baseInterfaceName strips the peer suffix (@ifN) from interface names.
+// For example, "eth0@if103" returns "eth0", while "enX0" returns "enX0".
+func baseInterfaceName(name string) string {
+	if i := strings.Index(name, "@"); i != -1 {
+		return name[:i]
+	}
+	return name
 }
 
 // AddOrUpdateIP adds or updates one or many IPAddresses
