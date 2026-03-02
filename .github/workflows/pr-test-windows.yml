@@ -36,8 +36,12 @@ jobs:
         shell: pwsh
         run: |
           # Find all _windows_test.go files and extract unique package directories
+          $repoRoot = (Get-Location).Path -replace '\\','/'
           $packages = Get-ChildItem -Path providers/os -Recurse -Filter "*_windows_test.go" |
-            ForEach-Object { "./$($_.DirectoryName -replace '\\','/')/..." } |
+            ForEach-Object {
+              $rel = ($_.DirectoryName -replace '\\','/').Replace($repoRoot + '/', '')
+              "./$rel/..."
+            } |
             Sort-Object -Unique
           if ($packages.Count -eq 0) {
             Write-Output "No Windows-specific test packages found"
@@ -53,8 +57,9 @@ jobs:
         if: steps.find-packages.outputs.has_tests == 'true'
         shell: pwsh
         run: |
-          $packages = "${{ steps.find-packages.outputs.packages }}" -split " "
-          go test -v @packages 2>&1 | Tee-Object -FilePath windows-test-output.txt
+          $packages = ("${{ steps.find-packages.outputs.packages }}" -split " ") | Where-Object { $_ -ne '' }
+          go test -count=1 -v @packages 2>&1 | Tee-Object -FilePath windows-test-output.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Upload test output
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
