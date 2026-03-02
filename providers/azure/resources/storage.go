@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+	"time"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -148,6 +149,11 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) containers() ([]any, error) 
 			var hasImmutabilityPolicy, hasLegalHold bool
 			var defaultEncryptionScope string
 			var denyEncryptionScopeOverride bool
+			var leaseState, leaseStatus string
+			var deleted *bool
+			var deletedTime, lastModifiedTime *time.Time
+			var remainingRetentionDays *int32
+			metadata := map[string]any{}
 			if container.Properties != nil {
 				if container.Properties.PublicAccess != nil {
 					publicAccess = string(*container.Properties.PublicAccess)
@@ -164,6 +170,21 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) containers() ([]any, error) 
 				if container.Properties.DenyEncryptionScopeOverride != nil {
 					denyEncryptionScopeOverride = *container.Properties.DenyEncryptionScopeOverride
 				}
+				if container.Properties.LeaseState != nil {
+					leaseState = string(*container.Properties.LeaseState)
+				}
+				if container.Properties.LeaseStatus != nil {
+					leaseStatus = string(*container.Properties.LeaseStatus)
+				}
+				deleted = container.Properties.Deleted
+				deletedTime = container.Properties.DeletedTime
+				lastModifiedTime = container.Properties.LastModifiedTime
+				remainingRetentionDays = container.Properties.RemainingRetentionDays
+				for k, v := range container.Properties.Metadata {
+					if v != nil {
+						metadata[k] = *v
+					}
+				}
 			}
 
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.storageService.account.container",
@@ -178,6 +199,13 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) containers() ([]any, error) 
 					"hasLegalHold":                llx.BoolData(hasLegalHold),
 					"defaultEncryptionScope":      llx.StringData(defaultEncryptionScope),
 					"denyEncryptionScopeOverride": llx.BoolData(denyEncryptionScopeOverride),
+					"metadata":                    llx.MapData(metadata, types.String),
+					"lastModifiedTime":            llx.TimeDataPtr(lastModifiedTime),
+					"leaseState":                  llx.StringData(leaseState),
+					"leaseStatus":                 llx.StringData(leaseStatus),
+					"deleted":                     llx.BoolDataPtr(deleted),
+					"deletedTime":                 llx.TimeDataPtr(deletedTime),
+					"remainingRetentionDays":      llx.IntDataPtr(remainingRetentionDays),
 				})
 			if err != nil {
 				return nil, err
@@ -590,6 +618,17 @@ func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mq
 	var isLocalUserEnabled *bool
 	var isSftpEnabled *bool
 	var isHnsEnabled *bool
+	var provisioningState *string
+	var creationTime *time.Time
+	var accessTier *string
+	var primaryLocation *string
+	var statusOfPrimary *string
+	var secondaryLocation *string
+	var statusOfSecondary *string
+	var defaultToOAuthAuthentication *bool
+	var enableNfsV3 *bool
+	var largeFileSharesState *string
+	var lastGeoFailoverTime *time.Time
 	if account.Properties != nil {
 		properties, err = convert.JsonToDict(AzureStorageAccountProperties(*account.Properties))
 		if err != nil {
@@ -604,6 +643,17 @@ func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mq
 		isLocalUserEnabled = account.Properties.IsLocalUserEnabled
 		isSftpEnabled = account.Properties.IsSftpEnabled
 		isHnsEnabled = account.Properties.IsHnsEnabled
+		provisioningState = (*string)(account.Properties.ProvisioningState)
+		creationTime = account.Properties.CreationTime
+		accessTier = (*string)(account.Properties.AccessTier)
+		primaryLocation = account.Properties.PrimaryLocation
+		statusOfPrimary = (*string)(account.Properties.StatusOfPrimary)
+		secondaryLocation = account.Properties.SecondaryLocation
+		statusOfSecondary = (*string)(account.Properties.StatusOfSecondary)
+		defaultToOAuthAuthentication = account.Properties.DefaultToOAuthAuthentication
+		enableNfsV3 = account.Properties.EnableNfsV3
+		largeFileSharesState = (*string)(account.Properties.LargeFileSharesState)
+		lastGeoFailoverTime = account.Properties.LastGeoFailoverTime
 	}
 
 	var networkRuleDefaultAction string
@@ -668,6 +718,17 @@ func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mq
 			"networkRuleBypass":                  llx.StringData(networkRuleBypass),
 			"networkRuleIpRanges":                llx.ArrayData(networkRuleIpRanges, types.String),
 			"networkRuleVirtualNetworkSubnetIds": llx.ArrayData(networkRuleVirtualNetworkSubnetIds, types.String),
+			"provisioningState":                  llx.StringDataPtr(provisioningState),
+			"creationTime":                       llx.TimeDataPtr(creationTime),
+			"accessTier":                         llx.StringDataPtr(accessTier),
+			"primaryLocation":                    llx.StringDataPtr(primaryLocation),
+			"statusOfPrimary":                    llx.StringDataPtr(statusOfPrimary),
+			"secondaryLocation":                  llx.StringDataPtr(secondaryLocation),
+			"statusOfSecondary":                  llx.StringDataPtr(statusOfSecondary),
+			"defaultToOAuthAuthentication":       llx.BoolDataPtr(defaultToOAuthAuthentication),
+			"enableNfsV3":                        llx.BoolDataPtr(enableNfsV3),
+			"largeFileSharesState":               llx.StringDataPtr(largeFileSharesState),
+			"lastGeoFailoverTime":                llx.TimeDataPtr(lastGeoFailoverTime),
 		})
 	if err != nil {
 		return nil, err

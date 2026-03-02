@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	compute "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
@@ -95,8 +96,13 @@ func (a *mqlAzureSubscriptionComputeService) vms() ([]any, error) {
 			}
 
 			var computerName, adminUsername, licenseType *string
+			var vmId, provisioningState *string
+			var timeCreated *time.Time
 			if vm.Properties != nil {
 				licenseType = vm.Properties.LicenseType
+				vmId = vm.Properties.VMID
+				provisioningState = vm.Properties.ProvisioningState
+				timeCreated = vm.Properties.TimeCreated
 				if vm.Properties.OSProfile != nil {
 					computerName = vm.Properties.OSProfile.ComputerName
 					adminUsername = vm.Properties.OSProfile.AdminUsername
@@ -120,6 +126,10 @@ func (a *mqlAzureSubscriptionComputeService) vms() ([]any, error) {
 					"computerName":      llx.StringDataPtr(computerName),
 					"adminUsername":     llx.StringDataPtr(adminUsername),
 					"licenseType":       llx.StringDataPtr(licenseType),
+					"managedBy":         llx.StringDataPtr(vm.ManagedBy),
+					"vmId":              llx.StringDataPtr(vmId),
+					"provisioningState": llx.StringDataPtr(provisioningState),
+					"timeCreated":       llx.TimeDataPtr(timeCreated),
 				})
 			if err != nil {
 				return nil, err
@@ -316,6 +326,25 @@ func diskToMql(runtime *plugin.Runtime, disk compute.Disk) (*mqlAzureSubscriptio
 		if disk.Properties.DataAccessAuthMode != nil {
 			args["dataAccessAuthMode"] = llx.StringData(string(*disk.Properties.DataAccessAuthMode))
 		}
+		if disk.Properties.DiskState != nil {
+			args["diskState"] = llx.StringData(string(*disk.Properties.DiskState))
+		}
+		args["provisioningState"] = llx.StringDataPtr(disk.Properties.ProvisioningState)
+		args["timeCreated"] = llx.TimeDataPtr(disk.Properties.TimeCreated)
+		args["uniqueId"] = llx.StringDataPtr(disk.Properties.UniqueID)
+		args["burstingEnabled"] = llx.BoolDataPtr(disk.Properties.BurstingEnabled)
+		args["diskSizeBytes"] = llx.IntDataPtr(disk.Properties.DiskSizeBytes)
+		args["diskIopsReadWrite"] = llx.IntDataPtr(disk.Properties.DiskIOPSReadWrite)
+		args["diskMbpsReadWrite"] = llx.IntDataPtr(disk.Properties.DiskMBpsReadWrite)
+		args["diskIopsReadOnly"] = llx.IntDataPtr(disk.Properties.DiskIOPSReadOnly)
+		args["diskMbpsReadOnly"] = llx.IntDataPtr(disk.Properties.DiskMBpsReadOnly)
+		args["maxShares"] = llx.IntDataPtr(disk.Properties.MaxShares)
+		if disk.Properties.HyperVGeneration != nil {
+			args["hyperVGeneration"] = llx.StringData(string(*disk.Properties.HyperVGeneration))
+		}
+		args["tier"] = llx.StringDataPtr(disk.Properties.Tier)
+		args["supportsHibernation"] = llx.BoolDataPtr(disk.Properties.SupportsHibernation)
+		args["diskAccessId"] = llx.StringDataPtr(disk.Properties.DiskAccessID)
 	}
 
 	res, err := CreateResource(runtime, "azure.subscription.computeService.disk", args)
