@@ -112,6 +112,7 @@ meid
 messagestoragepolicy
 mfs
 mgroup
+MINIMALUSER
 minfree
 mkey
 Mpim
@@ -148,6 +149,7 @@ Pids
 portgroup
 posix
 postgre
+POWERUSER
 psc
 pushconfig
 querypack
@@ -210,6 +212,7 @@ vulnmgmt
 webide
 WEBSERVERS
 wil
+WORKSPACESUSER
 xssmatchstatement
 ZSTD
 zrt
