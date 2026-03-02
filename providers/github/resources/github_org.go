@@ -669,13 +669,10 @@ type mqlGithubOrganizationActionsSettingsInternal struct {
 }
 
 func (g *mqlGithubOrganizationActionsSettings) id() (string, error) {
-	if g.orgLogin != "" {
-		return "github.organizationActionsSettings/" + g.orgLogin, nil
+	if g.orgLogin == "" {
+		return "", errors.New("orgLogin is required to compute organizationActionsSettings id")
 	}
-	if g.AllowedActions.Error != nil {
-		return "", g.AllowedActions.Error
-	}
-	return "github.organizationActionsSettings/" + g.AllowedActions.Data, nil
+	return "github.organizationActionsSettings/" + g.orgLogin, nil
 }
 
 func (g *mqlGithubOrganization) actionsSettings() (*mqlGithubOrganizationActionsSettings, error) {

@@ -2531,13 +2531,10 @@ type mqlGithubRepositoryActionsSettingsInternal struct {
 }
 
 func (g *mqlGithubRepositoryActionsSettings) id() (string, error) {
-	if g.ownerLogin != "" && g.repoName != "" {
-		return "github.repositoryActionsSettings/" + g.ownerLogin + "/" + g.repoName, nil
+	if g.ownerLogin == "" || g.repoName == "" {
+		return "", errors.New("ownerLogin and repoName are required to compute repositoryActionsSettings id")
 	}
-	if g.AllowedActions.Error != nil {
-		return "", g.AllowedActions.Error
-	}
-	return "github.repositoryActionsSettings/" + g.AllowedActions.Data, nil
+	return "github.repositoryActionsSettings/" + g.ownerLogin + "/" + g.repoName, nil
 }
 
 func (g *mqlGithubRepository) actionsSettings() (*mqlGithubRepositoryActionsSettings, error) {
