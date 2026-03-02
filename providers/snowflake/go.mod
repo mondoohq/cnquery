@@ -8,7 +8,7 @@ require (
 	// pin v0.92.0
 	github.com/Snowflake-Labs/terraform-provider-snowflake v0.92.0
 	github.com/jmoiron/sqlx v1.4.0 // indirect
-	github.com/snowflakedb/gosnowflake v1.18.1
+	github.com/snowflakedb/gosnowflake v1.19.0
 	github.com/stretchr/testify v1.11.1 // indirect
 	go.mondoo.com/mql/v13 v13.0.0-pre1
 	go.mondoo.com/ranger-rpc v0.8.0
