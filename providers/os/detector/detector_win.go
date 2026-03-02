@@ -59,9 +59,9 @@ func runtimeWindowsDetector(pf *inventory.Platform, conn shared.Connection) (boo
 	pf.Arch = data.OSArchitecture
 	pf.Labels["windows.mondoo.com/product-type"] = data.ProductType
 
-	detectIntuneDeviceID(pf, conn)
-
 	correctForWindows11(pf)
+
+	detectIntuneDeviceID(pf, conn)
 	return true, nil
 }
 
