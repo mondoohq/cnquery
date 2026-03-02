@@ -53,7 +53,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	region := ""
-	if x, ok := flags["user"]; ok && len(x.Value) != 0 {
+	if x, ok := flags["region"]; ok && len(x.Value) != 0 {
 		region = string(x.Value)
 	}
 
@@ -72,6 +72,16 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		keySecret = string(x.Value)
 	}
 
+	profile := ""
+	if x, ok := flags["profile"]; ok && len(x.Value) != 0 {
+		profile = string(x.Value)
+	}
+
+	configFile := ""
+	if x, ok := flags["config-file"]; ok && len(x.Value) != 0 {
+		configFile = string(x.Value)
+	}
+
 	if tenancy != "" {
 		conf.Options["tenancy"] = tenancy
 	}
@@ -83,6 +93,12 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 	if user != "" {
 		conf.Options["user"] = user
+	}
+	if profile != "" {
+		conf.Options["profile"] = profile
+	}
+	if configFile != "" {
+		conf.Options["config-file"] = configFile
 	}
 
 	if keyPath != "" {

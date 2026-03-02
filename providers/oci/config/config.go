@@ -24,6 +24,8 @@ var Config = plugin.Provider{
 Examples:
   cnquery shell oci --tenancy <tenancy_ocid> --user <user_ocid> --region <region> --key-path <path_to_private_key> --fingerprint <key_fingerprint>
   cnspec scan oci --tenancy <tenancy_ocid> --user <user_ocid> --region <region> --key-path <path_to_private_key> --fingerprint <key_fingerprint>
+  cnquery shell oci --profile MYPROFILE
+  cnquery shell oci --config-file /path/to/config --profile MYPROFILE
 `,
 			Discovery: []string{},
 			Flags: []plugin.Flag{
@@ -62,6 +64,18 @@ Examples:
 					Type:    plugin.FlagType_String,
 					Default: "",
 					Desc:    "Passphrase for the private key file, if encrypted",
+				},
+				{
+					Long:    "profile",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "OCI config profile name (e.g., DEFAULT)",
+				},
+				{
+					Long:    "config-file",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "Path to OCI config file (default: ~/.oci/config)",
 				},
 			},
 		},

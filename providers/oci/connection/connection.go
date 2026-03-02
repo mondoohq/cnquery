@@ -28,7 +28,10 @@ func NewOciConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 	}
 
 	// initialize your connection here
-	var configProvider common.ConfigurationProvider
+	var (
+		configProvider common.ConfigurationProvider
+		err            error
+	)
 	// if we have passed in credentials, assume we want to pass in all values explicitly.
 	if len(conf.Credentials) > 0 {
 		fingerprint := conf.Options["fingerprint"]
@@ -54,7 +57,19 @@ func NewOciConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 		}
 		configProvider = common.NewRawConfigurationProvider(tenancyOcid, userOcid, region, fingerprint, string(pkey.Secret), nil)
 	} else {
-		configProvider = common.DefaultConfigProvider()
+		profile := conf.Options["profile"]
+		configFile := conf.Options["config-file"]
+		if profile != "" || configFile != "" {
+			if profile == "" {
+				profile = "DEFAULT"
+			}
+			configProvider, err = common.ConfigurationProviderFromFileWithProfile(configFile, profile, "")
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			configProvider = common.DefaultConfigProvider()
+		}
 	}
 	tenancyOcid, err := configProvider.TenancyOCID()
 	if err != nil {
