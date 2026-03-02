@@ -301,6 +301,10 @@ const (
 	ResourceAwsCodedeployDeployment                                             string = "aws.codedeploy.deployment"
 	ResourceAwsWorkdocs                                                         string = "aws.workdocs"
 	ResourceAwsWorkdocsUser                                                     string = "aws.workdocs.user"
+	ResourceAwsAppstream                                                        string = "aws.appstream"
+	ResourceAwsAppstreamFleet                                                   string = "aws.appstream.fleet"
+	ResourceAwsAppstreamStack                                                   string = "aws.appstream.stack"
+	ResourceAwsAppstreamImageBuilder                                            string = "aws.appstream.imageBuilder"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -1442,6 +1446,22 @@ func init() {
 		"aws.workdocs.user": {
 			// to override args, implement: initAwsWorkdocsUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsWorkdocsUser,
+		},
+		"aws.appstream": {
+			// to override args, implement: initAwsAppstream(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsAppstream,
+		},
+		"aws.appstream.fleet": {
+			// to override args, implement: initAwsAppstreamFleet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsAppstreamFleet,
+		},
+		"aws.appstream.stack": {
+			// to override args, implement: initAwsAppstreamStack(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsAppstreamStack,
+		},
+		"aws.appstream.imageBuilder": {
+			// to override args, implement: initAwsAppstreamImageBuilder(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsAppstreamImageBuilder,
 		},
 	}
 }
@@ -8944,6 +8964,156 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.workdocs.user.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkdocsUser).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.appstream.fleets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstream).GetFleets()).ToDataRes(types.Array(types.Resource("aws.appstream.fleet")))
+	},
+	"aws.appstream.stacks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstream).GetStacks()).ToDataRes(types.Array(types.Resource("aws.appstream.stack")))
+	},
+	"aws.appstream.imageBuilders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstream).GetImageBuilders()).ToDataRes(types.Array(types.Resource("aws.appstream.imageBuilder")))
+	},
+	"aws.appstream.fleet.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleet).GetArn()).ToDataRes(types.String)
+	},
+	"aws.appstream.fleet.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleet).GetName()).ToDataRes(types.String)
+	},
+	"aws.appstream.fleet.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleet).GetState()).ToDataRes(types.String)
+	},
+	"aws.appstream.fleet.fleetType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleet).GetFleetType()).ToDataRes(types.String)
+	},
+	"aws.appstream.fleet.instanceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleet).GetInstanceType()).ToDataRes(types.String)
+	},
+	"aws.appstream.fleet.maxUserDurationInSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleet).GetMaxUserDurationInSeconds()).ToDataRes(types.Int)
+	},
+	"aws.appstream.fleet.disconnectTimeoutInSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleet).GetDisconnectTimeoutInSeconds()).ToDataRes(types.Int)
+	},
+	"aws.appstream.fleet.idleDisconnectTimeoutInSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleet).GetIdleDisconnectTimeoutInSeconds()).ToDataRes(types.Int)
+	},
+	"aws.appstream.fleet.enableDefaultInternetAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleet).GetEnableDefaultInternetAccess()).ToDataRes(types.Bool)
+	},
+	"aws.appstream.fleet.domainJoinInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleet).GetDomainJoinInfo()).ToDataRes(types.Dict)
+	},
+	"aws.appstream.fleet.maxConcurrentSessions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleet).GetMaxConcurrentSessions()).ToDataRes(types.Int)
+	},
+	"aws.appstream.fleet.maxSessionsPerInstance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleet).GetMaxSessionsPerInstance()).ToDataRes(types.Int)
+	},
+	"aws.appstream.fleet.vpcConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleet).GetVpcConfig()).ToDataRes(types.Dict)
+	},
+	"aws.appstream.fleet.iamRoleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleet).GetIamRoleArn()).ToDataRes(types.String)
+	},
+	"aws.appstream.fleet.imageName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleet).GetImageName()).ToDataRes(types.String)
+	},
+	"aws.appstream.fleet.imageArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleet).GetImageArn()).ToDataRes(types.String)
+	},
+	"aws.appstream.fleet.platform": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleet).GetPlatform()).ToDataRes(types.String)
+	},
+	"aws.appstream.fleet.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleet).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.appstream.fleet.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleet).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.appstream.fleet.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleet).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.appstream.stack.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamStack).GetArn()).ToDataRes(types.String)
+	},
+	"aws.appstream.stack.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamStack).GetName()).ToDataRes(types.String)
+	},
+	"aws.appstream.stack.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamStack).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.appstream.stack.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamStack).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.appstream.stack.accessEndpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamStack).GetAccessEndpoints()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.appstream.stack.applicationSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamStack).GetApplicationSettings()).ToDataRes(types.Dict)
+	},
+	"aws.appstream.stack.storageConnectors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamStack).GetStorageConnectors()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.appstream.stack.userSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamStack).GetUserSettings()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.appstream.stack.embedHostDomains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamStack).GetEmbedHostDomains()).ToDataRes(types.Array(types.String))
+	},
+	"aws.appstream.stack.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamStack).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.appstream.stack.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamStack).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.appstream.imageBuilder.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamImageBuilder).GetArn()).ToDataRes(types.String)
+	},
+	"aws.appstream.imageBuilder.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamImageBuilder).GetName()).ToDataRes(types.String)
+	},
+	"aws.appstream.imageBuilder.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamImageBuilder).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.appstream.imageBuilder.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamImageBuilder).GetState()).ToDataRes(types.String)
+	},
+	"aws.appstream.imageBuilder.instanceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamImageBuilder).GetInstanceType()).ToDataRes(types.String)
+	},
+	"aws.appstream.imageBuilder.platform": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamImageBuilder).GetPlatform()).ToDataRes(types.String)
+	},
+	"aws.appstream.imageBuilder.imageArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamImageBuilder).GetImageArn()).ToDataRes(types.String)
+	},
+	"aws.appstream.imageBuilder.appstreamAgentVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamImageBuilder).GetAppstreamAgentVersion()).ToDataRes(types.String)
+	},
+	"aws.appstream.imageBuilder.enableDefaultInternetAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamImageBuilder).GetEnableDefaultInternetAccess()).ToDataRes(types.Bool)
+	},
+	"aws.appstream.imageBuilder.domainJoinInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamImageBuilder).GetDomainJoinInfo()).ToDataRes(types.Dict)
+	},
+	"aws.appstream.imageBuilder.vpcConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamImageBuilder).GetVpcConfig()).ToDataRes(types.Dict)
+	},
+	"aws.appstream.imageBuilder.iamRoleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamImageBuilder).GetIamRoleArn()).ToDataRes(types.String)
+	},
+	"aws.appstream.imageBuilder.networkAccessConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamImageBuilder).GetNetworkAccessConfiguration()).ToDataRes(types.Dict)
+	},
+	"aws.appstream.imageBuilder.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamImageBuilder).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.appstream.imageBuilder.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamImageBuilder).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.appstream.imageBuilder.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamImageBuilder).GetRegion()).ToDataRes(types.String)
 	},
 }
 
@@ -19987,6 +20157,222 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.workdocs.user.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWorkdocsUser).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstream).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.appstream.fleets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstream).Fleets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.stacks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstream).Stacks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.imageBuilders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstream).ImageBuilders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleet).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.appstream.fleet.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleet).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleet).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleet).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.fleetType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleet).FleetType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.instanceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleet).InstanceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.maxUserDurationInSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleet).MaxUserDurationInSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.disconnectTimeoutInSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleet).DisconnectTimeoutInSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.idleDisconnectTimeoutInSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleet).IdleDisconnectTimeoutInSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.enableDefaultInternetAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleet).EnableDefaultInternetAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.domainJoinInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleet).DomainJoinInfo, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.maxConcurrentSessions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleet).MaxConcurrentSessions, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.maxSessionsPerInstance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleet).MaxSessionsPerInstance, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.vpcConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleet).VpcConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.iamRoleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleet).IamRoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.imageName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleet).ImageName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.imageArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleet).ImageArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.platform": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleet).Platform, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleet).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleet).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleet).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.stack.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamStack).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.appstream.stack.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamStack).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.stack.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamStack).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.stack.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamStack).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.stack.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamStack).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.stack.accessEndpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamStack).AccessEndpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.stack.applicationSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamStack).ApplicationSettings, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.stack.storageConnectors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamStack).StorageConnectors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.stack.userSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamStack).UserSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.stack.embedHostDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamStack).EmbedHostDomains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.stack.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamStack).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.stack.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamStack).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.imageBuilder.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamImageBuilder).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.appstream.imageBuilder.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamImageBuilder).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.imageBuilder.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamImageBuilder).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.imageBuilder.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamImageBuilder).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.imageBuilder.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamImageBuilder).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.imageBuilder.instanceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamImageBuilder).InstanceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.imageBuilder.platform": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamImageBuilder).Platform, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.imageBuilder.imageArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamImageBuilder).ImageArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.imageBuilder.appstreamAgentVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamImageBuilder).AppstreamAgentVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.imageBuilder.enableDefaultInternetAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamImageBuilder).EnableDefaultInternetAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.imageBuilder.domainJoinInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamImageBuilder).DomainJoinInfo, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.imageBuilder.vpcConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamImageBuilder).VpcConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.imageBuilder.iamRoleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamImageBuilder).IamRoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.imageBuilder.networkAccessConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamImageBuilder).NetworkAccessConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.imageBuilder.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamImageBuilder).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.imageBuilder.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamImageBuilder).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.imageBuilder.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamImageBuilder).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -48521,5 +48907,473 @@ func (c *mqlAwsWorkdocsUser) GetRootFolderId() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsWorkdocsUser) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsAppstream for the aws.appstream resource
+type mqlAwsAppstream struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsAppstreamInternal it will be used here
+	Fleets        plugin.TValue[[]any]
+	Stacks        plugin.TValue[[]any]
+	ImageBuilders plugin.TValue[[]any]
+}
+
+// createAwsAppstream creates a new instance of this resource
+func createAwsAppstream(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsAppstream{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.appstream", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsAppstream) MqlName() string {
+	return "aws.appstream"
+}
+
+func (c *mqlAwsAppstream) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsAppstream) GetFleets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Fleets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.appstream", c.__id, "fleets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.fleets()
+	})
+}
+
+func (c *mqlAwsAppstream) GetStacks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Stacks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.appstream", c.__id, "stacks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.stacks()
+	})
+}
+
+func (c *mqlAwsAppstream) GetImageBuilders() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ImageBuilders, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.appstream", c.__id, "imageBuilders")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.imageBuilders()
+	})
+}
+
+// mqlAwsAppstreamFleet for the aws.appstream.fleet resource
+type mqlAwsAppstreamFleet struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsAppstreamFleetInternal it will be used here
+	Arn                            plugin.TValue[string]
+	Name                           plugin.TValue[string]
+	State                          plugin.TValue[string]
+	FleetType                      plugin.TValue[string]
+	InstanceType                   plugin.TValue[string]
+	MaxUserDurationInSeconds       plugin.TValue[int64]
+	DisconnectTimeoutInSeconds     plugin.TValue[int64]
+	IdleDisconnectTimeoutInSeconds plugin.TValue[int64]
+	EnableDefaultInternetAccess    plugin.TValue[bool]
+	DomainJoinInfo                 plugin.TValue[any]
+	MaxConcurrentSessions          plugin.TValue[int64]
+	MaxSessionsPerInstance         plugin.TValue[int64]
+	VpcConfig                      plugin.TValue[any]
+	IamRoleArn                     plugin.TValue[string]
+	ImageName                      plugin.TValue[string]
+	ImageArn                       plugin.TValue[string]
+	Platform                       plugin.TValue[string]
+	CreatedAt                      plugin.TValue[*time.Time]
+	Tags                           plugin.TValue[map[string]any]
+	Region                         plugin.TValue[string]
+}
+
+// createAwsAppstreamFleet creates a new instance of this resource
+func createAwsAppstreamFleet(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsAppstreamFleet{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.appstream.fleet", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsAppstreamFleet) MqlName() string {
+	return "aws.appstream.fleet"
+}
+
+func (c *mqlAwsAppstreamFleet) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsAppstreamFleet) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsAppstreamFleet) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsAppstreamFleet) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsAppstreamFleet) GetFleetType() *plugin.TValue[string] {
+	return &c.FleetType
+}
+
+func (c *mqlAwsAppstreamFleet) GetInstanceType() *plugin.TValue[string] {
+	return &c.InstanceType
+}
+
+func (c *mqlAwsAppstreamFleet) GetMaxUserDurationInSeconds() *plugin.TValue[int64] {
+	return &c.MaxUserDurationInSeconds
+}
+
+func (c *mqlAwsAppstreamFleet) GetDisconnectTimeoutInSeconds() *plugin.TValue[int64] {
+	return &c.DisconnectTimeoutInSeconds
+}
+
+func (c *mqlAwsAppstreamFleet) GetIdleDisconnectTimeoutInSeconds() *plugin.TValue[int64] {
+	return &c.IdleDisconnectTimeoutInSeconds
+}
+
+func (c *mqlAwsAppstreamFleet) GetEnableDefaultInternetAccess() *plugin.TValue[bool] {
+	return &c.EnableDefaultInternetAccess
+}
+
+func (c *mqlAwsAppstreamFleet) GetDomainJoinInfo() *plugin.TValue[any] {
+	return &c.DomainJoinInfo
+}
+
+func (c *mqlAwsAppstreamFleet) GetMaxConcurrentSessions() *plugin.TValue[int64] {
+	return &c.MaxConcurrentSessions
+}
+
+func (c *mqlAwsAppstreamFleet) GetMaxSessionsPerInstance() *plugin.TValue[int64] {
+	return &c.MaxSessionsPerInstance
+}
+
+func (c *mqlAwsAppstreamFleet) GetVpcConfig() *plugin.TValue[any] {
+	return &c.VpcConfig
+}
+
+func (c *mqlAwsAppstreamFleet) GetIamRoleArn() *plugin.TValue[string] {
+	return &c.IamRoleArn
+}
+
+func (c *mqlAwsAppstreamFleet) GetImageName() *plugin.TValue[string] {
+	return &c.ImageName
+}
+
+func (c *mqlAwsAppstreamFleet) GetImageArn() *plugin.TValue[string] {
+	return &c.ImageArn
+}
+
+func (c *mqlAwsAppstreamFleet) GetPlatform() *plugin.TValue[string] {
+	return &c.Platform
+}
+
+func (c *mqlAwsAppstreamFleet) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsAppstreamFleet) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsAppstreamFleet) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsAppstreamStack for the aws.appstream.stack resource
+type mqlAwsAppstreamStack struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsAppstreamStackInternal it will be used here
+	Arn                 plugin.TValue[string]
+	Name                plugin.TValue[string]
+	Description         plugin.TValue[string]
+	CreatedAt           plugin.TValue[*time.Time]
+	AccessEndpoints     plugin.TValue[[]any]
+	ApplicationSettings plugin.TValue[any]
+	StorageConnectors   plugin.TValue[[]any]
+	UserSettings        plugin.TValue[[]any]
+	EmbedHostDomains    plugin.TValue[[]any]
+	Tags                plugin.TValue[map[string]any]
+	Region              plugin.TValue[string]
+}
+
+// createAwsAppstreamStack creates a new instance of this resource
+func createAwsAppstreamStack(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsAppstreamStack{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.appstream.stack", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsAppstreamStack) MqlName() string {
+	return "aws.appstream.stack"
+}
+
+func (c *mqlAwsAppstreamStack) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsAppstreamStack) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsAppstreamStack) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsAppstreamStack) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsAppstreamStack) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsAppstreamStack) GetAccessEndpoints() *plugin.TValue[[]any] {
+	return &c.AccessEndpoints
+}
+
+func (c *mqlAwsAppstreamStack) GetApplicationSettings() *plugin.TValue[any] {
+	return &c.ApplicationSettings
+}
+
+func (c *mqlAwsAppstreamStack) GetStorageConnectors() *plugin.TValue[[]any] {
+	return &c.StorageConnectors
+}
+
+func (c *mqlAwsAppstreamStack) GetUserSettings() *plugin.TValue[[]any] {
+	return &c.UserSettings
+}
+
+func (c *mqlAwsAppstreamStack) GetEmbedHostDomains() *plugin.TValue[[]any] {
+	return &c.EmbedHostDomains
+}
+
+func (c *mqlAwsAppstreamStack) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsAppstreamStack) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsAppstreamImageBuilder for the aws.appstream.imageBuilder resource
+type mqlAwsAppstreamImageBuilder struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsAppstreamImageBuilderInternal it will be used here
+	Arn                         plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	Description                 plugin.TValue[string]
+	State                       plugin.TValue[string]
+	InstanceType                plugin.TValue[string]
+	Platform                    plugin.TValue[string]
+	ImageArn                    plugin.TValue[string]
+	AppstreamAgentVersion       plugin.TValue[string]
+	EnableDefaultInternetAccess plugin.TValue[bool]
+	DomainJoinInfo              plugin.TValue[any]
+	VpcConfig                   plugin.TValue[any]
+	IamRoleArn                  plugin.TValue[string]
+	NetworkAccessConfiguration  plugin.TValue[any]
+	CreatedAt                   plugin.TValue[*time.Time]
+	Tags                        plugin.TValue[map[string]any]
+	Region                      plugin.TValue[string]
+}
+
+// createAwsAppstreamImageBuilder creates a new instance of this resource
+func createAwsAppstreamImageBuilder(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsAppstreamImageBuilder{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.appstream.imageBuilder", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsAppstreamImageBuilder) MqlName() string {
+	return "aws.appstream.imageBuilder"
+}
+
+func (c *mqlAwsAppstreamImageBuilder) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsAppstreamImageBuilder) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsAppstreamImageBuilder) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsAppstreamImageBuilder) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsAppstreamImageBuilder) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsAppstreamImageBuilder) GetInstanceType() *plugin.TValue[string] {
+	return &c.InstanceType
+}
+
+func (c *mqlAwsAppstreamImageBuilder) GetPlatform() *plugin.TValue[string] {
+	return &c.Platform
+}
+
+func (c *mqlAwsAppstreamImageBuilder) GetImageArn() *plugin.TValue[string] {
+	return &c.ImageArn
+}
+
+func (c *mqlAwsAppstreamImageBuilder) GetAppstreamAgentVersion() *plugin.TValue[string] {
+	return &c.AppstreamAgentVersion
+}
+
+func (c *mqlAwsAppstreamImageBuilder) GetEnableDefaultInternetAccess() *plugin.TValue[bool] {
+	return &c.EnableDefaultInternetAccess
+}
+
+func (c *mqlAwsAppstreamImageBuilder) GetDomainJoinInfo() *plugin.TValue[any] {
+	return &c.DomainJoinInfo
+}
+
+func (c *mqlAwsAppstreamImageBuilder) GetVpcConfig() *plugin.TValue[any] {
+	return &c.VpcConfig
+}
+
+func (c *mqlAwsAppstreamImageBuilder) GetIamRoleArn() *plugin.TValue[string] {
+	return &c.IamRoleArn
+}
+
+func (c *mqlAwsAppstreamImageBuilder) GetNetworkAccessConfiguration() *plugin.TValue[any] {
+	return &c.NetworkAccessConfiguration
+}
+
+func (c *mqlAwsAppstreamImageBuilder) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsAppstreamImageBuilder) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsAppstreamImageBuilder) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
