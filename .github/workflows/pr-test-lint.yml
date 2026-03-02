@@ -162,9 +162,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: [golangci-lint, golangci-lint-providers, go-test, go-test-integration, go-mod]
     # For now, we only auto approve and merge provider release PRs created by mondoo-tools.
-    # We have to check the commit author, because the PR is created by "github-actions[bot]"
-    # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/evaluate-expressions-in-workflows-and-actions#startswith
-    if: ${{ (startsWith(github.ref, 'refs/heads/version/providers_update_') || startsWith(github.ref, 'refs/heads/version/deps_update_')) && github.event.commits[0].author.username == 'mondoo-tools' }}
+    # We use github.actor (the authenticated GitHub user who pushed) instead of
+    # github.event.commits[0].author.username (the git commit author) because git commit
+    # metadata is user-controlled and can be spoofed by anyone via git config.
+    # github.actor is set by GitHub's authentication layer and is tamper-proof.
+    if: ${{ (startsWith(github.ref, 'refs/heads/version/providers_update_') || startsWith(github.ref, 'refs/heads/version/deps_update_')) && github.actor == 'mondoo-tools' }}
     permissions:
       contents: write
       pull-requests: write
