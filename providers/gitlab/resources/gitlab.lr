@@ -90,6 +90,14 @@ gitlab.group @defaults("name visibility webURL") {
   subgroups() []gitlab.group
   // List of labels for the group
   labels() []gitlab.group.label
+  // Push rules for the group
+  pushRules() gitlab.group.pushRule
+  // Access tokens for the group
+  accessTokens() []gitlab.group.accessToken
+  // Deploy tokens for the group
+  deployTokens() []gitlab.group.deployToken
+  // Protected branches at the group level
+  protectedBranches() []gitlab.group.protectedBranch
 }
 
 // GitLab project
@@ -192,6 +200,16 @@ gitlab.project @defaults("fullName visibility webURL") {
   pipelines() []gitlab.project.pipeline
   // List of runners available to the project
   runners() []gitlab.project.runner
+  // Push rules for the project
+  pushRules() gitlab.project.pushRule
+  // Access tokens for the project
+  accessTokens() []gitlab.project.accessToken
+  // Deploy keys for the project
+  deployKeys() []gitlab.project.deployKey
+  // Deploy tokens for the project
+  deployTokens() []gitlab.project.deployToken
+  // Security settings for the project
+  securitySettings() gitlab.project.securitySetting
 }
 
 // GitLab project approval rule
@@ -482,4 +500,202 @@ private gitlab.project.runner @defaults("id description status") {
   online bool
   // Runner status (online, offline, stale, never_contacted, active, paused)
   status string
+}
+
+// GitLab project push rules
+private gitlab.project.pushRule @defaults("preventSecrets rejectUnsignedCommits commitCommitterCheck") {
+  // Push rule ID
+  id int
+  // Regex for commit messages
+  commitMessageRegex string
+  // Regex for commit messages to reject
+  commitMessageNegativeRegex string
+  // Regex for branch names
+  branchNameRegex string
+  // Whether deleting tags is denied
+  denyDeleteTag bool
+  // Whether commits must be from a group member
+  memberCheck bool
+  // Whether known secrets are prevented from being pushed
+  preventSecrets bool
+  // Regex for allowed author emails
+  authorEmailRegex string
+  // Regex for disallowed file names
+  fileNameRegex string
+  // Maximum allowed file size in MB
+  maxFileSize int
+  // Whether the committer must be a verified GitLab user
+  commitCommitterCheck bool
+  // Whether the committer name must match the GitLab user name
+  commitCommitterNameCheck bool
+  // Whether unsigned commits are rejected
+  rejectUnsignedCommits bool
+  // Whether non-DCO commits are rejected
+  rejectNonDCOCommits bool
+  // Push rule creation time
+  createdAt time
+}
+
+// GitLab group push rules
+private gitlab.group.pushRule @defaults("preventSecrets rejectUnsignedCommits commitCommitterCheck") {
+  // Push rule ID
+  id int
+  // Regex for commit messages
+  commitMessageRegex string
+  // Regex for commit messages to reject
+  commitMessageNegativeRegex string
+  // Regex for branch names
+  branchNameRegex string
+  // Whether deleting tags is denied
+  denyDeleteTag bool
+  // Whether commits must be from a group member
+  memberCheck bool
+  // Whether known secrets are prevented from being pushed
+  preventSecrets bool
+  // Regex for allowed author emails
+  authorEmailRegex string
+  // Regex for disallowed file names
+  fileNameRegex string
+  // Maximum allowed file size in MB
+  maxFileSize int
+  // Whether the committer must be a verified GitLab user
+  commitCommitterCheck bool
+  // Whether the committer name must match the GitLab user name
+  commitCommitterNameCheck bool
+  // Whether unsigned commits are rejected
+  rejectUnsignedCommits bool
+  // Whether non-DCO commits are rejected
+  rejectNonDCOCommits bool
+  // Push rule creation time
+  createdAt time
+}
+
+// GitLab project access token
+private gitlab.project.accessToken @defaults("id name active expiresAt") {
+  // Token ID
+  id int
+  // Token name
+  name string
+  // Whether the token has been revoked
+  revoked bool
+  // Whether the token is active
+  active bool
+  // Token scopes (api, read_api, read_repository, write_repository, etc.)
+  scopes []string
+  // Token creation time
+  createdAt time
+  // Token expiration date
+  expiresAt time
+  // Last time the token was used
+  lastUsedAt time
+  // Access level granted by the token
+  accessLevel int
+}
+
+// GitLab group access token
+private gitlab.group.accessToken @defaults("id name active expiresAt") {
+  // Token ID
+  id int
+  // Token name
+  name string
+  // Whether the token has been revoked
+  revoked bool
+  // Whether the token is active
+  active bool
+  // Token scopes (api, read_api, read_repository, write_repository, etc.)
+  scopes []string
+  // Token creation time
+  createdAt time
+  // Token expiration date
+  expiresAt time
+  // Last time the token was used
+  lastUsedAt time
+  // Access level granted by the token
+  accessLevel int
+}
+
+// GitLab project deploy key
+private gitlab.project.deployKey @defaults("id title canPush") {
+  // Deploy key ID
+  id int
+  // Deploy key title
+  title string
+  // Public SSH key
+  key string
+  // MD5 fingerprint of the key
+  fingerprint string
+  // SHA256 fingerprint of the key
+  fingerprintSHA256 string
+  // Key creation time
+  createdAt time
+  // Key expiration time
+  expiresAt time
+  // Whether the key has push (write) access
+  canPush bool
+}
+
+// GitLab project deploy token
+private gitlab.project.deployToken @defaults("id name expired revoked") {
+  // Deploy token ID
+  id int
+  // Deploy token name
+  name string
+  // Deploy token username
+  username string
+  // Token expiration time
+  expiresAt time
+  // Whether the token has been revoked
+  revoked bool
+  // Whether the token has expired
+  expired bool
+  // Token scopes (read_repository, read_registry, write_registry, etc.)
+  scopes []string
+}
+
+// GitLab group deploy token
+private gitlab.group.deployToken @defaults("id name expired revoked") {
+  // Deploy token ID
+  id int
+  // Deploy token name
+  name string
+  // Deploy token username
+  username string
+  // Token expiration time
+  expiresAt time
+  // Whether the token has been revoked
+  revoked bool
+  // Whether the token has expired
+  expired bool
+  // Token scopes (read_repository, read_registry, write_registry, etc.)
+  scopes []string
+}
+
+// GitLab group protected branch
+private gitlab.group.protectedBranch @defaults("name allowForcePush") {
+  // Protected branch ID
+  id int
+  // Branch name or pattern
+  name string
+  // Whether force push is allowed
+  allowForcePush bool
+  // Whether code owner approval is required
+  codeOwnerApprovalRequired bool
+}
+
+// GitLab project security settings
+private gitlab.project.securitySetting @defaults("secretPushProtectionEnabled continuousVulnerabilityScansEnabled") {
+  // Whether auto-fix for container scanning is enabled
+  autoFixContainerScanning bool
+  // Whether auto-fix for DAST is enabled
+  autoFixDAST bool
+  // Whether auto-fix for dependency scanning is enabled
+  autoFixDependencyScanning bool
+  // Whether auto-fix for SAST is enabled
+  autoFixSAST bool
+  // Whether continuous vulnerability scans are enabled
+  continuousVulnerabilityScansEnabled bool
+  // Whether container scanning for registry is enabled
+  containerScanningForRegistryEnabled bool
+  // Whether secret push protection is enabled
+  secretPushProtectionEnabled bool
 }
