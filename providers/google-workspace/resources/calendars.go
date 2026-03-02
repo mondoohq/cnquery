@@ -23,9 +23,17 @@ func (g *mqlGoogleworkspace) calendars() ([]any, error) {
 	for _, c := range calendars.Items {
 		r, err := CreateResource(g.MqlRuntime, "googleworkspace.calendar", map[string]*llx.RawData{
 			"__id":            llx.StringData(c.Id),
+			"id":              llx.StringData(c.Id),
 			"summary":         llx.StringData(c.Summary),
 			"summaryOverride": llx.StringData(c.SummaryOverride),
 			"primary":         llx.BoolData(c.Primary),
+			"accessRole":      llx.StringData(c.AccessRole),
+			"description":     llx.StringData(c.Description),
+			"timeZone":        llx.StringData(c.TimeZone),
+			"location":        llx.StringData(c.Location),
+			"hidden":          llx.BoolData(c.Hidden),
+			"deleted":         llx.BoolData(c.Deleted),
+			"selected":        llx.BoolData(c.Selected),
 		})
 		if err != nil {
 			return nil, err
@@ -59,6 +67,7 @@ func (g *mqlGoogleworkspaceCalendar) acl() ([]any, error) {
 
 		r, err := CreateResource(g.MqlRuntime, "googleworkspace.calendar.aclRule", map[string]*llx.RawData{
 			"__id":  llx.StringData(a.Id),
+			"id":    llx.StringData(a.Id),
 			"role":  llx.StringData(a.Role),
 			"scope": llx.ResourceData(scope, "googleworkspace.calendar.aclRule.scope"),
 		})

@@ -204,6 +204,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"googleworkspace.calendars": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspace).GetCalendars()).ToDataRes(types.Array(types.Resource("googleworkspace.calendar")))
 	},
+	"googleworkspace.calendar.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceCalendar).GetId()).ToDataRes(types.String)
+	},
 	"googleworkspace.calendar.summary": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceCalendar).GetSummary()).ToDataRes(types.String)
 	},
@@ -213,8 +216,32 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"googleworkspace.calendar.primary": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceCalendar).GetPrimary()).ToDataRes(types.Bool)
 	},
+	"googleworkspace.calendar.accessRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceCalendar).GetAccessRole()).ToDataRes(types.String)
+	},
+	"googleworkspace.calendar.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceCalendar).GetDescription()).ToDataRes(types.String)
+	},
+	"googleworkspace.calendar.timeZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceCalendar).GetTimeZone()).ToDataRes(types.String)
+	},
+	"googleworkspace.calendar.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceCalendar).GetLocation()).ToDataRes(types.String)
+	},
+	"googleworkspace.calendar.hidden": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceCalendar).GetHidden()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.calendar.deleted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceCalendar).GetDeleted()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.calendar.selected": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceCalendar).GetSelected()).ToDataRes(types.Bool)
+	},
 	"googleworkspace.calendar.acl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceCalendar).GetAcl()).ToDataRes(types.Array(types.Resource("googleworkspace.calendar.aclRule")))
+	},
+	"googleworkspace.calendar.aclRule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceCalendarAclRule).GetId()).ToDataRes(types.String)
 	},
 	"googleworkspace.calendar.aclRule.role": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceCalendarAclRule).GetRole()).ToDataRes(types.String)
@@ -236,6 +263,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"googleworkspace.orgUnit.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceOrgUnit).GetDescription()).ToDataRes(types.String)
+	},
+	"googleworkspace.orgUnit.orgUnitPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceOrgUnit).GetOrgUnitPath()).ToDataRes(types.String)
+	},
+	"googleworkspace.orgUnit.parentOrgUnitPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceOrgUnit).GetParentOrgUnitPath()).ToDataRes(types.String)
 	},
 	"googleworkspace.domain.domainName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceDomain).GetDomainName()).ToDataRes(types.String)
@@ -300,6 +333,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"googleworkspace.user.isMailboxSetup": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceUser).GetIsMailboxSetup()).ToDataRes(types.Bool)
 	},
+	"googleworkspace.user.orgUnitPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUser).GetOrgUnitPath()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.changePasswordAtNextLogin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUser).GetChangePasswordAtNextLogin()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.user.ipWhitelisted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUser).GetIpWhitelisted()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.user.includeInGlobalAddressList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUser).GetIncludeInGlobalAddressList()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.user.isGuestUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUser).GetIsGuestUser()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.user.nonEditableAliases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUser).GetNonEditableAliases()).ToDataRes(types.Array(types.String))
+	},
+	"googleworkspace.user.thumbnailPhotoUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUser).GetThumbnailPhotoUrl()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.customerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUser).GetCustomerId()).ToDataRes(types.String)
+	},
 	"googleworkspace.user.lastLoginTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceUser).GetLastLoginTime()).ToDataRes(types.Time)
 	},
@@ -360,6 +417,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"googleworkspace.group.aliases": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceGroup).GetAliases()).ToDataRes(types.Array(types.String))
 	},
+	"googleworkspace.group.nonEditableAliases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceGroup).GetNonEditableAliases()).ToDataRes(types.Array(types.String))
+	},
 	"googleworkspace.group.directMembersCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceGroup).GetDirectMembersCount()).ToDataRes(types.Int)
 	},
@@ -381,11 +441,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"googleworkspace.member.email": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceMember).GetEmail()).ToDataRes(types.String)
 	},
+	"googleworkspace.member.role": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceMember).GetRole()).ToDataRes(types.String)
+	},
 	"googleworkspace.member.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceMember).GetStatus()).ToDataRes(types.String)
 	},
 	"googleworkspace.member.type": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceMember).GetType()).ToDataRes(types.String)
+	},
+	"googleworkspace.member.deliverySettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceMember).GetDeliverySettings()).ToDataRes(types.String)
 	},
 	"googleworkspace.member.user": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceMember).GetUser()).ToDataRes(types.Resource("googleworkspace.user"))
@@ -510,6 +576,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGoogleworkspaceCalendar).__id, ok = v.Value.(string)
 		return
 	},
+	"googleworkspace.calendar.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceCalendar).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"googleworkspace.calendar.summary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGoogleworkspaceCalendar).Summary, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -522,12 +592,44 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGoogleworkspaceCalendar).Primary, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"googleworkspace.calendar.accessRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceCalendar).AccessRole, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.calendar.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceCalendar).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.calendar.timeZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceCalendar).TimeZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.calendar.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceCalendar).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.calendar.hidden": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceCalendar).Hidden, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.calendar.deleted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceCalendar).Deleted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.calendar.selected": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceCalendar).Selected, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"googleworkspace.calendar.acl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGoogleworkspaceCalendar).Acl, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.calendar.aclRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGoogleworkspaceCalendarAclRule).__id, ok = v.Value.(string)
+		return
+	},
+	"googleworkspace.calendar.aclRule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceCalendarAclRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.calendar.aclRule.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -564,6 +666,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"googleworkspace.orgUnit.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGoogleworkspaceOrgUnit).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.orgUnit.orgUnitPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceOrgUnit).OrgUnitPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.orgUnit.parentOrgUnitPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceOrgUnit).ParentOrgUnitPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.domain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -658,6 +768,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGoogleworkspaceUser).IsMailboxSetup, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"googleworkspace.user.orgUnitPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUser).OrgUnitPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.changePasswordAtNextLogin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUser).ChangePasswordAtNextLogin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.ipWhitelisted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUser).IpWhitelisted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.includeInGlobalAddressList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUser).IncludeInGlobalAddressList, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.isGuestUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUser).IsGuestUser, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.nonEditableAliases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUser).NonEditableAliases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.thumbnailPhotoUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUser).ThumbnailPhotoUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.customerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUser).CustomerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"googleworkspace.user.lastLoginTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGoogleworkspaceUser).LastLoginTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -750,6 +892,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGoogleworkspaceGroup).Aliases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"googleworkspace.group.nonEditableAliases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceGroup).NonEditableAliases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"googleworkspace.group.directMembersCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGoogleworkspaceGroup).DirectMembersCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -782,12 +928,20 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGoogleworkspaceMember).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"googleworkspace.member.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceMember).Role, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"googleworkspace.member.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGoogleworkspaceMember).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.member.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGoogleworkspaceMember).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.member.deliverySettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceMember).DeliverySettings, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.member.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1102,9 +1256,17 @@ type mqlGoogleworkspaceCalendar struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGoogleworkspaceCalendarInternal it will be used here
+	Id              plugin.TValue[string]
 	Summary         plugin.TValue[string]
 	SummaryOverride plugin.TValue[string]
 	Primary         plugin.TValue[bool]
+	AccessRole      plugin.TValue[string]
+	Description     plugin.TValue[string]
+	TimeZone        plugin.TValue[string]
+	Location        plugin.TValue[string]
+	Hidden          plugin.TValue[bool]
+	Deleted         plugin.TValue[bool]
+	Selected        plugin.TValue[bool]
 	Acl             plugin.TValue[[]any]
 }
 
@@ -1140,6 +1302,10 @@ func (c *mqlGoogleworkspaceCalendar) MqlID() string {
 	return c.__id
 }
 
+func (c *mqlGoogleworkspaceCalendar) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
 func (c *mqlGoogleworkspaceCalendar) GetSummary() *plugin.TValue[string] {
 	return &c.Summary
 }
@@ -1150,6 +1316,34 @@ func (c *mqlGoogleworkspaceCalendar) GetSummaryOverride() *plugin.TValue[string]
 
 func (c *mqlGoogleworkspaceCalendar) GetPrimary() *plugin.TValue[bool] {
 	return &c.Primary
+}
+
+func (c *mqlGoogleworkspaceCalendar) GetAccessRole() *plugin.TValue[string] {
+	return &c.AccessRole
+}
+
+func (c *mqlGoogleworkspaceCalendar) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGoogleworkspaceCalendar) GetTimeZone() *plugin.TValue[string] {
+	return &c.TimeZone
+}
+
+func (c *mqlGoogleworkspaceCalendar) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlGoogleworkspaceCalendar) GetHidden() *plugin.TValue[bool] {
+	return &c.Hidden
+}
+
+func (c *mqlGoogleworkspaceCalendar) GetDeleted() *plugin.TValue[bool] {
+	return &c.Deleted
+}
+
+func (c *mqlGoogleworkspaceCalendar) GetSelected() *plugin.TValue[bool] {
+	return &c.Selected
 }
 
 func (c *mqlGoogleworkspaceCalendar) GetAcl() *plugin.TValue[[]any] {
@@ -1173,6 +1367,7 @@ type mqlGoogleworkspaceCalendarAclRule struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGoogleworkspaceCalendarAclRuleInternal it will be used here
+	Id    plugin.TValue[string]
 	Role  plugin.TValue[string]
 	Scope plugin.TValue[*mqlGoogleworkspaceCalendarAclRuleScope]
 }
@@ -1207,6 +1402,10 @@ func (c *mqlGoogleworkspaceCalendarAclRule) MqlName() string {
 
 func (c *mqlGoogleworkspaceCalendarAclRule) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlGoogleworkspaceCalendarAclRule) GetId() *plugin.TValue[string] {
+	return &c.Id
 }
 
 func (c *mqlGoogleworkspaceCalendarAclRule) GetRole() *plugin.TValue[string] {
@@ -1271,9 +1470,11 @@ type mqlGoogleworkspaceOrgUnit struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGoogleworkspaceOrgUnitInternal it will be used here
-	Id          plugin.TValue[string]
-	Name        plugin.TValue[string]
-	Description plugin.TValue[string]
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Description       plugin.TValue[string]
+	OrgUnitPath       plugin.TValue[string]
+	ParentOrgUnitPath plugin.TValue[string]
 }
 
 // createGoogleworkspaceOrgUnit creates a new instance of this resource
@@ -1323,6 +1524,14 @@ func (c *mqlGoogleworkspaceOrgUnit) GetName() *plugin.TValue[string] {
 
 func (c *mqlGoogleworkspaceOrgUnit) GetDescription() *plugin.TValue[string] {
 	return &c.Description
+}
+
+func (c *mqlGoogleworkspaceOrgUnit) GetOrgUnitPath() *plugin.TValue[string] {
+	return &c.OrgUnitPath
+}
+
+func (c *mqlGoogleworkspaceOrgUnit) GetParentOrgUnitPath() *plugin.TValue[string] {
+	return &c.ParentOrgUnitPath
 }
 
 // mqlGoogleworkspaceDomain for the googleworkspace.domain resource
@@ -1394,27 +1603,35 @@ type mqlGoogleworkspaceUser struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGoogleworkspaceUserInternal it will be used here
-	Id               plugin.TValue[string]
-	FamilyName       plugin.TValue[string]
-	GivenName        plugin.TValue[string]
-	FullName         plugin.TValue[string]
-	PrimaryEmail     plugin.TValue[string]
-	RecoveryEmail    plugin.TValue[string]
-	RecoveryPhone    plugin.TValue[string]
-	AgreedToTerms    plugin.TValue[bool]
-	Aliases          plugin.TValue[[]any]
-	Suspended        plugin.TValue[bool]
-	SuspensionReason plugin.TValue[string]
-	Archived         plugin.TValue[bool]
-	IsAdmin          plugin.TValue[bool]
-	IsDelegatedAdmin plugin.TValue[bool]
-	IsEnforcedIn2Sv  plugin.TValue[bool]
-	IsEnrolledIn2Sv  plugin.TValue[bool]
-	IsMailboxSetup   plugin.TValue[bool]
-	LastLoginTime    plugin.TValue[*time.Time]
-	CreationTime     plugin.TValue[*time.Time]
-	UsageReport      plugin.TValue[*mqlGoogleworkspaceReportUsage]
-	Tokens           plugin.TValue[[]any]
+	Id                         plugin.TValue[string]
+	FamilyName                 plugin.TValue[string]
+	GivenName                  plugin.TValue[string]
+	FullName                   plugin.TValue[string]
+	PrimaryEmail               plugin.TValue[string]
+	RecoveryEmail              plugin.TValue[string]
+	RecoveryPhone              plugin.TValue[string]
+	AgreedToTerms              plugin.TValue[bool]
+	Aliases                    plugin.TValue[[]any]
+	Suspended                  plugin.TValue[bool]
+	SuspensionReason           plugin.TValue[string]
+	Archived                   plugin.TValue[bool]
+	IsAdmin                    plugin.TValue[bool]
+	IsDelegatedAdmin           plugin.TValue[bool]
+	IsEnforcedIn2Sv            plugin.TValue[bool]
+	IsEnrolledIn2Sv            plugin.TValue[bool]
+	IsMailboxSetup             plugin.TValue[bool]
+	OrgUnitPath                plugin.TValue[string]
+	ChangePasswordAtNextLogin  plugin.TValue[bool]
+	IpWhitelisted              plugin.TValue[bool]
+	IncludeInGlobalAddressList plugin.TValue[bool]
+	IsGuestUser                plugin.TValue[bool]
+	NonEditableAliases         plugin.TValue[[]any]
+	ThumbnailPhotoUrl          plugin.TValue[string]
+	CustomerId                 plugin.TValue[string]
+	LastLoginTime              plugin.TValue[*time.Time]
+	CreationTime               plugin.TValue[*time.Time]
+	UsageReport                plugin.TValue[*mqlGoogleworkspaceReportUsage]
+	Tokens                     plugin.TValue[[]any]
 }
 
 // createGoogleworkspaceUser creates a new instance of this resource
@@ -1520,6 +1737,38 @@ func (c *mqlGoogleworkspaceUser) GetIsEnrolledIn2Sv() *plugin.TValue[bool] {
 
 func (c *mqlGoogleworkspaceUser) GetIsMailboxSetup() *plugin.TValue[bool] {
 	return &c.IsMailboxSetup
+}
+
+func (c *mqlGoogleworkspaceUser) GetOrgUnitPath() *plugin.TValue[string] {
+	return &c.OrgUnitPath
+}
+
+func (c *mqlGoogleworkspaceUser) GetChangePasswordAtNextLogin() *plugin.TValue[bool] {
+	return &c.ChangePasswordAtNextLogin
+}
+
+func (c *mqlGoogleworkspaceUser) GetIpWhitelisted() *plugin.TValue[bool] {
+	return &c.IpWhitelisted
+}
+
+func (c *mqlGoogleworkspaceUser) GetIncludeInGlobalAddressList() *plugin.TValue[bool] {
+	return &c.IncludeInGlobalAddressList
+}
+
+func (c *mqlGoogleworkspaceUser) GetIsGuestUser() *plugin.TValue[bool] {
+	return &c.IsGuestUser
+}
+
+func (c *mqlGoogleworkspaceUser) GetNonEditableAliases() *plugin.TValue[[]any] {
+	return &c.NonEditableAliases
+}
+
+func (c *mqlGoogleworkspaceUser) GetThumbnailPhotoUrl() *plugin.TValue[string] {
+	return &c.ThumbnailPhotoUrl
+}
+
+func (c *mqlGoogleworkspaceUser) GetCustomerId() *plugin.TValue[string] {
+	return &c.CustomerId
 }
 
 func (c *mqlGoogleworkspaceUser) GetLastLoginTime() *plugin.TValue[*time.Time] {
@@ -1715,6 +1964,7 @@ type mqlGoogleworkspaceGroup struct {
 	Email              plugin.TValue[string]
 	Description        plugin.TValue[string]
 	Aliases            plugin.TValue[[]any]
+	NonEditableAliases plugin.TValue[[]any]
 	DirectMembersCount plugin.TValue[int64]
 	AdminCreated       plugin.TValue[bool]
 	Members            plugin.TValue[[]any]
@@ -1779,6 +2029,10 @@ func (c *mqlGoogleworkspaceGroup) GetAliases() *plugin.TValue[[]any] {
 	return &c.Aliases
 }
 
+func (c *mqlGoogleworkspaceGroup) GetNonEditableAliases() *plugin.TValue[[]any] {
+	return &c.NonEditableAliases
+}
+
 func (c *mqlGoogleworkspaceGroup) GetDirectMembersCount() *plugin.TValue[int64] {
 	return &c.DirectMembersCount
 }
@@ -1820,11 +2074,13 @@ type mqlGoogleworkspaceMember struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGoogleworkspaceMemberInternal it will be used here
-	Id     plugin.TValue[string]
-	Email  plugin.TValue[string]
-	Status plugin.TValue[string]
-	Type   plugin.TValue[string]
-	User   plugin.TValue[*mqlGoogleworkspaceUser]
+	Id               plugin.TValue[string]
+	Email            plugin.TValue[string]
+	Role             plugin.TValue[string]
+	Status           plugin.TValue[string]
+	Type             plugin.TValue[string]
+	DeliverySettings plugin.TValue[string]
+	User             plugin.TValue[*mqlGoogleworkspaceUser]
 }
 
 // createGoogleworkspaceMember creates a new instance of this resource
@@ -1872,12 +2128,20 @@ func (c *mqlGoogleworkspaceMember) GetEmail() *plugin.TValue[string] {
 	return &c.Email
 }
 
+func (c *mqlGoogleworkspaceMember) GetRole() *plugin.TValue[string] {
+	return &c.Role
+}
+
 func (c *mqlGoogleworkspaceMember) GetStatus() *plugin.TValue[string] {
 	return &c.Status
 }
 
 func (c *mqlGoogleworkspaceMember) GetType() *plugin.TValue[string] {
 	return &c.Type
+}
+
+func (c *mqlGoogleworkspaceMember) GetDeliverySettings() *plugin.TValue[string] {
+	return &c.DeliverySettings
 }
 
 func (c *mqlGoogleworkspaceMember) GetUser() *plugin.TValue[*mqlGoogleworkspaceUser] {

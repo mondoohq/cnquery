@@ -61,6 +61,7 @@ func newMqlGoogleWorkspaceGroup(runtime *plugin.Runtime, entry *directory.Group)
 		"email":              llx.StringData(entry.Email),
 		"description":        llx.StringData(entry.Description),
 		"aliases":            llx.ArrayData(convert.SliceAnyToInterface[string](entry.Aliases), types.Any),
+		"nonEditableAliases": llx.ArrayData(convert.SliceAnyToInterface[string](entry.NonEditableAliases), types.Any),
 		"directMembersCount": llx.IntData(entry.DirectMembersCount),
 		"adminCreated":       llx.BoolData(entry.AdminCreated),
 	})
@@ -118,10 +119,12 @@ func (g *mqlGoogleworkspaceGroup) members() ([]any, error) {
 
 func newMqlGoogleWorkspaceMember(runtime *plugin.Runtime, entry *directory.Member) (any, error) {
 	return CreateResource(runtime, "googleworkspace.member", map[string]*llx.RawData{
-		"id":     llx.StringData(entry.Id),
-		"email":  llx.StringData(entry.Email),
-		"status": llx.StringData(entry.Status),
-		"type":   llx.StringData(entry.Type),
+		"id":               llx.StringData(entry.Id),
+		"email":            llx.StringData(entry.Email),
+		"role":             llx.StringData(entry.Role),
+		"status":           llx.StringData(entry.Status),
+		"type":             llx.StringData(entry.Type),
+		"deliverySettings": llx.StringData(entry.DeliverySettings),
 	})
 }
 
