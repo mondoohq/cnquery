@@ -498,7 +498,7 @@ func toMqlServiceStorageProperties(runtime *plugin.Runtime, props table.ServiceP
 func toMqlBlobServiceStorageProperties(runtime *plugin.Runtime, props table.ServiceProperties, blobProps storage.BlobServiceProperties, serviceType, parentId string) (*mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties, error) {
 	loggingRetentionPolicy, err := CreateResource(runtime, ResourceAzureSubscriptionStorageServiceAccountServicePropertiesRetentionPolicy,
 		map[string]*llx.RawData{
-			"__id":          llx.StringData(fmt.Sprintf("%s/%s/properties/logging/retentionPolicy", parentId, serviceType)),
+			"id":            llx.StringData(fmt.Sprintf("%s/%s/properties/logging/retentionPolicy", parentId, serviceType)),
 			"retentionDays": llx.IntDataDefault(props.Logging.RetentionPolicy.Days, 0),
 			"enabled":       llx.BoolDataPtr(props.Logging.RetentionPolicy.Enabled),
 		})
@@ -507,7 +507,7 @@ func toMqlBlobServiceStorageProperties(runtime *plugin.Runtime, props table.Serv
 	}
 	logging, err := CreateResource(runtime, ResourceAzureSubscriptionStorageServiceAccountServicePropertiesLogging,
 		map[string]*llx.RawData{
-			"__id":            llx.StringData(fmt.Sprintf("%s/%s/properties/logging", parentId, serviceType)),
+			"id":              llx.StringData(fmt.Sprintf("%s/%s/properties/logging", parentId, serviceType)),
 			"retentionPolicy": llx.ResourceData(loggingRetentionPolicy, "retentionPolicy"),
 			"delete":          llx.BoolDataPtr(props.Logging.Delete),
 			"write":           llx.BoolDataPtr(props.Logging.Write),
@@ -519,7 +519,7 @@ func toMqlBlobServiceStorageProperties(runtime *plugin.Runtime, props table.Serv
 	}
 	minuteMetricsRetentionPolicy, err := CreateResource(runtime, ResourceAzureSubscriptionStorageServiceAccountServicePropertiesRetentionPolicy,
 		map[string]*llx.RawData{
-			"__id":          llx.StringData(fmt.Sprintf("%s/%s/properties/minuteMetrics/retentionPolicy", parentId, serviceType)),
+			"id":            llx.StringData(fmt.Sprintf("%s/%s/properties/minuteMetrics/retentionPolicy", parentId, serviceType)),
 			"retentionDays": llx.IntDataDefault(props.MinuteMetrics.RetentionPolicy.Days, 0),
 			"enabled":       llx.BoolDataPtr(props.MinuteMetrics.RetentionPolicy.Enabled),
 		})
@@ -528,7 +528,7 @@ func toMqlBlobServiceStorageProperties(runtime *plugin.Runtime, props table.Serv
 	}
 	minuteMetrics, err := CreateResource(runtime, ResourceAzureSubscriptionStorageServiceAccountServicePropertiesMetrics,
 		map[string]*llx.RawData{
-			"__id":            llx.StringData(fmt.Sprintf("%s/%s/properties/minuteMetrics/", parentId, serviceType)),
+			"id":              llx.StringData(fmt.Sprintf("%s/%s/properties/minuteMetrics/", parentId, serviceType)),
 			"retentionPolicy": llx.ResourceData(minuteMetricsRetentionPolicy, "retentionPolicy"),
 			"enabled":         llx.BoolDataPtr(props.MinuteMetrics.Enabled),
 			"includeAPIs":     llx.BoolDataPtr(props.MinuteMetrics.IncludeAPIs),
@@ -539,7 +539,7 @@ func toMqlBlobServiceStorageProperties(runtime *plugin.Runtime, props table.Serv
 	}
 	hourMetricsRetentionPolicy, err := CreateResource(runtime, ResourceAzureSubscriptionStorageServiceAccountServicePropertiesRetentionPolicy,
 		map[string]*llx.RawData{
-			"__id":          llx.StringData(fmt.Sprintf("%s/%s/properties/hourMetrics/retentionPolicy", parentId, serviceType)),
+			"id":            llx.StringData(fmt.Sprintf("%s/%s/properties/hourMetrics/retentionPolicy", parentId, serviceType)),
 			"retentionDays": llx.IntDataDefault(props.HourMetrics.RetentionPolicy.Days, 0),
 			"enabled":       llx.BoolDataPtr(props.HourMetrics.RetentionPolicy.Enabled),
 		})
@@ -548,7 +548,7 @@ func toMqlBlobServiceStorageProperties(runtime *plugin.Runtime, props table.Serv
 	}
 	hourMetrics, err := CreateResource(runtime, ResourceAzureSubscriptionStorageServiceAccountServicePropertiesMetrics,
 		map[string]*llx.RawData{
-			"__id":            llx.StringData(fmt.Sprintf("%s/%s/properties/hourMetrics", parentId, serviceType)),
+			"id":              llx.StringData(fmt.Sprintf("%s/%s/properties/hourMetrics", parentId, serviceType)),
 			"retentionPolicy": llx.ResourceData(hourMetricsRetentionPolicy, "retentionPolicy"),
 			"enabled":         llx.BoolDataPtr(props.HourMetrics.Enabled),
 			"includeAPIs":     llx.BoolDataPtr(props.HourMetrics.IncludeAPIs),
@@ -566,7 +566,7 @@ func toMqlBlobServiceStorageProperties(runtime *plugin.Runtime, props table.Serv
 
 	settings, err := CreateResource(runtime, ResourceAzureSubscriptionStorageServiceAccountServiceBlobProperties,
 		map[string]*llx.RawData{
-			"__id":                llx.StringData(fmt.Sprintf("%s/%s/properties", parentId, serviceType)),
+			"id":                  llx.StringData(fmt.Sprintf("%s/%s/properties", parentId, serviceType)),
 			"minuteMetrics":       llx.ResourceData(minuteMetrics, "minuteMetrics"),
 			"hourMetrics":         llx.ResourceData(hourMetrics, "hourMetrics"),
 			"logging":             llx.ResourceData(logging, "logging"),
