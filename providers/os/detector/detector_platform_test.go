@@ -311,6 +311,28 @@ func TestUbuntu2204Detector(t *testing.T) {
 	assert.Equal(t, "aarch64", di.Arch, "os arch should be identified")
 }
 
+func TestUbuntu2204ProDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-ubuntu2204-pro.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "ubuntu", di.Name, "os name should be identified")
+	assert.Equal(t, "Ubuntu 22.04.3 LTS", di.Title, "os title should be identified")
+	assert.Equal(t, "22.04", di.Version, "os version should be identified")
+	assert.Equal(t, "aarch64", di.Arch, "os arch should be identified")
+	assert.Equal(t, "enabled", di.Metadata["ubuntu/pro"], "ubuntu pro metadata should be identified")
+}
+
+func TestUbuntu2204NoProDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-ubuntu2204-nopro.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "ubuntu", di.Name, "os name should be identified")
+	assert.Equal(t, "Ubuntu 22.04.3 LTS", di.Title, "os title should be identified")
+	assert.Equal(t, "22.04", di.Version, "os version should be identified")
+	assert.Equal(t, "aarch64", di.Arch, "os arch should be identified")
+	assert.Equal(t, "disabled", di.Metadata["ubuntu/pro"], "ubuntu pro metadata should be identified")
+}
+
 func TestPoposDetector(t *testing.T) {
 	di, err := detectPlatformFromMock("./testdata/detect-popos.toml")
 	assert.Nil(t, err, "was able to create the provider")

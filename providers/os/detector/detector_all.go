@@ -221,10 +221,27 @@ var ubuntu = &PlatformResolver{
 	Name:     "ubuntu",
 	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
-		if pf.Name == "ubuntu" {
-			return true, nil
+		if pf.Name != "ubuntu" {
+			return false, nil
 		}
-		return false, nil
+
+		afs := &afero.Afero{Fs: conn.FileSystem()}
+
+		// Prefer non-root detection via ESM apt source list files
+		esmFiles := []string{
+			"/etc/apt/sources.list.d/ubuntu-esm-infra.list",
+			"/etc/apt/sources.list.d/ubuntu-esm-apps.list",
+			"/etc/apt/sources.list.d/ubuntu-pro-client.list",
+		}
+		for _, p := range esmFiles {
+			if ok, err := afs.Exists(p); err == nil && ok {
+				pf.Metadata["ubuntu/pro"] = "enabled"
+				return true, nil
+			}
+		}
+
+		pf.Metadata["ubuntu/pro"] = "disabled"
+		return true, nil
 	},
 }
 
