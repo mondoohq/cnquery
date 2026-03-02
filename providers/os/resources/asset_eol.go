@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream/mvd"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream/mvd"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 )
 
