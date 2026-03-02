@@ -37,9 +37,11 @@ func (g *mqlGoogleworkspace) orgUnits() ([]any, error) {
 
 func newMqlGoogleWorkspaceOrgUnit(runtime *plugin.Runtime, entry *directory.OrgUnit) (any, error) {
 	return CreateResource(runtime, "googleworkspace.orgUnit", map[string]*llx.RawData{
-		"id":          llx.StringData(entry.OrgUnitId),
-		"name":        llx.StringData(entry.Name),
-		"description": llx.StringData(entry.Description),
+		"id":                llx.StringData(entry.OrgUnitId),
+		"name":              llx.StringData(entry.Name),
+		"description":       llx.StringData(entry.Description),
+		"orgUnitPath":       llx.StringData(entry.OrgUnitPath),
+		"parentOrgUnitPath": llx.StringData(entry.ParentOrgUnitPath),
 	})
 }
 

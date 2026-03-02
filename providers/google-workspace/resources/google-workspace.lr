@@ -24,18 +24,36 @@ googleworkspace {
 
 // Google Workspace calendar
 private googleworkspace.calendar @defaults("summary") {
+  // Identifier of the calendar
+  id string
   // Title of the calendar
   summary string
   // The summary that the authenticated user has set for this calendar
   summaryOverride string
   // Whether the calendar is the primary calendar for the authenticated user
   primary bool
+  // The effective access role for the authenticated user (freeBusyReader, reader, writer, owner)
+  accessRole string
+  // Description of the calendar
+  description string
+  // The time zone of the calendar
+  timeZone string
+  // Geographic location of the calendar as free-form text
+  location string
+  // Whether the calendar has been hidden from the list
+  hidden bool
+  // Whether the calendar list entry has been removed from the list
+  deleted bool
+  // Whether the calendar content shows up in the calendar UI
+  selected bool
   // ACL rules for the calendar
   acl() []googleworkspace.calendar.aclRule
 }
 
 // Google Workspace calendar ACL rule
 private googleworkspace.calendar.aclRule @defaults("role") {
+  // Identifier of the ACL rule
+  id string
   // The role assigned to the scope. Possible values are none, freeBusyReader, reader, writer, owner
   role string
   // The extent to which calendar access is granted by this ACL rule
@@ -58,6 +76,10 @@ private googleworkspace.orgUnit @defaults("name") {
   name string
   // Description of the organizational unit
   description string
+  // The full path to the organizational unit
+  orgUnitPath string
+  // The path of the parent organizational unit
+  parentOrgUnitPath string
 }
 
 // Google Workspace domain
@@ -108,6 +130,22 @@ private googleworkspace.user @defaults("primaryEmail") {
   isEnrolledIn2Sv bool
   // Whether the user's Google mailbox is created
   isMailboxSetup bool
+  // The full path of the parent organization associated with the user
+  orgUnitPath string
+  // Whether the user must change their password at the next login
+  changePasswordAtNextLogin bool
+  // Whether the user's IP address is allowlisted
+  ipWhitelisted bool
+  // Whether the user's profile is visible in the Google Workspace global address list
+  includeInGlobalAddressList bool
+  // Whether the user is a guest user
+  isGuestUser bool
+  // A list of the user's non-editable alias email addresses
+  nonEditableAliases []string
+  // URL of user's profile photo
+  thumbnailPhotoUrl string
+  // The unique ID for the customer's Google Workspace account
+  customerId string
   // User's last login time
   lastLoginTime time
   // User's account creation time
@@ -160,6 +198,8 @@ private googleworkspace.group @defaults("email") {
   description string
   // A list of a group's alias email addresses
   aliases []string
+  // A list of the group's non-editable alias email addresses outside the primary domain
+  nonEditableAliases []string
   // The number of users that are direct members of the group
   directMembersCount int
   // Whether this group was created by an administrator rather than a user
@@ -178,10 +218,14 @@ private googleworkspace.member @defaults("email") {
   id string
   // The member's email address
   email string
+  // The role of the member (MEMBER, OWNER, MANAGER)
+  role string
   // Status of member
   status string
   // The type of group member
   type string
+  // The delivery settings for the member (ALL_MAIL, DAILY, DIGEST, DISABLED, NONE)
+  deliverySettings string
   // Linked user account
   user() googleworkspace.user
 }
