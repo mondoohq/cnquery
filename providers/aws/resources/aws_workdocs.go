@@ -64,6 +64,10 @@ func (a *mqlAwsWorkdocs) getUsers(conn *connection.AwsConnection) []*jobpool.Job
 						log.Warn().Str("region", region).Msg("error accessing region for AWS WorkDocs API")
 						return res, nil
 					}
+					if isBadRequestError(err) {
+						log.Warn().Str("region", region).Msg("AWS WorkDocs not enabled in region")
+						return res, nil
+					}
 					return nil, err
 				}
 				for _, user := range page.Users {
