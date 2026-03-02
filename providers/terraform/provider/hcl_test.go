@@ -110,12 +110,57 @@ func TestResource_Terraform(t *testing.T) {
 	// 	assert.Equal(t, map[string]any{"enable-oslogin": true}, res[0].Data.Value)
 	// })
 
-	// t.Run("terraform settings", func(t *testing.T) {
-	// 	res := testTerraformHclQuery(t, terraformHclPath, "terraform.settings.requiredProviders['aws']['version']")
-	// 	require.NotEmpty(t, res)
-	// 	assert.Empty(t, res[0].Result().Error)
-	// 	assert.Equal(t, "~> 3.74", res[0].Data.Value)
-	// })
+	t.Run("terraform settings required providers", func(t *testing.T) {
+		srv, connRes := newTestService(HclConnectionType, terraformHclPath)
+		require.NotEmpty(t, srv)
+
+		// create terraform.settings resource
+		dataResp, err := srv.GetData(&plugin.DataReq{
+			Connection: connRes.Id,
+			Resource:   "terraform.settings",
+		})
+		require.NoError(t, err)
+		resourceId := string(dataResp.Data.Value)
+
+		// fetch requiredProviders
+		dataResp, err = srv.GetData(&plugin.DataReq{
+			Connection: connRes.Id,
+			Resource:   "terraform.settings",
+			ResourceId: resourceId,
+			Field:      "requiredProviders",
+		})
+		require.NoError(t, err)
+		require.Equal(t, 1, len(dataResp.Data.Array))
+
+		// get provider details
+		providerResourceID := string(dataResp.Data.Array[0].Value)
+		nameResp, err := srv.GetData(&plugin.DataReq{
+			Connection: connRes.Id,
+			Resource:   "terraform.settings.requiredProvider",
+			ResourceId: providerResourceID,
+			Field:      "name",
+		})
+		require.NoError(t, err)
+		assert.Equal(t, "aws", string(nameResp.Data.Value))
+
+		sourceResp, err := srv.GetData(&plugin.DataReq{
+			Connection: connRes.Id,
+			Resource:   "terraform.settings.requiredProvider",
+			ResourceId: providerResourceID,
+			Field:      "source",
+		})
+		require.NoError(t, err)
+		assert.Equal(t, "hashicorp/aws", string(sourceResp.Data.Value))
+
+		versionResp, err := srv.GetData(&plugin.DataReq{
+			Connection: connRes.Id,
+			Resource:   "terraform.settings.requiredProvider",
+			ResourceId: providerResourceID,
+			Field:      "version",
+		})
+		require.NoError(t, err)
+		assert.Equal(t, "~> 3.74", string(versionResp.Data.Value))
+	})
 }
 
 func TestModuleWithoutResources_Terraform(t *testing.T) {

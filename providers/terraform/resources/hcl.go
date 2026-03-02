@@ -779,7 +779,7 @@ func initTerraformSettings(runtime *plugin.Runtime, args map[string]*llx.RawData
 		// TODO: return modified arguments to load from recording
 		return nil, &mqlTerraformSettings{
 			Block:             plugin.TValue[*mqlTerraformBlock]{State: plugin.StateIsSet | plugin.StateIsNull},
-			RequiredProviders: plugin.TValue[any]{State: plugin.StateIsSet | plugin.StateIsNull, Data: []any{}},
+			RequiredProviders: plugin.TValue[[]any]{State: plugin.StateIsSet, Data: []any{}},
 			Backend:           plugin.TValue[any]{State: plugin.StateIsSet, Data: []any{}},
 		}, nil
 	}
@@ -788,7 +788,7 @@ func initTerraformSettings(runtime *plugin.Runtime, args map[string]*llx.RawData
 	// we will point to the first block and collect all the settings from all blocks to give
 	// as much information as possible back
 	args["block"] = llx.ResourceData(blocks[0], "terraform.block")
-	args["requiredProviders"] = llx.DictData(map[string]any{})
+	requiredProviders := []any{}
 	args["backend"] = llx.DictData(map[string]any{})
 
 	for _, settingsBlock := range blocks {
@@ -801,7 +801,32 @@ func initTerraformSettings(runtime *plugin.Runtime, args map[string]*llx.RawData
 				if err != nil {
 					return nil, nil, err
 				}
-				args["requiredProviders"] = llx.DictData(dict)
+				for name, val := range dict {
+					source := ""
+					version := ""
+					if m, ok := val.(map[string]any); ok {
+						if s, ok := m["source"].(string); ok {
+							source = s
+						}
+						if v, ok := m["version"].(string); ok {
+							version = v
+						}
+					} else if v, ok := val.(string); ok {
+						// Shorthand syntax: aws = "~> 3.74"
+						version = v
+					}
+					r, err := CreateResource(runtime, "terraform.settings.requiredProvider",
+						map[string]*llx.RawData{
+							"name":    llx.StringData(name),
+							"source":  llx.StringData(source),
+							"version": llx.StringData(version),
+						},
+					)
+					if err != nil {
+						return nil, nil, err
+					}
+					requiredProviders = append(requiredProviders, r)
+				}
 			}
 
 			backendBlock := getBlockByName(hb, "backend")
@@ -819,7 +844,12 @@ func initTerraformSettings(runtime *plugin.Runtime, args map[string]*llx.RawData
 		}
 	}
 
+	args["requiredProviders"] = llx.ArrayData(requiredProviders, types.Resource("terraform.settings.requiredProvider"))
 	return args, nil, nil
+}
+
+func (r *mqlTerraformSettingsRequiredProvider) id() (string, error) {
+	return "terraform.settings.requiredProvider/" + r.Name.Data, nil
 }
 
 func getBlockByName(hb *hcl.Block, name string) *hcl.Block {
