@@ -19,6 +19,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13"
 	"go.mondoo.com/mql/v13/exec"
+	"go.mondoo.com/mql/v13/logger"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/mqlc"
 	"go.mondoo.com/mql/v13/mqlc/parser"
@@ -239,6 +240,8 @@ func (m *shellModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case queryResultMsg:
 		// Query finished executing
 		m.executing = false
+		// Resume log output, flushing any buffered debug logs
+		(logger.LogOutputWriter.(*logger.BufferedWriter)).Resume()
 		// Print results directly to terminal (outside of Bubble Tea's view)
 		if msg.err != nil {
 			output := m.theme.ErrorText("failed to compile: " + msg.err.Error())
@@ -559,6 +562,9 @@ func (m *shellModel) executeQuery(input string) (tea.Model, tea.Cmd) {
 	m.input.SetHeight(1)
 	m.isMultiline = false
 	m.executing = true
+
+	// Pause log output to prevent debug logs from interleaving with the spinner
+	(logger.LogOutputWriter.(*logger.BufferedWriter)).Pause()
 
 	// Execute the query
 	queryToRun := m.query
