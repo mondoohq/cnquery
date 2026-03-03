@@ -77,6 +77,16 @@ const (
 	ResourceAuditdRuleControl          string = "auditd.rule.control"
 	ResourceAuditdRuleFile             string = "auditd.rule.file"
 	ResourceAuditdRuleSyscall          string = "auditd.rule.syscall"
+	ResourceApache                     string = "apache"
+	ResourceApacheConf                 string = "apache.conf"
+	ResourceApacheConfModule           string = "apache.conf.module"
+	ResourceApacheConfVirtualHost      string = "apache.conf.virtualHost"
+	ResourceApacheConfDirectory        string = "apache.conf.directory"
+	ResourceNginx                      string = "nginx"
+	ResourceNginxConf                  string = "nginx.conf"
+	ResourceNginxConfServer            string = "nginx.conf.server"
+	ResourceNginxConfUpstream          string = "nginx.conf.upstream"
+	ResourceNginxConfLocation          string = "nginx.conf.location"
 	ResourceJournaldConfig             string = "journald.config"
 	ResourceJournaldConfigSection      string = "journald.config.section"
 	ResourceJournaldConfigSectionParam string = "journald.config.section.param"
@@ -106,6 +116,10 @@ const (
 	ResourceIptables                   string = "iptables"
 	ResourceIp6tables                  string = "ip6tables"
 	ResourceIptablesEntry              string = "iptables.entry"
+	ResourceNftables                   string = "nftables"
+	ResourceNftablesTable              string = "nftables.table"
+	ResourceNftablesChain              string = "nftables.chain"
+	ResourceNftablesRule               string = "nftables.rule"
 	ResourceFstab                      string = "fstab"
 	ResourceFstabEntry                 string = "fstab.entry"
 	ResourceProcess                    string = "process"
@@ -435,6 +449,46 @@ func init() {
 			// to override args, implement: initAuditdRuleSyscall(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAuditdRuleSyscall,
 		},
+		"apache": {
+			// to override args, implement: initApache(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createApache,
+		},
+		"apache.conf": {
+			Init:   initApacheConf,
+			Create: createApacheConf,
+		},
+		"apache.conf.module": {
+			// to override args, implement: initApacheConfModule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createApacheConfModule,
+		},
+		"apache.conf.virtualHost": {
+			// to override args, implement: initApacheConfVirtualHost(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createApacheConfVirtualHost,
+		},
+		"apache.conf.directory": {
+			// to override args, implement: initApacheConfDirectory(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createApacheConfDirectory,
+		},
+		"nginx": {
+			// to override args, implement: initNginx(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNginx,
+		},
+		"nginx.conf": {
+			Init:   initNginxConf,
+			Create: createNginxConf,
+		},
+		"nginx.conf.server": {
+			// to override args, implement: initNginxConfServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNginxConfServer,
+		},
+		"nginx.conf.upstream": {
+			// to override args, implement: initNginxConfUpstream(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNginxConfUpstream,
+		},
+		"nginx.conf.location": {
+			// to override args, implement: initNginxConfLocation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNginxConfLocation,
+		},
 		"journald.config": {
 			Init:   initJournaldConfig,
 			Create: createJournaldConfig,
@@ -550,6 +604,22 @@ func init() {
 		"iptables.entry": {
 			// to override args, implement: initIptablesEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createIptablesEntry,
+		},
+		"nftables": {
+			// to override args, implement: initNftables(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNftables,
+		},
+		"nftables.table": {
+			// to override args, implement: initNftablesTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNftablesTable,
+		},
+		"nftables.chain": {
+			// to override args, implement: initNftablesChain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNftablesChain,
+		},
+		"nftables.rule": {
+			// to override args, implement: initNftablesRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNftablesRule,
 		},
 		"fstab": {
 			Init:   initFstab,
@@ -1278,6 +1348,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"os.linux.ip6tables": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOsLinux).GetIp6tables()).ToDataRes(types.Resource("ip6tables"))
 	},
+	"os.linux.nftables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsLinux).GetNftables()).ToDataRes(types.Resource("nftables"))
+	},
 	"os.linux.fstab": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOsLinux).GetFstab()).ToDataRes(types.Resource("fstab"))
 	},
@@ -1782,6 +1855,135 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"auditd.rule.syscall.keyname": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAuditdRuleSyscall).GetKeyname()).ToDataRes(types.String)
 	},
+	"apache.conf.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApacheConf).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"apache.conf.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApacheConf).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
+	},
+	"apache.conf.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApacheConf).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"apache.conf.listenAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApacheConf).GetListenAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"apache.conf.modules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApacheConf).GetModules()).ToDataRes(types.Array(types.Resource("apache.conf.module")))
+	},
+	"apache.conf.virtualHosts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApacheConf).GetVirtualHosts()).ToDataRes(types.Array(types.Resource("apache.conf.virtualHost")))
+	},
+	"apache.conf.directories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApacheConf).GetDirectories()).ToDataRes(types.Array(types.Resource("apache.conf.directory")))
+	},
+	"apache.conf.module.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApacheConfModule).GetName()).ToDataRes(types.String)
+	},
+	"apache.conf.module.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApacheConfModule).GetPath()).ToDataRes(types.String)
+	},
+	"apache.conf.virtualHost.address": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApacheConfVirtualHost).GetAddress()).ToDataRes(types.String)
+	},
+	"apache.conf.virtualHost.serverName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApacheConfVirtualHost).GetServerName()).ToDataRes(types.String)
+	},
+	"apache.conf.virtualHost.documentRoot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApacheConfVirtualHost).GetDocumentRoot()).ToDataRes(types.String)
+	},
+	"apache.conf.virtualHost.ssl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApacheConfVirtualHost).GetSsl()).ToDataRes(types.Bool)
+	},
+	"apache.conf.virtualHost.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApacheConfVirtualHost).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"apache.conf.directory.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApacheConfDirectory).GetPath()).ToDataRes(types.String)
+	},
+	"apache.conf.directory.options": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApacheConfDirectory).GetOptions()).ToDataRes(types.String)
+	},
+	"apache.conf.directory.allowOverride": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApacheConfDirectory).GetAllowOverride()).ToDataRes(types.String)
+	},
+	"apache.conf.directory.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApacheConfDirectory).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"nginx.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginx).GetVersion()).ToDataRes(types.String)
+	},
+	"nginx.modules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginx).GetModules()).ToDataRes(types.Array(types.String))
+	},
+	"nginx.conf.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConf).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"nginx.conf.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConf).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
+	},
+	"nginx.conf.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConf).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"nginx.conf.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConf).GetUser()).ToDataRes(types.String)
+	},
+	"nginx.conf.workerProcesses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConf).GetWorkerProcesses()).ToDataRes(types.String)
+	},
+	"nginx.conf.errorLog": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConf).GetErrorLog()).ToDataRes(types.String)
+	},
+	"nginx.conf.listenAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConf).GetListenAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"nginx.conf.httpParams": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConf).GetHttpParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"nginx.conf.servers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConf).GetServers()).ToDataRes(types.Array(types.Resource("nginx.conf.server")))
+	},
+	"nginx.conf.upstreams": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConf).GetUpstreams()).ToDataRes(types.Array(types.Resource("nginx.conf.upstream")))
+	},
+	"nginx.conf.server.serverName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConfServer).GetServerName()).ToDataRes(types.String)
+	},
+	"nginx.conf.server.listen": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConfServer).GetListen()).ToDataRes(types.String)
+	},
+	"nginx.conf.server.root": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConfServer).GetRoot()).ToDataRes(types.String)
+	},
+	"nginx.conf.server.ssl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConfServer).GetSsl()).ToDataRes(types.Bool)
+	},
+	"nginx.conf.server.locations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConfServer).GetLocations()).ToDataRes(types.Array(types.Resource("nginx.conf.location")))
+	},
+	"nginx.conf.server.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConfServer).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"nginx.conf.upstream.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConfUpstream).GetName()).ToDataRes(types.String)
+	},
+	"nginx.conf.upstream.servers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConfUpstream).GetServers()).ToDataRes(types.Array(types.String))
+	},
+	"nginx.conf.upstream.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConfUpstream).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"nginx.conf.location.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConfLocation).GetPath()).ToDataRes(types.String)
+	},
+	"nginx.conf.location.proxyPass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConfLocation).GetProxyPass()).ToDataRes(types.String)
+	},
+	"nginx.conf.location.root": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConfLocation).GetRoot()).ToDataRes(types.String)
+	},
+	"nginx.conf.location.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNginxConfLocation).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"journald.config.file": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlJournaldConfig).GetFile()).ToDataRes(types.Resource("file"))
 	},
@@ -2129,6 +2331,75 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"iptables.entry.chain": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIptablesEntry).GetChain()).ToDataRes(types.String)
+	},
+	"nftables.tables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftables).GetTables()).ToDataRes(types.Array(types.Resource("nftables.table")))
+	},
+	"nftables.table.family": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesTable).GetFamily()).ToDataRes(types.String)
+	},
+	"nftables.table.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesTable).GetName()).ToDataRes(types.String)
+	},
+	"nftables.table.handle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesTable).GetHandle()).ToDataRes(types.Int)
+	},
+	"nftables.table.flags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesTable).GetFlags()).ToDataRes(types.Array(types.String))
+	},
+	"nftables.table.chains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesTable).GetChains()).ToDataRes(types.Array(types.Resource("nftables.chain")))
+	},
+	"nftables.table.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesTable).GetRules()).ToDataRes(types.Array(types.Resource("nftables.rule")))
+	},
+	"nftables.chain.family": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesChain).GetFamily()).ToDataRes(types.String)
+	},
+	"nftables.chain.table": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesChain).GetTable()).ToDataRes(types.String)
+	},
+	"nftables.chain.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesChain).GetName()).ToDataRes(types.String)
+	},
+	"nftables.chain.handle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesChain).GetHandle()).ToDataRes(types.Int)
+	},
+	"nftables.chain.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesChain).GetType()).ToDataRes(types.String)
+	},
+	"nftables.chain.hook": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesChain).GetHook()).ToDataRes(types.String)
+	},
+	"nftables.chain.prio": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesChain).GetPrio()).ToDataRes(types.Int)
+	},
+	"nftables.chain.policy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesChain).GetPolicy()).ToDataRes(types.String)
+	},
+	"nftables.chain.isBaseChain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesChain).GetIsBaseChain()).ToDataRes(types.Bool)
+	},
+	"nftables.chain.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesChain).GetRules()).ToDataRes(types.Array(types.Resource("nftables.rule")))
+	},
+	"nftables.rule.family": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesRule).GetFamily()).ToDataRes(types.String)
+	},
+	"nftables.rule.table": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesRule).GetTable()).ToDataRes(types.String)
+	},
+	"nftables.rule.chain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesRule).GetChain()).ToDataRes(types.String)
+	},
+	"nftables.rule.handle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesRule).GetHandle()).ToDataRes(types.Int)
+	},
+	"nftables.rule.expr": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesRule).GetExpr()).ToDataRes(types.Array(types.Dict))
+	},
+	"nftables.rule.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesRule).GetComment()).ToDataRes(types.String)
 	},
 	"fstab.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFstab).GetPath()).ToDataRes(types.String)
@@ -4119,6 +4390,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOsLinux).Ip6tables, ok = plugin.RawToTValue[*mqlIp6tables](v.Value, v.Error)
 		return
 	},
+	"os.linux.nftables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsLinux).Nftables, ok = plugin.RawToTValue[*mqlNftables](v.Value, v.Error)
+		return
+	},
 	"os.linux.fstab": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOsLinux).Fstab, ok = plugin.RawToTValue[*mqlFstab](v.Value, v.Error)
 		return
@@ -4935,6 +5210,218 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAuditdRuleSyscall).Keyname, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"apache.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache).__id, ok = v.Value.(string)
+		return
+	},
+	"apache.conf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApacheConf).__id, ok = v.Value.(string)
+		return
+	},
+	"apache.conf.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApacheConf).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"apache.conf.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApacheConf).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"apache.conf.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApacheConf).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"apache.conf.listenAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApacheConf).ListenAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"apache.conf.modules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApacheConf).Modules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"apache.conf.virtualHosts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApacheConf).VirtualHosts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"apache.conf.directories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApacheConf).Directories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"apache.conf.module.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApacheConfModule).__id, ok = v.Value.(string)
+		return
+	},
+	"apache.conf.module.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApacheConfModule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apache.conf.module.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApacheConfModule).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apache.conf.virtualHost.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApacheConfVirtualHost).__id, ok = v.Value.(string)
+		return
+	},
+	"apache.conf.virtualHost.address": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApacheConfVirtualHost).Address, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apache.conf.virtualHost.serverName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApacheConfVirtualHost).ServerName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apache.conf.virtualHost.documentRoot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApacheConfVirtualHost).DocumentRoot, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apache.conf.virtualHost.ssl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApacheConfVirtualHost).Ssl, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"apache.conf.virtualHost.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApacheConfVirtualHost).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"apache.conf.directory.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApacheConfDirectory).__id, ok = v.Value.(string)
+		return
+	},
+	"apache.conf.directory.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApacheConfDirectory).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apache.conf.directory.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApacheConfDirectory).Options, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apache.conf.directory.allowOverride": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApacheConfDirectory).AllowOverride, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apache.conf.directory.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApacheConfDirectory).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"nginx.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginx).__id, ok = v.Value.(string)
+		return
+	},
+	"nginx.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginx).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nginx.modules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginx).Modules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConf).__id, ok = v.Value.(string)
+		return
+	},
+	"nginx.conf.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConf).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConf).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConf).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConf).User, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.workerProcesses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConf).WorkerProcesses, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.errorLog": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConf).ErrorLog, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.listenAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConf).ListenAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.httpParams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConf).HttpParams, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.servers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConf).Servers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.upstreams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConf).Upstreams, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.server.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConfServer).__id, ok = v.Value.(string)
+		return
+	},
+	"nginx.conf.server.serverName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConfServer).ServerName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.server.listen": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConfServer).Listen, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.server.root": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConfServer).Root, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.server.ssl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConfServer).Ssl, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.server.locations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConfServer).Locations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.server.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConfServer).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.upstream.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConfUpstream).__id, ok = v.Value.(string)
+		return
+	},
+	"nginx.conf.upstream.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConfUpstream).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.upstream.servers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConfUpstream).Servers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.upstream.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConfUpstream).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.location.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConfLocation).__id, ok = v.Value.(string)
+		return
+	},
+	"nginx.conf.location.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConfLocation).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.location.proxyPass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConfLocation).ProxyPass, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.location.root": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConfLocation).Root, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nginx.conf.location.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNginxConfLocation).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"journald.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlJournaldConfig).__id, ok = v.Value.(string)
 		return
@@ -5513,6 +6000,114 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"iptables.entry.chain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIptablesEntry).Chain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nftables.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftables).__id, ok = v.Value.(string)
+		return
+	},
+	"nftables.tables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftables).Tables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nftables.table.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesTable).__id, ok = v.Value.(string)
+		return
+	},
+	"nftables.table.family": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesTable).Family, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nftables.table.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesTable).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nftables.table.handle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesTable).Handle, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"nftables.table.flags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesTable).Flags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nftables.table.chains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesTable).Chains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nftables.table.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesTable).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nftables.chain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesChain).__id, ok = v.Value.(string)
+		return
+	},
+	"nftables.chain.family": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesChain).Family, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nftables.chain.table": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesChain).Table, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nftables.chain.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesChain).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nftables.chain.handle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesChain).Handle, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"nftables.chain.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesChain).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nftables.chain.hook": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesChain).Hook, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nftables.chain.prio": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesChain).Prio, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"nftables.chain.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesChain).Policy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nftables.chain.isBaseChain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesChain).IsBaseChain, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nftables.chain.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesChain).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nftables.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesRule).__id, ok = v.Value.(string)
+		return
+	},
+	"nftables.rule.family": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesRule).Family, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nftables.rule.table": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesRule).Table, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nftables.rule.chain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesRule).Chain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nftables.rule.handle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesRule).Handle, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"nftables.rule.expr": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesRule).Expr, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nftables.rule.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesRule).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"fstab.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9511,6 +10106,7 @@ type mqlOsLinux struct {
 	Unix      plugin.TValue[*mqlOsUnix]
 	Iptables  plugin.TValue[*mqlIptables]
 	Ip6tables plugin.TValue[*mqlIp6tables]
+	Nftables  plugin.TValue[*mqlNftables]
 	Fstab     plugin.TValue[*mqlFstab]
 }
 
@@ -9596,6 +10192,22 @@ func (c *mqlOsLinux) GetIp6tables() *plugin.TValue[*mqlIp6tables] {
 		}
 
 		return c.ip6tables()
+	})
+}
+
+func (c *mqlOsLinux) GetNftables() *plugin.TValue[*mqlNftables] {
+	return plugin.GetOrCompute[*mqlNftables](&c.Nftables, func() (*mqlNftables, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("os.linux", c.__id, "nftables")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNftables), nil
+			}
+		}
+
+		return c.nftables()
 	})
 }
 
@@ -12716,6 +13328,824 @@ func (c *mqlAuditdRuleSyscall) GetKeyname() *plugin.TValue[string] {
 	return &c.Keyname
 }
 
+// mqlApache for the apache resource
+type mqlApache struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlApacheInternal it will be used here
+}
+
+// createApache creates a new instance of this resource
+func createApache(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlApache{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("apache", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlApache) MqlName() string {
+	return "apache"
+}
+
+func (c *mqlApache) MqlID() string {
+	return c.__id
+}
+
+// mqlApacheConf for the apache.conf resource
+type mqlApacheConf struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlApacheConfInternal
+	File            plugin.TValue[*mqlFile]
+	Files           plugin.TValue[[]any]
+	Params          plugin.TValue[map[string]any]
+	ListenAddresses plugin.TValue[[]any]
+	Modules         plugin.TValue[[]any]
+	VirtualHosts    plugin.TValue[[]any]
+	Directories     plugin.TValue[[]any]
+}
+
+// createApacheConf creates a new instance of this resource
+func createApacheConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlApacheConf{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("apache.conf", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlApacheConf) MqlName() string {
+	return "apache.conf"
+}
+
+func (c *mqlApacheConf) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlApacheConf) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("apache.conf", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlApacheConf) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("apache.conf", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.files(vargFile.Data)
+	})
+}
+
+func (c *mqlApacheConf) GetParams() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Params, func() (map[string]any, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.params(vargFile.Data)
+	})
+}
+
+func (c *mqlApacheConf) GetListenAddresses() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ListenAddresses, func() ([]any, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.listenAddresses(vargParams.Data)
+	})
+}
+
+func (c *mqlApacheConf) GetModules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Modules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("apache.conf", c.__id, "modules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.modules(vargFile.Data)
+	})
+}
+
+func (c *mqlApacheConf) GetVirtualHosts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VirtualHosts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("apache.conf", c.__id, "virtualHosts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.virtualHosts(vargFile.Data)
+	})
+}
+
+func (c *mqlApacheConf) GetDirectories() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Directories, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("apache.conf", c.__id, "directories")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.directories(vargFile.Data)
+	})
+}
+
+// mqlApacheConfModule for the apache.conf.module resource
+type mqlApacheConfModule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlApacheConfModuleInternal it will be used here
+	Name plugin.TValue[string]
+	Path plugin.TValue[string]
+}
+
+// createApacheConfModule creates a new instance of this resource
+func createApacheConfModule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlApacheConfModule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("apache.conf.module", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlApacheConfModule) MqlName() string {
+	return "apache.conf.module"
+}
+
+func (c *mqlApacheConfModule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlApacheConfModule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlApacheConfModule) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+// mqlApacheConfVirtualHost for the apache.conf.virtualHost resource
+type mqlApacheConfVirtualHost struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlApacheConfVirtualHostInternal it will be used here
+	Address      plugin.TValue[string]
+	ServerName   plugin.TValue[string]
+	DocumentRoot plugin.TValue[string]
+	Ssl          plugin.TValue[bool]
+	Params       plugin.TValue[map[string]any]
+}
+
+// createApacheConfVirtualHost creates a new instance of this resource
+func createApacheConfVirtualHost(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlApacheConfVirtualHost{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("apache.conf.virtualHost", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlApacheConfVirtualHost) MqlName() string {
+	return "apache.conf.virtualHost"
+}
+
+func (c *mqlApacheConfVirtualHost) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlApacheConfVirtualHost) GetAddress() *plugin.TValue[string] {
+	return &c.Address
+}
+
+func (c *mqlApacheConfVirtualHost) GetServerName() *plugin.TValue[string] {
+	return &c.ServerName
+}
+
+func (c *mqlApacheConfVirtualHost) GetDocumentRoot() *plugin.TValue[string] {
+	return &c.DocumentRoot
+}
+
+func (c *mqlApacheConfVirtualHost) GetSsl() *plugin.TValue[bool] {
+	return &c.Ssl
+}
+
+func (c *mqlApacheConfVirtualHost) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+// mqlApacheConfDirectory for the apache.conf.directory resource
+type mqlApacheConfDirectory struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlApacheConfDirectoryInternal it will be used here
+	Path          plugin.TValue[string]
+	Options       plugin.TValue[string]
+	AllowOverride plugin.TValue[string]
+	Params        plugin.TValue[map[string]any]
+}
+
+// createApacheConfDirectory creates a new instance of this resource
+func createApacheConfDirectory(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlApacheConfDirectory{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("apache.conf.directory", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlApacheConfDirectory) MqlName() string {
+	return "apache.conf.directory"
+}
+
+func (c *mqlApacheConfDirectory) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlApacheConfDirectory) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlApacheConfDirectory) GetOptions() *plugin.TValue[string] {
+	return &c.Options
+}
+
+func (c *mqlApacheConfDirectory) GetAllowOverride() *plugin.TValue[string] {
+	return &c.AllowOverride
+}
+
+func (c *mqlApacheConfDirectory) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+// mqlNginx for the nginx resource
+type mqlNginx struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlNginxInternal
+	Version plugin.TValue[string]
+	Modules plugin.TValue[[]any]
+}
+
+// createNginx creates a new instance of this resource
+func createNginx(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNginx{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nginx", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNginx) MqlName() string {
+	return "nginx"
+}
+
+func (c *mqlNginx) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNginx) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlNginx) GetModules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Modules, func() ([]any, error) {
+		return c.modules()
+	})
+}
+
+// mqlNginxConf for the nginx.conf resource
+type mqlNginxConf struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlNginxConfInternal
+	File            plugin.TValue[*mqlFile]
+	Files           plugin.TValue[[]any]
+	Params          plugin.TValue[map[string]any]
+	User            plugin.TValue[string]
+	WorkerProcesses plugin.TValue[string]
+	ErrorLog        plugin.TValue[string]
+	ListenAddresses plugin.TValue[[]any]
+	HttpParams      plugin.TValue[map[string]any]
+	Servers         plugin.TValue[[]any]
+	Upstreams       plugin.TValue[[]any]
+}
+
+// createNginxConf creates a new instance of this resource
+func createNginxConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNginxConf{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nginx.conf", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNginxConf) MqlName() string {
+	return "nginx.conf"
+}
+
+func (c *mqlNginxConf) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNginxConf) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nginx.conf", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlNginxConf) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nginx.conf", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.files(vargFile.Data)
+	})
+}
+
+func (c *mqlNginxConf) GetParams() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Params, func() (map[string]any, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.params(vargFile.Data)
+	})
+}
+
+func (c *mqlNginxConf) GetUser() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.User, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.user(vargParams.Data)
+	})
+}
+
+func (c *mqlNginxConf) GetWorkerProcesses() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.WorkerProcesses, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.workerProcesses(vargParams.Data)
+	})
+}
+
+func (c *mqlNginxConf) GetErrorLog() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ErrorLog, func() (string, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return "", vargParams.Error
+		}
+
+		return c.errorLog(vargParams.Data)
+	})
+}
+
+func (c *mqlNginxConf) GetListenAddresses() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ListenAddresses, func() ([]any, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.listenAddresses(vargFile.Data)
+	})
+}
+
+func (c *mqlNginxConf) GetHttpParams() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.HttpParams, func() (map[string]any, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.httpParams(vargFile.Data)
+	})
+}
+
+func (c *mqlNginxConf) GetServers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Servers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nginx.conf", c.__id, "servers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.servers(vargFile.Data)
+	})
+}
+
+func (c *mqlNginxConf) GetUpstreams() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Upstreams, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nginx.conf", c.__id, "upstreams")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.upstreams(vargFile.Data)
+	})
+}
+
+// mqlNginxConfServer for the nginx.conf.server resource
+type mqlNginxConfServer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNginxConfServerInternal it will be used here
+	ServerName plugin.TValue[string]
+	Listen     plugin.TValue[string]
+	Root       plugin.TValue[string]
+	Ssl        plugin.TValue[bool]
+	Locations  plugin.TValue[[]any]
+	Params     plugin.TValue[map[string]any]
+}
+
+// createNginxConfServer creates a new instance of this resource
+func createNginxConfServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNginxConfServer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nginx.conf.server", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNginxConfServer) MqlName() string {
+	return "nginx.conf.server"
+}
+
+func (c *mqlNginxConfServer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNginxConfServer) GetServerName() *plugin.TValue[string] {
+	return &c.ServerName
+}
+
+func (c *mqlNginxConfServer) GetListen() *plugin.TValue[string] {
+	return &c.Listen
+}
+
+func (c *mqlNginxConfServer) GetRoot() *plugin.TValue[string] {
+	return &c.Root
+}
+
+func (c *mqlNginxConfServer) GetSsl() *plugin.TValue[bool] {
+	return &c.Ssl
+}
+
+func (c *mqlNginxConfServer) GetLocations() *plugin.TValue[[]any] {
+	return &c.Locations
+}
+
+func (c *mqlNginxConfServer) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+// mqlNginxConfUpstream for the nginx.conf.upstream resource
+type mqlNginxConfUpstream struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNginxConfUpstreamInternal it will be used here
+	Name    plugin.TValue[string]
+	Servers plugin.TValue[[]any]
+	Params  plugin.TValue[map[string]any]
+}
+
+// createNginxConfUpstream creates a new instance of this resource
+func createNginxConfUpstream(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNginxConfUpstream{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nginx.conf.upstream", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNginxConfUpstream) MqlName() string {
+	return "nginx.conf.upstream"
+}
+
+func (c *mqlNginxConfUpstream) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNginxConfUpstream) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlNginxConfUpstream) GetServers() *plugin.TValue[[]any] {
+	return &c.Servers
+}
+
+func (c *mqlNginxConfUpstream) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+// mqlNginxConfLocation for the nginx.conf.location resource
+type mqlNginxConfLocation struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNginxConfLocationInternal it will be used here
+	Path      plugin.TValue[string]
+	ProxyPass plugin.TValue[string]
+	Root      plugin.TValue[string]
+	Params    plugin.TValue[map[string]any]
+}
+
+// createNginxConfLocation creates a new instance of this resource
+func createNginxConfLocation(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNginxConfLocation{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nginx.conf.location", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNginxConfLocation) MqlName() string {
+	return "nginx.conf.location"
+}
+
+func (c *mqlNginxConfLocation) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNginxConfLocation) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlNginxConfLocation) GetProxyPass() *plugin.TValue[string] {
+	return &c.ProxyPass
+}
+
+func (c *mqlNginxConfLocation) GetRoot() *plugin.TValue[string] {
+	return &c.Root
+}
+
+func (c *mqlNginxConfLocation) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
 // mqlJournaldConfig for the journald.config resource
 type mqlJournaldConfig struct {
 	MqlRuntime *plugin.Runtime
@@ -14665,6 +16095,309 @@ func (c *mqlIptablesEntry) GetOptions() *plugin.TValue[string] {
 
 func (c *mqlIptablesEntry) GetChain() *plugin.TValue[string] {
 	return &c.Chain
+}
+
+// mqlNftables for the nftables resource
+type mqlNftables struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNftablesInternal it will be used here
+	Tables plugin.TValue[[]any]
+}
+
+// createNftables creates a new instance of this resource
+func createNftables(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNftables{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nftables", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNftables) MqlName() string {
+	return "nftables"
+}
+
+func (c *mqlNftables) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNftables) GetTables() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tables, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nftables", c.__id, "tables")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tables()
+	})
+}
+
+// mqlNftablesTable for the nftables.table resource
+type mqlNftablesTable struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNftablesTableInternal it will be used here
+	Family plugin.TValue[string]
+	Name   plugin.TValue[string]
+	Handle plugin.TValue[int64]
+	Flags  plugin.TValue[[]any]
+	Chains plugin.TValue[[]any]
+	Rules  plugin.TValue[[]any]
+}
+
+// createNftablesTable creates a new instance of this resource
+func createNftablesTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNftablesTable{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nftables.table", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNftablesTable) MqlName() string {
+	return "nftables.table"
+}
+
+func (c *mqlNftablesTable) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNftablesTable) GetFamily() *plugin.TValue[string] {
+	return &c.Family
+}
+
+func (c *mqlNftablesTable) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlNftablesTable) GetHandle() *plugin.TValue[int64] {
+	return &c.Handle
+}
+
+func (c *mqlNftablesTable) GetFlags() *plugin.TValue[[]any] {
+	return &c.Flags
+}
+
+func (c *mqlNftablesTable) GetChains() *plugin.TValue[[]any] {
+	return &c.Chains
+}
+
+func (c *mqlNftablesTable) GetRules() *plugin.TValue[[]any] {
+	return &c.Rules
+}
+
+// mqlNftablesChain for the nftables.chain resource
+type mqlNftablesChain struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNftablesChainInternal it will be used here
+	Family      plugin.TValue[string]
+	Table       plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Handle      plugin.TValue[int64]
+	Type        plugin.TValue[string]
+	Hook        plugin.TValue[string]
+	Prio        plugin.TValue[int64]
+	Policy      plugin.TValue[string]
+	IsBaseChain plugin.TValue[bool]
+	Rules       plugin.TValue[[]any]
+}
+
+// createNftablesChain creates a new instance of this resource
+func createNftablesChain(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNftablesChain{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nftables.chain", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNftablesChain) MqlName() string {
+	return "nftables.chain"
+}
+
+func (c *mqlNftablesChain) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNftablesChain) GetFamily() *plugin.TValue[string] {
+	return &c.Family
+}
+
+func (c *mqlNftablesChain) GetTable() *plugin.TValue[string] {
+	return &c.Table
+}
+
+func (c *mqlNftablesChain) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlNftablesChain) GetHandle() *plugin.TValue[int64] {
+	return &c.Handle
+}
+
+func (c *mqlNftablesChain) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlNftablesChain) GetHook() *plugin.TValue[string] {
+	return &c.Hook
+}
+
+func (c *mqlNftablesChain) GetPrio() *plugin.TValue[int64] {
+	return &c.Prio
+}
+
+func (c *mqlNftablesChain) GetPolicy() *plugin.TValue[string] {
+	return &c.Policy
+}
+
+func (c *mqlNftablesChain) GetIsBaseChain() *plugin.TValue[bool] {
+	return &c.IsBaseChain
+}
+
+func (c *mqlNftablesChain) GetRules() *plugin.TValue[[]any] {
+	return &c.Rules
+}
+
+// mqlNftablesRule for the nftables.rule resource
+type mqlNftablesRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNftablesRuleInternal it will be used here
+	Family  plugin.TValue[string]
+	Table   plugin.TValue[string]
+	Chain   plugin.TValue[string]
+	Handle  plugin.TValue[int64]
+	Expr    plugin.TValue[[]any]
+	Comment plugin.TValue[string]
+}
+
+// createNftablesRule creates a new instance of this resource
+func createNftablesRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNftablesRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nftables.rule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNftablesRule) MqlName() string {
+	return "nftables.rule"
+}
+
+func (c *mqlNftablesRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNftablesRule) GetFamily() *plugin.TValue[string] {
+	return &c.Family
+}
+
+func (c *mqlNftablesRule) GetTable() *plugin.TValue[string] {
+	return &c.Table
+}
+
+func (c *mqlNftablesRule) GetChain() *plugin.TValue[string] {
+	return &c.Chain
+}
+
+func (c *mqlNftablesRule) GetHandle() *plugin.TValue[int64] {
+	return &c.Handle
+}
+
+func (c *mqlNftablesRule) GetExpr() *plugin.TValue[[]any] {
+	return &c.Expr
+}
+
+func (c *mqlNftablesRule) GetComment() *plugin.TValue[string] {
+	return &c.Comment
 }
 
 // mqlFstab for the fstab resource
