@@ -25,7 +25,6 @@ bytematchstatement
 cavium
 cdn
 certificatechains
-CHAPv
 clcerts
 cloudflare
 Clusterwide
@@ -140,13 +139,12 @@ ondemand
 ontap
 opcplc
 opensearch
-OPENZFS
 openssl
 openzfs
 orstatement
 ospf
 parallelquery
-paravirtual
+pipefail
 PAYG
 Pids
 portgroup
@@ -216,6 +214,7 @@ vulnmgmt
 webide
 WEBSERVERS
 wil
+workdir
 WORKSPACESUSER
 xssmatchstatement
 ZSTD

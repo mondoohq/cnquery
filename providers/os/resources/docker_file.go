@@ -190,11 +190,13 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 	var copy []any
 	var add []any
 	var volumes []any
+	var workdir []any
 	var unsupported []string
 	var entrypointRaw *instructions.EntrypointCommand
 	var cmdRaw *instructions.CmdCommand
 	var userRaw *instructions.UserCommand
 	var healthcheckRaw *instructions.HealthCheckCommand
+	var shellRaw *instructions.ShellCommand
 	for i := range stage.Commands {
 		switch v := stage.Commands[i].(type) {
 		case *instructions.EnvCommand:
@@ -316,6 +318,19 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 				volumes = append(volumes, resource)
 			}
 
+		case *instructions.ShellCommand:
+			shellRaw = v
+
+		case *instructions.WorkdirCommand:
+			resource, err := CreateResource(p.MqlRuntime, ResourceDockerFileWorkdir, map[string]*llx.RawData{
+				"__id": llx.StringData(p.locationID(v.Location())),
+				"path": llx.StringData(v.Path),
+			})
+			if err != nil {
+				return nil, err
+			}
+			workdir = append(workdir, resource)
+
 		default:
 			cmd := stage.Commands[i]
 			unsupported = append(unsupported, cmd.Name())
@@ -339,6 +354,7 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 		"copy":    llx.ArrayData(copy, types.Resource(ResourceDockerFileCopy)),
 		"expose":  llx.ArrayData(expose, types.Resource(ResourceDockerFileExpose)),
 		"volumes": llx.ArrayData(volumes, types.Resource(ResourceDockerFileVolume)),
+		"workdir": llx.ArrayData(workdir, types.Resource(ResourceDockerFileWorkdir)),
 	}
 
 	if entrypointRaw != nil {
@@ -416,6 +432,23 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 		args["healthcheck"] = llx.ResourceData(hcResource, ResourceDockerFileHealthcheck)
 	} else {
 		args["healthcheck"] = llx.NilData
+	}
+
+	if shellRaw != nil {
+		shell := make([]any, len(shellRaw.Shell))
+		for i, s := range shellRaw.Shell {
+			shell[i] = s
+		}
+		shellResource, err := CreateResource(p.MqlRuntime, ResourceDockerFileShell, map[string]*llx.RawData{
+			"__id":    llx.StringData(p.locationID(shellRaw.Location())),
+			"command": llx.ArrayData(shell, types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+		args["shell"] = llx.ResourceData(shellResource, ResourceDockerFileShell)
+	} else {
+		args["shell"] = llx.NilData
 	}
 
 	rawStage, err := CreateResource(p.MqlRuntime, ResourceDockerFileStage, args)
