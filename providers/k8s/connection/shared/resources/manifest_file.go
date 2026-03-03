@@ -14,12 +14,16 @@ import (
 
 	admissionv1 "k8s.io/api/admission/v1"
 	appsv1 "k8s.io/api/apps/v1"
+	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	discoveryv1 "k8s.io/api/discovery/v1"
 	v1beta1 "k8s.io/api/extensions/v1beta1"
 	networkingv1 "k8s.io/api/networking/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	schedulingv1 "k8s.io/api/scheduling/v1"
+	storagev1 "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -54,15 +58,18 @@ func MergeManifestFiles(filenames []string) (io.Reader, error) {
 
 func ClientSchema() *runtime.Scheme {
 	scheme := runtime.NewScheme()
-	// TODO: we need to add more core resources here
 	admissionv1.AddToScheme(scheme)
 	appsv1.AddToScheme(scheme)
+	autoscalingv2.AddToScheme(scheme)
 	corev1.AddToScheme(scheme)
+	discoveryv1.AddToScheme(scheme)
 	v1beta1.AddToScheme(scheme)
 	batchv1.AddToScheme(scheme)
 	policyv1beta1.AddToScheme(scheme)
 	networkingv1.AddToScheme(scheme)
 	rbacv1.AddToScheme(scheme)
+	schedulingv1.AddToScheme(scheme)
+	storagev1.AddToScheme(scheme)
 
 	return scheme
 }

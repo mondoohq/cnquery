@@ -49,6 +49,14 @@ const (
 	ResourceK8sRbacRolebinding                         string = "k8s.rbac.rolebinding"
 	ResourceK8sNetworkpolicy                           string = "k8s.networkpolicy"
 	ResourceK8sCustomresource                          string = "k8s.customresource"
+	ResourceK8sPersistentvolume                        string = "k8s.persistentvolume"
+	ResourceK8sStorageclass                            string = "k8s.storageclass"
+	ResourceK8sPriorityclass                           string = "k8s.priorityclass"
+	ResourceK8sHorizontalpodautoscaler                 string = "k8s.horizontalpodautoscaler"
+	ResourceK8sResourcequota                           string = "k8s.resourcequota"
+	ResourceK8sLimitrange                              string = "k8s.limitrange"
+	ResourceK8sPersistentvolumeclaim                   string = "k8s.persistentvolumeclaim"
+	ResourceK8sEndpointslice                           string = "k8s.endpointslice"
 	ResourceK8sAdmissionreview                         string = "k8s.admissionreview"
 	ResourceK8sAdmissionrequest                        string = "k8s.admissionrequest"
 	ResourceK8sUserinfo                                string = "k8s.userinfo"
@@ -187,6 +195,38 @@ func init() {
 		"k8s.customresource": {
 			// to override args, implement: initK8sCustomresource(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createK8sCustomresource,
+		},
+		"k8s.persistentvolume": {
+			Init:   initK8sPersistentvolume,
+			Create: createK8sPersistentvolume,
+		},
+		"k8s.storageclass": {
+			Init:   initK8sStorageclass,
+			Create: createK8sStorageclass,
+		},
+		"k8s.priorityclass": {
+			Init:   initK8sPriorityclass,
+			Create: createK8sPriorityclass,
+		},
+		"k8s.horizontalpodautoscaler": {
+			Init:   initK8sHorizontalpodautoscaler,
+			Create: createK8sHorizontalpodautoscaler,
+		},
+		"k8s.resourcequota": {
+			Init:   initK8sResourcequota,
+			Create: createK8sResourcequota,
+		},
+		"k8s.limitrange": {
+			Init:   initK8sLimitrange,
+			Create: createK8sLimitrange,
+		},
+		"k8s.persistentvolumeclaim": {
+			Init:   initK8sPersistentvolumeclaim,
+			Create: createK8sPersistentvolumeclaim,
+		},
+		"k8s.endpointslice": {
+			Init:   initK8sEndpointslice,
+			Create: createK8sEndpointslice,
 		},
 		"k8s.admissionreview": {
 			// to override args, implement: initK8sAdmissionreview(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -359,6 +399,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.apps": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8s).GetApps()).ToDataRes(types.Array(types.Resource("k8s.app")))
+	},
+	"k8s.persistentVolumes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetPersistentVolumes()).ToDataRes(types.Array(types.Resource("k8s.persistentvolume")))
+	},
+	"k8s.storageClasses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetStorageClasses()).ToDataRes(types.Array(types.Resource("k8s.storageclass")))
+	},
+	"k8s.priorityClasses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetPriorityClasses()).ToDataRes(types.Array(types.Resource("k8s.priorityclass")))
+	},
+	"k8s.horizontalPodAutoscalers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetHorizontalPodAutoscalers()).ToDataRes(types.Array(types.Resource("k8s.horizontalpodautoscaler")))
+	},
+	"k8s.resourceQuotas": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetResourceQuotas()).ToDataRes(types.Array(types.Resource("k8s.resourcequota")))
+	},
+	"k8s.limitRanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetLimitRanges()).ToDataRes(types.Array(types.Resource("k8s.limitrange")))
+	},
+	"k8s.persistentVolumeClaims": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetPersistentVolumeClaims()).ToDataRes(types.Array(types.Resource("k8s.persistentvolumeclaim")))
+	},
+	"k8s.endpointSlices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetEndpointSlices()).ToDataRes(types.Array(types.Resource("k8s.endpointslice")))
 	},
 	"k8s.apiresource.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sApiresource).GetName()).ToDataRes(types.String)
@@ -1317,6 +1381,303 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.customresource.manifest": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sCustomresource).GetManifest()).ToDataRes(types.Dict)
 	},
+	"k8s.persistentvolume.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPersistentvolume).GetId()).ToDataRes(types.String)
+	},
+	"k8s.persistentvolume.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPersistentvolume).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.persistentvolume.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPersistentvolume).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.persistentvolume.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPersistentvolume).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.persistentvolume.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPersistentvolume).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.persistentvolume.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPersistentvolume).GetName()).ToDataRes(types.String)
+	},
+	"k8s.persistentvolume.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPersistentvolume).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.persistentvolume.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPersistentvolume).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.persistentvolume.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPersistentvolume).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.persistentvolume.spec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPersistentvolume).GetSpec()).ToDataRes(types.Dict)
+	},
+	"k8s.persistentvolume.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPersistentvolume).GetStatus()).ToDataRes(types.Dict)
+	},
+	"k8s.storageclass.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStorageclass).GetId()).ToDataRes(types.String)
+	},
+	"k8s.storageclass.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStorageclass).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.storageclass.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStorageclass).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.storageclass.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStorageclass).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.storageclass.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStorageclass).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.storageclass.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStorageclass).GetName()).ToDataRes(types.String)
+	},
+	"k8s.storageclass.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStorageclass).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.storageclass.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStorageclass).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.storageclass.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStorageclass).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.storageclass.provisioner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStorageclass).GetProvisioner()).ToDataRes(types.String)
+	},
+	"k8s.storageclass.reclaimPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStorageclass).GetReclaimPolicy()).ToDataRes(types.String)
+	},
+	"k8s.storageclass.volumeBindingMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStorageclass).GetVolumeBindingMode()).ToDataRes(types.String)
+	},
+	"k8s.storageclass.allowVolumeExpansion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStorageclass).GetAllowVolumeExpansion()).ToDataRes(types.Bool)
+	},
+	"k8s.storageclass.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStorageclass).GetParameters()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.storageclass.mountOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sStorageclass).GetMountOptions()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.priorityclass.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPriorityclass).GetId()).ToDataRes(types.String)
+	},
+	"k8s.priorityclass.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPriorityclass).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.priorityclass.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPriorityclass).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.priorityclass.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPriorityclass).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.priorityclass.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPriorityclass).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.priorityclass.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPriorityclass).GetName()).ToDataRes(types.String)
+	},
+	"k8s.priorityclass.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPriorityclass).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.priorityclass.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPriorityclass).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.priorityclass.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPriorityclass).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.priorityclass.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPriorityclass).GetValue()).ToDataRes(types.Int)
+	},
+	"k8s.priorityclass.globalDefault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPriorityclass).GetGlobalDefault()).ToDataRes(types.Bool)
+	},
+	"k8s.priorityclass.preemptionPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPriorityclass).GetPreemptionPolicy()).ToDataRes(types.String)
+	},
+	"k8s.priorityclass.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPriorityclass).GetDescription()).ToDataRes(types.String)
+	},
+	"k8s.horizontalpodautoscaler.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sHorizontalpodautoscaler).GetId()).ToDataRes(types.String)
+	},
+	"k8s.horizontalpodautoscaler.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sHorizontalpodautoscaler).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.horizontalpodautoscaler.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sHorizontalpodautoscaler).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.horizontalpodautoscaler.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sHorizontalpodautoscaler).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.horizontalpodautoscaler.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sHorizontalpodautoscaler).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.horizontalpodautoscaler.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sHorizontalpodautoscaler).GetName()).ToDataRes(types.String)
+	},
+	"k8s.horizontalpodautoscaler.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sHorizontalpodautoscaler).GetNamespace()).ToDataRes(types.String)
+	},
+	"k8s.horizontalpodautoscaler.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sHorizontalpodautoscaler).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.horizontalpodautoscaler.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sHorizontalpodautoscaler).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.horizontalpodautoscaler.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sHorizontalpodautoscaler).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.horizontalpodautoscaler.spec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sHorizontalpodautoscaler).GetSpec()).ToDataRes(types.Dict)
+	},
+	"k8s.horizontalpodautoscaler.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sHorizontalpodautoscaler).GetStatus()).ToDataRes(types.Dict)
+	},
+	"k8s.resourcequota.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourcequota).GetId()).ToDataRes(types.String)
+	},
+	"k8s.resourcequota.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourcequota).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.resourcequota.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourcequota).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.resourcequota.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourcequota).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.resourcequota.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourcequota).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.resourcequota.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourcequota).GetName()).ToDataRes(types.String)
+	},
+	"k8s.resourcequota.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourcequota).GetNamespace()).ToDataRes(types.String)
+	},
+	"k8s.resourcequota.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourcequota).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.resourcequota.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourcequota).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.resourcequota.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourcequota).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.resourcequota.spec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourcequota).GetSpec()).ToDataRes(types.Dict)
+	},
+	"k8s.resourcequota.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sResourcequota).GetStatus()).ToDataRes(types.Dict)
+	},
+	"k8s.limitrange.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sLimitrange).GetId()).ToDataRes(types.String)
+	},
+	"k8s.limitrange.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sLimitrange).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.limitrange.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sLimitrange).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.limitrange.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sLimitrange).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.limitrange.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sLimitrange).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.limitrange.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sLimitrange).GetName()).ToDataRes(types.String)
+	},
+	"k8s.limitrange.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sLimitrange).GetNamespace()).ToDataRes(types.String)
+	},
+	"k8s.limitrange.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sLimitrange).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.limitrange.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sLimitrange).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.limitrange.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sLimitrange).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.limitrange.spec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sLimitrange).GetSpec()).ToDataRes(types.Dict)
+	},
+	"k8s.persistentvolumeclaim.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPersistentvolumeclaim).GetId()).ToDataRes(types.String)
+	},
+	"k8s.persistentvolumeclaim.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPersistentvolumeclaim).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.persistentvolumeclaim.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPersistentvolumeclaim).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.persistentvolumeclaim.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPersistentvolumeclaim).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.persistentvolumeclaim.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPersistentvolumeclaim).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.persistentvolumeclaim.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPersistentvolumeclaim).GetName()).ToDataRes(types.String)
+	},
+	"k8s.persistentvolumeclaim.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPersistentvolumeclaim).GetNamespace()).ToDataRes(types.String)
+	},
+	"k8s.persistentvolumeclaim.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPersistentvolumeclaim).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.persistentvolumeclaim.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPersistentvolumeclaim).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.persistentvolumeclaim.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPersistentvolumeclaim).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.persistentvolumeclaim.spec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPersistentvolumeclaim).GetSpec()).ToDataRes(types.Dict)
+	},
+	"k8s.persistentvolumeclaim.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPersistentvolumeclaim).GetStatus()).ToDataRes(types.Dict)
+	},
+	"k8s.endpointslice.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEndpointslice).GetId()).ToDataRes(types.String)
+	},
+	"k8s.endpointslice.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEndpointslice).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.endpointslice.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEndpointslice).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.endpointslice.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEndpointslice).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.endpointslice.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEndpointslice).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.endpointslice.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEndpointslice).GetName()).ToDataRes(types.String)
+	},
+	"k8s.endpointslice.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEndpointslice).GetNamespace()).ToDataRes(types.String)
+	},
+	"k8s.endpointslice.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEndpointslice).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.endpointslice.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEndpointslice).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.endpointslice.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEndpointslice).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.endpointslice.addressType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEndpointslice).GetAddressType()).ToDataRes(types.String)
+	},
+	"k8s.endpointslice.endpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEndpointslice).GetEndpoints()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.endpointslice.ports": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEndpointslice).GetPorts()).ToDataRes(types.Array(types.Dict))
+	},
 	"k8s.admissionreview.request": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sAdmissionreview).GetRequest()).ToDataRes(types.Resource("k8s.admissionrequest"))
 	},
@@ -1502,6 +1863,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"k8s.apps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8s).Apps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.persistentVolumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).PersistentVolumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.storageClasses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).StorageClasses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.priorityClasses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).PriorityClasses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.horizontalPodAutoscalers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).HorizontalPodAutoscalers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourceQuotas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).ResourceQuotas, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.limitRanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).LimitRanges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.persistentVolumeClaims": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).PersistentVolumeClaims, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.endpointSlices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).EndpointSlices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"k8s.apiresource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2904,6 +3297,434 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlK8sCustomresource).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"k8s.persistentvolume.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPersistentvolume).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.persistentvolume.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPersistentvolume).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.persistentvolume.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPersistentvolume).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.persistentvolume.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPersistentvolume).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.persistentvolume.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPersistentvolume).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.persistentvolume.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPersistentvolume).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.persistentvolume.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPersistentvolume).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.persistentvolume.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPersistentvolume).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.persistentvolume.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPersistentvolume).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.persistentvolume.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPersistentvolume).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.persistentvolume.spec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPersistentvolume).Spec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.persistentvolume.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPersistentvolume).Status, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.storageclass.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStorageclass).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.storageclass.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStorageclass).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.storageclass.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStorageclass).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.storageclass.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStorageclass).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.storageclass.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStorageclass).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.storageclass.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStorageclass).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.storageclass.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStorageclass).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.storageclass.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStorageclass).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.storageclass.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStorageclass).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.storageclass.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStorageclass).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.storageclass.provisioner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStorageclass).Provisioner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.storageclass.reclaimPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStorageclass).ReclaimPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.storageclass.volumeBindingMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStorageclass).VolumeBindingMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.storageclass.allowVolumeExpansion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStorageclass).AllowVolumeExpansion, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.storageclass.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStorageclass).Parameters, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.storageclass.mountOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sStorageclass).MountOptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.priorityclass.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPriorityclass).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.priorityclass.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPriorityclass).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.priorityclass.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPriorityclass).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.priorityclass.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPriorityclass).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.priorityclass.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPriorityclass).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.priorityclass.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPriorityclass).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.priorityclass.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPriorityclass).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.priorityclass.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPriorityclass).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.priorityclass.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPriorityclass).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.priorityclass.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPriorityclass).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.priorityclass.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPriorityclass).Value, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.priorityclass.globalDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPriorityclass).GlobalDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.priorityclass.preemptionPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPriorityclass).PreemptionPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.priorityclass.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPriorityclass).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.horizontalpodautoscaler.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sHorizontalpodautoscaler).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.horizontalpodautoscaler.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sHorizontalpodautoscaler).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.horizontalpodautoscaler.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sHorizontalpodautoscaler).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.horizontalpodautoscaler.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sHorizontalpodautoscaler).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.horizontalpodautoscaler.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sHorizontalpodautoscaler).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.horizontalpodautoscaler.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sHorizontalpodautoscaler).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.horizontalpodautoscaler.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sHorizontalpodautoscaler).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.horizontalpodautoscaler.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sHorizontalpodautoscaler).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.horizontalpodautoscaler.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sHorizontalpodautoscaler).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.horizontalpodautoscaler.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sHorizontalpodautoscaler).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.horizontalpodautoscaler.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sHorizontalpodautoscaler).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.horizontalpodautoscaler.spec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sHorizontalpodautoscaler).Spec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.horizontalpodautoscaler.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sHorizontalpodautoscaler).Status, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourcequota.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourcequota).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.resourcequota.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourcequota).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.resourcequota.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourcequota).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.resourcequota.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourcequota).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.resourcequota.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourcequota).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourcequota.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourcequota).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourcequota.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourcequota).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.resourcequota.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourcequota).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.resourcequota.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourcequota).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.resourcequota.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourcequota).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.resourcequota.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourcequota).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourcequota.spec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourcequota).Spec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.resourcequota.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sResourcequota).Status, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.limitrange.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLimitrange).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.limitrange.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLimitrange).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.limitrange.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLimitrange).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.limitrange.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLimitrange).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.limitrange.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLimitrange).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.limitrange.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLimitrange).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.limitrange.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLimitrange).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.limitrange.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLimitrange).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.limitrange.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLimitrange).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.limitrange.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLimitrange).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.limitrange.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLimitrange).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.limitrange.spec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sLimitrange).Spec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.persistentvolumeclaim.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPersistentvolumeclaim).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.persistentvolumeclaim.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPersistentvolumeclaim).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.persistentvolumeclaim.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPersistentvolumeclaim).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.persistentvolumeclaim.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPersistentvolumeclaim).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.persistentvolumeclaim.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPersistentvolumeclaim).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.persistentvolumeclaim.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPersistentvolumeclaim).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.persistentvolumeclaim.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPersistentvolumeclaim).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.persistentvolumeclaim.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPersistentvolumeclaim).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.persistentvolumeclaim.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPersistentvolumeclaim).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.persistentvolumeclaim.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPersistentvolumeclaim).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.persistentvolumeclaim.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPersistentvolumeclaim).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.persistentvolumeclaim.spec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPersistentvolumeclaim).Spec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.persistentvolumeclaim.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPersistentvolumeclaim).Status, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.endpointslice.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEndpointslice).__id, ok = v.Value.(string)
+		return
+	},
+	"k8s.endpointslice.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEndpointslice).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.endpointslice.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEndpointslice).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.endpointslice.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEndpointslice).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.endpointslice.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEndpointslice).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.endpointslice.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEndpointslice).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"k8s.endpointslice.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEndpointslice).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.endpointslice.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEndpointslice).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.endpointslice.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEndpointslice).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.endpointslice.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEndpointslice).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.endpointslice.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEndpointslice).Manifest, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"k8s.endpointslice.addressType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEndpointslice).AddressType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.endpointslice.endpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEndpointslice).Endpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"k8s.endpointslice.ports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEndpointslice).Ports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"k8s.admissionreview.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sAdmissionreview).__id, ok = v.Value.(string)
 		return
@@ -3077,6 +3898,14 @@ type mqlK8s struct {
 	Customresources                 plugin.TValue[[]any]
 	ValidatingWebhookConfigurations plugin.TValue[[]any]
 	Apps                            plugin.TValue[[]any]
+	PersistentVolumes               plugin.TValue[[]any]
+	StorageClasses                  plugin.TValue[[]any]
+	PriorityClasses                 plugin.TValue[[]any]
+	HorizontalPodAutoscalers        plugin.TValue[[]any]
+	ResourceQuotas                  plugin.TValue[[]any]
+	LimitRanges                     plugin.TValue[[]any]
+	PersistentVolumeClaims          plugin.TValue[[]any]
+	EndpointSlices                  plugin.TValue[[]any]
 }
 
 // createK8s creates a new instance of this resource
@@ -3482,6 +4311,134 @@ func (c *mqlK8s) GetApps() *plugin.TValue[[]any] {
 		}
 
 		return c.apps()
+	})
+}
+
+func (c *mqlK8s) GetPersistentVolumes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PersistentVolumes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "persistentVolumes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.persistentVolumes()
+	})
+}
+
+func (c *mqlK8s) GetStorageClasses() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.StorageClasses, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "storageClasses")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.storageClasses()
+	})
+}
+
+func (c *mqlK8s) GetPriorityClasses() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PriorityClasses, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "priorityClasses")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.priorityClasses()
+	})
+}
+
+func (c *mqlK8s) GetHorizontalPodAutoscalers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.HorizontalPodAutoscalers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "horizontalPodAutoscalers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.horizontalPodAutoscalers()
+	})
+}
+
+func (c *mqlK8s) GetResourceQuotas() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ResourceQuotas, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "resourceQuotas")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.resourceQuotas()
+	})
+}
+
+func (c *mqlK8s) GetLimitRanges() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LimitRanges, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "limitRanges")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.limitRanges()
+	})
+}
+
+func (c *mqlK8s) GetPersistentVolumeClaims() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PersistentVolumeClaims, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "persistentVolumeClaims")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.persistentVolumeClaims()
+	})
+}
+
+func (c *mqlK8s) GetEndpointSlices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EndpointSlices, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "endpointSlices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.endpointSlices()
 	})
 }
 
@@ -6836,6 +7793,927 @@ func (c *mqlK8sCustomresource) GetCreated() *plugin.TValue[*time.Time] {
 func (c *mqlK8sCustomresource) GetManifest() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
 		return c.manifest()
+	})
+}
+
+// mqlK8sPersistentvolume for the k8s.persistentvolume resource
+type mqlK8sPersistentvolume struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlK8sPersistentvolumeInternal
+	Id              plugin.TValue[string]
+	Uid             plugin.TValue[string]
+	ResourceVersion plugin.TValue[string]
+	Labels          plugin.TValue[map[string]any]
+	Annotations     plugin.TValue[map[string]any]
+	Name            plugin.TValue[string]
+	Kind            plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	Manifest        plugin.TValue[any]
+	Spec            plugin.TValue[any]
+	Status          plugin.TValue[any]
+}
+
+// createK8sPersistentvolume creates a new instance of this resource
+func createK8sPersistentvolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sPersistentvolume{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.persistentvolume", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sPersistentvolume) MqlName() string {
+	return "k8s.persistentvolume"
+}
+
+func (c *mqlK8sPersistentvolume) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sPersistentvolume) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sPersistentvolume) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sPersistentvolume) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sPersistentvolume) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sPersistentvolume) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sPersistentvolume) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sPersistentvolume) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sPersistentvolume) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sPersistentvolume) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
+		return c.manifest()
+	})
+}
+
+func (c *mqlK8sPersistentvolume) GetSpec() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Spec, func() (any, error) {
+		return c.spec()
+	})
+}
+
+func (c *mqlK8sPersistentvolume) GetStatus() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Status, func() (any, error) {
+		return c.status()
+	})
+}
+
+// mqlK8sStorageclass for the k8s.storageclass resource
+type mqlK8sStorageclass struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlK8sStorageclassInternal
+	Id                   plugin.TValue[string]
+	Uid                  plugin.TValue[string]
+	ResourceVersion      plugin.TValue[string]
+	Labels               plugin.TValue[map[string]any]
+	Annotations          plugin.TValue[map[string]any]
+	Name                 plugin.TValue[string]
+	Kind                 plugin.TValue[string]
+	Created              plugin.TValue[*time.Time]
+	Manifest             plugin.TValue[any]
+	Provisioner          plugin.TValue[string]
+	ReclaimPolicy        plugin.TValue[string]
+	VolumeBindingMode    plugin.TValue[string]
+	AllowVolumeExpansion plugin.TValue[bool]
+	Parameters           plugin.TValue[map[string]any]
+	MountOptions         plugin.TValue[[]any]
+}
+
+// createK8sStorageclass creates a new instance of this resource
+func createK8sStorageclass(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sStorageclass{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.storageclass", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sStorageclass) MqlName() string {
+	return "k8s.storageclass"
+}
+
+func (c *mqlK8sStorageclass) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sStorageclass) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sStorageclass) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sStorageclass) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sStorageclass) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sStorageclass) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sStorageclass) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sStorageclass) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sStorageclass) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sStorageclass) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
+		return c.manifest()
+	})
+}
+
+func (c *mqlK8sStorageclass) GetProvisioner() *plugin.TValue[string] {
+	return &c.Provisioner
+}
+
+func (c *mqlK8sStorageclass) GetReclaimPolicy() *plugin.TValue[string] {
+	return &c.ReclaimPolicy
+}
+
+func (c *mqlK8sStorageclass) GetVolumeBindingMode() *plugin.TValue[string] {
+	return &c.VolumeBindingMode
+}
+
+func (c *mqlK8sStorageclass) GetAllowVolumeExpansion() *plugin.TValue[bool] {
+	return &c.AllowVolumeExpansion
+}
+
+func (c *mqlK8sStorageclass) GetParameters() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Parameters, func() (map[string]any, error) {
+		return c.parameters()
+	})
+}
+
+func (c *mqlK8sStorageclass) GetMountOptions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MountOptions, func() ([]any, error) {
+		return c.mountOptions()
+	})
+}
+
+// mqlK8sPriorityclass for the k8s.priorityclass resource
+type mqlK8sPriorityclass struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlK8sPriorityclassInternal
+	Id               plugin.TValue[string]
+	Uid              plugin.TValue[string]
+	ResourceVersion  plugin.TValue[string]
+	Labels           plugin.TValue[map[string]any]
+	Annotations      plugin.TValue[map[string]any]
+	Name             plugin.TValue[string]
+	Kind             plugin.TValue[string]
+	Created          plugin.TValue[*time.Time]
+	Manifest         plugin.TValue[any]
+	Value            plugin.TValue[int64]
+	GlobalDefault    plugin.TValue[bool]
+	PreemptionPolicy plugin.TValue[string]
+	Description      plugin.TValue[string]
+}
+
+// createK8sPriorityclass creates a new instance of this resource
+func createK8sPriorityclass(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sPriorityclass{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.priorityclass", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sPriorityclass) MqlName() string {
+	return "k8s.priorityclass"
+}
+
+func (c *mqlK8sPriorityclass) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sPriorityclass) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sPriorityclass) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sPriorityclass) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sPriorityclass) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sPriorityclass) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sPriorityclass) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sPriorityclass) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sPriorityclass) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sPriorityclass) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
+		return c.manifest()
+	})
+}
+
+func (c *mqlK8sPriorityclass) GetValue() *plugin.TValue[int64] {
+	return &c.Value
+}
+
+func (c *mqlK8sPriorityclass) GetGlobalDefault() *plugin.TValue[bool] {
+	return &c.GlobalDefault
+}
+
+func (c *mqlK8sPriorityclass) GetPreemptionPolicy() *plugin.TValue[string] {
+	return &c.PreemptionPolicy
+}
+
+func (c *mqlK8sPriorityclass) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+// mqlK8sHorizontalpodautoscaler for the k8s.horizontalpodautoscaler resource
+type mqlK8sHorizontalpodautoscaler struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlK8sHorizontalpodautoscalerInternal
+	Id              plugin.TValue[string]
+	Uid             plugin.TValue[string]
+	ResourceVersion plugin.TValue[string]
+	Labels          plugin.TValue[map[string]any]
+	Annotations     plugin.TValue[map[string]any]
+	Name            plugin.TValue[string]
+	Namespace       plugin.TValue[string]
+	Kind            plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	Manifest        plugin.TValue[any]
+	Spec            plugin.TValue[any]
+	Status          plugin.TValue[any]
+}
+
+// createK8sHorizontalpodautoscaler creates a new instance of this resource
+func createK8sHorizontalpodautoscaler(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sHorizontalpodautoscaler{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.horizontalpodautoscaler", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sHorizontalpodautoscaler) MqlName() string {
+	return "k8s.horizontalpodautoscaler"
+}
+
+func (c *mqlK8sHorizontalpodautoscaler) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sHorizontalpodautoscaler) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sHorizontalpodautoscaler) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sHorizontalpodautoscaler) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sHorizontalpodautoscaler) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sHorizontalpodautoscaler) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sHorizontalpodautoscaler) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sHorizontalpodautoscaler) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlK8sHorizontalpodautoscaler) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sHorizontalpodautoscaler) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sHorizontalpodautoscaler) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
+		return c.manifest()
+	})
+}
+
+func (c *mqlK8sHorizontalpodautoscaler) GetSpec() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Spec, func() (any, error) {
+		return c.spec()
+	})
+}
+
+func (c *mqlK8sHorizontalpodautoscaler) GetStatus() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Status, func() (any, error) {
+		return c.status()
+	})
+}
+
+// mqlK8sResourcequota for the k8s.resourcequota resource
+type mqlK8sResourcequota struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlK8sResourcequotaInternal
+	Id              plugin.TValue[string]
+	Uid             plugin.TValue[string]
+	ResourceVersion plugin.TValue[string]
+	Labels          plugin.TValue[map[string]any]
+	Annotations     plugin.TValue[map[string]any]
+	Name            plugin.TValue[string]
+	Namespace       plugin.TValue[string]
+	Kind            plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	Manifest        plugin.TValue[any]
+	Spec            plugin.TValue[any]
+	Status          plugin.TValue[any]
+}
+
+// createK8sResourcequota creates a new instance of this resource
+func createK8sResourcequota(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sResourcequota{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.resourcequota", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sResourcequota) MqlName() string {
+	return "k8s.resourcequota"
+}
+
+func (c *mqlK8sResourcequota) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sResourcequota) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sResourcequota) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sResourcequota) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sResourcequota) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sResourcequota) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sResourcequota) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sResourcequota) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlK8sResourcequota) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sResourcequota) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sResourcequota) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
+		return c.manifest()
+	})
+}
+
+func (c *mqlK8sResourcequota) GetSpec() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Spec, func() (any, error) {
+		return c.spec()
+	})
+}
+
+func (c *mqlK8sResourcequota) GetStatus() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Status, func() (any, error) {
+		return c.status()
+	})
+}
+
+// mqlK8sLimitrange for the k8s.limitrange resource
+type mqlK8sLimitrange struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlK8sLimitrangeInternal
+	Id              plugin.TValue[string]
+	Uid             plugin.TValue[string]
+	ResourceVersion plugin.TValue[string]
+	Labels          plugin.TValue[map[string]any]
+	Annotations     plugin.TValue[map[string]any]
+	Name            plugin.TValue[string]
+	Namespace       plugin.TValue[string]
+	Kind            plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	Manifest        plugin.TValue[any]
+	Spec            plugin.TValue[any]
+}
+
+// createK8sLimitrange creates a new instance of this resource
+func createK8sLimitrange(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sLimitrange{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.limitrange", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sLimitrange) MqlName() string {
+	return "k8s.limitrange"
+}
+
+func (c *mqlK8sLimitrange) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sLimitrange) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sLimitrange) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sLimitrange) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sLimitrange) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sLimitrange) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sLimitrange) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sLimitrange) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlK8sLimitrange) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sLimitrange) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sLimitrange) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
+		return c.manifest()
+	})
+}
+
+func (c *mqlK8sLimitrange) GetSpec() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Spec, func() (any, error) {
+		return c.spec()
+	})
+}
+
+// mqlK8sPersistentvolumeclaim for the k8s.persistentvolumeclaim resource
+type mqlK8sPersistentvolumeclaim struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlK8sPersistentvolumeclaimInternal
+	Id              plugin.TValue[string]
+	Uid             plugin.TValue[string]
+	ResourceVersion plugin.TValue[string]
+	Labels          plugin.TValue[map[string]any]
+	Annotations     plugin.TValue[map[string]any]
+	Name            plugin.TValue[string]
+	Namespace       plugin.TValue[string]
+	Kind            plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	Manifest        plugin.TValue[any]
+	Spec            plugin.TValue[any]
+	Status          plugin.TValue[any]
+}
+
+// createK8sPersistentvolumeclaim creates a new instance of this resource
+func createK8sPersistentvolumeclaim(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sPersistentvolumeclaim{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.persistentvolumeclaim", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sPersistentvolumeclaim) MqlName() string {
+	return "k8s.persistentvolumeclaim"
+}
+
+func (c *mqlK8sPersistentvolumeclaim) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sPersistentvolumeclaim) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sPersistentvolumeclaim) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sPersistentvolumeclaim) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sPersistentvolumeclaim) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sPersistentvolumeclaim) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sPersistentvolumeclaim) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sPersistentvolumeclaim) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlK8sPersistentvolumeclaim) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sPersistentvolumeclaim) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sPersistentvolumeclaim) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
+		return c.manifest()
+	})
+}
+
+func (c *mqlK8sPersistentvolumeclaim) GetSpec() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Spec, func() (any, error) {
+		return c.spec()
+	})
+}
+
+func (c *mqlK8sPersistentvolumeclaim) GetStatus() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Status, func() (any, error) {
+		return c.status()
+	})
+}
+
+// mqlK8sEndpointslice for the k8s.endpointslice resource
+type mqlK8sEndpointslice struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlK8sEndpointsliceInternal
+	Id              plugin.TValue[string]
+	Uid             plugin.TValue[string]
+	ResourceVersion plugin.TValue[string]
+	Labels          plugin.TValue[map[string]any]
+	Annotations     plugin.TValue[map[string]any]
+	Name            plugin.TValue[string]
+	Namespace       plugin.TValue[string]
+	Kind            plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	Manifest        plugin.TValue[any]
+	AddressType     plugin.TValue[string]
+	Endpoints       plugin.TValue[[]any]
+	Ports           plugin.TValue[[]any]
+}
+
+// createK8sEndpointslice creates a new instance of this resource
+func createK8sEndpointslice(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sEndpointslice{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.endpointslice", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sEndpointslice) MqlName() string {
+	return "k8s.endpointslice"
+}
+
+func (c *mqlK8sEndpointslice) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sEndpointslice) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sEndpointslice) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sEndpointslice) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sEndpointslice) GetLabels() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Labels, func() (map[string]any, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sEndpointslice) GetAnnotations() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Annotations, func() (map[string]any, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sEndpointslice) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sEndpointslice) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlK8sEndpointslice) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sEndpointslice) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sEndpointslice) GetManifest() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Manifest, func() (any, error) {
+		return c.manifest()
+	})
+}
+
+func (c *mqlK8sEndpointslice) GetAddressType() *plugin.TValue[string] {
+	return &c.AddressType
+}
+
+func (c *mqlK8sEndpointslice) GetEndpoints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Endpoints, func() ([]any, error) {
+		return c.endpoints()
+	})
+}
+
+func (c *mqlK8sEndpointslice) GetPorts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Ports, func() ([]any, error) {
+		return c.ports()
 	})
 }
 

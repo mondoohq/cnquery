@@ -11,6 +11,7 @@ Auths
 autoaccept
 autoclose
 autoprovision
+Autoscalers
 awsapps
 awslogs
 awsvpc
@@ -55,6 +56,7 @@ eas
 Ecmp
 eip
 ekm
+endpointslice
 ekus
 elbv
 exo
@@ -79,6 +81,7 @@ gvnic
 headerorder
 Hns
 hostkeys
+horizontalpodautoscaler
 hostedzone
 hotlink
 hvm
@@ -100,6 +103,7 @@ kqueue
 KSK
 labelmatchstatement
 lfs
+limitrange
 liveanalytics
 loggingservice
 longtermretentionpolicy
@@ -144,12 +148,15 @@ openzfs
 orstatement
 ospf
 parallelquery
+persistentvolume
+persistentvolumeclaim
 pipefail
 PAYG
 Pids
 portgroup
 posix
 postgre
+priorityclass
 POWERUSER
 psc
 pushconfig
@@ -159,6 +166,7 @@ recaptcha
 regexmatchstatement
 regexpatternsetreferencestatement
 resourcegroup
+resourcequota
 rtsp
 rulegroup
 rulegroupreferencestatement
