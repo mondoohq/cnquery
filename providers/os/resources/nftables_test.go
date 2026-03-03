@@ -134,9 +134,15 @@ func TestParseNftRuleset_Rules(t *testing.T) {
 	assert.Equal(t, int64(5), rules[1].Handle)
 	assert.Equal(t, "allow established", rules[1].Comment)
 
-	// Third rule: allow ssh
+	// Third rule: allow ssh — verify integer port number is preserved as int64
 	assert.Equal(t, int64(6), rules[2].Handle)
 	assert.Equal(t, "allow ssh", rules[2].Comment)
+	require.Len(t, rules[2].Expr, 2)
+	matchExpr, ok := rules[2].Expr[0].(map[string]any)
+	require.True(t, ok)
+	matchInner, ok := matchExpr["match"].(map[string]any)
+	require.True(t, ok)
+	assert.Equal(t, int64(22), matchInner["right"])
 
 	// NAT rule
 	assert.Equal(t, "ip", rules[3].Family)

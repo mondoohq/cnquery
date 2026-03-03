@@ -1166,7 +1166,7 @@ iptables.entry {
 }
 
 // nftables firewall
-nftables {
+nftables @defaults("tables") {
   // All nftables tables
   tables() []nftables.table
 }

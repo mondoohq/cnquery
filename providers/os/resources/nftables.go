@@ -4,15 +4,13 @@
 package resources
 
 import (
+	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
 	"strconv"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 	"go.mondoo.com/mql/v13/types"
 )
 
@@ -82,10 +80,48 @@ type nftRule struct {
 
 func parseNftRuleset(data []byte) (*nftRuleset, error) {
 	var ruleset nftRuleset
-	if err := json.Unmarshal(data, &ruleset); err != nil {
+	dec := json.NewDecoder(bytes.NewReader(data))
+	dec.UseNumber()
+	if err := dec.Decode(&ruleset); err != nil {
 		return nil, fmt.Errorf("failed to parse nftables JSON: %w", err)
 	}
+	// Convert json.Number values in rule expressions to native Go types
+	// so they are compatible with llx dict handling (which expects int64/float64).
+	for i := range ruleset.Nftables {
+		if r := ruleset.Nftables[i].Rule; r != nil {
+			for j := range r.Expr {
+				r.Expr[j] = convertJSONNumbers(r.Expr[j])
+			}
+		}
+	}
 	return &ruleset, nil
+}
+
+// convertJSONNumbers recursively walks a value decoded with UseNumber()
+// and replaces json.Number with int64 (preferred) or float64.
+func convertJSONNumbers(v any) any {
+	switch x := v.(type) {
+	case json.Number:
+		if n, err := x.Int64(); err == nil {
+			return n
+		}
+		if f, err := x.Float64(); err == nil {
+			return f
+		}
+		return x.String()
+	case map[string]any:
+		for k, val := range x {
+			x[k] = convertJSONNumbers(val)
+		}
+		return x
+	case []any:
+		for i, val := range x {
+			x[i] = convertJSONNumbers(val)
+		}
+		return x
+	default:
+		return v
+	}
 }
 
 func (n *mqlNftables) id() (string, error) {
@@ -105,22 +141,18 @@ func (r *mqlNftablesRule) id() (string, error) {
 }
 
 func (n *mqlNftables) tables() ([]any, error) {
-	conn := n.MqlRuntime.Connection.(shared.Connection)
-
-	cmd, err := conn.RunCommand("nft -j list ruleset")
+	o, err := CreateResource(n.MqlRuntime, "command", map[string]*llx.RawData{
+		"command": llx.StringData("nft -j list ruleset"),
+	})
 	if err != nil {
 		return nil, err
 	}
-	data, err := io.ReadAll(cmd.Stdout)
-	if err != nil {
-		return nil, err
-	}
-	if cmd.ExitStatus != 0 {
-		outErr, _ := io.ReadAll(cmd.Stderr)
-		return nil, errors.New(string(outErr))
+	cmd := o.(*mqlCommand)
+	if exit := cmd.GetExitcode(); exit.Data != 0 {
+		return nil, fmt.Errorf("nft command failed (exit %d): %s", exit.Data, cmd.Stderr.Data)
 	}
 
-	ruleset, err := parseNftRuleset(data)
+	ruleset, err := parseNftRuleset([]byte(cmd.Stdout.Data))
 	if err != nil {
 		return nil, err
 	}
