@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -55,7 +56,8 @@ func (s *mqlApache2) version() (string, error) {
 var reApacheVersion = regexp.MustCompile(`Apache/(\S+)`)
 
 type mqlApache2ConfInternal struct {
-	lock sync.Mutex
+	lock       sync.Mutex
+	serverRoot string
 }
 
 // apacheConfPaths maps platform names to their default Apache config location.
@@ -116,6 +118,29 @@ func apacheServerRoot(conn shared.Connection) string {
 	return "/etc/httpd"
 }
 
+// prescanServerRoot does a quick scan of the config content for a ServerRoot
+// directive so that relative Include paths can be resolved before full parsing.
+func prescanServerRoot(content string) string {
+	for _, line := range strings.Split(content, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || line[0] == '#' {
+			continue
+		}
+		idx := strings.IndexAny(line, " \t")
+		if idx < 0 {
+			continue
+		}
+		if strings.EqualFold(line[:idx], "ServerRoot") {
+			value := strings.TrimSpace(line[idx+1:])
+			if len(value) >= 2 && value[0] == '"' && value[len(value)-1] == '"' {
+				value = value[1 : len(value)-1]
+			}
+			return value
+		}
+	}
+	return ""
+}
+
 func initApache2Conf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if x, ok := args["path"]; ok {
 		path, ok := x.Value.(string)
@@ -164,9 +189,12 @@ var reApacheGlob = regexp.MustCompile(`[*?\[]`)
 func (s *mqlApache2Conf) expandGlob(pattern string) ([]string, error) {
 	conn := s.MqlRuntime.Connection.(shared.Connection)
 
-	// Resolve relative paths against ServerRoot
+	// Resolve relative paths against ServerRoot (prefer config value, fall back to platform default)
 	if !filepath.IsAbs(pattern) {
-		serverRoot := apacheServerRoot(conn)
+		serverRoot := s.serverRoot
+		if serverRoot == "" {
+			serverRoot = apacheServerRoot(conn)
+		}
 		pattern = filepath.Join(serverRoot, pattern)
 	}
 
@@ -222,6 +250,14 @@ func (s *mqlApache2Conf) parse(file *mqlFile) error {
 
 	if file == nil {
 		return errors.New("no base apache config file to read")
+	}
+
+	// Pre-scan root file for ServerRoot directive so that relative Include
+	// paths are resolved correctly during parsing.
+	if content := file.GetContent(); content.Error == nil {
+		if sr := prescanServerRoot(content.Data); sr != "" {
+			s.serverRoot = sr
+		}
 	}
 
 	filesIdx := map[string]*mqlFile{
@@ -352,14 +388,8 @@ func apacheModules2Resources(modules []apache2.Module, runtime *plugin.Runtime, 
 func apacheVHosts2Resources(vhosts []apache2.VirtualHost, runtime *plugin.Runtime, ownerID string) ([]any, error) {
 	res := make([]any, len(vhosts))
 	for i, vh := range vhosts {
-		// Use address + serverName for unique ID since multiple VHosts can share an address
-		id := vh.Address
-		if vh.ServerName != "" {
-			id += "/" + vh.ServerName
-		}
-
 		obj, err := CreateResource(runtime, "apache2.conf.virtualHost", map[string]*llx.RawData{
-			"__id":         llx.StringData(ownerID + "/vhost/" + id),
+			"__id":         llx.StringData(ownerID + "/vhost/" + strconv.Itoa(i) + "/" + vh.Address),
 			"address":      llx.StringData(vh.Address),
 			"serverName":   llx.StringData(vh.ServerName),
 			"documentRoot": llx.StringData(vh.DocumentRoot),
@@ -378,7 +408,7 @@ func apacheDirs2Resources(dirs []apache2.Directory, runtime *plugin.Runtime, own
 	res := make([]any, len(dirs))
 	for i, d := range dirs {
 		obj, err := CreateResource(runtime, "apache2.conf.directory", map[string]*llx.RawData{
-			"__id":          llx.StringData(ownerID + "/dir/" + d.Path),
+			"__id":          llx.StringData(ownerID + "/dir/" + strconv.Itoa(i) + "/" + d.Path),
 			"path":          llx.StringData(d.Path),
 			"options":       llx.StringData(d.Options),
 			"allowOverride": llx.StringData(d.AllowOverride),

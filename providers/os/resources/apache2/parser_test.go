@@ -255,6 +255,64 @@ ServerSignature Off
 	assert.Equal(t, "Off", cfg.Params["ServerSignature"])
 }
 
+func TestParseVirtualHostNestedBlocks(t *testing.T) {
+	content := `
+<VirtualHost *:443>
+    ServerName example.com
+    DocumentRoot /var/www/html
+    SSLEngine on
+    <Directory /var/www/html>
+        Options FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+    <Location /status>
+        SetHandler server-status
+    </Location>
+    Header always set X-Frame-Options DENY
+</VirtualHost>
+`
+	cfg := Parse(content)
+	require.NotNil(t, cfg)
+	require.Len(t, cfg.VHosts, 1)
+
+	vh := cfg.VHosts[0]
+	assert.Equal(t, "example.com", vh.ServerName)
+	assert.Equal(t, "/var/www/html", vh.DocumentRoot)
+	assert.True(t, vh.SSL)
+
+	// Nested block directives must NOT leak into VirtualHost params
+	assert.NotContains(t, vh.Params, "Options")
+	assert.NotContains(t, vh.Params, "AllowOverride")
+	assert.NotContains(t, vh.Params, "Require")
+	assert.NotContains(t, vh.Params, "SetHandler")
+
+	// VirtualHost's own directives must still be present
+	assert.Contains(t, vh.Params, "Header")
+}
+
+func TestParseDirectoryNestedBlocks(t *testing.T) {
+	content := `
+<Directory /var/www>
+    Options Indexes
+    <Files "*.php">
+        SetHandler application/x-httpd-php
+    </Files>
+    AllowOverride All
+</Directory>
+`
+	cfg := Parse(content)
+	require.NotNil(t, cfg)
+	require.Len(t, cfg.Dirs, 1)
+
+	d := cfg.Dirs[0]
+	assert.Equal(t, "Indexes", d.Options)
+	assert.Equal(t, "All", d.AllowOverride)
+
+	// Nested <Files> directives must NOT leak
+	assert.NotContains(t, d.Params, "SetHandler")
+}
+
 func TestParseEmptyContent(t *testing.T) {
 	cfg := Parse("")
 	require.NotNil(t, cfg)

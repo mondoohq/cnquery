@@ -109,7 +109,7 @@ func parseWithGlobRecursive(cfg *Config, filePath, content string, fileContent f
 		case "include", "includeoptional":
 			cfg.Includes = append(cfg.Includes, value)
 			if globExpand != nil && fileContent != nil {
-				expandInclude(cfg, filePath, value, fileContent, globExpand, keyLower == "includeoptional")
+				expandInclude(cfg, value, fileContent, globExpand, keyLower == "includeoptional")
 			}
 		case "loadmodule":
 			parts := strings.Fields(value)
@@ -124,7 +124,7 @@ func parseWithGlobRecursive(cfg *Config, filePath, content string, fileContent f
 	}
 }
 
-func expandInclude(cfg *Config, parentPath, pattern string, fileContent fileContentFunc, globExpand globExpandFunc, optional bool) {
+func expandInclude(cfg *Config, pattern string, fileContent fileContentFunc, globExpand globExpandFunc, optional bool) {
 	paths, err := globExpand(pattern)
 	if err != nil {
 		if !optional {
@@ -197,10 +197,20 @@ func parseVirtualHost(address string, lines []string) VirtualHost {
 		Params:  map[string]any{},
 	}
 
+	depth := 0
 	for _, line := range lines {
-		// Skip nested blocks inside VirtualHost (e.g., <Directory>, <Location>)
 		if strings.HasPrefix(line, "<") {
+			if strings.HasPrefix(line, "</") {
+				if depth > 0 {
+					depth--
+				}
+			} else {
+				depth++
+			}
 			continue
+		}
+		if depth > 0 {
+			continue // inside a nested block — skip
 		}
 
 		key, value := parseDirective(line)
@@ -230,9 +240,20 @@ func parseDirectory(path string, lines []string) Directory {
 		Params: map[string]any{},
 	}
 
+	depth := 0
 	for _, line := range lines {
 		if strings.HasPrefix(line, "<") {
+			if strings.HasPrefix(line, "</") {
+				if depth > 0 {
+					depth--
+				}
+			} else {
+				depth++
+			}
 			continue
+		}
+		if depth > 0 {
+			continue // inside a nested block — skip
 		}
 
 		key, value := parseDirective(line)
