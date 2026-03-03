@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"os"
 	"regexp"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -168,7 +169,11 @@ func TestFindFiles(t *testing.T) {
 	mkFile(t, fs, "root/b/file1")
 	mkFile(t, fs, "root/c/file4")
 	mkFile(t, fs, "root/c/d/file5")
-	require.NoError(t, fs.Chmod("root/c/file4", 0o002))
+
+	// Chmod and permission-based filtering don't work on Windows
+	if runtime.GOOS != "windows" {
+		require.NoError(t, fs.Chmod("root/c/file4", 0o002))
+	}
 
 	rootAFiles, err := FindFiles(afero.NewIOFS(fs), "root/a", nil, "f", nil, nil)
 	require.NoError(t, err)
@@ -186,10 +191,12 @@ func TestFindFiles(t *testing.T) {
 	require.NoError(t, err)
 	assert.ElementsMatch(t, file1Files, []string{"root/b/file1", "root/a/file1"})
 
-	perm := uint32(0o002)
-	permFiles, err := FindFiles(afero.NewIOFS(fs), "root", nil, "f", &perm, nil)
-	require.NoError(t, err)
-	assert.ElementsMatch(t, permFiles, []string{"root/c/file4"})
+	if runtime.GOOS != "windows" {
+		perm := uint32(0o002)
+		permFiles, err := FindFiles(afero.NewIOFS(fs), "root", nil, "f", &perm, nil)
+		require.NoError(t, err)
+		assert.ElementsMatch(t, permFiles, []string{"root/c/file4"})
+	}
 
 	depth := 0
 	depthFiles, err := FindFiles(afero.NewIOFS(fs), "root", nil, "f", nil, &depth)
