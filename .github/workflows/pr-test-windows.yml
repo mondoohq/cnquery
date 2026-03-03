@@ -1,10 +1,6 @@
 name: Windows Tests
 
 on:
-  push:
-    paths:
-      - "providers/os/**"
-      - ".github/workflows/pr-test-windows.yml"
   pull_request:
     paths:
       - "providers/os/**"
@@ -56,8 +52,10 @@ jobs:
       - name: Run Windows-specific tests
         if: steps.find-packages.outputs.has_tests == 'true'
         shell: pwsh
+        env:
+          WIN_TEST_PACKAGES: ${{ steps.find-packages.outputs.packages }}
         run: |
-          $packages = ("${{ steps.find-packages.outputs.packages }}" -split " ") | Where-Object { $_ -ne '' }
+          $packages = ($env:WIN_TEST_PACKAGES -split " ") | Where-Object { $_ -ne '' }
           go test -count=1 -v @packages 2>&1 | Tee-Object -FilePath windows-test-output.txt
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
