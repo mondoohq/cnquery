@@ -28,6 +28,10 @@ func (n *mqlNginx) parse() error {
 	n.lock.Lock()
 	defer n.lock.Unlock()
 
+	if n.Version.State == plugin.StateIsSet {
+		return nil
+	}
+
 	o, err := CreateResource(n.MqlRuntime, "command", map[string]*llx.RawData{
 		"command": llx.StringData("nginx -V 2>&1"),
 	})
@@ -166,6 +170,10 @@ func (s *mqlNginxConf) parse(file *mqlFile) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
+	if s.Params.State == plugin.StateIsSet {
+		return nil
+	}
+
 	if file == nil {
 		return errors.New("no base nginx config file to read")
 	}
@@ -218,6 +226,12 @@ func (s *mqlNginxConf) parse(file *mqlFile) error {
 			switch d.Directive {
 			case "http":
 				walkHTTPBlock(d.Block, httpParams, &servers, &upstreams, &allListenAddrs)
+			case "events":
+				for _, ed := range d.Block {
+					if !ed.IsBlock() {
+						setNginxParam(mainParams, ed.Directive, strings.Join(ed.Args, " "))
+					}
+				}
 			default:
 				if !d.IsBlock() {
 					setNginxParam(mainParams, d.Directive, strings.Join(d.Args, " "))
@@ -504,21 +518,15 @@ var isNginxMultiParam = map[string]bool{
 func nginxServers2Resources(servers []nginxServer, runtime *plugin.Runtime, ownerID string) ([]any, error) {
 	res := make([]any, len(servers))
 	for i, srv := range servers {
-		id := srv.ServerName
-		if id == "" {
-			id = srv.Listen
-		}
-		if id == "" {
-			id = fmt.Sprintf("server-%d", i)
-		}
+		id := fmt.Sprintf("%s/server/%d-%s-%s", ownerID, i, srv.ServerName, srv.Listen)
 
-		locations, err := nginxLocations2Resources(srv.Locations, runtime, ownerID+"/server/"+id)
+		locations, err := nginxLocations2Resources(srv.Locations, runtime, id)
 		if err != nil {
 			return nil, err
 		}
 
 		obj, err := CreateResource(runtime, "nginx.conf.server", map[string]*llx.RawData{
-			"__id":       llx.StringData(ownerID + "/server/" + id),
+			"__id":       llx.StringData(id),
 			"serverName": llx.StringData(srv.ServerName),
 			"listen":     llx.StringData(srv.Listen),
 			"root":       llx.StringData(srv.Root),
@@ -560,7 +568,7 @@ func nginxLocations2Resources(locations []nginxLocation, runtime *plugin.Runtime
 	res := make([]any, len(locations))
 	for i, loc := range locations {
 		obj, err := CreateResource(runtime, "nginx.conf.location", map[string]*llx.RawData{
-			"__id":      llx.StringData(ownerID + "/location/" + loc.Path),
+			"__id":      llx.StringData(fmt.Sprintf("%s/location/%d-%s", ownerID, i, loc.Path)),
 			"path":      llx.StringData(loc.Path),
 			"proxyPass": llx.StringData(loc.ProxyPass),
 			"root":      llx.StringData(loc.Root),
