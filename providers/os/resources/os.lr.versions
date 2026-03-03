@@ -796,6 +796,7 @@ service.installed 9.0.0
 service.masked 9.0.0
 service.name 9.0.0
 service.running 9.0.0
+service.static 11.8.12
 service.type 9.0.0
 services 9.0.0
 services.list 9.0.0

@@ -20,6 +20,7 @@ type Service struct {
 	Running     bool
 	Enabled     bool
 	Masked      bool
+	Static      bool
 	Path        string
 }
 

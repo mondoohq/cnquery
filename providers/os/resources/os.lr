@@ -863,6 +863,8 @@ service @defaults("name running enabled type") {
   type string
   // Whether the service is masked
   masked bool
+  // Whether the service is static (unit file has no [Install] section and cannot be enabled/disabled)
+  static bool
 }
 
 // Services configured on this system

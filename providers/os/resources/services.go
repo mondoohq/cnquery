@@ -54,6 +54,7 @@ func initService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 	res.Type.State = plugin.StateIsSet | plugin.StateIsNull
 	res.Enabled = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
 	res.Masked = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
+	res.Static = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
 	return nil, res, nil
 }
 
@@ -102,6 +103,7 @@ func (x *mqlServices) list() ([]any, error) {
 			"masked":      llx.BoolData(srv.Masked),
 			"running":     llx.BoolData(srv.Running),
 			"type":        llx.StringData(srv.Type),
+			"static":      llx.BoolData(srv.Static),
 		})
 		if err != nil {
 			return nil, err
