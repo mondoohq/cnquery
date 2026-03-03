@@ -136,13 +136,6 @@ func (n *neti) getLinuxSysfsInterfaces() (interfaces []Interface, err error) {
 	log.Debug().Int("dir_entries", len(dirEntries)).Msg("os.network.interface> read /sys/class/net")
 
 	for _, entry := range dirEntries {
-		if !entry.IsDir() {
-			log.Trace().
-				Str("name", filepath.Join("/sys/class/net", entry.Name())).
-				Msg("os.network.interfaces> not a directory, skipping")
-			continue
-		}
-
 		ifaceName := entry.Name()
 		iinterface := Interface{Name: ifaceName}
 
