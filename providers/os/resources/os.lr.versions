@@ -1,6 +1,30 @@
 # Copyright (c) Mondoo, Inc.
 # SPDX-License-Identifier: BUSL-1.1
 
+apache2 11.8.14
+apache2.conf 11.8.14
+apache2.conf.directories 11.8.14
+apache2.conf.directory 11.8.14
+apache2.conf.directory.allowOverride 11.8.14
+apache2.conf.directory.options 11.8.14
+apache2.conf.directory.params 11.8.14
+apache2.conf.directory.path 11.8.14
+apache2.conf.file 11.8.14
+apache2.conf.files 11.8.14
+apache2.conf.listenAddresses 11.8.14
+apache2.conf.module 11.8.14
+apache2.conf.module.name 11.8.14
+apache2.conf.module.path 11.8.14
+apache2.conf.modules 11.8.14
+apache2.conf.params 11.8.14
+apache2.conf.virtualHost 11.8.14
+apache2.conf.virtualHost.address 11.8.14
+apache2.conf.virtualHost.documentRoot 11.8.14
+apache2.conf.virtualHost.params 11.8.14
+apache2.conf.virtualHost.serverName 11.8.14
+apache2.conf.virtualHost.ssl 11.8.14
+apache2.conf.virtualHosts 11.8.14
+apache2.version 11.8.14
 asset 9.0.1
 asset.cpes 9.0.1
 asset.eol 9.0.1
