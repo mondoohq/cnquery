@@ -943,6 +943,10 @@ private docker.file.stage @defaults("from.name") {
   healthcheck docker.file.healthcheck
   // VOLUME instructions in this Dockerfile
   volumes []docker.file.volume
+  // SHELL instruction in this Dockerfile
+  shell docker.file.shell
+  // WORKDIR instructions in this Dockerfile
+  workdir []docker.file.workdir
 }
 
 // Dockerfile ARG instructions
@@ -1034,6 +1038,18 @@ private docker.file.healthcheck @defaults("test") {
 // Dockerfile VOLUME instruction
 private docker.file.volume @defaults("path") {
   // Volume mount path
+  path string
+}
+
+// Dockerfile SHELL instruction
+private docker.file.shell @defaults("command") {
+  // Shell executable and flags (e.g., ["/bin/bash", "-o", "pipefail", "-c"])
+  command []string
+}
+
+// Dockerfile WORKDIR instruction
+private docker.file.workdir @defaults("path") {
+  // Working directory path
   path string
 }
 

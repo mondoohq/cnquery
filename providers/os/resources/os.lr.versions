@@ -185,6 +185,8 @@ docker.file.healthcheck.timeout 11.8.14
 docker.file.instructions 11.0.2
 docker.file.run 11.0.2
 docker.file.run.script 11.0.2
+docker.file.shell 11.8.15
+docker.file.shell.command 11.8.15
 docker.file.stage 11.0.2
 docker.file.stage.add 11.0.2
 docker.file.stage.arg 11.0.2
@@ -198,14 +200,18 @@ docker.file.stage.from 11.0.2
 docker.file.stage.healthcheck 11.8.14
 docker.file.stage.labels 11.0.2
 docker.file.stage.run 11.0.2
+docker.file.stage.shell 11.8.15
 docker.file.stage.user 11.0.2
 docker.file.stage.volumes 11.8.14
+docker.file.stage.workdir 11.8.15
 docker.file.stages 11.0.2
 docker.file.user 11.1.3
 docker.file.user.group 11.1.3
 docker.file.user.user 11.1.3
 docker.file.volume 11.8.14
 docker.file.volume.path 11.8.14
+docker.file.workdir 11.8.15
+docker.file.workdir.path 11.8.15
 docker.image 9.0.0
 docker.image.id 9.0.0
 docker.image.labels 9.0.0

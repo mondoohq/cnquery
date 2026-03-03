@@ -97,6 +97,8 @@ const (
 	ResourceDockerFileCopy             string = "docker.file.copy"
 	ResourceDockerFileHealthcheck      string = "docker.file.healthcheck"
 	ResourceDockerFileVolume           string = "docker.file.volume"
+	ResourceDockerFileShell            string = "docker.file.shell"
+	ResourceDockerFileWorkdir          string = "docker.file.workdir"
 	ResourceDockerImage                string = "docker.image"
 	ResourceDockerContainer            string = "docker.container"
 	ResourceContainerd                 string = "containerd"
@@ -512,6 +514,14 @@ func init() {
 		"docker.file.volume": {
 			// to override args, implement: initDockerFileVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDockerFileVolume,
+		},
+		"docker.file.shell": {
+			// to override args, implement: initDockerFileShell(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDockerFileShell,
+		},
+		"docker.file.workdir": {
+			// to override args, implement: initDockerFileWorkdir(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDockerFileWorkdir,
 		},
 		"docker.image": {
 			// to override args, implement: initDockerImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1895,6 +1905,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"docker.file.stage.volumes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFileStage).GetVolumes()).ToDataRes(types.Array(types.Resource("docker.file.volume")))
 	},
+	"docker.file.stage.shell": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileStage).GetShell()).ToDataRes(types.Resource("docker.file.shell"))
+	},
+	"docker.file.stage.workdir": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileStage).GetWorkdir()).ToDataRes(types.Array(types.Resource("docker.file.workdir")))
+	},
 	"docker.file.arg.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFileArg).GetName()).ToDataRes(types.String)
 	},
@@ -1984,6 +2000,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"docker.file.volume.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFileVolume).GetPath()).ToDataRes(types.String)
+	},
+	"docker.file.shell.command": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileShell).GetCommand()).ToDataRes(types.Array(types.String))
+	},
+	"docker.file.workdir.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileWorkdir).GetPath()).ToDataRes(types.String)
 	},
 	"docker.image.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerImage).GetId()).ToDataRes(types.String)
@@ -5117,6 +5139,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDockerFileStage).Volumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"docker.file.stage.shell": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileStage).Shell, ok = plugin.RawToTValue[*mqlDockerFileShell](v.Value, v.Error)
+		return
+	},
+	"docker.file.stage.workdir": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileStage).Workdir, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"docker.file.arg.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDockerFileArg).__id, ok = v.Value.(string)
 		return
@@ -5275,6 +5305,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"docker.file.volume.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDockerFileVolume).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"docker.file.shell.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileShell).__id, ok = v.Value.(string)
+		return
+	},
+	"docker.file.shell.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileShell).Command, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"docker.file.workdir.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileWorkdir).__id, ok = v.Value.(string)
+		return
+	},
+	"docker.file.workdir.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileWorkdir).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"docker.image.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13321,6 +13367,8 @@ type mqlDockerFileStage struct {
 	Expose      plugin.TValue[[]any]
 	Healthcheck plugin.TValue[*mqlDockerFileHealthcheck]
 	Volumes     plugin.TValue[[]any]
+	Shell       plugin.TValue[*mqlDockerFileShell]
+	Workdir     plugin.TValue[[]any]
 }
 
 // createDockerFileStage creates a new instance of this resource
@@ -13409,6 +13457,14 @@ func (c *mqlDockerFileStage) GetHealthcheck() *plugin.TValue[*mqlDockerFileHealt
 
 func (c *mqlDockerFileStage) GetVolumes() *plugin.TValue[[]any] {
 	return &c.Volumes
+}
+
+func (c *mqlDockerFileStage) GetShell() *plugin.TValue[*mqlDockerFileShell] {
+	return &c.Shell
+}
+
+func (c *mqlDockerFileStage) GetWorkdir() *plugin.TValue[[]any] {
+	return &c.Workdir
 }
 
 // mqlDockerFileArg for the docker.file.arg resource
@@ -13948,6 +14004,94 @@ func (c *mqlDockerFileVolume) MqlID() string {
 }
 
 func (c *mqlDockerFileVolume) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+// mqlDockerFileShell for the docker.file.shell resource
+type mqlDockerFileShell struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDockerFileShellInternal it will be used here
+	Command plugin.TValue[[]any]
+}
+
+// createDockerFileShell creates a new instance of this resource
+func createDockerFileShell(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDockerFileShell{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("docker.file.shell", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDockerFileShell) MqlName() string {
+	return "docker.file.shell"
+}
+
+func (c *mqlDockerFileShell) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDockerFileShell) GetCommand() *plugin.TValue[[]any] {
+	return &c.Command
+}
+
+// mqlDockerFileWorkdir for the docker.file.workdir resource
+type mqlDockerFileWorkdir struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDockerFileWorkdirInternal it will be used here
+	Path plugin.TValue[string]
+}
+
+// createDockerFileWorkdir creates a new instance of this resource
+func createDockerFileWorkdir(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDockerFileWorkdir{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("docker.file.workdir", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDockerFileWorkdir) MqlName() string {
+	return "docker.file.workdir"
+}
+
+func (c *mqlDockerFileWorkdir) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDockerFileWorkdir) GetPath() *plugin.TValue[string] {
 	return &c.Path
 }
 

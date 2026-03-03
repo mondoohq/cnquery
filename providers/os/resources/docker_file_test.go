@@ -16,20 +16,22 @@ func TestParseDockerfile(t *testing.T) {
 		purpose           string
 		subjectDockerFile string
 
-		expectedLabels          map[string]any
-		expectedEnv             func(r *plugin.Runtime) []any
-		expectedArg             func(r *plugin.Runtime) []any
-		expectedFromImage       string
-		expectedFromTag         string
-		expectedUser            plugin.TValue[*mqlDockerFileUser]
-		expectedCmd             plugin.TValue[*mqlDockerFileRun]
-		expectedEntrypoint      plugin.TValue[*mqlDockerFileRun]
-		expectedRunStruct       []plugin.TValue[*mqlDockerFileRun]
-		expectedCopyStruct      []plugin.TValue[*mqlDockerFileCopy]
-		expectedAddStruct       []plugin.TValue[*mqlDockerFileAdd]
-		expectedExposeStructArr []plugin.TValue[*mqlDockerFileExpose]
-		expectedHealthcheck     plugin.TValue[*mqlDockerFileHealthcheck]
-		expectedVolumeStructArr []plugin.TValue[*mqlDockerFileVolume]
+		expectedLabels           map[string]any
+		expectedEnv              func(r *plugin.Runtime) []any
+		expectedArg              func(r *plugin.Runtime) []any
+		expectedFromImage        string
+		expectedFromTag          string
+		expectedUser             plugin.TValue[*mqlDockerFileUser]
+		expectedCmd              plugin.TValue[*mqlDockerFileRun]
+		expectedEntrypoint       plugin.TValue[*mqlDockerFileRun]
+		expectedRunStruct        []plugin.TValue[*mqlDockerFileRun]
+		expectedCopyStruct       []plugin.TValue[*mqlDockerFileCopy]
+		expectedAddStruct        []plugin.TValue[*mqlDockerFileAdd]
+		expectedExposeStructArr  []plugin.TValue[*mqlDockerFileExpose]
+		expectedHealthcheck      plugin.TValue[*mqlDockerFileHealthcheck]
+		expectedVolumeStructArr  []plugin.TValue[*mqlDockerFileVolume]
+		expectedShell            plugin.TValue[*mqlDockerFileShell]
+		expectedWorkdirStructArr []plugin.TValue[*mqlDockerFileWorkdir]
 	}{
 		{
 			purpose: "minimal instructions with CMD",
@@ -205,6 +207,36 @@ HEALTHCHECK NONE
 				},
 			},
 		},
+		{
+			purpose: "with SHELL and WORKDIR",
+			subjectDockerFile: `
+FROM alpine
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+WORKDIR /app
+WORKDIR /app/src
+RUN echo hello | cat
+`,
+			expectedLabels:    map[string]any{},
+			expectedFromImage: "alpine",
+			expectedShell: plugin.TValue[*mqlDockerFileShell]{
+				Data: &mqlDockerFileShell{
+					Command: plugin.TValue[[]any]{Data: []any{"/bin/bash", "-o", "pipefail", "-c"}},
+				},
+			},
+			expectedWorkdirStructArr: []plugin.TValue[*mqlDockerFileWorkdir]{
+				{Data: &mqlDockerFileWorkdir{
+					Path: plugin.TValue[string]{Data: "/app"},
+				}},
+				{Data: &mqlDockerFileWorkdir{
+					Path: plugin.TValue[string]{Data: "/app/src"},
+				}},
+			},
+			expectedRunStruct: []plugin.TValue[*mqlDockerFileRun]{
+				{Data: &mqlDockerFileRun{
+					Script: plugin.TValue[string]{Data: "echo hello | cat"},
+				}},
+			},
+		},
 	}
 
 	for _, kase := range cases {
@@ -297,6 +329,19 @@ HEALTHCHECK NONE
 			for i, vol := range actualMqlDockerFileStage.Volumes.Data {
 				actualVol := vol.(*mqlDockerFileVolume)
 				require.Equal(t, kase.expectedVolumeStructArr[i].Data.Path.Data, actualVol.Path.Data)
+			}
+
+			if kase.expectedShell.Data == nil {
+				require.Nil(t, actualMqlDockerFileStage.Shell.Data)
+			} else {
+				require.NotNil(t, actualMqlDockerFileStage.Shell.Data)
+				require.Equal(t, kase.expectedShell.Data.Command.Data, actualMqlDockerFileStage.Shell.Data.Command.Data)
+			}
+
+			require.Equal(t, len(kase.expectedWorkdirStructArr), len(actualMqlDockerFileStage.Workdir.Data))
+			for i, wd := range actualMqlDockerFileStage.Workdir.Data {
+				actualWd := wd.(*mqlDockerFileWorkdir)
+				require.Equal(t, kase.expectedWorkdirStructArr[i].Data.Path.Data, actualWd.Path.Data)
 			}
 		})
 	}
