@@ -124,7 +124,7 @@ func register(token string, annotations map[string]string, updatesURL string, pr
 	if err != nil {
 		return cli_errors.NewCommandError(errors.Wrap(err, "could not gather client information"), 1)
 	}
-	defaultPlugins := rangerUtils.DefaultRangerPlugins(mql.DefaultFeatures)
+	defaultPlugins := rangerUtils.DefaultRangerPlugins(mql.DefaultFeatures, nil)
 
 	apiEndpoint := viper.GetString("api_endpoint")
 	token = strings.TrimSpace(token)

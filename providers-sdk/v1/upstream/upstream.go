@@ -23,6 +23,13 @@ import (
 
 const agents_issuer = "mondoo/ams"
 
+// SysInfoProvider can be set by callers to provide system information for upstream request headers.
+// When set, InitClient will call this function and include the platform ID, hostname, IP, etc.
+// in the HTTP headers sent to the platform. This is used by the server to track agent check-ins.
+// This is a function variable to avoid import cycles (sysinfo -> inventory -> upstream).
+// Must be set before any call to InitClient (typically in an init function).
+var SysInfoProvider func() *rangerUtils.ClientSysInfo
+
 func NewServiceAccountRangerPlugin(credentials *ServiceAccountCredentials) (ranger.ClientPlugin, error) {
 	if credentials == nil {
 		return nil, errors.New("agent credentials must be set")
@@ -70,8 +77,14 @@ func (c *UpstreamConfig) InitClient(ctx context.Context) (*UpstreamClient, error
 	if err != nil {
 		return nil, multierr.Wrap(err, "could not initialize client authentication")
 	}
+
+	var si *rangerUtils.ClientSysInfo
+	if SysInfoProvider != nil {
+		si = SysInfoProvider()
+	}
+
 	plugins := []ranger.ClientPlugin{certAuth}
-	plugins = append(plugins, rangerUtils.DefaultRangerPlugins(mql.GetFeatures(ctx))...)
+	plugins = append(plugins, rangerUtils.DefaultRangerPlugins(mql.GetFeatures(ctx), si)...)
 
 	res := UpstreamClient{
 		UpstreamConfig: *c,
