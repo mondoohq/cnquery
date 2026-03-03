@@ -36,7 +36,6 @@ const (
 	DiscoveryPostgresFlexibleServers = "postgres-flexible-servers"
 	DiscoveryMySqlServers            = "mysql-servers"
 	DiscoveryMySqlFlexibleServers    = "mysql-flexible-servers"
-	DiscoveryMariaDbServers          = "mariadb-servers"
 	DiscoveryAksClusters             = "aks-clusters"
 	DiscoveryAppServiceApps          = "app-service-webapps"
 	DiscoveryCacheRedis              = "cache-redis-instances"
@@ -66,7 +65,6 @@ var AllAPIResources = []string{
 	DiscoveryPostgresFlexibleServers,
 	DiscoveryMySqlServers,
 	DiscoveryMySqlFlexibleServers,
-	DiscoveryMariaDbServers,
 	DiscoveryAksClusters,
 	DiscoveryAppServiceApps,
 	DiscoveryCacheRedis,
@@ -217,14 +215,6 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 			return nil, err
 		}
 		assets = append(assets, flexibleServers...)
-	}
-
-	if stringx.ContainsAnyOf(targets, DiscoveryMariaDbServers) {
-		mariaDbServers, err := discoverMariadbServers(runtime, subsWithConfigs)
-		if err != nil {
-			return nil, err
-		}
-		assets = append(assets, mariaDbServers...)
 	}
 
 	if stringx.ContainsAnyOf(targets, DiscoveryAksClusters) {
@@ -573,40 +563,6 @@ func discoverPostgresqlFlexibleServers(runtime *plugin.Runtime, subsWithConfigs 
 					location:     s.Location.Data,
 					service:      "postgresql",
 					objectType:   "flexible-server",
-				},
-			}, subWithConfig.conf, false)
-			assets = append(assets, asset)
-		}
-	}
-	return assets, nil
-}
-
-func discoverMariadbServers(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([]*inventory.Asset, error) {
-	assets := []*inventory.Asset{}
-	for _, subWithConfig := range subsWithConfigs {
-		svc, err := NewResource(runtime, "azure.subscription.mariaDbService", map[string]*llx.RawData{
-			"subscriptionId": llx.StringDataPtr(subWithConfig.sub.SubscriptionID),
-		})
-		if err != nil {
-			return nil, err
-		}
-		mariaSvc := svc.(*mqlAzureSubscriptionMariaDbService)
-		servers := mariaSvc.GetServers()
-		if servers.Error != nil {
-			return nil, servers.Error
-		}
-		for _, mysqlServ := range servers.Data {
-			s := mysqlServ.(*mqlAzureSubscriptionMariaDbServiceServer)
-			asset := mqlObjectToAsset(mqlObject{
-				name:   s.Name.Data,
-				labels: interfaceMapToStr(s.Tags.Data),
-				azureObject: azureObject{
-					id:           s.Id.Data,
-					subscription: *subWithConfig.sub.SubscriptionID,
-					tenant:       subWithConfig.sub.TenantID,
-					location:     s.Location.Data,
-					service:      "mariadb",
-					objectType:   "server",
 				},
 			}, subWithConfig.conf, false)
 			assets = append(assets, asset)
@@ -1064,10 +1020,6 @@ func getTitleFamily(azureObject azureObject) (azureObjectPlatformInfo, error) {
 		}
 		if azureObject.objectType == "flexible-server" {
 			return azureObjectPlatformInfo{title: "Azure MySQL Flexible Server", platform: "azure-mysql-flexible-server"}, nil
-		}
-	case "mariadb":
-		if azureObject.objectType == "server" {
-			return azureObjectPlatformInfo{title: "Azure MariaDB Server", platform: "azure-mariadb-server"}, nil
 		}
 	case "aks":
 		if azureObject.objectType == "cluster" {
