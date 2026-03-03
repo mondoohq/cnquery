@@ -79,7 +79,8 @@ func getActivatedRhelModules(conn shared.Connection) []string {
 // getActivatedRhelSupportLevels returns the support level of the currently activated rhel repositories
 // It currently detects the following support levels:
 //   - eus (Extended Update Support)
-//   - e4s (Enhanced Extendeded Update Support)
+//   - e4s (Enhanced Extended Update Support)
+//   - els (Extended Life Cycle Support)
 func getActivatedRhelSupportLevels(conn shared.Connection) []string {
 	afs := &afero.Afero{Fs: conn.FileSystem()}
 	ok, err := afs.DirExists(reposDir)
@@ -115,6 +116,8 @@ func getActivatedRhelSupportLevels(conn shared.Connection) []string {
 				supportLevel = "e4s"
 			case strings.Contains(section, "baseos-eus-"):
 				supportLevel = "eus"
+			case strings.Contains(section, "-els-"):
+				supportLevel = "els"
 			}
 			if supportLevel == "" {
 				continue
