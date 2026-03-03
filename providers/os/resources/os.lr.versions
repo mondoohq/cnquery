@@ -385,6 +385,15 @@ logindefs 9.0.1
 logindefs.content 9.0.1
 logindefs.file 9.0.1
 logindefs.params 9.0.1
+logrotate 11.8.14
+logrotate.entries 11.8.14
+logrotate.entry 11.8.14
+logrotate.entry.config 11.8.14
+logrotate.entry.file 11.8.14
+logrotate.entry.lineNumber 11.8.14
+logrotate.entry.path 11.8.14
+logrotate.files 11.8.14
+logrotate.globalConfig 11.8.14
 lsblk 9.0.1
 lsblk.entry 9.0.1
 lsblk.entry.fstype 9.0.1

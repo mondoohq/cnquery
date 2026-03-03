@@ -189,6 +189,8 @@ const (
 	ResourceCrontabEntry               string = "crontab.entry"
 	ResourceVscode                     string = "vscode"
 	ResourceVscodeExtension            string = "vscode.extension"
+	ResourceLogrotate                  string = "logrotate"
+	ResourceLogrotateEntry             string = "logrotate.entry"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -882,6 +884,14 @@ func init() {
 		"vscode.extension": {
 			// to override args, implement: initVscodeExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVscodeExtension,
+		},
+		"logrotate": {
+			Init:   initLogrotate,
+			Create: createLogrotate,
+		},
+		"logrotate.entry": {
+			// to override args, implement: initLogrotateEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createLogrotateEntry,
 		},
 	}
 }
@@ -3593,6 +3603,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vscode.extension.categories": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVscodeExtension).GetCategories()).ToDataRes(types.Array(types.String))
+	},
+	"logrotate.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLogrotate).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
+	},
+	"logrotate.globalConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLogrotate).GetGlobalConfig()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"logrotate.entries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLogrotate).GetEntries()).ToDataRes(types.Array(types.Resource("logrotate.entry")))
+	},
+	"logrotate.entry.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLogrotateEntry).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"logrotate.entry.lineNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLogrotateEntry).GetLineNumber()).ToDataRes(types.Int)
+	},
+	"logrotate.entry.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLogrotateEntry).GetPath()).ToDataRes(types.String)
+	},
+	"logrotate.entry.config": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLogrotateEntry).GetConfig()).ToDataRes(types.Map(types.String, types.String))
 	},
 }
 
@@ -7800,6 +7831,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vscode.extension.categories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVscodeExtension).Categories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"logrotate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLogrotate).__id, ok = v.Value.(string)
+		return
+	},
+	"logrotate.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLogrotate).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"logrotate.globalConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLogrotate).GlobalConfig, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"logrotate.entries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLogrotate).Entries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"logrotate.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLogrotateEntry).__id, ok = v.Value.(string)
+		return
+	},
+	"logrotate.entry.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLogrotateEntry).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"logrotate.entry.lineNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLogrotateEntry).LineNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"logrotate.entry.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLogrotateEntry).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"logrotate.entry.config": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLogrotateEntry).Config, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 }
@@ -21762,4 +21829,163 @@ func (c *mqlVscodeExtension) GetVscodeVersion() *plugin.TValue[string] {
 
 func (c *mqlVscodeExtension) GetCategories() *plugin.TValue[[]any] {
 	return &c.Categories
+}
+
+// mqlLogrotate for the logrotate resource
+type mqlLogrotate struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlLogrotateInternal it will be used here
+	Files        plugin.TValue[[]any]
+	GlobalConfig plugin.TValue[map[string]any]
+	Entries      plugin.TValue[[]any]
+}
+
+// createLogrotate creates a new instance of this resource
+func createLogrotate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlLogrotate{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("logrotate", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlLogrotate) MqlName() string {
+	return "logrotate"
+}
+
+func (c *mqlLogrotate) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlLogrotate) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("logrotate", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+func (c *mqlLogrotate) GetGlobalConfig() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.GlobalConfig, func() (map[string]any, error) {
+		vargFiles := c.GetFiles()
+		if vargFiles.Error != nil {
+			return nil, vargFiles.Error
+		}
+
+		return c.globalConfig(vargFiles.Data)
+	})
+}
+
+func (c *mqlLogrotate) GetEntries() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Entries, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("logrotate", c.__id, "entries")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFiles := c.GetFiles()
+		if vargFiles.Error != nil {
+			return nil, vargFiles.Error
+		}
+
+		return c.entries(vargFiles.Data)
+	})
+}
+
+// mqlLogrotateEntry for the logrotate.entry resource
+type mqlLogrotateEntry struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlLogrotateEntryInternal it will be used here
+	File       plugin.TValue[*mqlFile]
+	LineNumber plugin.TValue[int64]
+	Path       plugin.TValue[string]
+	Config     plugin.TValue[map[string]any]
+}
+
+// createLogrotateEntry creates a new instance of this resource
+func createLogrotateEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlLogrotateEntry{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("logrotate.entry", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlLogrotateEntry) MqlName() string {
+	return "logrotate.entry"
+}
+
+func (c *mqlLogrotateEntry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlLogrotateEntry) GetFile() *plugin.TValue[*mqlFile] {
+	return &c.File
+}
+
+func (c *mqlLogrotateEntry) GetLineNumber() *plugin.TValue[int64] {
+	return &c.LineNumber
+}
+
+func (c *mqlLogrotateEntry) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlLogrotateEntry) GetConfig() *plugin.TValue[map[string]any] {
+	return &c.Config
 }
