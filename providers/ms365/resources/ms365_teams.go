@@ -53,7 +53,15 @@ if ($null -ne $CsTenantFederationConfiguration.AllowedDomains) {
 }
 $CsTenantFederationConfiguration.AllowedDomains = $allowedList
 
-$CsTenantFederationConfiguration | Add-Member -MemberType NoteProperty -Name "AllowedDomainsClean" -Value $allowedList
+$blockedList = New-Object System.Collections.Generic.List[string]
+if ($null -ne $CsTenantFederationConfiguration.BlockedDomains) {
+  foreach ($item in $CsTenantFederationConfiguration.BlockedDomains) {
+    $itemAsString = $item.ToString()
+    $domainValue = ($itemAsString -split '=')[1]
+    $blockedList.Add($domainValue)
+  }
+}
+$CsTenantFederationConfiguration.BlockedDomains = $blockedList
 
 $msteams = New-Object PSObject
 Add-Member -InputObject $msteams -MemberType NoteProperty -Name CsTeamsClientConfiguration -Value $CsTeamsClientConfiguration
@@ -83,9 +91,7 @@ type CsTenantFederationConfiguration struct {
 	RestrictTeamsConsumerToExternalUserProfiles bool     `json:"RestrictTeamsConsumerToExternalUserProfiles"`
 	ExternalAccessWithTrialTenants              string   `json:"ExternalAccessWithTrialTenants"`
 	AllowedDomains                              []string `json:"AllowedDomains"`
-	// TODO: we need to figure out how to get this right when using Convert-ToJson
-	// it currently comes back as an empty json object {} but the pwsh cmdlet spits out a string-looking value
-	BlockedDomains any `json:"BlockedDomains"`
+	BlockedDomains                              []string `json:"BlockedDomains"`
 }
 
 type CsTeamsMeetingPolicy struct {
@@ -188,11 +194,10 @@ func (r *mqlMs365Teams) gatherTeamsReport() error {
 
 	if report.CsTenantFederationConfiguration != nil {
 		tenantConfig := report.CsTenantFederationConfiguration
-		tenantConfigBlockedDomains, _ := convert.JsonToDict(tenantConfig.BlockedDomains)
 		mqlTenantConfig, mqlTenantConfigErr := CreateResource(r.MqlRuntime, "ms365.teams.tenantFederationConfig",
 			map[string]*llx.RawData{
 				"identity":                                    llx.StringData(tenantConfig.Identity),
-				"blockedDomains":                              llx.DictData(tenantConfigBlockedDomains),
+				"blockedDomains":                              llx.ArrayData(convert.SliceAnyToInterface(tenantConfig.BlockedDomains), types.String),
 				"allowedDomains":                              llx.ArrayData(convert.SliceAnyToInterface(tenantConfig.AllowedDomains), types.String),
 				"allowFederatedUsers":                         llx.BoolData(tenantConfig.AllowFederatedUsers),
 				"allowPublicUsers":                            llx.BoolData(tenantConfig.AllowPublicUsers),
