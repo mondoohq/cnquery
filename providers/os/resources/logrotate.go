@@ -20,11 +20,35 @@ const (
 	defaultLogrotateDir  = "/etc/logrotate.d"
 )
 
+type mqlLogrotateInternal struct {
+	customPath string
+}
+
 func initLogrotate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if x, ok := args["path"]; ok {
+		path, ok := x.Value.(string)
+		if !ok {
+			return nil, nil, errors.New("wrong type for 'path' in logrotate initialization, it must be a string")
+		}
+
+		obj, err := CreateResource(runtime, "logrotate", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, nil, err
+		}
+		lr := obj.(*mqlLogrotate)
+		lr.customPath = path
+		delete(args, "path")
+
+		return args, lr, nil
+	}
+
 	return args, nil, nil
 }
 
 func (l *mqlLogrotate) id() (string, error) {
+	if l.customPath != "" {
+		return "logrotate:" + l.customPath, nil
+	}
 	return "logrotate", nil
 }
 
@@ -39,9 +63,14 @@ func (le *mqlLogrotateEntry) id() (string, error) {
 func (l *mqlLogrotate) files() ([]any, error) {
 	var allFiles []any
 
+	confPath := defaultLogrotateConf
+	if l.customPath != "" {
+		confPath = l.customPath
+	}
+
 	// Add main logrotate.conf
 	mainFile, err := CreateResource(l.MqlRuntime, "file", map[string]*llx.RawData{
-		"path": llx.StringData(defaultLogrotateConf),
+		"path": llx.StringData(confPath),
 	})
 	if err != nil {
 		return nil, err
@@ -71,8 +100,9 @@ func (l *mqlLogrotate) files() ([]any, error) {
 
 	if dirExists.Data {
 		files, err := CreateResource(l.MqlRuntime, "files.find", map[string]*llx.RawData{
-			"from": llx.StringData(defaultLogrotateDir),
-			"type": llx.StringData("file"),
+			"from":  llx.StringData(defaultLogrotateDir),
+			"type":  llx.StringData("file"),
+			"depth": llx.IntData(1),
 		})
 		if err != nil {
 			return nil, err
