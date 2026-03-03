@@ -45,7 +45,6 @@ func TestIntToString(t *testing.T) {
 }
 
 func TestGetWmiInformation_Integration(t *testing.T) {
-	// Reuse the same mock connection type from build_version_windows_test.go
 	conn := &mockLocalConnection{}
 	info, err := GetWmiInformation(conn)
 	require.NoError(t, err)
