@@ -210,9 +210,7 @@ func nftCollectRules(runtime *plugin.Runtime, ruleset *nftRuleset, family, table
 		}
 
 		exprDicts := make([]any, len(r.Expr))
-		for i, e := range r.Expr {
-			exprDicts[i] = e
-		}
+		copy(exprDicts, r.Expr)
 
 		ruleRes, err := CreateResource(runtime, "nftables.rule", map[string]*llx.RawData{
 			"family":  llx.StringData(r.Family),
