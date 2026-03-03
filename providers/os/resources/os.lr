@@ -2501,7 +2501,6 @@ private vscode.extension @defaults("editor name version") {
 
 // Logrotate configuration
 logrotate {
-  init(path? string)
   // List of configuration files (main + logrotate.d fragments)
   files() []file
   // Global directives (outside any file block)

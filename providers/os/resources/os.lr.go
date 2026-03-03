@@ -21823,7 +21823,7 @@ func (c *mqlVscodeExtension) GetCategories() *plugin.TValue[[]any] {
 type mqlLogrotate struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlLogrotateInternal
+	// optional: if you define mqlLogrotateInternal it will be used here
 	Files        plugin.TValue[[]any]
 	GlobalConfig plugin.TValue[map[string]any]
 	Entries      plugin.TValue[[]any]
