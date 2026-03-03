@@ -189,10 +189,12 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 	var runs []any
 	var copy []any
 	var add []any
+	var volumes []any
 	var unsupported []string
 	var entrypointRaw *instructions.EntrypointCommand
 	var cmdRaw *instructions.CmdCommand
 	var userRaw *instructions.UserCommand
+	var healthcheckRaw *instructions.HealthCheckCommand
 	for i := range stage.Commands {
 		switch v := stage.Commands[i].(type) {
 		case *instructions.EnvCommand:
@@ -299,6 +301,21 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 
 			}
 
+		case *instructions.HealthCheckCommand:
+			healthcheckRaw = v
+
+		case *instructions.VolumeCommand:
+			for _, vol := range v.Volumes {
+				resource, err := CreateResource(p.MqlRuntime, ResourceDockerFileVolume, map[string]*llx.RawData{
+					"__id": llx.StringData(p.locationID(v.Location()) + ":" + vol),
+					"path": llx.StringData(vol),
+				})
+				if err != nil {
+					return nil, err
+				}
+				volumes = append(volumes, resource)
+			}
+
 		default:
 			cmd := stage.Commands[i]
 			unsupported = append(unsupported, cmd.Name())
@@ -311,16 +328,17 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 	}
 
 	args := map[string]*llx.RawData{
-		"__id":   llx.StringData(stageID),
-		"from":   llx.ResourceData(rawFrom, ResourceDockerFileFrom),
-		"file":   llx.ResourceData(p, ResourceDockerFile),
-		"env":    llx.ArrayData(env, types.Resource(ResourceDockerFileEnv)),
-		"arg":    llx.ArrayData(arg, types.Resource(ResourceDockerFileArg)),
-		"labels": llx.MapData(llx.TMap2Raw(labels), types.String),
-		"run":    llx.ArrayData(runs, types.Resource(ResourceDockerFileRun)),
-		"add":    llx.ArrayData(add, types.Resource(ResourceDockerFileAdd)),
-		"copy":   llx.ArrayData(copy, types.Resource(ResourceDockerFileCopy)),
-		"expose": llx.ArrayData(expose, types.Resource(ResourceDockerFileExpose)),
+		"__id":    llx.StringData(stageID),
+		"from":    llx.ResourceData(rawFrom, ResourceDockerFileFrom),
+		"file":    llx.ResourceData(p, ResourceDockerFile),
+		"env":     llx.ArrayData(env, types.Resource(ResourceDockerFileEnv)),
+		"arg":     llx.ArrayData(arg, types.Resource(ResourceDockerFileArg)),
+		"labels":  llx.MapData(llx.TMap2Raw(labels), types.String),
+		"run":     llx.ArrayData(runs, types.Resource(ResourceDockerFileRun)),
+		"add":     llx.ArrayData(add, types.Resource(ResourceDockerFileAdd)),
+		"copy":    llx.ArrayData(copy, types.Resource(ResourceDockerFileCopy)),
+		"expose":  llx.ArrayData(expose, types.Resource(ResourceDockerFileExpose)),
+		"volumes": llx.ArrayData(volumes, types.Resource(ResourceDockerFileVolume)),
 	}
 
 	if entrypointRaw != nil {
@@ -373,6 +391,31 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 		args["user"] = llx.ResourceData(userResource, ResourceDockerFileUser)
 	} else {
 		args["user"] = llx.NilData
+	}
+
+	if healthcheckRaw != nil && healthcheckRaw.Health != nil {
+		h := healthcheckRaw.Health
+		isNone := len(h.Test) > 0 && h.Test[0] == "NONE"
+		test := make([]any, len(h.Test))
+		for i, t := range h.Test {
+			test[i] = t
+		}
+		hcResource, err := CreateResource(p.MqlRuntime, ResourceDockerFileHealthcheck, map[string]*llx.RawData{
+			"__id":          llx.StringData(p.locationID(healthcheckRaw.Location())),
+			"test":          llx.ArrayData(test, types.String),
+			"interval":      llx.IntData(int64(h.Interval)),
+			"timeout":       llx.IntData(int64(h.Timeout)),
+			"startPeriod":   llx.IntData(int64(h.StartPeriod)),
+			"startInterval": llx.IntData(int64(h.StartInterval)),
+			"retries":       llx.IntData(int64(h.Retries)),
+			"none":          llx.BoolData(isNone),
+		})
+		if err != nil {
+			return nil, err
+		}
+		args["healthcheck"] = llx.ResourceData(hcResource, ResourceDockerFileHealthcheck)
+	} else {
+		args["healthcheck"] = llx.NilData
 	}
 
 	rawStage, err := CreateResource(p.MqlRuntime, ResourceDockerFileStage, args)

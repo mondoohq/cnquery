@@ -939,6 +939,10 @@ private docker.file.stage @defaults("from.name") {
   copy []docker.file.copy
   // EXPOSE instructions in this Dockerfile
   expose []docker.file.expose
+  // HEALTHCHECK instruction in this Dockerfile
+  healthcheck docker.file.healthcheck
+  // VOLUME instructions in this Dockerfile
+  volumes []docker.file.volume
 }
 
 // Dockerfile ARG instructions
@@ -1007,6 +1011,30 @@ private docker.file.copy @defaults("src dst") {
   chown string
   // Octal permissions of the file(s)
   chmod string
+}
+
+// Dockerfile HEALTHCHECK instruction
+private docker.file.healthcheck @defaults("test") {
+  // The health check test command (e.g., ["CMD-SHELL", "curl -f http://localhost/ || exit 1"])
+  test []string
+  // Time between running the check in nanoseconds
+  interval int
+  // Time to wait before considering the check hung in nanoseconds
+  timeout int
+  // Start period for the container to initialize before counting retries in nanoseconds
+  startPeriod int
+  // Interval between checks during start period in nanoseconds
+  startInterval int
+  // Number of consecutive failures needed to report unhealthy
+  retries int
+  // Whether HEALTHCHECK is set to NONE (disables any inherited healthcheck)
+  none bool
+}
+
+// Dockerfile VOLUME instruction
+private docker.file.volume @defaults("path") {
+  // Volume mount path
+  path string
 }
 
 // Docker image

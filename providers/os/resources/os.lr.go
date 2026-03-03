@@ -95,6 +95,8 @@ const (
 	ResourceDockerFileRun              string = "docker.file.run"
 	ResourceDockerFileAdd              string = "docker.file.add"
 	ResourceDockerFileCopy             string = "docker.file.copy"
+	ResourceDockerFileHealthcheck      string = "docker.file.healthcheck"
+	ResourceDockerFileVolume           string = "docker.file.volume"
 	ResourceDockerImage                string = "docker.image"
 	ResourceDockerContainer            string = "docker.container"
 	ResourceContainerd                 string = "containerd"
@@ -502,6 +504,14 @@ func init() {
 		"docker.file.copy": {
 			// to override args, implement: initDockerFileCopy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDockerFileCopy,
+		},
+		"docker.file.healthcheck": {
+			// to override args, implement: initDockerFileHealthcheck(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDockerFileHealthcheck,
+		},
+		"docker.file.volume": {
+			// to override args, implement: initDockerFileVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDockerFileVolume,
 		},
 		"docker.image": {
 			// to override args, implement: initDockerImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1879,6 +1889,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"docker.file.stage.expose": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFileStage).GetExpose()).ToDataRes(types.Array(types.Resource("docker.file.expose")))
 	},
+	"docker.file.stage.healthcheck": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileStage).GetHealthcheck()).ToDataRes(types.Resource("docker.file.healthcheck"))
+	},
+	"docker.file.stage.volumes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileStage).GetVolumes()).ToDataRes(types.Array(types.Resource("docker.file.volume")))
+	},
 	"docker.file.arg.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFileArg).GetName()).ToDataRes(types.String)
 	},
@@ -1944,6 +1960,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"docker.file.copy.chmod": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFileCopy).GetChmod()).ToDataRes(types.String)
+	},
+	"docker.file.healthcheck.test": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileHealthcheck).GetTest()).ToDataRes(types.Array(types.String))
+	},
+	"docker.file.healthcheck.interval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileHealthcheck).GetInterval()).ToDataRes(types.Int)
+	},
+	"docker.file.healthcheck.timeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileHealthcheck).GetTimeout()).ToDataRes(types.Int)
+	},
+	"docker.file.healthcheck.startPeriod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileHealthcheck).GetStartPeriod()).ToDataRes(types.Int)
+	},
+	"docker.file.healthcheck.startInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileHealthcheck).GetStartInterval()).ToDataRes(types.Int)
+	},
+	"docker.file.healthcheck.retries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileHealthcheck).GetRetries()).ToDataRes(types.Int)
+	},
+	"docker.file.healthcheck.none": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileHealthcheck).GetNone()).ToDataRes(types.Bool)
+	},
+	"docker.file.volume.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileVolume).GetPath()).ToDataRes(types.String)
 	},
 	"docker.image.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerImage).GetId()).ToDataRes(types.String)
@@ -5069,6 +5109,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDockerFileStage).Expose, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"docker.file.stage.healthcheck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileStage).Healthcheck, ok = plugin.RawToTValue[*mqlDockerFileHealthcheck](v.Value, v.Error)
+		return
+	},
+	"docker.file.stage.volumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileStage).Volumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"docker.file.arg.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDockerFileArg).__id, ok = v.Value.(string)
 		return
@@ -5187,6 +5235,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"docker.file.copy.chmod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDockerFileCopy).Chmod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"docker.file.healthcheck.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileHealthcheck).__id, ok = v.Value.(string)
+		return
+	},
+	"docker.file.healthcheck.test": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileHealthcheck).Test, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"docker.file.healthcheck.interval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileHealthcheck).Interval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"docker.file.healthcheck.timeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileHealthcheck).Timeout, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"docker.file.healthcheck.startPeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileHealthcheck).StartPeriod, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"docker.file.healthcheck.startInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileHealthcheck).StartInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"docker.file.healthcheck.retries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileHealthcheck).Retries, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"docker.file.healthcheck.none": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileHealthcheck).None, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"docker.file.volume.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileVolume).__id, ok = v.Value.(string)
+		return
+	},
+	"docker.file.volume.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileVolume).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"docker.image.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13219,18 +13307,20 @@ type mqlDockerFileStage struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlDockerFileStageInternal it will be used here
-	From       plugin.TValue[*mqlDockerFileFrom]
-	File       plugin.TValue[*mqlDockerFile]
-	Env        plugin.TValue[[]any]
-	Arg        plugin.TValue[[]any]
-	Labels     plugin.TValue[map[string]any]
-	Run        plugin.TValue[[]any]
-	Cmd        plugin.TValue[*mqlDockerFileRun]
-	User       plugin.TValue[*mqlDockerFileUser]
-	Entrypoint plugin.TValue[*mqlDockerFileRun]
-	Add        plugin.TValue[[]any]
-	Copy       plugin.TValue[[]any]
-	Expose     plugin.TValue[[]any]
+	From        plugin.TValue[*mqlDockerFileFrom]
+	File        plugin.TValue[*mqlDockerFile]
+	Env         plugin.TValue[[]any]
+	Arg         plugin.TValue[[]any]
+	Labels      plugin.TValue[map[string]any]
+	Run         plugin.TValue[[]any]
+	Cmd         plugin.TValue[*mqlDockerFileRun]
+	User        plugin.TValue[*mqlDockerFileUser]
+	Entrypoint  plugin.TValue[*mqlDockerFileRun]
+	Add         plugin.TValue[[]any]
+	Copy        plugin.TValue[[]any]
+	Expose      plugin.TValue[[]any]
+	Healthcheck plugin.TValue[*mqlDockerFileHealthcheck]
+	Volumes     plugin.TValue[[]any]
 }
 
 // createDockerFileStage creates a new instance of this resource
@@ -13311,6 +13401,14 @@ func (c *mqlDockerFileStage) GetCopy() *plugin.TValue[[]any] {
 
 func (c *mqlDockerFileStage) GetExpose() *plugin.TValue[[]any] {
 	return &c.Expose
+}
+
+func (c *mqlDockerFileStage) GetHealthcheck() *plugin.TValue[*mqlDockerFileHealthcheck] {
+	return &c.Healthcheck
+}
+
+func (c *mqlDockerFileStage) GetVolumes() *plugin.TValue[[]any] {
+	return &c.Volumes
 }
 
 // mqlDockerFileArg for the docker.file.arg resource
@@ -13733,6 +13831,124 @@ func (c *mqlDockerFileCopy) GetChown() *plugin.TValue[string] {
 
 func (c *mqlDockerFileCopy) GetChmod() *plugin.TValue[string] {
 	return &c.Chmod
+}
+
+// mqlDockerFileHealthcheck for the docker.file.healthcheck resource
+type mqlDockerFileHealthcheck struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDockerFileHealthcheckInternal it will be used here
+	Test          plugin.TValue[[]any]
+	Interval      plugin.TValue[int64]
+	Timeout       plugin.TValue[int64]
+	StartPeriod   plugin.TValue[int64]
+	StartInterval plugin.TValue[int64]
+	Retries       plugin.TValue[int64]
+	None          plugin.TValue[bool]
+}
+
+// createDockerFileHealthcheck creates a new instance of this resource
+func createDockerFileHealthcheck(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDockerFileHealthcheck{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("docker.file.healthcheck", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDockerFileHealthcheck) MqlName() string {
+	return "docker.file.healthcheck"
+}
+
+func (c *mqlDockerFileHealthcheck) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDockerFileHealthcheck) GetTest() *plugin.TValue[[]any] {
+	return &c.Test
+}
+
+func (c *mqlDockerFileHealthcheck) GetInterval() *plugin.TValue[int64] {
+	return &c.Interval
+}
+
+func (c *mqlDockerFileHealthcheck) GetTimeout() *plugin.TValue[int64] {
+	return &c.Timeout
+}
+
+func (c *mqlDockerFileHealthcheck) GetStartPeriod() *plugin.TValue[int64] {
+	return &c.StartPeriod
+}
+
+func (c *mqlDockerFileHealthcheck) GetStartInterval() *plugin.TValue[int64] {
+	return &c.StartInterval
+}
+
+func (c *mqlDockerFileHealthcheck) GetRetries() *plugin.TValue[int64] {
+	return &c.Retries
+}
+
+func (c *mqlDockerFileHealthcheck) GetNone() *plugin.TValue[bool] {
+	return &c.None
+}
+
+// mqlDockerFileVolume for the docker.file.volume resource
+type mqlDockerFileVolume struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDockerFileVolumeInternal it will be used here
+	Path plugin.TValue[string]
+}
+
+// createDockerFileVolume creates a new instance of this resource
+func createDockerFileVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDockerFileVolume{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("docker.file.volume", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDockerFileVolume) MqlName() string {
+	return "docker.file.volume"
+}
+
+func (c *mqlDockerFileVolume) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDockerFileVolume) GetPath() *plugin.TValue[string] {
+	return &c.Path
 }
 
 // mqlDockerImage for the docker.image resource

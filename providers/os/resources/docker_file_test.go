@@ -28,6 +28,8 @@ func TestParseDockerfile(t *testing.T) {
 		expectedCopyStruct      []plugin.TValue[*mqlDockerFileCopy]
 		expectedAddStruct       []plugin.TValue[*mqlDockerFileAdd]
 		expectedExposeStructArr []plugin.TValue[*mqlDockerFileExpose]
+		expectedHealthcheck     plugin.TValue[*mqlDockerFileHealthcheck]
+		expectedVolumeStructArr []plugin.TValue[*mqlDockerFileVolume]
 	}{
 		{
 			purpose: "minimal instructions with CMD",
@@ -157,6 +159,52 @@ ADD /foo-add /bar-add
 				}},
 			},
 		},
+		{
+			purpose: "with HEALTHCHECK and VOLUME",
+			subjectDockerFile: `
+FROM alpine
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 CMD curl -f http://localhost/ || exit 1
+VOLUME /data
+VOLUME /var/log /tmp
+`,
+			expectedLabels:    map[string]any{},
+			expectedFromImage: "alpine",
+			expectedHealthcheck: plugin.TValue[*mqlDockerFileHealthcheck]{
+				Data: &mqlDockerFileHealthcheck{
+					Test:     plugin.TValue[[]any]{Data: []any{"CMD-SHELL", "curl -f http://localhost/ || exit 1"}},
+					Interval: plugin.TValue[int64]{Data: int64(30000000000)},
+					Timeout:  plugin.TValue[int64]{Data: int64(10000000000)},
+					Retries:  plugin.TValue[int64]{Data: int64(3)},
+					None:     plugin.TValue[bool]{Data: false},
+				},
+			},
+			expectedVolumeStructArr: []plugin.TValue[*mqlDockerFileVolume]{
+				{Data: &mqlDockerFileVolume{
+					Path: plugin.TValue[string]{Data: "/data"},
+				}},
+				{Data: &mqlDockerFileVolume{
+					Path: plugin.TValue[string]{Data: "/var/log"},
+				}},
+				{Data: &mqlDockerFileVolume{
+					Path: plugin.TValue[string]{Data: "/tmp"},
+				}},
+			},
+		},
+		{
+			purpose: "with HEALTHCHECK NONE",
+			subjectDockerFile: `
+FROM alpine
+HEALTHCHECK NONE
+`,
+			expectedLabels:    map[string]any{},
+			expectedFromImage: "alpine",
+			expectedHealthcheck: plugin.TValue[*mqlDockerFileHealthcheck]{
+				Data: &mqlDockerFileHealthcheck{
+					Test: plugin.TValue[[]any]{Data: []any{"NONE"}},
+					None: plugin.TValue[bool]{Data: true},
+				},
+			},
+		},
 	}
 
 	for _, kase := range cases {
@@ -231,6 +279,24 @@ ADD /foo-add /bar-add
 				actualExpose := expose.(*mqlDockerFileExpose)
 				require.Equal(t, kase.expectedExposeStructArr[i].Data.Port.Data, actualExpose.Port.Data)
 				require.Equal(t, kase.expectedExposeStructArr[i].Data.Protocol.Data, actualExpose.Protocol.Data)
+			}
+
+			if kase.expectedHealthcheck.Data == nil {
+				require.Nil(t, actualMqlDockerFileStage.Healthcheck.Data)
+			} else {
+				require.NotNil(t, actualMqlDockerFileStage.Healthcheck.Data)
+				actualHC := actualMqlDockerFileStage.Healthcheck.Data
+				require.Equal(t, kase.expectedHealthcheck.Data.Test.Data, actualHC.Test.Data)
+				require.Equal(t, kase.expectedHealthcheck.Data.Interval.Data, actualHC.Interval.Data)
+				require.Equal(t, kase.expectedHealthcheck.Data.Timeout.Data, actualHC.Timeout.Data)
+				require.Equal(t, kase.expectedHealthcheck.Data.Retries.Data, actualHC.Retries.Data)
+				require.Equal(t, kase.expectedHealthcheck.Data.None.Data, actualHC.None.Data)
+			}
+
+			require.Equal(t, len(kase.expectedVolumeStructArr), len(actualMqlDockerFileStage.Volumes.Data))
+			for i, vol := range actualMqlDockerFileStage.Volumes.Data {
+				actualVol := vol.(*mqlDockerFileVolume)
+				require.Equal(t, kase.expectedVolumeStructArr[i].Data.Path.Data, actualVol.Path.Data)
 			}
 		})
 	}
