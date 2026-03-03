@@ -2498,3 +2498,26 @@ private vscode.extension @defaults("editor name version") {
   // Extension categories
   categories []string
 }
+
+// Logrotate configuration
+logrotate {
+  init(path? string)
+  // List of configuration files (main + logrotate.d fragments)
+  files() []file
+  // Global directives (outside any file block)
+  globalConfig(files) map[string]string
+  // Per-file/glob rotation entries
+  entries(files) []logrotate.entry
+}
+
+// Logrotate configuration entry for a specific log path
+private logrotate.entry @defaults("path") {
+  // Configuration file where this entry is defined
+  file file
+  // Line number in the configuration file
+  lineNumber int
+  // Log file path or glob pattern
+  path string
+  // All directives in this block as key-value pairs
+  config map[string]string
+}
