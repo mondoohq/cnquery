@@ -4,6 +4,7 @@
 package fsutil_test
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -14,7 +15,7 @@ import (
 )
 
 func TestFileResource(t *testing.T) {
-	path := "/tmp/test_hash"
+	path := filepath.Join(t.TempDir(), "test_hash")
 
 	conn := local.NewConnection(0, &inventory.Config{
 		Path: path,
@@ -30,6 +31,7 @@ func TestFileResource(t *testing.T) {
 	f, err := fs.Open(path)
 	assert.Nil(t, err)
 	if assert.NotNil(t, f) {
+		defer f.Close()
 		assert.Equal(t, path, f.Name(), "they should be equal")
 
 		md5, err := fsutil.Md5(f)
