@@ -107,24 +107,20 @@ type mqlApache2ConfInternal struct {
 	serverRoot string
 }
 
-// apacheConfPaths maps platform names to their default Apache config location.
-// Debian/Ubuntu use apache2, RHEL/CentOS use httpd.
-var apacheConfPaths = map[string]string{
-	"ubuntu":   "/etc/apache2/apache2.conf",
-	"debian":   "/etc/apache2/apache2.conf",
-	"redhat":   "/etc/httpd/conf/httpd.conf",
-	"centos":   "/etc/httpd/conf/httpd.conf",
-	"fedora":   "/etc/httpd/conf/httpd.conf",
-	"rocky":    "/etc/httpd/conf/httpd.conf",
-	"alma":     "/etc/httpd/conf/httpd.conf",
-	"oracle":   "/etc/httpd/conf/httpd.conf",
-	"amazon":   "/etc/httpd/conf/httpd.conf",
-	"suse":     "/etc/apache2/httpd.conf",
-	"opensuse": "/etc/apache2/httpd.conf",
-	"freebsd":  "/usr/local/etc/apache24/httpd.conf",
-	"openbsd":  "/etc/apache2/httpd.conf",
-	"arch":     "/etc/httpd/conf/httpd.conf",
-	"gentoo":   "/etc/apache2/httpd.conf",
+// apacheConfByFamily maps platform families (and a few standalone platform
+// names that don't belong to the matching family) to their default Apache
+// config path. The lookup checks platform name first, then walks Family[].
+var apacheConfByFamily = map[string]string{
+	// families
+	"debian": "/etc/apache2/apache2.conf",
+	"redhat": "/etc/httpd/conf/httpd.conf",
+	"suse":   "/etc/apache2/httpd.conf",
+	"arch":   "/etc/httpd/conf/httpd.conf",
+	"bsd":    "/etc/apache2/httpd.conf",
+	// standalone platforms (not in matching families above)
+	"amazonlinux": "/etc/httpd/conf/httpd.conf",
+	"gentoo":      "/etc/apache2/httpd.conf",
+	"freebsd":     "/usr/local/etc/apache24/httpd.conf",
 }
 
 const defaultApacheConf = "/etc/httpd/conf/httpd.conf"
@@ -132,12 +128,11 @@ const defaultApacheConf = "/etc/httpd/conf/httpd.conf"
 func apacheConfPath(conn shared.Connection) string {
 	asset := conn.Asset()
 	if asset != nil && asset.Platform != nil {
-		if p, ok := apacheConfPaths[asset.Platform.Name]; ok {
+		if p, ok := apacheConfByFamily[asset.Platform.Name]; ok {
 			return p
 		}
-		// Check family for broader matches
 		for _, family := range asset.Platform.Family {
-			if p, ok := apacheConfPaths[family]; ok {
+			if p, ok := apacheConfByFamily[family]; ok {
 				return p
 			}
 		}
@@ -145,24 +140,33 @@ func apacheConfPath(conn shared.Connection) string {
 	return defaultApacheConf
 }
 
+// apacheServerRootByFamily maps platform families/names to their default
+// ServerRoot directory for resolving relative Include paths.
+var apacheServerRootByFamily = map[string]string{
+	"debian":  "/etc/apache2",
+	"suse":    "/etc/apache2",
+	"bsd":     "/etc/apache2",
+	"freebsd": "/usr/local/etc/apache24",
+	"gentoo":  "/etc/apache2",
+}
+
+const defaultApacheServerRoot = "/etc/httpd"
+
 // apacheServerRoot returns the ServerRoot directory for resolving relative
 // Include paths. Defaults based on platform.
 func apacheServerRoot(conn shared.Connection) string {
 	asset := conn.Asset()
 	if asset != nil && asset.Platform != nil {
-		switch asset.Platform.Name {
-		case "ubuntu", "debian":
-			return "/etc/apache2"
-		case "freebsd":
-			return "/usr/local/etc/apache24"
+		if p, ok := apacheServerRootByFamily[asset.Platform.Name]; ok {
+			return p
 		}
 		for _, family := range asset.Platform.Family {
-			if family == "debian" {
-				return "/etc/apache2"
+			if p, ok := apacheServerRootByFamily[family]; ok {
+				return p
 			}
 		}
 	}
-	return "/etc/httpd"
+	return defaultApacheServerRoot
 }
 
 // prescanServerRoot does a quick scan of the config content for a ServerRoot
@@ -228,7 +232,7 @@ func (s *mqlApache2Conf) file() (*mqlFile, error) {
 	// Try the platform-preferred path first, then fall back to all known paths.
 	preferred := apacheConfPath(conn)
 	candidates := []string{preferred}
-	for _, p := range apacheConfPaths {
+	for _, p := range apacheConfByFamily {
 		if p != preferred {
 			candidates = append(candidates, p)
 		}
