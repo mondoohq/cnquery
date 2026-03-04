@@ -62,6 +62,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/timestreamwrite"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	"github.com/aws/aws-sdk-go-v2/service/workdocs"
+	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	"github.com/rs/zerolog/log"
 )
 
@@ -1413,6 +1414,30 @@ func (t *AwsConnection) WorkDocs(region string) *workdocs.Client {
 	cfg := t.cfg.Copy()
 	cfg.Region = region
 	client := workdocs.NewFromConfig(cfg)
+
+	// cache it
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) Workspaces(region string) *workspaces.Client {
+	// if no region value is sent in, use the configured region
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_workspaces_" + region
+
+	// check for cached client and return it if it exists
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached workspaces client")
+		return c.Data.(*workspaces.Client)
+	}
+
+	// create the client
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := workspaces.NewFromConfig(cfg)
 
 	// cache it
 	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})

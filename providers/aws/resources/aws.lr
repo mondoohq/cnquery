@@ -6333,3 +6333,151 @@ private aws.directoryservice.connectSettings @defaults("vpcId customerUserName")
   // Username of the service account in the directory
   customerUserName string
 }
+
+// Amazon WorkSpaces service
+aws.workspaces @defaults("directories") {
+  // List of registered workspace directories across all enabled regions
+  directories() []aws.workspaces.directory
+  // List of all workspace instances across all enabled regions
+  instances() []aws.workspaces.workspace
+  // List of IP access control groups across all enabled regions
+  ipGroups() []aws.workspaces.ipGroup
+  // List of workspace images across all enabled regions
+  images() []aws.workspaces.image
+  // List of workspace bundles across all enabled regions
+  bundles() []aws.workspaces.bundle
+}
+
+// Amazon WorkSpaces directory
+private aws.workspaces.directory @defaults("directoryId directoryName state region") {
+  // Directory identifier
+  directoryId string
+  // Fully qualified directory name
+  directoryName string
+  // Directory type: SIMPLE_AD, AD_CONNECTOR, CUSTOMER_MANAGED, AWS_IAM_IDENTITY_CENTER
+  directoryType string
+  // Directory alias
+  alias string
+  // Directory state
+  state string
+  // DNS IP addresses
+  dnsIpAddresses []string
+  // Endpoint encryption mode: STANDARD_TLS or FIPS_VALIDATED
+  endpointEncryptionMode string
+  // Workspace access properties for device types
+  workspaceAccessProperties dict
+  // Default workspace creation properties
+  defaultCreationProperties dict
+  // Certificate-based authentication properties
+  certificateBasedAuthProperties dict
+  // Associated IP access control group IDs
+  ipGroupIds []string
+  // Self-service permissions for users
+  selfservicePermissions dict
+  // IAM role identifier
+  iamRoleId string
+  // Subnet identifiers
+  subnetIds []string
+  // Resource tags
+  tags() map[string]string
+  // AWS region
+  region string
+}
+
+// Amazon WorkSpaces workspace instance
+private aws.workspaces.workspace @defaults("workspaceId userName state region") {
+  // Workspace identifier
+  workspaceId string
+  // Associated directory ID
+  directoryId string
+  // User associated with the workspace
+  userName string
+  // IP address of the workspace
+  ipAddress string
+  // Computer name
+  computerName string
+  // Bundle ID used to create the workspace
+  bundleId string
+  // Subnet ID
+  subnetId string
+  // State: PENDING, AVAILABLE, IMPAIRED, UNHEALTHY, REBOOTING, etc.
+  state string
+  // Whether the root volume is encrypted
+  rootVolumeEncryptionEnabled bool
+  // Whether the user volume is encrypted
+  userVolumeEncryptionEnabled bool
+  // KMS key ARN for volume encryption
+  volumeEncryptionKey string
+  // Error code if in error state
+  errorCode string
+  // Error message if in error state
+  errorMessage string
+  // Resource tags
+  tags() map[string]string
+  // AWS region
+  region string
+}
+
+// Amazon WorkSpaces image
+private aws.workspaces.image @defaults("imageId name state region") {
+  // Image identifier
+  imageId string
+  // Image name
+  name string
+  // Image description
+  description string
+  // Operating system details
+  operatingSystem dict
+  // State: AVAILABLE, PENDING, ERROR
+  state string
+  // Image creation timestamp
+  created time
+  // Account that owns the image
+  ownerAccountId string
+  // AWS region
+  region string
+}
+
+// Amazon WorkSpaces bundle
+private aws.workspaces.bundle @defaults("bundleId name region") {
+  // Bundle identifier
+  bundleId string
+  // Bundle name
+  name string
+  // Bundle description
+  description string
+  // Owner account ID or AMAZON
+  owner string
+  // Compute type configuration
+  computeType dict
+  // User storage configuration
+  userStorage dict
+  // Root storage configuration
+  rootStorage dict
+  // Bundle state: AVAILABLE, PENDING, ERROR
+  state string
+  // Bundle type: REGULAR or STANDBY
+  bundleType string
+  // Associated image ID
+  imageId string
+  // Bundle creation timestamp
+  creationTime time
+  // Last update timestamp
+  lastUpdatedTime time
+  // AWS region
+  region string
+}
+
+// Amazon WorkSpaces IP access control group
+private aws.workspaces.ipGroup @defaults("groupId groupName region") {
+  // IP group identifier
+  groupId string
+  // IP group name
+  groupName string
+  // IP group description
+  groupDesc string
+  // IP rules (each has ipRule and ruleDesc)
+  userRules []dict
+  // AWS region
+  region string
+}

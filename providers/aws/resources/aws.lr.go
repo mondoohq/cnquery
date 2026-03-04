@@ -310,6 +310,12 @@ const (
 	ResourceAwsDirectoryserviceRadiusSettings                                   string = "aws.directoryservice.radiusSettings"
 	ResourceAwsDirectoryserviceVpcSettings                                      string = "aws.directoryservice.vpcSettings"
 	ResourceAwsDirectoryserviceConnectSettings                                  string = "aws.directoryservice.connectSettings"
+	ResourceAwsWorkspaces                                                       string = "aws.workspaces"
+	ResourceAwsWorkspacesDirectory                                              string = "aws.workspaces.directory"
+	ResourceAwsWorkspacesWorkspace                                              string = "aws.workspaces.workspace"
+	ResourceAwsWorkspacesImage                                                  string = "aws.workspaces.image"
+	ResourceAwsWorkspacesBundle                                                 string = "aws.workspaces.bundle"
+	ResourceAwsWorkspacesIpGroup                                                string = "aws.workspaces.ipGroup"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -1487,6 +1493,30 @@ func init() {
 		"aws.directoryservice.connectSettings": {
 			// to override args, implement: initAwsDirectoryserviceConnectSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsDirectoryserviceConnectSettings,
+		},
+		"aws.workspaces": {
+			// to override args, implement: initAwsWorkspaces(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWorkspaces,
+		},
+		"aws.workspaces.directory": {
+			// to override args, implement: initAwsWorkspacesDirectory(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWorkspacesDirectory,
+		},
+		"aws.workspaces.workspace": {
+			// to override args, implement: initAwsWorkspacesWorkspace(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWorkspacesWorkspace,
+		},
+		"aws.workspaces.image": {
+			// to override args, implement: initAwsWorkspacesImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWorkspacesImage,
+		},
+		"aws.workspaces.bundle": {
+			// to override args, implement: initAwsWorkspacesBundle(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWorkspacesBundle,
+		},
+		"aws.workspaces.ipGroup": {
+			// to override args, implement: initAwsWorkspacesIpGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWorkspacesIpGroup,
 		},
 	}
 }
@@ -9274,6 +9304,192 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.directoryservice.connectSettings.customerUserName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDirectoryserviceConnectSettings).GetCustomerUserName()).ToDataRes(types.String)
+	},
+	"aws.workspaces.directories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspaces).GetDirectories()).ToDataRes(types.Array(types.Resource("aws.workspaces.directory")))
+	},
+	"aws.workspaces.instances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspaces).GetInstances()).ToDataRes(types.Array(types.Resource("aws.workspaces.workspace")))
+	},
+	"aws.workspaces.ipGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspaces).GetIpGroups()).ToDataRes(types.Array(types.Resource("aws.workspaces.ipGroup")))
+	},
+	"aws.workspaces.images": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspaces).GetImages()).ToDataRes(types.Array(types.Resource("aws.workspaces.image")))
+	},
+	"aws.workspaces.bundles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspaces).GetBundles()).ToDataRes(types.Array(types.Resource("aws.workspaces.bundle")))
+	},
+	"aws.workspaces.directory.directoryId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesDirectory).GetDirectoryId()).ToDataRes(types.String)
+	},
+	"aws.workspaces.directory.directoryName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesDirectory).GetDirectoryName()).ToDataRes(types.String)
+	},
+	"aws.workspaces.directory.directoryType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesDirectory).GetDirectoryType()).ToDataRes(types.String)
+	},
+	"aws.workspaces.directory.alias": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesDirectory).GetAlias()).ToDataRes(types.String)
+	},
+	"aws.workspaces.directory.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesDirectory).GetState()).ToDataRes(types.String)
+	},
+	"aws.workspaces.directory.dnsIpAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesDirectory).GetDnsIpAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"aws.workspaces.directory.endpointEncryptionMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesDirectory).GetEndpointEncryptionMode()).ToDataRes(types.String)
+	},
+	"aws.workspaces.directory.workspaceAccessProperties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesDirectory).GetWorkspaceAccessProperties()).ToDataRes(types.Dict)
+	},
+	"aws.workspaces.directory.defaultCreationProperties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesDirectory).GetDefaultCreationProperties()).ToDataRes(types.Dict)
+	},
+	"aws.workspaces.directory.certificateBasedAuthProperties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesDirectory).GetCertificateBasedAuthProperties()).ToDataRes(types.Dict)
+	},
+	"aws.workspaces.directory.ipGroupIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesDirectory).GetIpGroupIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.workspaces.directory.selfservicePermissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesDirectory).GetSelfservicePermissions()).ToDataRes(types.Dict)
+	},
+	"aws.workspaces.directory.iamRoleId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesDirectory).GetIamRoleId()).ToDataRes(types.String)
+	},
+	"aws.workspaces.directory.subnetIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesDirectory).GetSubnetIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.workspaces.directory.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesDirectory).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.workspaces.directory.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesDirectory).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.workspaces.workspace.workspaceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesWorkspace).GetWorkspaceId()).ToDataRes(types.String)
+	},
+	"aws.workspaces.workspace.directoryId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesWorkspace).GetDirectoryId()).ToDataRes(types.String)
+	},
+	"aws.workspaces.workspace.userName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesWorkspace).GetUserName()).ToDataRes(types.String)
+	},
+	"aws.workspaces.workspace.ipAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesWorkspace).GetIpAddress()).ToDataRes(types.String)
+	},
+	"aws.workspaces.workspace.computerName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesWorkspace).GetComputerName()).ToDataRes(types.String)
+	},
+	"aws.workspaces.workspace.bundleId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesWorkspace).GetBundleId()).ToDataRes(types.String)
+	},
+	"aws.workspaces.workspace.subnetId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesWorkspace).GetSubnetId()).ToDataRes(types.String)
+	},
+	"aws.workspaces.workspace.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesWorkspace).GetState()).ToDataRes(types.String)
+	},
+	"aws.workspaces.workspace.rootVolumeEncryptionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesWorkspace).GetRootVolumeEncryptionEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.workspaces.workspace.userVolumeEncryptionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesWorkspace).GetUserVolumeEncryptionEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.workspaces.workspace.volumeEncryptionKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesWorkspace).GetVolumeEncryptionKey()).ToDataRes(types.String)
+	},
+	"aws.workspaces.workspace.errorCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesWorkspace).GetErrorCode()).ToDataRes(types.String)
+	},
+	"aws.workspaces.workspace.errorMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesWorkspace).GetErrorMessage()).ToDataRes(types.String)
+	},
+	"aws.workspaces.workspace.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesWorkspace).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.workspaces.workspace.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesWorkspace).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.workspaces.image.imageId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesImage).GetImageId()).ToDataRes(types.String)
+	},
+	"aws.workspaces.image.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesImage).GetName()).ToDataRes(types.String)
+	},
+	"aws.workspaces.image.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesImage).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.workspaces.image.operatingSystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesImage).GetOperatingSystem()).ToDataRes(types.Dict)
+	},
+	"aws.workspaces.image.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesImage).GetState()).ToDataRes(types.String)
+	},
+	"aws.workspaces.image.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesImage).GetCreated()).ToDataRes(types.Time)
+	},
+	"aws.workspaces.image.ownerAccountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesImage).GetOwnerAccountId()).ToDataRes(types.String)
+	},
+	"aws.workspaces.image.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesImage).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.workspaces.bundle.bundleId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesBundle).GetBundleId()).ToDataRes(types.String)
+	},
+	"aws.workspaces.bundle.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesBundle).GetName()).ToDataRes(types.String)
+	},
+	"aws.workspaces.bundle.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesBundle).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.workspaces.bundle.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesBundle).GetOwner()).ToDataRes(types.String)
+	},
+	"aws.workspaces.bundle.computeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesBundle).GetComputeType()).ToDataRes(types.Dict)
+	},
+	"aws.workspaces.bundle.userStorage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesBundle).GetUserStorage()).ToDataRes(types.Dict)
+	},
+	"aws.workspaces.bundle.rootStorage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesBundle).GetRootStorage()).ToDataRes(types.Dict)
+	},
+	"aws.workspaces.bundle.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesBundle).GetState()).ToDataRes(types.String)
+	},
+	"aws.workspaces.bundle.bundleType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesBundle).GetBundleType()).ToDataRes(types.String)
+	},
+	"aws.workspaces.bundle.imageId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesBundle).GetImageId()).ToDataRes(types.String)
+	},
+	"aws.workspaces.bundle.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesBundle).GetCreationTime()).ToDataRes(types.Time)
+	},
+	"aws.workspaces.bundle.lastUpdatedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesBundle).GetLastUpdatedTime()).ToDataRes(types.Time)
+	},
+	"aws.workspaces.bundle.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesBundle).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.workspaces.ipGroup.groupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesIpGroup).GetGroupId()).ToDataRes(types.String)
+	},
+	"aws.workspaces.ipGroup.groupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesIpGroup).GetGroupName()).ToDataRes(types.String)
+	},
+	"aws.workspaces.ipGroup.groupDesc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesIpGroup).GetGroupDesc()).ToDataRes(types.String)
+	},
+	"aws.workspaces.ipGroup.userRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesIpGroup).GetUserRules()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.workspaces.ipGroup.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesIpGroup).GetRegion()).ToDataRes(types.String)
 	},
 }
 
@@ -20733,6 +20949,278 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.directoryservice.connectSettings.customerUserName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDirectoryserviceConnectSettings).CustomerUserName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspaces).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.workspaces.directories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspaces).Directories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspaces).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.ipGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspaces).IpGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.images": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspaces).Images, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.bundles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspaces).Bundles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.directory.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesDirectory).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.workspaces.directory.directoryId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesDirectory).DirectoryId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.directory.directoryName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesDirectory).DirectoryName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.directory.directoryType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesDirectory).DirectoryType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.directory.alias": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesDirectory).Alias, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.directory.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesDirectory).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.directory.dnsIpAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesDirectory).DnsIpAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.directory.endpointEncryptionMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesDirectory).EndpointEncryptionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.directory.workspaceAccessProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesDirectory).WorkspaceAccessProperties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.directory.defaultCreationProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesDirectory).DefaultCreationProperties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.directory.certificateBasedAuthProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesDirectory).CertificateBasedAuthProperties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.directory.ipGroupIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesDirectory).IpGroupIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.directory.selfservicePermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesDirectory).SelfservicePermissions, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.directory.iamRoleId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesDirectory).IamRoleId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.directory.subnetIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesDirectory).SubnetIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.directory.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesDirectory).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.directory.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesDirectory).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.workspace.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesWorkspace).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.workspaces.workspace.workspaceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesWorkspace).WorkspaceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.workspace.directoryId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesWorkspace).DirectoryId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.workspace.userName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesWorkspace).UserName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.workspace.ipAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesWorkspace).IpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.workspace.computerName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesWorkspace).ComputerName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.workspace.bundleId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesWorkspace).BundleId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.workspace.subnetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesWorkspace).SubnetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.workspace.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesWorkspace).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.workspace.rootVolumeEncryptionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesWorkspace).RootVolumeEncryptionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.workspace.userVolumeEncryptionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesWorkspace).UserVolumeEncryptionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.workspace.volumeEncryptionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesWorkspace).VolumeEncryptionKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.workspace.errorCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesWorkspace).ErrorCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.workspace.errorMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesWorkspace).ErrorMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.workspace.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesWorkspace).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.workspace.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesWorkspace).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.image.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesImage).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.workspaces.image.imageId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesImage).ImageId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.image.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesImage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.image.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesImage).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.image.operatingSystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesImage).OperatingSystem, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.image.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesImage).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.image.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesImage).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.image.ownerAccountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesImage).OwnerAccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.image.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesImage).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.bundle.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesBundle).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.workspaces.bundle.bundleId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesBundle).BundleId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.bundle.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesBundle).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.bundle.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesBundle).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.bundle.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesBundle).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.bundle.computeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesBundle).ComputeType, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.bundle.userStorage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesBundle).UserStorage, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.bundle.rootStorage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesBundle).RootStorage, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.bundle.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesBundle).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.bundle.bundleType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesBundle).BundleType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.bundle.imageId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesBundle).ImageId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.bundle.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesBundle).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.bundle.lastUpdatedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesBundle).LastUpdatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.bundle.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesBundle).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.ipGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesIpGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.workspaces.ipGroup.groupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesIpGroup).GroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.ipGroup.groupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesIpGroup).GroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.ipGroup.groupDesc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesIpGroup).GroupDesc, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.ipGroup.userRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesIpGroup).UserRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.ipGroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesIpGroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -50231,4 +50719,642 @@ func (c *mqlAwsDirectoryserviceConnectSettings) GetConnectIps() *plugin.TValue[[
 
 func (c *mqlAwsDirectoryserviceConnectSettings) GetCustomerUserName() *plugin.TValue[string] {
 	return &c.CustomerUserName
+}
+
+// mqlAwsWorkspaces for the aws.workspaces resource
+type mqlAwsWorkspaces struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsWorkspacesInternal it will be used here
+	Directories plugin.TValue[[]any]
+	Instances   plugin.TValue[[]any]
+	IpGroups    plugin.TValue[[]any]
+	Images      plugin.TValue[[]any]
+	Bundles     plugin.TValue[[]any]
+}
+
+// createAwsWorkspaces creates a new instance of this resource
+func createAwsWorkspaces(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWorkspaces{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.workspaces", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWorkspaces) MqlName() string {
+	return "aws.workspaces"
+}
+
+func (c *mqlAwsWorkspaces) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWorkspaces) GetDirectories() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Directories, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.workspaces", c.__id, "directories")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.directories()
+	})
+}
+
+func (c *mqlAwsWorkspaces) GetInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Instances, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.workspaces", c.__id, "instances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.instances()
+	})
+}
+
+func (c *mqlAwsWorkspaces) GetIpGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IpGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.workspaces", c.__id, "ipGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ipGroups()
+	})
+}
+
+func (c *mqlAwsWorkspaces) GetImages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Images, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.workspaces", c.__id, "images")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.images()
+	})
+}
+
+func (c *mqlAwsWorkspaces) GetBundles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Bundles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.workspaces", c.__id, "bundles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.bundles()
+	})
+}
+
+// mqlAwsWorkspacesDirectory for the aws.workspaces.directory resource
+type mqlAwsWorkspacesDirectory struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsWorkspacesDirectoryInternal it will be used here
+	DirectoryId                    plugin.TValue[string]
+	DirectoryName                  plugin.TValue[string]
+	DirectoryType                  plugin.TValue[string]
+	Alias                          plugin.TValue[string]
+	State                          plugin.TValue[string]
+	DnsIpAddresses                 plugin.TValue[[]any]
+	EndpointEncryptionMode         plugin.TValue[string]
+	WorkspaceAccessProperties      plugin.TValue[any]
+	DefaultCreationProperties      plugin.TValue[any]
+	CertificateBasedAuthProperties plugin.TValue[any]
+	IpGroupIds                     plugin.TValue[[]any]
+	SelfservicePermissions         plugin.TValue[any]
+	IamRoleId                      plugin.TValue[string]
+	SubnetIds                      plugin.TValue[[]any]
+	Tags                           plugin.TValue[map[string]any]
+	Region                         plugin.TValue[string]
+}
+
+// createAwsWorkspacesDirectory creates a new instance of this resource
+func createAwsWorkspacesDirectory(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWorkspacesDirectory{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.workspaces.directory", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWorkspacesDirectory) MqlName() string {
+	return "aws.workspaces.directory"
+}
+
+func (c *mqlAwsWorkspacesDirectory) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWorkspacesDirectory) GetDirectoryId() *plugin.TValue[string] {
+	return &c.DirectoryId
+}
+
+func (c *mqlAwsWorkspacesDirectory) GetDirectoryName() *plugin.TValue[string] {
+	return &c.DirectoryName
+}
+
+func (c *mqlAwsWorkspacesDirectory) GetDirectoryType() *plugin.TValue[string] {
+	return &c.DirectoryType
+}
+
+func (c *mqlAwsWorkspacesDirectory) GetAlias() *plugin.TValue[string] {
+	return &c.Alias
+}
+
+func (c *mqlAwsWorkspacesDirectory) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsWorkspacesDirectory) GetDnsIpAddresses() *plugin.TValue[[]any] {
+	return &c.DnsIpAddresses
+}
+
+func (c *mqlAwsWorkspacesDirectory) GetEndpointEncryptionMode() *plugin.TValue[string] {
+	return &c.EndpointEncryptionMode
+}
+
+func (c *mqlAwsWorkspacesDirectory) GetWorkspaceAccessProperties() *plugin.TValue[any] {
+	return &c.WorkspaceAccessProperties
+}
+
+func (c *mqlAwsWorkspacesDirectory) GetDefaultCreationProperties() *plugin.TValue[any] {
+	return &c.DefaultCreationProperties
+}
+
+func (c *mqlAwsWorkspacesDirectory) GetCertificateBasedAuthProperties() *plugin.TValue[any] {
+	return &c.CertificateBasedAuthProperties
+}
+
+func (c *mqlAwsWorkspacesDirectory) GetIpGroupIds() *plugin.TValue[[]any] {
+	return &c.IpGroupIds
+}
+
+func (c *mqlAwsWorkspacesDirectory) GetSelfservicePermissions() *plugin.TValue[any] {
+	return &c.SelfservicePermissions
+}
+
+func (c *mqlAwsWorkspacesDirectory) GetIamRoleId() *plugin.TValue[string] {
+	return &c.IamRoleId
+}
+
+func (c *mqlAwsWorkspacesDirectory) GetSubnetIds() *plugin.TValue[[]any] {
+	return &c.SubnetIds
+}
+
+func (c *mqlAwsWorkspacesDirectory) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsWorkspacesDirectory) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsWorkspacesWorkspace for the aws.workspaces.workspace resource
+type mqlAwsWorkspacesWorkspace struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsWorkspacesWorkspaceInternal it will be used here
+	WorkspaceId                 plugin.TValue[string]
+	DirectoryId                 plugin.TValue[string]
+	UserName                    plugin.TValue[string]
+	IpAddress                   plugin.TValue[string]
+	ComputerName                plugin.TValue[string]
+	BundleId                    plugin.TValue[string]
+	SubnetId                    plugin.TValue[string]
+	State                       plugin.TValue[string]
+	RootVolumeEncryptionEnabled plugin.TValue[bool]
+	UserVolumeEncryptionEnabled plugin.TValue[bool]
+	VolumeEncryptionKey         plugin.TValue[string]
+	ErrorCode                   plugin.TValue[string]
+	ErrorMessage                plugin.TValue[string]
+	Tags                        plugin.TValue[map[string]any]
+	Region                      plugin.TValue[string]
+}
+
+// createAwsWorkspacesWorkspace creates a new instance of this resource
+func createAwsWorkspacesWorkspace(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWorkspacesWorkspace{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.workspaces.workspace", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWorkspacesWorkspace) MqlName() string {
+	return "aws.workspaces.workspace"
+}
+
+func (c *mqlAwsWorkspacesWorkspace) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWorkspacesWorkspace) GetWorkspaceId() *plugin.TValue[string] {
+	return &c.WorkspaceId
+}
+
+func (c *mqlAwsWorkspacesWorkspace) GetDirectoryId() *plugin.TValue[string] {
+	return &c.DirectoryId
+}
+
+func (c *mqlAwsWorkspacesWorkspace) GetUserName() *plugin.TValue[string] {
+	return &c.UserName
+}
+
+func (c *mqlAwsWorkspacesWorkspace) GetIpAddress() *plugin.TValue[string] {
+	return &c.IpAddress
+}
+
+func (c *mqlAwsWorkspacesWorkspace) GetComputerName() *plugin.TValue[string] {
+	return &c.ComputerName
+}
+
+func (c *mqlAwsWorkspacesWorkspace) GetBundleId() *plugin.TValue[string] {
+	return &c.BundleId
+}
+
+func (c *mqlAwsWorkspacesWorkspace) GetSubnetId() *plugin.TValue[string] {
+	return &c.SubnetId
+}
+
+func (c *mqlAwsWorkspacesWorkspace) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsWorkspacesWorkspace) GetRootVolumeEncryptionEnabled() *plugin.TValue[bool] {
+	return &c.RootVolumeEncryptionEnabled
+}
+
+func (c *mqlAwsWorkspacesWorkspace) GetUserVolumeEncryptionEnabled() *plugin.TValue[bool] {
+	return &c.UserVolumeEncryptionEnabled
+}
+
+func (c *mqlAwsWorkspacesWorkspace) GetVolumeEncryptionKey() *plugin.TValue[string] {
+	return &c.VolumeEncryptionKey
+}
+
+func (c *mqlAwsWorkspacesWorkspace) GetErrorCode() *plugin.TValue[string] {
+	return &c.ErrorCode
+}
+
+func (c *mqlAwsWorkspacesWorkspace) GetErrorMessage() *plugin.TValue[string] {
+	return &c.ErrorMessage
+}
+
+func (c *mqlAwsWorkspacesWorkspace) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsWorkspacesWorkspace) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsWorkspacesImage for the aws.workspaces.image resource
+type mqlAwsWorkspacesImage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsWorkspacesImageInternal it will be used here
+	ImageId         plugin.TValue[string]
+	Name            plugin.TValue[string]
+	Description     plugin.TValue[string]
+	OperatingSystem plugin.TValue[any]
+	State           plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	OwnerAccountId  plugin.TValue[string]
+	Region          plugin.TValue[string]
+}
+
+// createAwsWorkspacesImage creates a new instance of this resource
+func createAwsWorkspacesImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWorkspacesImage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.workspaces.image", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWorkspacesImage) MqlName() string {
+	return "aws.workspaces.image"
+}
+
+func (c *mqlAwsWorkspacesImage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWorkspacesImage) GetImageId() *plugin.TValue[string] {
+	return &c.ImageId
+}
+
+func (c *mqlAwsWorkspacesImage) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsWorkspacesImage) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsWorkspacesImage) GetOperatingSystem() *plugin.TValue[any] {
+	return &c.OperatingSystem
+}
+
+func (c *mqlAwsWorkspacesImage) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsWorkspacesImage) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlAwsWorkspacesImage) GetOwnerAccountId() *plugin.TValue[string] {
+	return &c.OwnerAccountId
+}
+
+func (c *mqlAwsWorkspacesImage) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsWorkspacesBundle for the aws.workspaces.bundle resource
+type mqlAwsWorkspacesBundle struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsWorkspacesBundleInternal it will be used here
+	BundleId        plugin.TValue[string]
+	Name            plugin.TValue[string]
+	Description     plugin.TValue[string]
+	Owner           plugin.TValue[string]
+	ComputeType     plugin.TValue[any]
+	UserStorage     plugin.TValue[any]
+	RootStorage     plugin.TValue[any]
+	State           plugin.TValue[string]
+	BundleType      plugin.TValue[string]
+	ImageId         plugin.TValue[string]
+	CreationTime    plugin.TValue[*time.Time]
+	LastUpdatedTime plugin.TValue[*time.Time]
+	Region          plugin.TValue[string]
+}
+
+// createAwsWorkspacesBundle creates a new instance of this resource
+func createAwsWorkspacesBundle(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWorkspacesBundle{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.workspaces.bundle", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWorkspacesBundle) MqlName() string {
+	return "aws.workspaces.bundle"
+}
+
+func (c *mqlAwsWorkspacesBundle) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWorkspacesBundle) GetBundleId() *plugin.TValue[string] {
+	return &c.BundleId
+}
+
+func (c *mqlAwsWorkspacesBundle) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsWorkspacesBundle) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsWorkspacesBundle) GetOwner() *plugin.TValue[string] {
+	return &c.Owner
+}
+
+func (c *mqlAwsWorkspacesBundle) GetComputeType() *plugin.TValue[any] {
+	return &c.ComputeType
+}
+
+func (c *mqlAwsWorkspacesBundle) GetUserStorage() *plugin.TValue[any] {
+	return &c.UserStorage
+}
+
+func (c *mqlAwsWorkspacesBundle) GetRootStorage() *plugin.TValue[any] {
+	return &c.RootStorage
+}
+
+func (c *mqlAwsWorkspacesBundle) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsWorkspacesBundle) GetBundleType() *plugin.TValue[string] {
+	return &c.BundleType
+}
+
+func (c *mqlAwsWorkspacesBundle) GetImageId() *plugin.TValue[string] {
+	return &c.ImageId
+}
+
+func (c *mqlAwsWorkspacesBundle) GetCreationTime() *plugin.TValue[*time.Time] {
+	return &c.CreationTime
+}
+
+func (c *mqlAwsWorkspacesBundle) GetLastUpdatedTime() *plugin.TValue[*time.Time] {
+	return &c.LastUpdatedTime
+}
+
+func (c *mqlAwsWorkspacesBundle) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsWorkspacesIpGroup for the aws.workspaces.ipGroup resource
+type mqlAwsWorkspacesIpGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsWorkspacesIpGroupInternal it will be used here
+	GroupId   plugin.TValue[string]
+	GroupName plugin.TValue[string]
+	GroupDesc plugin.TValue[string]
+	UserRules plugin.TValue[[]any]
+	Region    plugin.TValue[string]
+}
+
+// createAwsWorkspacesIpGroup creates a new instance of this resource
+func createAwsWorkspacesIpGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWorkspacesIpGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.workspaces.ipGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWorkspacesIpGroup) MqlName() string {
+	return "aws.workspaces.ipGroup"
+}
+
+func (c *mqlAwsWorkspacesIpGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWorkspacesIpGroup) GetGroupId() *plugin.TValue[string] {
+	return &c.GroupId
+}
+
+func (c *mqlAwsWorkspacesIpGroup) GetGroupName() *plugin.TValue[string] {
+	return &c.GroupName
+}
+
+func (c *mqlAwsWorkspacesIpGroup) GetGroupDesc() *plugin.TValue[string] {
+	return &c.GroupDesc
+}
+
+func (c *mqlAwsWorkspacesIpGroup) GetUserRules() *plugin.TValue[[]any] {
+	return &c.UserRules
+}
+
+func (c *mqlAwsWorkspacesIpGroup) GetRegion() *plugin.TValue[string] {
+	return &c.Region
 }
