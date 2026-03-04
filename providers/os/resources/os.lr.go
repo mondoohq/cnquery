@@ -106,6 +106,10 @@ const (
 	ResourceIptables                   string = "iptables"
 	ResourceIp6tables                  string = "ip6tables"
 	ResourceIptablesEntry              string = "iptables.entry"
+	ResourceNftables                   string = "nftables"
+	ResourceNftablesTable              string = "nftables.table"
+	ResourceNftablesChain              string = "nftables.chain"
+	ResourceNftablesRule               string = "nftables.rule"
 	ResourceFstab                      string = "fstab"
 	ResourceFstabEntry                 string = "fstab.entry"
 	ResourceProcess                    string = "process"
@@ -552,6 +556,22 @@ func init() {
 		"iptables.entry": {
 			// to override args, implement: initIptablesEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createIptablesEntry,
+		},
+		"nftables": {
+			// to override args, implement: initNftables(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNftables,
+		},
+		"nftables.table": {
+			// to override args, implement: initNftablesTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNftablesTable,
+		},
+		"nftables.chain": {
+			// to override args, implement: initNftablesChain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNftablesChain,
+		},
+		"nftables.rule": {
+			// to override args, implement: initNftablesRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNftablesRule,
 		},
 		"fstab": {
 			Init:   initFstab,
@@ -1287,6 +1307,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"os.linux.ip6tables": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOsLinux).GetIp6tables()).ToDataRes(types.Resource("ip6tables"))
+	},
+	"os.linux.nftables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsLinux).GetNftables()).ToDataRes(types.Resource("nftables"))
 	},
 	"os.linux.fstab": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOsLinux).GetFstab()).ToDataRes(types.Resource("fstab"))
@@ -2142,6 +2165,75 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"iptables.entry.chain": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIptablesEntry).GetChain()).ToDataRes(types.String)
+	},
+	"nftables.tables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftables).GetTables()).ToDataRes(types.Array(types.Resource("nftables.table")))
+	},
+	"nftables.table.family": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesTable).GetFamily()).ToDataRes(types.String)
+	},
+	"nftables.table.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesTable).GetName()).ToDataRes(types.String)
+	},
+	"nftables.table.handle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesTable).GetHandle()).ToDataRes(types.Int)
+	},
+	"nftables.table.flags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesTable).GetFlags()).ToDataRes(types.Array(types.String))
+	},
+	"nftables.table.chains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesTable).GetChains()).ToDataRes(types.Array(types.Resource("nftables.chain")))
+	},
+	"nftables.table.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesTable).GetRules()).ToDataRes(types.Array(types.Resource("nftables.rule")))
+	},
+	"nftables.chain.family": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesChain).GetFamily()).ToDataRes(types.String)
+	},
+	"nftables.chain.table": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesChain).GetTable()).ToDataRes(types.String)
+	},
+	"nftables.chain.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesChain).GetName()).ToDataRes(types.String)
+	},
+	"nftables.chain.handle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesChain).GetHandle()).ToDataRes(types.Int)
+	},
+	"nftables.chain.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesChain).GetType()).ToDataRes(types.String)
+	},
+	"nftables.chain.hook": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesChain).GetHook()).ToDataRes(types.String)
+	},
+	"nftables.chain.prio": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesChain).GetPrio()).ToDataRes(types.Int)
+	},
+	"nftables.chain.policy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesChain).GetPolicy()).ToDataRes(types.String)
+	},
+	"nftables.chain.isBaseChain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesChain).GetIsBaseChain()).ToDataRes(types.Bool)
+	},
+	"nftables.chain.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesChain).GetRules()).ToDataRes(types.Array(types.Resource("nftables.rule")))
+	},
+	"nftables.rule.family": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesRule).GetFamily()).ToDataRes(types.String)
+	},
+	"nftables.rule.table": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesRule).GetTable()).ToDataRes(types.String)
+	},
+	"nftables.rule.chain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesRule).GetChain()).ToDataRes(types.String)
+	},
+	"nftables.rule.handle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesRule).GetHandle()).ToDataRes(types.Int)
+	},
+	"nftables.rule.expr": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesRule).GetExpr()).ToDataRes(types.Array(types.Dict))
+	},
+	"nftables.rule.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNftablesRule).GetComment()).ToDataRes(types.String)
 	},
 	"fstab.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFstab).GetPath()).ToDataRes(types.String)
@@ -4153,6 +4245,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOsLinux).Ip6tables, ok = plugin.RawToTValue[*mqlIp6tables](v.Value, v.Error)
 		return
 	},
+	"os.linux.nftables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsLinux).Nftables, ok = plugin.RawToTValue[*mqlNftables](v.Value, v.Error)
+		return
+	},
 	"os.linux.fstab": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOsLinux).Fstab, ok = plugin.RawToTValue[*mqlFstab](v.Value, v.Error)
 		return
@@ -5551,6 +5647,114 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"iptables.entry.chain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIptablesEntry).Chain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nftables.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftables).__id, ok = v.Value.(string)
+		return
+	},
+	"nftables.tables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftables).Tables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nftables.table.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesTable).__id, ok = v.Value.(string)
+		return
+	},
+	"nftables.table.family": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesTable).Family, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nftables.table.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesTable).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nftables.table.handle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesTable).Handle, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"nftables.table.flags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesTable).Flags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nftables.table.chains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesTable).Chains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nftables.table.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesTable).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nftables.chain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesChain).__id, ok = v.Value.(string)
+		return
+	},
+	"nftables.chain.family": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesChain).Family, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nftables.chain.table": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesChain).Table, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nftables.chain.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesChain).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nftables.chain.handle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesChain).Handle, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"nftables.chain.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesChain).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nftables.chain.hook": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesChain).Hook, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nftables.chain.prio": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesChain).Prio, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"nftables.chain.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesChain).Policy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nftables.chain.isBaseChain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesChain).IsBaseChain, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"nftables.chain.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesChain).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nftables.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesRule).__id, ok = v.Value.(string)
+		return
+	},
+	"nftables.rule.family": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesRule).Family, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nftables.rule.table": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesRule).Table, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nftables.rule.chain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesRule).Chain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"nftables.rule.handle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesRule).Handle, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"nftables.rule.expr": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesRule).Expr, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"nftables.rule.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNftablesRule).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"fstab.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9585,6 +9789,7 @@ type mqlOsLinux struct {
 	Unix      plugin.TValue[*mqlOsUnix]
 	Iptables  plugin.TValue[*mqlIptables]
 	Ip6tables plugin.TValue[*mqlIp6tables]
+	Nftables  plugin.TValue[*mqlNftables]
 	Fstab     plugin.TValue[*mqlFstab]
 }
 
@@ -9670,6 +9875,22 @@ func (c *mqlOsLinux) GetIp6tables() *plugin.TValue[*mqlIp6tables] {
 		}
 
 		return c.ip6tables()
+	})
+}
+
+func (c *mqlOsLinux) GetNftables() *plugin.TValue[*mqlNftables] {
+	return plugin.GetOrCompute[*mqlNftables](&c.Nftables, func() (*mqlNftables, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("os.linux", c.__id, "nftables")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNftables), nil
+			}
+		}
+
+		return c.nftables()
 	})
 }
 
@@ -14744,6 +14965,309 @@ func (c *mqlIptablesEntry) GetOptions() *plugin.TValue[string] {
 
 func (c *mqlIptablesEntry) GetChain() *plugin.TValue[string] {
 	return &c.Chain
+}
+
+// mqlNftables for the nftables resource
+type mqlNftables struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNftablesInternal it will be used here
+	Tables plugin.TValue[[]any]
+}
+
+// createNftables creates a new instance of this resource
+func createNftables(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNftables{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nftables", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNftables) MqlName() string {
+	return "nftables"
+}
+
+func (c *mqlNftables) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNftables) GetTables() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tables, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("nftables", c.__id, "tables")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tables()
+	})
+}
+
+// mqlNftablesTable for the nftables.table resource
+type mqlNftablesTable struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNftablesTableInternal it will be used here
+	Family plugin.TValue[string]
+	Name   plugin.TValue[string]
+	Handle plugin.TValue[int64]
+	Flags  plugin.TValue[[]any]
+	Chains plugin.TValue[[]any]
+	Rules  plugin.TValue[[]any]
+}
+
+// createNftablesTable creates a new instance of this resource
+func createNftablesTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNftablesTable{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nftables.table", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNftablesTable) MqlName() string {
+	return "nftables.table"
+}
+
+func (c *mqlNftablesTable) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNftablesTable) GetFamily() *plugin.TValue[string] {
+	return &c.Family
+}
+
+func (c *mqlNftablesTable) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlNftablesTable) GetHandle() *plugin.TValue[int64] {
+	return &c.Handle
+}
+
+func (c *mqlNftablesTable) GetFlags() *plugin.TValue[[]any] {
+	return &c.Flags
+}
+
+func (c *mqlNftablesTable) GetChains() *plugin.TValue[[]any] {
+	return &c.Chains
+}
+
+func (c *mqlNftablesTable) GetRules() *plugin.TValue[[]any] {
+	return &c.Rules
+}
+
+// mqlNftablesChain for the nftables.chain resource
+type mqlNftablesChain struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNftablesChainInternal it will be used here
+	Family      plugin.TValue[string]
+	Table       plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Handle      plugin.TValue[int64]
+	Type        plugin.TValue[string]
+	Hook        plugin.TValue[string]
+	Prio        plugin.TValue[int64]
+	Policy      plugin.TValue[string]
+	IsBaseChain plugin.TValue[bool]
+	Rules       plugin.TValue[[]any]
+}
+
+// createNftablesChain creates a new instance of this resource
+func createNftablesChain(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNftablesChain{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nftables.chain", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNftablesChain) MqlName() string {
+	return "nftables.chain"
+}
+
+func (c *mqlNftablesChain) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNftablesChain) GetFamily() *plugin.TValue[string] {
+	return &c.Family
+}
+
+func (c *mqlNftablesChain) GetTable() *plugin.TValue[string] {
+	return &c.Table
+}
+
+func (c *mqlNftablesChain) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlNftablesChain) GetHandle() *plugin.TValue[int64] {
+	return &c.Handle
+}
+
+func (c *mqlNftablesChain) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlNftablesChain) GetHook() *plugin.TValue[string] {
+	return &c.Hook
+}
+
+func (c *mqlNftablesChain) GetPrio() *plugin.TValue[int64] {
+	return &c.Prio
+}
+
+func (c *mqlNftablesChain) GetPolicy() *plugin.TValue[string] {
+	return &c.Policy
+}
+
+func (c *mqlNftablesChain) GetIsBaseChain() *plugin.TValue[bool] {
+	return &c.IsBaseChain
+}
+
+func (c *mqlNftablesChain) GetRules() *plugin.TValue[[]any] {
+	return &c.Rules
+}
+
+// mqlNftablesRule for the nftables.rule resource
+type mqlNftablesRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNftablesRuleInternal it will be used here
+	Family  plugin.TValue[string]
+	Table   plugin.TValue[string]
+	Chain   plugin.TValue[string]
+	Handle  plugin.TValue[int64]
+	Expr    plugin.TValue[[]any]
+	Comment plugin.TValue[string]
+}
+
+// createNftablesRule creates a new instance of this resource
+func createNftablesRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNftablesRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("nftables.rule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNftablesRule) MqlName() string {
+	return "nftables.rule"
+}
+
+func (c *mqlNftablesRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNftablesRule) GetFamily() *plugin.TValue[string] {
+	return &c.Family
+}
+
+func (c *mqlNftablesRule) GetTable() *plugin.TValue[string] {
+	return &c.Table
+}
+
+func (c *mqlNftablesRule) GetChain() *plugin.TValue[string] {
+	return &c.Chain
+}
+
+func (c *mqlNftablesRule) GetHandle() *plugin.TValue[int64] {
+	return &c.Handle
+}
+
+func (c *mqlNftablesRule) GetExpr() *plugin.TValue[[]any] {
+	return &c.Expr
+}
+
+func (c *mqlNftablesRule) GetComment() *plugin.TValue[string] {
+	return &c.Comment
 }
 
 // mqlFstab for the fstab resource

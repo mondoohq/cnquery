@@ -312,6 +312,8 @@ os.linux {
   iptables() iptables
   // iptables firewall for IPv6
   ip6tables() ip6tables
+  // nftables firewall
+  nftables() nftables
   // /etc/fstab entries
   fstab() fstab
 }
@@ -1161,6 +1163,68 @@ iptables.entry {
   options string
   // Input or output, which is used to create the ID
   chain string
+}
+
+// nftables firewall
+nftables @defaults("tables") {
+  // All nftables tables
+  tables() []nftables.table
+}
+
+// nftables table
+private nftables.table @defaults("family name") {
+  // Address family (ip, ip6, inet, arp, bridge, netdev)
+  family string
+  // Table name
+  name string
+  // Table handle number
+  handle int
+  // Table flags (e.g., dormant, owner, persist)
+  flags []string
+  // Chains in this table
+  chains []nftables.chain
+  // Rules in this table across all chains
+  rules []nftables.rule
+}
+
+// nftables chain
+private nftables.chain @defaults("family table name") {
+  // Address family
+  family string
+  // Table this chain belongs to
+  table string
+  // Chain name
+  name string
+  // Chain handle number
+  handle int
+  // Chain type (filter, route, nat) - only for base chains
+  type string
+  // Hook point (input, output, forward, prerouting, postrouting, ingress, egress) - only for base chains
+  hook string
+  // Chain priority - only for base chains
+  prio int
+  // Default policy (accept, drop) - only for base chains
+  policy string
+  // Whether this is a base chain (has type, hook, and priority)
+  isBaseChain bool
+  // Rules in this chain
+  rules []nftables.rule
+}
+
+// nftables rule
+private nftables.rule @defaults("family table chain handle") {
+  // Address family
+  family string
+  // Table this rule belongs to
+  table string
+  // Chain this rule belongs to
+  chain string
+  // Rule handle number
+  handle int
+  // Rule expressions as structured data
+  expr []dict
+  // Rule comment
+  comment string
 }
 
 fstab @defaults("path") {
