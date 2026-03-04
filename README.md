@@ -108,7 +108,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | AWS EC2 instances             | `ssh`                      | `mql shell ssh user@host`                                                                                                                               |
 | Confluence users              | `atlassian`                | `mql shell atlassian --host YOUR_HOST_URL --admin-token YOUR_TOKEN`                                                                                     |
 | Container images              | `container`, `docker`      | `mql shell container ubuntu:latest`                                                                                                                     |
-| Container registries          | `container registry`       | `mql shell container registry index.docker.io/library/rockylinux:8 `                                                                                    |
+| Container registries          | `container registry`       | `mql shell container registry index.docker.io/library/rockylinux:8`                                                                                    |
 | Dockerfiles                   | `docker`                   | `mql shell docker file FILENAME`                                                                                                                        |
 | DNS records                   | `host`                     | `mql shell host mondoo.com`                                                                                                                             |
 | GitHub organizations          | `github org`               | `mql shell github org mondoohq`                                                                                                                         |
@@ -120,7 +120,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | Jira projects                 | `atlassian`                | `mql shell atlassian --host YOUR_HOST_URL --admin-token YOUR_TOKEN`                                                                                     |
 | Kubernetes cluster nodes      | `local`, `ssh`             | `mql shell ssh user@host`                                                                                                                               |
 | Kubernetes clusters           | `k8s`                      | `mql shell k8s`                                                                                                                                         |
-| Kubernetes manifests          | `k8s`                      | `mql shell k8s manifest.yaml `                                                                                                                          |
+| Kubernetes manifests          | `k8s`                      | `mql shell k8s manifest.yaml`                                                                                                                          |
 | Kubernetes workloads          | `k8s`                      | `mql shell k8s --discover pods,deployments`                                                                                                             |
 | Linux hosts                   | `local`, `ssh`             | `mql shell local` or<br></br>`mql shell ssh user@host`                                                                                              |
 | macOS hosts                   | `local`, `ssh`             | `mql shell local` or<br></br>`mql shell ssh user@IP_ADDRESS`                                                                                        |
@@ -162,6 +162,6 @@ See our [development documentation](docs/development.md) for information on buil
 
 ## Legal
 
-- **Copyright:** 2018-2025, Mondoo, Inc.
+- **Copyright:** 2018-2026, Mondoo, Inc.
 - **License:** BUSL 1.1
 - **Authors:** Christoph Hartmann, Dominik Richter
