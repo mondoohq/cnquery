@@ -226,9 +226,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"asset.cpes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAsset).GetCpes()).ToDataRes(types.Array(types.Resource("cpe")))
 	},
-	"asset.vulnerabilityReport": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAsset).GetVulnerabilityReport()).ToDataRes(types.Dict)
-	},
 	"vulnmgmt.cves": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVulnmgmt).GetCves()).ToDataRes(types.Array(types.Resource("vuln.cve")))
 	},
@@ -613,10 +610,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"asset.cpes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAsset).Cpes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"asset.vulnerabilityReport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAsset).VulnerabilityReport, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"vulnmgmt.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1228,8 +1221,7 @@ type mqlAsset struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAssetInternal it will be used here
-	Cpes                plugin.TValue[[]any]
-	VulnerabilityReport plugin.TValue[any]
+	Cpes plugin.TValue[[]any]
 }
 
 // createAsset creates a new instance of this resource
@@ -1277,12 +1269,6 @@ func (c *mqlAsset) GetCpes() *plugin.TValue[[]any] {
 		}
 
 		return c.cpes()
-	})
-}
-
-func (c *mqlAsset) GetVulnerabilityReport() *plugin.TValue[any] {
-	return plugin.GetOrCompute[any](&c.VulnerabilityReport, func() (any, error) {
-		return c.vulnerabilityReport()
 	})
 }
 

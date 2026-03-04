@@ -3,7 +3,6 @@
 
 asset 9.1.1
 asset.cpes 9.1.1
-asset.vulnerabilityReport 9.1.1
 audit.cvss 9.1.11
 audit.cvss.score 9.1.11
 audit.cvss.vector 9.1.11
@@ -12,7 +11,6 @@ esxi.command 9.0.0
 esxi.command.command 9.0.0
 esxi.command.inventoryPath 9.0.0
 esxi.command.result 9.0.0
-esxi.host 9.0.0
 esxi.kernelmodule 9.0.0
 esxi.kernelmodule.enabled 9.0.0
 esxi.kernelmodule.license 9.0.0
@@ -49,7 +47,6 @@ esxi.vib.name 9.0.0
 esxi.vib.status 9.0.0
 esxi.vib.vendor 9.0.0
 esxi.vib.version 9.0.0
-esxi.vm 9.0.0
 vsphere 9.0.0
 vsphere.about 9.0.0
 vsphere.cluster 9.0.0

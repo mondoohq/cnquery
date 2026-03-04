@@ -92,10 +92,12 @@ func (a *mqlAwsS3) buckets() ([]any, error) {
 
 	res := []any{}
 	for _, bwr := range bucketsWithRegions {
+		arn := fmt.Sprintf(s3ArnPattern, convert.ToValue(bwr.bucket.Name))
 		mqlS3Bucket, err := CreateResource(a.MqlRuntime, ResourceAwsS3Bucket,
 			map[string]*llx.RawData{
+				"__id":      llx.StringData(arn),
 				"name":      llx.StringDataPtr(bwr.bucket.Name),
-				"arn":       llx.StringData(fmt.Sprintf(s3ArnPattern, convert.ToValue(bwr.bucket.Name))),
+				"arn":       llx.StringData(arn),
 				"exists":    llx.BoolData(true),
 				"location":  llx.StringData(bwr.region),
 				"createdAt": llx.TimeDataPtr(bwr.bucket.CreationDate),
@@ -237,7 +239,6 @@ func (a *mqlAwsS3Bucket) policy() (*mqlAwsS3BucketPolicy, error) {
 		// create the policy resource
 		mqlS3BucketPolicy, err := CreateResource(a.MqlRuntime, "aws.s3.bucket.policy",
 			map[string]*llx.RawData{
-				"id":         llx.StringData(parsedPolicy.Id),
 				"name":       llx.StringData(bucketname),
 				"bucketName": llx.StringData(bucketname),
 				"version":    llx.StringData(parsedPolicy.Version),
