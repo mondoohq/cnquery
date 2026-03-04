@@ -248,5 +248,5 @@ jobs:
           repository: "mondoohq/releasr"
           event-type: reindex
           client-payload: '{
-            "reindex-path": "providers"
+            "apps": "providers"
             }'
