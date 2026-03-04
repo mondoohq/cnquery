@@ -790,7 +790,7 @@ func TestWindows11_24H2HotpatchDetector(t *testing.T) {
 	assert.Nil(t, err, "was able to create the provider")
 
 	assert.Equal(t, "windows", di.Name, "os name should be identified")
-	assert.Equal(t, "Windows 11 Enterprise LTSC", di.Title, "os title should be identified")
+	assert.Equal(t, "Windows 11 Enterprise", di.Title, "os title should be identified")
 	assert.Equal(t, "26100", di.Version, "os version should be identified")
 	assert.Equal(t, "1", di.Labels["windows.mondoo.com/product-type"])
 	assert.Equal(t, "true", di.Labels["windows.mondoo.com/hotpatch"])

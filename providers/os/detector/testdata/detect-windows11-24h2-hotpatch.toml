@@ -4,8 +4,8 @@ stdout="""
     "CurrentBuild":  "26100",
     "UBR":  3000,
     "InstallationType":  "Client",
-    "EditionID":  "EnterpriseS",
-    "ProductName":  "Windows 10 Enterprise LTSC",
+    "EditionID":  "Enterprise",
+    "ProductName":  "Windows 11 Enterprise",
     "DisplayVersion":  "24H2",
     "Architecture":  "AMD64",
     "ProductType":  "WinNT"
