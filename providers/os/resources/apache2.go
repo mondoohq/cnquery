@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"bytes"
 	"errors"
 	"io"
 	"os"
@@ -25,14 +26,41 @@ func (s *mqlApache2) id() (string, error) {
 	return "apache2", nil
 }
 
-// apacheVersionBinaries lists commands to try for getting the Apache version.
-// Debian/Ubuntu use apache2ctl, RHEL/CentOS use httpd, others may use apachectl.
-var apacheVersionBinaries = []string{"apache2ctl", "httpd", "apachectl"}
+// apacheVersionBinaries lists the well-known binary paths for the Apache httpd
+// server. The version string (e.g. "Apache/2.4.62") is embedded as a constant in
+// the binary, so we can extract it by reading the file directly — no command
+// execution required.
+var apacheVersionBinaries = []string{
+	"/usr/sbin/apache2",
+	"/usr/sbin/httpd",
+	"/usr/local/sbin/httpd",
+	"/usr/local/bin/httpd",
+}
+
+// apacheVersionCommands are tried as a fallback when the binary cannot be read.
+var apacheVersionCommands = []string{"apache2ctl", "httpd", "apachectl"}
+
+var apacheVersionTag = []byte("Apache/")
 
 func (s *mqlApache2) version() (string, error) {
 	conn := s.MqlRuntime.Connection.(shared.Connection)
+	afs := &afero.Afero{Fs: conn.FileSystem()}
 
+	// Prefer file-based detection: read the httpd binary and scan for the
+	// embedded "Apache/x.y.z" version string.
 	for _, bin := range apacheVersionBinaries {
+		data, err := afs.ReadFile(bin)
+		if err != nil {
+			continue
+		}
+		if v := extractApacheVersion(data); v != "" {
+			return v, nil
+		}
+	}
+
+	// Fall back to running a command when the binary isn't readable (e.g.
+	// non-standard install path).
+	for _, bin := range apacheVersionCommands {
 		cmd, err := conn.RunCommand(bin + " -v")
 		if err != nil {
 			continue
@@ -50,7 +78,26 @@ func (s *mqlApache2) version() (string, error) {
 		}
 	}
 
-	return "", errors.New("could not determine apache version")
+	// Apache is likely not installed; return nil rather than an error.
+	s.Version = plugin.TValue[string]{State: plugin.StateIsSet | plugin.StateIsNull}
+	return "", nil
+}
+
+// extractApacheVersion scans binary data for an embedded "Apache/x.y.z" string.
+func extractApacheVersion(data []byte) string {
+	idx := bytes.Index(data, apacheVersionTag)
+	if idx < 0 {
+		return ""
+	}
+	start := idx + len(apacheVersionTag)
+	end := start
+	for end < len(data) && (data[end] == '.' || (data[end] >= '0' && data[end] <= '9')) {
+		end++
+	}
+	if end == start {
+		return ""
+	}
+	return string(data[start:end])
 }
 
 var reApacheVersion = regexp.MustCompile(`Apache/(\S+)`)
@@ -63,21 +110,21 @@ type mqlApache2ConfInternal struct {
 // apacheConfPaths maps platform names to their default Apache config location.
 // Debian/Ubuntu use apache2, RHEL/CentOS use httpd.
 var apacheConfPaths = map[string]string{
-	"ubuntu":  "/etc/apache2/apache2.conf",
-	"debian":  "/etc/apache2/apache2.conf",
-	"redhat":  "/etc/httpd/conf/httpd.conf",
-	"centos":  "/etc/httpd/conf/httpd.conf",
-	"fedora":  "/etc/httpd/conf/httpd.conf",
-	"rocky":   "/etc/httpd/conf/httpd.conf",
-	"alma":    "/etc/httpd/conf/httpd.conf",
-	"oracle":  "/etc/httpd/conf/httpd.conf",
-	"amazon":  "/etc/httpd/conf/httpd.conf",
-	"suse":    "/etc/apache2/httpd.conf",
-	"opensuse":   "/etc/apache2/httpd.conf",
-	"freebsd":    "/usr/local/etc/apache24/httpd.conf",
-	"openbsd":    "/etc/apache2/httpd.conf",
-	"arch":       "/etc/httpd/conf/httpd.conf",
-	"gentoo":     "/etc/apache2/httpd.conf",
+	"ubuntu":   "/etc/apache2/apache2.conf",
+	"debian":   "/etc/apache2/apache2.conf",
+	"redhat":   "/etc/httpd/conf/httpd.conf",
+	"centos":   "/etc/httpd/conf/httpd.conf",
+	"fedora":   "/etc/httpd/conf/httpd.conf",
+	"rocky":    "/etc/httpd/conf/httpd.conf",
+	"alma":     "/etc/httpd/conf/httpd.conf",
+	"oracle":   "/etc/httpd/conf/httpd.conf",
+	"amazon":   "/etc/httpd/conf/httpd.conf",
+	"suse":     "/etc/apache2/httpd.conf",
+	"opensuse": "/etc/apache2/httpd.conf",
+	"freebsd":  "/usr/local/etc/apache24/httpd.conf",
+	"openbsd":  "/etc/apache2/httpd.conf",
+	"arch":     "/etc/httpd/conf/httpd.conf",
+	"gentoo":   "/etc/apache2/httpd.conf",
 }
 
 const defaultApacheConf = "/etc/httpd/conf/httpd.conf"
@@ -171,12 +218,39 @@ func (s *mqlApache2Conf) id() (string, error) {
 	return file.Data.Path.Data, nil
 }
 
+// file is the default getter for the file field. It is only called when
+// apache2.conf is created without a path argument. When a path IS provided,
+// initApache2Conf converts it to a file resource that the framework stores
+// directly, bypassing this method entirely (same pattern as sshd.config).
 func (s *mqlApache2Conf) file() (*mqlFile, error) {
 	conn := s.MqlRuntime.Connection.(shared.Connection)
-	path := apacheConfPath(conn)
 
+	// Try the platform-preferred path first, then fall back to all known paths.
+	preferred := apacheConfPath(conn)
+	candidates := []string{preferred}
+	for _, p := range apacheConfPaths {
+		if p != preferred {
+			candidates = append(candidates, p)
+		}
+	}
+
+	afs := &afero.Afero{Fs: conn.FileSystem()}
+	for _, path := range candidates {
+		if ok, _ := afs.Exists(path); ok {
+			f, err := CreateResource(s.MqlRuntime, "file", map[string]*llx.RawData{
+				"path": llx.StringData(path),
+			})
+			if err != nil {
+				return nil, err
+			}
+			return f.(*mqlFile), nil
+		}
+	}
+
+	// No config file found; return the platform default so the resource still
+	// has a path but parse() will detect non-existence and return empty data.
 	f, err := CreateResource(s.MqlRuntime, "file", map[string]*llx.RawData{
-		"path": llx.StringData(path),
+		"path": llx.StringData(preferred),
 	})
 	if err != nil {
 		return nil, err
@@ -244,12 +318,28 @@ func (s *mqlApache2Conf) expandGlob(pattern string) ([]string, error) {
 	return paths, nil
 }
 
+func (s *mqlApache2Conf) setEmpty() {
+	s.Params = plugin.TValue[map[string]any]{Data: map[string]any{}, State: plugin.StateIsSet}
+	s.Modules = plugin.TValue[[]any]{Data: []any{}, State: plugin.StateIsSet}
+	s.VirtualHosts = plugin.TValue[[]any]{Data: []any{}, State: plugin.StateIsSet}
+	s.Directories = plugin.TValue[[]any]{Data: []any{}, State: plugin.StateIsSet}
+	s.Files = plugin.TValue[[]any]{Data: []any{}, State: plugin.StateIsSet}
+}
+
 func (s *mqlApache2Conf) parse(file *mqlFile) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
 	if file == nil {
-		return errors.New("no base apache config file to read")
+		s.setEmpty()
+		return nil
+	}
+
+	// When the config file doesn't exist (e.g. Apache is not installed),
+	// return empty data instead of cascading errors.
+	if exists := file.GetExists(); exists.Error != nil || !exists.Data {
+		s.setEmpty()
+		return nil
 	}
 
 	// Pre-scan root file for ServerRoot directive so that relative Include
