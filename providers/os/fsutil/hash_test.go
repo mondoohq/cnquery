@@ -31,6 +31,7 @@ func TestFileResource(t *testing.T) {
 	f, err := fs.Open(path)
 	assert.Nil(t, err)
 	if assert.NotNil(t, f) {
+		defer f.Close()
 		assert.Equal(t, path, f.Name(), "they should be equal")
 
 		md5, err := fsutil.Md5(f)
