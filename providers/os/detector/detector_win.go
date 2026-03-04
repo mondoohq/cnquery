@@ -151,44 +151,52 @@ func staticWindowsDetector(pf *inventory.Platform, conn shared.Connection) (bool
 
 	var hotpatchEnabled bool
 	if pf.Labels["windows.mondoo.com/product-type"] == "1" {
-		// Client (Windows 11): check AllowRebootlessUpdates + VBS
-		allowRebootless, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\PolicyManager\\current\\device\\Update", "AllowRebootlessUpdates")
-		if err == nil && allowRebootless.Value.String != "" {
-			log.Debug().Str("allowRebootlessUpdates", allowRebootless.Value.String).Msg("found AllowRebootlessUpdates")
-		}
-
-		enableVBS, err := rh.GetRegistryItemValue(registry.System, "CurrentControlSet\\Control\\DeviceGuard", "EnableVirtualizationBasedSecurity")
-		if err == nil && enableVBS.Value.String != "" {
-			log.Debug().Str("enableVirtualizationBasedSecurity", enableVBS.Value.String).Msg("found enableVirtualizationBasedSecurity")
-		}
-
-		hotpatchEnabled = allowRebootless.Value.String == "1" && enableVBS.Value.String == "1"
+		hotpatchEnabled = staticClientHotpatch(rh)
 	} else {
-		// Server: check hotpatch enrollment package + VBS + HotPatchTableSize
-		platformArch := "amd64"
-		if pf.Arch != "" {
-			platformArch = strings.ToLower(pf.Arch)
-		}
-		hotpatchPackage, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion\\Update\\TargetingInfo\\DynamicInstalled\\Hotpatch."+platformArch, "Name")
-		if err == nil && hotpatchPackage.Value.String != "" {
-			log.Debug().Str("hotpatchPackage", hotpatchPackage.Value.String).Msg("found hotpatchPackage")
-		}
-
-		enableVBS, err := rh.GetRegistryItemValue(registry.System, "CurrentControlSet\\Control\\DeviceGuard", "EnableVirtualizationBasedSecurity")
-		if err == nil && enableVBS.Value.String != "" {
-			log.Debug().Str("enableVirtualizationBasedSecurity", enableVBS.Value.String).Msg("found enableVirtualizationBasedSecurity")
-		}
-
-		hotPatchTableSize, err := rh.GetRegistryItemValue(registry.System, "CurrentControlSet\\Control\\Session Manager\\Memory Management", "HotPatchTableSize")
-		if err == nil && hotPatchTableSize.Value.String != "" {
-			log.Debug().Str("hotPatchTableSize", hotPatchTableSize.Value.String).Msg("found hotPatchTableSize")
-		}
-
-		hotpatchEnabled = hotpatchPackage.Value.String == win.HotpatchPackage && enableVBS.Value.String == "1" && hotPatchTableSize.Value.String != "0"
+		hotpatchEnabled = staticServerHotpatch(rh, pf.Arch)
 	}
 	pf.Labels["windows.mondoo.com/hotpatch"] = strconv.FormatBool(hotpatchEnabled)
 
 	return true, nil
+}
+
+// staticClientHotpatch checks AllowRebootlessUpdates + VBS from offline registry hives.
+func staticClientHotpatch(rh *registry.RegistryHandler) bool {
+	allowRebootless, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\PolicyManager\\current\\device\\Update", "AllowRebootlessUpdates")
+	if err == nil && allowRebootless.Value.String != "" {
+		log.Debug().Str("allowRebootlessUpdates", allowRebootless.Value.String).Msg("found AllowRebootlessUpdates")
+	}
+
+	enableVBS, err := rh.GetRegistryItemValue(registry.System, "CurrentControlSet\\Control\\DeviceGuard", "EnableVirtualizationBasedSecurity")
+	if err == nil && enableVBS.Value.String != "" {
+		log.Debug().Str("enableVirtualizationBasedSecurity", enableVBS.Value.String).Msg("found enableVirtualizationBasedSecurity")
+	}
+
+	return allowRebootless.Value.String == "1" && enableVBS.Value.String == "1"
+}
+
+// staticServerHotpatch checks hotpatch enrollment package + VBS + HotPatchTableSize from offline registry hives.
+func staticServerHotpatch(rh *registry.RegistryHandler, arch string) bool {
+	platformArch := "amd64"
+	if arch != "" {
+		platformArch = strings.ToLower(arch)
+	}
+	hotpatchPackage, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion\\Update\\TargetingInfo\\DynamicInstalled\\Hotpatch."+platformArch, "Name")
+	if err == nil && hotpatchPackage.Value.String != "" {
+		log.Debug().Str("hotpatchPackage", hotpatchPackage.Value.String).Msg("found hotpatchPackage")
+	}
+
+	enableVBS, err := rh.GetRegistryItemValue(registry.System, "CurrentControlSet\\Control\\DeviceGuard", "EnableVirtualizationBasedSecurity")
+	if err == nil && enableVBS.Value.String != "" {
+		log.Debug().Str("enableVirtualizationBasedSecurity", enableVBS.Value.String).Msg("found enableVirtualizationBasedSecurity")
+	}
+
+	hotPatchTableSize, err := rh.GetRegistryItemValue(registry.System, "CurrentControlSet\\Control\\Session Manager\\Memory Management", "HotPatchTableSize")
+	if err == nil && hotPatchTableSize.Value.String != "" {
+		log.Debug().Str("hotPatchTableSize", hotPatchTableSize.Value.String).Msg("found hotPatchTableSize")
+	}
+
+	return hotpatchPackage.Value.String == win.HotpatchPackage && enableVBS.Value.String == "1" && hotPatchTableSize.Value.String != "0"
 }
 
 // correctForWindows11 replaces the windows 10 title with windows 11 if the build number is greater than 22000
