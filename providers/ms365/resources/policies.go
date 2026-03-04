@@ -163,7 +163,7 @@ func newAuthenticationMethodsPolicy(runtime *plugin.Runtime, policy models.Authe
 		return nil, err
 	}
 
-	mqlAuthenticationMethodsPolicy, err := CreateResource(runtime, "microsoft.authenticationMethodsPolicy",
+	mqlAuthenticationMethodsPolicy, err := CreateResource(runtime, ResourceMicrosoftAuthenticationMethodsPolicy,
 		map[string]*llx.RawData{
 			"__id":                               llx.StringDataPtr(policy.GetId()),
 			"id":                                 llx.StringDataPtr(policy.GetId()),
@@ -171,7 +171,7 @@ func newAuthenticationMethodsPolicy(runtime *plugin.Runtime, policy models.Authe
 			"displayName":                        llx.StringDataPtr(policy.GetDisplayName()),
 			"lastModifiedDateTime":               llx.TimeDataPtr(policy.GetLastModifiedDateTime()),
 			"policyVersion":                      llx.StringDataPtr(policy.GetPolicyVersion()),
-			"authenticationMethodConfigurations": llx.ArrayData(authMethodConfigs, "microsoft.authenticationMethodConfiguration"),
+			"authenticationMethodConfigurations": llx.ArrayData(authMethodConfigs, types.Resource(string(ResourceMicrosoftAuthenticationMethodConfiguration))),
 		})
 	if err != nil {
 		return nil, err
@@ -207,7 +207,7 @@ func newAuthenticationMethodConfigurations(runtime *plugin.Runtime, configs []mo
 			"excludeTargets": llx.ArrayData(excludeTargets, types.Dict),
 		}
 
-		mqlConfig, err := CreateResource(runtime, "microsoft.authenticationMethodConfiguration", configData)
+		mqlConfig, err := CreateResource(runtime, ResourceMicrosoftAuthenticationMethodConfiguration, configData)
 		if err != nil {
 			return nil, err
 		}
@@ -350,7 +350,7 @@ func (a *mqlMicrosoftPolicies) externalIdentitiesPolicy() (*mqlMicrosoftExternal
 		return nil, transformError(err)
 	}
 
-	mqlPolicy, err := CreateResource(a.MqlRuntime, "microsoft.externalIdentitiesPolicy",
+	mqlPolicy, err := CreateResource(a.MqlRuntime, ResourceMicrosoftExternalIdentitiesPolicy,
 		map[string]*llx.RawData{
 			"__id":                           llx.StringDataPtr(policy.GetId()),
 			"id":                             llx.StringDataPtr(policy.GetId()),
