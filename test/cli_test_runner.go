@@ -7,7 +7,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"os"
 	"os/exec"
+	"strings"
 )
 
 type Runner interface {
@@ -69,4 +71,18 @@ func (c *cliTestRunner) Stderr() []byte {
 
 func (c *cliTestRunner) Json(v any) error {
 	return json.Unmarshal(c.Stdout(), v)
+}
+
+// BuildEnv returns the current environment with GOCOVERDIR removed.
+// When tests run with -cover, Go sets GOCOVERDIR which is inherited by child
+// processes. Programs spawned via "go run" or "go build" are not built with
+// -cover, so they fail at exit when trying to write coverage data.
+func BuildEnv() []string {
+	var env []string
+	for _, e := range os.Environ() {
+		if !strings.HasPrefix(e, "GOCOVERDIR=") {
+			env = append(env, e)
+		}
+	}
+	return env
 }
