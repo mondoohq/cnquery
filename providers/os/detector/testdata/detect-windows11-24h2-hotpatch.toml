@@ -12,11 +12,10 @@ stdout="""
 }
 """
 
-[commands."f4246d954507e9b11f23b02a2e1f6c8fc01c953e748925c6098de35cfc7e3d7e"]
+[commands."abb2e2bc03d2148718d9bb1a8069ea307dd97f1c2d81845558b0ea6d560b9900"]
 stdout="""
 {
-    "Name":  "Hotpatch Enrollment Package",
-    "HotPatchTableSize":  "4096",
+    "AllowRebootlessUpdates":  "1",
     "EnableVirtualizationBasedSecurity":  "1"
 }
 """

@@ -145,26 +145,65 @@ func staticWindowsDetector(pf *inventory.Platform, conn shared.Connection) (bool
 		}
 	}
 
-	platformArch := "amd64"
-	if pf.Arch != "" {
-		platformArch = strings.ToLower(pf.Arch)
-	}
-	hotpatchPackage, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion\\Update\\TargetingInfo\\DynamicInstalled\\Hotpatch."+platformArch, "Name")
-	if err == nil && hotpatchPackage.Value.String != "" {
-		log.Debug().Str("hotpatchPackage", hotpatchPackage.Value.String).Msg("found hotpatchPackage")
-	}
-
-	enableVirtualizationBasedSecurity, err := rh.GetRegistryItemValue(registry.System, "CurrentControlSet\\Control\\DeviceGuard", "EnableVirtualizationBasedSecurity")
-	if err == nil && enableVirtualizationBasedSecurity.Value.String != "" {
-		log.Debug().Str("enableVirtualizationBasedSecurity", enableVirtualizationBasedSecurity.Value.String).Msg("found enableVirtualizationBasedSecurity")
+	// Determine product type from InstallationType
+	installationType, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion", "InstallationType")
+	if err == nil && installationType.Value.String != "" {
+		log.Debug().Str("installationType", installationType.Value.String).Msg("found installationType")
+		if installationType.Value.String == "Client" {
+			pf.Labels["windows.mondoo.com/product-type"] = "1"
+		} else {
+			pf.Labels["windows.mondoo.com/product-type"] = "3"
+		}
 	}
 
-	hotPatchTableSize, err := rh.GetRegistryItemValue(registry.System, "CurrentControlSet\\Control\\Session Manager\\Memory Management", "HotPatchTableSize")
-	if err == nil && enableVirtualizationBasedSecurity.Value.String != "" {
-		log.Debug().Str("hotPatchTableSize", hotPatchTableSize.Value.String).Msg("found hotPatchTableSize")
+	// Load SYSTEM hive for VBS and HotPatchTableSize reads
+	systemFi, err := conn.FileInfo(registry.SystemRegPath)
+	if err != nil {
+		log.Debug().Err(err).Msg("could not find SYSTEM registry key file")
+	} else {
+		err = rh.LoadSubkey(registry.System, systemFi.Path)
+		if err != nil {
+			log.Debug().Err(err).Msg("could not load SYSTEM registry key file")
+		}
 	}
 
-	hotpatchEnabled := hotpatchPackage.Value.String == win.HotpatchPackage && enableVirtualizationBasedSecurity.Value.String == "1" && hotPatchTableSize.Value.String != "0"
+	var hotpatchEnabled bool
+	if pf.Labels["windows.mondoo.com/product-type"] == "1" {
+		// Client (Windows 11): check AllowRebootlessUpdates + VBS
+		allowRebootless, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\PolicyManager\\current\\device\\Update", "AllowRebootlessUpdates")
+		if err == nil && allowRebootless.Value.String != "" {
+			log.Debug().Str("allowRebootlessUpdates", allowRebootless.Value.String).Msg("found AllowRebootlessUpdates")
+		}
+
+		enableVBS, err := rh.GetRegistryItemValue(registry.System, "CurrentControlSet\\Control\\DeviceGuard", "EnableVirtualizationBasedSecurity")
+		if err == nil && enableVBS.Value.String != "" {
+			log.Debug().Str("enableVirtualizationBasedSecurity", enableVBS.Value.String).Msg("found enableVirtualizationBasedSecurity")
+		}
+
+		hotpatchEnabled = allowRebootless.Value.String == "1" && enableVBS.Value.String == "1"
+	} else {
+		// Server: check hotpatch enrollment package + VBS + HotPatchTableSize
+		platformArch := "amd64"
+		if pf.Arch != "" {
+			platformArch = strings.ToLower(pf.Arch)
+		}
+		hotpatchPackage, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion\\Update\\TargetingInfo\\DynamicInstalled\\Hotpatch."+platformArch, "Name")
+		if err == nil && hotpatchPackage.Value.String != "" {
+			log.Debug().Str("hotpatchPackage", hotpatchPackage.Value.String).Msg("found hotpatchPackage")
+		}
+
+		enableVBS, err := rh.GetRegistryItemValue(registry.System, "CurrentControlSet\\Control\\DeviceGuard", "EnableVirtualizationBasedSecurity")
+		if err == nil && enableVBS.Value.String != "" {
+			log.Debug().Str("enableVirtualizationBasedSecurity", enableVBS.Value.String).Msg("found enableVirtualizationBasedSecurity")
+		}
+
+		hotPatchTableSize, err := rh.GetRegistryItemValue(registry.System, "CurrentControlSet\\Control\\Session Manager\\Memory Management", "HotPatchTableSize")
+		if err == nil && hotPatchTableSize.Value.String != "" {
+			log.Debug().Str("hotPatchTableSize", hotPatchTableSize.Value.String).Msg("found hotPatchTableSize")
+		}
+
+		hotpatchEnabled = hotpatchPackage.Value.String == win.HotpatchPackage && enableVBS.Value.String == "1" && hotPatchTableSize.Value.String != "0"
+	}
 	pf.Labels["windows.mondoo.com/hotpatch"] = strconv.FormatBool(hotpatchEnabled)
 
 	correctForWindows11(pf)

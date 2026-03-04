@@ -15,5 +15,5 @@ func GetWindowsHotpatch(conn shared.Connection, pf *inventory.Platform) (bool, e
 	if !hotpatchSupported(pf) {
 		return false, nil
 	}
-	return powershellGetWindowsHotpatch(conn, pf.Arch)
+	return powershellGetWindowsHotpatch(conn, pf)
 }

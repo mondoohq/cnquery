@@ -25,52 +25,90 @@ func GetWindowsHotpatch(conn shared.Connection, pf *inventory.Platform) (bool, e
 
 	// if we are running locally on windows, we want to avoid using powershell to be faster
 	if conn.Type() == shared.Type_Local && runtime.GOOS == "windows" {
-		k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\Microsoft\Windows NT\CurrentVersion\Update\TargetingInfo\DynamicInstalled\Hotpatch.`+strings.ToLower(pf.Arch), registry.QUERY_VALUE)
-		if err != nil {
-			log.Debug().Err(err).Msg("could not open registry key DynamicInstalled")
-			// Don't return an error here, as it is expected that this key may not exist
-			return false, nil
+		if isClientOS(pf) {
+			return nativeGetWindowsClientHotpatch()
 		}
-		defer k.Close()
-
-		hotpatchName, _, err := k.GetStringValue("Name")
-		if err != nil && err != registry.ErrNotExist {
-			return false, err
-		}
-
-		systemKey, err := registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\CurrentControlSet\Control\DeviceGuard`, registry.QUERY_VALUE)
-		if err != nil {
-			log.Debug().Err(err).Msg("could not open registry key DeviceGuard")
-			// Don't return an error here, as it is expected that this key may not exist
-			return false, nil
-		}
-		defer systemKey.Close()
-
-		enableVirtualizationBasedSecurity, _, err := systemKey.GetIntegerValue("EnableVirtualizationBasedSecurity")
-		if err != nil && err != registry.ErrNotExist {
-			log.Debug().Err(err).Msg("could not get EnableVirtualizationBasedSecurity value")
-			return false, err
-		}
-
-		memoryKey, err := registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management`, registry.QUERY_VALUE)
-		if err != nil {
-			log.Debug().Err(err).Msg("could not open registry key Memory Management")
-			// Don't return an error here, as it is expected that this key may not exist
-			return false, nil
-		}
-		defer memoryKey.Close()
-
-		hotPatchTableSize, _, err := memoryKey.GetIntegerValue("HotPatchTableSize")
-		if err != nil && err != registry.ErrNotExist {
-			log.Debug().Err(err).Msg("could not get HotPatchTableSize value")
-			return false, err
-		}
-
-		log.Debug().Str("hotpatchName", hotpatchName).Int("enableVirtualizationBasedSecurity", int(enableVirtualizationBasedSecurity)).Int("hotPatchTableSize", int(hotPatchTableSize)).Msg("parsed windows hotpatch settings")
-
-		return hotpatchName == HotpatchPackage && enableVirtualizationBasedSecurity == 1 && hotPatchTableSize > 0, nil
+		return nativeGetWindowsServerHotpatch(pf.Arch)
 	}
 
 	// for all non-local checks use powershell
-	return powershellGetWindowsHotpatch(conn, pf.Arch)
+	return powershellGetWindowsHotpatch(conn, pf)
+}
+
+// nativeGetWindowsClientHotpatch reads AllowRebootlessUpdates and VBS directly from the Windows registry.
+func nativeGetWindowsClientHotpatch() (bool, error) {
+	updateKey, err := registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\Microsoft\PolicyManager\current\device\Update`, registry.QUERY_VALUE)
+	if err != nil {
+		log.Debug().Err(err).Msg("could not open registry key PolicyManager Update")
+		return false, nil
+	}
+	defer updateKey.Close()
+
+	allowRebootless, _, err := updateKey.GetIntegerValue("AllowRebootlessUpdates")
+	if err != nil {
+		log.Debug().Err(err).Msg("could not get AllowRebootlessUpdates value")
+		return false, nil
+	}
+
+	systemKey, err := registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\CurrentControlSet\Control\DeviceGuard`, registry.QUERY_VALUE)
+	if err != nil {
+		log.Debug().Err(err).Msg("could not open registry key DeviceGuard")
+		return false, nil
+	}
+	defer systemKey.Close()
+
+	enableVBS, _, err := systemKey.GetIntegerValue("EnableVirtualizationBasedSecurity")
+	if err != nil && err != registry.ErrNotExist {
+		log.Debug().Err(err).Msg("could not get EnableVirtualizationBasedSecurity value")
+		return false, err
+	}
+
+	log.Debug().Int("allowRebootlessUpdates", int(allowRebootless)).Int("enableVBS", int(enableVBS)).Msg("parsed windows client hotpatch settings")
+
+	return allowRebootless == 1 && enableVBS == 1, nil
+}
+
+// nativeGetWindowsServerHotpatch reads hotpatch enrollment, VBS, and HotPatchTableSize directly from the Windows registry.
+func nativeGetWindowsServerHotpatch(arch string) (bool, error) {
+	k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\Microsoft\Windows NT\CurrentVersion\Update\TargetingInfo\DynamicInstalled\Hotpatch.`+strings.ToLower(arch), registry.QUERY_VALUE)
+	if err != nil {
+		log.Debug().Err(err).Msg("could not open registry key DynamicInstalled")
+		return false, nil
+	}
+	defer k.Close()
+
+	hotpatchName, _, err := k.GetStringValue("Name")
+	if err != nil && err != registry.ErrNotExist {
+		return false, err
+	}
+
+	systemKey, err := registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\CurrentControlSet\Control\DeviceGuard`, registry.QUERY_VALUE)
+	if err != nil {
+		log.Debug().Err(err).Msg("could not open registry key DeviceGuard")
+		return false, nil
+	}
+	defer systemKey.Close()
+
+	enableVirtualizationBasedSecurity, _, err := systemKey.GetIntegerValue("EnableVirtualizationBasedSecurity")
+	if err != nil && err != registry.ErrNotExist {
+		log.Debug().Err(err).Msg("could not get EnableVirtualizationBasedSecurity value")
+		return false, err
+	}
+
+	memoryKey, err := registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management`, registry.QUERY_VALUE)
+	if err != nil {
+		log.Debug().Err(err).Msg("could not open registry key Memory Management")
+		return false, nil
+	}
+	defer memoryKey.Close()
+
+	hotPatchTableSize, _, err := memoryKey.GetIntegerValue("HotPatchTableSize")
+	if err != nil && err != registry.ErrNotExist {
+		log.Debug().Err(err).Msg("could not get HotPatchTableSize value")
+		return false, err
+	}
+
+	log.Debug().Str("hotpatchName", hotpatchName).Int("enableVirtualizationBasedSecurity", int(enableVirtualizationBasedSecurity)).Int("hotPatchTableSize", int(hotPatchTableSize)).Msg("parsed windows server hotpatch settings")
+
+	return hotpatchName == HotpatchPackage && enableVirtualizationBasedSecurity == 1 && hotPatchTableSize > 0, nil
 }
