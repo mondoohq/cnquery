@@ -116,7 +116,7 @@ func getActivatedRhelSupportLevels(conn shared.Connection) []string {
 				supportLevel = "e4s"
 			case strings.Contains(section, "baseos-eus-"):
 				supportLevel = "eus"
-			case strings.Contains(section, "-els-"):
+			case strings.Contains(section, "-server-els-"):
 				supportLevel = "els"
 			}
 			if supportLevel == "" {
