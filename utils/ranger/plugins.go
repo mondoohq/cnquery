@@ -12,14 +12,25 @@ import (
 	"go.mondoo.com/ranger-rpc/plugins/scope"
 )
 
-func DefaultRangerPlugins(features mql.Features) []ranger.ClientPlugin {
+// ClientSysInfo holds system information for upstream request headers.
+// This is a lightweight struct to avoid import cycles with the sysinfo package.
+type ClientSysInfo struct {
+	PlatformName    string
+	PlatformVersion string
+	PlatformArch    string
+	IP              string
+	Hostname        string
+	PlatformID      string
+}
+
+func DefaultRangerPlugins(features mql.Features, si *ClientSysInfo) []ranger.ClientPlugin {
 	plugins := []ranger.ClientPlugin{}
 	plugins = append(plugins, scope.NewRequestIDRangerPlugin())
-	plugins = append(plugins, sysInfoHeader(features))
+	plugins = append(plugins, sysInfoHeader(features, si))
 	return plugins
 }
 
-func sysInfoHeader(features mql.Features) ranger.ClientPlugin {
+func sysInfoHeader(features mql.Features, si *ClientSysInfo) ranger.ClientPlugin {
 	const (
 		HttpHeaderUserAgent      = "User-Agent"
 		HttpHeaderClientFeatures = "Mondoo-Features"
@@ -31,12 +42,18 @@ func sysInfoHeader(features mql.Features) ranger.ClientPlugin {
 		"mql":   mql.Version,
 		"build": mql.Build,
 	}
-	info["PN"] = runtime.GOOS
-	// info["PR"] = sysInfo.Platform.Version
-	// info["PA"] = sysInfo.Platform.Arch
-	// info["IP"] = sysInfo.IP
-	// info["HN"] = sysInfo.Hostname
-	// h.Set(HttpHeaderPlatformID, sysInfo.PlatformId)
+	if si != nil {
+		info["PN"] = si.PlatformName
+		info["PR"] = si.PlatformVersion
+		info["PA"] = si.PlatformArch
+		info["IP"] = si.IP
+		info["HN"] = si.Hostname
+		h.Set(HttpHeaderPlatformID, si.PlatformID)
+	}
+
+	if info["PN"] == "" {
+		info["PN"] = runtime.GOOS
+	}
 
 	h.Set(HttpHeaderUserAgent, scope.XInfoHeader(info))
 	h.Set(HttpHeaderClientFeatures, features.Encode())

@@ -54,7 +54,7 @@ ensure the credentials cannot be used in the future.
 			return cli_errors.NewCommandError(errors.Wrap(err, "could not initialize client authentication"), ConfigurationErrorCode)
 		}
 
-		plugins := rangerUtils.DefaultRangerPlugins(opts.GetFeatures())
+		plugins := rangerUtils.DefaultRangerPlugins(opts.GetFeatures(), nil)
 		certAuth, err := upstream.NewServiceAccountRangerPlugin(serviceAccount)
 		if err != nil {
 			log.Error().Err(err).Msg("could not initialize client authentication")
