@@ -11,6 +11,7 @@ import (
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 	"go.mondoo.com/mql/v13/types"
 )
 
@@ -141,6 +142,11 @@ func (r *mqlNftablesRule) id() (string, error) {
 }
 
 func (n *mqlNftables) tables() ([]any, error) {
+	conn, ok := n.MqlRuntime.Connection.(shared.Connection)
+	if !ok || !conn.Capabilities().Has(shared.Capability_RunCommand) {
+		return nil, nil
+	}
+
 	o, err := CreateResource(n.MqlRuntime, "command", map[string]*llx.RawData{
 		"command": llx.StringData("nft -j list ruleset"),
 	})
