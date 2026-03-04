@@ -181,7 +181,9 @@ func staticWindowsDetector(pf *inventory.Platform, conn shared.Connection) (bool
 // systems which report as product-type "3" but are manageable via Intune.
 func detectIntuneDeviceID(pf *inventory.Platform, conn shared.Connection) {
 	isWorkstation := pf.Labels["windows.mondoo.com/product-type"] == "1"
-	isWindows11MultiSession := pf.Labels["windows.mondoo.com/product-type"] == "3" && strings.Contains(pf.Title, "Windows 11")
+	isWindows11MultiSession := pf.Labels["windows.mondoo.com/product-type"] == "3" &&
+		strings.Contains(pf.Title, "Windows 11") &&
+		strings.Contains(pf.Title, "Multi-Session")
 	if !isWorkstation && !isWindows11MultiSession {
 		return
 	}
