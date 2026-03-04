@@ -5,7 +5,7 @@
 
 **Open source, cloud-native asset inventory and discovery**
 
-MQL is a cloud-native tool for querying your entire infrastructure. Built upon Mondoo's security data fabric, it answers thousands of questions about your infrastructure and integrates with over 850 resources across cloud accounts, Kubernetes, containers, services, VMs, APIs, and more.
+MQL is a cloud-native tool for querying your entire infrastructure. Built upon Mondoo's security data fabric, it answers thousands of questions about your infrastructure and integrates with over 1,300 resources across cloud accounts, Kubernetes, containers, services, VMs, APIs, and more.
 
 ![MQL run example](.github/images/mql-run.gif)
 

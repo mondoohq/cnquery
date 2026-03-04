@@ -4,7 +4,7 @@ This directory contains information to help Claude AI assistants understand and 
 
 ## 1. Project Context
 
-**mql** (formerly cnquery) is a cloud-native infrastructure querying tool. It uses **MQL (Mondoo Query Language)** to query over 850 resources across cloud accounts (AWS, Azure, GCP), Kubernetes, containers, OS internals, and APIs.
+**mql** (formerly cnquery) is a cloud-native infrastructure querying tool. It uses **MQL (Mondoo Query Language)** to query over 1,300 resources across cloud accounts (AWS, Azure, GCP), Kubernetes, containers, OS internals, and APIs.
 
 > **v13 Rename:** In v13 the project was renamed from `cnquery` to `mql`. The Go module is `go.mondoo.com/mql/v13`, the CLI binary is `mql`, and all build targets use the `mql/` prefix. The `scan` and `sbom` subcommands have moved to **cnspec**.
 
@@ -516,7 +516,7 @@ Use emojis in commit messages (but don't worry about it, since you're NEVER goin
 ## 10. Additional Resources
 
 ### External Documentation
-- [Official Documentation](https://mondoo.com/docs/cnquery/home/)
+- [Official Documentation](https://mondoo.com/docs/llms.txt)
 - [MQL Introduction](https://mondoohq.github.io/mql-intro/index.html)
 - [MQL Language Reference](https://mondoo.com/docs/mql/resources/)
 - [GitHub Repository](https://github.com/mondoohq/mql)
