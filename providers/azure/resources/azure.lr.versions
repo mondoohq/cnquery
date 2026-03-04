@@ -383,6 +383,16 @@ azure.subscription.cloudDefenderService.defenderForStorageAccounts.replacedBy 11
 azure.subscription.cloudDefenderService.defenderForStorageAccounts.resourcesCoverageStatus 11.6.1
 azure.subscription.cloudDefenderService.defenderForStorageAccounts.subPlan 11.6.1
 azure.subscription.cloudDefenderService.defenderForStorageAccounts.subscriptionId 11.6.1
+azure.subscription.cloudDefenderService.forAppServices 11.6.3
+azure.subscription.cloudDefenderService.forContainers 11.6.3
+azure.subscription.cloudDefenderService.forCosmosDb 11.6.3
+azure.subscription.cloudDefenderService.forKeyVaults 11.6.3
+azure.subscription.cloudDefenderService.forOpenSourceDatabases 11.6.3
+azure.subscription.cloudDefenderService.forResourceManager 11.6.3
+azure.subscription.cloudDefenderService.forServers 11.6.3
+azure.subscription.cloudDefenderService.forSqlDatabases 11.6.3
+azure.subscription.cloudDefenderService.forSqlServersOnMachines 11.6.3
+azure.subscription.cloudDefenderService.forStorageAccounts 11.6.3
 azure.subscription.cloudDefenderService.monitoringAgentAutoProvision 9.0.1
 azure.subscription.cloudDefenderService.securityContact 9.0.1
 azure.subscription.cloudDefenderService.securityContact.alertNotifications 9.0.1
