@@ -63,8 +63,10 @@ func hotpatchSupported(pf *inventory.Platform) bool {
 	switch productType {
 	case "1": // Workstation (Windows client)
 		return buildNumber >= 26100
-	default: // Server or Domain Controller
+	case "2", "3": // Domain Controller or Server
 		return buildNumber >= 20348
+	default:
+		return false
 	}
 }
 
