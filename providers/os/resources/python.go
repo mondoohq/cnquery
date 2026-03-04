@@ -346,7 +346,6 @@ func initPythonPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 			return nil, nil, err
 		}
 
-		// Parse the metadata file to populate all fields upfront
 		content := file.GetContent()
 		if content.Error != nil {
 			return nil, nil, content.Error
@@ -356,31 +355,12 @@ func initPythonPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 			return nil, nil, fmt.Errorf("error parsing python package data: %s", err)
 		}
 
-		cpes := []any{}
-		for i := range pkg.Cpes {
-			cpe, err := runtime.CreateSharedResource("cpe", map[string]*llx.RawData{
-				"uri": llx.StringData(pkg.Cpes[i]),
-			})
-			if err != nil {
-				return nil, nil, err
-			}
-			cpes = append(cpes, cpe)
+		// Use newMqlPythonPackage so that deps is populated on the resource
+		res, err := newMqlPythonPackage(runtime, *pkg)
+		if err != nil {
+			return nil, nil, err
 		}
-
-		args["id"] = llx.StringData(path)
-		args["file"] = llx.ResourceData(file, file.MqlName())
-		args["name"] = llx.StringData(pkg.Name)
-		args["version"] = llx.StringData(pkg.Version)
-		args["author"] = llx.StringData(pkg.Author)
-		args["authorEmail"] = llx.StringData(pkg.AuthorEmail)
-		args["summary"] = llx.StringData(pkg.Summary)
-		args["license"] = llx.StringData(pkg.License)
-		args["requiresPython"] = llx.StringData(pkg.RequiresPython)
-		args["projectUrls"] = llx.MapData(convert.MapToInterfaceMap(pkg.ProjectUrls), types.String)
-		args["purl"] = llx.StringData(pkg.Purl)
-		args["cpes"] = llx.ArrayData(cpes, types.Resource("cpe"))
-
-		delete(args, "path")
+		return nil, res, nil
 	}
 	return args, nil, nil
 }

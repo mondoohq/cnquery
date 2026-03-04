@@ -51,7 +51,7 @@ func ParseMIME(r io.Reader, pythonMIMEFilepath string) (*python.PackageDetails, 
 	}
 
 	deps := extractMimeDeps(mimeData.Values("Requires-Dist"))
-	projectUrls := parseProjectUrls(mimeData.Values("Project-Url"))
+	projectUrls := parseProjectUrls(mimeData.Values("Project-URL"))
 
 	return &python.PackageDetails{
 		Name:           mimeData.Get("Name"),
