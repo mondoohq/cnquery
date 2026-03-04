@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 
@@ -18,15 +19,33 @@ import (
 
 var once sync.Once
 
+// buildEnv returns the current environment with GOCOVERDIR removed.
+// When tests run with -cover, Go sets GOCOVERDIR which is inherited by child
+// processes. Programs spawned via "go run" or "go build" are not built with
+// -cover, so they fail at exit when trying to write coverage data.
+func buildEnv() []string {
+	var env []string
+	for _, e := range os.Environ() {
+		if !strings.HasPrefix(e, "GOCOVERDIR=") {
+			env = append(env, e)
+		}
+	}
+	return env
+}
+
 // setup builds mql locally
 func setup() {
 	// build mql
-	if err := exec.Command("go", "build", "../../apps/mql/mql.go").Run(); err != nil {
+	cmd := exec.Command("go", "build", "../../apps/mql/mql.go")
+	cmd.Env = buildEnv()
+	if err := cmd.Run(); err != nil {
 		log.Fatalf("building mql: %v", err)
 	}
 
 	// install local provider
-	if err := exec.Command("bash", "-c", "cd ../.. && make providers/build/os providers/install/os").Run(); err != nil {
+	providerCmd := exec.Command("bash", "-c", "cd ../.. && make providers/build/os providers/install/os")
+	providerCmd.Env = buildEnv()
+	if err := providerCmd.Run(); err != nil {
 		log.Fatalf("building os provider: %v", err)
 	}
 
