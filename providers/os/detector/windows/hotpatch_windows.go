@@ -45,9 +45,9 @@ func nativeGetWindowsClientHotpatch() (bool, error) {
 	defer updateKey.Close()
 
 	allowRebootless, _, err := updateKey.GetIntegerValue("AllowRebootlessUpdates")
-	if err != nil {
+	if err != nil && err != registry.ErrNotExist {
 		log.Debug().Err(err).Msg("could not get AllowRebootlessUpdates value")
-		return false, nil
+		return false, err
 	}
 
 	systemKey, err := registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\CurrentControlSet\Control\DeviceGuard`, registry.QUERY_VALUE)

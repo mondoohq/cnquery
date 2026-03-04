@@ -196,7 +196,7 @@ func staticServerHotpatch(rh *registry.RegistryHandler, arch string) bool {
 		log.Debug().Str("hotPatchTableSize", hotPatchTableSize.Value.String).Msg("found hotPatchTableSize")
 	}
 
-	return hotpatchPackage.Value.String == win.HotpatchPackage && enableVBS.Value.String == "1" && hotPatchTableSize.Value.String != "0"
+	return hotpatchPackage.Value.String == win.HotpatchPackage && enableVBS.Value.String == "1" && hotPatchTableSize.Value.String != "0" && hotPatchTableSize.Value.String != ""
 }
 
 // correctForWindows11 replaces the windows 10 title with windows 11 if the build number is greater than 22000
