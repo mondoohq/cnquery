@@ -11,6 +11,9 @@ auditlog
 Auths
 autoaccept
 autoclose
+autoexpand
+autoreplace
+autotrim
 autoprovision
 Autoscalers
 awsapps
@@ -33,6 +36,7 @@ Clusterwide
 cmek
 cmnd
 cooldown
+compressratio
 copywrite
 cpe
 cryptokey
@@ -45,10 +49,12 @@ datapath
 DATAUSER
 datetime
 ddos
+dedupratio
 deliverychannel
 dfw
 directoryservice
 documentdb
+draid
 dlp
 dlq
 dlv
@@ -166,6 +172,7 @@ priorityclass
 psc
 pushconfig
 querypack
+raidz
 ratebasedstatement
 recaptcha
 regexmatchstatement
@@ -210,6 +217,7 @@ toplevel
 tpu
 transitgateway
 udid
+UNAVAIL
 uefi
 Uocm
 usb
@@ -217,7 +225,12 @@ Utc
 valkey
 VAULTNAME
 vdcs
+<<<<<<< HEAD
 VGeneration
+=======
+vdev
+vdevs
+>>>>>>> 8be598738 (✨ Add ZFS resources to OS provider)
 virtualmachine
 vlans
 vnet
@@ -232,5 +245,12 @@ workdir
 WORKSPACESUSER
 workspacesweb
 xssmatchstatement
+<<<<<<< HEAD
 zrt
 ZSTD
+=======
+zfs
+zpool
+zrt
+zstd
+>>>>>>> 8be598738 (✨ Add ZFS resources to OS provider)
