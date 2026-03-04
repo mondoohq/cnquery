@@ -14,6 +14,7 @@ import (
 
 	"github.com/google/go-cmdtest"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/v13/test"
 )
 
 var once sync.Once
@@ -22,6 +23,7 @@ var testDir string
 func setup() {
 	// build cnquery
 	cmd := exec.Command("go", "build", "../../apps/mql/mql.go")
+	cmd.Env = test.BuildEnv()
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	if err := cmd.Run(); err != nil {
@@ -29,7 +31,9 @@ func setup() {
 	}
 
 	// install local provider
-	if err := exec.Command("bash", "-c", "cd ../.. && make providers/build/os providers/install/os").Run(); err != nil {
+	providerCmd := exec.Command("bash", "-c", "cd ../.. && make providers/build/os providers/install/os")
+	providerCmd.Env = test.BuildEnv()
+	if err := providerCmd.Run(); err != nil {
 		log.Fatalf("building os provider: %v", err)
 	}
 

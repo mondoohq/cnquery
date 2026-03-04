@@ -21,12 +21,16 @@ var once sync.Once
 // setup builds mql locally
 func setup() {
 	// build mql
-	if err := exec.Command("go", "build", "../../apps/mql/mql.go").Run(); err != nil {
+	cmd := exec.Command("go", "build", "../../apps/mql/mql.go")
+	cmd.Env = test.BuildEnv()
+	if err := cmd.Run(); err != nil {
 		log.Fatalf("building mql: %v", err)
 	}
 
 	// install local provider
-	if err := exec.Command("bash", "-c", "cd ../.. && make providers/build/os providers/install/os").Run(); err != nil {
+	providerCmd := exec.Command("bash", "-c", "cd ../.. && make providers/build/os providers/install/os")
+	providerCmd.Env = test.BuildEnv()
+	if err := providerCmd.Run(); err != nil {
 		log.Fatalf("building os provider: %v", err)
 	}
 
