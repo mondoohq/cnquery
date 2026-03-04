@@ -3354,8 +3354,6 @@ private aws.backup.vaultRecoveryPoint @defaults("resourceType completionDate sta
   status string
   // Date the recovery point was created
   createdAt time
-  // Deprecated (use `createdAt` instead)
-  creationDate time
   // Date the recovery point completed
   completionDate time
   // ARN of the key used to encrypt the recovery point

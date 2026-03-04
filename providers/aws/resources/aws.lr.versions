@@ -274,7 +274,6 @@ aws.backup.vaultRecoveryPoint.arn 11.15.2
 aws.backup.vaultRecoveryPoint.completionDate 11.15.2
 aws.backup.vaultRecoveryPoint.createdAt 11.15.2
 aws.backup.vaultRecoveryPoint.createdBy 11.15.2
-aws.backup.vaultRecoveryPoint.creationDate 11.15.2
 aws.backup.vaultRecoveryPoint.encryptionKeyArn 11.15.2
 aws.backup.vaultRecoveryPoint.iamRoleArn 11.15.2
 aws.backup.vaultRecoveryPoint.isEncrypted 11.15.2

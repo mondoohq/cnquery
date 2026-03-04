@@ -5423,9 +5423,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.backup.vaultRecoveryPoint.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBackupVaultRecoveryPoint).GetCreatedAt()).ToDataRes(types.Time)
 	},
-	"aws.backup.vaultRecoveryPoint.creationDate": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsBackupVaultRecoveryPoint).GetCreationDate()).ToDataRes(types.Time)
-	},
 	"aws.backup.vaultRecoveryPoint.completionDate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBackupVaultRecoveryPoint).GetCompletionDate()).ToDataRes(types.Time)
 	},
@@ -15277,10 +15274,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.backup.vaultRecoveryPoint.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBackupVaultRecoveryPoint).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
-		return
-	},
-	"aws.backup.vaultRecoveryPoint.creationDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsBackupVaultRecoveryPoint).CreationDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.backup.vaultRecoveryPoint.completionDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -37189,7 +37182,6 @@ type mqlAwsBackupVaultRecoveryPoint struct {
 	IamRoleArn       plugin.TValue[string]
 	Status           plugin.TValue[string]
 	CreatedAt        plugin.TValue[*time.Time]
-	CreationDate     plugin.TValue[*time.Time]
 	CompletionDate   plugin.TValue[*time.Time]
 	EncryptionKeyArn plugin.TValue[string]
 	IsEncrypted      plugin.TValue[bool]
@@ -37254,10 +37246,6 @@ func (c *mqlAwsBackupVaultRecoveryPoint) GetStatus() *plugin.TValue[string] {
 
 func (c *mqlAwsBackupVaultRecoveryPoint) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
-}
-
-func (c *mqlAwsBackupVaultRecoveryPoint) GetCreationDate() *plugin.TValue[*time.Time] {
-	return &c.CreationDate
 }
 
 func (c *mqlAwsBackupVaultRecoveryPoint) GetCompletionDate() *plugin.TValue[*time.Time] {
