@@ -108,55 +108,7 @@ func staticWindowsDetector(pf *inventory.Platform, conn shared.Connection) (bool
 		return false, nil
 	}
 
-	pf.Name = "windows"
-	productName, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion", "ProductName")
-	if err == nil {
-		log.Debug().Str("productName", productName.Value.String).Msg("found productName")
-		pf.Title = productName.Value.String
-	}
-
-	editionID, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion", "EditionID")
-	if err == nil {
-		log.Debug().Str("editionID", editionID.Value.String).Msg("found editionID")
-		pf.Labels["windows.mondoo.com/edition-id"] = editionID.Value.String
-	}
-
-	arch, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion", "Architecture")
-	if err == nil && arch.Value.String != "" {
-		log.Debug().Str("architecture", arch.Value.String).Msg("found architecture")
-		pf.Arch = arch.Value.String
-	}
-
-	ubr, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion", "UBR")
-	if err == nil && ubr.Value.String != "" {
-		log.Debug().Str("ubr", ubr.Value.String).Msg("found ubr")
-		pf.Build = ubr.Value.String
-	}
-	// we try both CurrentBuild and CurrentBuildNumber for the version number
-	currentBuild, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion", "CurrentBuild")
-	if err == nil && currentBuild.Value.String != "" {
-		log.Debug().Str("currentBuild", currentBuild.Value.String).Msg("found currentBuild")
-		pf.Version = currentBuild.Value.String
-	} else {
-		currentBuildNumber, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion", "CurrentBuildNumber")
-		if err == nil && currentBuildNumber.Value.String != "" {
-			log.Debug().Str("currentBuildNumber", currentBuildNumber.Value.String).Msg("found currentBuildNumber")
-			pf.Version = currentBuildNumber.Value.String
-		}
-	}
-
-	// Determine product type from InstallationType
-	installationType, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion", "InstallationType")
-	if err == nil && installationType.Value.String != "" {
-		log.Debug().Str("installationType", installationType.Value.String).Msg("found installationType")
-		if installationType.Value.String == "Client" {
-			pf.Labels["windows.mondoo.com/product-type"] = "1"
-		} else {
-			pf.Labels["windows.mondoo.com/product-type"] = "3"
-		}
-	}
-
-	// Load SYSTEM hive for VBS and HotPatchTableSize reads
+	// Load SYSTEM hive for ProductType, VBS, and HotPatchTableSize reads
 	systemFi, err := conn.FileInfo(registry.SystemRegPath)
 	if err != nil {
 		log.Debug().Err(err).Msg("could not find SYSTEM registry key file")
@@ -166,6 +118,36 @@ func staticWindowsDetector(pf *inventory.Platform, conn shared.Connection) (bool
 			log.Debug().Err(err).Msg("could not load SYSTEM registry key file")
 		}
 	}
+
+	// Build a WindowsCurrentVersion from the registry hives and reuse platformFromWinCurrentVersion
+	current := &win.WindowsCurrentVersion{}
+
+	if v, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion", "ProductName"); err == nil {
+		current.ProductName = v.Value.String
+	}
+	if v, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion", "EditionID"); err == nil {
+		current.EditionID = v.Value.String
+	}
+	if v, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion", "Architecture"); err == nil {
+		current.Architecture = v.Value.String
+	}
+	if v, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion", "DisplayVersion"); err == nil {
+		current.DisplayVersion = v.Value.String
+	}
+	if v, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion", "UBR"); err == nil {
+		current.UBR, _ = strconv.Atoi(v.Value.String)
+	}
+	// we try both CurrentBuild and CurrentBuildNumber for the version number
+	if v, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion", "CurrentBuild"); err == nil && v.Value.String != "" {
+		current.CurrentBuild = v.Value.String
+	} else if v, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion", "CurrentBuildNumber"); err == nil {
+		current.CurrentBuild = v.Value.String
+	}
+	if v, err := rh.GetRegistryItemValue(registry.System, "CurrentControlSet\\Control\\ProductOptions", "ProductType"); err == nil {
+		current.ProductType = v.Value.String
+	}
+
+	platformFromWinCurrentVersion(pf, current)
 
 	var hotpatchEnabled bool
 	if pf.Labels["windows.mondoo.com/product-type"] == "1" {
@@ -205,8 +187,6 @@ func staticWindowsDetector(pf *inventory.Platform, conn shared.Connection) (bool
 		hotpatchEnabled = hotpatchPackage.Value.String == win.HotpatchPackage && enableVBS.Value.String == "1" && hotPatchTableSize.Value.String != "0"
 	}
 	pf.Labels["windows.mondoo.com/hotpatch"] = strconv.FormatBool(hotpatchEnabled)
-
-	correctForWindows11(pf)
 
 	return true, nil
 }
