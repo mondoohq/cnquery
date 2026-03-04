@@ -6,9 +6,11 @@ package windows
 import (
 	"encoding/json"
 	"io"
+	"strconv"
 	"strings"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 	"go.mondoo.com/mql/v13/providers/os/resources/powershell"
 )
@@ -16,6 +18,27 @@ import (
 const (
 	HotpatchPackage = "Hotpatch Enrollment Package"
 )
+
+// hotpatchSupported checks whether the given platform meets the minimum build
+// requirements for hotpatching:
+//   - Windows Server 2022+ (build 20348+, product-type "2" or "3")
+//   - Windows 11 Enterprise 24H2+ (build 26100+, product-type "1")
+func hotpatchSupported(pf *inventory.Platform) bool {
+	buildNumber, err := strconv.Atoi(pf.Version)
+	if err != nil {
+		log.Error().Err(err).Msg("could not parse windows build number")
+		return false
+	}
+	log.Debug().Int("buildNumber", buildNumber).Msg("parsed windows build number")
+
+	productType := pf.Labels["windows.mondoo.com/product-type"]
+	switch productType {
+	case "1": // Workstation (Windows client)
+		return buildNumber >= 26100
+	default: // Server or Domain Controller
+		return buildNumber >= 20348
+	}
+}
 
 type WindowsHotpatch struct {
 	Name                              string `json:"Name"`
@@ -41,8 +64,10 @@ func ParseWinRegistryHotpatch(r io.Reader) (bool, error) {
 
 // https://learn.microsoft.com/en-us/windows-server/get-started/hotpatch
 // https://learn.microsoft.com/en-us/windows-server/get-started/enable-hotpatch-azure-edition
+// https://learn.microsoft.com/en-us/windows/client-management/hotpatch
 
 // powershellGetWindowsHotpatch runs a powershell script to determine whether hotpatching is enabled on the system.
+// Hotpatching is supported on Windows Server 2022+ and Windows 11 Enterprise 24H2+.
 func powershellGetWindowsHotpatch(conn shared.Connection, arch string) (bool, error) {
 	// FIXME: for windows 2025 this might be arm64
 	pscommand := `

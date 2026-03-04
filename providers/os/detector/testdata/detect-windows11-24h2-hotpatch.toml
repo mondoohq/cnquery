@@ -1,0 +1,22 @@
+[commands."55dbc0e9b838caa11145eed07f6e73644bda27bf65a0c58a52291f9a18384481"]
+stdout="""
+{
+    "CurrentBuild":  "26100",
+    "UBR":  3000,
+    "InstallationType":  "Client",
+    "EditionID":  "EnterpriseS",
+    "ProductName":  "Windows 10 Enterprise LTSC",
+    "DisplayVersion":  "24H2",
+    "Architecture":  "AMD64",
+    "ProductType":  "WinNT"
+}
+"""
+
+[commands."f4246d954507e9b11f23b02a2e1f6c8fc01c953e748925c6098de35cfc7e3d7e"]
+stdout="""
+{
+    "Name":  "Hotpatch Enrollment Package",
+    "HotPatchTableSize":  "4096",
+    "EnableVirtualizationBasedSecurity":  "1"
+}
+"""

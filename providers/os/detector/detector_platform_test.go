@@ -770,6 +770,32 @@ func TestAzureWindows2025Detector(t *testing.T) {
 	assert.Equal(t, "false", di.Labels["windows.mondoo.com/hotpatch"])
 }
 
+func TestWindows11_24H2Detector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-windows11-24h2.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "windows", di.Name, "os name should be identified")
+	assert.Equal(t, "Windows 11 Enterprise LTSC", di.Title, "os title should be identified")
+	assert.Equal(t, "26100", di.Version, "os version should be identified")
+	assert.Equal(t, "3000", di.Build, "os build version should be identified")
+	assert.Equal(t, "AMD64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"windows", "os"}, di.Family)
+	assert.Equal(t, "1", di.Labels["windows.mondoo.com/product-type"])
+	assert.Equal(t, "24H2", di.Labels["windows.mondoo.com/display-version"])
+	assert.Equal(t, "false", di.Labels["windows.mondoo.com/hotpatch"])
+}
+
+func TestWindows11_24H2HotpatchDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-windows11-24h2-hotpatch.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "windows", di.Name, "os name should be identified")
+	assert.Equal(t, "Windows 11 Enterprise LTSC", di.Title, "os title should be identified")
+	assert.Equal(t, "26100", di.Version, "os version should be identified")
+	assert.Equal(t, "1", di.Labels["windows.mondoo.com/product-type"])
+	assert.Equal(t, "true", di.Labels["windows.mondoo.com/hotpatch"])
+}
+
 func TestPhoton1Detector(t *testing.T) {
 	di, err := detectPlatformFromMock("./testdata/detect-photon1.toml")
 	assert.Nil(t, err, "was able to create the provider")

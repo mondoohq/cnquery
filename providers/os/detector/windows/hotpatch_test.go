@@ -59,4 +59,29 @@ func TestParseWinRegistryHotpatch(t *testing.T) {
 		assert.Nil(t, err)
 		assert.False(t, m)
 	})
+
+	t.Run("parse Windows 11 client hotpatch enabled", func(t *testing.T) {
+		// Windows 11 Enterprise 24H2 uses the same registry keys as Server
+		data := `{
+			"Name":  "Hotpatch Enrollment Package",
+			"HotPatchTableSize": "4096",
+			"EnableVirtualizationBasedSecurity": "1"
+		}`
+
+		m, err := ParseWinRegistryHotpatch(strings.NewReader(data))
+		assert.Nil(t, err)
+		assert.True(t, m)
+	})
+
+	t.Run("parse empty JSON", func(t *testing.T) {
+		data := `{
+			"Name":  "",
+			"HotPatchTableSize": "0",
+			"EnableVirtualizationBasedSecurity": "0"
+		}`
+
+		m, err := ParseWinRegistryHotpatch(strings.NewReader(data))
+		assert.Nil(t, err)
+		assert.False(t, m)
+	})
 }
