@@ -7,6 +7,7 @@
 package windows
 
 import (
+	"errors"
 	"runtime"
 	"strings"
 
@@ -45,7 +46,7 @@ func nativeGetWindowsClientHotpatch() (bool, error) {
 	defer updateKey.Close()
 
 	allowRebootless, _, err := updateKey.GetIntegerValue("AllowRebootlessUpdates")
-	if err != nil && err != registry.ErrNotExist {
+	if err != nil && !errors.Is(err, registry.ErrNotExist) {
 		log.Debug().Err(err).Msg("could not get AllowRebootlessUpdates value")
 		return false, err
 	}
@@ -58,7 +59,7 @@ func nativeGetWindowsClientHotpatch() (bool, error) {
 	defer systemKey.Close()
 
 	enableVBS, _, err := systemKey.GetIntegerValue("EnableVirtualizationBasedSecurity")
-	if err != nil && err != registry.ErrNotExist {
+	if err != nil && !errors.Is(err, registry.ErrNotExist) {
 		log.Debug().Err(err).Msg("could not get EnableVirtualizationBasedSecurity value")
 		return false, err
 	}
@@ -78,7 +79,7 @@ func nativeGetWindowsServerHotpatch(arch string) (bool, error) {
 	defer k.Close()
 
 	hotpatchName, _, err := k.GetStringValue("Name")
-	if err != nil && err != registry.ErrNotExist {
+	if err != nil && !errors.Is(err, registry.ErrNotExist) {
 		return false, err
 	}
 
@@ -90,7 +91,7 @@ func nativeGetWindowsServerHotpatch(arch string) (bool, error) {
 	defer systemKey.Close()
 
 	enableVirtualizationBasedSecurity, _, err := systemKey.GetIntegerValue("EnableVirtualizationBasedSecurity")
-	if err != nil && err != registry.ErrNotExist {
+	if err != nil && !errors.Is(err, registry.ErrNotExist) {
 		log.Debug().Err(err).Msg("could not get EnableVirtualizationBasedSecurity value")
 		return false, err
 	}
@@ -103,7 +104,7 @@ func nativeGetWindowsServerHotpatch(arch string) (bool, error) {
 	defer memoryKey.Close()
 
 	hotPatchTableSize, _, err := memoryKey.GetIntegerValue("HotPatchTableSize")
-	if err != nil && err != registry.ErrNotExist {
+	if err != nil && !errors.Is(err, registry.ErrNotExist) {
 		log.Debug().Err(err).Msg("could not get HotPatchTableSize value")
 		return false, err
 	}
