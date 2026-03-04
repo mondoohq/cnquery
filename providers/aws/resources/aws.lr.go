@@ -312,10 +312,13 @@ const (
 	ResourceAwsDirectoryserviceConnectSettings                                  string = "aws.directoryservice.connectSettings"
 	ResourceAwsWorkspaces                                                       string = "aws.workspaces"
 	ResourceAwsWorkspacesDirectory                                              string = "aws.workspaces.directory"
+	ResourceAwsWorkspacesweb                                                    string = "aws.workspacesweb"
+	ResourceAwsWorkspaceswebPortal                                              string = "aws.workspacesweb.portal"
 	ResourceAwsWorkspacesWorkspace                                              string = "aws.workspaces.workspace"
 	ResourceAwsWorkspacesImage                                                  string = "aws.workspaces.image"
 	ResourceAwsWorkspacesBundle                                                 string = "aws.workspaces.bundle"
 	ResourceAwsWorkspacesIpGroup                                                string = "aws.workspaces.ipGroup"
+	ResourceAwsWorkspaceswebUserAccessLoggingSetting                            string = "aws.workspacesweb.userAccessLoggingSetting"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -1502,6 +1505,14 @@ func init() {
 			// to override args, implement: initAwsWorkspacesDirectory(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsWorkspacesDirectory,
 		},
+		"aws.workspacesweb": {
+			// to override args, implement: initAwsWorkspacesweb(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWorkspacesweb,
+		},
+		"aws.workspacesweb.portal": {
+			// to override args, implement: initAwsWorkspaceswebPortal(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWorkspaceswebPortal,
+		},
 		"aws.workspaces.workspace": {
 			// to override args, implement: initAwsWorkspacesWorkspace(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsWorkspacesWorkspace,
@@ -1517,6 +1528,10 @@ func init() {
 		"aws.workspaces.ipGroup": {
 			// to override args, implement: initAwsWorkspacesIpGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsWorkspacesIpGroup,
+		},
+		"aws.workspacesweb.userAccessLoggingSetting": {
+			// to override args, implement: initAwsWorkspaceswebUserAccessLoggingSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWorkspaceswebUserAccessLoggingSetting,
 		},
 	}
 }
@@ -9368,6 +9383,66 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.workspaces.directory.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkspacesDirectory).GetRegion()).ToDataRes(types.String)
 	},
+	"aws.workspacesweb.portals": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesweb).GetPortals()).ToDataRes(types.Array(types.Resource("aws.workspacesweb.portal")))
+	},
+	"aws.workspacesweb.userAccessLoggingSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesweb).GetUserAccessLoggingSettings()).ToDataRes(types.Array(types.Resource("aws.workspacesweb.userAccessLoggingSetting")))
+	},
+	"aws.workspacesweb.portal.portalArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspaceswebPortal).GetPortalArn()).ToDataRes(types.String)
+	},
+	"aws.workspacesweb.portal.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspaceswebPortal).GetDisplayName()).ToDataRes(types.String)
+	},
+	"aws.workspacesweb.portal.portalEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspaceswebPortal).GetPortalEndpoint()).ToDataRes(types.String)
+	},
+	"aws.workspacesweb.portal.portalStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspaceswebPortal).GetPortalStatus()).ToDataRes(types.String)
+	},
+	"aws.workspacesweb.portal.authenticationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspaceswebPortal).GetAuthenticationType()).ToDataRes(types.String)
+	},
+	"aws.workspacesweb.portal.browserType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspaceswebPortal).GetBrowserType()).ToDataRes(types.String)
+	},
+	"aws.workspacesweb.portal.instanceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspaceswebPortal).GetInstanceType()).ToDataRes(types.String)
+	},
+	"aws.workspacesweb.portal.rendererType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspaceswebPortal).GetRendererType()).ToDataRes(types.String)
+	},
+	"aws.workspacesweb.portal.browserSettingsArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspaceswebPortal).GetBrowserSettingsArn()).ToDataRes(types.String)
+	},
+	"aws.workspacesweb.portal.networkSettingsArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspaceswebPortal).GetNetworkSettingsArn()).ToDataRes(types.String)
+	},
+	"aws.workspacesweb.portal.userSettingsArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspaceswebPortal).GetUserSettingsArn()).ToDataRes(types.String)
+	},
+	"aws.workspacesweb.portal.trustStoreArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspaceswebPortal).GetTrustStoreArn()).ToDataRes(types.String)
+	},
+	"aws.workspacesweb.portal.ipAccessSettingsArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspaceswebPortal).GetIpAccessSettingsArn()).ToDataRes(types.String)
+	},
+	"aws.workspacesweb.portal.userAccessLoggingSettingsArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspaceswebPortal).GetUserAccessLoggingSettingsArn()).ToDataRes(types.String)
+	},
+	"aws.workspacesweb.portal.dataProtectionSettingsArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspaceswebPortal).GetDataProtectionSettingsArn()).ToDataRes(types.String)
+	},
+	"aws.workspacesweb.portal.maxConcurrentSessions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspaceswebPortal).GetMaxConcurrentSessions()).ToDataRes(types.Int)
+	},
+	"aws.workspacesweb.portal.creationDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspaceswebPortal).GetCreationDate()).ToDataRes(types.Time)
+	},
+	"aws.workspacesweb.portal.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspaceswebPortal).GetRegion()).ToDataRes(types.String)
+	},
 	"aws.workspaces.workspace.workspaceId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkspacesWorkspace).GetWorkspaceId()).ToDataRes(types.String)
 	},
@@ -9490,6 +9565,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.workspaces.ipGroup.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkspacesIpGroup).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.workspacesweb.userAccessLoggingSetting.userAccessLoggingSettingsArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspaceswebUserAccessLoggingSetting).GetUserAccessLoggingSettingsArn()).ToDataRes(types.String)
+	},
+	"aws.workspacesweb.userAccessLoggingSetting.kinesisStreamArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspaceswebUserAccessLoggingSetting).GetKinesisStreamArn()).ToDataRes(types.String)
+	},
+	"aws.workspacesweb.userAccessLoggingSetting.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspaceswebUserAccessLoggingSetting).GetRegion()).ToDataRes(types.String)
 	},
 }
 
@@ -21043,6 +21127,94 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsWorkspacesDirectory).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.workspacesweb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesweb).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.workspacesweb.portals": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesweb).Portals, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.workspacesweb.userAccessLoggingSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesweb).UserAccessLoggingSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.workspacesweb.portal.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspaceswebPortal).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.workspacesweb.portal.portalArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspaceswebPortal).PortalArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspacesweb.portal.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspaceswebPortal).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspacesweb.portal.portalEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspaceswebPortal).PortalEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspacesweb.portal.portalStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspaceswebPortal).PortalStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspacesweb.portal.authenticationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspaceswebPortal).AuthenticationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspacesweb.portal.browserType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspaceswebPortal).BrowserType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspacesweb.portal.instanceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspaceswebPortal).InstanceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspacesweb.portal.rendererType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspaceswebPortal).RendererType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspacesweb.portal.browserSettingsArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspaceswebPortal).BrowserSettingsArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspacesweb.portal.networkSettingsArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspaceswebPortal).NetworkSettingsArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspacesweb.portal.userSettingsArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspaceswebPortal).UserSettingsArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspacesweb.portal.trustStoreArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspaceswebPortal).TrustStoreArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspacesweb.portal.ipAccessSettingsArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspaceswebPortal).IpAccessSettingsArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspacesweb.portal.userAccessLoggingSettingsArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspaceswebPortal).UserAccessLoggingSettingsArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspacesweb.portal.dataProtectionSettingsArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspaceswebPortal).DataProtectionSettingsArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspacesweb.portal.maxConcurrentSessions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspaceswebPortal).MaxConcurrentSessions, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.workspacesweb.portal.creationDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspaceswebPortal).CreationDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.workspacesweb.portal.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspaceswebPortal).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.workspaces.workspace.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWorkspacesWorkspace).__id, ok = v.Value.(string)
 		return
@@ -21221,6 +21393,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.workspaces.ipGroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWorkspacesIpGroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspacesweb.userAccessLoggingSetting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspaceswebUserAccessLoggingSetting).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.workspacesweb.userAccessLoggingSetting.userAccessLoggingSettingsArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspaceswebUserAccessLoggingSetting).UserAccessLoggingSettingsArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspacesweb.userAccessLoggingSetting.kinesisStreamArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspaceswebUserAccessLoggingSetting).KinesisStreamArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspacesweb.userAccessLoggingSetting.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspaceswebUserAccessLoggingSetting).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -50976,6 +51164,218 @@ func (c *mqlAwsWorkspacesDirectory) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
+// mqlAwsWorkspacesweb for the aws.workspacesweb resource
+type mqlAwsWorkspacesweb struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsWorkspaceswebInternal it will be used here
+	Portals                   plugin.TValue[[]any]
+	UserAccessLoggingSettings plugin.TValue[[]any]
+}
+
+// createAwsWorkspacesweb creates a new instance of this resource
+func createAwsWorkspacesweb(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWorkspacesweb{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.workspacesweb", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWorkspacesweb) MqlName() string {
+	return "aws.workspacesweb"
+}
+
+func (c *mqlAwsWorkspacesweb) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWorkspacesweb) GetPortals() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Portals, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.workspacesweb", c.__id, "portals")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.portals()
+	})
+}
+
+func (c *mqlAwsWorkspacesweb) GetUserAccessLoggingSettings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UserAccessLoggingSettings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.workspacesweb", c.__id, "userAccessLoggingSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.userAccessLoggingSettings()
+	})
+}
+
+// mqlAwsWorkspaceswebPortal for the aws.workspacesweb.portal resource
+type mqlAwsWorkspaceswebPortal struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsWorkspaceswebPortalInternal it will be used here
+	PortalArn                    plugin.TValue[string]
+	DisplayName                  plugin.TValue[string]
+	PortalEndpoint               plugin.TValue[string]
+	PortalStatus                 plugin.TValue[string]
+	AuthenticationType           plugin.TValue[string]
+	BrowserType                  plugin.TValue[string]
+	InstanceType                 plugin.TValue[string]
+	RendererType                 plugin.TValue[string]
+	BrowserSettingsArn           plugin.TValue[string]
+	NetworkSettingsArn           plugin.TValue[string]
+	UserSettingsArn              plugin.TValue[string]
+	TrustStoreArn                plugin.TValue[string]
+	IpAccessSettingsArn          plugin.TValue[string]
+	UserAccessLoggingSettingsArn plugin.TValue[string]
+	DataProtectionSettingsArn    plugin.TValue[string]
+	MaxConcurrentSessions        plugin.TValue[int64]
+	CreationDate                 plugin.TValue[*time.Time]
+	Region                       plugin.TValue[string]
+}
+
+// createAwsWorkspaceswebPortal creates a new instance of this resource
+func createAwsWorkspaceswebPortal(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWorkspaceswebPortal{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.workspacesweb.portal", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWorkspaceswebPortal) MqlName() string {
+	return "aws.workspacesweb.portal"
+}
+
+func (c *mqlAwsWorkspaceswebPortal) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWorkspaceswebPortal) GetPortalArn() *plugin.TValue[string] {
+	return &c.PortalArn
+}
+
+func (c *mqlAwsWorkspaceswebPortal) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlAwsWorkspaceswebPortal) GetPortalEndpoint() *plugin.TValue[string] {
+	return &c.PortalEndpoint
+}
+
+func (c *mqlAwsWorkspaceswebPortal) GetPortalStatus() *plugin.TValue[string] {
+	return &c.PortalStatus
+}
+
+func (c *mqlAwsWorkspaceswebPortal) GetAuthenticationType() *plugin.TValue[string] {
+	return &c.AuthenticationType
+}
+
+func (c *mqlAwsWorkspaceswebPortal) GetBrowserType() *plugin.TValue[string] {
+	return &c.BrowserType
+}
+
+func (c *mqlAwsWorkspaceswebPortal) GetInstanceType() *plugin.TValue[string] {
+	return &c.InstanceType
+}
+
+func (c *mqlAwsWorkspaceswebPortal) GetRendererType() *plugin.TValue[string] {
+	return &c.RendererType
+}
+
+func (c *mqlAwsWorkspaceswebPortal) GetBrowserSettingsArn() *plugin.TValue[string] {
+	return &c.BrowserSettingsArn
+}
+
+func (c *mqlAwsWorkspaceswebPortal) GetNetworkSettingsArn() *plugin.TValue[string] {
+	return &c.NetworkSettingsArn
+}
+
+func (c *mqlAwsWorkspaceswebPortal) GetUserSettingsArn() *plugin.TValue[string] {
+	return &c.UserSettingsArn
+}
+
+func (c *mqlAwsWorkspaceswebPortal) GetTrustStoreArn() *plugin.TValue[string] {
+	return &c.TrustStoreArn
+}
+
+func (c *mqlAwsWorkspaceswebPortal) GetIpAccessSettingsArn() *plugin.TValue[string] {
+	return &c.IpAccessSettingsArn
+}
+
+func (c *mqlAwsWorkspaceswebPortal) GetUserAccessLoggingSettingsArn() *plugin.TValue[string] {
+	return &c.UserAccessLoggingSettingsArn
+}
+
+func (c *mqlAwsWorkspaceswebPortal) GetDataProtectionSettingsArn() *plugin.TValue[string] {
+	return &c.DataProtectionSettingsArn
+}
+
+func (c *mqlAwsWorkspaceswebPortal) GetMaxConcurrentSessions() *plugin.TValue[int64] {
+	return &c.MaxConcurrentSessions
+}
+
+func (c *mqlAwsWorkspaceswebPortal) GetCreationDate() *plugin.TValue[*time.Time] {
+	return &c.CreationDate
+}
+
+func (c *mqlAwsWorkspaceswebPortal) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
 // mqlAwsWorkspacesWorkspace for the aws.workspaces.workspace resource
 type mqlAwsWorkspacesWorkspace struct {
 	MqlRuntime *plugin.Runtime
@@ -51356,5 +51756,64 @@ func (c *mqlAwsWorkspacesIpGroup) GetUserRules() *plugin.TValue[[]any] {
 }
 
 func (c *mqlAwsWorkspacesIpGroup) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsWorkspaceswebUserAccessLoggingSetting for the aws.workspacesweb.userAccessLoggingSetting resource
+type mqlAwsWorkspaceswebUserAccessLoggingSetting struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsWorkspaceswebUserAccessLoggingSettingInternal it will be used here
+	UserAccessLoggingSettingsArn plugin.TValue[string]
+	KinesisStreamArn             plugin.TValue[string]
+	Region                       plugin.TValue[string]
+}
+
+// createAwsWorkspaceswebUserAccessLoggingSetting creates a new instance of this resource
+func createAwsWorkspaceswebUserAccessLoggingSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWorkspaceswebUserAccessLoggingSetting{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.workspacesweb.userAccessLoggingSetting", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWorkspaceswebUserAccessLoggingSetting) MqlName() string {
+	return "aws.workspacesweb.userAccessLoggingSetting"
+}
+
+func (c *mqlAwsWorkspaceswebUserAccessLoggingSetting) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWorkspaceswebUserAccessLoggingSetting) GetUserAccessLoggingSettingsArn() *plugin.TValue[string] {
+	return &c.UserAccessLoggingSettingsArn
+}
+
+func (c *mqlAwsWorkspaceswebUserAccessLoggingSetting) GetKinesisStreamArn() *plugin.TValue[string] {
+	return &c.KinesisStreamArn
+}
+
+func (c *mqlAwsWorkspaceswebUserAccessLoggingSetting) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }

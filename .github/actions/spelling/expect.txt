@@ -226,6 +226,7 @@ WEBSERVERS
 wil
 workdir
 WORKSPACESUSER
+workspacesweb
 xssmatchstatement
 zrt
 ZSTD

@@ -6384,6 +6384,54 @@ private aws.workspaces.directory @defaults("directoryId directoryName state regi
   region string
 }
 
+// Amazon WorkSpaces Web service
+aws.workspacesweb @defaults("portals") {
+  // List of WorkSpaces Web portals across all enabled regions
+  portals() []aws.workspacesweb.portal
+  // List of user access logging settings across all enabled regions
+  userAccessLoggingSettings() []aws.workspacesweb.userAccessLoggingSetting
+}
+
+// Amazon WorkSpaces Web portal
+private aws.workspacesweb.portal @defaults("displayName portalStatus region") {
+  // Portal ARN
+  portalArn string
+  // Portal display name
+  displayName string
+  // Portal endpoint URL
+  portalEndpoint string
+  // Portal status: Incomplete, Pending, Active
+  portalStatus string
+  // Authentication type: Standard or IAMIdentityCenter
+  authenticationType string
+  // Browser type
+  browserType string
+  // Instance type
+  instanceType string
+  // Renderer type
+  rendererType string
+  // Associated browser settings ARN
+  browserSettingsArn string
+  // Associated network settings ARN
+  networkSettingsArn string
+  // Associated user settings ARN
+  userSettingsArn string
+  // Associated trust store ARN
+  trustStoreArn string
+  // Associated IP access settings ARN
+  ipAccessSettingsArn string
+  // Associated user access logging settings ARN
+  userAccessLoggingSettingsArn string
+  // Associated data protection settings ARN
+  dataProtectionSettingsArn string
+  // Maximum concurrent sessions
+  maxConcurrentSessions int
+  // Portal creation timestamp
+  creationDate time
+  // AWS region
+  region string
+}
+
 // Amazon WorkSpaces workspace instance
 private aws.workspaces.workspace @defaults("workspaceId userName state region") {
   // Workspace identifier
@@ -6478,6 +6526,16 @@ private aws.workspaces.ipGroup @defaults("groupId groupName region") {
   groupDesc string
   // IP rules (each has ipRule and ruleDesc)
   userRules []dict
+  // AWS region
+  region string
+}
+
+// Amazon WorkSpaces Web user access logging setting
+private aws.workspacesweb.userAccessLoggingSetting @defaults("userAccessLoggingSettingsArn kinesisStreamArn region") {
+  // Settings ARN
+  userAccessLoggingSettingsArn string
+  // Kinesis data stream ARN for logging
+  kinesisStreamArn string
   // AWS region
   region string
 }

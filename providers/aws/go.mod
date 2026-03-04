@@ -66,6 +66,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.70.7
 	github.com/aws/aws-sdk-go-v2/service/workdocs v1.30.17
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.66.2
+	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.38.2
 	github.com/aws/smithy-go v1.24.2
 	github.com/cockroachdb/errors v1.12.0
 	github.com/google/uuid v1.6.0
