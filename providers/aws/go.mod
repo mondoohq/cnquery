@@ -15,6 +15,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.38.6
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.41.12
 	github.com/aws/aws-sdk-go-v2/service/appstream v1.54.2
+	github.com/aws/aws-sdk-go-v2/service/athena v1.57.2
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.64.2
 	github.com/aws/aws-sdk-go-v2/service/backup v1.54.8
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.60.2
