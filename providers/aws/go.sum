@@ -259,6 +259,8 @@ github.com/aws/aws-sdk-go-v2/service/lambda v1.88.2 h1:j+IFEtr7aykD6jJRE86kv/+Tg
 github.com/aws/aws-sdk-go-v2/service/lambda v1.88.2/go.mod h1:IDvS3hFp41ZJTByY7BO8PNgQkPNeQDjJfU/0cHJ2V4o=
 github.com/aws/aws-sdk-go-v2/service/macie2 v1.50.11 h1:xVA8bNIG+Jk0qJedaIzv8S8a24Yh4bMgGONZfoPvxWw=
 github.com/aws/aws-sdk-go-v2/service/macie2 v1.50.11/go.mod h1:ni1hQqlr8F40BzrH8GcH37dN7wNpryGUkiHnE+MIN1Q=
+github.com/aws/aws-sdk-go-v2/service/memorydb v1.33.12 h1:BUd9RyiCSQ3gau/LAh6ZppvuQ1IxjetxpB25pc9YbAg=
+github.com/aws/aws-sdk-go-v2/service/memorydb v1.33.12/go.mod h1:rxCveQsDbPAecIQjIcDlzsH93PrHovX8bz3llcRAgt0=
 github.com/aws/aws-sdk-go-v2/service/neptune v1.44.1 h1:Akp3PA62O+s8Tze5/4f3YthrAT6OHhay9QhUPv7zw6Y=
 github.com/aws/aws-sdk-go-v2/service/neptune v1.44.1/go.mod h1:YNCq3tFuuD8sxXKR9NC7n8gdafguPzxp+WFKuivplTw=
 github.com/aws/aws-sdk-go-v2/service/opensearch v1.59.0 h1:rhlLa2SwSeKva0DEUrbRc5DN2bAsIPvcmW7N/c2MUgI=

@@ -6718,3 +6718,55 @@ private aws.kinesis.firehoseDeliveryStream @defaults("name status region") {
   // Tags for the delivery stream
   tags() map[string]string
 }
+
+// Amazon MemoryDB
+aws.memorydb @defaults("clusters") {
+  // List of MemoryDB clusters
+  clusters() []aws.memorydb.cluster
+}
+
+// Amazon MemoryDB cluster
+private aws.memorydb.cluster @defaults("name status nodeType region") {
+  // ARN of the cluster
+  arn string
+  // Name of the cluster
+  name string
+  // Description of the cluster
+  description string
+  // Current status of the cluster: available, creating, updating, deleting, or snapshotting
+  status string
+  // Node type for the nodes in the cluster
+  nodeType string
+  // Name of the engine used by the cluster
+  engine string
+  // Version number of the engine used by the cluster
+  engineVersion string
+  // Engine patch version
+  enginePatchVersion string
+  // Number of shards in the cluster
+  numberOfShards int
+  // Whether encryption in transit (TLS) is enabled
+  tlsEnabled bool
+  // KMS key used for encryption at rest
+  kmsKey() aws.kms.key
+  // Name of the Access Control List associated with the cluster
+  aclName string
+  // Name of the parameter group used by the cluster
+  parameterGroupName string
+  // Name of the subnet group used by the cluster
+  subnetGroupName string
+  // Number of days for which MemoryDB retains automatic snapshots
+  snapshotRetentionLimit int
+  // Daily time range during which MemoryDB takes automatic snapshots
+  snapshotWindow string
+  // Weekly time range during which system maintenance can occur
+  maintenanceWindow string
+  // Whether the cluster will automatically receive minor engine version upgrades
+  autoMinorVersionUpgrade bool
+  // Region where the cluster exists
+  region string
+  // Tags for the cluster
+  tags() map[string]string
+  // Security groups associated with the cluster
+  securityGroups() []aws.ec2.securitygroup
+}

@@ -329,6 +329,8 @@ const (
 	ResourceAwsKinesis                                                          string = "aws.kinesis"
 	ResourceAwsKinesisStream                                                    string = "aws.kinesis.stream"
 	ResourceAwsKinesisFirehoseDeliveryStream                                    string = "aws.kinesis.firehoseDeliveryStream"
+	ResourceAwsMemorydb                                                         string = "aws.memorydb"
+	ResourceAwsMemorydbCluster                                                  string = "aws.memorydb.cluster"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -1582,6 +1584,14 @@ func init() {
 		"aws.kinesis.firehoseDeliveryStream": {
 			// to override args, implement: initAwsKinesisFirehoseDeliveryStream(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsKinesisFirehoseDeliveryStream,
+		},
+		"aws.memorydb": {
+			// to override args, implement: initAwsMemorydb(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMemorydb,
+		},
+		"aws.memorydb.cluster": {
+			// to override args, implement: initAwsMemorydbCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMemorydbCluster,
 		},
 	}
 }
@@ -9834,6 +9844,72 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.kinesis.firehoseDeliveryStream.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKinesisFirehoseDeliveryStream).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.memorydb.clusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydb).GetClusters()).ToDataRes(types.Array(types.Resource("aws.memorydb.cluster")))
+	},
+	"aws.memorydb.cluster.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetArn()).ToDataRes(types.String)
+	},
+	"aws.memorydb.cluster.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetName()).ToDataRes(types.String)
+	},
+	"aws.memorydb.cluster.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.memorydb.cluster.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.memorydb.cluster.nodeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetNodeType()).ToDataRes(types.String)
+	},
+	"aws.memorydb.cluster.engine": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetEngine()).ToDataRes(types.String)
+	},
+	"aws.memorydb.cluster.engineVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetEngineVersion()).ToDataRes(types.String)
+	},
+	"aws.memorydb.cluster.enginePatchVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetEnginePatchVersion()).ToDataRes(types.String)
+	},
+	"aws.memorydb.cluster.numberOfShards": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetNumberOfShards()).ToDataRes(types.Int)
+	},
+	"aws.memorydb.cluster.tlsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetTlsEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.memorydb.cluster.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.memorydb.cluster.aclName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetAclName()).ToDataRes(types.String)
+	},
+	"aws.memorydb.cluster.parameterGroupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetParameterGroupName()).ToDataRes(types.String)
+	},
+	"aws.memorydb.cluster.subnetGroupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetSubnetGroupName()).ToDataRes(types.String)
+	},
+	"aws.memorydb.cluster.snapshotRetentionLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetSnapshotRetentionLimit()).ToDataRes(types.Int)
+	},
+	"aws.memorydb.cluster.snapshotWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetSnapshotWindow()).ToDataRes(types.String)
+	},
+	"aws.memorydb.cluster.maintenanceWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetMaintenanceWindow()).ToDataRes(types.String)
+	},
+	"aws.memorydb.cluster.autoMinorVersionUpgrade": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetAutoMinorVersionUpgrade()).ToDataRes(types.Bool)
+	},
+	"aws.memorydb.cluster.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.memorydb.cluster.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.memorydb.cluster.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
 	},
 }
 
@@ -21989,6 +22065,102 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.kinesis.firehoseDeliveryStream.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsKinesisFirehoseDeliveryStream).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydb).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.memorydb.clusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydb).Clusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.memorydb.cluster.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.nodeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).NodeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.engine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).Engine, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.engineVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).EngineVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.enginePatchVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).EnginePatchVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.numberOfShards": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).NumberOfShards, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.tlsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).TlsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.aclName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).AclName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.parameterGroupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).ParameterGroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.subnetGroupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).SubnetGroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.snapshotRetentionLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).SnapshotRetentionLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.snapshotWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).SnapshotWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.maintenanceWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).MaintenanceWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.autoMinorVersionUpgrade": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).AutoMinorVersionUpgrade, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 }
@@ -53270,5 +53442,236 @@ func (c *mqlAwsKinesisFirehoseDeliveryStream) GetRegion() *plugin.TValue[string]
 func (c *mqlAwsKinesisFirehoseDeliveryStream) GetTags() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
+	})
+}
+
+// mqlAwsMemorydb for the aws.memorydb resource
+type mqlAwsMemorydb struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsMemorydbInternal it will be used here
+	Clusters plugin.TValue[[]any]
+}
+
+// createAwsMemorydb creates a new instance of this resource
+func createAwsMemorydb(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMemorydb{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.memorydb", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMemorydb) MqlName() string {
+	return "aws.memorydb"
+}
+
+func (c *mqlAwsMemorydb) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMemorydb) GetClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Clusters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.memorydb", c.__id, "clusters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.clusters()
+	})
+}
+
+// mqlAwsMemorydbCluster for the aws.memorydb.cluster resource
+type mqlAwsMemorydbCluster struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsMemorydbClusterInternal
+	Arn                     plugin.TValue[string]
+	Name                    plugin.TValue[string]
+	Description             plugin.TValue[string]
+	Status                  plugin.TValue[string]
+	NodeType                plugin.TValue[string]
+	Engine                  plugin.TValue[string]
+	EngineVersion           plugin.TValue[string]
+	EnginePatchVersion      plugin.TValue[string]
+	NumberOfShards          plugin.TValue[int64]
+	TlsEnabled              plugin.TValue[bool]
+	KmsKey                  plugin.TValue[*mqlAwsKmsKey]
+	AclName                 plugin.TValue[string]
+	ParameterGroupName      plugin.TValue[string]
+	SubnetGroupName         plugin.TValue[string]
+	SnapshotRetentionLimit  plugin.TValue[int64]
+	SnapshotWindow          plugin.TValue[string]
+	MaintenanceWindow       plugin.TValue[string]
+	AutoMinorVersionUpgrade plugin.TValue[bool]
+	Region                  plugin.TValue[string]
+	Tags                    plugin.TValue[map[string]any]
+	SecurityGroups          plugin.TValue[[]any]
+}
+
+// createAwsMemorydbCluster creates a new instance of this resource
+func createAwsMemorydbCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMemorydbCluster{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.memorydb.cluster", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMemorydbCluster) MqlName() string {
+	return "aws.memorydb.cluster"
+}
+
+func (c *mqlAwsMemorydbCluster) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMemorydbCluster) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsMemorydbCluster) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsMemorydbCluster) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsMemorydbCluster) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsMemorydbCluster) GetNodeType() *plugin.TValue[string] {
+	return &c.NodeType
+}
+
+func (c *mqlAwsMemorydbCluster) GetEngine() *plugin.TValue[string] {
+	return &c.Engine
+}
+
+func (c *mqlAwsMemorydbCluster) GetEngineVersion() *plugin.TValue[string] {
+	return &c.EngineVersion
+}
+
+func (c *mqlAwsMemorydbCluster) GetEnginePatchVersion() *plugin.TValue[string] {
+	return &c.EnginePatchVersion
+}
+
+func (c *mqlAwsMemorydbCluster) GetNumberOfShards() *plugin.TValue[int64] {
+	return &c.NumberOfShards
+}
+
+func (c *mqlAwsMemorydbCluster) GetTlsEnabled() *plugin.TValue[bool] {
+	return &c.TlsEnabled
+}
+
+func (c *mqlAwsMemorydbCluster) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.memorydb.cluster", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsMemorydbCluster) GetAclName() *plugin.TValue[string] {
+	return &c.AclName
+}
+
+func (c *mqlAwsMemorydbCluster) GetParameterGroupName() *plugin.TValue[string] {
+	return &c.ParameterGroupName
+}
+
+func (c *mqlAwsMemorydbCluster) GetSubnetGroupName() *plugin.TValue[string] {
+	return &c.SubnetGroupName
+}
+
+func (c *mqlAwsMemorydbCluster) GetSnapshotRetentionLimit() *plugin.TValue[int64] {
+	return &c.SnapshotRetentionLimit
+}
+
+func (c *mqlAwsMemorydbCluster) GetSnapshotWindow() *plugin.TValue[string] {
+	return &c.SnapshotWindow
+}
+
+func (c *mqlAwsMemorydbCluster) GetMaintenanceWindow() *plugin.TValue[string] {
+	return &c.MaintenanceWindow
+}
+
+func (c *mqlAwsMemorydbCluster) GetAutoMinorVersionUpgrade() *plugin.TValue[bool] {
+	return &c.AutoMinorVersionUpgrade
+}
+
+func (c *mqlAwsMemorydbCluster) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsMemorydbCluster) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsMemorydbCluster) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.memorydb.cluster", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
 	})
 }

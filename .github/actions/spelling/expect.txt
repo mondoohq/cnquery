@@ -115,6 +115,7 @@ managedzone
 maxmemory
 mcp
 mcr
+memorydb
 meid
 messagestoragepolicy
 mfs

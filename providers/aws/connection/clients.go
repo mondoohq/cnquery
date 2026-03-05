@@ -47,6 +47,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/macie2"
+	"github.com/aws/aws-sdk-go-v2/service/memorydb"
 	"github.com/aws/aws-sdk-go-v2/service/neptune"
 	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
@@ -777,6 +778,26 @@ func (t *AwsConnection) Macie2(region string) *macie2.Client {
 	client := macie2.NewFromConfig(cfg)
 
 	// cache it
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) Memorydb(region string) *memorydb.Client {
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_memorydb_" + region
+
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached memorydb client")
+		return c.Data.(*memorydb.Client)
+	}
+
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := memorydb.NewFromConfig(cfg)
+
 	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
 	return client
 }
