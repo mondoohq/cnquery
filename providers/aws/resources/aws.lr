@@ -6021,6 +6021,66 @@ private aws.neptune.snapshot @defaults("arn status createdAt") {
   region string
 }
 
+// Amazon Cognito
+aws.cognito @defaults("userPools") {
+  // List of Cognito user pools
+  userPools() []aws.cognito.userPool
+  // List of Cognito identity pools (federated identities)
+  identityPools() []aws.cognito.identityPool
+}
+
+// Amazon Cognito user pool
+private aws.cognito.userPool @defaults("arn name") {
+  // ARN of the user pool
+  arn string
+  // User pool ID
+  id string
+  // Name of the user pool
+  name string
+  // Region of the user pool
+  region string
+  // Status: Enabled or Disabled
+  status string
+  // Whether deletion protection is enabled
+  deletionProtection() bool
+  // MFA configuration: OFF, ON, OPTIONAL
+  mfaConfiguration() string
+  // Password policy
+  passwordPolicy() dict
+  // Advanced security mode: OFF, AUDIT, ENFORCED
+  advancedSecurityMode() string
+  // User pool tags
+  tags() map[string]string
+  // Date the user pool was created
+  createdAt time
+  // Date the user pool was last modified
+  updatedAt time
+}
+
+// Amazon Cognito identity pool (federated identities)
+private aws.cognito.identityPool @defaults("id name") {
+  // Identity pool ID (format: REGION:GUID)
+  id string
+  // Name of the identity pool
+  name string
+  // Region of the identity pool
+  region string
+  // Whether unauthenticated identities are allowed
+  allowUnauthenticatedIdentities() bool
+  // Whether the Basic (Classic) authentication flow is enabled
+  allowClassicFlow() bool
+  // Developer provider name
+  developerProviderName() string
+  // OpenID Connect provider ARNs
+  openIdConnectProviderArns() []string
+  // SAML provider ARNs
+  samlProviderArns() []string
+  // Supported login providers (provider name to app ID mapping)
+  supportedLoginProviders() map[string]string
+  // Identity pool tags
+  tags() map[string]string
+}
+
 // Amazon Timestream for LiveAnalytics
 aws.timestream.liveanalytics @defaults("databases") {
   // List of databases

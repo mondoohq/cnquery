@@ -21,6 +21,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild"
 	"github.com/aws/aws-sdk-go-v2/service/codedeploy"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
@@ -1600,6 +1602,46 @@ func (t *AwsConnection) Route53Domains(region string) *route53domains.Client {
 	cfg := t.cfg.Copy()
 	cfg.Region = region
 	client := route53domains.NewFromConfig(cfg)
+
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) CognitoIdentity(region string) *cognitoidentity.Client {
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_cognitoidentity_" + region
+
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached cognitoidentity client")
+		return c.Data.(*cognitoidentity.Client)
+	}
+
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := cognitoidentity.NewFromConfig(cfg)
+
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) CognitoIdentityProvider(region string) *cognitoidentityprovider.Client {
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_cognitoidentityprovider_" + region
+
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached cognitoidentityprovider client")
+		return c.Data.(*cognitoidentityprovider.Client)
+	}
+
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := cognitoidentityprovider.NewFromConfig(cfg)
 
 	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
 	return client
