@@ -77,6 +77,11 @@ const (
 	ResourceAuditdRuleControl          string = "auditd.rule.control"
 	ResourceAuditdRuleFile             string = "auditd.rule.file"
 	ResourceAuditdRuleSyscall          string = "auditd.rule.syscall"
+	ResourceApache2                    string = "apache2"
+	ResourceApache2Conf                string = "apache2.conf"
+	ResourceApache2ConfModule          string = "apache2.conf.module"
+	ResourceApache2ConfVirtualHost     string = "apache2.conf.virtualHost"
+	ResourceApache2ConfDirectory       string = "apache2.conf.directory"
 	ResourceJournaldConfig             string = "journald.config"
 	ResourceJournaldConfigSection      string = "journald.config.section"
 	ResourceJournaldConfigSectionParam string = "journald.config.section.param"
@@ -440,6 +445,26 @@ func init() {
 		"auditd.rule.syscall": {
 			// to override args, implement: initAuditdRuleSyscall(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAuditdRuleSyscall,
+		},
+		"apache2": {
+			// to override args, implement: initApache2(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createApache2,
+		},
+		"apache2.conf": {
+			Init:   initApache2Conf,
+			Create: createApache2Conf,
+		},
+		"apache2.conf.module": {
+			// to override args, implement: initApache2ConfModule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createApache2ConfModule,
+		},
+		"apache2.conf.virtualHost": {
+			// to override args, implement: initApache2ConfVirtualHost(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createApache2ConfVirtualHost,
+		},
+		"apache2.conf.directory": {
+			// to override args, implement: initApache2ConfDirectory(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createApache2ConfDirectory,
 		},
 		"journald.config": {
 			Init:   initJournaldConfig,
@@ -1814,6 +1839,63 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"auditd.rule.syscall.keyname": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAuditdRuleSyscall).GetKeyname()).ToDataRes(types.String)
+	},
+	"apache2.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2).GetVersion()).ToDataRes(types.String)
+	},
+	"apache2.conf.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2Conf).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"apache2.conf.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2Conf).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
+	},
+	"apache2.conf.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2Conf).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"apache2.conf.listenAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2Conf).GetListenAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"apache2.conf.modules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2Conf).GetModules()).ToDataRes(types.Array(types.Resource("apache2.conf.module")))
+	},
+	"apache2.conf.virtualHosts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2Conf).GetVirtualHosts()).ToDataRes(types.Array(types.Resource("apache2.conf.virtualHost")))
+	},
+	"apache2.conf.directories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2Conf).GetDirectories()).ToDataRes(types.Array(types.Resource("apache2.conf.directory")))
+	},
+	"apache2.conf.module.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2ConfModule).GetName()).ToDataRes(types.String)
+	},
+	"apache2.conf.module.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2ConfModule).GetPath()).ToDataRes(types.String)
+	},
+	"apache2.conf.virtualHost.address": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2ConfVirtualHost).GetAddress()).ToDataRes(types.String)
+	},
+	"apache2.conf.virtualHost.serverName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2ConfVirtualHost).GetServerName()).ToDataRes(types.String)
+	},
+	"apache2.conf.virtualHost.documentRoot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2ConfVirtualHost).GetDocumentRoot()).ToDataRes(types.String)
+	},
+	"apache2.conf.virtualHost.ssl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2ConfVirtualHost).GetSsl()).ToDataRes(types.Bool)
+	},
+	"apache2.conf.virtualHost.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2ConfVirtualHost).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"apache2.conf.directory.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2ConfDirectory).GetPath()).ToDataRes(types.String)
+	},
+	"apache2.conf.directory.options": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2ConfDirectory).GetOptions()).ToDataRes(types.String)
+	},
+	"apache2.conf.directory.allowOverride": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2ConfDirectory).GetAllowOverride()).ToDataRes(types.String)
+	},
+	"apache2.conf.directory.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApache2ConfDirectory).GetParams()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"journald.config.file": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlJournaldConfig).GetFile()).ToDataRes(types.Resource("file"))
@@ -5063,6 +5145,102 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"auditd.rule.syscall.keyname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAuditdRuleSyscall).Keyname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apache2.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2).__id, ok = v.Value.(string)
+		return
+	},
+	"apache2.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2Conf).__id, ok = v.Value.(string)
+		return
+	},
+	"apache2.conf.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2Conf).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2Conf).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2Conf).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.listenAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2Conf).ListenAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.modules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2Conf).Modules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.virtualHosts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2Conf).VirtualHosts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.directories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2Conf).Directories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.module.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2ConfModule).__id, ok = v.Value.(string)
+		return
+	},
+	"apache2.conf.module.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2ConfModule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.module.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2ConfModule).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.virtualHost.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2ConfVirtualHost).__id, ok = v.Value.(string)
+		return
+	},
+	"apache2.conf.virtualHost.address": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2ConfVirtualHost).Address, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.virtualHost.serverName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2ConfVirtualHost).ServerName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.virtualHost.documentRoot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2ConfVirtualHost).DocumentRoot, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.virtualHost.ssl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2ConfVirtualHost).Ssl, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.virtualHost.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2ConfVirtualHost).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.directory.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2ConfDirectory).__id, ok = v.Value.(string)
+		return
+	},
+	"apache2.conf.directory.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2ConfDirectory).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.directory.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2ConfDirectory).Options, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.directory.allowOverride": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2ConfDirectory).AllowOverride, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apache2.conf.directory.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApache2ConfDirectory).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"journald.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13009,6 +13187,402 @@ func (c *mqlAuditdRuleSyscall) GetComparisons() *plugin.TValue[[]any] {
 
 func (c *mqlAuditdRuleSyscall) GetKeyname() *plugin.TValue[string] {
 	return &c.Keyname
+}
+
+// mqlApache2 for the apache2 resource
+type mqlApache2 struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlApache2Internal it will be used here
+	Version plugin.TValue[string]
+}
+
+// createApache2 creates a new instance of this resource
+func createApache2(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlApache2{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("apache2", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlApache2) MqlName() string {
+	return "apache2"
+}
+
+func (c *mqlApache2) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlApache2) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+// mqlApache2Conf for the apache2.conf resource
+type mqlApache2Conf struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlApache2ConfInternal
+	File            plugin.TValue[*mqlFile]
+	Files           plugin.TValue[[]any]
+	Params          plugin.TValue[map[string]any]
+	ListenAddresses plugin.TValue[[]any]
+	Modules         plugin.TValue[[]any]
+	VirtualHosts    plugin.TValue[[]any]
+	Directories     plugin.TValue[[]any]
+}
+
+// createApache2Conf creates a new instance of this resource
+func createApache2Conf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlApache2Conf{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("apache2.conf", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlApache2Conf) MqlName() string {
+	return "apache2.conf"
+}
+
+func (c *mqlApache2Conf) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlApache2Conf) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("apache2.conf", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlApache2Conf) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("apache2.conf", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.files(vargFile.Data)
+	})
+}
+
+func (c *mqlApache2Conf) GetParams() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Params, func() (map[string]any, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.params(vargFile.Data)
+	})
+}
+
+func (c *mqlApache2Conf) GetListenAddresses() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ListenAddresses, func() ([]any, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.listenAddresses(vargParams.Data)
+	})
+}
+
+func (c *mqlApache2Conf) GetModules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Modules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("apache2.conf", c.__id, "modules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.modules(vargFile.Data)
+	})
+}
+
+func (c *mqlApache2Conf) GetVirtualHosts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VirtualHosts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("apache2.conf", c.__id, "virtualHosts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.virtualHosts(vargFile.Data)
+	})
+}
+
+func (c *mqlApache2Conf) GetDirectories() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Directories, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("apache2.conf", c.__id, "directories")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.directories(vargFile.Data)
+	})
+}
+
+// mqlApache2ConfModule for the apache2.conf.module resource
+type mqlApache2ConfModule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlApache2ConfModuleInternal it will be used here
+	Name plugin.TValue[string]
+	Path plugin.TValue[string]
+}
+
+// createApache2ConfModule creates a new instance of this resource
+func createApache2ConfModule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlApache2ConfModule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("apache2.conf.module", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlApache2ConfModule) MqlName() string {
+	return "apache2.conf.module"
+}
+
+func (c *mqlApache2ConfModule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlApache2ConfModule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlApache2ConfModule) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+// mqlApache2ConfVirtualHost for the apache2.conf.virtualHost resource
+type mqlApache2ConfVirtualHost struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlApache2ConfVirtualHostInternal it will be used here
+	Address      plugin.TValue[string]
+	ServerName   plugin.TValue[string]
+	DocumentRoot plugin.TValue[string]
+	Ssl          plugin.TValue[bool]
+	Params       plugin.TValue[map[string]any]
+}
+
+// createApache2ConfVirtualHost creates a new instance of this resource
+func createApache2ConfVirtualHost(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlApache2ConfVirtualHost{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("apache2.conf.virtualHost", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlApache2ConfVirtualHost) MqlName() string {
+	return "apache2.conf.virtualHost"
+}
+
+func (c *mqlApache2ConfVirtualHost) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlApache2ConfVirtualHost) GetAddress() *plugin.TValue[string] {
+	return &c.Address
+}
+
+func (c *mqlApache2ConfVirtualHost) GetServerName() *plugin.TValue[string] {
+	return &c.ServerName
+}
+
+func (c *mqlApache2ConfVirtualHost) GetDocumentRoot() *plugin.TValue[string] {
+	return &c.DocumentRoot
+}
+
+func (c *mqlApache2ConfVirtualHost) GetSsl() *plugin.TValue[bool] {
+	return &c.Ssl
+}
+
+func (c *mqlApache2ConfVirtualHost) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+// mqlApache2ConfDirectory for the apache2.conf.directory resource
+type mqlApache2ConfDirectory struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlApache2ConfDirectoryInternal it will be used here
+	Path          plugin.TValue[string]
+	Options       plugin.TValue[string]
+	AllowOverride plugin.TValue[string]
+	Params        plugin.TValue[map[string]any]
+}
+
+// createApache2ConfDirectory creates a new instance of this resource
+func createApache2ConfDirectory(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlApache2ConfDirectory{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("apache2.conf.directory", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlApache2ConfDirectory) MqlName() string {
+	return "apache2.conf.directory"
+}
+
+func (c *mqlApache2ConfDirectory) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlApache2ConfDirectory) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlApache2ConfDirectory) GetOptions() *plugin.TValue[string] {
+	return &c.Options
+}
+
+func (c *mqlApache2ConfDirectory) GetAllowOverride() *plugin.TValue[string] {
+	return &c.AllowOverride
+}
+
+func (c *mqlApache2ConfDirectory) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
 }
 
 // mqlJournaldConfig for the journald.config resource

@@ -824,6 +824,65 @@ private auditd.rule.syscall @defaults("action list") {
   keyname string
 }
 
+// Apache2 HTTP Server
+apache2 {
+  // Apache2 version (e.g., "2.4.62")
+  version() string
+}
+
+// Apache2 HTTP Server configuration
+apache2.conf {
+  init(path? string)
+  // Primary configuration file
+  file() file
+  // All configuration files (main + included fragments)
+  files(file) []file
+  // Flat key-value directives from the configuration
+  params(file) map[string]string
+  // Listen addresses/ports
+  listenAddresses(params) []string
+  // Loaded modules (LoadModule directives)
+  modules(file) []apache2.conf.module
+  // VirtualHost blocks
+  virtualHosts(file) []apache2.conf.virtualHost
+  // Directory blocks
+  directories(file) []apache2.conf.directory
+}
+
+// Apache2 loaded module
+private apache2.conf.module @defaults("name") {
+  // Module name (e.g., "ssl_module")
+  name string
+  // Shared object path (e.g., "modules/mod_ssl.so")
+  path string
+}
+
+// Apache2 VirtualHost block
+private apache2.conf.virtualHost @defaults("address") {
+  // VirtualHost address (e.g., "*:443")
+  address string
+  // ServerName directive
+  serverName string
+  // DocumentRoot directive
+  documentRoot string
+  // Whether SSL is enabled (SSLEngine on)
+  ssl bool
+  // All directives within this VirtualHost
+  params map[string]string
+}
+
+// Apache2 Directory block
+private apache2.conf.directory @defaults("path") {
+  // Directory path
+  path string
+  // Options directive value
+  options string
+  // AllowOverride directive value
+  allowOverride string
+  // All directives within this Directory block
+  params map[string]string
+}
+
 // systemd journald configuration
 journald.config {
   init(path? string)
