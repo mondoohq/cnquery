@@ -225,6 +225,7 @@ webide
 WEBSERVERS
 wil
 workdir
+workgroups
 WORKSPACESUSER
 workspacesweb
 xssmatchstatement

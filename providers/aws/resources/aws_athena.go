@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/athena"
@@ -69,8 +70,12 @@ func (a *mqlAwsAthena) getWorkgroups(conn *connection.AwsConnection) []*jobpool.
 						WorkGroup: wgSummary.Name,
 					})
 					if err != nil {
-						log.Warn().Str("workgroup", convert.ToValue(wgSummary.Name)).Err(err).Msg("could not get workgroup details")
-						continue
+						var nfe *athena_types.ResourceNotFoundException
+						if errors.As(err, &nfe) {
+							log.Warn().Str("workgroup", convert.ToValue(wgSummary.Name)).Msg("workgroup not found, skipping")
+							continue
+						}
+						return nil, err
 					}
 					mqlWg, err := newMqlAwsAthenaWorkgroup(a.MqlRuntime, region, conn.AccountId(), wgResp.WorkGroup)
 					if err != nil {
@@ -135,6 +140,12 @@ func newMqlAwsAthenaWorkgroup(runtime *plugin.Runtime, region string, accountID 
 }
 
 func (a *mqlAwsAthenaWorkgroup) tags() (map[string]interface{}, error) {
+	if a.Arn.Error != nil {
+		return nil, a.Arn.Error
+	}
+	if a.Region.Error != nil {
+		return nil, a.Region.Error
+	}
 	arn := a.Arn.Data
 	region := a.Region.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
