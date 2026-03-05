@@ -38,6 +38,7 @@ func NewCliTestRunner(binary string, args ...string) *cliTestRunner {
 
 func (c *cliTestRunner) Run() error {
 	c.cmd = exec.Command(c.binary, c.args...)
+	c.cmd.Env = BuildEnv()
 	c.cmd.Stdout = &c.stdout
 	c.cmd.Stderr = &c.stderr
 
