@@ -267,6 +267,158 @@ func (a *mqlAwsDocumentdbInstance) kmsKey() (*mqlAwsKmsKey, error) {
 	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
+func (a *mqlAwsDocumentdbSnapshot) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsDocumentdb) snapshots() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getSnapshots(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		if poolOfJobs.Jobs[i].Result != nil {
+			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsDocumentdb) getSnapshots(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("documentdb>getSnapshots>calling aws with region %s", region)
+
+			svc := conn.DocumentDB(region)
+			ctx := context.Background()
+			res := []any{}
+
+			paginator := docdb.NewDescribeDBClusterSnapshotsPaginator(svc, &docdb.DescribeDBClusterSnapshotsInput{})
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, snapshot := range page.DBClusterSnapshots {
+					mqlSnapshot, err := newMqlAwsDocumentdbSnapshot(a.MqlRuntime, region, snapshot)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlSnapshot)
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (a *mqlAwsDocumentdbCluster) snapshots() ([]any, error) {
+	clusterIdentifier := a.ClusterIdentifier.Data
+	region := a.Region.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.DocumentDB(region)
+	ctx := context.Background()
+	res := []any{}
+
+	paginator := docdb.NewDescribeDBClusterSnapshotsPaginator(svc, &docdb.DescribeDBClusterSnapshotsInput{
+		DBClusterIdentifier: &clusterIdentifier,
+	})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, snapshot := range page.DBClusterSnapshots {
+			mqlSnapshot, err := newMqlAwsDocumentdbSnapshot(a.MqlRuntime, region, snapshot)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlSnapshot)
+		}
+	}
+	return res, nil
+}
+
+func newMqlAwsDocumentdbSnapshot(runtime *plugin.Runtime, region string, snapshot docdb_types.DBClusterSnapshot) (*mqlAwsDocumentdbSnapshot, error) {
+	resource, err := CreateResource(runtime, "aws.documentdb.snapshot",
+		map[string]*llx.RawData{
+			"__id":              llx.StringDataPtr(snapshot.DBClusterSnapshotArn),
+			"arn":               llx.StringDataPtr(snapshot.DBClusterSnapshotArn),
+			"id":                llx.StringDataPtr(snapshot.DBClusterSnapshotIdentifier),
+			"clusterIdentifier": llx.StringDataPtr(snapshot.DBClusterIdentifier),
+			"engine":            llx.StringDataPtr(snapshot.Engine),
+			"engineVersion":     llx.StringDataPtr(snapshot.EngineVersion),
+			"status":            llx.StringDataPtr(snapshot.Status),
+			"snapshotType":      llx.StringDataPtr(snapshot.SnapshotType),
+			"port":              llx.IntDataDefault(snapshot.Port, 0),
+			"storageEncrypted":  llx.BoolDataPtr(snapshot.StorageEncrypted),
+			"storageType":       llx.StringDataPtr(snapshot.StorageType),
+			"availabilityZones": llx.ArrayData(convert.SliceAnyToInterface(snapshot.AvailabilityZones), types.String),
+			"percentProgress":   llx.IntDataDefault(snapshot.PercentProgress, 0),
+			"createdAt":         llx.TimeDataPtr(snapshot.SnapshotCreateTime),
+			"clusterCreatedAt":  llx.TimeDataPtr(snapshot.ClusterCreateTime),
+			"region":            llx.StringData(region),
+		})
+	if err != nil {
+		return nil, err
+	}
+	mqlSnapshot := resource.(*mqlAwsDocumentdbSnapshot)
+	mqlSnapshot.cacheKmsKeyId = snapshot.KmsKeyId
+	mqlSnapshot.cacheVpcId = snapshot.VpcId
+	return mqlSnapshot, nil
+}
+
+type mqlAwsDocumentdbSnapshotInternal struct {
+	cacheKmsKeyId *string
+	cacheVpcId    *string
+}
+
+func (a *mqlAwsDocumentdbSnapshot) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.cacheKmsKeyId == nil || *a.cacheKmsKeyId == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{
+			"arn": llx.StringDataPtr(a.cacheKmsKeyId),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
+func (a *mqlAwsDocumentdbSnapshot) vpc() (*mqlAwsVpc, error) {
+	if a.cacheVpcId == nil || *a.cacheVpcId == "" {
+		a.Vpc.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlVpc, err := NewResource(a.MqlRuntime, "aws.vpc",
+		map[string]*llx.RawData{
+			"id": llx.StringDataPtr(a.cacheVpcId),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlVpc.(*mqlAwsVpc), nil
+}
+
 func (a *mqlAwsDocumentdbInstance) tags() (map[string]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.DocumentDB(a.Region.Data)

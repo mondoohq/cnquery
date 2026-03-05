@@ -84,6 +84,10 @@ func getServiceName(platformName string) string {
 		return "ec2"
 	case "aws-ecr-image":
 		return "ecr"
+	case "aws-elasticache-cluster":
+		return "elasticache"
+	case "aws-cloudfront-distribution":
+		return "cloudfront"
 	}
 	return "other"
 }
@@ -144,6 +148,10 @@ func getTitleForPlatformName(name string) string {
 		return "AWS EKS Cluster"
 	case "aws-secretsmanager-secret":
 		return "AWS Secrets Manager Secret"
+	case "aws-elasticache-cluster":
+		return "AWS ElastiCache Cluster"
+	case "aws-cloudfront-distribution":
+		return "AWS CloudFront Distribution"
 	}
 	return "Amazon Web Services"
 }

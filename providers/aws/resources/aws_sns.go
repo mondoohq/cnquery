@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"sync"
 
@@ -95,6 +96,7 @@ func (a *mqlAwsSns) getTopics(conn *connection.AwsConnection) []*jobpool.Job {
 				for _, topic := range topics.Topics {
 					mqlTopic, err := CreateResource(a.MqlRuntime, "aws.sns.topic",
 						map[string]*llx.RawData{
+							"__id":   llx.StringDataPtr(topic.TopicArn),
 							"arn":    llx.StringDataPtr(topic.TopicArn),
 							"region": llx.StringData(region),
 						},
@@ -227,14 +229,159 @@ func (a *mqlAwsSnsTopic) subscriptions() ([]any, error) {
 		for _, sub := range subsByTopic.Subscriptions {
 			mqlSub, err := CreateResource(a.MqlRuntime, "aws.sns.subscription",
 				map[string]*llx.RawData{
+					"__id":     llx.StringDataPtr(sub.SubscriptionArn),
 					"arn":      llx.StringDataPtr(sub.SubscriptionArn),
 					"protocol": llx.StringDataPtr(sub.Protocol),
+					"endpoint": llx.StringDataPtr(sub.Endpoint),
+					"owner":    llx.StringDataPtr(sub.Owner),
+					"region":   llx.StringData(regionVal),
 				})
 			if err != nil {
 				return nil, err
 			}
+			mqlSub.(*mqlAwsSnsSubscription).cacheTopicArn = sub.TopicArn
 			mqlSubs = append(mqlSubs, mqlSub)
 		}
 	}
 	return mqlSubs, nil
+}
+
+// Internal caching for subscription attributes
+type mqlAwsSnsSubscriptionInternal struct {
+	cacheTopicArn *string
+	fetched       bool
+	attrs         map[string]string
+	lock          sync.Mutex
+}
+
+func (a *mqlAwsSnsSubscription) topic() (*mqlAwsSnsTopic, error) {
+	if a.cacheTopicArn == nil || *a.cacheTopicArn == "" {
+		a.Topic.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlTopic, err := NewResource(a.MqlRuntime, "aws.sns.topic",
+		map[string]*llx.RawData{
+			"arn": llx.StringDataPtr(a.cacheTopicArn),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlTopic.(*mqlAwsSnsTopic), nil
+}
+
+func (a *mqlAwsSnsSubscription) fetchAttributes() (map[string]string, error) {
+	if a.fetched {
+		return a.attrs, nil
+	}
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	if a.fetched {
+		return a.attrs, nil
+	}
+
+	arnVal := a.Arn.Data
+	regionVal := a.Region.Data
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Sns(regionVal)
+	ctx := context.Background()
+
+	resp, err := svc.GetSubscriptionAttributes(ctx, &sns.GetSubscriptionAttributesInput{
+		SubscriptionArn: &arnVal,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	a.fetched = true
+	a.attrs = resp.Attributes
+	return a.attrs, nil
+}
+
+func (a *mqlAwsSnsSubscription) attributes() (any, error) {
+	attrs, err := a.fetchAttributes()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(attrs)
+}
+
+func (a *mqlAwsSnsSubscription) rawMessageDelivery() (bool, error) {
+	attrs, err := a.fetchAttributes()
+	if err != nil {
+		return false, err
+	}
+	return attrs["RawMessageDelivery"] == "true", nil
+}
+
+func (a *mqlAwsSnsSubscription) filterPolicy() (any, error) {
+	attrs, err := a.fetchAttributes()
+	if err != nil {
+		return nil, err
+	}
+	val, ok := attrs["FilterPolicy"]
+	if !ok || val == "" {
+		return nil, nil
+	}
+	var result map[string]any
+	if err := json.Unmarshal([]byte(val), &result); err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(result)
+}
+
+func (a *mqlAwsSnsSubscription) filterPolicyScope() (string, error) {
+	attrs, err := a.fetchAttributes()
+	if err != nil {
+		return "", err
+	}
+	return attrs["FilterPolicyScope"], nil
+}
+
+func (a *mqlAwsSnsSubscription) redrivePolicy() (any, error) {
+	attrs, err := a.fetchAttributes()
+	if err != nil {
+		return nil, err
+	}
+	val, ok := attrs["RedrivePolicy"]
+	if !ok || val == "" {
+		return nil, nil
+	}
+	var result map[string]any
+	if err := json.Unmarshal([]byte(val), &result); err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(result)
+}
+
+func (a *mqlAwsSnsSubscription) confirmationWasAuthenticated() (bool, error) {
+	attrs, err := a.fetchAttributes()
+	if err != nil {
+		return false, err
+	}
+	return attrs["ConfirmationWasAuthenticated"] == "true", nil
+}
+
+func (a *mqlAwsSnsSubscription) deliveryPolicy() (any, error) {
+	attrs, err := a.fetchAttributes()
+	if err != nil {
+		return nil, err
+	}
+	val, ok := attrs["DeliveryPolicy"]
+	if !ok || val == "" {
+		return nil, nil
+	}
+	var result map[string]any
+	if err := json.Unmarshal([]byte(val), &result); err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(result)
+}
+
+func (a *mqlAwsSnsSubscription) pendingConfirmation() (bool, error) {
+	attrs, err := a.fetchAttributes()
+	if err != nil {
+		return false, err
+	}
+	return attrs["PendingConfirmation"] == "true", nil
 }

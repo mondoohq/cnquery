@@ -85,6 +85,7 @@ func (c *mqlAwsCodedeploy) getApplicationResources(conn *connection.AwsConnectio
 					for _, appInfo := range appInfos.ApplicationsInfo {
 						arn := fmt.Sprintf(codeDeployApplicationPattern, reg, conn.AccountId(), aws.ToString(appInfo.ApplicationName))
 						args := map[string]*llx.RawData{
+							"__id":            llx.StringData(arn),
 							"applicationName": llx.StringDataPtr(appInfo.ApplicationName),
 							"applicationId":   llx.StringDataPtr(appInfo.ApplicationId),
 							"arn":             llx.StringData(arn),
@@ -160,6 +161,7 @@ func (a *mqlAwsCodedeployApplication) deploymentGroups() ([]any, error) {
 					a.Region.Data, conn.AccountId(), aws.ToString(dgInfo.ApplicationName), aws.ToString(dgInfo.DeploymentGroupName),
 				)
 				args := map[string]*llx.RawData{
+					"__id":                llx.StringData(arn),
 					"applicationName":     llx.StringDataPtr(dgInfo.ApplicationName),
 					"arn":                 llx.StringData(arn),
 					"deploymentGroupId":   llx.StringDataPtr(dgInfo.DeploymentGroupId),
@@ -396,6 +398,7 @@ func listDeployments(runtime *plugin.Runtime, region string, appName, dgName *st
 				)
 
 				args := map[string]*llx.RawData{
+					"__id":                          llx.StringData(syntheticArn),
 					"applicationName":               llx.StringDataPtr(depInfo.ApplicationName),
 					"deploymentId":                  llx.StringDataPtr(depInfo.DeploymentId),
 					"arn":                           llx.StringData(syntheticArn), // Or just depInfo.DeploymentId
@@ -447,6 +450,7 @@ func getDeploymentResource(runtime *plugin.Runtime, region string, appName, dgNa
 		region, conn.AccountId(), aws.ToString(depInfo.ApplicationName), aws.ToString(depInfo.DeploymentGroupName), aws.ToString(depInfo.DeploymentId))
 
 	args := map[string]*llx.RawData{
+		"__id":                          llx.StringData(syntheticArn),
 		"applicationName":               llx.StringDataPtr(depInfo.ApplicationName),
 		"deploymentId":                  llx.StringDataPtr(depInfo.DeploymentId),
 		"arn":                           llx.StringData(syntheticArn),
@@ -470,22 +474,30 @@ func getDeploymentResource(runtime *plugin.Runtime, region string, appName, dgNa
 }
 
 func initAwsCodedeployApplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	// This function allows querying for a specific application, e.g., by ARN or name + region.
-	// For now, we primarily discover all applications via the top-level aws.codedeploy.applications()
-	// If direct lookup is needed, implement logic here using GetApplication.
-	if arnVal, ok := args["arn"]; ok && arnVal != nil {
-		// Parse ARN for region and app name, then call GetApplication
-		// ...
-	} else if nameVal, nameOk := args["applicationName"]; nameOk && nameVal != nil {
-		if regionVal, regionOk := args["region"]; regionOk && regionVal != nil {
-			// Call GetApplication
-			// ...
-		} else {
-			return nil, nil, errors.New("region is required when fetching CodeDeploy application by name")
-		}
+	if len(args) > 2 {
+		return args, nil, nil
 	}
 
-	// If found, populate args and return (args, nil, nil) for the create function to use.
-	// If not found or not enough info for direct lookup, rely on list-based creation.
-	return args, nil, nil
+	if args["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch CodeDeploy application")
+	}
+
+	obj, err := CreateResource(runtime, "aws.codedeploy", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	cd := obj.(*mqlAwsCodedeploy)
+	rawResources := cd.GetApplications()
+	if rawResources.Error != nil {
+		return nil, nil, rawResources.Error
+	}
+
+	arnVal := args["arn"].Value.(string)
+	for _, r := range rawResources.Data {
+		app := r.(*mqlAwsCodedeployApplication)
+		if app.Arn.Data == arnVal {
+			return args, app, nil
+		}
+	}
+	return nil, nil, errors.New("codedeploy application does not exist")
 }

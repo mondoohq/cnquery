@@ -139,6 +139,90 @@ func newMqlAwsKinesisStream(runtime *plugin.Runtime, region string, svc *kinesis
 	return resource.(*mqlAwsKinesisStream), nil
 }
 
+func (a *mqlAwsKinesisStream) consumers() ([]any, error) {
+	arn := a.Arn.Data
+	region := a.Region.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Kinesis(region)
+	ctx := context.Background()
+	res := []any{}
+
+	paginator := kinesis.NewListStreamConsumersPaginator(svc, &kinesis.ListStreamConsumersInput{
+		StreamARN: &arn,
+	})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, consumer := range page.Consumers {
+			mqlConsumer, err := newMqlAwsKinesisStreamConsumer(a.MqlRuntime, region, consumer, arn)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlConsumer)
+		}
+	}
+	return res, nil
+}
+
+func newMqlAwsKinesisStreamConsumer(runtime *plugin.Runtime, region string, consumer kinesis_types.Consumer, streamArn string) (*mqlAwsKinesisStreamConsumer, error) {
+	resource, err := CreateResource(runtime, "aws.kinesis.streamConsumer",
+		map[string]*llx.RawData{
+			"__id":      llx.StringDataPtr(consumer.ConsumerARN),
+			"arn":       llx.StringDataPtr(consumer.ConsumerARN),
+			"name":      llx.StringDataPtr(consumer.ConsumerName),
+			"status":    llx.StringData(string(consumer.ConsumerStatus)),
+			"createdAt": llx.TimeDataPtr(consumer.ConsumerCreationTimestamp),
+			"region":    llx.StringData(region),
+		})
+	if err != nil {
+		return nil, err
+	}
+	mqlConsumer := resource.(*mqlAwsKinesisStreamConsumer)
+	mqlConsumer.cacheStreamArn = streamArn
+	return mqlConsumer, nil
+}
+
+type mqlAwsKinesisStreamConsumerInternal struct {
+	cacheStreamArn string
+}
+
+func (a *mqlAwsKinesisStreamConsumer) stream() (*mqlAwsKinesisStream, error) {
+	if a.cacheStreamArn == "" {
+		a.Stream.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlStream, err := NewResource(a.MqlRuntime, "aws.kinesis.stream",
+		map[string]*llx.RawData{
+			"arn": llx.StringData(a.cacheStreamArn),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlStream.(*mqlAwsKinesisStream), nil
+}
+
+// streamConsumers lists all enhanced fan-out consumers across all streams
+func (a *mqlAwsKinesis) streamConsumers() ([]any, error) {
+	streams := a.GetStreams()
+	if streams.Error != nil {
+		return nil, streams.Error
+	}
+
+	res := []any{}
+	for _, s := range streams.Data {
+		stream := s.(*mqlAwsKinesisStream)
+		consumers := stream.GetConsumers()
+		if consumers.Error != nil {
+			return nil, consumers.Error
+		}
+		res = append(res, consumers.Data...)
+	}
+	return res, nil
+}
+
 func (a *mqlAwsKinesisStream) tags() (map[string]interface{}, error) {
 	arn := a.Arn.Data
 	region := a.Region.Data

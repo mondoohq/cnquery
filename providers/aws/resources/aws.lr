@@ -219,7 +219,7 @@ private aws.vpc.subnet @defaults("id cidrs region availabilityZone defaultForAva
   defaultForAvailabilityZone bool
   // Whether a network interface created in this subnet (including a network interface created by RunInstances ) receives an IPv6 address
   assignIpv6AddressOnCreation bool
-  // State of the subnet: pending or available
+  // State of the subnet: pending, available, unavailable, failed, or failed-insufficient-capacity
   state string
   // Region in which the VPC subnet exists
   region string
@@ -379,7 +379,7 @@ private aws.waf.rule @defaults("name") {
 private aws.waf.rule.action @defaults("action") {
   // Name of the rule this action belongs to
   ruleName string
-  // One of Block, Allow, Count, Captcha, Challenge
+  // One of Block, Allow, Count, Captcha, Challenge, Excluded_as_Count
   action string
   // HTTP Response Code, only if the action is Block
   responseCode string
@@ -1052,7 +1052,7 @@ private aws.kms.key @defaults("id region aliases metadata.Description") {
   tags() map[string]string
   // Aliases for the KMS key
   aliases() []string
-  // Current state of the key: Enabled, Disabled, PendingDeletion, PendingImport, PendingReplicaDeletion, Unavailable, or Updating
+  // Current state of the key: Creating, Enabled, Disabled, PendingDeletion, PendingImport, PendingReplicaDeletion, Unavailable, or Updating
   keyState() string
   // When the key was created
   createdAt() time
@@ -1496,8 +1496,32 @@ private aws.sns.topic @defaults("arn") {
 private aws.sns.subscription @defaults("arn") {
   // ARN of the subscription
   arn string
-  // Protocol value for the subscription
+  // Protocol value for the subscription (http, https, email, email-json, sqs, lambda, application, sms, firehose)
   protocol string
+  // Subscription endpoint (URL, email, queue ARN, Lambda ARN, etc.)
+  endpoint string
+  // AWS account ID of the subscription owner
+  owner string
+  // Topic the subscription belongs to
+  topic() aws.sns.topic
+  // Region of the subscription
+  region string
+  // All subscription attributes
+  attributes() dict
+  // Whether raw message delivery is enabled (no SNS metadata wrapper)
+  rawMessageDelivery() bool
+  // Filter policy for message filtering
+  filterPolicy() dict
+  // Scope of the filter policy: MessageAttributes or MessageBody
+  filterPolicyScope() string
+  // Dead-letter queue configuration
+  redrivePolicy() dict
+  // Whether the subscription confirmation was authenticated
+  confirmationWasAuthenticated() bool
+  // Delivery policy for retries
+  deliveryPolicy() dict
+  // Whether the subscription is confirmed
+  pendingConfirmation() bool
 }
 
 // AWS Elasticsearch service
@@ -1890,7 +1914,7 @@ private aws.elb.listener @defaults("arn port protocol") {
   loadBalancerArn string
   // Port on which the listener listens
   port int
-  // Protocol for connections from clients to the load balancer (HTTP, HTTPS, TCP, TLS, UDP, TCP_UDP)
+  // Protocol for connections from clients to the load balancer (HTTP, HTTPS, TCP, TLS, UDP, TCP_UDP, GENEVE)
   protocol string
   // SSL policy for HTTPS/TLS listeners
   sslPolicy string
@@ -3158,7 +3182,7 @@ private aws.s3.bucket.websiteConfiguration.routingRule.conditionConf {
 // AWS Application Auto Scaling
 aws.applicationAutoscaling @defaults("namespace") {
   init(namespace string)
-  // Service namespace to query for application auto scaling: comprehend, rds, sagemaker, appstream, elasticmapreduce, dynamodb, lambda, ecs, cassandra, ec2, neptune, kafka, custom-resource, or elasticache
+  // Service namespace to query for application auto scaling: comprehend, rds, sagemaker, appstream, elasticmapreduce, dynamodb, lambda, ecs, cassandra, ec2, neptune, kafka, custom-resource, elasticache, or workspaces
   namespace string
   // List of scalable targets belonging to the service namespace
   scalableTargets() []aws.applicationAutoscaling.target
@@ -3648,6 +3672,8 @@ aws.rds {
   parameterGroups() []aws.rds.parameterGroup
   // List of all cluster parameter groups
   clusterParameterGroups() []aws.rds.clusterParameterGroup
+  // List of RDS proxies
+  proxies() []aws.rds.proxy
 }
 
 // Amazon RDS Backup Setting
@@ -3770,6 +3796,10 @@ aws.rds.dbcluster @defaults("id region engine engineVersion") {
   engineMode string
   // Earliest point-in-time restore timestamp
   earliestRestorableTime time
+  // KMS key used to encrypt the activity stream
+  activityStreamKmsKey() aws.kms.key
+  // Master user secret managed by Secrets Manager
+  masterUserSecret dict
 }
 
 // Amazon RDS snapshot
@@ -3916,6 +3946,10 @@ aws.rds.dbinstance @defaults("id region engine engineVersion") {
   dbClusterIdentifier string
   // Storage throughput in MiBps for gp3 volumes
   storageThroughput int
+  // KMS key used to encrypt the activity stream
+  activityStreamKmsKey() aws.kms.key
+  // Master user secret managed by Secrets Manager
+  masterUserSecret dict
 }
 
 // Amazon RDS pending maintenance action
@@ -4120,7 +4154,7 @@ private aws.redshift.cluster @defaults("dbName clusterVersion clusterStatus regi
   clusterParameterGroupNames []string
   // Specific revision number of the database in the cluster
   clusterRevisionNumber string
-  // Current state of this cluster: available, creating, deleting, rebooting, renaming, or resizing
+  // Current state of this cluster: available, cancelling-resize, creating, deleting, final-snapshot, hardware-failure, incompatible-hsm, incompatible-network, incompatible-parameters, incompatible-restore, modifying, paused, rebooting, renaming, resizing, rotating-keys, storage-full, or updating-hsm
   clusterStatus string
   // Name of the subnet group associated with the cluster
   clusterSubnetGroupName string
@@ -4491,6 +4525,16 @@ private aws.ecr.repository @defaults("uri region") {
   scanningFrequency() string
   // Lifecycle policy for the repository
   lifecyclePolicy() aws.ecr.lifecyclePolicy
+  // About text from catalog data (public repositories only)
+  aboutText() string
+  // Usage text from catalog data (public repositories only)
+  usageText() string
+  // Short description from catalog data (public repositories only)
+  catalogDescription() string
+  // Operating systems from catalog data (public repositories only)
+  operatingSystems() []string
+  // Architectures from catalog data (public repositories only)
+  architectures() []string
 }
 
 // AWS ECR repository lifecycle policy
@@ -4697,6 +4741,8 @@ private aws.lambda.function @defaults("arn") {
   stateReason string
   // Status of the last function update (Successful, Failed, InProgress)
   lastUpdateStatus string
+  // Reason for the last update status
+  lastUpdateStatusReason string
   // KMS key ARN used to encrypt environment variables
   // Deprecated: use kmsKey() instead
   kmsKeyArn string
@@ -5390,7 +5436,7 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   enclaveEnabled bool
   // Patch state information about the instance
   patchState() dict
-  // State of the instance: pending, running, stopping, stopped, rebooting, or terminated
+  // State of the instance: pending, running, shutting-down, stopping, stopped, or terminated
   state string
   // List of devices attached to the instance (such as EBS volume)
   deviceMappings []aws.ec2.instance.device
@@ -5460,7 +5506,7 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   cpuThreadsPerCore int
   // Whether the instance is enabled for hibernation
   hibernationConfigured bool
-  // Auto recovery behavior: undefined, default, or disabled
+  // Auto recovery behavior: default or disabled
   maintenanceAutoRecovery string
   // Current boot mode of the instance: undefined, legacy-bios, uefi, or uefi-preferred
   currentInstanceBootMode string
@@ -6139,6 +6185,8 @@ aws.documentdb @defaults("clusters") {
   clusters() []aws.documentdb.cluster
   // List of DocumentDB instances
   instances() []aws.documentdb.instance
+  // List of DocumentDB cluster snapshots
+  snapshots() []aws.documentdb.snapshot
 }
 
 // Amazon DocumentDB cluster
@@ -6195,6 +6243,8 @@ private aws.documentdb.cluster @defaults("arn name status") {
   storageType string
   // Tags for the cluster
   tags() map[string]string
+  // Snapshots for this cluster
+  snapshots() []aws.documentdb.snapshot
 }
 
 // Amazon DocumentDB instance
@@ -6241,6 +6291,44 @@ private aws.documentdb.instance @defaults("arn name status") {
   certificateAuthority string
   // Tags for the instance
   tags() map[string]string
+}
+
+// Amazon DocumentDB cluster snapshot
+private aws.documentdb.snapshot @defaults("arn status createdAt") {
+  // Snapshot ARN
+  arn string
+  // Snapshot identifier
+  id string
+  // DB cluster identifier
+  clusterIdentifier string
+  // Database engine name
+  engine string
+  // Database engine version
+  engineVersion string
+  // Snapshot status
+  status string
+  // Snapshot type (manual or automated)
+  snapshotType string
+  // Port the database engine was listening on at the time of the snapshot
+  port int
+  // Whether the snapshot is encrypted
+  storageEncrypted bool
+  // Storage type
+  storageType string
+  // KMS key used for the encrypted snapshot
+  kmsKey() aws.kms.key
+  // Availability zones for the snapshot
+  availabilityZones []string
+  // VPC associated with the snapshot
+  vpc() aws.vpc
+  // Percentage progress of the snapshot
+  percentProgress int
+  // Time the snapshot was taken
+  createdAt time
+  // Time the DB cluster was created
+  clusterCreatedAt time
+  // Region where the snapshot exists
+  region string
 }
 
 // Amazon Timestream for LiveAnalytics
@@ -6370,7 +6458,7 @@ private aws.codedeploy.deployment @defaults("deploymentId status applicationName
   deploymentId string
   // ARN of the deployment (Note: Deployments themselves don't have ARNs, this will be a synthetic ID or the deploymentId itself)
   arn string
-  // Status of the deployment (Created, Queued, InProgress, Succeeded, Failed, Stopped, Ready)
+  // Status of the deployment (Created, Queued, InProgress, Baking, Succeeded, Failed, Stopped, Ready)
   status string
   // Deployment group name
   deploymentGroupName string
@@ -6570,6 +6658,10 @@ private aws.appstream.imageBuilder @defaults("name state platform region") {
 aws.athena @defaults("workgroups") {
   // List of Athena workgroups
   workgroups() []aws.athena.workgroup
+  // List of Athena data catalogs
+  dataCatalogs() []aws.athena.dataCatalog
+  // List of Athena named (saved) queries
+  namedQueries() []aws.athena.namedQuery
 }
 
 // Amazon Athena workgroup
@@ -6600,6 +6692,44 @@ private aws.athena.workgroup @defaults("name state region") {
   region string
   // Tags for the workgroup
   tags() map[string]string
+}
+
+// Amazon Athena data catalog
+private aws.athena.dataCatalog @defaults("name type region") {
+  // Name of the data catalog
+  name string
+  // Type of data catalog: LAMBDA, GLUE, HIVE, or FEDERATED
+  type string
+  // Description of the data catalog
+  description() string
+  // Parameters for the data catalog (e.g., Lambda ARN, Glue catalog ID)
+  parameters() map[string]string
+  // Status of the data catalog: CREATE_IN_PROGRESS, CREATE_COMPLETE, CREATE_FAILED, etc.
+  status string
+  // Connection type for FEDERATED catalogs
+  connectionType string
+  // Error message if creation/deletion failed
+  error string
+  // Region where the data catalog exists
+  region string
+}
+
+// Amazon Athena named (saved) query
+private aws.athena.namedQuery @defaults("name database region") {
+  // Unique identifier of the named query
+  id string
+  // Name of the named query
+  name string
+  // Database to which the query belongs
+  database string
+  // SQL query string
+  queryString string
+  // Description of the named query
+  description string
+  // Workgroup the named query belongs to
+  workGroup string
+  // Region where the named query exists
+  region string
 }
 
 // AWS Directory Service
@@ -6932,6 +7062,8 @@ aws.kinesis @defaults("streams") {
   streams() []aws.kinesis.stream
   // List of Kinesis Firehose delivery streams
   firehoseDeliveryStreams() []aws.kinesis.firehoseDeliveryStream
+  // List of all enhanced fan-out consumers across all streams
+  streamConsumers() []aws.kinesis.streamConsumer
 }
 
 // Amazon Kinesis data stream
@@ -6962,6 +7094,24 @@ private aws.kinesis.stream @defaults("name status region") {
   region string
   // Tags for the stream
   tags() map[string]string
+  // Enhanced fan-out consumers registered with the stream
+  consumers() []aws.kinesis.streamConsumer
+}
+
+// Amazon Kinesis enhanced fan-out stream consumer
+private aws.kinesis.streamConsumer @defaults("name status") {
+  // ARN of the consumer
+  arn string
+  // Name of the consumer
+  name string
+  // Current status of the consumer: CREATING, ACTIVE, or DELETING
+  status string
+  // Date and time the consumer was created
+  createdAt time
+  // Stream the consumer is registered with
+  stream() aws.kinesis.stream
+  // Region where the consumer exists
+  region string
 }
 
 // Amazon Kinesis Firehose delivery stream
@@ -6992,6 +7142,14 @@ private aws.kinesis.firehoseDeliveryStream @defaults("name status region") {
 aws.memorydb @defaults("clusters") {
   // List of MemoryDB clusters
   clusters() []aws.memorydb.cluster
+  // List of MemoryDB access control lists
+  acls() []aws.memorydb.acl
+  // List of MemoryDB users
+  users() []aws.memorydb.user
+  // List of MemoryDB snapshots
+  snapshots() []aws.memorydb.snapshot
+  // List of MemoryDB subnet groups
+  subnetGroups() []aws.memorydb.subnetGroup
 }
 
 // Amazon MemoryDB cluster
@@ -7002,7 +7160,7 @@ private aws.memorydb.cluster @defaults("name status nodeType region") {
   name string
   // Description of the cluster
   description string
-  // Current status of the cluster: available, creating, updating, deleting, or snapshotting
+  // Current status of the cluster: available, creating, deleted, deleting, incompatible-network, modifying, rebooting cluster nodes, restore-failed, or snapshotting
   status string
   // Node type for the nodes in the cluster
   nodeType string
@@ -7038,6 +7196,88 @@ private aws.memorydb.cluster @defaults("name status nodeType region") {
   tags() map[string]string
   // Security groups associated with the cluster
   securityGroups() []aws.ec2.securitygroup
+}
+
+// Amazon MemoryDB access control list
+private aws.memorydb.acl @defaults("name status") {
+  // ARN of the ACL
+  arn string
+  // Name of the ACL
+  name string
+  // Current status of the ACL: creating, active, modifying, or deleting
+  status string
+  // List of user names associated with the ACL
+  userNames []string
+  // List of cluster names associated with the ACL
+  clusters []string
+  // Minimum engine version supported by the ACL
+  minimumEngineVersion string
+  // Region where the ACL exists
+  region string
+  // Tags for the ACL
+  tags() map[string]string
+}
+
+// Amazon MemoryDB user
+private aws.memorydb.user @defaults("name status") {
+  // ARN of the user
+  arn string
+  // Name of the user
+  name string
+  // Current status of the user: active, modifying, or deleting
+  status string
+  // Access permissions string for the user
+  accessString string
+  // List of ACL names the user belongs to
+  aclNames []string
+  // Minimum engine version supported by the user
+  minimumEngineVersion string
+  // Authentication configuration
+  authentication dict
+  // Region where the user exists
+  region string
+  // Tags for the user
+  tags() map[string]string
+}
+
+// Amazon MemoryDB snapshot
+private aws.memorydb.snapshot @defaults("name status") {
+  // ARN of the snapshot
+  arn string
+  // Name of the snapshot
+  name string
+  // Current status of the snapshot: creating, available, restoring, copying, or deleting
+  status string
+  // Whether the snapshot is from an automatic backup (automated) or was created manually (manual)
+  source string
+  // KMS key used for the encrypted snapshot
+  kmsKey() aws.kms.key
+  // Cluster configuration at the time of the snapshot
+  clusterConfiguration dict
+  // Data tiering status: true or false
+  dataTiering string
+  // Region where the snapshot exists
+  region string
+  // Tags for the snapshot
+  tags() map[string]string
+}
+
+// Amazon MemoryDB subnet group
+private aws.memorydb.subnetGroup @defaults("name") {
+  // ARN of the subnet group
+  arn string
+  // Name of the subnet group
+  name string
+  // Description of the subnet group
+  description string
+  // VPC in which the subnet group exists
+  vpc() aws.vpc
+  // Subnets in the subnet group
+  subnets() []aws.vpc.subnet
+  // Region where the subnet group exists
+  region string
+  // Tags for the subnet group
+  tags() map[string]string
 }
 
 // Amazon Timestream for InfluxDB
@@ -7143,6 +7383,8 @@ private aws.timestream.influxdb.cluster @defaults("arn name status") {
   // Tags for the DB cluster
   tags() map[string]string
 }
+
+
 // AWS Glue
 aws.glue @defaults("crawlers") {
   // List of Glue crawlers
@@ -7372,6 +7614,44 @@ private aws.elasticbeanstalk.environment @defaults("arn name status") {
   // Version label
   versionLabel string
   // Tags for the environment
+  tags() map[string]string
+}
+
+// Amazon RDS database proxy
+private aws.rds.proxy @defaults("arn name status") {
+  // ARN of the DB proxy
+  arn string
+  // Name of the DB proxy
+  name string
+  // Region of the DB proxy
+  region string
+  // Whether debug logging is enabled
+  debugLogging bool
+  // Endpoint for the DB proxy
+  endpoint string
+  // Network type of the DB proxy endpoint: IPV4, IPV6, or DUAL
+  endpointNetworkType string
+  // Database engine family: MYSQL, POSTGRESQL, or SQLSERVER
+  engineFamily string
+  // Number of seconds a connection can be idle before being dropped
+  idleClientTimeout int
+  // Whether TLS encryption is required
+  requireTLS bool
+  // IAM role used to access Secrets Manager
+  iamRole() aws.iam.role
+  // Current status of the proxy: available, modifying, incompatible-network, insufficient-resource-limits, creating, deleting, suspended, suspending, or reactivating
+  status string
+  // VPC associated with the DB proxy
+  vpc() aws.vpc
+  // Security groups associated with the DB proxy
+  securityGroups() []aws.ec2.securitygroup
+  // Subnets associated with the DB proxy
+  subnets() []aws.vpc.subnet
+  // Date the proxy was created
+  createdAt time
+  // Date the proxy was last updated
+  updatedAt time
+  // Tags for the proxy
   tags() map[string]string
 }
 

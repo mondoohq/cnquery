@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
@@ -67,9 +68,6 @@ func (a *mqlAwsElasticache) getCacheClusters(conn *connection.AwsConnection) []*
 						return res, nil
 					}
 					return nil, err
-				}
-				if len(clusters.CacheClusters) == 0 {
-					return nil, nil
 				}
 				for _, cluster := range clusters.CacheClusters {
 					mqlCluster, err := newMqlAwsElasticacheCluster(a.MqlRuntime, region, conn.AccountId(), cluster)
@@ -209,9 +207,6 @@ func (a *mqlAwsElasticache) getServerlessCaches(conn *connection.AwsConnection) 
 					}
 					return nil, err
 				}
-				if len(caches.ServerlessCaches) == 0 {
-					return nil, nil
-				}
 				for _, cache := range caches.ServerlessCaches {
 					mqlCache, err := newMqlAwsElasticacheServerlessCache(a.MqlRuntime, region, conn.AccountId(), cache)
 					if err != nil {
@@ -304,4 +299,44 @@ func (a *mqlAwsElasticacheServerlessCache) subnets() ([]any, error) {
 		res = append(res, mqlSubnet)
 	}
 	return res, nil
+}
+
+func initAwsElasticacheCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["cacheClusterId"] = llx.StringData(ids.name)
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
+
+	if args["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch elasticache cluster")
+	}
+
+	obj, err := CreateResource(runtime, "aws.elasticache", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	ec := obj.(*mqlAwsElasticache)
+	rawResources := ec.GetCacheClusters()
+	if rawResources.Error != nil {
+		return nil, nil, rawResources.Error
+	}
+
+	arnVal, ok := args["arn"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("arn must be a string")
+	}
+	for _, rawResource := range rawResources.Data {
+		cluster := rawResource.(*mqlAwsElasticacheCluster)
+		if cluster.Arn.Data == arnVal {
+			return args, cluster, nil
+		}
+	}
+	return nil, nil, errors.New("elasticache cluster does not exist")
 }

@@ -216,6 +216,14 @@ func getPlatformName(awsObject awsObject) string {
 		if awsObject.objectType == "domain" {
 			return "aws-opensearch-domain"
 		}
+	case "elasticache":
+		if awsObject.objectType == "cluster" {
+			return "aws-elasticache-cluster"
+		}
+	case "cloudfront":
+		if awsObject.objectType == "distribution" {
+			return "aws-cloudfront-distribution"
+		}
 	}
 	return ""
 }
