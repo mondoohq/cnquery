@@ -341,6 +341,16 @@ const (
 	ResourceAwsTimestreamInfluxdb                                               string = "aws.timestream.influxdb"
 	ResourceAwsTimestreamInfluxdbInstance                                       string = "aws.timestream.influxdb.instance"
 	ResourceAwsTimestreamInfluxdbCluster                                        string = "aws.timestream.influxdb.cluster"
+	ResourceAwsGlue                                                             string = "aws.glue"
+	ResourceAwsGlueCrawler                                                      string = "aws.glue.crawler"
+	ResourceAwsGlueJob                                                          string = "aws.glue.job"
+	ResourceAwsGlueSecurityConfiguration                                        string = "aws.glue.securityConfiguration"
+	ResourceAwsGlueDatabase                                                     string = "aws.glue.database"
+	ResourceAwsGlueDatabaseTable                                                string = "aws.glue.database.table"
+	ResourceAwsElasticbeanstalk                                                 string = "aws.elasticbeanstalk"
+	ResourceAwsElasticbeanstalkApplication                                      string = "aws.elasticbeanstalk.application"
+	ResourceAwsElasticbeanstalkEnvironment                                      string = "aws.elasticbeanstalk.environment"
+	ResourceAwsGlueWorkflow                                                     string = "aws.glue.workflow"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -1642,6 +1652,46 @@ func init() {
 		"aws.timestream.influxdb.cluster": {
 			// to override args, implement: initAwsTimestreamInfluxdbCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsTimestreamInfluxdbCluster,
+		},
+		"aws.glue": {
+			// to override args, implement: initAwsGlue(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsGlue,
+		},
+		"aws.glue.crawler": {
+			// to override args, implement: initAwsGlueCrawler(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsGlueCrawler,
+		},
+		"aws.glue.job": {
+			// to override args, implement: initAwsGlueJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsGlueJob,
+		},
+		"aws.glue.securityConfiguration": {
+			// to override args, implement: initAwsGlueSecurityConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsGlueSecurityConfiguration,
+		},
+		"aws.glue.database": {
+			// to override args, implement: initAwsGlueDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsGlueDatabase,
+		},
+		"aws.glue.database.table": {
+			// to override args, implement: initAwsGlueDatabaseTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsGlueDatabaseTable,
+		},
+		"aws.elasticbeanstalk": {
+			// to override args, implement: initAwsElasticbeanstalk(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsElasticbeanstalk,
+		},
+		"aws.elasticbeanstalk.application": {
+			// to override args, implement: initAwsElasticbeanstalkApplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsElasticbeanstalkApplication,
+		},
+		"aws.elasticbeanstalk.environment": {
+			// to override args, implement: initAwsElasticbeanstalkEnvironment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsElasticbeanstalkEnvironment,
+		},
+		"aws.glue.workflow": {
+			// to override args, implement: initAwsGlueWorkflow(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsGlueWorkflow,
 		},
 	}
 }
@@ -10440,6 +10490,324 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.timestream.influxdb.cluster.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.glue.crawlers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlue).GetCrawlers()).ToDataRes(types.Array(types.Resource("aws.glue.crawler")))
+	},
+	"aws.glue.jobs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlue).GetJobs()).ToDataRes(types.Array(types.Resource("aws.glue.job")))
+	},
+	"aws.glue.securityConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlue).GetSecurityConfigurations()).ToDataRes(types.Array(types.Resource("aws.glue.securityConfiguration")))
+	},
+	"aws.glue.databases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlue).GetDatabases()).ToDataRes(types.Array(types.Resource("aws.glue.database")))
+	},
+	"aws.glue.catalogEncryptionSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlue).GetCatalogEncryptionSettings()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.glue.workflows": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlue).GetWorkflows()).ToDataRes(types.Array(types.Resource("aws.glue.workflow")))
+	},
+	"aws.glue.crawler.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueCrawler).GetName()).ToDataRes(types.String)
+	},
+	"aws.glue.crawler.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueCrawler).GetArn()).ToDataRes(types.String)
+	},
+	"aws.glue.crawler.role": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueCrawler).GetRole()).ToDataRes(types.String)
+	},
+	"aws.glue.crawler.databaseName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueCrawler).GetDatabaseName()).ToDataRes(types.String)
+	},
+	"aws.glue.crawler.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueCrawler).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.glue.crawler.targets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueCrawler).GetTargets()).ToDataRes(types.Dict)
+	},
+	"aws.glue.crawler.schedule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueCrawler).GetSchedule()).ToDataRes(types.String)
+	},
+	"aws.glue.crawler.classifiers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueCrawler).GetClassifiers()).ToDataRes(types.Array(types.String))
+	},
+	"aws.glue.crawler.schemaChangePolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueCrawler).GetSchemaChangePolicy()).ToDataRes(types.Dict)
+	},
+	"aws.glue.crawler.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueCrawler).GetState()).ToDataRes(types.String)
+	},
+	"aws.glue.crawler.configuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueCrawler).GetConfiguration()).ToDataRes(types.String)
+	},
+	"aws.glue.crawler.securityConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueCrawler).GetSecurityConfiguration()).ToDataRes(types.String)
+	},
+	"aws.glue.crawler.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueCrawler).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.glue.crawler.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueCrawler).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.glue.crawler.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueCrawler).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.glue.crawler.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueCrawler).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.glue.job.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueJob).GetName()).ToDataRes(types.String)
+	},
+	"aws.glue.job.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueJob).GetArn()).ToDataRes(types.String)
+	},
+	"aws.glue.job.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueJob).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.glue.job.role": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueJob).GetRole()).ToDataRes(types.String)
+	},
+	"aws.glue.job.command": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueJob).GetCommand()).ToDataRes(types.Dict)
+	},
+	"aws.glue.job.maxRetries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueJob).GetMaxRetries()).ToDataRes(types.Int)
+	},
+	"aws.glue.job.timeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueJob).GetTimeout()).ToDataRes(types.Int)
+	},
+	"aws.glue.job.glueVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueJob).GetGlueVersion()).ToDataRes(types.String)
+	},
+	"aws.glue.job.numberOfWorkers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueJob).GetNumberOfWorkers()).ToDataRes(types.Int)
+	},
+	"aws.glue.job.workerType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueJob).GetWorkerType()).ToDataRes(types.String)
+	},
+	"aws.glue.job.maxCapacity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueJob).GetMaxCapacity()).ToDataRes(types.Float)
+	},
+	"aws.glue.job.connections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueJob).GetConnections()).ToDataRes(types.Array(types.String))
+	},
+	"aws.glue.job.defaultArguments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueJob).GetDefaultArguments()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.glue.job.securityConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueJob).GetSecurityConfiguration()).ToDataRes(types.String)
+	},
+	"aws.glue.job.executionClass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueJob).GetExecutionClass()).ToDataRes(types.String)
+	},
+	"aws.glue.job.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueJob).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.glue.job.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueJob).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.glue.job.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueJob).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.glue.job.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueJob).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.glue.securityConfiguration.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueSecurityConfiguration).GetName()).ToDataRes(types.String)
+	},
+	"aws.glue.securityConfiguration.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueSecurityConfiguration).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.glue.securityConfiguration.s3Encryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueSecurityConfiguration).GetS3Encryption()).ToDataRes(types.Dict)
+	},
+	"aws.glue.securityConfiguration.cloudWatchEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueSecurityConfiguration).GetCloudWatchEncryption()).ToDataRes(types.Dict)
+	},
+	"aws.glue.securityConfiguration.jobBookmarksEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueSecurityConfiguration).GetJobBookmarksEncryption()).ToDataRes(types.Dict)
+	},
+	"aws.glue.securityConfiguration.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueSecurityConfiguration).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.glue.database.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueDatabase).GetName()).ToDataRes(types.String)
+	},
+	"aws.glue.database.catalogId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueDatabase).GetCatalogId()).ToDataRes(types.String)
+	},
+	"aws.glue.database.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueDatabase).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.glue.database.locationUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueDatabase).GetLocationUri()).ToDataRes(types.String)
+	},
+	"aws.glue.database.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueDatabase).GetParameters()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.glue.database.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueDatabase).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.glue.database.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueDatabase).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.glue.database.tables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueDatabase).GetTables()).ToDataRes(types.Array(types.Resource("aws.glue.database.table")))
+	},
+	"aws.glue.database.table.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueDatabaseTable).GetName()).ToDataRes(types.String)
+	},
+	"aws.glue.database.table.databaseName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueDatabaseTable).GetDatabaseName()).ToDataRes(types.String)
+	},
+	"aws.glue.database.table.catalogId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueDatabaseTable).GetCatalogId()).ToDataRes(types.String)
+	},
+	"aws.glue.database.table.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueDatabaseTable).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.glue.database.table.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueDatabaseTable).GetOwner()).ToDataRes(types.String)
+	},
+	"aws.glue.database.table.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueDatabaseTable).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.glue.database.table.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueDatabaseTable).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.glue.database.table.lastAccessedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueDatabaseTable).GetLastAccessedAt()).ToDataRes(types.Time)
+	},
+	"aws.glue.database.table.retention": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueDatabaseTable).GetRetention()).ToDataRes(types.Int)
+	},
+	"aws.glue.database.table.storageDescriptor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueDatabaseTable).GetStorageDescriptor()).ToDataRes(types.Dict)
+	},
+	"aws.glue.database.table.tableType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueDatabaseTable).GetTableType()).ToDataRes(types.String)
+	},
+	"aws.glue.database.table.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueDatabaseTable).GetParameters()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.glue.database.table.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueDatabaseTable).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"aws.glue.database.table.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueDatabaseTable).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.applications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalk).GetApplications()).ToDataRes(types.Array(types.Resource("aws.elasticbeanstalk.application")))
+	},
+	"aws.elasticbeanstalk.environments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalk).GetEnvironments()).ToDataRes(types.Array(types.Resource("aws.elasticbeanstalk.environment")))
+	},
+	"aws.elasticbeanstalk.application.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkApplication).GetArn()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.application.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkApplication).GetName()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.application.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkApplication).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.application.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkApplication).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.application.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkApplication).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.elasticbeanstalk.application.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkApplication).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.elasticbeanstalk.application.configurationTemplates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkApplication).GetConfigurationTemplates()).ToDataRes(types.Array(types.String))
+	},
+	"aws.elasticbeanstalk.application.versions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkApplication).GetVersions()).ToDataRes(types.Array(types.String))
+	},
+	"aws.elasticbeanstalk.application.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkApplication).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.elasticbeanstalk.environment.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkEnvironment).GetArn()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.environment.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkEnvironment).GetName()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.environment.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkEnvironment).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.environment.applicationName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkEnvironment).GetApplicationName()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.environment.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkEnvironment).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.environment.environmentId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkEnvironment).GetEnvironmentId()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.environment.platformArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkEnvironment).GetPlatformArn()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.environment.solutionStackName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkEnvironment).GetSolutionStackName()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.environment.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkEnvironment).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.environment.health": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkEnvironment).GetHealth()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.environment.healthStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkEnvironment).GetHealthStatus()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.environment.cname": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkEnvironment).GetCname()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.environment.endpointUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkEnvironment).GetEndpointUrl()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.environment.tier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkEnvironment).GetTier()).ToDataRes(types.Dict)
+	},
+	"aws.elasticbeanstalk.environment.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkEnvironment).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.elasticbeanstalk.environment.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkEnvironment).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.elasticbeanstalk.environment.versionLabel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkEnvironment).GetVersionLabel()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.environment.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkEnvironment).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.glue.workflow.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueWorkflow).GetName()).ToDataRes(types.String)
+	},
+	"aws.glue.workflow.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueWorkflow).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.glue.workflow.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueWorkflow).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.glue.workflow.defaultRunProperties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueWorkflow).GetDefaultRunProperties()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.glue.workflow.maxConcurrentRuns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueWorkflow).GetMaxConcurrentRuns()).ToDataRes(types.Int)
+	},
+	"aws.glue.workflow.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueWorkflow).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.glue.workflow.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueWorkflow).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.glue.workflow.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueWorkflow).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 }
 
@@ -23371,6 +23739,470 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.timestream.influxdb.cluster.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsTimestreamInfluxdbCluster).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.glue.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlue).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.glue.crawlers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlue).Crawlers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.glue.jobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlue).Jobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.glue.securityConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlue).SecurityConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.glue.databases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlue).Databases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.glue.catalogEncryptionSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlue).CatalogEncryptionSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.glue.workflows": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlue).Workflows, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.glue.crawler.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueCrawler).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.glue.crawler.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueCrawler).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.crawler.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueCrawler).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.crawler.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueCrawler).Role, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.crawler.databaseName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueCrawler).DatabaseName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.crawler.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueCrawler).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.crawler.targets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueCrawler).Targets, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.glue.crawler.schedule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueCrawler).Schedule, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.crawler.classifiers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueCrawler).Classifiers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.glue.crawler.schemaChangePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueCrawler).SchemaChangePolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.glue.crawler.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueCrawler).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.crawler.configuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueCrawler).Configuration, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.crawler.securityConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueCrawler).SecurityConfiguration, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.crawler.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueCrawler).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.glue.crawler.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueCrawler).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.glue.crawler.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueCrawler).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.crawler.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueCrawler).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.glue.job.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueJob).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.glue.job.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueJob).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.job.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueJob).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.job.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueJob).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.job.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueJob).Role, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.job.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueJob).Command, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.glue.job.maxRetries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueJob).MaxRetries, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.glue.job.timeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueJob).Timeout, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.glue.job.glueVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueJob).GlueVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.job.numberOfWorkers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueJob).NumberOfWorkers, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.glue.job.workerType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueJob).WorkerType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.job.maxCapacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueJob).MaxCapacity, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"aws.glue.job.connections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueJob).Connections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.glue.job.defaultArguments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueJob).DefaultArguments, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.glue.job.securityConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueJob).SecurityConfiguration, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.job.executionClass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueJob).ExecutionClass, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.job.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueJob).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.glue.job.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueJob).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.glue.job.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueJob).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.job.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueJob).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.glue.securityConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueSecurityConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.glue.securityConfiguration.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueSecurityConfiguration).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.securityConfiguration.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueSecurityConfiguration).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.glue.securityConfiguration.s3Encryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueSecurityConfiguration).S3Encryption, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.glue.securityConfiguration.cloudWatchEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueSecurityConfiguration).CloudWatchEncryption, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.glue.securityConfiguration.jobBookmarksEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueSecurityConfiguration).JobBookmarksEncryption, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.glue.securityConfiguration.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueSecurityConfiguration).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.database.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueDatabase).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.glue.database.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueDatabase).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.database.catalogId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueDatabase).CatalogId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.database.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueDatabase).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.database.locationUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueDatabase).LocationUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.database.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueDatabase).Parameters, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.glue.database.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueDatabase).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.glue.database.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueDatabase).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.database.tables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueDatabase).Tables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.glue.database.table.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueDatabaseTable).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.glue.database.table.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueDatabaseTable).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.database.table.databaseName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueDatabaseTable).DatabaseName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.database.table.catalogId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueDatabaseTable).CatalogId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.database.table.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueDatabaseTable).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.database.table.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueDatabaseTable).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.database.table.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueDatabaseTable).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.glue.database.table.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueDatabaseTable).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.glue.database.table.lastAccessedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueDatabaseTable).LastAccessedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.glue.database.table.retention": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueDatabaseTable).Retention, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.glue.database.table.storageDescriptor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueDatabaseTable).StorageDescriptor, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.glue.database.table.tableType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueDatabaseTable).TableType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.database.table.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueDatabaseTable).Parameters, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.glue.database.table.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueDatabaseTable).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.database.table.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueDatabaseTable).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalk).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.elasticbeanstalk.applications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalk).Applications, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.environments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalk).Environments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.application.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkApplication).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.elasticbeanstalk.application.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkApplication).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.application.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkApplication).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.application.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkApplication).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.application.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkApplication).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.application.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkApplication).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.application.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkApplication).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.application.configurationTemplates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkApplication).ConfigurationTemplates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.application.versions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkApplication).Versions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.application.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkApplication).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.environment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkEnvironment).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.elasticbeanstalk.environment.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkEnvironment).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.environment.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkEnvironment).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.environment.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkEnvironment).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.environment.applicationName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkEnvironment).ApplicationName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.environment.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkEnvironment).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.environment.environmentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkEnvironment).EnvironmentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.environment.platformArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkEnvironment).PlatformArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.environment.solutionStackName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkEnvironment).SolutionStackName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.environment.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkEnvironment).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.environment.health": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkEnvironment).Health, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.environment.healthStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkEnvironment).HealthStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.environment.cname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkEnvironment).Cname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.environment.endpointUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkEnvironment).EndpointUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.environment.tier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkEnvironment).Tier, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.environment.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkEnvironment).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.environment.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkEnvironment).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.environment.versionLabel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkEnvironment).VersionLabel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.environment.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkEnvironment).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.glue.workflow.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueWorkflow).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.glue.workflow.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueWorkflow).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.workflow.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueWorkflow).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.workflow.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueWorkflow).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.workflow.defaultRunProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueWorkflow).DefaultRunProperties, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.glue.workflow.maxConcurrentRuns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueWorkflow).MaxConcurrentRuns, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.glue.workflow.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueWorkflow).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.glue.workflow.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueWorkflow).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.glue.workflow.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueWorkflow).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 }
@@ -56509,6 +57341,1044 @@ func (c *mqlAwsTimestreamInfluxdbCluster) GetFailoverMode() *plugin.TValue[strin
 }
 
 func (c *mqlAwsTimestreamInfluxdbCluster) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsGlue for the aws.glue resource
+type mqlAwsGlue struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsGlueInternal it will be used here
+	Crawlers                  plugin.TValue[[]any]
+	Jobs                      plugin.TValue[[]any]
+	SecurityConfigurations    plugin.TValue[[]any]
+	Databases                 plugin.TValue[[]any]
+	CatalogEncryptionSettings plugin.TValue[[]any]
+	Workflows                 plugin.TValue[[]any]
+}
+
+// createAwsGlue creates a new instance of this resource
+func createAwsGlue(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsGlue{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.glue", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsGlue) MqlName() string {
+	return "aws.glue"
+}
+
+func (c *mqlAwsGlue) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsGlue) GetCrawlers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Crawlers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.glue", c.__id, "crawlers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.crawlers()
+	})
+}
+
+func (c *mqlAwsGlue) GetJobs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Jobs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.glue", c.__id, "jobs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.jobs()
+	})
+}
+
+func (c *mqlAwsGlue) GetSecurityConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityConfigurations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.glue", c.__id, "securityConfigurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityConfigurations()
+	})
+}
+
+func (c *mqlAwsGlue) GetDatabases() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Databases, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.glue", c.__id, "databases")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.databases()
+	})
+}
+
+func (c *mqlAwsGlue) GetCatalogEncryptionSettings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CatalogEncryptionSettings, func() ([]any, error) {
+		return c.catalogEncryptionSettings()
+	})
+}
+
+func (c *mqlAwsGlue) GetWorkflows() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Workflows, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.glue", c.__id, "workflows")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.workflows()
+	})
+}
+
+// mqlAwsGlueCrawler for the aws.glue.crawler resource
+type mqlAwsGlueCrawler struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsGlueCrawlerInternal it will be used here
+	Name                  plugin.TValue[string]
+	Arn                   plugin.TValue[string]
+	Role                  plugin.TValue[string]
+	DatabaseName          plugin.TValue[string]
+	Description           plugin.TValue[string]
+	Targets               plugin.TValue[any]
+	Schedule              plugin.TValue[string]
+	Classifiers           plugin.TValue[[]any]
+	SchemaChangePolicy    plugin.TValue[any]
+	State                 plugin.TValue[string]
+	Configuration         plugin.TValue[string]
+	SecurityConfiguration plugin.TValue[string]
+	CreatedAt             plugin.TValue[*time.Time]
+	UpdatedAt             plugin.TValue[*time.Time]
+	Region                plugin.TValue[string]
+	Tags                  plugin.TValue[map[string]any]
+}
+
+// createAwsGlueCrawler creates a new instance of this resource
+func createAwsGlueCrawler(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsGlueCrawler{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.glue.crawler", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsGlueCrawler) MqlName() string {
+	return "aws.glue.crawler"
+}
+
+func (c *mqlAwsGlueCrawler) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsGlueCrawler) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsGlueCrawler) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsGlueCrawler) GetRole() *plugin.TValue[string] {
+	return &c.Role
+}
+
+func (c *mqlAwsGlueCrawler) GetDatabaseName() *plugin.TValue[string] {
+	return &c.DatabaseName
+}
+
+func (c *mqlAwsGlueCrawler) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsGlueCrawler) GetTargets() *plugin.TValue[any] {
+	return &c.Targets
+}
+
+func (c *mqlAwsGlueCrawler) GetSchedule() *plugin.TValue[string] {
+	return &c.Schedule
+}
+
+func (c *mqlAwsGlueCrawler) GetClassifiers() *plugin.TValue[[]any] {
+	return &c.Classifiers
+}
+
+func (c *mqlAwsGlueCrawler) GetSchemaChangePolicy() *plugin.TValue[any] {
+	return &c.SchemaChangePolicy
+}
+
+func (c *mqlAwsGlueCrawler) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsGlueCrawler) GetConfiguration() *plugin.TValue[string] {
+	return &c.Configuration
+}
+
+func (c *mqlAwsGlueCrawler) GetSecurityConfiguration() *plugin.TValue[string] {
+	return &c.SecurityConfiguration
+}
+
+func (c *mqlAwsGlueCrawler) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsGlueCrawler) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlAwsGlueCrawler) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsGlueCrawler) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsGlueJob for the aws.glue.job resource
+type mqlAwsGlueJob struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsGlueJobInternal it will be used here
+	Name                  plugin.TValue[string]
+	Arn                   plugin.TValue[string]
+	Description           plugin.TValue[string]
+	Role                  plugin.TValue[string]
+	Command               plugin.TValue[any]
+	MaxRetries            plugin.TValue[int64]
+	Timeout               plugin.TValue[int64]
+	GlueVersion           plugin.TValue[string]
+	NumberOfWorkers       plugin.TValue[int64]
+	WorkerType            plugin.TValue[string]
+	MaxCapacity           plugin.TValue[float64]
+	Connections           plugin.TValue[[]any]
+	DefaultArguments      plugin.TValue[map[string]any]
+	SecurityConfiguration plugin.TValue[string]
+	ExecutionClass        plugin.TValue[string]
+	CreatedAt             plugin.TValue[*time.Time]
+	UpdatedAt             plugin.TValue[*time.Time]
+	Region                plugin.TValue[string]
+	Tags                  plugin.TValue[map[string]any]
+}
+
+// createAwsGlueJob creates a new instance of this resource
+func createAwsGlueJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsGlueJob{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.glue.job", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsGlueJob) MqlName() string {
+	return "aws.glue.job"
+}
+
+func (c *mqlAwsGlueJob) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsGlueJob) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsGlueJob) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsGlueJob) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsGlueJob) GetRole() *plugin.TValue[string] {
+	return &c.Role
+}
+
+func (c *mqlAwsGlueJob) GetCommand() *plugin.TValue[any] {
+	return &c.Command
+}
+
+func (c *mqlAwsGlueJob) GetMaxRetries() *plugin.TValue[int64] {
+	return &c.MaxRetries
+}
+
+func (c *mqlAwsGlueJob) GetTimeout() *plugin.TValue[int64] {
+	return &c.Timeout
+}
+
+func (c *mqlAwsGlueJob) GetGlueVersion() *plugin.TValue[string] {
+	return &c.GlueVersion
+}
+
+func (c *mqlAwsGlueJob) GetNumberOfWorkers() *plugin.TValue[int64] {
+	return &c.NumberOfWorkers
+}
+
+func (c *mqlAwsGlueJob) GetWorkerType() *plugin.TValue[string] {
+	return &c.WorkerType
+}
+
+func (c *mqlAwsGlueJob) GetMaxCapacity() *plugin.TValue[float64] {
+	return &c.MaxCapacity
+}
+
+func (c *mqlAwsGlueJob) GetConnections() *plugin.TValue[[]any] {
+	return &c.Connections
+}
+
+func (c *mqlAwsGlueJob) GetDefaultArguments() *plugin.TValue[map[string]any] {
+	return &c.DefaultArguments
+}
+
+func (c *mqlAwsGlueJob) GetSecurityConfiguration() *plugin.TValue[string] {
+	return &c.SecurityConfiguration
+}
+
+func (c *mqlAwsGlueJob) GetExecutionClass() *plugin.TValue[string] {
+	return &c.ExecutionClass
+}
+
+func (c *mqlAwsGlueJob) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsGlueJob) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlAwsGlueJob) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsGlueJob) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsGlueSecurityConfiguration for the aws.glue.securityConfiguration resource
+type mqlAwsGlueSecurityConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsGlueSecurityConfigurationInternal it will be used here
+	Name                   plugin.TValue[string]
+	CreatedAt              plugin.TValue[*time.Time]
+	S3Encryption           plugin.TValue[any]
+	CloudWatchEncryption   plugin.TValue[any]
+	JobBookmarksEncryption plugin.TValue[any]
+	Region                 plugin.TValue[string]
+}
+
+// createAwsGlueSecurityConfiguration creates a new instance of this resource
+func createAwsGlueSecurityConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsGlueSecurityConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.glue.securityConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsGlueSecurityConfiguration) MqlName() string {
+	return "aws.glue.securityConfiguration"
+}
+
+func (c *mqlAwsGlueSecurityConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsGlueSecurityConfiguration) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsGlueSecurityConfiguration) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsGlueSecurityConfiguration) GetS3Encryption() *plugin.TValue[any] {
+	return &c.S3Encryption
+}
+
+func (c *mqlAwsGlueSecurityConfiguration) GetCloudWatchEncryption() *plugin.TValue[any] {
+	return &c.CloudWatchEncryption
+}
+
+func (c *mqlAwsGlueSecurityConfiguration) GetJobBookmarksEncryption() *plugin.TValue[any] {
+	return &c.JobBookmarksEncryption
+}
+
+func (c *mqlAwsGlueSecurityConfiguration) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsGlueDatabase for the aws.glue.database resource
+type mqlAwsGlueDatabase struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsGlueDatabaseInternal it will be used here
+	Name        plugin.TValue[string]
+	CatalogId   plugin.TValue[string]
+	Description plugin.TValue[string]
+	LocationUri plugin.TValue[string]
+	Parameters  plugin.TValue[map[string]any]
+	CreatedAt   plugin.TValue[*time.Time]
+	Region      plugin.TValue[string]
+	Tables      plugin.TValue[[]any]
+}
+
+// createAwsGlueDatabase creates a new instance of this resource
+func createAwsGlueDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsGlueDatabase{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.glue.database", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsGlueDatabase) MqlName() string {
+	return "aws.glue.database"
+}
+
+func (c *mqlAwsGlueDatabase) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsGlueDatabase) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsGlueDatabase) GetCatalogId() *plugin.TValue[string] {
+	return &c.CatalogId
+}
+
+func (c *mqlAwsGlueDatabase) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsGlueDatabase) GetLocationUri() *plugin.TValue[string] {
+	return &c.LocationUri
+}
+
+func (c *mqlAwsGlueDatabase) GetParameters() *plugin.TValue[map[string]any] {
+	return &c.Parameters
+}
+
+func (c *mqlAwsGlueDatabase) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsGlueDatabase) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsGlueDatabase) GetTables() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tables, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.glue.database", c.__id, "tables")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tables()
+	})
+}
+
+// mqlAwsGlueDatabaseTable for the aws.glue.database.table resource
+type mqlAwsGlueDatabaseTable struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsGlueDatabaseTableInternal it will be used here
+	Name              plugin.TValue[string]
+	DatabaseName      plugin.TValue[string]
+	CatalogId         plugin.TValue[string]
+	Description       plugin.TValue[string]
+	Owner             plugin.TValue[string]
+	CreatedAt         plugin.TValue[*time.Time]
+	UpdatedAt         plugin.TValue[*time.Time]
+	LastAccessedAt    plugin.TValue[*time.Time]
+	Retention         plugin.TValue[int64]
+	StorageDescriptor plugin.TValue[any]
+	TableType         plugin.TValue[string]
+	Parameters        plugin.TValue[map[string]any]
+	CreatedBy         plugin.TValue[string]
+	Region            plugin.TValue[string]
+}
+
+// createAwsGlueDatabaseTable creates a new instance of this resource
+func createAwsGlueDatabaseTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsGlueDatabaseTable{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.glue.database.table", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsGlueDatabaseTable) MqlName() string {
+	return "aws.glue.database.table"
+}
+
+func (c *mqlAwsGlueDatabaseTable) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsGlueDatabaseTable) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsGlueDatabaseTable) GetDatabaseName() *plugin.TValue[string] {
+	return &c.DatabaseName
+}
+
+func (c *mqlAwsGlueDatabaseTable) GetCatalogId() *plugin.TValue[string] {
+	return &c.CatalogId
+}
+
+func (c *mqlAwsGlueDatabaseTable) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsGlueDatabaseTable) GetOwner() *plugin.TValue[string] {
+	return &c.Owner
+}
+
+func (c *mqlAwsGlueDatabaseTable) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsGlueDatabaseTable) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlAwsGlueDatabaseTable) GetLastAccessedAt() *plugin.TValue[*time.Time] {
+	return &c.LastAccessedAt
+}
+
+func (c *mqlAwsGlueDatabaseTable) GetRetention() *plugin.TValue[int64] {
+	return &c.Retention
+}
+
+func (c *mqlAwsGlueDatabaseTable) GetStorageDescriptor() *plugin.TValue[any] {
+	return &c.StorageDescriptor
+}
+
+func (c *mqlAwsGlueDatabaseTable) GetTableType() *plugin.TValue[string] {
+	return &c.TableType
+}
+
+func (c *mqlAwsGlueDatabaseTable) GetParameters() *plugin.TValue[map[string]any] {
+	return &c.Parameters
+}
+
+func (c *mqlAwsGlueDatabaseTable) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+func (c *mqlAwsGlueDatabaseTable) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsElasticbeanstalk for the aws.elasticbeanstalk resource
+type mqlAwsElasticbeanstalk struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsElasticbeanstalkInternal it will be used here
+	Applications plugin.TValue[[]any]
+	Environments plugin.TValue[[]any]
+}
+
+// createAwsElasticbeanstalk creates a new instance of this resource
+func createAwsElasticbeanstalk(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsElasticbeanstalk{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.elasticbeanstalk", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsElasticbeanstalk) MqlName() string {
+	return "aws.elasticbeanstalk"
+}
+
+func (c *mqlAwsElasticbeanstalk) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsElasticbeanstalk) GetApplications() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Applications, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elasticbeanstalk", c.__id, "applications")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.applications()
+	})
+}
+
+func (c *mqlAwsElasticbeanstalk) GetEnvironments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Environments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elasticbeanstalk", c.__id, "environments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.environments()
+	})
+}
+
+// mqlAwsElasticbeanstalkApplication for the aws.elasticbeanstalk.application resource
+type mqlAwsElasticbeanstalkApplication struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsElasticbeanstalkApplicationInternal it will be used here
+	Arn                    plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	Region                 plugin.TValue[string]
+	Description            plugin.TValue[string]
+	CreatedAt              plugin.TValue[*time.Time]
+	UpdatedAt              plugin.TValue[*time.Time]
+	ConfigurationTemplates plugin.TValue[[]any]
+	Versions               plugin.TValue[[]any]
+	Tags                   plugin.TValue[map[string]any]
+}
+
+// createAwsElasticbeanstalkApplication creates a new instance of this resource
+func createAwsElasticbeanstalkApplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsElasticbeanstalkApplication{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.elasticbeanstalk.application", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsElasticbeanstalkApplication) MqlName() string {
+	return "aws.elasticbeanstalk.application"
+}
+
+func (c *mqlAwsElasticbeanstalkApplication) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsElasticbeanstalkApplication) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsElasticbeanstalkApplication) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsElasticbeanstalkApplication) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsElasticbeanstalkApplication) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsElasticbeanstalkApplication) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsElasticbeanstalkApplication) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlAwsElasticbeanstalkApplication) GetConfigurationTemplates() *plugin.TValue[[]any] {
+	return &c.ConfigurationTemplates
+}
+
+func (c *mqlAwsElasticbeanstalkApplication) GetVersions() *plugin.TValue[[]any] {
+	return &c.Versions
+}
+
+func (c *mqlAwsElasticbeanstalkApplication) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsElasticbeanstalkEnvironment for the aws.elasticbeanstalk.environment resource
+type mqlAwsElasticbeanstalkEnvironment struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsElasticbeanstalkEnvironmentInternal it will be used here
+	Arn               plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Region            plugin.TValue[string]
+	ApplicationName   plugin.TValue[string]
+	Description       plugin.TValue[string]
+	EnvironmentId     plugin.TValue[string]
+	PlatformArn       plugin.TValue[string]
+	SolutionStackName plugin.TValue[string]
+	Status            plugin.TValue[string]
+	Health            plugin.TValue[string]
+	HealthStatus      plugin.TValue[string]
+	Cname             plugin.TValue[string]
+	EndpointUrl       plugin.TValue[string]
+	Tier              plugin.TValue[any]
+	CreatedAt         plugin.TValue[*time.Time]
+	UpdatedAt         plugin.TValue[*time.Time]
+	VersionLabel      plugin.TValue[string]
+	Tags              plugin.TValue[map[string]any]
+}
+
+// createAwsElasticbeanstalkEnvironment creates a new instance of this resource
+func createAwsElasticbeanstalkEnvironment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsElasticbeanstalkEnvironment{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.elasticbeanstalk.environment", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsElasticbeanstalkEnvironment) MqlName() string {
+	return "aws.elasticbeanstalk.environment"
+}
+
+func (c *mqlAwsElasticbeanstalkEnvironment) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsElasticbeanstalkEnvironment) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsElasticbeanstalkEnvironment) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsElasticbeanstalkEnvironment) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsElasticbeanstalkEnvironment) GetApplicationName() *plugin.TValue[string] {
+	return &c.ApplicationName
+}
+
+func (c *mqlAwsElasticbeanstalkEnvironment) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsElasticbeanstalkEnvironment) GetEnvironmentId() *plugin.TValue[string] {
+	return &c.EnvironmentId
+}
+
+func (c *mqlAwsElasticbeanstalkEnvironment) GetPlatformArn() *plugin.TValue[string] {
+	return &c.PlatformArn
+}
+
+func (c *mqlAwsElasticbeanstalkEnvironment) GetSolutionStackName() *plugin.TValue[string] {
+	return &c.SolutionStackName
+}
+
+func (c *mqlAwsElasticbeanstalkEnvironment) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsElasticbeanstalkEnvironment) GetHealth() *plugin.TValue[string] {
+	return &c.Health
+}
+
+func (c *mqlAwsElasticbeanstalkEnvironment) GetHealthStatus() *plugin.TValue[string] {
+	return &c.HealthStatus
+}
+
+func (c *mqlAwsElasticbeanstalkEnvironment) GetCname() *plugin.TValue[string] {
+	return &c.Cname
+}
+
+func (c *mqlAwsElasticbeanstalkEnvironment) GetEndpointUrl() *plugin.TValue[string] {
+	return &c.EndpointUrl
+}
+
+func (c *mqlAwsElasticbeanstalkEnvironment) GetTier() *plugin.TValue[any] {
+	return &c.Tier
+}
+
+func (c *mqlAwsElasticbeanstalkEnvironment) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsElasticbeanstalkEnvironment) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlAwsElasticbeanstalkEnvironment) GetVersionLabel() *plugin.TValue[string] {
+	return &c.VersionLabel
+}
+
+func (c *mqlAwsElasticbeanstalkEnvironment) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsGlueWorkflow for the aws.glue.workflow resource
+type mqlAwsGlueWorkflow struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsGlueWorkflowInternal it will be used here
+	Name                 plugin.TValue[string]
+	Region               plugin.TValue[string]
+	Description          plugin.TValue[string]
+	DefaultRunProperties plugin.TValue[map[string]any]
+	MaxConcurrentRuns    plugin.TValue[int64]
+	CreatedAt            plugin.TValue[*time.Time]
+	UpdatedAt            plugin.TValue[*time.Time]
+	Tags                 plugin.TValue[map[string]any]
+}
+
+// createAwsGlueWorkflow creates a new instance of this resource
+func createAwsGlueWorkflow(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsGlueWorkflow{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.glue.workflow", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsGlueWorkflow) MqlName() string {
+	return "aws.glue.workflow"
+}
+
+func (c *mqlAwsGlueWorkflow) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsGlueWorkflow) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsGlueWorkflow) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsGlueWorkflow) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsGlueWorkflow) GetDefaultRunProperties() *plugin.TValue[map[string]any] {
+	return &c.DefaultRunProperties
+}
+
+func (c *mqlAwsGlueWorkflow) GetMaxConcurrentRuns() *plugin.TValue[int64] {
+	return &c.MaxConcurrentRuns
+}
+
+func (c *mqlAwsGlueWorkflow) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsGlueWorkflow) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlAwsGlueWorkflow) GetTags() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
 	})

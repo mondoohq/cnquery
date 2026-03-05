@@ -39,6 +39,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/efs v1.41.12
 	github.com/aws/aws-sdk-go-v2/service/eks v1.80.2
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.51.11
+	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.33.21
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.54.8
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.39.0
@@ -46,6 +47,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.45.20
 	github.com/aws/aws-sdk-go-v2/service/firehose v1.42.11
 	github.com/aws/aws-sdk-go-v2/service/fsx v1.65.5
+	github.com/aws/aws-sdk-go-v2/service/glue v1.137.2
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.73.2
 	github.com/aws/aws-sdk-go-v2/service/iam v1.53.4
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.47.2

@@ -7143,3 +7143,254 @@ private aws.timestream.influxdb.cluster @defaults("arn name status") {
   // Tags for the DB cluster
   tags() map[string]string
 }
+// AWS Glue
+aws.glue @defaults("crawlers") {
+  // List of Glue crawlers
+  crawlers() []aws.glue.crawler
+  // List of Glue ETL jobs
+  jobs() []aws.glue.job
+  // List of Glue security configurations
+  securityConfigurations() []aws.glue.securityConfiguration
+  // List of Glue Data Catalog databases
+  databases() []aws.glue.database
+  // Data Catalog encryption settings per region
+  catalogEncryptionSettings() []dict
+  // List of Glue workflows
+  workflows() []aws.glue.workflow
+}
+
+// AWS Glue crawler
+private aws.glue.crawler @defaults("name state databaseName region") {
+  // Name of the crawler
+  name string
+  // ARN of the crawler
+  arn string
+  // IAM role used by the crawler
+  role string
+  // Name of the database where results are stored
+  databaseName string
+  // Description of the crawler
+  description string
+  // Targets for the crawler
+  targets dict
+  // Schedule for the crawler
+  schedule string
+  // Classifiers used by the crawler
+  classifiers []string
+  // Schema change policy
+  schemaChangePolicy dict
+  // Current state of the crawler: READY, RUNNING, or STOPPING
+  state string
+  // Configuration for the crawler
+  configuration string
+  // Security configuration name
+  securityConfiguration string
+  // Date and time the crawler was created
+  createdAt time
+  // Date and time the crawler was last updated
+  updatedAt time
+  // Region where the crawler exists
+  region string
+  // Tags for the crawler
+  tags() map[string]string
+}
+
+// AWS Glue ETL job
+private aws.glue.job @defaults("name region") {
+  // Name of the job
+  name string
+  // ARN of the job
+  arn string
+  // Description of the job
+  description string
+  // IAM role associated with this job
+  role string
+  // Command that the job runs
+  command dict
+  // Maximum number of times to retry this job if it fails
+  maxRetries int
+  // Job timeout in minutes
+  timeout int
+  // Glue version used by this job
+  glueVersion string
+  // Number of workers allocated to this job
+  numberOfWorkers int
+  // Type of predefined worker allocated: Standard, G.1X, G.2X, G.025X
+  workerType string
+  // Maximum number of concurrent runs allowed for this job
+  maxCapacity float
+  // Connections used by this job
+  connections []string
+  // Default arguments for this job
+  defaultArguments map[string]string
+  // Security configuration name
+  securityConfiguration string
+  // Execution class of the job: FLEX or STANDARD
+  executionClass string
+  // Date and time the job was created
+  createdAt time
+  // Date and time the job was last modified
+  updatedAt time
+  // Region where the job exists
+  region string
+  // Tags for the job
+  tags() map[string]string
+}
+
+// AWS Glue security configuration
+private aws.glue.securityConfiguration @defaults("name") {
+  // Name of the security configuration
+  name string
+  // Date and time the security configuration was created
+  createdAt time
+  // S3 encryption configuration
+  s3Encryption dict
+  // CloudWatch encryption configuration
+  cloudWatchEncryption dict
+  // Job bookmarks encryption configuration
+  jobBookmarksEncryption dict
+  // Region where the security configuration exists
+  region string
+}
+
+// AWS Glue Data Catalog database
+private aws.glue.database @defaults("name region") {
+  // Name of the database
+  name string
+  // ID of the Data Catalog in which the database resides
+  catalogId string
+  // Description of the database
+  description string
+  // Location URI of the database
+  locationUri string
+  // Parameters of the database
+  parameters map[string]string
+  // Date and time the database was created
+  createdAt time
+  // Region where the database exists
+  region string
+  // Tables in the database
+  tables() []aws.glue.database.table
+}
+
+// AWS Glue Data Catalog database table
+private aws.glue.database.table @defaults("name databaseName region") {
+  // Name of the table
+  name string
+  // Name of the database containing this table
+  databaseName string
+  // ID of the Data Catalog in which the table resides
+  catalogId string
+  // Description of the table
+  description string
+  // Owner of the table
+  owner string
+  // Date and time the table was created
+  createdAt time
+  // Date and time the table was last updated
+  updatedAt time
+  // Date and time the table was last accessed
+  lastAccessedAt time
+  // Retention time for the table (in days)
+  retention int
+  // Storage descriptor containing column and location information
+  storageDescriptor dict
+  // Type of the table (EXTERNAL_TABLE, VIRTUAL_VIEW, etc.)
+  tableType string
+  // Properties associated with the table
+  parameters map[string]string
+  // Person or entity who created the table
+  createdBy string
+  // Region where the table exists
+  region string
+}
+
+// AWS Elastic Beanstalk
+aws.elasticbeanstalk @defaults("environments") {
+  // List of Elastic Beanstalk applications
+  applications() []aws.elasticbeanstalk.application
+  // List of Elastic Beanstalk environments
+  environments() []aws.elasticbeanstalk.environment
+}
+
+// AWS Elastic Beanstalk application
+private aws.elasticbeanstalk.application @defaults("arn name") {
+  // ARN of the application
+  arn string
+  // Name of the application
+  name string
+  // Region of the application
+  region string
+  // Description of the application
+  description string
+  // Date the application was created
+  createdAt time
+  // Date the application was last updated
+  updatedAt time
+  // Configuration templates for the application
+  configurationTemplates []string
+  // Application version labels
+  versions []string
+  // Tags for the application
+  tags() map[string]string
+}
+
+// AWS Elastic Beanstalk environment
+private aws.elasticbeanstalk.environment @defaults("arn name status") {
+  // ARN of the environment
+  arn string
+  // Name of the environment
+  name string
+  // Region of the environment
+  region string
+  // Application name the environment belongs to
+  applicationName string
+  // Description of the environment
+  description string
+  // Environment ID
+  environmentId string
+  // Platform ARN
+  platformArn string
+  // Solution stack name
+  solutionStackName string
+  // Status: Launching, Updating, Ready, Terminating, Terminated
+  status string
+  // Health: Green, Yellow, Red, Grey
+  health string
+  // Health status: Ok, Info, Warning, Degraded, Severe, Suspended, Unknown, NoData
+  healthStatus string
+  // CNAME of the environment
+  cname string
+  // Endpoint URL
+  endpointUrl string
+  // Environment tier (Worker or WebServer)
+  tier dict
+  // Date the environment was created
+  createdAt time
+  // Date the environment was last updated
+  updatedAt time
+  // Version label
+  versionLabel string
+  // Tags for the environment
+  tags() map[string]string
+}
+
+// AWS Glue workflow
+private aws.glue.workflow @defaults("name region") {
+  // Name of the workflow
+  name string
+  // Region of the workflow
+  region string
+  // Description of the workflow
+  description string
+  // Default run properties for the workflow
+  defaultRunProperties map[string]string
+  // Maximum number of concurrent runs
+  maxConcurrentRuns int
+  // Date the workflow was created
+  createdAt time
+  // Date the workflow was last modified
+  updatedAt time
+  // Tags for the workflow
+  tags() map[string]string
+}

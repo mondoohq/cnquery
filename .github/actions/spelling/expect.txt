@@ -26,6 +26,7 @@ BYOS
 bytematchstatement
 cavium
 cdn
+cname
 certificatechains
 clcerts
 cloudflare
@@ -62,6 +63,7 @@ ekus
 elbv
 endpointslice
 EPP
+ETL
 exo
 failback
 fargate
