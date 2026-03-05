@@ -48,6 +48,7 @@ ddos
 deliverychannel
 dfw
 directoryservice
+documentdb
 dlp
 dlq
 dlv
