@@ -41,10 +41,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.39.0
 	github.com/aws/aws-sdk-go-v2/service/emr v1.57.7
 	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.45.20
+	github.com/aws/aws-sdk-go-v2/service/firehose v1.42.11
 	github.com/aws/aws-sdk-go-v2/service/fsx v1.65.5
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.73.2
 	github.com/aws/aws-sdk-go-v2/service/iam v1.53.4
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.47.2
+	github.com/aws/aws-sdk-go-v2/service/kinesis v1.43.2
 	github.com/aws/aws-sdk-go-v2/service/kms v1.50.2
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.88.2
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.50.11
