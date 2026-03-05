@@ -1023,29 +1023,22 @@ func (t *AwsConnection) TimestreamLiveAnalytics(region string) *timestreamwrite.
 	return client
 }
 
-// TimestreamInflux returns a Timestream client for InfluxDB
 func (t *AwsConnection) TimestreamInfluxDB(region string) *timestreaminfluxdb.Client {
-	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
 		region = t.cfg.Region
 	}
-	cacheVal := "_timestream_" + region
+	cacheVal := "_timestream_influxdb_" + region
 
-	// check for cached client and return it if it exists
 	c, ok := t.clientcache.Load(cacheVal)
 	if ok {
 		log.Debug().Msg("use cached timestreaminfluxdb client")
 		return c.Data.(*timestreaminfluxdb.Client)
 	}
 
-	// create the client
 	cfg := t.cfg.Copy()
 	cfg.Region = region
-
-	// Create a Neptune client from just a session.
 	client := timestreaminfluxdb.NewFromConfig(cfg)
 
-	// cache it
 	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
 	return client
 }

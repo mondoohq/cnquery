@@ -331,6 +331,9 @@ const (
 	ResourceAwsKinesisFirehoseDeliveryStream                                    string = "aws.kinesis.firehoseDeliveryStream"
 	ResourceAwsMemorydb                                                         string = "aws.memorydb"
 	ResourceAwsMemorydbCluster                                                  string = "aws.memorydb.cluster"
+	ResourceAwsTimestreamInfluxdb                                               string = "aws.timestream.influxdb"
+	ResourceAwsTimestreamInfluxdbInstance                                       string = "aws.timestream.influxdb.instance"
+	ResourceAwsTimestreamInfluxdbCluster                                        string = "aws.timestream.influxdb.cluster"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -1592,6 +1595,18 @@ func init() {
 		"aws.memorydb.cluster": {
 			// to override args, implement: initAwsMemorydbCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsMemorydbCluster,
+		},
+		"aws.timestream.influxdb": {
+			// to override args, implement: initAwsTimestreamInfluxdb(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsTimestreamInfluxdb,
+		},
+		"aws.timestream.influxdb.instance": {
+			// to override args, implement: initAwsTimestreamInfluxdbInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsTimestreamInfluxdbInstance,
+		},
+		"aws.timestream.influxdb.cluster": {
+			// to override args, implement: initAwsTimestreamInfluxdbCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsTimestreamInfluxdbCluster,
 		},
 	}
 }
@@ -9910,6 +9925,93 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.memorydb.cluster.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMemorydbCluster).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.timestream.influxdb.instances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdb).GetInstances()).ToDataRes(types.Array(types.Resource("aws.timestream.influxdb.instance")))
+	},
+	"aws.timestream.influxdb.clusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdb).GetClusters()).ToDataRes(types.Array(types.Resource("aws.timestream.influxdb.cluster")))
+	},
+	"aws.timestream.influxdb.instance.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetArn()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.instance.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetId()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.instance.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetName()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.instance.allocatedStorage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetAllocatedStorage()).ToDataRes(types.Int)
+	},
+	"aws.timestream.influxdb.instance.dbInstanceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetDbInstanceType()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.instance.dbStorageType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetDbStorageType()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.instance.deploymentType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetDeploymentType()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.instance.endpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetEndpoint()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.instance.networkType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetNetworkType()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.instance.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetPort()).ToDataRes(types.Int)
+	},
+	"aws.timestream.influxdb.instance.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.instance.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.instance.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.timestream.influxdb.cluster.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetArn()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.cluster.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetId()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.cluster.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetName()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.cluster.allocatedStorage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetAllocatedStorage()).ToDataRes(types.Int)
+	},
+	"aws.timestream.influxdb.cluster.dbInstanceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetDbInstanceType()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.cluster.dbStorageType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetDbStorageType()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.cluster.deploymentType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetDeploymentType()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.cluster.endpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetEndpoint()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.cluster.readerEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetReaderEndpoint()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.cluster.networkType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetNetworkType()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.cluster.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetPort()).ToDataRes(types.Int)
+	},
+	"aws.timestream.influxdb.cluster.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.cluster.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.cluster.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 }
 
@@ -22161,6 +22263,134 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.memorydb.cluster.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsMemorydbCluster).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdb).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.timestream.influxdb.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdb).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.clusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdb).Clusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.timestream.influxdb.instance.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.allocatedStorage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).AllocatedStorage, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.dbInstanceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).DbInstanceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.dbStorageType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).DbStorageType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.deploymentType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).DeploymentType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.endpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).Endpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.networkType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).NetworkType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.timestream.influxdb.cluster.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.allocatedStorage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).AllocatedStorage, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.dbInstanceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).DbInstanceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.dbStorageType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).DbStorageType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.deploymentType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).DeploymentType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.endpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).Endpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.readerEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).ReaderEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.networkType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).NetworkType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 }
@@ -53673,5 +53903,300 @@ func (c *mqlAwsMemorydbCluster) GetSecurityGroups() *plugin.TValue[[]any] {
 		}
 
 		return c.securityGroups()
+	})
+}
+
+// mqlAwsTimestreamInfluxdb for the aws.timestream.influxdb resource
+type mqlAwsTimestreamInfluxdb struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsTimestreamInfluxdbInternal it will be used here
+	Instances plugin.TValue[[]any]
+	Clusters  plugin.TValue[[]any]
+}
+
+// createAwsTimestreamInfluxdb creates a new instance of this resource
+func createAwsTimestreamInfluxdb(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsTimestreamInfluxdb{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.timestream.influxdb", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsTimestreamInfluxdb) MqlName() string {
+	return "aws.timestream.influxdb"
+}
+
+func (c *mqlAwsTimestreamInfluxdb) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsTimestreamInfluxdb) GetInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Instances, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.timestream.influxdb", c.__id, "instances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.instances()
+	})
+}
+
+func (c *mqlAwsTimestreamInfluxdb) GetClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Clusters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.timestream.influxdb", c.__id, "clusters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.clusters()
+	})
+}
+
+// mqlAwsTimestreamInfluxdbInstance for the aws.timestream.influxdb.instance resource
+type mqlAwsTimestreamInfluxdbInstance struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsTimestreamInfluxdbInstanceInternal it will be used here
+	Arn              plugin.TValue[string]
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	AllocatedStorage plugin.TValue[int64]
+	DbInstanceType   plugin.TValue[string]
+	DbStorageType    plugin.TValue[string]
+	DeploymentType   plugin.TValue[string]
+	Endpoint         plugin.TValue[string]
+	NetworkType      plugin.TValue[string]
+	Port             plugin.TValue[int64]
+	Status           plugin.TValue[string]
+	Region           plugin.TValue[string]
+	Tags             plugin.TValue[map[string]any]
+}
+
+// createAwsTimestreamInfluxdbInstance creates a new instance of this resource
+func createAwsTimestreamInfluxdbInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsTimestreamInfluxdbInstance{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.timestream.influxdb.instance", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) MqlName() string {
+	return "aws.timestream.influxdb.instance"
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetAllocatedStorage() *plugin.TValue[int64] {
+	return &c.AllocatedStorage
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetDbInstanceType() *plugin.TValue[string] {
+	return &c.DbInstanceType
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetDbStorageType() *plugin.TValue[string] {
+	return &c.DbStorageType
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetDeploymentType() *plugin.TValue[string] {
+	return &c.DeploymentType
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetEndpoint() *plugin.TValue[string] {
+	return &c.Endpoint
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetNetworkType() *plugin.TValue[string] {
+	return &c.NetworkType
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsTimestreamInfluxdbCluster for the aws.timestream.influxdb.cluster resource
+type mqlAwsTimestreamInfluxdbCluster struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsTimestreamInfluxdbClusterInternal it will be used here
+	Arn              plugin.TValue[string]
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	AllocatedStorage plugin.TValue[int64]
+	DbInstanceType   plugin.TValue[string]
+	DbStorageType    plugin.TValue[string]
+	DeploymentType   plugin.TValue[string]
+	Endpoint         plugin.TValue[string]
+	ReaderEndpoint   plugin.TValue[string]
+	NetworkType      plugin.TValue[string]
+	Port             plugin.TValue[int64]
+	Status           plugin.TValue[string]
+	Region           plugin.TValue[string]
+	Tags             plugin.TValue[map[string]any]
+}
+
+// createAwsTimestreamInfluxdbCluster creates a new instance of this resource
+func createAwsTimestreamInfluxdbCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsTimestreamInfluxdbCluster{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.timestream.influxdb.cluster", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) MqlName() string {
+	return "aws.timestream.influxdb.cluster"
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetAllocatedStorage() *plugin.TValue[int64] {
+	return &c.AllocatedStorage
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetDbInstanceType() *plugin.TValue[string] {
+	return &c.DbInstanceType
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetDbStorageType() *plugin.TValue[string] {
+	return &c.DbStorageType
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetDeploymentType() *plugin.TValue[string] {
+	return &c.DeploymentType
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetEndpoint() *plugin.TValue[string] {
+	return &c.Endpoint
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetReaderEndpoint() *plugin.TValue[string] {
+	return &c.ReaderEndpoint
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetNetworkType() *plugin.TValue[string] {
+	return &c.NetworkType
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
 	})
 }
