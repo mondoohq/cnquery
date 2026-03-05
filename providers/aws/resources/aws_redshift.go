@@ -119,6 +119,7 @@ func (a *mqlAwsRedshift) getClusters(conn *connection.AwsConnection) []*jobpool.
 					if err != nil {
 						return nil, err
 					}
+					mqlDBInstance.(*mqlAwsRedshiftCluster).cacheKmsKeyId = cluster.KmsKeyId
 					res = append(res, mqlDBInstance)
 				}
 			}
@@ -137,8 +138,43 @@ func redshiftTagsToMap(tags []redshifttypes.Tag) map[string]any {
 	return tagsMap
 }
 
+type mqlAwsRedshiftClusterInternal struct {
+	cacheKmsKeyId *string
+}
+
 func (a *mqlAwsRedshiftCluster) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsRedshiftCluster) vpc() (*mqlAwsVpc, error) {
+	vpcId := a.VpcId.Data
+	if vpcId == "" {
+		a.Vpc.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := a.Region.Data
+	vpcArn := fmt.Sprintf(vpcArnPattern, region, conn.AccountId(), vpcId)
+	res, err := NewResource(a.MqlRuntime, "aws.vpc", map[string]*llx.RawData{"arn": llx.StringData(vpcArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsVpc), nil
+}
+
+func (a *mqlAwsRedshiftCluster) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.cacheKmsKeyId == nil || *a.cacheKmsKeyId == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{
+			"arn": llx.StringDataPtr(a.cacheKmsKeyId),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
 func initAwsRedshiftCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {

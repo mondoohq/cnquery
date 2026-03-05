@@ -6,7 +6,6 @@ package resources
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/docdb"
 	docdb_types "github.com/aws/aws-sdk-go-v2/service/docdb/types"
 	"github.com/rs/zerolog/log"
@@ -55,15 +54,7 @@ func (a *mqlAwsDocumentdb) getDbClusters(conn *connection.AwsConnection) []*jobp
 			ctx := context.Background()
 			res := []any{}
 
-			params := &docdb.DescribeDBClustersInput{
-				Filters: []docdb_types.Filter{
-					{
-						Name:   aws.String("engine"),
-						Values: []string{"docdb"},
-					},
-				},
-			}
-			paginator := docdb.NewDescribeDBClustersPaginator(svc, params)
+			paginator := docdb.NewDescribeDBClustersPaginator(svc, &docdb.DescribeDBClustersInput{})
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
@@ -198,15 +189,7 @@ func (a *mqlAwsDocumentdb) getDbInstances(conn *connection.AwsConnection) []*job
 			ctx := context.Background()
 			res := []any{}
 
-			params := &docdb.DescribeDBInstancesInput{
-				Filters: []docdb_types.Filter{
-					{
-						Name:   aws.String("engine"),
-						Values: []string{"docdb"},
-					},
-				},
-			}
-			paginator := docdb.NewDescribeDBInstancesPaginator(svc, params)
+			paginator := docdb.NewDescribeDBInstancesPaginator(svc, &docdb.DescribeDBInstancesInput{})
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
@@ -255,6 +238,7 @@ func newMqlAwsDocumentdbInstance(runtime *plugin.Runtime, region string, instanc
 			"promotionTier":                llx.IntDataPtr(instance.PromotionTier),
 			"status":                       llx.StringDataPtr(instance.DBInstanceStatus),
 			"storageEncrypted":             llx.BoolDataPtr(instance.StorageEncrypted),
+			"certificateAuthority":         llx.StringDataPtr(instance.CACertificateIdentifier),
 		})
 	if err != nil {
 		return nil, err

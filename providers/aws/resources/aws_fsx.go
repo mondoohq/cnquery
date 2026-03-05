@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	fsxtypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
@@ -157,8 +158,39 @@ func initAwsFsxFilesystem(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	return nil, nil, errors.New("fsx filesystem does not exist")
 }
 
+func (a *mqlAwsFsxFilesystem) vpc() (*mqlAwsVpc, error) {
+	vpcId := a.VpcId.Data
+	if vpcId == "" {
+		a.Vpc.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := a.Region.Data
+	vpcArn := fmt.Sprintf(vpcArnPattern, region, conn.AccountId(), vpcId)
+	res, err := NewResource(a.MqlRuntime, "aws.vpc", map[string]*llx.RawData{"arn": llx.StringData(vpcArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsVpc), nil
+}
+
 func (a *mqlAwsFsxFilesystem) encrypted() (bool, error) {
 	return a.KmsKeyId.Data != "", nil
+}
+
+func (a *mqlAwsFsxFilesystem) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.KmsKeyId.Data == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{
+			"arn": llx.StringData(a.KmsKeyId.Data),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
 // ========================
@@ -295,6 +327,22 @@ func initAwsFsxCache(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		}
 	}
 	return nil, nil, errors.New("fsx cache does not exist")
+}
+
+func (a *mqlAwsFsxCache) vpc() (*mqlAwsVpc, error) {
+	vpcId := a.VpcId.Data
+	if vpcId == "" {
+		a.Vpc.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := a.Region.Data
+	vpcArn := fmt.Sprintf(vpcArnPattern, region, conn.AccountId(), vpcId)
+	res, err := NewResource(a.MqlRuntime, "aws.vpc", map[string]*llx.RawData{"arn": llx.StringData(vpcArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsVpc), nil
 }
 
 // ========================
@@ -434,6 +482,21 @@ func initAwsFsxBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 		}
 	}
 	return nil, nil, errors.New("fsx backup does not exist")
+}
+
+func (a *mqlAwsFsxBackup) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.KmsKeyId.Data == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{
+			"arn": llx.StringData(a.KmsKeyId.Data),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
 // ========================

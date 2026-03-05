@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/timestreamwrite"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
@@ -110,6 +111,21 @@ func (a *mqlAwsTimestreamLiveanalytics) getDatabases(conn *connection.AwsConnect
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func (a *mqlAwsTimestreamLiveanalyticsDatabase) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.KmsKeyId.Data == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{
+			"arn": llx.StringData(a.KmsKeyId.Data),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
 func (a *mqlAwsTimestreamLiveanalytics) tables() ([]any, error) {

@@ -296,6 +296,21 @@ type mqlAwsLambdaFunctionInternal struct {
 	cacheRoleArn *string
 }
 
+func (a *mqlAwsLambdaFunction) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.KmsKeyArn.Data == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{
+			"arn": llx.StringData(a.KmsKeyArn.Data),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
 func (a *mqlAwsLambdaFunction) concurrency() (int64, error) {
 	funcName := a.Name.Data
 	region := a.Region.Data

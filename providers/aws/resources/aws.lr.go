@@ -2740,8 +2740,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.fsx.filesystem.kmsKeyId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsFsxFilesystem).GetKmsKeyId()).ToDataRes(types.String)
 	},
+	"aws.fsx.filesystem.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxFilesystem).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
 	"aws.fsx.filesystem.vpcId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsFsxFilesystem).GetVpcId()).ToDataRes(types.String)
+	},
+	"aws.fsx.filesystem.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxFilesystem).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
 	},
 	"aws.fsx.filesystem.subnetIds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsFsxFilesystem).GetSubnetIds()).ToDataRes(types.Array(types.String))
@@ -2769,6 +2775,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.fsx.cache.vpcId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsFsxCache).GetVpcId()).ToDataRes(types.String)
+	},
+	"aws.fsx.cache.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxCache).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
 	},
 	"aws.fsx.cache.subnetIds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsFsxCache).GetSubnetIds()).ToDataRes(types.Array(types.String))
@@ -2802,6 +2811,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.fsx.backup.kmsKeyId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsFsxBackup).GetKmsKeyId()).ToDataRes(types.String)
+	},
+	"aws.fsx.backup.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxBackup).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
 	"aws.fsx.backup.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsFsxBackup).GetCreatedAt()).ToDataRes(types.Time)
@@ -3487,6 +3499,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.opensearch.domain.encryptionAtRestKmsKeyId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOpensearchDomain).GetEncryptionAtRestKmsKeyId()).ToDataRes(types.String)
 	},
+	"aws.opensearch.domain.encryptionAtRestKmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetEncryptionAtRestKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
 	"aws.opensearch.domain.nodeToNodeEncryptionEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOpensearchDomain).GetNodeToNodeEncryptionEnabled()).ToDataRes(types.Bool)
 	},
@@ -3541,6 +3556,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.opensearch.domain.vpcId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOpensearchDomain).GetVpcId()).ToDataRes(types.String)
 	},
+	"aws.opensearch.domain.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
 	"aws.opensearch.domain.enforceHTTPS": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOpensearchDomain).GetEnforceHTTPS()).ToDataRes(types.Bool)
 	},
@@ -3579,6 +3597,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.opensearch.domain.serviceSoftwareNewVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOpensearchDomain).GetServiceSoftwareNewVersion()).ToDataRes(types.String)
+	},
+	"aws.opensearch.domain.autoSoftwareUpdateEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetAutoSoftwareUpdateEnabled()).ToDataRes(types.Bool)
 	},
 	"aws.opensearch.domain.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOpensearchDomain).GetTags()).ToDataRes(types.Map(types.String, types.String))
@@ -3798,6 +3819,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.elb.targetgroup.lambdaTargets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbTargetgroup).GetLambdaTargets()).ToDataRes(types.Array(types.Resource("aws.lambda.function")))
+	},
+	"aws.elb.targetgroup.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbTargetgroup).GetRegion()).ToDataRes(types.String)
 	},
 	"aws.elb.targetgroup.attributes.targetGroupArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbTargetgroupAttributes).GetTargetGroupArn()).ToDataRes(types.String)
@@ -4395,6 +4419,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ecs.task.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsTask).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.ecs.task.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTask).GetRegion()).ToDataRes(types.String)
 	},
 	"aws.ecs.task.containers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsTask).GetContainers()).ToDataRes(types.Array(types.Resource("aws.ecs.container")))
@@ -6553,6 +6580,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.elasticache.serverlessCache.kmsKeyId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticacheServerlessCache).GetKmsKeyId()).ToDataRes(types.String)
 	},
+	"aws.elasticache.serverlessCache.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheServerlessCache).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
 	"aws.elasticache.serverlessCache.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticacheServerlessCache).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
 	},
@@ -6613,6 +6643,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.redshift.cluster.encrypted": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftCluster).GetEncrypted()).ToDataRes(types.Bool)
 	},
+	"aws.redshift.cluster.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
 	"aws.redshift.cluster.enhancedVpcRouting": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftCluster).GetEnhancedVpcRouting()).ToDataRes(types.Bool)
 	},
@@ -6651,6 +6684,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.redshift.cluster.vpcId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftCluster).GetVpcId()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
 	},
 	"aws.redshift.cluster.clusterAvailabilityStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftCluster).GetClusterAvailabilityStatus()).ToDataRes(types.String)
@@ -7341,6 +7377,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.lambda.function.kmsKeyArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunction).GetKmsKeyArn()).ToDataRes(types.String)
+	},
+	"aws.lambda.function.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
 	"aws.lambda.function.environment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunction).GetEnvironment()).ToDataRes(types.Map(types.String, types.String))
@@ -8332,6 +8371,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.networkinterface.privateIpAddress": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Networkinterface).GetPrivateIpAddress()).ToDataRes(types.String)
 	},
+	"aws.ec2.networkinterface.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Networkinterface).GetRegion()).ToDataRes(types.String)
+	},
 	"aws.ec2.keypair.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Keypair).GetArn()).ToDataRes(types.String)
 	},
@@ -8481,6 +8523,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.image.ebsBlockDevice.kmsKeyId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2ImageEbsBlockDevice).GetKmsKeyId()).ToDataRes(types.String)
+	},
+	"aws.ec2.image.ebsBlockDevice.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ImageEbsBlockDevice).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
 	"aws.ec2.image.ebsBlockDevice.iops": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2ImageEbsBlockDevice).GetIops()).ToDataRes(types.Int)
@@ -8731,6 +8776,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.eks.addon.configurationValues": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksAddon).GetConfigurationValues()).ToDataRes(types.String)
 	},
+	"aws.eks.addon.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksAddon).GetRegion()).ToDataRes(types.String)
+	},
 	"aws.eks.cluster.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksCluster).GetName()).ToDataRes(types.String)
 	},
@@ -8826,6 +8874,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.neptune.cluster.kmsKeyId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNeptuneCluster).GetKmsKeyId()).ToDataRes(types.String)
+	},
+	"aws.neptune.cluster.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneCluster).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
 	"aws.neptune.cluster.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNeptuneCluster).GetRegion()).ToDataRes(types.String)
@@ -8950,6 +9001,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.neptune.instance.kmsKeyId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNeptuneInstance).GetKmsKeyId()).ToDataRes(types.String)
 	},
+	"aws.neptune.instance.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
 	"aws.neptune.instance.latestRestorableTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNeptuneInstance).GetLatestRestorableTime()).ToDataRes(types.Time)
 	},
@@ -8985,6 +9039,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.neptune.instance.tdeCredentialArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNeptuneInstance).GetTdeCredentialArn()).ToDataRes(types.String)
+	},
+	"aws.neptune.instance.publiclyAccessible": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetPubliclyAccessible()).ToDataRes(types.Bool)
+	},
+	"aws.neptune.instance.certificateAuthority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetCertificateAuthority()).ToDataRes(types.String)
 	},
 	"aws.neptune.snapshot.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNeptuneSnapshot).GetArn()).ToDataRes(types.String)
@@ -9247,6 +9307,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.documentdb.instance.storageEncrypted": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbInstance).GetStorageEncrypted()).ToDataRes(types.Bool)
 	},
+	"aws.documentdb.instance.certificateAuthority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetCertificateAuthority()).ToDataRes(types.String)
+	},
 	"aws.documentdb.instance.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbInstance).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -9264,6 +9327,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.timestream.liveanalytics.database.kmsKeyId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsTimestreamLiveanalyticsDatabase).GetKmsKeyId()).ToDataRes(types.String)
+	},
+	"aws.timestream.liveanalytics.database.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamLiveanalyticsDatabase).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
 	"aws.timestream.liveanalytics.database.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsTimestreamLiveanalyticsDatabase).GetRegion()).ToDataRes(types.String)
@@ -11956,8 +12022,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsFsxFilesystem).KmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.fsx.filesystem.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxFilesystem).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
 	"aws.fsx.filesystem.vpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsFsxFilesystem).VpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.filesystem.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxFilesystem).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
 		return
 	},
 	"aws.fsx.filesystem.subnetIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11998,6 +12072,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.fsx.cache.vpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsFsxCache).VpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.cache.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxCache).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
 		return
 	},
 	"aws.fsx.cache.subnetIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12046,6 +12124,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.fsx.backup.kmsKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsFsxBackup).KmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.backup.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxBackup).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.fsx.backup.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13080,6 +13162,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsOpensearchDomain).EncryptionAtRestKmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.opensearch.domain.encryptionAtRestKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).EncryptionAtRestKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
 	"aws.opensearch.domain.nodeToNodeEncryptionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsOpensearchDomain).NodeToNodeEncryptionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -13152,6 +13238,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsOpensearchDomain).VpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.opensearch.domain.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
 	"aws.opensearch.domain.enforceHTTPS": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsOpensearchDomain).EnforceHTTPS, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -13202,6 +13292,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.opensearch.domain.serviceSoftwareNewVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsOpensearchDomain).ServiceSoftwareNewVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.autoSoftwareUpdateEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).AutoSoftwareUpdateEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.opensearch.domain.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13522,6 +13616,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.elb.targetgroup.lambdaTargets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElbTargetgroup).LambdaTargets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.elb.targetgroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbTargetgroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.elb.targetgroup.attributes.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14410,6 +14508,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ecs.task.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsTask).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.task.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTask).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.task.containers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -17640,6 +17742,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsElasticacheServerlessCache).KmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.elasticache.serverlessCache.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheServerlessCache).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
 	"aws.elasticache.serverlessCache.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElasticacheServerlessCache).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -17728,6 +17834,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsRedshiftCluster).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"aws.redshift.cluster.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
 	"aws.redshift.cluster.enhancedVpcRouting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRedshiftCluster).EnhancedVpcRouting, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -17778,6 +17888,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.redshift.cluster.vpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRedshiftCluster).VpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
 		return
 	},
 	"aws.redshift.cluster.clusterAvailabilityStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -18774,6 +18888,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.lambda.function.kmsKeyArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLambdaFunction).KmsKeyArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.lambda.function.environment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20236,6 +20354,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2Networkinterface).PrivateIpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.networkinterface.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Networkinterface).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.keypair.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Keypair).__id, ok = v.Value.(string)
 		return
@@ -20454,6 +20576,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.image.ebsBlockDevice.kmsKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2ImageEbsBlockDevice).KmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.image.ebsBlockDevice.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ImageEbsBlockDevice).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.image.ebsBlockDevice.iops": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20832,6 +20958,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEksAddon).ConfigurationValues, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.eks.addon.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksAddon).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.eks.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEksCluster).__id, ok = v.Value.(string)
 		return
@@ -20970,6 +21100,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.neptune.cluster.kmsKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsNeptuneCluster).KmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.cluster.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneCluster).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.neptune.cluster.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21140,6 +21274,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsNeptuneInstance).KmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.neptune.instance.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
 	"aws.neptune.instance.latestRestorableTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsNeptuneInstance).LatestRestorableTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -21186,6 +21324,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.neptune.instance.tdeCredentialArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsNeptuneInstance).TdeCredentialArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.publiclyAccessible": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).PubliclyAccessible, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.certificateAuthority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).CertificateAuthority, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.neptune.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21564,6 +21710,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsDocumentdbInstance).StorageEncrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"aws.documentdb.instance.certificateAuthority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).CertificateAuthority, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.documentdb.instance.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDocumentdbInstance).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -21594,6 +21744,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.timestream.liveanalytics.database.kmsKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsTimestreamLiveanalyticsDatabase).KmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.liveanalytics.database.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamLiveanalyticsDatabase).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.timestream.liveanalytics.database.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -27661,7 +27815,9 @@ type mqlAwsFsxFilesystem struct {
 	StorageType     plugin.TValue[string]
 	Encrypted       plugin.TValue[bool]
 	KmsKeyId        plugin.TValue[string]
+	KmsKey          plugin.TValue[*mqlAwsKmsKey]
 	VpcId           plugin.TValue[string]
+	Vpc             plugin.TValue[*mqlAwsVpc]
 	SubnetIds       plugin.TValue[[]any]
 	Tags            plugin.TValue[map[string]any]
 	CreatedAt       plugin.TValue[*time.Time]
@@ -27739,8 +27895,40 @@ func (c *mqlAwsFsxFilesystem) GetKmsKeyId() *plugin.TValue[string] {
 	return &c.KmsKeyId
 }
 
+func (c *mqlAwsFsxFilesystem) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.fsx.filesystem", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
 func (c *mqlAwsFsxFilesystem) GetVpcId() *plugin.TValue[string] {
 	return &c.VpcId
+}
+
+func (c *mqlAwsFsxFilesystem) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.fsx.filesystem", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
 }
 
 func (c *mqlAwsFsxFilesystem) GetSubnetIds() *plugin.TValue[[]any] {
@@ -27769,6 +27957,7 @@ type mqlAwsFsxCache struct {
 	Lifecycle                  plugin.TValue[string]
 	StorageCapacity            plugin.TValue[int64]
 	VpcId                      plugin.TValue[string]
+	Vpc                        plugin.TValue[*mqlAwsVpc]
 	SubnetIds                  plugin.TValue[[]any]
 	LustreConfiguration        plugin.TValue[any]
 	DataRepositoryAssociations plugin.TValue[[]any]
@@ -27832,6 +28021,22 @@ func (c *mqlAwsFsxCache) GetVpcId() *plugin.TValue[string] {
 	return &c.VpcId
 }
 
+func (c *mqlAwsFsxCache) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.fsx.cache", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
 func (c *mqlAwsFsxCache) GetSubnetIds() *plugin.TValue[[]any] {
 	return &c.SubnetIds
 }
@@ -27860,6 +28065,7 @@ type mqlAwsFsxBackup struct {
 	FileSystemId   plugin.TValue[string]
 	FileSystemType plugin.TValue[string]
 	KmsKeyId       plugin.TValue[string]
+	KmsKey         plugin.TValue[*mqlAwsKmsKey]
 	CreatedAt      plugin.TValue[*time.Time]
 	Region         plugin.TValue[string]
 	Tags           plugin.TValue[map[string]any]
@@ -27928,6 +28134,22 @@ func (c *mqlAwsFsxBackup) GetFileSystemType() *plugin.TValue[string] {
 
 func (c *mqlAwsFsxBackup) GetKmsKeyId() *plugin.TValue[string] {
 	return &c.KmsKeyId
+}
+
+func (c *mqlAwsFsxBackup) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.fsx.backup", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
 }
 
 func (c *mqlAwsFsxBackup) GetCreatedAt() *plugin.TValue[*time.Time] {
@@ -30824,6 +31046,7 @@ type mqlAwsOpensearchDomain struct {
 	Endpoint                    plugin.TValue[string]
 	EncryptionAtRestEnabled     plugin.TValue[bool]
 	EncryptionAtRestKmsKeyId    plugin.TValue[string]
+	EncryptionAtRestKmsKey      plugin.TValue[*mqlAwsKmsKey]
 	NodeToNodeEncryptionEnabled plugin.TValue[bool]
 	DedicatedMasterEnabled      plugin.TValue[bool]
 	DedicatedMasterType         plugin.TValue[string]
@@ -30842,6 +31065,7 @@ type mqlAwsOpensearchDomain struct {
 	EbsIops                     plugin.TValue[int64]
 	EbsThroughput               plugin.TValue[int64]
 	VpcId                       plugin.TValue[string]
+	Vpc                         plugin.TValue[*mqlAwsVpc]
 	EnforceHTTPS                plugin.TValue[bool]
 	TlsSecurityPolicy           plugin.TValue[string]
 	SamlEnabled                 plugin.TValue[bool]
@@ -30855,6 +31079,7 @@ type mqlAwsOpensearchDomain struct {
 	AuditLogEnabled             plugin.TValue[bool]
 	IpAddressType               plugin.TValue[string]
 	ServiceSoftwareNewVersion   plugin.TValue[string]
+	AutoSoftwareUpdateEnabled   plugin.TValue[bool]
 	Tags                        plugin.TValue[map[string]any]
 	SecurityGroups              plugin.TValue[[]any]
 	Subnets                     plugin.TValue[[]any]
@@ -30929,6 +31154,22 @@ func (c *mqlAwsOpensearchDomain) GetEncryptionAtRestKmsKeyId() *plugin.TValue[st
 	return &c.EncryptionAtRestKmsKeyId
 }
 
+func (c *mqlAwsOpensearchDomain) GetEncryptionAtRestKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.EncryptionAtRestKmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.opensearch.domain", c.__id, "encryptionAtRestKmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.encryptionAtRestKmsKey()
+	})
+}
+
 func (c *mqlAwsOpensearchDomain) GetNodeToNodeEncryptionEnabled() *plugin.TValue[bool] {
 	return &c.NodeToNodeEncryptionEnabled
 }
@@ -31001,6 +31242,22 @@ func (c *mqlAwsOpensearchDomain) GetVpcId() *plugin.TValue[string] {
 	return &c.VpcId
 }
 
+func (c *mqlAwsOpensearchDomain) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.opensearch.domain", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
 func (c *mqlAwsOpensearchDomain) GetEnforceHTTPS() *plugin.TValue[bool] {
 	return &c.EnforceHTTPS
 }
@@ -31051,6 +31308,10 @@ func (c *mqlAwsOpensearchDomain) GetIpAddressType() *plugin.TValue[string] {
 
 func (c *mqlAwsOpensearchDomain) GetServiceSoftwareNewVersion() *plugin.TValue[string] {
 	return &c.ServiceSoftwareNewVersion
+}
+
+func (c *mqlAwsOpensearchDomain) GetAutoSoftwareUpdateEnabled() *plugin.TValue[bool] {
+	return &c.AutoSoftwareUpdateEnabled
 }
 
 func (c *mqlAwsOpensearchDomain) GetTags() *plugin.TValue[map[string]any] {
@@ -31713,6 +31974,7 @@ type mqlAwsElbTargetgroup struct {
 	Vpc                        plugin.TValue[*mqlAwsVpc]
 	Ec2Targets                 plugin.TValue[[]any]
 	LambdaTargets              plugin.TValue[[]any]
+	Region                     plugin.TValue[string]
 }
 
 // createAwsElbTargetgroup creates a new instance of this resource
@@ -31874,6 +32136,10 @@ func (c *mqlAwsElbTargetgroup) GetLambdaTargets() *plugin.TValue[[]any] {
 
 		return c.lambdaTargets()
 	})
+}
+
+func (c *mqlAwsElbTargetgroup) GetRegion() *plugin.TValue[string] {
+	return &c.Region
 }
 
 // mqlAwsElbTargetgroupAttributes for the aws.elb.targetgroup.attributes resource
@@ -34154,6 +34420,7 @@ type mqlAwsEcsTask struct {
 	PlatformFamily  plugin.TValue[string]
 	PlatformVersion plugin.TValue[string]
 	Tags            plugin.TValue[map[string]any]
+	Region          plugin.TValue[string]
 	Containers      plugin.TValue[[]any]
 }
 
@@ -34220,6 +34487,10 @@ func (c *mqlAwsEcsTask) GetPlatformVersion() *plugin.TValue[string] {
 
 func (c *mqlAwsEcsTask) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
+}
+
+func (c *mqlAwsEcsTask) GetRegion() *plugin.TValue[string] {
+	return &c.Region
 }
 
 func (c *mqlAwsEcsTask) GetContainers() *plugin.TValue[[]any] {
@@ -42677,6 +42948,7 @@ type mqlAwsElasticacheServerlessCache struct {
 	EngineVersion          plugin.TValue[string]
 	MajorEngineVersion     plugin.TValue[string]
 	KmsKeyId               plugin.TValue[string]
+	KmsKey                 plugin.TValue[*mqlAwsKmsKey]
 	SecurityGroups         plugin.TValue[[]any]
 	SnapshotRetentionLimit plugin.TValue[int64]
 	DailySnapshotTime      plugin.TValue[string]
@@ -42744,6 +43016,22 @@ func (c *mqlAwsElasticacheServerlessCache) GetMajorEngineVersion() *plugin.TValu
 
 func (c *mqlAwsElasticacheServerlessCache) GetKmsKeyId() *plugin.TValue[string] {
 	return &c.KmsKeyId
+}
+
+func (c *mqlAwsElasticacheServerlessCache) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elasticache.serverlessCache", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
 }
 
 func (c *mqlAwsElasticacheServerlessCache) GetSecurityGroups() *plugin.TValue[[]any] {
@@ -42863,7 +43151,7 @@ func (c *mqlAwsRedshift) GetClusters() *plugin.TValue[[]any] {
 type mqlAwsRedshiftCluster struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsRedshiftClusterInternal it will be used here
+	mqlAwsRedshiftClusterInternal
 	AllowVersionUpgrade              plugin.TValue[bool]
 	Arn                              plugin.TValue[string]
 	AutomatedSnapshotRetentionPeriod plugin.TValue[int64]
@@ -42876,6 +43164,7 @@ type mqlAwsRedshiftCluster struct {
 	CreatedAt                        plugin.TValue[*time.Time]
 	DbName                           plugin.TValue[string]
 	Encrypted                        plugin.TValue[bool]
+	KmsKey                           plugin.TValue[*mqlAwsKmsKey]
 	EnhancedVpcRouting               plugin.TValue[bool]
 	Logging                          plugin.TValue[any]
 	MasterUsername                   plugin.TValue[string]
@@ -42889,6 +43178,7 @@ type mqlAwsRedshiftCluster struct {
 	Region                           plugin.TValue[string]
 	Tags                             plugin.TValue[map[string]any]
 	VpcId                            plugin.TValue[string]
+	Vpc                              plugin.TValue[*mqlAwsVpc]
 	ClusterAvailabilityStatus        plugin.TValue[string]
 	TotalStorageCapacityInMegaBytes  plugin.TValue[int64]
 	MultiAZ                          plugin.TValue[bool]
@@ -42982,6 +43272,22 @@ func (c *mqlAwsRedshiftCluster) GetEncrypted() *plugin.TValue[bool] {
 	return &c.Encrypted
 }
 
+func (c *mqlAwsRedshiftCluster) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.redshift.cluster", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
 func (c *mqlAwsRedshiftCluster) GetEnhancedVpcRouting() *plugin.TValue[bool] {
 	return &c.EnhancedVpcRouting
 }
@@ -43036,6 +43342,22 @@ func (c *mqlAwsRedshiftCluster) GetTags() *plugin.TValue[map[string]any] {
 
 func (c *mqlAwsRedshiftCluster) GetVpcId() *plugin.TValue[string] {
 	return &c.VpcId
+}
+
+func (c *mqlAwsRedshiftCluster) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.redshift.cluster", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
 }
 
 func (c *mqlAwsRedshiftCluster) GetClusterAvailabilityStatus() *plugin.TValue[string] {
@@ -45199,6 +45521,7 @@ type mqlAwsLambdaFunction struct {
 	StateReason                   plugin.TValue[string]
 	LastUpdateStatus              plugin.TValue[string]
 	KmsKeyArn                     plugin.TValue[string]
+	KmsKey                        plugin.TValue[*mqlAwsKmsKey]
 	Environment                   plugin.TValue[map[string]any]
 	Layers                        plugin.TValue[[]any]
 	LoggingConfig                 plugin.TValue[*mqlAwsLambdaFunctionLoggingConfig]
@@ -45380,6 +45703,22 @@ func (c *mqlAwsLambdaFunction) GetLastUpdateStatus() *plugin.TValue[string] {
 
 func (c *mqlAwsLambdaFunction) GetKmsKeyArn() *plugin.TValue[string] {
 	return &c.KmsKeyArn
+}
+
+func (c *mqlAwsLambdaFunction) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.lambda.function", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
 }
 
 func (c *mqlAwsLambdaFunction) GetEnvironment() *plugin.TValue[map[string]any] {
@@ -48968,6 +49307,7 @@ type mqlAwsEc2Networkinterface struct {
 	MacAddress       plugin.TValue[string]
 	PrivateDnsName   plugin.TValue[string]
 	PrivateIpAddress plugin.TValue[string]
+	Region           plugin.TValue[string]
 }
 
 // createAwsEc2Networkinterface creates a new instance of this resource
@@ -49092,6 +49432,10 @@ func (c *mqlAwsEc2Networkinterface) GetPrivateDnsName() *plugin.TValue[string] {
 
 func (c *mqlAwsEc2Networkinterface) GetPrivateIpAddress() *plugin.TValue[string] {
 	return &c.PrivateIpAddress
+}
+
+func (c *mqlAwsEc2Networkinterface) GetRegion() *plugin.TValue[string] {
+	return &c.Region
 }
 
 // mqlAwsEc2Keypair for the aws.ec2.keypair resource
@@ -49507,6 +49851,7 @@ type mqlAwsEc2ImageEbsBlockDevice struct {
 	VolumeSize          plugin.TValue[int64]
 	VolumeType          plugin.TValue[string]
 	KmsKeyId            plugin.TValue[string]
+	KmsKey              plugin.TValue[*mqlAwsKmsKey]
 	Iops                plugin.TValue[int64]
 	Throughput          plugin.TValue[int64]
 	DeleteOnTermination plugin.TValue[bool]
@@ -49562,6 +49907,22 @@ func (c *mqlAwsEc2ImageEbsBlockDevice) GetVolumeType() *plugin.TValue[string] {
 
 func (c *mqlAwsEc2ImageEbsBlockDevice) GetKmsKeyId() *plugin.TValue[string] {
 	return &c.KmsKeyId
+}
+
+func (c *mqlAwsEc2ImageEbsBlockDevice) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.image.ebsBlockDevice", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
 }
 
 func (c *mqlAwsEc2ImageEbsBlockDevice) GetIops() *plugin.TValue[int64] {
@@ -50503,6 +50864,7 @@ type mqlAwsEksAddon struct {
 	Publisher           plugin.TValue[string]
 	Owner               plugin.TValue[string]
 	ConfigurationValues plugin.TValue[string]
+	Region              plugin.TValue[string]
 }
 
 // createAwsEksAddon creates a new instance of this resource
@@ -50593,6 +50955,10 @@ func (c *mqlAwsEksAddon) GetConfigurationValues() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.ConfigurationValues, func() (string, error) {
 		return c.configurationValues()
 	})
+}
+
+func (c *mqlAwsEksAddon) GetRegion() *plugin.TValue[string] {
+	return &c.Region
 }
 
 // mqlAwsEksCluster for the aws.eks.cluster resource
@@ -50864,6 +51230,7 @@ type mqlAwsNeptuneCluster struct {
 	Engine                           plugin.TValue[string]
 	EngineVersion                    plugin.TValue[string]
 	KmsKeyId                         plugin.TValue[string]
+	KmsKey                           plugin.TValue[*mqlAwsKmsKey]
 	Region                           plugin.TValue[string]
 	AutomaticRestartTime             plugin.TValue[*time.Time]
 	AvailabilityZones                plugin.TValue[[]any]
@@ -50963,6 +51330,22 @@ func (c *mqlAwsNeptuneCluster) GetEngineVersion() *plugin.TValue[string] {
 
 func (c *mqlAwsNeptuneCluster) GetKmsKeyId() *plugin.TValue[string] {
 	return &c.KmsKeyId
+}
+
+func (c *mqlAwsNeptuneCluster) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.neptune.cluster", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
 }
 
 func (c *mqlAwsNeptuneCluster) GetRegion() *plugin.TValue[string] {
@@ -51080,6 +51463,7 @@ type mqlAwsNeptuneInstance struct {
 	IamDatabaseAuthenticationEnabled plugin.TValue[bool]
 	CreatedAt                        plugin.TValue[*time.Time]
 	KmsKeyId                         plugin.TValue[string]
+	KmsKey                           plugin.TValue[*mqlAwsKmsKey]
 	LatestRestorableTime             plugin.TValue[*time.Time]
 	MasterUsername                   plugin.TValue[string]
 	MonitoringInterval               plugin.TValue[int64]
@@ -51092,6 +51476,8 @@ type mqlAwsNeptuneInstance struct {
 	StorageEncrypted                 plugin.TValue[bool]
 	StorageType                      plugin.TValue[string]
 	TdeCredentialArn                 plugin.TValue[string]
+	PubliclyAccessible               plugin.TValue[bool]
+	CertificateAuthority             plugin.TValue[string]
 }
 
 // createAwsNeptuneInstance creates a new instance of this resource
@@ -51198,6 +51584,22 @@ func (c *mqlAwsNeptuneInstance) GetKmsKeyId() *plugin.TValue[string] {
 	return &c.KmsKeyId
 }
 
+func (c *mqlAwsNeptuneInstance) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.neptune.instance", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
 func (c *mqlAwsNeptuneInstance) GetLatestRestorableTime() *plugin.TValue[*time.Time] {
 	return &c.LatestRestorableTime
 }
@@ -51244,6 +51646,14 @@ func (c *mqlAwsNeptuneInstance) GetStorageType() *plugin.TValue[string] {
 
 func (c *mqlAwsNeptuneInstance) GetTdeCredentialArn() *plugin.TValue[string] {
 	return &c.TdeCredentialArn
+}
+
+func (c *mqlAwsNeptuneInstance) GetPubliclyAccessible() *plugin.TValue[bool] {
+	return &c.PubliclyAccessible
+}
+
+func (c *mqlAwsNeptuneInstance) GetCertificateAuthority() *plugin.TValue[string] {
+	return &c.CertificateAuthority
 }
 
 // mqlAwsNeptuneSnapshot for the aws.neptune.snapshot resource
@@ -51957,6 +52367,7 @@ type mqlAwsDocumentdbInstance struct {
 	PromotionTier                plugin.TValue[int64]
 	Region                       plugin.TValue[string]
 	StorageEncrypted             plugin.TValue[bool]
+	CertificateAuthority         plugin.TValue[string]
 	Tags                         plugin.TValue[map[string]any]
 }
 
@@ -52080,6 +52491,10 @@ func (c *mqlAwsDocumentdbInstance) GetStorageEncrypted() *plugin.TValue[bool] {
 	return &c.StorageEncrypted
 }
 
+func (c *mqlAwsDocumentdbInstance) GetCertificateAuthority() *plugin.TValue[string] {
+	return &c.CertificateAuthority
+}
+
 func (c *mqlAwsDocumentdbInstance) GetTags() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
@@ -52172,6 +52587,7 @@ type mqlAwsTimestreamLiveanalyticsDatabase struct {
 	Arn        plugin.TValue[string]
 	Name       plugin.TValue[string]
 	KmsKeyId   plugin.TValue[string]
+	KmsKey     plugin.TValue[*mqlAwsKmsKey]
 	Region     plugin.TValue[string]
 	CreatedAt  plugin.TValue[*time.Time]
 	UpdatedAt  plugin.TValue[*time.Time]
@@ -52220,6 +52636,22 @@ func (c *mqlAwsTimestreamLiveanalyticsDatabase) GetName() *plugin.TValue[string]
 
 func (c *mqlAwsTimestreamLiveanalyticsDatabase) GetKmsKeyId() *plugin.TValue[string] {
 	return &c.KmsKeyId
+}
+
+func (c *mqlAwsTimestreamLiveanalyticsDatabase) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.timestream.liveanalytics.database", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
 }
 
 func (c *mqlAwsTimestreamLiveanalyticsDatabase) GetRegion() *plugin.TValue[string] {
