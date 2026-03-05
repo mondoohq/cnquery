@@ -6770,3 +6770,73 @@ private aws.memorydb.cluster @defaults("name status nodeType region") {
   // Security groups associated with the cluster
   securityGroups() []aws.ec2.securitygroup
 }
+
+// Amazon Timestream for InfluxDB
+aws.timestream.influxdb @defaults("instances clusters") {
+  // List of InfluxDB instances
+  instances() []aws.timestream.influxdb.instance
+  // List of InfluxDB clusters
+  clusters() []aws.timestream.influxdb.cluster
+}
+
+// Amazon Timestream for InfluxDB instance
+private aws.timestream.influxdb.instance @defaults("arn name status") {
+  // ARN of the DB instance
+  arn string
+  // Service-generated unique identifier
+  id string
+  // Customer-supplied name of the DB instance
+  name string
+  // Amount of storage allocated (GiB)
+  allocatedStorage int
+  // DB instance type
+  dbInstanceType string
+  // DB storage type
+  dbStorageType string
+  // Deployment type: SINGLE_AZ or WITH_MULTIAZ_STANDBY
+  deploymentType string
+  // Connection endpoint
+  endpoint string
+  // Network type: IPV4 or DUAL
+  networkType string
+  // Port for InfluxDB connections
+  port int
+  // Status of the DB instance
+  status string
+  // Region of the DB instance
+  region string
+  // Tags for the DB instance
+  tags() map[string]string
+}
+
+// Amazon Timestream for InfluxDB cluster
+private aws.timestream.influxdb.cluster @defaults("arn name status") {
+  // ARN of the DB cluster
+  arn string
+  // Service-generated unique identifier
+  id string
+  // Customer-supplied name of the DB cluster
+  name string
+  // Amount of storage allocated (GiB)
+  allocatedStorage int
+  // DB instance type used by the cluster
+  dbInstanceType string
+  // DB storage type
+  dbStorageType string
+  // Deployment type of the cluster
+  deploymentType string
+  // Write and read endpoint
+  endpoint string
+  // Read-only endpoint
+  readerEndpoint string
+  // Network type: IPV4 or DUAL
+  networkType string
+  // Port for InfluxDB connections
+  port int
+  // Status of the DB cluster
+  status string
+  // Region of the DB cluster
+  region string
+  // Tags for the DB cluster
+  tags() map[string]string
+}

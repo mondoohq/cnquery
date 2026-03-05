@@ -123,6 +123,7 @@ mgroup
 minfree
 MINIMALUSER
 mkey
+MULTIAZ
 Mpim
 naflags
 natgateway
