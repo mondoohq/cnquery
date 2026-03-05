@@ -319,20 +319,22 @@ func (a *mqlAwsWorkspacesWorkspace) securityGroups() ([]any, error) {
 	svc := conn.Ec2(a.Region.Data)
 	ctx := context.Background()
 
-	resp, err := svc.DescribeNetworkInterfaces(ctx, &ec2.DescribeNetworkInterfacesInput{
+	sgIdSet := map[string]struct{}{}
+	paginator := ec2.NewDescribeNetworkInterfacesPaginator(svc, &ec2.DescribeNetworkInterfacesInput{
 		Filters: []ec2types.Filter{
 			{Name: aws.String("addresses.private-ip-address"), Values: []string{ipAddress}},
 		},
 	})
-	if err != nil {
-		return nil, err
-	}
-
-	sgIdSet := map[string]struct{}{}
-	for _, ni := range resp.NetworkInterfaces {
-		for _, sg := range ni.Groups {
-			if sg.GroupId != nil {
-				sgIdSet[*sg.GroupId] = struct{}{}
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, ni := range page.NetworkInterfaces {
+			for _, sg := range ni.Groups {
+				if sg.GroupId != nil {
+					sgIdSet[*sg.GroupId] = struct{}{}
+				}
 			}
 		}
 	}
