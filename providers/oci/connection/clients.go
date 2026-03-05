@@ -8,10 +8,16 @@ import (
 	"errors"
 
 	"github.com/oracle/oci-go-sdk/v65/audit"
+	"github.com/oracle/oci-go-sdk/v65/cloudguard"
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/core"
+	"github.com/oracle/oci-go-sdk/v65/events"
+	"github.com/oracle/oci-go-sdk/v65/filestorage"
 	"github.com/oracle/oci-go-sdk/v65/identity"
+	"github.com/oracle/oci-go-sdk/v65/keymanagement"
+	"github.com/oracle/oci-go-sdk/v65/logging"
 	"github.com/oracle/oci-go-sdk/v65/objectstorage"
+	"github.com/oracle/oci-go-sdk/v65/ons"
 )
 
 func (c *OciConnection) IdentityClient() (identity.IdentityClient, error) {
@@ -146,6 +152,86 @@ func (c *OciConnection) AuditClient(region string) (*audit.AuditClient, error) {
 
 func (c *OciConnection) ObjectStorageClient(region string) (*objectstorage.ObjectStorageClient, error) {
 	client, err := objectstorage.NewObjectStorageClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) BlockstorageClient(region string) (*core.BlockstorageClient, error) {
+	client, err := core.NewBlockstorageClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) FileStorageClient(region string) (*filestorage.FileStorageClient, error) {
+	client, err := filestorage.NewFileStorageClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) LoggingClient(region string) (*logging.LoggingManagementClient, error) {
+	client, err := logging.NewLoggingManagementClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) KmsVaultClient(region string) (*keymanagement.KmsVaultClient, error) {
+	client, err := keymanagement.NewKmsVaultClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) KmsManagementClient(endpoint string) (*keymanagement.KmsManagementClient, error) {
+	client, err := keymanagement.NewKmsManagementClientWithConfigurationProvider(c.config, endpoint)
+	if err != nil {
+		return nil, err
+	}
+	return &client, nil
+}
+
+func (c *OciConnection) EventsClient(region string) (*events.EventsClient, error) {
+	client, err := events.NewEventsClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) NotificationControlPlaneClient(region string) (*ons.NotificationControlPlaneClient, error) {
+	client, err := ons.NewNotificationControlPlaneClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) CloudGuardClient(region string) (*cloudguard.CloudGuardClient, error) {
+	client, err := cloudguard.NewCloudGuardClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) NotificationDataPlaneClient(region string) (*ons.NotificationDataPlaneClient, error) {
+	client, err := ons.NewNotificationDataPlaneClientWithConfigurationProvider(c.config)
 	if err != nil {
 		return nil, err
 	}
