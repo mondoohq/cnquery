@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -23,63 +24,98 @@ type mqlNginxInternal struct {
 	lock sync.Mutex
 }
 
-// parse runs "nginx -V" once and populates both Version and Modules.
-func (n *mqlNginx) parse() error {
-	n.lock.Lock()
-	defer n.lock.Unlock()
+// nginxVersionBinaries lists the well-known binary paths for the nginx server.
+// The version string (e.g. "nginx/1.25.3") is embedded as a constant in the
+// binary, so we can extract it by reading the file directly — no command
+// execution required.
+var nginxVersionBinaries = []string{
+	"/usr/sbin/nginx",
+	"/usr/local/sbin/nginx",
+	"/usr/local/bin/nginx",
+	"/usr/bin/nginx",
+}
 
-	if n.Version.State == plugin.StateIsSet {
-		return nil
+var nginxVersionTag = []byte("nginx/")
+
+// extractNginxVersion scans binary data for an embedded "nginx/x.y.z" string.
+func extractNginxVersion(data []byte) string {
+	idx := bytes.Index(data, nginxVersionTag)
+	if idx < 0 {
+		return ""
+	}
+	start := idx + len(nginxVersionTag)
+	end := start
+	for end < len(data) && (data[end] == '.' || (data[end] >= '0' && data[end] <= '9')) {
+		end++
+	}
+	if end == start {
+		return ""
+	}
+	return string(data[start:end])
+}
+
+func (n *mqlNginx) version() (string, error) {
+	conn := n.MqlRuntime.Connection.(shared.Connection)
+	afs := &afero.Afero{Fs: conn.FileSystem()}
+
+	// Prefer file-based detection: read the nginx binary and scan for the
+	// embedded "nginx/x.y.z" version string.
+	for _, bin := range nginxVersionBinaries {
+		data, err := afs.ReadFile(bin)
+		if err != nil {
+			continue
+		}
+		if v := extractNginxVersion(data); v != "" {
+			return v, nil
+		}
 	}
 
-	o, err := CreateResource(n.MqlRuntime, "command", map[string]*llx.RawData{
-		"command": llx.StringData("nginx -V 2>&1"),
-	})
+	// Fall back to running a command when the binary isn't readable (e.g.
+	// non-standard install path).
+	cmd, err := conn.RunCommand("nginx -v 2>&1")
+	if err == nil && cmd.ExitStatus == 0 {
+		data, err := io.ReadAll(cmd.Stdout)
+		if err == nil {
+			if m := reNginxVersion.FindSubmatch(data); m != nil {
+				return string(m[1]), nil
+			}
+		}
+	}
+
+	// Nginx is likely not installed; return nil rather than an error.
+	n.Version = plugin.TValue[string]{State: plugin.StateIsSet | plugin.StateIsNull}
+	return "", nil
+}
+
+func (n *mqlNginx) modules() ([]any, error) {
+	conn := n.MqlRuntime.Connection.(shared.Connection)
+
+	// Modules require "nginx -V" output (configure arguments are not in the binary).
+	cmd, err := conn.RunCommand("nginx -V 2>&1")
 	if err != nil {
-		n.Version = plugin.TValue[string]{Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
-		n.Modules = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
-		return err
+		n.Modules = plugin.TValue[[]any]{State: plugin.StateIsSet | plugin.StateIsNull}
+		return nil, nil
 	}
-	cmd := o.(*mqlCommand)
-	if exit := cmd.GetExitcode(); exit.Data != 0 {
-		err := errors.New("failed to run nginx -V: " + cmd.GetStdout().Data)
-		n.Version = plugin.TValue[string]{Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
-		n.Modules = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
-		return err
+	if cmd.ExitStatus != 0 {
+		n.Modules = plugin.TValue[[]any]{State: plugin.StateIsSet | plugin.StateIsNull}
+		return nil, nil
 	}
 
-	output := cmd.GetStdout().Data
+	data, err := io.ReadAll(cmd.Stdout)
+	if err != nil {
+		return nil, err
+	}
 
-	n.Version = plugin.TValue[string]{Data: parseNginxVersion(output), State: plugin.StateIsSet}
-
-	modules := parseNginxModules(output)
+	modules := parseNginxModules(string(data))
 	modulesData := make([]any, len(modules))
 	for i, m := range modules {
 		modulesData[i] = m
 	}
-	n.Modules = plugin.TValue[[]any]{Data: modulesData, State: plugin.StateIsSet}
-
-	return nil
+	return modulesData, nil
 }
 
-func (n *mqlNginx) version() (string, error) {
-	return "", n.parse()
-}
-
-func (n *mqlNginx) modules() ([]any, error) {
-	return nil, n.parse()
-}
-
-// reNginxVersion matches "nginx version: nginx/1.25.3" or similar.
-var reNginxVersion = regexp.MustCompile(`nginx version:\s*\S+/(\S+)`)
-
-// parseNginxVersion extracts the version number from nginx -V output.
-func parseNginxVersion(output string) string {
-	if m := reNginxVersion.FindStringSubmatch(output); len(m) > 1 {
-		return m[1]
-	}
-	return ""
-}
+// reNginxVersion matches "nginx version: nginx/1.25.3" or "nginx/1.25.3".
+var reNginxVersion = regexp.MustCompile(`nginx/(\S+)`)
 
 // reNginxModule matches --with-*_module flags in configure arguments.
 var reNginxModule = regexp.MustCompile(`--with-(\S+_module)`)

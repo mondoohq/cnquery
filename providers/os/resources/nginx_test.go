@@ -178,21 +178,46 @@ func TestNginxConfPathDefault(t *testing.T) {
 	assert.Equal(t, "/etc/nginx/nginx.conf", defaultNginxConf)
 }
 
-func TestParseNginxVersion(t *testing.T) {
-	t.Run("standard version output", func(t *testing.T) {
-		output := "nginx version: nginx/1.25.3\n" +
-			"built by gcc 12.2.0 (Debian 12.2.0-14)\n" +
-			"configure arguments: --prefix=/etc/nginx\n"
-		assert.Equal(t, "1.25.3", parseNginxVersion(output))
+func TestExtractNginxVersion(t *testing.T) {
+	t.Run("embedded version in binary data", func(t *testing.T) {
+		// Simulate binary data with embedded version string
+		data := []byte("\x00\x00nginx/1.25.3\x00\x00")
+		assert.Equal(t, "1.25.3", extractNginxVersion(data))
+	})
+
+	t.Run("four-part version", func(t *testing.T) {
+		data := []byte("some binary stuff\x00nginx/1.21.4.2\x00more stuff")
+		assert.Equal(t, "1.21.4.2", extractNginxVersion(data))
+	})
+
+	t.Run("no version tag", func(t *testing.T) {
+		data := []byte("no version here")
+		assert.Equal(t, "", extractNginxVersion(data))
+	})
+
+	t.Run("empty data", func(t *testing.T) {
+		assert.Equal(t, "", extractNginxVersion([]byte{}))
+	})
+
+	t.Run("tag without version digits", func(t *testing.T) {
+		data := []byte("nginx/\x00rest")
+		assert.Equal(t, "", extractNginxVersion(data))
+	})
+}
+
+func TestNginxVersionRegex(t *testing.T) {
+	t.Run("standard command output", func(t *testing.T) {
+		output := []byte("nginx version: nginx/1.25.3\n")
+		m := reNginxVersion.FindSubmatch(output)
+		require.NotNil(t, m)
+		assert.Equal(t, "1.25.3", string(m[1]))
 	})
 
 	t.Run("openresty variant", func(t *testing.T) {
-		output := "nginx version: openresty/1.21.4.2\n"
-		assert.Equal(t, "1.21.4.2", parseNginxVersion(output))
-	})
-
-	t.Run("empty output", func(t *testing.T) {
-		assert.Equal(t, "", parseNginxVersion(""))
+		// The -v output for openresty still contains nginx/version
+		m := reNginxVersion.FindSubmatch([]byte("nginx version: nginx/1.21.4.2\n"))
+		require.NotNil(t, m)
+		assert.Equal(t, "1.21.4.2", string(m[1]))
 	})
 }
 
