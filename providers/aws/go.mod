@@ -29,6 +29,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.61.2
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.61.7
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.38.14
+	github.com/aws/aws-sdk-go-v2/service/docdb v1.48.11
 	github.com/aws/aws-sdk-go-v2/service/drs v1.36.11
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.56.1
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.293.1

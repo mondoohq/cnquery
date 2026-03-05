@@ -6081,6 +6081,114 @@ private aws.cognito.identityPool @defaults("id name") {
   tags() map[string]string
 }
 
+// Amazon DocumentDB
+aws.documentdb @defaults("clusters") {
+  // List of DocumentDB clusters
+  clusters() []aws.documentdb.cluster
+  // List of DocumentDB instances
+  instances() []aws.documentdb.instance
+}
+
+// Amazon DocumentDB cluster
+private aws.documentdb.cluster @defaults("arn name status") {
+  // ARN for the cluster
+  arn string
+  // Name of the cluster
+  name string
+  // User-supplied DB cluster identifier
+  clusterIdentifier string
+  // Name of the database engine
+  engine string
+  // Database engine version
+  engineVersion string
+  // KMS key used to encrypt the DB cluster
+  kmsKey() aws.kms.key
+  // Region where the cluster exists
+  region string
+  // List of EC2 Availability Zones
+  availabilityZones []string
+  // Number of days automatic DB snapshots are retained
+  backupRetentionPeriod int
+  // Time when the cluster was created
+  createdAt time
+  // DB cluster parameter group for the DB cluster
+  clusterParameterGroup string
+  // Subnet group associated with the DB cluster
+  subnetGroup string
+  // Amazon Region-unique, immutable identifier for the DB cluster
+  clusterResourceId string
+  // Whether the DB cluster has deletion protection enabled
+  deletionProtection bool
+  // Earliest time to which a database can be restored
+  earliestRestorableTime time
+  // List of log types that this cluster is configured to export to CloudWatch logs
+  enabledCloudwatchLogsExports []string
+  // Connection endpoint for the primary instance
+  endpoint string
+  // Username
+  masterUsername string
+  // Whether the cluster has instances in multiple availability zones
+  multiAZ bool
+  // Port on which the database engine is listening
+  port int
+  // Daily time range during which automated backups are created
+  preferredBackupWindow string
+  // Weekly time range during which system maintenance can occur
+  preferredMaintenanceWindow string
+  // Status of the cluster
+  status string
+  // Whether the DB cluster is encrypted
+  storageEncrypted bool
+  // Storage type
+  storageType string
+  // Tags for the cluster
+  tags() map[string]string
+}
+
+// Amazon DocumentDB instance
+private aws.documentdb.instance @defaults("arn name status") {
+  // ARN for the instance
+  arn string
+  // Name of the instance
+  name string
+  // User-supplied DB cluster identifier
+  clusterIdentifier string
+  // Whether minor version patches are applied automatically
+  autoMinorVersionUpgrade bool
+  // Name of the availability zone
+  availabilityZone string
+  // Number of days automatic DB snapshots are retained
+  backupRetentionPeriod int
+  // Name of the compute and memory capacity class
+  instanceClass string
+  // Status of the instance
+  status string
+  // List of log types that this DB instance is configured to export to CloudWatch logs
+  enabledCloudwatchLogsExports []string
+  // Connection endpoint
+  endpoint dict
+  // Name of the database engine
+  engine string
+  // Database engine version
+  engineVersion string
+  // Time when the instance was created
+  createdAt time
+  // KMS key used to encrypt the DB instance
+  kmsKey() aws.kms.key
+  // Daily time range during which automated backups are created
+  preferredBackupWindow string
+  // Weekly time range during which system maintenance can occur
+  preferredMaintenanceWindow string
+  // Order in which a Read Replica is promoted
+  promotionTier int
+  // Region where the instance exists
+  region string
+  // Whether the DB instance is encrypted
+  storageEncrypted bool
+  // Tags for the instance
+  tags() map[string]string
+}
+
 // Amazon Timestream for LiveAnalytics
 aws.timestream.liveanalytics @defaults("databases") {
   // List of databases
