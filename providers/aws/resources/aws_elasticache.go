@@ -229,9 +229,10 @@ func (a *mqlAwsElasticache) getServerlessCaches(conn *connection.AwsConnection) 
 
 type mqlAwsElasticacheServerlessCacheInternal struct {
 	securityGroupIdHandler
-	region    string
-	accountID string
-	subnetIds []string
+	region        string
+	accountID     string
+	subnetIds     []string
+	cacheKmsKeyId *string
 }
 
 func newMqlAwsElasticacheServerlessCache(runtime *plugin.Runtime, region string, accountID string, cache elasticache_types.ServerlessCache) (*mqlAwsElasticacheServerlessCache, error) {
@@ -266,7 +267,23 @@ func newMqlAwsElasticacheServerlessCache(runtime *plugin.Runtime, region string,
 	mqlCache.region = region
 	mqlCache.accountID = accountID
 	mqlCache.subnetIds = cache.SubnetIds
+	mqlCache.cacheKmsKeyId = cache.KmsKeyId
 	return mqlCache, nil
+}
+
+func (a *mqlAwsElasticacheServerlessCache) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.cacheKmsKeyId == nil || *a.cacheKmsKeyId == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{
+			"arn": llx.StringDataPtr(a.cacheKmsKeyId),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
 func (a *mqlAwsElasticacheServerlessCache) securityGroups() ([]any, error) {

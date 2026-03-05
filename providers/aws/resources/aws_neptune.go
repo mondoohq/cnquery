@@ -243,11 +243,43 @@ func newMqlAwsNeptuneInstance(runtime *plugin.Runtime, region string, instance n
 			"storageType":                      llx.StringDataPtr(instance.StorageType),
 			"storageEncrypted":                 llx.BoolDataPtr(instance.StorageEncrypted),
 			"tdeCredentialArn":                 llx.StringDataPtr(instance.TdeCredentialArn),
+			"publiclyAccessible":               llx.BoolDataPtr(instance.PubliclyAccessible),
+			"certificateAuthority":             llx.StringDataPtr(instance.CACertificateIdentifier),
 		})
 	if err != nil {
 		return nil, err
 	}
 	return resource.(*mqlAwsNeptuneInstance), nil
+}
+
+func (a *mqlAwsNeptuneCluster) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.KmsKeyId.Data == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{
+			"arn": llx.StringData(a.KmsKeyId.Data),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
+func (a *mqlAwsNeptuneInstance) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.KmsKeyId.Data == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{
+			"arn": llx.StringData(a.KmsKeyId.Data),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
 func (a *mqlAwsNeptuneSnapshot) id() (string, error) {

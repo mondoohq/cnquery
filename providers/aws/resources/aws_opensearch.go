@@ -310,6 +310,12 @@ func newMqlAwsOpensearchDomain(runtime *plugin.Runtime, region string, accountID
 		serviceSoftwareNewVersion = convert.ToValue(domain.ServiceSoftwareOptions.NewVersion)
 	}
 
+	// Software update options
+	var autoSoftwareUpdateEnabled bool
+	if domain.SoftwareUpdateOptions != nil {
+		autoSoftwareUpdateEnabled = convert.ToValue(domain.SoftwareUpdateOptions.AutoSoftwareUpdateEnabled)
+	}
+
 	// Created timestamp
 	var createdAt *llx.RawData
 	if domain.Created != nil && *domain.Created {
@@ -360,6 +366,7 @@ func newMqlAwsOpensearchDomain(runtime *plugin.Runtime, region string, accountID
 			"auditLogEnabled":             llx.BoolData(auditLogEnabled),
 			"ipAddressType":               llx.StringData(string(domain.IPAddressType)),
 			"serviceSoftwareNewVersion":   llx.StringData(serviceSoftwareNewVersion),
+			"autoSoftwareUpdateEnabled":   llx.BoolData(autoSoftwareUpdateEnabled),
 		})
 	if err != nil {
 		return nil, err
@@ -370,6 +377,36 @@ func newMqlAwsOpensearchDomain(runtime *plugin.Runtime, region string, accountID
 	mqlDomain.subnetIds = subnetIds
 	mqlDomain.setSecurityGroupArns(sgArns)
 	return mqlDomain, nil
+}
+
+func (a *mqlAwsOpensearchDomain) encryptionAtRestKmsKey() (*mqlAwsKmsKey, error) {
+	if a.EncryptionAtRestKmsKeyId.Data == "" {
+		a.EncryptionAtRestKmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{
+			"arn": llx.StringData(a.EncryptionAtRestKmsKeyId.Data),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
+func (a *mqlAwsOpensearchDomain) vpc() (*mqlAwsVpc, error) {
+	vpcId := a.VpcId.Data
+	if vpcId == "" {
+		a.Vpc.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	vpcArn := fmt.Sprintf(vpcArnPattern, a.region, conn.AccountId(), vpcId)
+	res, err := NewResource(a.MqlRuntime, "aws.vpc", map[string]*llx.RawData{"arn": llx.StringData(vpcArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsVpc), nil
 }
 
 func (a *mqlAwsOpensearchDomain) securityGroups() ([]any, error) {

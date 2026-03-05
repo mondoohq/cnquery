@@ -905,9 +905,15 @@ private aws.fsx.filesystem @defaults("id type region") {
   // Whether file system is encrypted at rest (true if kmsKeyId is set)
   encrypted() bool
   // KMS key ID used for encryption
+  // Deprecated: use kmsKey() instead
   kmsKeyId string
+  // KMS key used for encryption
+  kmsKey() aws.kms.key
   // VPC ID where file system resides
+  // Deprecated: use vpc() instead
   vpcId string
+  // VPC where the file system resides
+  vpc() aws.vpc
   // Subnet IDs for file system
   subnetIds []string
   // Resource tags
@@ -929,7 +935,10 @@ private aws.fsx.cache @defaults("id lifecycle") {
   // Storage capacity in TiB
   storageCapacity int
   // VPC ID
+  // Deprecated: use vpc() instead
   vpcId string
+  // VPC where the cache resides
+  vpc() aws.vpc
   // Subnet IDs
   subnetIds []string
   // Lustre-specific configuration
@@ -955,7 +964,10 @@ private aws.fsx.backup @defaults("backupId type lifecycle") {
   // File system type
   fileSystemType string
   // KMS key ID used for encryption
+  // Deprecated: use kmsKey() instead
   kmsKeyId string
+  // KMS key used for encryption
+  kmsKey() aws.kms.key
   // Creation timestamp
   createdAt time
   // Region where the backup exists
@@ -1541,7 +1553,10 @@ private aws.opensearch.domain @defaults("name engineVersion") {
   // Whether encryption at rest is enabled
   encryptionAtRestEnabled bool
   // KMS key ID for encryption at rest
+  // Deprecated: use encryptionAtRestKmsKey() instead
   encryptionAtRestKmsKeyId string
+  // KMS key used for encryption at rest
+  encryptionAtRestKmsKey() aws.kms.key
   // Whether node-to-node encryption is enabled
   nodeToNodeEncryptionEnabled bool
   // Whether the domain is created with a dedicated master node
@@ -1577,7 +1592,10 @@ private aws.opensearch.domain @defaults("name engineVersion") {
   // EBS throughput
   ebsThroughput int
   // VPC ID if domain is in a VPC
+  // Deprecated: use vpc() instead
   vpcId string
+  // VPC associated with the domain
+  vpc() aws.vpc
   // Whether HTTPS is required
   enforceHTTPS bool
   // TLS security policy
@@ -1604,6 +1622,8 @@ private aws.opensearch.domain @defaults("name engineVersion") {
   ipAddressType string
   // New service software version available for the domain (empty string if up to date)
   serviceSoftwareNewVersion string
+  // Whether automatic software updates are enabled
+  autoSoftwareUpdateEnabled bool
   // Tags for the domain
   tags() map[string]string
   // Security groups associated with the VPC domain
@@ -1778,6 +1798,8 @@ private aws.elb.targetgroup @defaults("name port ec2Targets lambdaTargets") {
   ec2Targets() []aws.ec2.instance
   // Lambda targets for the load balancer target group
   lambdaTargets() []aws.lambda.function
+  // Region where the target group exists
+  region string
 }
 
 // AWS ELB target group attributes
@@ -2269,6 +2291,8 @@ private aws.ecs.task @defaults("lastStatus platformFamily platformVersion") {
   platformVersion string
   // User-defined tags associated with the ECS task
   tags map[string]string
+  // Region where the ECS task exists
+  region string
   // List of AWS ECS containers
   containers() []aws.ecs.container
 }
@@ -4056,7 +4080,10 @@ private aws.elasticache.serverlessCache @defaults("name description status engin
   // Version number of the engine with which the serverless cache is compatible
   majorEngineVersion string
   // ID of the Amazon Web Services Key Management Service (KMS) key
+  // Deprecated: use kmsKey() instead
   kmsKeyId string
+  // KMS key used to encrypt the serverless cache
+  kmsKey() aws.kms.key
   // A list of VPC security groups associated with the cluster
   securityGroups() []aws.ec2.securitygroup
   // Number of days ElastiCache retains automatic cluster snapshots before deleting them
@@ -4105,6 +4132,8 @@ private aws.redshift.cluster @defaults("dbName clusterVersion clusterStatus regi
   dbName string
   // Whether the cluster is encrypted at rest
   encrypted bool
+  // KMS key used to encrypt the cluster
+  kmsKey() aws.kms.key
   // Whether enhanced VPC routing is enabled for the cluster traffic
   enhancedVpcRouting bool
   // Logging configuration for the cluster
@@ -4130,7 +4159,10 @@ private aws.redshift.cluster @defaults("dbName clusterVersion clusterStatus regi
   // Tags for the cluster
   tags map[string]string
   // ID of the VPC where the cluster is running
+  // Deprecated: use vpc() instead
   vpcId string
+  // VPC where the cluster is running
+  vpc() aws.vpc
   // Availability status (Available, Unavailable, Maintenance, Modifying)
   clusterAvailabilityStatus string
   // Total storage capacity in megabytes
@@ -4666,7 +4698,10 @@ private aws.lambda.function @defaults("arn") {
   // Status of the last function update (Successful, Failed, InProgress)
   lastUpdateStatus string
   // KMS key ARN used to encrypt environment variables
+  // Deprecated: use kmsKey() instead
   kmsKeyArn string
+  // KMS key used to encrypt environment variables
+  kmsKey() aws.kms.key
   // Environment variables configured for the function
   environment map[string]string
   // Layers attached to the function
@@ -5467,6 +5502,8 @@ private aws.ec2.networkinterface @defaults("id privateIpAddress macAddress") {
   privateDnsName string
   // Private IPv4 address of the network interface
   privateIpAddress string
+  // Region where the network interface exists
+  region string
 }
 
 // Amazon EC2 key pair
@@ -5586,7 +5623,10 @@ private aws.ec2.image.ebsBlockDevice @defaults("volumeSize volumeType encrypted"
   // Volume type (gp2, gp3, io1, io2, etc.)
   volumeType string
   // ARN of the KMS key for encryption
+  // Deprecated: use kmsKey() instead
   kmsKeyId string
+  // KMS key used for encryption
+  kmsKey() aws.kms.key
   // IOPS for the volume
   iops int
   // Throughput in MiB/s
@@ -5797,6 +5837,8 @@ private aws.eks.addon @defaults("name addonVersion status") {
   owner() string
   // Configuration values that you provided
   configurationValues() string
+  // Region where the add-on exists
+  region string
 }
 
 // Amazon EKS cluster
@@ -5872,7 +5914,10 @@ private aws.neptune.cluster @defaults("arn name status") {
   // Database engine version
   engineVersion string
   // Amazon KMS key identifier for the encrypted DB cluster
+  // Deprecated: use kmsKey() instead
   kmsKeyId string
+  // KMS key used to encrypt the DB cluster
+  kmsKey() aws.kms.key
   // Region where the cluster exists
   region string
   // Time when the cluster was created
@@ -5958,7 +6003,10 @@ private aws.neptune.instance @defaults("arn name status"){
   // Time when the cluster was created
   createdAt time
   // Amazon KMS key identifier for the encrypted DB instance
+  // Deprecated: use kmsKey() instead
   kmsKeyId string
+  // KMS key used to encrypt the DB instance
+  kmsKey() aws.kms.key
   // Latest time to which a database can be restored
   latestRestorableTime time
   // Username
@@ -5983,6 +6031,10 @@ private aws.neptune.instance @defaults("arn name status"){
   storageType string
   // Key store with which the instance is associated for TDE encryption
   tdeCredentialArn string
+  // Whether the DB instance is publicly accessible
+  publiclyAccessible bool
+  // ID of the Certificate Authority
+  certificateAuthority string
 }
 
 // Amazon Neptune DB cluster snapshot
@@ -6185,6 +6237,8 @@ private aws.documentdb.instance @defaults("arn name status") {
   region string
   // Whether the DB instance is encrypted
   storageEncrypted bool
+  // ID of the Certificate Authority
+  certificateAuthority string
   // Tags for the instance
   tags() map[string]string
 }
@@ -6204,7 +6258,10 @@ private aws.timestream.liveanalytics.database @defaults("name region") {
   // Name of the database
   name string
   // KMS key used to encrypt the data stored in the database
+  // Deprecated: use kmsKey() instead
   kmsKeyId string
+  // KMS key used to encrypt the data stored in the database
+  kmsKey() aws.kms.key
   // Region where the database exists
   region string
   // Time when the database was created

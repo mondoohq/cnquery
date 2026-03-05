@@ -1265,6 +1265,7 @@ func (i *mqlAwsEc2Instance) networkInterfaces() ([]any, error) {
 				"sourceDestCheck":  llx.BoolDataPtr(networkingInterface.SourceDestCheck),
 				"status":           llx.StringData(string(networkingInterface.Status)),
 				"tags":             llx.MapData(toInterfaceMap(ec2TagsToMap(networkingInterface.TagSet)), types.String),
+				"region":           llx.StringData(i.Region.Data),
 			}
 			mqlNetworkInterface, err := CreateResource(i.MqlRuntime, ResourceAwsEc2Networkinterface, args)
 			if err != nil {
@@ -1433,6 +1434,21 @@ func (i *mqlAwsEc2Image) launchPermissions() ([]interface{}, error) {
 	}
 
 	return permissions, nil
+}
+
+func (a *mqlAwsEc2ImageEbsBlockDevice) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.KmsKeyId.Data == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{
+			"arn": llx.StringData(a.KmsKeyId.Data),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
 func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {

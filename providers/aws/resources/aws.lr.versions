@@ -603,6 +603,7 @@ aws.documentdb.instance.arn 11.16.1
 aws.documentdb.instance.autoMinorVersionUpgrade 11.16.1
 aws.documentdb.instance.availabilityZone 11.16.1
 aws.documentdb.instance.backupRetentionPeriod 11.16.1
+aws.documentdb.instance.certificateAuthority 11.16.1
 aws.documentdb.instance.clusterIdentifier 11.16.1
 aws.documentdb.instance.createdAt 11.16.1
 aws.documentdb.instance.enabledCloudwatchLogsExports 11.16.1
@@ -745,6 +746,7 @@ aws.ec2.image.ebsBlockDevice 11.15.2
 aws.ec2.image.ebsBlockDevice.deleteOnTermination 11.15.2
 aws.ec2.image.ebsBlockDevice.encrypted 11.15.2
 aws.ec2.image.ebsBlockDevice.iops 11.15.2
+aws.ec2.image.ebsBlockDevice.kmsKey 11.16.1
 aws.ec2.image.ebsBlockDevice.kmsKeyId 11.15.2
 aws.ec2.image.ebsBlockDevice.snapshotId 11.15.2
 aws.ec2.image.ebsBlockDevice.throughput 11.15.2
@@ -896,6 +898,7 @@ aws.ec2.networkinterface.ipv6Native 11.15.2
 aws.ec2.networkinterface.macAddress 11.15.2
 aws.ec2.networkinterface.privateDnsName 11.15.2
 aws.ec2.networkinterface.privateIpAddress 11.15.2
+aws.ec2.networkinterface.region 11.16.1
 aws.ec2.networkinterface.requesterManaged 11.15.2
 aws.ec2.networkinterface.securityGroups 11.15.2
 aws.ec2.networkinterface.sourceDestCheck 11.15.2
@@ -1121,6 +1124,7 @@ aws.ecs.task.containers 11.15.2
 aws.ecs.task.lastStatus 11.15.2
 aws.ecs.task.platformFamily 11.15.2
 aws.ecs.task.platformVersion 11.15.2
+aws.ecs.task.region 11.16.1
 aws.ecs.task.tags 11.15.2
 aws.ecs.taskDefinition 11.15.2
 aws.ecs.taskDefinition.arn 11.15.2
@@ -1253,6 +1257,7 @@ aws.eks.addon.modifiedAt 11.15.2
 aws.eks.addon.name 11.15.2
 aws.eks.addon.owner 11.15.2
 aws.eks.addon.publisher 11.15.2
+aws.eks.addon.region 11.16.1
 aws.eks.addon.status 11.15.2
 aws.eks.addon.tags 11.15.2
 aws.eks.cluster 11.15.2
@@ -1335,6 +1340,7 @@ aws.elasticache.serverlessCache.dailySnapshotTime 11.15.2
 aws.elasticache.serverlessCache.description 11.15.2
 aws.elasticache.serverlessCache.engine 11.15.2
 aws.elasticache.serverlessCache.engineVersion 11.15.2
+aws.elasticache.serverlessCache.kmsKey 11.16.1
 aws.elasticache.serverlessCache.kmsKeyId 11.15.2
 aws.elasticache.serverlessCache.majorEngineVersion 11.15.2
 aws.elasticache.serverlessCache.name 11.15.2
@@ -1425,6 +1431,7 @@ aws.elb.targetgroup.name 11.15.2
 aws.elb.targetgroup.port 11.15.2
 aws.elb.targetgroup.protocol 11.15.2
 aws.elb.targetgroup.protocolVersion 11.15.2
+aws.elb.targetgroup.region 11.16.1
 aws.elb.targetgroup.targetType 11.15.2
 aws.elb.targetgroup.unhealthyThresholdCount 11.15.2
 aws.elb.targetgroup.vpc 11.15.2
@@ -1480,6 +1487,7 @@ aws.fsx.backup.backupId 11.15.2
 aws.fsx.backup.createdAt 11.15.2
 aws.fsx.backup.fileSystemId 11.15.2
 aws.fsx.backup.fileSystemType 11.15.2
+aws.fsx.backup.kmsKey 11.16.1
 aws.fsx.backup.kmsKeyId 11.15.2
 aws.fsx.backup.lifecycle 11.15.2
 aws.fsx.backup.region 11.15.2
@@ -1495,6 +1503,7 @@ aws.fsx.cache.lustreConfiguration 11.15.2
 aws.fsx.cache.region 11.15.2
 aws.fsx.cache.storageCapacity 11.15.2
 aws.fsx.cache.subnetIds 11.15.2
+aws.fsx.cache.vpc 11.16.1
 aws.fsx.cache.vpcId 11.15.2
 aws.fsx.caches 11.15.2
 aws.fsx.fileSystems 11.15.2
@@ -1503,6 +1512,7 @@ aws.fsx.filesystem.arn 11.15.2
 aws.fsx.filesystem.createdAt 11.15.2
 aws.fsx.filesystem.encrypted 11.15.2
 aws.fsx.filesystem.id 11.15.2
+aws.fsx.filesystem.kmsKey 11.16.1
 aws.fsx.filesystem.kmsKeyId 11.15.2
 aws.fsx.filesystem.lifecycle 11.15.2
 aws.fsx.filesystem.region 11.15.2
@@ -1511,6 +1521,7 @@ aws.fsx.filesystem.storageType 11.15.2
 aws.fsx.filesystem.subnetIds 11.15.2
 aws.fsx.filesystem.tags 11.15.2
 aws.fsx.filesystem.type 11.15.2
+aws.fsx.filesystem.vpc 11.16.1
 aws.fsx.filesystem.vpcId 11.15.2
 aws.fsx.volume 11.15.2
 aws.fsx.volume.arn 11.15.2
@@ -1842,6 +1853,7 @@ aws.lambda.function.ephemeralStorageSize 11.15.2
 aws.lambda.function.eventSourceMappings 11.15.2
 aws.lambda.function.fileSystemConfigs 11.15.2
 aws.lambda.function.handler 11.15.2
+aws.lambda.function.kmsKey 11.16.1
 aws.lambda.function.kmsKeyArn 11.15.2
 aws.lambda.function.lastModifiedAt 11.15.2
 aws.lambda.function.lastUpdateStatus 11.15.2
@@ -2001,6 +2013,7 @@ aws.neptune.cluster.engine 11.15.2
 aws.neptune.cluster.engineVersion 11.15.2
 aws.neptune.cluster.globalClusterIdentifier 11.15.2
 aws.neptune.cluster.iamDatabaseAuthenticationEnabled 11.15.2
+aws.neptune.cluster.kmsKey 11.16.1
 aws.neptune.cluster.kmsKeyId 11.15.2
 aws.neptune.cluster.latestRestorableTime 11.15.2
 aws.neptune.cluster.masterUsername 11.15.2
@@ -2021,6 +2034,7 @@ aws.neptune.instance.arn 11.15.2
 aws.neptune.instance.autoMinorVersionUpgrade 11.15.2
 aws.neptune.instance.availabilityZone 11.15.2
 aws.neptune.instance.backupRetentionPeriod 11.15.2
+aws.neptune.instance.certificateAuthority 11.16.1
 aws.neptune.instance.clusterIdentifier 11.15.2
 aws.neptune.instance.createdAt 11.15.2
 aws.neptune.instance.deletionProtection 11.15.2
@@ -2031,6 +2045,7 @@ aws.neptune.instance.engineVersion 11.15.2
 aws.neptune.instance.enhancedMonitoringResourceArn 11.15.2
 aws.neptune.instance.iamDatabaseAuthenticationEnabled 11.15.2
 aws.neptune.instance.instanceClass 11.15.2
+aws.neptune.instance.kmsKey 11.16.1
 aws.neptune.instance.kmsKeyId 11.15.2
 aws.neptune.instance.latestRestorableTime 11.15.2
 aws.neptune.instance.masterUsername 11.15.2
@@ -2042,6 +2057,7 @@ aws.neptune.instance.port 11.15.2
 aws.neptune.instance.preferredBackupWindow 11.15.2
 aws.neptune.instance.preferredMaintenanceWindow 11.15.2
 aws.neptune.instance.promotionTier 11.15.2
+aws.neptune.instance.publiclyAccessible 11.16.1
 aws.neptune.instance.region 11.15.2
 aws.neptune.instance.status 11.15.2
 aws.neptune.instance.storageEncrypted 11.15.2
@@ -2071,6 +2087,7 @@ aws.opensearch.domain.advancedSecurityEnabled 11.15.2
 aws.opensearch.domain.anonymousAuthEnabled 11.15.2
 aws.opensearch.domain.arn 11.15.2
 aws.opensearch.domain.auditLogEnabled 11.15.2
+aws.opensearch.domain.autoSoftwareUpdateEnabled 11.16.1
 aws.opensearch.domain.autoTuneState 11.15.2
 aws.opensearch.domain.availabilityZoneCount 11.15.2
 aws.opensearch.domain.coldStorageEnabled 11.15.2
@@ -2085,6 +2102,7 @@ aws.opensearch.domain.ebsThroughput 11.15.2
 aws.opensearch.domain.ebsVolumeSize 11.15.2
 aws.opensearch.domain.ebsVolumeType 11.15.2
 aws.opensearch.domain.encryptionAtRestEnabled 11.15.2
+aws.opensearch.domain.encryptionAtRestKmsKey 11.16.1
 aws.opensearch.domain.encryptionAtRestKmsKeyId 11.15.2
 aws.opensearch.domain.endpoint 11.15.2
 aws.opensearch.domain.enforceHTTPS 11.15.2
@@ -2104,6 +2122,7 @@ aws.opensearch.domain.subnets 11.15.2
 aws.opensearch.domain.tags 11.15.2
 aws.opensearch.domain.tlsSecurityPolicy 11.15.2
 aws.opensearch.domain.upgradeProcessing 11.15.2
+aws.opensearch.domain.vpc 11.16.1
 aws.opensearch.domain.vpcId 11.15.2
 aws.opensearch.domain.warmCount 11.15.2
 aws.opensearch.domain.warmEnabled 11.15.2
@@ -2304,6 +2323,7 @@ aws.redshift.cluster.dbName 11.15.2
 aws.redshift.cluster.encrypted 11.15.2
 aws.redshift.cluster.enhancedVpcRouting 11.15.2
 aws.redshift.cluster.ipAddressType 11.15.2
+aws.redshift.cluster.kmsKey 11.16.1
 aws.redshift.cluster.logging 11.15.2
 aws.redshift.cluster.manualSnapshotRetentionPeriod 11.15.2
 aws.redshift.cluster.masterUsername 11.15.2
@@ -2319,6 +2339,7 @@ aws.redshift.cluster.region 11.15.2
 aws.redshift.cluster.snapshots 11.15.2
 aws.redshift.cluster.tags 11.15.2
 aws.redshift.cluster.totalStorageCapacityInMegaBytes 11.15.2
+aws.redshift.cluster.vpc 11.16.1
 aws.redshift.cluster.vpcId 11.15.2
 aws.redshift.clusters 11.15.2
 aws.redshift.snapshot 11.15.2
@@ -2696,6 +2717,7 @@ aws.timestream.liveanalytics 11.15.2
 aws.timestream.liveanalytics.database 11.15.2
 aws.timestream.liveanalytics.database.arn 11.15.2
 aws.timestream.liveanalytics.database.createdAt 11.15.2
+aws.timestream.liveanalytics.database.kmsKey 11.16.1
 aws.timestream.liveanalytics.database.kmsKeyId 11.15.2
 aws.timestream.liveanalytics.database.name 11.15.2
 aws.timestream.liveanalytics.database.region 11.15.2
