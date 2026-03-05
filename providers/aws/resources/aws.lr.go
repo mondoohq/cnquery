@@ -155,6 +155,9 @@ const (
 	ResourceAwsEcsTaskDefinitionEphemeralStorage                                string = "aws.ecs.taskDefinition.ephemeralStorage"
 	ResourceAwsEmr                                                              string = "aws.emr"
 	ResourceAwsEmrCluster                                                       string = "aws.emr.cluster"
+	ResourceAwsEventbridge                                                      string = "aws.eventbridge"
+	ResourceAwsEventbridgeEventBus                                              string = "aws.eventbridge.eventBus"
+	ResourceAwsEventbridgeRule                                                  string = "aws.eventbridge.rule"
 	ResourceAwsCloudwatch                                                       string = "aws.cloudwatch"
 	ResourceAwsCloudwatchMetricsalarm                                           string = "aws.cloudwatch.metricsalarm"
 	ResourceAwsCloudwatchMetric                                                 string = "aws.cloudwatch.metric"
@@ -880,6 +883,18 @@ func init() {
 		"aws.emr.cluster": {
 			// to override args, implement: initAwsEmrCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEmrCluster,
+		},
+		"aws.eventbridge": {
+			// to override args, implement: initAwsEventbridge(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridge,
+		},
+		"aws.eventbridge.eventBus": {
+			// to override args, implement: initAwsEventbridgeEventBus(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgeEventBus,
+		},
+		"aws.eventbridge.rule": {
+			// to override args, implement: initAwsEventbridgeRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgeRule,
 		},
 		"aws.cloudwatch": {
 			// to override args, implement: initAwsCloudwatch(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4728,6 +4743,60 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.emr.cluster.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEmrCluster).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.eventbridge.eventBuses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridge).GetEventBuses()).ToDataRes(types.Array(types.Resource("aws.eventbridge.eventBus")))
+	},
+	"aws.eventbridge.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridge).GetRules()).ToDataRes(types.Array(types.Resource("aws.eventbridge.rule")))
+	},
+	"aws.eventbridge.eventBus.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeEventBus).GetArn()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.eventBus.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeEventBus).GetName()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.eventBus.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeEventBus).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.eventBus.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeEventBus).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.eventbridge.eventBus.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeEventBus).GetRules()).ToDataRes(types.Array(types.Resource("aws.eventbridge.rule")))
+	},
+	"aws.eventbridge.rule.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeRule).GetArn()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.rule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeRule).GetName()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.rule.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeRule).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.rule.eventBusName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeRule).GetEventBusName()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.rule.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeRule).GetState()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.rule.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeRule).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.rule.eventPattern": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeRule).GetEventPattern()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.rule.scheduleExpression": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeRule).GetScheduleExpression()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.rule.roleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeRule).GetRoleArn()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.rule.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeRule).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.eventbridge.rule.targets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeRule).GetTargets()).ToDataRes(types.Array(types.Dict))
 	},
 	"aws.cloudwatch.logGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudwatch).GetLogGroups()).ToDataRes(types.Array(types.Resource("aws.cloudwatch.loggroup")))
@@ -14366,6 +14435,90 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.emr.cluster.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEmrCluster).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridge).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.eventBuses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridge).EventBuses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridge).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.eventBus.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeEventBus).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.eventBus.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeEventBus).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.eventBus.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeEventBus).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.eventBus.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeEventBus).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.eventBus.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeEventBus).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.eventBus.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeEventBus).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeRule).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.rule.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeRule).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.rule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.rule.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeRule).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.rule.eventBusName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeRule).EventBusName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.rule.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeRule).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.rule.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeRule).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.rule.eventPattern": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeRule).EventPattern, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.rule.scheduleExpression": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeRule).ScheduleExpression, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.rule.roleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeRule).RoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.rule.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeRule).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.rule.targets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeRule).Targets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.cloudwatch.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -34526,6 +34679,260 @@ func (c *mqlAwsEmrCluster) GetId() *plugin.TValue[string] {
 
 func (c *mqlAwsEmrCluster) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
+}
+
+// mqlAwsEventbridge for the aws.eventbridge resource
+type mqlAwsEventbridge struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEventbridgeInternal it will be used here
+	EventBuses plugin.TValue[[]any]
+	Rules      plugin.TValue[[]any]
+}
+
+// createAwsEventbridge creates a new instance of this resource
+func createAwsEventbridge(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridge{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridge) MqlName() string {
+	return "aws.eventbridge"
+}
+
+func (c *mqlAwsEventbridge) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridge) GetEventBuses() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EventBuses, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge", c.__id, "eventBuses")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.eventBuses()
+	})
+}
+
+func (c *mqlAwsEventbridge) GetRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge", c.__id, "rules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rules()
+	})
+}
+
+// mqlAwsEventbridgeEventBus for the aws.eventbridge.eventBus resource
+type mqlAwsEventbridgeEventBus struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEventbridgeEventBusInternal it will be used here
+	Arn    plugin.TValue[string]
+	Name   plugin.TValue[string]
+	Region plugin.TValue[string]
+	Tags   plugin.TValue[map[string]any]
+	Rules  plugin.TValue[[]any]
+}
+
+// createAwsEventbridgeEventBus creates a new instance of this resource
+func createAwsEventbridgeEventBus(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgeEventBus{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.eventBus", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgeEventBus) MqlName() string {
+	return "aws.eventbridge.eventBus"
+}
+
+func (c *mqlAwsEventbridgeEventBus) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgeEventBus) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsEventbridgeEventBus) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsEventbridgeEventBus) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsEventbridgeEventBus) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsEventbridgeEventBus) GetRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.eventBus", c.__id, "rules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rules()
+	})
+}
+
+// mqlAwsEventbridgeRule for the aws.eventbridge.rule resource
+type mqlAwsEventbridgeRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEventbridgeRuleInternal it will be used here
+	Arn                plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Region             plugin.TValue[string]
+	EventBusName       plugin.TValue[string]
+	State              plugin.TValue[string]
+	Description        plugin.TValue[string]
+	EventPattern       plugin.TValue[string]
+	ScheduleExpression plugin.TValue[string]
+	RoleArn            plugin.TValue[string]
+	Tags               plugin.TValue[map[string]any]
+	Targets            plugin.TValue[[]any]
+}
+
+// createAwsEventbridgeRule creates a new instance of this resource
+func createAwsEventbridgeRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgeRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.rule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgeRule) MqlName() string {
+	return "aws.eventbridge.rule"
+}
+
+func (c *mqlAwsEventbridgeRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgeRule) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsEventbridgeRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsEventbridgeRule) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsEventbridgeRule) GetEventBusName() *plugin.TValue[string] {
+	return &c.EventBusName
+}
+
+func (c *mqlAwsEventbridgeRule) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsEventbridgeRule) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsEventbridgeRule) GetEventPattern() *plugin.TValue[string] {
+	return &c.EventPattern
+}
+
+func (c *mqlAwsEventbridgeRule) GetScheduleExpression() *plugin.TValue[string] {
+	return &c.ScheduleExpression
+}
+
+func (c *mqlAwsEventbridgeRule) GetRoleArn() *plugin.TValue[string] {
+	return &c.RoleArn
+}
+
+func (c *mqlAwsEventbridgeRule) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsEventbridgeRule) GetTargets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Targets, func() ([]any, error) {
+		return c.targets()
+	})
 }
 
 // mqlAwsCloudwatch for the aws.cloudwatch resource
