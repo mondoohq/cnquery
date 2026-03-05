@@ -9475,6 +9475,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.codedeploy.deployment.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCodedeployDeployment).GetCreatedAt()).ToDataRes(types.Time)
 	},
+	"aws.codedeploy.deployment.completedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodedeployDeployment).GetCompletedAt()).ToDataRes(types.Time)
+	},
 	"aws.codedeploy.deployment.compleatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCodedeployDeployment).GetCompleatedAt()).ToDataRes(types.Time)
 	},
@@ -21960,6 +21963,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.codedeploy.deployment.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCodedeployDeployment).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.codedeploy.deployment.completedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodedeployDeployment).CompletedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.codedeploy.deployment.compleatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -53138,6 +53145,7 @@ type mqlAwsCodedeployDeployment struct {
 	DeploymentGroupName           plugin.TValue[string]
 	DeploymentConfigName          plugin.TValue[string]
 	CreatedAt                     plugin.TValue[*time.Time]
+	CompletedAt                   plugin.TValue[*time.Time]
 	CompleatedAt                  plugin.TValue[*time.Time]
 	Description                   plugin.TValue[string]
 	Creator                       plugin.TValue[string]
@@ -53214,6 +53222,10 @@ func (c *mqlAwsCodedeployDeployment) GetDeploymentConfigName() *plugin.TValue[st
 
 func (c *mqlAwsCodedeployDeployment) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
+}
+
+func (c *mqlAwsCodedeployDeployment) GetCompletedAt() *plugin.TValue[*time.Time] {
+	return &c.CompletedAt
 }
 
 func (c *mqlAwsCodedeployDeployment) GetCompleatedAt() *plugin.TValue[*time.Time] {

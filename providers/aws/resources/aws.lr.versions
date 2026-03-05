@@ -429,6 +429,7 @@ aws.codedeploy.deployment 11.15.2
 aws.codedeploy.deployment.applicationName 11.15.2
 aws.codedeploy.deployment.arn 11.15.2
 aws.codedeploy.deployment.compleatedAt 11.15.2
+aws.codedeploy.deployment.completedAt 11.16.1
 aws.codedeploy.deployment.createdAt 11.15.2
 aws.codedeploy.deployment.creator 11.15.2
 aws.codedeploy.deployment.deploymentConfigName 11.15.2

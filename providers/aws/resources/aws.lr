@@ -6379,6 +6379,8 @@ private aws.codedeploy.deployment @defaults("deploymentId status applicationName
   // Time the deployment was created
   createdAt time
   // Time the deployment was completed
+  completedAt time
+  // Deprecated. Use `completedAt` instead.
   compleatedAt time
   // Description of the deployment
   description string
