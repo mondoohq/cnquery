@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/docdb"
 	docdb_types "github.com/aws/aws-sdk-go-v2/service/docdb/types"
 	"github.com/rs/zerolog/log"
@@ -54,7 +55,15 @@ func (a *mqlAwsDocumentdb) getDbClusters(conn *connection.AwsConnection) []*jobp
 			ctx := context.Background()
 			res := []any{}
 
-			paginator := docdb.NewDescribeDBClustersPaginator(svc, &docdb.DescribeDBClustersInput{})
+			params := &docdb.DescribeDBClustersInput{
+				Filters: []docdb_types.Filter{
+					{
+						Name:   aws.String("engine"),
+						Values: []string{"docdb"},
+					},
+				},
+			}
+			paginator := docdb.NewDescribeDBClustersPaginator(svc, params)
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
@@ -189,7 +198,15 @@ func (a *mqlAwsDocumentdb) getDbInstances(conn *connection.AwsConnection) []*job
 			ctx := context.Background()
 			res := []any{}
 
-			paginator := docdb.NewDescribeDBInstancesPaginator(svc, &docdb.DescribeDBInstancesInput{})
+			params := &docdb.DescribeDBInstancesInput{
+				Filters: []docdb_types.Filter{
+					{
+						Name:   aws.String("engine"),
+						Values: []string{"docdb"},
+					},
+				},
+			}
+			paginator := docdb.NewDescribeDBInstancesPaginator(svc, params)
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
