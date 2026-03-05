@@ -54,7 +54,7 @@ type Config struct {
 	// Used to match archive entries and construct platform-specific filenames.
 	BinaryName string
 	// CurrentVersion is the current version of the running binary.
-	// If "unstable", self-update is skipped.
+	// If "x.y.z-rolling", self-update is skipped.
 	CurrentVersion string
 }
 
@@ -85,9 +85,9 @@ func CheckAndUpdate(cfg Config) (bool, error) {
 		return false, nil
 	}
 
-	// Skip if version is "unstable" (dev build)
+	// Skip if version is "rolling" (dev build)
 	currentVersion := cfg.CurrentVersion
-	if currentVersion == "unstable" {
+	if strings.HasSuffix(currentVersion, "-rolling") {
 		log.Debug().Msg("self-update: skipping, running unstable/dev build")
 		return false, nil
 	}

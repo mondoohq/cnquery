@@ -47,7 +47,7 @@ var DisableMaxLimit string
 // valid semver version including build version (e.g. 4.10.0+4900), where 4900 is a forward rolling int
 func GetVersion() string {
 	if Version == "" {
-		return "unstable"
+		return "v13.0.0-rolling"
 	}
 	return Version
 }
@@ -105,7 +105,7 @@ func GetCoreVersion() string {
 	}
 
 	if v == "" {
-		return "unstable"
+		return "v13.0.0-rolling"
 	}
 	return v
 }
