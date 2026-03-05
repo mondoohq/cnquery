@@ -122,6 +122,14 @@ func newMqlAwsKinesisStream(runtime *plugin.Runtime, region string, svc *kinesis
 		args["openShardCount"] = llx.IntDataDefault(desc.OpenShardCount, 0)
 		args["consumerCount"] = llx.IntDataDefault(desc.ConsumerCount, 0)
 		args["enhancedMonitoring"] = llx.ArrayData(enhancedMonitoring, types.Any)
+	} else {
+		log.Warn().Str("stream", convert.ToValue(summary.StreamName)).Msg("nil stream description summary")
+		args["encryptionType"] = llx.StringData("")
+		args["keyId"] = llx.StringData("")
+		args["retentionPeriodHours"] = llx.IntData(0)
+		args["openShardCount"] = llx.IntData(0)
+		args["consumerCount"] = llx.IntData(0)
+		args["enhancedMonitoring"] = llx.ArrayData([]any{}, types.Any)
 	}
 
 	resource, err := CreateResource(runtime, "aws.kinesis.stream", args)
