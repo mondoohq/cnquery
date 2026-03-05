@@ -54,6 +54,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
+	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
@@ -1580,6 +1581,26 @@ func (t *AwsConnection) STS(region string) *sts.Client {
 	client := sts.NewFromConfig(cfg)
 
 	// cache it
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) Route53Domains(region string) *route53domains.Client {
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_route53domains_" + region
+
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached route53domains client")
+		return c.Data.(*route53domains.Client)
+	}
+
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := route53domains.NewFromConfig(cfg)
+
 	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
 	return client
 }

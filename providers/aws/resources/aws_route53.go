@@ -8,9 +8,11 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	route53types "github.com/aws/aws-sdk-go-v2/service/route53/types"
+	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -648,6 +650,187 @@ func (a *mqlAwsRoute53KeySigningKey) kmsKey() (*mqlAwsKmsKey, error) {
 		return nil, err
 	}
 	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
+// Domains (via Route 53 Domains - us-east-1 only)
+
+func (a *mqlAwsRoute53) domains() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Route53Domains("us-east-1")
+	ctx := context.Background()
+
+	var res []interface{}
+	var marker *string
+	for {
+		input := &route53domains.ListDomainsInput{}
+		if marker != nil {
+			input.Marker = marker
+		}
+		resp, err := svc.ListDomains(ctx, input)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return nil, nil
+			}
+			return nil, err
+		}
+		for _, domain := range resp.Domains {
+			domainName := convert.ToValue(domain.DomainName)
+
+			mqlDomain, err := CreateResource(a.MqlRuntime, "aws.route53.domain",
+				map[string]*llx.RawData{
+					"__id":         llx.StringData("aws.route53.domain/" + domainName),
+					"domainName":   llx.StringData(domainName),
+					"autoRenew":    llx.BoolDataPtr(domain.AutoRenew),
+					"transferLock": llx.BoolDataPtr(domain.TransferLock),
+					"expiresAt":    llx.TimeDataPtr(domain.Expiry),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlDomain)
+		}
+		if resp.NextPageMarker == nil {
+			break
+		}
+		marker = resp.NextPageMarker
+	}
+	return res, nil
+}
+
+type mqlAwsRoute53DomainInternal struct {
+	detailCache *route53domains.GetDomainDetailOutput
+	detailDone  bool
+}
+
+func (a *mqlAwsRoute53Domain) id() (string, error) {
+	return "aws.route53.domain/" + a.DomainName.Data, nil
+}
+
+func (a *mqlAwsRoute53Domain) getDetail() (*route53domains.GetDomainDetailOutput, error) {
+	if a.detailDone {
+		return a.detailCache, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Route53Domains("us-east-1")
+	ctx := context.Background()
+	domainName := a.DomainName.Data
+
+	detail, err := svc.GetDomainDetail(ctx, &route53domains.GetDomainDetailInput{
+		DomainName: &domainName,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			a.detailDone = true
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	a.detailCache = detail
+	a.detailDone = true
+	return detail, nil
+}
+
+func (a *mqlAwsRoute53Domain) createdAt() (*time.Time, error) {
+	detail, err := a.getDetail()
+	if err != nil || detail == nil {
+		return nil, err
+	}
+	return detail.CreationDate, nil
+}
+
+func (a *mqlAwsRoute53Domain) updatedAt() (*time.Time, error) {
+	detail, err := a.getDetail()
+	if err != nil || detail == nil {
+		return nil, err
+	}
+	return detail.UpdatedDate, nil
+}
+
+func (a *mqlAwsRoute53Domain) adminPrivacy() (bool, error) {
+	detail, err := a.getDetail()
+	if err != nil || detail == nil {
+		return false, err
+	}
+	if detail.AdminPrivacy == nil {
+		return false, nil
+	}
+	return *detail.AdminPrivacy, nil
+}
+
+func (a *mqlAwsRoute53Domain) registrantPrivacy() (bool, error) {
+	detail, err := a.getDetail()
+	if err != nil || detail == nil {
+		return false, err
+	}
+	if detail.RegistrantPrivacy == nil {
+		return false, nil
+	}
+	return *detail.RegistrantPrivacy, nil
+}
+
+func (a *mqlAwsRoute53Domain) techPrivacy() (bool, error) {
+	detail, err := a.getDetail()
+	if err != nil || detail == nil {
+		return false, err
+	}
+	if detail.TechPrivacy == nil {
+		return false, nil
+	}
+	return *detail.TechPrivacy, nil
+}
+
+func (a *mqlAwsRoute53Domain) dnssec() (string, error) {
+	detail, err := a.getDetail()
+	if err != nil || detail == nil {
+		return "", err
+	}
+	return convert.ToValue(detail.DnsSec), nil
+}
+
+func (a *mqlAwsRoute53Domain) statusList() ([]interface{}, error) {
+	detail, err := a.getDetail()
+	if err != nil || detail == nil {
+		return nil, err
+	}
+	var statusList []interface{}
+	for _, s := range detail.StatusList {
+		statusList = append(statusList, s)
+	}
+	return statusList, nil
+}
+
+func (a *mqlAwsRoute53Domain) nameservers() ([]interface{}, error) {
+	detail, err := a.getDetail()
+	if err != nil || detail == nil {
+		return nil, err
+	}
+	var nameservers []interface{}
+	for _, ns := range detail.Nameservers {
+		nsDict, err := convert.JsonToDict(ns)
+		if err != nil {
+			return nil, err
+		}
+		nameservers = append(nameservers, nsDict)
+	}
+	return nameservers, nil
+}
+
+func (a *mqlAwsRoute53Domain) registrarName() (string, error) {
+	detail, err := a.getDetail()
+	if err != nil || detail == nil {
+		return "", err
+	}
+	return convert.ToValue(detail.RegistrarName), nil
+}
+
+func (a *mqlAwsRoute53Domain) abuseContactEmail() (string, error) {
+	detail, err := a.getDetail()
+	if err != nil || detail == nil {
+		return "", err
+	}
+	return convert.ToValue(detail.AbuseContactEmail), nil
 }
 
 // Helper functions
