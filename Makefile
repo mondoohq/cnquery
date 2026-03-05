@@ -189,7 +189,7 @@ providers/mqlr/install: providers/mqlr
 PROVIDERS := network os ipmi ipinfo oci slack github gitlab terraform \
 	vsphere opcua okta google-workspace arista equinix vcd gcp k8s azure \
 	ms365 aws atlassian cloudformation shodan ansible snowflake mondoo \
-	cloudflare nmap tailscale
+	cloudflare nmap tailscale depsdev
 
 .PHONY: providers/build
 providers/build: \
