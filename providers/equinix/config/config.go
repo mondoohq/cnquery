@@ -25,8 +25,8 @@ Available commands:
   project <project-id>      Specifies the project to interact with, using the project identifier.
 
 Examples:
-  cnquery shell equinix org <org-id> --token <api-token>
-  cnquery shell equinix project <project-id> --token <api-token>
+  cnspec shell equinix org <org-id> --token <api-token>
+  cnspec shell equinix project <project-id> --token <api-token>
   cnspec scan equinix org <org-id> --token <api-token>
 
 Notes:

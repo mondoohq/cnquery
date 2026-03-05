@@ -25,7 +25,7 @@ IPMI provides management and monitoring capabilities independently of the host s
 firmware (BIOS or UEFI), and operating system.
 
 Examples:
-  cnquery shell ipmi <user@host>
+  cnspec shell ipmi <user@host>
 	cnspec scan ipmi <user@host>
 `,
 			MinArgs:   1,

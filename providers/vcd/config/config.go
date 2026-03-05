@@ -21,7 +21,7 @@ var Config = plugin.Provider{
 			Long: `Use the vcd provider to query resources in a VMware Cloud Director environment. The VMware Cloud Director platform facilitates the operation and management of virtual resources within a multi-tenant cloud environment.
 
 			Examples:
-			  cnquery shell vcd --user <USER-NAME> --host <HOST-NAME> --ask-pass
+			  cnspec shell vcd --user <USER-NAME> --host <HOST-NAME> --ask-pass
 				cnspec scan vcd --user <USER-NAME> --host <HOST-NAME> --password <PASSWORD>
 `,
 			Discovery: []string{},

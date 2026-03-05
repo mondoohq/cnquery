@@ -27,7 +27,7 @@ Requirement:
   To query or scan a Kubernetes cluster, you must install kubectl on your workstation. To learn how, read https://kubernetes.io/docs/tasks/tools/. 
 
 Examples:
-  cnquery shell k8s
+  cnspec shell k8s
   cnspec scan k8s
   cnspec scan k8s <MANIFEST-FILE>
 `,

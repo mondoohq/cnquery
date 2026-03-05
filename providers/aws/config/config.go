@@ -39,10 +39,10 @@ Available commands:
 																									Provide the snapshot ID
 
 Examples:
-  cnquery shell aws
+  cnspec shell aws
 	cnspec scan aws
-	cnquery scan aws -f mondoo-aws-incident-response.mql.yaml --querypack mondoo-incident-response-aws
-	cnquery shell aws --role <role-arn>
+	cnspec scan aws -f mondoo-aws-incident-response.mql.yaml --querypack mondoo-incident-response-aws
+	cnspec shell aws --role <role-arn>
 	cnspec scan aws ec2 instance-connect <user@host>
 	cnspec scan aws ec2 instance-connect <user@host> --identity-file <path>
 	cnspec scan aws ec2 ebs <snapshot-id>

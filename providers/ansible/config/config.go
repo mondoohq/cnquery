@@ -22,7 +22,7 @@ var Config = plugin.Provider{
 			Long: `Use the ansible provider to query resources in an Ansible playbook, including tasks, roles, handlers, and variables.
 
 Examples:
-  cnquery shell ansible <path>
+  cnspec shell ansible <path>
   cnspec scan ansible <path>
 `,
 			MinArgs:   1,

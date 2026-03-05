@@ -24,7 +24,7 @@ var Config = plugin.Provider{
 
 Examples:
   cnspec scan vsphere <USER>@<HOST> --askpass
-	cnquery shell vsphere <USER>@<HOST> --password <YOUR-PASSWORD>
+	cnspec shell vsphere <USER>@<HOST> --password <YOUR-PASSWORD>
 `,
 			Discovery: []string{
 				resources.DiscoveryApi,

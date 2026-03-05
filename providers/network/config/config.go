@@ -37,7 +37,7 @@ var Config = plugin.Provider{
 			Long: `Use the host provider to query remote HTTP or HTTPS hosts. 
 
 Examples:
-  cnquery shell host <YOUR-DOMAIN-OR-IP>
+  cnspec shell host <YOUR-DOMAIN-OR-IP>
   cnspec scan host <YOUR-DOMAIN-OR-IP>
 
 Note:

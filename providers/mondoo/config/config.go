@@ -23,7 +23,7 @@ var Config = plugin.Provider{
 To query Mondoo Platform from a workstation, the workstation must be registered with Mondoo Platform. To learn how to register a workstation, read https://mondoo.com/docs/cnspec/cnspec-adv-install/registration/. 
 
 Examples:
-  cnquery shell mondoo
+  cnspec shell mondoo
 	cnspec scan mondoo
 `,
 			MinArgs:   0,

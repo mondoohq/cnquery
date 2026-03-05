@@ -21,7 +21,7 @@ var Config = plugin.Provider{
 			Long: `Use the opcua provider to query resources on an Open Platform Communications Unified Architecture (OPC UA) server or device. OPC UA is a protocol for machine-to-machine communication in industrial automation.
 
 Examples:
-  cnquery shell opcua --endpoint opc.tcp://<host>:<port>
+  cnspec shell opcua --endpoint opc.tcp://<host>:<port>
   cnspec scan opcua --endpoint opc.tcp://<host>:<port>
 `,
 			Discovery: []string{},

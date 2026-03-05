@@ -25,7 +25,7 @@ To access a Snowflake account, you must first authenticate with Snowflake. To do
 Once you successfully authenticate, you can scan or query the Snowflake account.
 
 Example:
-  cnquery shell snowflake --account <account id> --region <region> --user <your id> --role <the role you use> --identity-file <path to your private RSA key>
+  cnspec shell snowflake --account <account id> --region <region> --user <your id> --role <the role you use> --identity-file <path to your private RSA key>
   cnspec scan snowflake --account <account id> --region <region> --user <your id> --role <the role you use> --identity-file <path to your private RSA key>
 `,
 			Discovery: []string{},

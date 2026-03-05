@@ -38,7 +38,7 @@ var Config = plugin.Provider{
 			Long: `Use the local provider to query your local system. This is the default provider. There's no need to specify local in a command.  
 
 Examples:
-  cnquery shell
+  cnspec shell
   cnspec scan
   cnspec scan -o json > FILENAME.json
 `,
@@ -73,7 +73,7 @@ Examples:
 
 Examples:
   cnspec scan ssh USER@IP-ADDRESS --ask-pass
-  cnquery shell ssh USER@IP-ADDRESS --ask-pass
+  cnspec shell ssh USER@IP-ADDRESS --ask-pass
 `,
 			MinArgs: 1,
 			MaxArgs: 1,
@@ -130,7 +130,7 @@ Examples:
 
 Examples:
   cnspec scan winrm USER@HOST --ask-pass
-  cnquery shell winrm USER@HOST --ask-pass
+  cnspec shell winrm USER@HOST --ask-pass
 `,
 			MinArgs: 1,
 			MaxArgs: 1,
@@ -173,7 +173,7 @@ Examples:
 
 Examples:
   cnspec scan vagrant HOST
-  cnquery shell vagrant HOST
+  cnspec shell vagrant HOST
 `,
 			MinArgs: 1,
 			MaxArgs: 1,
@@ -201,7 +201,7 @@ Examples:
 
 Examples:
   cnspec scan container ubuntu:latest
-  cnquery shell container ubuntu:latest
+  cnspec shell container ubuntu:latest
 `,
 			MinArgs: 1,
 			MaxArgs: 2,
@@ -296,7 +296,7 @@ Examples:
 
 Examples:
   cnspec scan filesystem <MOUNT-PATH-TO-FILE-SYSTEM>
-  cnquery shell fs <MOUNT-PATH-TO-FILE-SYSTEM>
+  cnspec shell fs <MOUNT-PATH-TO-FILE-SYSTEM>
 `,
 			MinArgs: 0,
 			MaxArgs: 1,
@@ -318,7 +318,7 @@ Examples:
 
 Examples:
   cnspec scan device --lun <LOGICAL-UNIT-NUMBER>
-  cnquery shell device --device-name <NAME-OF-LINUX-DEVICE>
+  cnspec shell device --device-name <NAME-OF-LINUX-DEVICE>
 `,
 			MinArgs: 0,
 			MaxArgs: 0,
