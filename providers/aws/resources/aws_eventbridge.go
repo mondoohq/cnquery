@@ -92,10 +92,11 @@ func (a *mqlAwsEventbridge) getEventBuses(conn *connection.AwsConnection) []*job
 }
 
 func (a *mqlAwsEventbridge) rules() ([]any, error) {
-	buses, err := a.eventBuses()
-	if err != nil {
-		return nil, err
+	obj := a.GetEventBuses()
+	if obj.Error != nil {
+		return nil, obj.Error
 	}
+	buses := obj.Data
 	res := []any{}
 	for _, b := range buses {
 		bus := b.(*mqlAwsEventbridgeEventBus)
@@ -120,6 +121,9 @@ func (a *mqlAwsEventbridgeEventBus) tags() (map[string]any, error) {
 		ResourceARN: &arn,
 	})
 	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	tags := make(map[string]any)
@@ -193,6 +197,9 @@ func (a *mqlAwsEventbridgeRule) tags() (map[string]any, error) {
 		ResourceARN: &arn,
 	})
 	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	tags := make(map[string]any)

@@ -2674,7 +2674,7 @@ private aws.eventbridge.rule @defaults("arn name state") {
   region string
   // Name of the event bus this rule belongs to
   eventBusName string
-  // State: ENABLED or DISABLED
+  // State: ENABLED, DISABLED, or ENABLED_WITH_ALL_CLOUDTRAIL_MANAGEMENT_EVENTS
   state string
   // Description of the rule
   description string
