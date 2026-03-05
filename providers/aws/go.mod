@@ -40,6 +40,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.54.8
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.39.0
 	github.com/aws/aws-sdk-go-v2/service/emr v1.57.7
+	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.45.20
 	github.com/aws/aws-sdk-go-v2/service/fsx v1.65.5
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.73.2
 	github.com/aws/aws-sdk-go-v2/service/iam v1.53.4

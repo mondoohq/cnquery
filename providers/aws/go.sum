@@ -229,6 +229,8 @@ github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.39.0 h1:ZO42xJoJT4T
 github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.39.0/go.mod h1:QTMlCXScnaAfHsNrKMao+y84ZyMOWkvTgmfq5f05WXo=
 github.com/aws/aws-sdk-go-v2/service/emr v1.57.7 h1:AzUI+6ICHeXPUCZtLNXkIJCoHZ/VUqhMbpJJSKjQMUU=
 github.com/aws/aws-sdk-go-v2/service/emr v1.57.7/go.mod h1:qT4ApoYT69AnCiyIlduF1gj07o7+boJKgrp5E7RX3HU=
+github.com/aws/aws-sdk-go-v2/service/eventbridge v1.45.20 h1:np4Aimq5BoWqTMbQNmEQA6cjb3u1wFfqQFtpNkTtWYs=
+github.com/aws/aws-sdk-go-v2/service/eventbridge v1.45.20/go.mod h1:341T6vJxk3/kTiO5F26hLA52qQyv+3pLu1byq5u7wp0=
 github.com/aws/aws-sdk-go-v2/service/fsx v1.65.5 h1:PDe5BUnwA05BW+UngkSYBd6J33kHNB8iI5GD4vbJrX8=
 github.com/aws/aws-sdk-go-v2/service/fsx v1.65.5/go.mod h1:5SrSRrwMqqrWsvaTbBpOr9Wzj2T8DcjECu0GYUG+fe0=
 github.com/aws/aws-sdk-go-v2/service/guardduty v1.73.2 h1:/4AkQefeLMkmgiSOtJzj8Gn+EML2XNt1ToQMxMigi0c=

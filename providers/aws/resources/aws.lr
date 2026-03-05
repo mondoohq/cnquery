@@ -2642,6 +2642,54 @@ private aws.emr.cluster @defaults("arn") {
   tags map[string]string
 }
 
+// Amazon EventBridge
+aws.eventbridge @defaults("eventBuses") {
+  // List of EventBridge event buses
+  eventBuses() []aws.eventbridge.eventBus
+  // List of EventBridge rules across all event buses
+  rules() []aws.eventbridge.rule
+}
+
+// Amazon EventBridge event bus
+private aws.eventbridge.eventBus @defaults("arn name") {
+  // ARN of the event bus
+  arn string
+  // Name of the event bus
+  name string
+  // Region of the event bus
+  region string
+  // Tags for the event bus
+  tags() map[string]string
+  // Rules on this event bus
+  rules() []aws.eventbridge.rule
+}
+
+// Amazon EventBridge rule
+private aws.eventbridge.rule @defaults("arn name state") {
+  // ARN of the rule
+  arn string
+  // Name of the rule
+  name string
+  // Region of the rule
+  region string
+  // Name of the event bus this rule belongs to
+  eventBusName string
+  // State: ENABLED, DISABLED, or ENABLED_WITH_ALL_CLOUDTRAIL_MANAGEMENT_EVENTS
+  state string
+  // Description of the rule
+  description string
+  // Event pattern (JSON filter)
+  eventPattern string
+  // Schedule expression (cron or rate)
+  scheduleExpression string
+  // ARN of the IAM role associated with the rule
+  roleArn string
+  // Tags for the rule
+  tags() map[string]string
+  // Targets for this rule
+  targets() []dict
+}
+
 // Amazon CloudWatch
 aws.cloudwatch {
   // List of CloudWatch log groups
