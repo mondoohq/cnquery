@@ -36,6 +36,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
+	"github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	"github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
@@ -43,6 +44,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	"github.com/aws/aws-sdk-go-v2/service/firehose"
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
@@ -1588,6 +1590,26 @@ func (t *AwsConnection) STS(region string) *sts.Client {
 	return client
 }
 
+func (t *AwsConnection) Glue(region string) *glue.Client {
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_glue_" + region
+
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached glue client")
+		return c.Data.(*glue.Client)
+	}
+
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := glue.NewFromConfig(cfg)
+
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
 func (t *AwsConnection) Route53Domains(region string) *route53domains.Client {
 	if len(region) == 0 {
 		region = t.cfg.Region
@@ -1663,6 +1685,26 @@ func (t *AwsConnection) DocumentDB(region string) *docdb.Client {
 	cfg := t.cfg.Copy()
 	cfg.Region = region
 	client := docdb.NewFromConfig(cfg)
+
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) ElasticBeanstalk(region string) *elasticbeanstalk.Client {
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_elasticbeanstalk_" + region
+
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached elasticbeanstalk client")
+		return c.Data.(*elasticbeanstalk.Client)
+	}
+
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := elasticbeanstalk.NewFromConfig(cfg)
 
 	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
 	return client
