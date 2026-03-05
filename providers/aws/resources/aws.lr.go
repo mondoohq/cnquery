@@ -230,6 +230,7 @@ const (
 	ResourceAwsRoute53HealthCheck                                               string = "aws.route53.healthCheck"
 	ResourceAwsRoute53QueryLoggingConfig                                        string = "aws.route53.queryLoggingConfig"
 	ResourceAwsRoute53KeySigningKey                                             string = "aws.route53.keySigningKey"
+	ResourceAwsRoute53Domain                                                    string = "aws.route53.domain"
 	ResourceAwsEcr                                                              string = "aws.ecr"
 	ResourceAwsEcrRepository                                                    string = "aws.ecr.repository"
 	ResourceAwsEcrLifecyclePolicy                                               string = "aws.ecr.lifecyclePolicy"
@@ -1191,6 +1192,10 @@ func init() {
 		"aws.route53.keySigningKey": {
 			// to override args, implement: initAwsRoute53KeySigningKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsRoute53KeySigningKey,
+		},
+		"aws.route53.domain": {
+			// to override args, implement: initAwsRoute53Domain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsRoute53Domain,
 		},
 		"aws.ecr": {
 			// to override args, implement: initAwsEcr(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -6713,6 +6718,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.route53.queryLoggingConfigs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRoute53).GetQueryLoggingConfigs()).ToDataRes(types.Array(types.Resource("aws.route53.queryLoggingConfig")))
 	},
+	"aws.route53.domains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53).GetDomains()).ToDataRes(types.Array(types.Resource("aws.route53.domain")))
+	},
 	"aws.route53.hostedZone.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRoute53HostedZone).GetId()).ToDataRes(types.String)
 	},
@@ -6955,6 +6963,48 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.route53.keySigningKey.kmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRoute53KeySigningKey).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.route53.domain.domainName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Domain).GetDomainName()).ToDataRes(types.String)
+	},
+	"aws.route53.domain.autoRenew": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Domain).GetAutoRenew()).ToDataRes(types.Bool)
+	},
+	"aws.route53.domain.transferLock": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Domain).GetTransferLock()).ToDataRes(types.Bool)
+	},
+	"aws.route53.domain.expiresAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Domain).GetExpiresAt()).ToDataRes(types.Time)
+	},
+	"aws.route53.domain.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Domain).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.route53.domain.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Domain).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.route53.domain.adminPrivacy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Domain).GetAdminPrivacy()).ToDataRes(types.Bool)
+	},
+	"aws.route53.domain.registrantPrivacy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Domain).GetRegistrantPrivacy()).ToDataRes(types.Bool)
+	},
+	"aws.route53.domain.techPrivacy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Domain).GetTechPrivacy()).ToDataRes(types.Bool)
+	},
+	"aws.route53.domain.dnssec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Domain).GetDnssec()).ToDataRes(types.String)
+	},
+	"aws.route53.domain.statusList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Domain).GetStatusList()).ToDataRes(types.Array(types.String))
+	},
+	"aws.route53.domain.nameservers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Domain).GetNameservers()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.route53.domain.registrarName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Domain).GetRegistrarName()).ToDataRes(types.String)
+	},
+	"aws.route53.domain.abuseContactEmail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Domain).GetAbuseContactEmail()).ToDataRes(types.String)
 	},
 	"aws.ecr.privateRepositories": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcr).GetPrivateRepositories()).ToDataRes(types.Array(types.Resource("aws.ecr.repository")))
@@ -17557,6 +17607,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsRoute53).QueryLoggingConfigs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.route53.domains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53).Domains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.route53.hostedZone.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRoute53HostedZone).__id, ok = v.Value.(string)
 		return
@@ -17899,6 +17953,66 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.route53.keySigningKey.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRoute53KeySigningKey).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.route53.domain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Domain).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.route53.domain.domainName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Domain).DomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.domain.autoRenew": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Domain).AutoRenew, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.route53.domain.transferLock": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Domain).TransferLock, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.route53.domain.expiresAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Domain).ExpiresAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.route53.domain.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Domain).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.route53.domain.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Domain).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.route53.domain.adminPrivacy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Domain).AdminPrivacy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.route53.domain.registrantPrivacy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Domain).RegistrantPrivacy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.route53.domain.techPrivacy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Domain).TechPrivacy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.route53.domain.dnssec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Domain).Dnssec, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.domain.statusList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Domain).StatusList, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.domain.nameservers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Domain).Nameservers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.domain.registrarName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Domain).RegistrarName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.domain.abuseContactEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Domain).AbuseContactEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ecr.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -42434,6 +42548,7 @@ type mqlAwsRoute53 struct {
 	HostedZones         plugin.TValue[[]any]
 	HealthChecks        plugin.TValue[[]any]
 	QueryLoggingConfigs plugin.TValue[[]any]
+	Domains             plugin.TValue[[]any]
 }
 
 // createAwsRoute53 creates a new instance of this resource
@@ -42518,6 +42633,22 @@ func (c *mqlAwsRoute53) GetQueryLoggingConfigs() *plugin.TValue[[]any] {
 		}
 
 		return c.queryLoggingConfigs()
+	})
+}
+
+func (c *mqlAwsRoute53) GetDomains() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Domains, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53", c.__id, "domains")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.domains()
 	})
 }
 
@@ -43251,6 +43382,140 @@ func (c *mqlAwsRoute53KeySigningKey) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
 		}
 
 		return c.kmsKey()
+	})
+}
+
+// mqlAwsRoute53Domain for the aws.route53.domain resource
+type mqlAwsRoute53Domain struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsRoute53DomainInternal
+	DomainName        plugin.TValue[string]
+	AutoRenew         plugin.TValue[bool]
+	TransferLock      plugin.TValue[bool]
+	ExpiresAt         plugin.TValue[*time.Time]
+	CreatedAt         plugin.TValue[*time.Time]
+	UpdatedAt         plugin.TValue[*time.Time]
+	AdminPrivacy      plugin.TValue[bool]
+	RegistrantPrivacy plugin.TValue[bool]
+	TechPrivacy       plugin.TValue[bool]
+	Dnssec            plugin.TValue[string]
+	StatusList        plugin.TValue[[]any]
+	Nameservers       plugin.TValue[[]any]
+	RegistrarName     plugin.TValue[string]
+	AbuseContactEmail plugin.TValue[string]
+}
+
+// createAwsRoute53Domain creates a new instance of this resource
+func createAwsRoute53Domain(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRoute53Domain{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.route53.domain", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRoute53Domain) MqlName() string {
+	return "aws.route53.domain"
+}
+
+func (c *mqlAwsRoute53Domain) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRoute53Domain) GetDomainName() *plugin.TValue[string] {
+	return &c.DomainName
+}
+
+func (c *mqlAwsRoute53Domain) GetAutoRenew() *plugin.TValue[bool] {
+	return &c.AutoRenew
+}
+
+func (c *mqlAwsRoute53Domain) GetTransferLock() *plugin.TValue[bool] {
+	return &c.TransferLock
+}
+
+func (c *mqlAwsRoute53Domain) GetExpiresAt() *plugin.TValue[*time.Time] {
+	return &c.ExpiresAt
+}
+
+func (c *mqlAwsRoute53Domain) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
+		return c.createdAt()
+	})
+}
+
+func (c *mqlAwsRoute53Domain) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.UpdatedAt, func() (*time.Time, error) {
+		return c.updatedAt()
+	})
+}
+
+func (c *mqlAwsRoute53Domain) GetAdminPrivacy() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AdminPrivacy, func() (bool, error) {
+		return c.adminPrivacy()
+	})
+}
+
+func (c *mqlAwsRoute53Domain) GetRegistrantPrivacy() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RegistrantPrivacy, func() (bool, error) {
+		return c.registrantPrivacy()
+	})
+}
+
+func (c *mqlAwsRoute53Domain) GetTechPrivacy() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.TechPrivacy, func() (bool, error) {
+		return c.techPrivacy()
+	})
+}
+
+func (c *mqlAwsRoute53Domain) GetDnssec() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Dnssec, func() (string, error) {
+		return c.dnssec()
+	})
+}
+
+func (c *mqlAwsRoute53Domain) GetStatusList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.StatusList, func() ([]any, error) {
+		return c.statusList()
+	})
+}
+
+func (c *mqlAwsRoute53Domain) GetNameservers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Nameservers, func() ([]any, error) {
+		return c.nameservers()
+	})
+}
+
+func (c *mqlAwsRoute53Domain) GetRegistrarName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RegistrarName, func() (string, error) {
+		return c.registrarName()
+	})
+}
+
+func (c *mqlAwsRoute53Domain) GetAbuseContactEmail() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AbuseContactEmail, func() (string, error) {
+		return c.abuseContactEmail()
 	})
 }
 

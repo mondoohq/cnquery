@@ -4203,6 +4203,8 @@ aws.route53 {
   healthChecks() []aws.route53.healthCheck
   // List of all query logging configurations
   queryLoggingConfigs() []aws.route53.queryLoggingConfig
+  // List of registered domains (via Route 53 Domains)
+  domains() []aws.route53.domain
 }
 
 // Route 53 hosted zone
@@ -4385,6 +4387,38 @@ private aws.route53.keySigningKey @defaults("name status") {
   hostedZone() aws.route53.hostedZone
   // KMS key resource
   kmsKey() aws.kms.key
+}
+
+// Amazon Route 53 registered domain
+private aws.route53.domain @defaults("domainName autoRenew transferLock") {
+  // Registered domain name
+  domainName string
+  // Whether auto-renewal is enabled
+  autoRenew bool
+  // Whether transfer lock is enabled
+  transferLock bool
+  // Domain expiration date
+  expiresAt time
+  // Domain creation date
+  createdAt() time
+  // Domain last updated date
+  updatedAt() time
+  // Whether admin contact privacy protection is enabled
+  adminPrivacy() bool
+  // Whether registrant contact privacy protection is enabled
+  registrantPrivacy() bool
+  // Whether tech contact privacy protection is enabled
+  techPrivacy() bool
+  // DNSSEC configuration status
+  dnssec() string
+  // EPP status codes (e.g., clientTransferProhibited)
+  statusList() []string
+  // Nameservers for the domain
+  nameservers() []dict
+  // Registrar name
+  registrarName() string
+  // Abuse contact email
+  abuseContactEmail() string
 }
 
 // AWS Elastic Container Registry (ECR)
