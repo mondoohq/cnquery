@@ -10276,6 +10276,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.timestream.influxdb.instance.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetRegion()).ToDataRes(types.String)
 	},
+	"aws.timestream.influxdb.instance.publiclyAccessible": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetPubliclyAccessible()).ToDataRes(types.Bool)
+	},
+	"aws.timestream.influxdb.instance.vpcSubnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetVpcSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
+	"aws.timestream.influxdb.instance.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.timestream.influxdb.instance.influxAuthParametersSecretArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetInfluxAuthParametersSecretArn()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.instance.logDeliveryEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetLogDeliveryEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.timestream.influxdb.instance.logDeliveryS3Bucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetLogDeliveryS3Bucket()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.instance.dbParameterGroupIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetDbParameterGroupIdentifier()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.instance.availabilityZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetAvailabilityZone()).ToDataRes(types.String)
+	},
 	"aws.timestream.influxdb.instance.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -10317,6 +10341,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.timestream.influxdb.cluster.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.cluster.engineType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetEngineType()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.cluster.publiclyAccessible": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetPubliclyAccessible()).ToDataRes(types.Bool)
+	},
+	"aws.timestream.influxdb.cluster.vpcSubnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetVpcSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
+	"aws.timestream.influxdb.cluster.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.timestream.influxdb.cluster.influxAuthParametersSecretArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetInfluxAuthParametersSecretArn()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.cluster.logDeliveryEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetLogDeliveryEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.timestream.influxdb.cluster.logDeliveryS3Bucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetLogDeliveryS3Bucket()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.cluster.dbParameterGroupIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetDbParameterGroupIdentifier()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.cluster.failoverMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetFailoverMode()).ToDataRes(types.String)
 	},
 	"aws.timestream.influxdb.cluster.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetTags()).ToDataRes(types.Map(types.String, types.String))
@@ -23029,6 +23080,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsTimestreamInfluxdbInstance).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.timestream.influxdb.instance.publiclyAccessible": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).PubliclyAccessible, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.vpcSubnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).VpcSubnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.influxAuthParametersSecretArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).InfluxAuthParametersSecretArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.logDeliveryEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).LogDeliveryEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.logDeliveryS3Bucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).LogDeliveryS3Bucket, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.dbParameterGroupIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).DbParameterGroupIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.availabilityZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).AvailabilityZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.timestream.influxdb.instance.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsTimestreamInfluxdbInstance).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -23087,6 +23170,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.timestream.influxdb.cluster.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsTimestreamInfluxdbCluster).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.engineType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).EngineType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.publiclyAccessible": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).PubliclyAccessible, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.vpcSubnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).VpcSubnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.influxAuthParametersSecretArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).InfluxAuthParametersSecretArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.logDeliveryEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).LogDeliveryEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.logDeliveryS3Bucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).LogDeliveryS3Bucket, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.dbParameterGroupIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).DbParameterGroupIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.failoverMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).FailoverMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.timestream.influxdb.cluster.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -55581,20 +55700,28 @@ func (c *mqlAwsTimestreamInfluxdb) GetClusters() *plugin.TValue[[]any] {
 type mqlAwsTimestreamInfluxdbInstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsTimestreamInfluxdbInstanceInternal it will be used here
-	Arn              plugin.TValue[string]
-	Id               plugin.TValue[string]
-	Name             plugin.TValue[string]
-	AllocatedStorage plugin.TValue[int64]
-	DbInstanceType   plugin.TValue[string]
-	DbStorageType    plugin.TValue[string]
-	DeploymentType   plugin.TValue[string]
-	Endpoint         plugin.TValue[string]
-	NetworkType      plugin.TValue[string]
-	Port             plugin.TValue[int64]
-	Status           plugin.TValue[string]
-	Region           plugin.TValue[string]
-	Tags             plugin.TValue[map[string]any]
+	mqlAwsTimestreamInfluxdbInstanceInternal
+	Arn                           plugin.TValue[string]
+	Id                            plugin.TValue[string]
+	Name                          plugin.TValue[string]
+	AllocatedStorage              plugin.TValue[int64]
+	DbInstanceType                plugin.TValue[string]
+	DbStorageType                 plugin.TValue[string]
+	DeploymentType                plugin.TValue[string]
+	Endpoint                      plugin.TValue[string]
+	NetworkType                   plugin.TValue[string]
+	Port                          plugin.TValue[int64]
+	Status                        plugin.TValue[string]
+	Region                        plugin.TValue[string]
+	PubliclyAccessible            plugin.TValue[bool]
+	VpcSubnets                    plugin.TValue[[]any]
+	SecurityGroups                plugin.TValue[[]any]
+	InfluxAuthParametersSecretArn plugin.TValue[string]
+	LogDeliveryEnabled            plugin.TValue[bool]
+	LogDeliveryS3Bucket           plugin.TValue[string]
+	DbParameterGroupIdentifier    plugin.TValue[string]
+	AvailabilityZone              plugin.TValue[string]
+	Tags                          plugin.TValue[map[string]any]
 }
 
 // createAwsTimestreamInfluxdbInstance creates a new instance of this resource
@@ -55677,6 +55804,74 @@ func (c *mqlAwsTimestreamInfluxdbInstance) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
+func (c *mqlAwsTimestreamInfluxdbInstance) GetPubliclyAccessible() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PubliclyAccessible, func() (bool, error) {
+		return c.publiclyAccessible()
+	})
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetVpcSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VpcSubnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.timestream.influxdb.instance", c.__id, "vpcSubnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vpcSubnets()
+	})
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.timestream.influxdb.instance", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetInfluxAuthParametersSecretArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.InfluxAuthParametersSecretArn, func() (string, error) {
+		return c.influxAuthParametersSecretArn()
+	})
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetLogDeliveryEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LogDeliveryEnabled, func() (bool, error) {
+		return c.logDeliveryEnabled()
+	})
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetLogDeliveryS3Bucket() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LogDeliveryS3Bucket, func() (string, error) {
+		return c.logDeliveryS3Bucket()
+	})
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetDbParameterGroupIdentifier() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DbParameterGroupIdentifier, func() (string, error) {
+		return c.dbParameterGroupIdentifier()
+	})
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetAvailabilityZone() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AvailabilityZone, func() (string, error) {
+		return c.availabilityZone()
+	})
+}
+
 func (c *mqlAwsTimestreamInfluxdbInstance) GetTags() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
@@ -55687,21 +55882,30 @@ func (c *mqlAwsTimestreamInfluxdbInstance) GetTags() *plugin.TValue[map[string]a
 type mqlAwsTimestreamInfluxdbCluster struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsTimestreamInfluxdbClusterInternal it will be used here
-	Arn              plugin.TValue[string]
-	Id               plugin.TValue[string]
-	Name             plugin.TValue[string]
-	AllocatedStorage plugin.TValue[int64]
-	DbInstanceType   plugin.TValue[string]
-	DbStorageType    plugin.TValue[string]
-	DeploymentType   plugin.TValue[string]
-	Endpoint         plugin.TValue[string]
-	ReaderEndpoint   plugin.TValue[string]
-	NetworkType      plugin.TValue[string]
-	Port             plugin.TValue[int64]
-	Status           plugin.TValue[string]
-	Region           plugin.TValue[string]
-	Tags             plugin.TValue[map[string]any]
+	mqlAwsTimestreamInfluxdbClusterInternal
+	Arn                           plugin.TValue[string]
+	Id                            plugin.TValue[string]
+	Name                          plugin.TValue[string]
+	AllocatedStorage              plugin.TValue[int64]
+	DbInstanceType                plugin.TValue[string]
+	DbStorageType                 plugin.TValue[string]
+	DeploymentType                plugin.TValue[string]
+	Endpoint                      plugin.TValue[string]
+	ReaderEndpoint                plugin.TValue[string]
+	NetworkType                   plugin.TValue[string]
+	Port                          plugin.TValue[int64]
+	Status                        plugin.TValue[string]
+	Region                        plugin.TValue[string]
+	EngineType                    plugin.TValue[string]
+	PubliclyAccessible            plugin.TValue[bool]
+	VpcSubnets                    plugin.TValue[[]any]
+	SecurityGroups                plugin.TValue[[]any]
+	InfluxAuthParametersSecretArn plugin.TValue[string]
+	LogDeliveryEnabled            plugin.TValue[bool]
+	LogDeliveryS3Bucket           plugin.TValue[string]
+	DbParameterGroupIdentifier    plugin.TValue[string]
+	FailoverMode                  plugin.TValue[string]
+	Tags                          plugin.TValue[map[string]any]
 }
 
 // createAwsTimestreamInfluxdbCluster creates a new instance of this resource
@@ -55786,6 +55990,78 @@ func (c *mqlAwsTimestreamInfluxdbCluster) GetStatus() *plugin.TValue[string] {
 
 func (c *mqlAwsTimestreamInfluxdbCluster) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetEngineType() *plugin.TValue[string] {
+	return &c.EngineType
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetPubliclyAccessible() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PubliclyAccessible, func() (bool, error) {
+		return c.publiclyAccessible()
+	})
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetVpcSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VpcSubnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.timestream.influxdb.cluster", c.__id, "vpcSubnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vpcSubnets()
+	})
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.timestream.influxdb.cluster", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetInfluxAuthParametersSecretArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.InfluxAuthParametersSecretArn, func() (string, error) {
+		return c.influxAuthParametersSecretArn()
+	})
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetLogDeliveryEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LogDeliveryEnabled, func() (bool, error) {
+		return c.logDeliveryEnabled()
+	})
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetLogDeliveryS3Bucket() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LogDeliveryS3Bucket, func() (string, error) {
+		return c.logDeliveryS3Bucket()
+	})
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetDbParameterGroupIdentifier() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DbParameterGroupIdentifier, func() (string, error) {
+		return c.dbParameterGroupIdentifier()
+	})
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetFailoverMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.FailoverMode, func() (string, error) {
+		return c.failoverMode()
+	})
 }
 
 func (c *mqlAwsTimestreamInfluxdbCluster) GetTags() *plugin.TValue[map[string]any] {

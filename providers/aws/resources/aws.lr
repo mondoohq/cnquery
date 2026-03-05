@@ -7015,6 +7015,22 @@ private aws.timestream.influxdb.instance @defaults("arn name status") {
   status string
   // Region of the DB instance
   region string
+  // Whether the DB instance has a public IP to facilitate access
+  publiclyAccessible() bool
+  // VPC subnets associated with the DB instance
+  vpcSubnets() []aws.vpc.subnet
+  // Security groups associated with the DB instance
+  securityGroups() []aws.ec2.securitygroup
+  // ARN of the Secrets Manager secret containing InfluxDB auth parameters
+  influxAuthParametersSecretArn() string
+  // Whether S3 log delivery is enabled
+  logDeliveryEnabled() bool
+  // S3 bucket name for log delivery
+  logDeliveryS3Bucket() string
+  // DB parameter group identifier
+  dbParameterGroupIdentifier() string
+  // Availability Zone of the DB instance
+  availabilityZone() string
   // Tags for the DB instance
   tags() map[string]string
 }
@@ -7047,6 +7063,24 @@ private aws.timestream.influxdb.cluster @defaults("arn name status") {
   status string
   // Region of the DB cluster
   region string
+  // Engine type: INFLUXDB_V2, INFLUXDB_V3_CORE, or INFLUXDB_V3_ENTERPRISE
+  engineType string
+  // Whether the DB cluster has a public IP to facilitate access
+  publiclyAccessible() bool
+  // VPC subnets associated with the DB cluster
+  vpcSubnets() []aws.vpc.subnet
+  // Security groups associated with the DB cluster
+  securityGroups() []aws.ec2.securitygroup
+  // ARN of the Secrets Manager secret containing InfluxDB auth parameters
+  influxAuthParametersSecretArn() string
+  // Whether S3 log delivery is enabled
+  logDeliveryEnabled() bool
+  // S3 bucket name for log delivery
+  logDeliveryS3Bucket() string
+  // DB parameter group identifier
+  dbParameterGroupIdentifier() string
+  // Failover mode: AUTOMATIC or NO_FAILOVER
+  failoverMode() string
   // Tags for the DB cluster
   tags() map[string]string
 }
