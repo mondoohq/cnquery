@@ -793,7 +793,7 @@ private aws.waf.acl.loggingConfiguration @defaults("arn") {
   // Whether managed by Firewall Manager
   managedByFirewallManager bool
   // Fields that are redacted from logs
-  redactedFields []dict
+  redactedFields []string
 }
 
 // AWS Elastic File System (EFS) service

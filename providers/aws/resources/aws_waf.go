@@ -19,6 +19,15 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
+// wafRegionForScope returns the region to use for WAF API calls.
+// CLOUDFRONT-scoped resources must use us-east-1; REGIONAL uses the default.
+func wafRegionForScope(scope string) string {
+	if scope == "CLOUDFRONT" {
+		return "us-east-1"
+	}
+	return ""
+}
+
 func (a *mqlAwsWaf) id() (string, error) {
 	return "aws.waf", nil
 }
@@ -64,12 +73,11 @@ func initAwsWaf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 func (a *mqlAwsWaf) acls() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	region := ""
-	svc := conn.Wafv2(region)
+	scopeString := a.Scope.Data
+	svc := conn.Wafv2(wafRegionForScope(scopeString))
 	ctx := context.Background()
 	acls := []any{}
 	nextMarker := aws.String("No-Marker-to-begin-with")
-	scopeString := a.Scope.Data
 	scope := waftypes.Scope(scopeString)
 	params := &wafv2.ListWebACLsInput{Scope: scope}
 	for nextMarker != nil {
@@ -222,8 +230,7 @@ func (a *mqlAwsWafRulegroup) rules() ([]any, error) {
 	scopeString := a.Scope.Data
 	scope := waftypes.Scope(scopeString)
 	ctx := context.Background()
-	region := ""
-	svc := conn.Wafv2(region)
+	svc := conn.Wafv2(wafRegionForScope(scopeString))
 	rules := []any{}
 	params := &wafv2.GetRuleGroupInput{
 		Id:    &a.Id.Data,
@@ -265,12 +272,11 @@ func (a *mqlAwsWafRulegroup) rules() ([]any, error) {
 func (a *mqlAwsWaf) ruleGroups() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	region := ""
-	svc := conn.Wafv2(region)
+	scopeString := a.Scope.Data
+	svc := conn.Wafv2(wafRegionForScope(scopeString))
 	ctx := context.Background()
 	acls := []any{}
 	nextMarker := aws.String("No-Marker-to-begin-with")
-	scopeString := a.Scope.Data
 	scope := waftypes.Scope(scopeString)
 	params := &wafv2.ListRuleGroupsInput{Scope: scope}
 	for nextMarker != nil {
@@ -306,12 +312,11 @@ func (a *mqlAwsWaf) ruleGroups() ([]any, error) {
 func (a *mqlAwsWaf) ipSets() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	region := ""
-	svc := conn.Wafv2(region)
+	scopeString := a.Scope.Data
+	svc := conn.Wafv2(wafRegionForScope(scopeString))
 	ctx := context.Background()
 	acls := []any{}
 	nextMarker := aws.String("No-Marker-to-begin-with")
-	scopeString := a.Scope.Data
 	scope := waftypes.Scope(scopeString)
 	params := &wafv2.ListIPSetsInput{Scope: scope}
 	for nextMarker != nil {
@@ -362,8 +367,7 @@ func (a *mqlAwsWafAcl) rules() ([]any, error) {
 	scopeString := a.Scope.Data
 	scope := waftypes.Scope(scopeString)
 	ctx := context.Background()
-	region := ""
-	svc := conn.Wafv2(region)
+	svc := conn.Wafv2(wafRegionForScope(scopeString))
 	rules := []any{}
 	params := &wafv2.GetWebACLInput{
 		Id:    &a.Id.Data,
@@ -795,6 +799,17 @@ func createFieldToMatchResource(runtime *plugin.Runtime, fieldToMatch *waftypes.
 			return nil, err
 		}
 	}
+	if fieldToMatch.SingleQueryArgument != nil {
+		target = "SingleQueryArgument"
+		singleQueryArgument, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.singlequeryargument", map[string]*llx.RawData{
+			"statementID": llx.StringData(mqlStatementID),
+			"ruleName":    llx.StringDataPtr(ruleName),
+			"name":        llx.StringDataPtr(fieldToMatch.SingleQueryArgument.Name),
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if fieldToMatch.JA3Fingerprint != nil {
 		target = "JA3Fingerprint"
@@ -906,12 +921,11 @@ func (a *mqlAwsWafRegexPatternSet) id() (string, error) {
 func (a *mqlAwsWaf) regexPatternSets() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	region := ""
-	svc := conn.Wafv2(region)
+	scopeString := a.Scope.Data
+	svc := conn.Wafv2(wafRegionForScope(scopeString))
 	ctx := context.Background()
 	res := []any{}
 	nextMarker := aws.String("No-Marker-to-begin-with")
-	scopeString := a.Scope.Data
 	scope := waftypes.Scope(scopeString)
 	params := &wafv2.ListRegexPatternSetsInput{Scope: scope}
 	for nextMarker != nil {
@@ -969,8 +983,7 @@ func (a *mqlAwsWafAclLoggingConfiguration) id() (string, error) {
 func (a *mqlAwsWafAcl) loggingConfiguration() (*mqlAwsWafAclLoggingConfiguration, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	region := ""
-	svc := conn.Wafv2(region)
+	svc := conn.Wafv2(wafRegionForScope(a.Scope.Data))
 	ctx := context.Background()
 
 	arnVal := a.Arn.Data
@@ -1033,8 +1046,7 @@ func (a *mqlAwsWafAcl) loggingConfiguration() (*mqlAwsWafAclLoggingConfiguration
 func (a *mqlAwsWafAcl) associatedResources() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	region := ""
-	svc := conn.Wafv2(region)
+	svc := conn.Wafv2(wafRegionForScope(a.Scope.Data))
 	ctx := context.Background()
 
 	arnVal := a.Arn.Data
