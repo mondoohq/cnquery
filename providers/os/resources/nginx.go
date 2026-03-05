@@ -37,41 +37,73 @@ var nginxVersionBinaries = []string{
 
 var nginxVersionTag = []byte("nginx/")
 
-// extractNginxVersion scans binary data for an embedded "nginx/x.y.z" string.
-func extractNginxVersion(data []byte) string {
-	idx := bytes.Index(data, nginxVersionTag)
-	if idx < 0 {
+// scanBinaryForTag reads a file in chunks and looks for tag followed by a
+// dot-separated version number (e.g. "nginx/1.25.3"). This avoids loading
+// multi-megabyte binaries entirely into memory.
+func scanBinaryForTag(fs *afero.Afero, path string, tag []byte) string {
+	f, err := fs.Open(path)
+	if err != nil {
 		return ""
 	}
-	start := idx + len(nginxVersionTag)
-	end := start
-	for end < len(data) && (data[end] == '.' || (data[end] >= '0' && data[end] <= '9')) {
-		end++
+	defer f.Close()
+
+	const chunkSize = 64 * 1024
+	// Overlap must be at least len(tag) + max version length to avoid
+	// missing a match that spans two chunks.
+	overlap := len(tag) + 20
+	buf := make([]byte, chunkSize+overlap)
+	carry := 0
+
+	for {
+		n, err := f.Read(buf[carry:])
+		if n == 0 && err != nil {
+			break
+		}
+		active := buf[:carry+n]
+
+		idx := bytes.Index(active, tag)
+		if idx >= 0 {
+			start := idx + len(tag)
+			end := start
+			for end < len(active) && (active[end] == '.' || (active[end] >= '0' && active[end] <= '9')) {
+				end++
+			}
+			if end > start {
+				return string(active[start:end])
+			}
+		}
+
+		// Keep the last `overlap` bytes so a tag spanning chunks isn't missed.
+		if len(active) > overlap {
+			copy(buf, active[len(active)-overlap:])
+			carry = overlap
+		} else {
+			carry = 0
+		}
+
+		if err != nil {
+			break
+		}
 	}
-	if end == start {
-		return ""
-	}
-	return string(data[start:end])
+	return ""
 }
 
 func (n *mqlNginx) version() (string, error) {
 	conn := n.MqlRuntime.Connection.(shared.Connection)
 	afs := &afero.Afero{Fs: conn.FileSystem()}
 
-	// Prefer file-based detection: read the nginx binary and scan for the
-	// embedded "nginx/x.y.z" version string.
+	// Prefer file-based detection: scan the nginx binary for the embedded
+	// "nginx/x.y.z" version string without loading the full binary into memory.
 	for _, bin := range nginxVersionBinaries {
-		data, err := afs.ReadFile(bin)
-		if err != nil {
-			continue
-		}
-		if v := extractNginxVersion(data); v != "" {
+		if v := scanBinaryForTag(afs, bin, nginxVersionTag); v != "" {
 			return v, nil
 		}
 	}
 
 	// Fall back to running a command when the binary isn't readable (e.g.
-	// non-standard install path).
+	// non-standard install path). We use lowercase -v (not -V) because it
+	// prints only the version line and is cheaper than -V which also dumps
+	// all configure arguments.
 	cmd, err := conn.RunCommand("nginx -v 2>&1")
 	if err == nil && cmd.ExitStatus == 0 {
 		data, err := io.ReadAll(cmd.Stdout)

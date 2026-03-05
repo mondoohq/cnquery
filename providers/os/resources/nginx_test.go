@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/nginxinc/nginx-go-crossplane"
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -178,30 +179,47 @@ func TestNginxConfPathDefault(t *testing.T) {
 	assert.Equal(t, "/etc/nginx/nginx.conf", defaultNginxConf)
 }
 
-func TestExtractNginxVersion(t *testing.T) {
+func TestScanBinaryForTag(t *testing.T) {
+	tag := []byte("nginx/")
+
+	writeBinary := func(t *testing.T, data []byte) *afero.Afero {
+		t.Helper()
+		fs := afero.NewMemMapFs()
+		require.NoError(t, afero.WriteFile(fs, "/usr/sbin/nginx", data, 0o755))
+		return &afero.Afero{Fs: fs}
+	}
+
 	t.Run("embedded version in binary data", func(t *testing.T) {
-		// Simulate binary data with embedded version string
-		data := []byte("\x00\x00nginx/1.25.3\x00\x00")
-		assert.Equal(t, "1.25.3", extractNginxVersion(data))
+		afs := writeBinary(t, []byte("\x00\x00nginx/1.25.3\x00\x00"))
+		assert.Equal(t, "1.25.3", scanBinaryForTag(afs, "/usr/sbin/nginx", tag))
 	})
 
 	t.Run("four-part version", func(t *testing.T) {
-		data := []byte("some binary stuff\x00nginx/1.21.4.2\x00more stuff")
-		assert.Equal(t, "1.21.4.2", extractNginxVersion(data))
+		afs := writeBinary(t, []byte("some binary stuff\x00nginx/1.21.4.2\x00more stuff"))
+		assert.Equal(t, "1.21.4.2", scanBinaryForTag(afs, "/usr/sbin/nginx", tag))
 	})
 
 	t.Run("no version tag", func(t *testing.T) {
-		data := []byte("no version here")
-		assert.Equal(t, "", extractNginxVersion(data))
+		afs := writeBinary(t, []byte("no version here"))
+		assert.Equal(t, "", scanBinaryForTag(afs, "/usr/sbin/nginx", tag))
 	})
 
-	t.Run("empty data", func(t *testing.T) {
-		assert.Equal(t, "", extractNginxVersion([]byte{}))
+	t.Run("file does not exist", func(t *testing.T) {
+		afs := &afero.Afero{Fs: afero.NewMemMapFs()}
+		assert.Equal(t, "", scanBinaryForTag(afs, "/usr/sbin/nginx", tag))
 	})
 
 	t.Run("tag without version digits", func(t *testing.T) {
-		data := []byte("nginx/\x00rest")
-		assert.Equal(t, "", extractNginxVersion(data))
+		afs := writeBinary(t, []byte("nginx/\x00rest"))
+		assert.Equal(t, "", scanBinaryForTag(afs, "/usr/sbin/nginx", tag))
+	})
+
+	t.Run("version spanning chunk boundary", func(t *testing.T) {
+		// Build data where "nginx/1.25.3" straddles a 64KB boundary.
+		prefix := make([]byte, 64*1024-3) // tag starts 3 bytes before boundary
+		data := append(prefix, []byte("nginx/1.25.3\x00")...)
+		afs := writeBinary(t, data)
+		assert.Equal(t, "1.25.3", scanBinaryForTag(afs, "/usr/sbin/nginx", tag))
 	})
 }
 
