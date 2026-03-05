@@ -26,10 +26,10 @@ Requirement:
   Nmap must be installed on your system. To learn how, read https://nmap.org/download.html.
 
 Examples:
-  cnquery shell nmap 192.168.1.0/24
-  cnquery shell nmap 192.168.1.1
-  cnquery shell nmap --networks 10.0.0.0/8,192.168.0.0/16
-  cnspec scan nmap 192.168.1.0/24
+  cnspec shell nmap host 192.168.1.1
+  cnspec shell nmap --networks 10.0.0.0/8,192.168.0.0/16
+  cnspec shell nmap --networks "192.168.1.0/24" --discover hosts
+  cnspec scan nmap host 192.168.1.1
 `,
 			MinArgs: 0,
 			MaxArgs: 2,
