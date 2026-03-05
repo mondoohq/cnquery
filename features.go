@@ -82,9 +82,14 @@ const (
 	// status: default
 	AutoUpdateEngine Feature = 14
 
+	// Use SQLite-backed resource cache to reduce memory usage for large scans
+	// start:  v13.x
+	// status: new
+	SqliteResourceCache Feature = 15
+
 	// Placeholder to indicate how many feature flags exist. This number
 	// is changing with every new feature and cannot be used as a featureflag itself.
-	MAX_FEATURES byte = 15
+	MAX_FEATURES byte = 16
 )
 
 var FeaturesValue = map[string]Feature{
@@ -102,6 +107,7 @@ var FeaturesValue = map[string]Feature{
 	"FailIfNoEntryPoints":  FailIfNoEntryPoints,
 	"UploadResultsV2":      UploadResultsV2,
 	"AutoUpdateEngine":     AutoUpdateEngine,
+	"SqliteResourceCache":  SqliteResourceCache,
 }
 
 // DefaultFeatures are a set of default flags that are active
@@ -117,4 +123,5 @@ var DefaultFeatures = Features{
 var AvailableFeatures = Features{
 	byte(MQLAssetContext),
 	byte(UploadResultsV2),
+	byte(SqliteResourceCache),
 }

@@ -83,3 +83,8 @@ Features:
   idx: 14
   start: v13.x
   status: default
+- id: SqliteResourceCache
+  desc: Use SQLite-backed resource cache to reduce memory usage for large scans
+  idx: 15
+  start: v13.x
+  status: new
