@@ -62,6 +62,11 @@ func setup() {
 }
 
 func TestMain(m *testing.M) {
+	// When tests run with -cover, Go sets GOCOVERDIR which is inherited by
+	// child processes. The mql binary spawned by cmdtest is not built with
+	// -cover, so it fails at exit when trying to write coverage data.
+	os.Unsetenv("GOCOVERDIR")
+
 	ret := m.Run()
 	os.Exit(ret)
 }
