@@ -6656,3 +6656,65 @@ private aws.workspacesweb.userAccessLoggingSetting @defaults("userAccessLoggingS
   // AWS region
   region string
 }
+
+// Amazon Kinesis
+aws.kinesis @defaults("streams") {
+  // List of Kinesis data streams
+  streams() []aws.kinesis.stream
+  // List of Kinesis Firehose delivery streams
+  firehoseDeliveryStreams() []aws.kinesis.firehoseDeliveryStream
+}
+
+// Amazon Kinesis data stream
+private aws.kinesis.stream @defaults("name status region") {
+  // ARN of the stream
+  arn string
+  // Name of the stream
+  name string
+  // Current status of the stream: CREATING, DELETING, ACTIVE, or UPDATING
+  status string
+  // Encryption type used (NONE or KMS)
+  encryptionType string
+  // KMS key ID for encryption
+  keyId string
+  // Number of hours data records are accessible after being added to the stream
+  retentionPeriodHours int
+  // Number of open shards in the stream
+  openShardCount int
+  // Number of enhanced fan-out consumers registered with the stream
+  consumerCount int
+  // Stream mode details (ON_DEMAND or PROVISIONED)
+  streamModeDetails dict
+  // Enhanced monitoring settings
+  enhancedMonitoring []dict
+  // Date and time the stream was created
+  createdAt time
+  // Region where the stream exists
+  region string
+  // Tags for the stream
+  tags() map[string]string
+}
+
+// Amazon Kinesis Firehose delivery stream
+private aws.kinesis.firehoseDeliveryStream @defaults("name status region") {
+  // ARN of the delivery stream
+  arn string
+  // Name of the delivery stream
+  name string
+  // Current status of the delivery stream: CREATING, CREATING_FAILED, DELETING, DELETING_FAILED, or ACTIVE
+  status string
+  // Type of the delivery stream (DirectPut or KinesisStreamAsSource)
+  deliveryStreamType string
+  // Server-side encryption configuration
+  encryption dict
+  // Source configuration if the stream reads from a Kinesis data stream
+  source dict
+  // Destinations for the delivery stream
+  destinations []dict
+  // Date and time the delivery stream was created
+  createdAt time
+  // Region where the delivery stream exists
+  region string
+  // Tags for the delivery stream
+  tags() map[string]string
+}
