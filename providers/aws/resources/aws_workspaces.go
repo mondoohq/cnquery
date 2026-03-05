@@ -5,7 +5,11 @@ package resources
 
 import (
 	"context"
+	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	workspacestypes "github.com/aws/aws-sdk-go-v2/service/workspaces/types"
 	"github.com/rs/zerolog/log"
@@ -263,6 +267,90 @@ func (a *mqlAwsWorkspacesWorkspace) tags() (map[string]any, error) {
 		}
 	}
 	return tags, nil
+}
+
+func (a *mqlAwsWorkspacesWorkspace) fetchConnectionStatus() error {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Workspaces(a.Region.Data)
+	ctx := context.Background()
+
+	resp, err := svc.DescribeWorkspacesConnectionStatus(ctx, &workspaces.DescribeWorkspacesConnectionStatusInput{
+		WorkspaceIds: []string{a.WorkspaceId.Data},
+	})
+	if err != nil {
+		return err
+	}
+
+	var connState string
+	var checkTimestamp *time.Time
+	var lastUserTimestamp *time.Time
+	if len(resp.WorkspacesConnectionStatus) > 0 {
+		status := resp.WorkspacesConnectionStatus[0]
+		connState = string(status.ConnectionState)
+		checkTimestamp = status.ConnectionStateCheckTimestamp
+		lastUserTimestamp = status.LastKnownUserConnectionTimestamp
+	}
+
+	a.ConnectionState = plugin.TValue[string]{Data: connState, State: plugin.StateIsSet}
+	a.ConnectionStateCheckTimestamp = plugin.TValue[*time.Time]{Data: checkTimestamp, State: plugin.StateIsSet}
+	a.LastKnownUserConnectionTimestamp = plugin.TValue[*time.Time]{Data: lastUserTimestamp, State: plugin.StateIsSet}
+	return nil
+}
+
+func (a *mqlAwsWorkspacesWorkspace) connectionState() (string, error) {
+	return "", a.fetchConnectionStatus()
+}
+
+func (a *mqlAwsWorkspacesWorkspace) connectionStateCheckTimestamp() (*time.Time, error) {
+	return nil, a.fetchConnectionStatus()
+}
+
+func (a *mqlAwsWorkspacesWorkspace) lastKnownUserConnectionTimestamp() (*time.Time, error) {
+	return nil, a.fetchConnectionStatus()
+}
+
+func (a *mqlAwsWorkspacesWorkspace) securityGroups() ([]any, error) {
+	ipAddress := a.IpAddress.Data
+	if ipAddress == "" {
+		return []any{}, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Ec2(a.Region.Data)
+	ctx := context.Background()
+
+	resp, err := svc.DescribeNetworkInterfaces(ctx, &ec2.DescribeNetworkInterfacesInput{
+		Filters: []ec2types.Filter{
+			{Name: aws.String("addresses.private-ip-address"), Values: []string{ipAddress}},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	sgIdSet := map[string]struct{}{}
+	for _, ni := range resp.NetworkInterfaces {
+		for _, sg := range ni.Groups {
+			if sg.GroupId != nil {
+				sgIdSet[*sg.GroupId] = struct{}{}
+			}
+		}
+	}
+
+	region := a.Region.Data
+	sgs := make([]any, 0, len(sgIdSet))
+	for sgId := range sgIdSet {
+		mqlSg, err := NewResource(a.MqlRuntime, "aws.ec2.securitygroup",
+			map[string]*llx.RawData{
+				"id":     llx.StringData(sgId),
+				"region": llx.StringData(region),
+			})
+		if err != nil {
+			return nil, err
+		}
+		sgs = append(sgs, mqlSg)
+	}
+	return sgs, nil
 }
 
 // ---- Images ----

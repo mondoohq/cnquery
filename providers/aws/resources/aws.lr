@@ -6781,6 +6781,14 @@ private aws.workspaces.workspace @defaults("workspaceId userName state region") 
   errorMessage string
   // Resource tags
   tags() map[string]string
+  // Connection state: CONNECTED, DISCONNECTED, UNKNOWN
+  connectionState() string
+  // Timestamp of the last connection state check
+  connectionStateCheckTimestamp() time
+  // Timestamp of the last known user connection
+  lastKnownUserConnectionTimestamp() time
+  // Security groups associated with the workspace network interfaces
+  securityGroups() []aws.ec2.securitygroup
   // AWS region
   region string
 }
