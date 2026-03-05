@@ -1809,23 +1809,27 @@ python.package @defaults("name version") {
   // ID is the python.package unique identifier
   id string
   // Name of the package
-  name() string
+  name string
   // File containing the package metadata
   file file
   // Version of the package
-  version() string
+  version string
   // License of the package
-  license() string
+  license string
   // Author of the package
-  author() string
+  author string
   // Author email of the package
-  authorEmail() string
+  authorEmail string
   // Short package description
-  summary() string
+  summary string
+  // Required Python version (e.g., ">=3.6")
+  requiresPython string
+  // Project URLs by label (e.g., Homepage, Repository, Documentation)
+  projectUrls map[string]string
   // Package URL
-  purl() string
+  purl string
   // Common Platform Enumeration (CPE) for the package
-  cpes() []core.cpe
+  cpes []core.cpe
   // List of packages depended on
   dependencies() []python.package
 }
