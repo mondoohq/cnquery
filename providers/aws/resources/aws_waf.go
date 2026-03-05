@@ -1046,7 +1046,15 @@ func (a *mqlAwsWafAcl) loggingConfiguration() (*mqlAwsWafAclLoggingConfiguration
 func (a *mqlAwsWafAcl) associatedResources() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	svc := conn.Wafv2(wafRegionForScope(a.Scope.Data))
+	scopeString := a.Scope.Data
+
+	// ListResourcesForWebACL only supports REGIONAL scope ACLs.
+	// CLOUDFRONT ACLs are associated via CloudFront distributions, not this API.
+	if scopeString == "CLOUDFRONT" {
+		return []any{}, nil
+	}
+
+	svc := conn.Wafv2(wafRegionForScope(scopeString))
 	ctx := context.Background()
 
 	arnVal := a.Arn.Data
