@@ -36,8 +36,9 @@ const (
 	EnvAutoUpdate = "MONDOO_AUTO_UPDATE"
 	// DefaultReleaseURL is the URL to fetch the latest release information
 	DefaultReleaseURL = "https://releases.mondoo.com/mql/latest.json"
-	// markerFileName is the file used to track when the last update check occurred
-	markerFileName = ".last-update-check"
+	// markerFilePrefix is the prefix for per-binary marker files that track when the last update check occurred.
+	// Each binary gets its own marker (e.g., ".last-update-check-mql", ".last-update-check-cnspec").
+	markerFilePrefix = ".last-update-check-"
 
 	defaultHttpTimeout         = 30 * time.Second
 	defaultIdleConnTimeout     = 30 * time.Second
@@ -109,7 +110,7 @@ func CheckAndUpdate(cfg Config) (bool, error) {
 	}
 
 	// Check if we should perform a network update check based on refresh interval
-	if !shouldCheckUpdate(binPath, cfg.RefreshInterval) {
+	if !shouldCheckUpdate(binPath, cfg.BinaryName, cfg.RefreshInterval) {
 		log.Debug().Msg("self-update: skipping network check, within refresh interval")
 		return false, nil
 	}
@@ -121,14 +122,14 @@ func CheckAndUpdate(cfg Config) (bool, error) {
 	release, err := getLatestRelease(ctx, cfg.ReleaseURL)
 	if err != nil {
 		// Update marker even on failure to avoid repeated attempts
-		updateMarkerFile(binPath)
+		updateMarkerFile(binPath, cfg.BinaryName)
 		return false, errors.Wrap(err, "failed to fetch latest release")
 	}
 
 	// Compare versions
 	cmp, err := semver.Parser{}.Compare(release.Version, currentVersion)
 	if err != nil {
-		updateMarkerFile(binPath)
+		updateMarkerFile(binPath, cfg.BinaryName)
 		return false, errors.Wrap(err, "failed to compare versions")
 	}
 
@@ -137,7 +138,7 @@ func CheckAndUpdate(cfg Config) (bool, error) {
 			Str("current", currentVersion).
 			Str("latest", release.Version).
 			Msg("self-update: already up to date")
-		updateMarkerFile(binPath)
+		updateMarkerFile(binPath, cfg.BinaryName)
 		return false, nil
 	}
 
@@ -149,19 +150,19 @@ func CheckAndUpdate(cfg Config) (bool, error) {
 	// Check if the bin directory is writable
 	if err := checkWritable(binPath); err != nil {
 		log.Warn().Str("path", binPath).Msg("self-update: cannot write to install directory, skipping")
-		updateMarkerFile(binPath)
+		updateMarkerFile(binPath, cfg.BinaryName)
 		return false, nil
 	}
 
 	// Download and install the update
 	binaryPath, err := downloadAndInstall(ctx, release, binPath, cfg.BinaryName)
 	if err != nil {
-		updateMarkerFile(binPath)
+		updateMarkerFile(binPath, cfg.BinaryName)
 		return false, errors.Wrap(err, "failed to download and install update")
 	}
 
 	// Update marker file after successful installation
-	updateMarkerFile(binPath)
+	updateMarkerFile(binPath, cfg.BinaryName)
 
 	log.Debug().
 		Str("version", release.Version).
@@ -263,8 +264,9 @@ func getLocalBinaryVersion(binaryPath string) (string, error) {
 }
 
 // shouldCheckUpdate returns true if enough time has passed since the last check
-func shouldCheckUpdate(binPath string, interval int64) bool {
-	markerPath := filepath.Join(binPath, markerFileName)
+// for this specific binary name.
+func shouldCheckUpdate(binPath string, binName string, interval int64) bool {
+	markerPath := filepath.Join(binPath, markerFilePrefix+binName)
 	info, err := os.Stat(markerPath)
 	if err != nil {
 		// Marker doesn't exist or can't be read, should check
@@ -276,8 +278,9 @@ func shouldCheckUpdate(binPath string, interval int64) bool {
 }
 
 // updateMarkerFile touches the marker file to record when the last check occurred
-func updateMarkerFile(binPath string) {
-	markerPath := filepath.Join(binPath, markerFileName)
+// for this specific binary name.
+func updateMarkerFile(binPath string, binName string) {
+	markerPath := filepath.Join(binPath, markerFilePrefix+binName)
 
 	// Ensure the directory exists
 	if err := os.MkdirAll(binPath, 0o755); err != nil {
