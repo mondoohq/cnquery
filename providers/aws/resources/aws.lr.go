@@ -63,6 +63,8 @@ const (
 	ResourceAwsWafRuleStatementXssmatchstatement                                string = "aws.waf.rule.statement.xssmatchstatement"
 	ResourceAwsWafRuleStatementSqlimatchstatement                               string = "aws.waf.rule.statement.sqlimatchstatement"
 	ResourceAwsWafIpset                                                         string = "aws.waf.ipset"
+	ResourceAwsWafRegexPatternSet                                               string = "aws.waf.regexPatternSet"
+	ResourceAwsWafAclLoggingConfiguration                                       string = "aws.waf.acl.loggingConfiguration"
 	ResourceAwsEfs                                                              string = "aws.efs"
 	ResourceAwsEfsFilesystem                                                    string = "aws.efs.filesystem"
 	ResourceAwsEfsMountTarget                                                   string = "aws.efs.mountTarget"
@@ -508,6 +510,14 @@ func init() {
 		"aws.waf.ipset": {
 			// to override args, implement: initAwsWafIpset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsWafIpset,
+		},
+		"aws.waf.regexPatternSet": {
+			// to override args, implement: initAwsWafRegexPatternSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRegexPatternSet,
+		},
+		"aws.waf.acl.loggingConfiguration": {
+			// to override args, implement: initAwsWafAclLoggingConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafAclLoggingConfiguration,
 		},
 		"aws.efs": {
 			// to override args, implement: initAwsEfs(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1985,6 +1995,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.waf.ipSets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWaf).GetIpSets()).ToDataRes(types.Array(types.Resource("aws.waf.ipset")))
 	},
+	"aws.waf.regexPatternSets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWaf).GetRegexPatternSets()).ToDataRes(types.Array(types.Resource("aws.waf.regexPatternSet")))
+	},
 	"aws.waf.scope": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWaf).GetScope()).ToDataRes(types.String)
 	},
@@ -2008,6 +2021,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.waf.acl.scope": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafAcl).GetScope()).ToDataRes(types.String)
+	},
+	"aws.waf.acl.loggingConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAcl).GetLoggingConfiguration()).ToDataRes(types.Resource("aws.waf.acl.loggingConfiguration"))
+	},
+	"aws.waf.acl.associatedResources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAcl).GetAssociatedResources()).ToDataRes(types.Array(types.String))
 	},
 	"aws.waf.rulegroup.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRulegroup).GetArn()).ToDataRes(types.String)
@@ -2458,6 +2477,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.waf.ipset.addresses": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafIpset).GetAddresses()).ToDataRes(types.Dict)
+	},
+	"aws.waf.regexPatternSet.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRegexPatternSet).GetArn()).ToDataRes(types.String)
+	},
+	"aws.waf.regexPatternSet.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRegexPatternSet).GetId()).ToDataRes(types.String)
+	},
+	"aws.waf.regexPatternSet.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRegexPatternSet).GetScope()).ToDataRes(types.String)
+	},
+	"aws.waf.regexPatternSet.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRegexPatternSet).GetName()).ToDataRes(types.String)
+	},
+	"aws.waf.regexPatternSet.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRegexPatternSet).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.waf.regexPatternSet.regularExpressions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRegexPatternSet).GetRegularExpressions()).ToDataRes(types.Array(types.String))
+	},
+	"aws.waf.acl.loggingConfiguration.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAclLoggingConfiguration).GetArn()).ToDataRes(types.String)
+	},
+	"aws.waf.acl.loggingConfiguration.logDestinationConfigs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAclLoggingConfiguration).GetLogDestinationConfigs()).ToDataRes(types.Array(types.String))
+	},
+	"aws.waf.acl.loggingConfiguration.managedByFirewallManager": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAclLoggingConfiguration).GetManagedByFirewallManager()).ToDataRes(types.Bool)
+	},
+	"aws.waf.acl.loggingConfiguration.redactedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAclLoggingConfiguration).GetRedactedFields()).ToDataRes(types.Array(types.String))
 	},
 	"aws.efs.filesystems": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfs).GetFilesystems()).ToDataRes(types.Array(types.Resource("aws.efs.filesystem")))
@@ -10135,6 +10184,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsWaf).IpSets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.waf.regexPatternSets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWaf).RegexPatternSets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.waf.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWaf).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -10169,6 +10222,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.waf.acl.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafAcl).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.acl.loggingConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAcl).LoggingConfiguration, ok = plugin.RawToTValue[*mqlAwsWafAclLoggingConfiguration](v.Value, v.Error)
+		return
+	},
+	"aws.waf.acl.associatedResources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAcl).AssociatedResources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.waf.rulegroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10897,6 +10958,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.waf.ipset.addresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafIpset).Addresses, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.waf.regexPatternSet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRegexPatternSet).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.waf.regexPatternSet.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRegexPatternSet).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.regexPatternSet.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRegexPatternSet).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.regexPatternSet.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRegexPatternSet).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.regexPatternSet.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRegexPatternSet).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.regexPatternSet.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRegexPatternSet).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.regexPatternSet.regularExpressions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRegexPatternSet).RegularExpressions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.waf.acl.loggingConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAclLoggingConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.waf.acl.loggingConfiguration.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAclLoggingConfiguration).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.acl.loggingConfiguration.logDestinationConfigs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAclLoggingConfiguration).LogDestinationConfigs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.waf.acl.loggingConfiguration.managedByFirewallManager": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAclLoggingConfiguration).ManagedByFirewallManager, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.waf.acl.loggingConfiguration.redactedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAclLoggingConfiguration).RedactedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.efs.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -22825,10 +22934,11 @@ type mqlAwsWaf struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsWafInternal it will be used here
-	Acls       plugin.TValue[[]any]
-	RuleGroups plugin.TValue[[]any]
-	IpSets     plugin.TValue[[]any]
-	Scope      plugin.TValue[string]
+	Acls             plugin.TValue[[]any]
+	RuleGroups       plugin.TValue[[]any]
+	IpSets           plugin.TValue[[]any]
+	RegexPatternSets plugin.TValue[[]any]
+	Scope            plugin.TValue[string]
 }
 
 // createAwsWaf creates a new instance of this resource
@@ -22916,6 +23026,22 @@ func (c *mqlAwsWaf) GetIpSets() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsWaf) GetRegexPatternSets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RegexPatternSets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.waf", c.__id, "regexPatternSets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.regexPatternSets()
+	})
+}
+
 func (c *mqlAwsWaf) GetScope() *plugin.TValue[string] {
 	return &c.Scope
 }
@@ -22932,6 +23058,8 @@ type mqlAwsWafAcl struct {
 	ManagedByFirewallManager plugin.TValue[bool]
 	Rules                    plugin.TValue[[]any]
 	Scope                    plugin.TValue[string]
+	LoggingConfiguration     plugin.TValue[*mqlAwsWafAclLoggingConfiguration]
+	AssociatedResources      plugin.TValue[[]any]
 }
 
 // createAwsWafAcl creates a new instance of this resource
@@ -23009,6 +23137,28 @@ func (c *mqlAwsWafAcl) GetRules() *plugin.TValue[[]any] {
 
 func (c *mqlAwsWafAcl) GetScope() *plugin.TValue[string] {
 	return &c.Scope
+}
+
+func (c *mqlAwsWafAcl) GetLoggingConfiguration() *plugin.TValue[*mqlAwsWafAclLoggingConfiguration] {
+	return plugin.GetOrCompute[*mqlAwsWafAclLoggingConfiguration](&c.LoggingConfiguration, func() (*mqlAwsWafAclLoggingConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.waf.acl", c.__id, "loggingConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsWafAclLoggingConfiguration), nil
+			}
+		}
+
+		return c.loggingConfiguration()
+	})
+}
+
+func (c *mqlAwsWafAcl) GetAssociatedResources() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AssociatedResources, func() ([]any, error) {
+		return c.associatedResources()
+	})
 }
 
 // mqlAwsWafRulegroup for the aws.waf.rulegroup resource
@@ -25169,6 +25319,144 @@ func (c *mqlAwsWafIpset) GetAddressType() *plugin.TValue[string] {
 
 func (c *mqlAwsWafIpset) GetAddresses() *plugin.TValue[any] {
 	return &c.Addresses
+}
+
+// mqlAwsWafRegexPatternSet for the aws.waf.regexPatternSet resource
+type mqlAwsWafRegexPatternSet struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsWafRegexPatternSetInternal it will be used here
+	Arn                plugin.TValue[string]
+	Id                 plugin.TValue[string]
+	Scope              plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Description        plugin.TValue[string]
+	RegularExpressions plugin.TValue[[]any]
+}
+
+// createAwsWafRegexPatternSet creates a new instance of this resource
+func createAwsWafRegexPatternSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRegexPatternSet{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.regexPatternSet", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRegexPatternSet) MqlName() string {
+	return "aws.waf.regexPatternSet"
+}
+
+func (c *mqlAwsWafRegexPatternSet) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRegexPatternSet) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsWafRegexPatternSet) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsWafRegexPatternSet) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
+func (c *mqlAwsWafRegexPatternSet) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsWafRegexPatternSet) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsWafRegexPatternSet) GetRegularExpressions() *plugin.TValue[[]any] {
+	return &c.RegularExpressions
+}
+
+// mqlAwsWafAclLoggingConfiguration for the aws.waf.acl.loggingConfiguration resource
+type mqlAwsWafAclLoggingConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsWafAclLoggingConfigurationInternal it will be used here
+	Arn                      plugin.TValue[string]
+	LogDestinationConfigs    plugin.TValue[[]any]
+	ManagedByFirewallManager plugin.TValue[bool]
+	RedactedFields           plugin.TValue[[]any]
+}
+
+// createAwsWafAclLoggingConfiguration creates a new instance of this resource
+func createAwsWafAclLoggingConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafAclLoggingConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.acl.loggingConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafAclLoggingConfiguration) MqlName() string {
+	return "aws.waf.acl.loggingConfiguration"
+}
+
+func (c *mqlAwsWafAclLoggingConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafAclLoggingConfiguration) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsWafAclLoggingConfiguration) GetLogDestinationConfigs() *plugin.TValue[[]any] {
+	return &c.LogDestinationConfigs
+}
+
+func (c *mqlAwsWafAclLoggingConfiguration) GetManagedByFirewallManager() *plugin.TValue[bool] {
+	return &c.ManagedByFirewallManager
+}
+
+func (c *mqlAwsWafAclLoggingConfiguration) GetRedactedFields() *plugin.TValue[[]any] {
+	return &c.RedactedFields
 }
 
 // mqlAwsEfs for the aws.efs resource
