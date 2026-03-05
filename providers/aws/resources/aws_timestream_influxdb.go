@@ -5,10 +5,13 @@ package resources
 
 import (
 	"context"
+	"fmt"
+	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
 )
@@ -157,6 +160,7 @@ func (a *mqlAwsTimestreamInfluxdb) getClusters(conn *connection.AwsConnection) [
 							"port":             llx.IntDataDefault(cluster.Port, 0),
 							"status":           llx.StringData(string(cluster.Status)),
 							"region":           llx.StringData(region),
+							"engineType":       llx.StringData(string(cluster.EngineType)),
 						})
 					if err != nil {
 						return nil, err
@@ -171,7 +175,120 @@ func (a *mqlAwsTimestreamInfluxdb) getClusters(conn *connection.AwsConnection) [
 	return tasks
 }
 
-func (a *mqlAwsTimestreamInfluxdbCluster) tags() (map[string]interface{}, error) {
+// Instance detail caching
+
+type mqlAwsTimestreamInfluxdbInstanceInternal struct {
+	securityGroupIdHandler
+	detailOnce sync.Once
+	detailErr  error
+	detail     *timestreaminfluxdb.GetDbInstanceOutput
+}
+
+func (a *mqlAwsTimestreamInfluxdbInstance) fetchDetail() (*timestreaminfluxdb.GetDbInstanceOutput, error) {
+	a.detailOnce.Do(func() {
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		svc := conn.TimestreamInfluxDB(a.Region.Data)
+		ctx := context.Background()
+		id := a.Id.Data
+		a.detail, a.detailErr = svc.GetDbInstance(ctx, &timestreaminfluxdb.GetDbInstanceInput{
+			Identifier: &id,
+		})
+		if a.detailErr == nil && a.detail != nil {
+			accountID := conn.AccountId()
+			region := a.Region.Data
+			sgs := make([]string, 0, len(a.detail.VpcSecurityGroupIds))
+			for _, sgID := range a.detail.VpcSecurityGroupIds {
+				sgs = append(sgs, NewSecurityGroupArn(region, accountID, sgID))
+			}
+			a.setSecurityGroupArns(sgs)
+		}
+	})
+	return a.detail, a.detailErr
+}
+
+func (a *mqlAwsTimestreamInfluxdbInstance) publiclyAccessible() (bool, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return false, err
+	}
+	return convert.ToValue(detail.PubliclyAccessible), nil
+}
+
+func (a *mqlAwsTimestreamInfluxdbInstance) vpcSubnets() ([]any, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return nil, err
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := a.Region.Data
+	accountID := conn.AccountId()
+	res := make([]any, 0, len(detail.VpcSubnetIds))
+	for _, subnetID := range detail.VpcSubnetIds {
+		sub, err := NewResource(a.MqlRuntime, ResourceAwsVpcSubnet, map[string]*llx.RawData{
+			"arn": llx.StringData(fmt.Sprintf(subnetArnPattern, region, accountID, subnetID)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, sub)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsTimestreamInfluxdbInstance) securityGroups() ([]any, error) {
+	if _, err := a.fetchDetail(); err != nil {
+		return nil, err
+	}
+	return a.newSecurityGroupResources(a.MqlRuntime)
+}
+
+func (a *mqlAwsTimestreamInfluxdbInstance) influxAuthParametersSecretArn() (string, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(detail.InfluxAuthParametersSecretArn), nil
+}
+
+func (a *mqlAwsTimestreamInfluxdbInstance) logDeliveryEnabled() (bool, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return false, err
+	}
+	if detail.LogDeliveryConfiguration != nil && detail.LogDeliveryConfiguration.S3Configuration != nil {
+		return convert.ToValue(detail.LogDeliveryConfiguration.S3Configuration.Enabled), nil
+	}
+	return false, nil
+}
+
+func (a *mqlAwsTimestreamInfluxdbInstance) logDeliveryS3Bucket() (string, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	if detail.LogDeliveryConfiguration != nil && detail.LogDeliveryConfiguration.S3Configuration != nil {
+		return convert.ToValue(detail.LogDeliveryConfiguration.S3Configuration.BucketName), nil
+	}
+	return "", nil
+}
+
+func (a *mqlAwsTimestreamInfluxdbInstance) dbParameterGroupIdentifier() (string, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(detail.DbParameterGroupIdentifier), nil
+}
+
+func (a *mqlAwsTimestreamInfluxdbInstance) availabilityZone() (string, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(detail.AvailabilityZone), nil
+}
+
+func (a *mqlAwsTimestreamInfluxdbInstance) tags() (map[string]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.TimestreamInfluxDB(a.Region.Data)
 	ctx := context.Background()
@@ -190,7 +307,120 @@ func (a *mqlAwsTimestreamInfluxdbCluster) tags() (map[string]interface{}, error)
 	return tags, nil
 }
 
-func (a *mqlAwsTimestreamInfluxdbInstance) tags() (map[string]interface{}, error) {
+// Cluster detail caching
+
+type mqlAwsTimestreamInfluxdbClusterInternal struct {
+	securityGroupIdHandler
+	detailOnce sync.Once
+	detailErr  error
+	detail     *timestreaminfluxdb.GetDbClusterOutput
+}
+
+func (a *mqlAwsTimestreamInfluxdbCluster) fetchDetail() (*timestreaminfluxdb.GetDbClusterOutput, error) {
+	a.detailOnce.Do(func() {
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		svc := conn.TimestreamInfluxDB(a.Region.Data)
+		ctx := context.Background()
+		id := a.Id.Data
+		a.detail, a.detailErr = svc.GetDbCluster(ctx, &timestreaminfluxdb.GetDbClusterInput{
+			DbClusterId: &id,
+		})
+		if a.detailErr == nil && a.detail != nil {
+			accountID := conn.AccountId()
+			region := a.Region.Data
+			sgs := make([]string, 0, len(a.detail.VpcSecurityGroupIds))
+			for _, sgID := range a.detail.VpcSecurityGroupIds {
+				sgs = append(sgs, NewSecurityGroupArn(region, accountID, sgID))
+			}
+			a.setSecurityGroupArns(sgs)
+		}
+	})
+	return a.detail, a.detailErr
+}
+
+func (a *mqlAwsTimestreamInfluxdbCluster) publiclyAccessible() (bool, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return false, err
+	}
+	return convert.ToValue(detail.PubliclyAccessible), nil
+}
+
+func (a *mqlAwsTimestreamInfluxdbCluster) vpcSubnets() ([]any, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return nil, err
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := a.Region.Data
+	accountID := conn.AccountId()
+	res := make([]any, 0, len(detail.VpcSubnetIds))
+	for _, subnetID := range detail.VpcSubnetIds {
+		sub, err := NewResource(a.MqlRuntime, ResourceAwsVpcSubnet, map[string]*llx.RawData{
+			"arn": llx.StringData(fmt.Sprintf(subnetArnPattern, region, accountID, subnetID)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, sub)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsTimestreamInfluxdbCluster) securityGroups() ([]any, error) {
+	if _, err := a.fetchDetail(); err != nil {
+		return nil, err
+	}
+	return a.newSecurityGroupResources(a.MqlRuntime)
+}
+
+func (a *mqlAwsTimestreamInfluxdbCluster) influxAuthParametersSecretArn() (string, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(detail.InfluxAuthParametersSecretArn), nil
+}
+
+func (a *mqlAwsTimestreamInfluxdbCluster) logDeliveryEnabled() (bool, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return false, err
+	}
+	if detail.LogDeliveryConfiguration != nil && detail.LogDeliveryConfiguration.S3Configuration != nil {
+		return convert.ToValue(detail.LogDeliveryConfiguration.S3Configuration.Enabled), nil
+	}
+	return false, nil
+}
+
+func (a *mqlAwsTimestreamInfluxdbCluster) logDeliveryS3Bucket() (string, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	if detail.LogDeliveryConfiguration != nil && detail.LogDeliveryConfiguration.S3Configuration != nil {
+		return convert.ToValue(detail.LogDeliveryConfiguration.S3Configuration.BucketName), nil
+	}
+	return "", nil
+}
+
+func (a *mqlAwsTimestreamInfluxdbCluster) dbParameterGroupIdentifier() (string, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(detail.DbParameterGroupIdentifier), nil
+}
+
+func (a *mqlAwsTimestreamInfluxdbCluster) failoverMode() (string, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	return string(detail.FailoverMode), nil
+}
+
+func (a *mqlAwsTimestreamInfluxdbCluster) tags() (map[string]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.TimestreamInfluxDB(a.Region.Data)
 	ctx := context.Background()
