@@ -63,6 +63,8 @@ const (
 	ResourceAwsWafRuleStatementXssmatchstatement                                string = "aws.waf.rule.statement.xssmatchstatement"
 	ResourceAwsWafRuleStatementSqlimatchstatement                               string = "aws.waf.rule.statement.sqlimatchstatement"
 	ResourceAwsWafIpset                                                         string = "aws.waf.ipset"
+	ResourceAwsWafRegexPatternSet                                               string = "aws.waf.regexPatternSet"
+	ResourceAwsWafAclLoggingConfiguration                                       string = "aws.waf.acl.loggingConfiguration"
 	ResourceAwsEfs                                                              string = "aws.efs"
 	ResourceAwsEfsFilesystem                                                    string = "aws.efs.filesystem"
 	ResourceAwsEfsMountTarget                                                   string = "aws.efs.mountTarget"
@@ -153,6 +155,9 @@ const (
 	ResourceAwsEcsTaskDefinitionEphemeralStorage                                string = "aws.ecs.taskDefinition.ephemeralStorage"
 	ResourceAwsEmr                                                              string = "aws.emr"
 	ResourceAwsEmrCluster                                                       string = "aws.emr.cluster"
+	ResourceAwsEventbridge                                                      string = "aws.eventbridge"
+	ResourceAwsEventbridgeEventBus                                              string = "aws.eventbridge.eventBus"
+	ResourceAwsEventbridgeRule                                                  string = "aws.eventbridge.rule"
 	ResourceAwsCloudwatch                                                       string = "aws.cloudwatch"
 	ResourceAwsCloudwatchMetricsalarm                                           string = "aws.cloudwatch.metricsalarm"
 	ResourceAwsCloudwatchMetric                                                 string = "aws.cloudwatch.metric"
@@ -225,6 +230,7 @@ const (
 	ResourceAwsRoute53HealthCheck                                               string = "aws.route53.healthCheck"
 	ResourceAwsRoute53QueryLoggingConfig                                        string = "aws.route53.queryLoggingConfig"
 	ResourceAwsRoute53KeySigningKey                                             string = "aws.route53.keySigningKey"
+	ResourceAwsRoute53Domain                                                    string = "aws.route53.domain"
 	ResourceAwsEcr                                                              string = "aws.ecr"
 	ResourceAwsEcrRepository                                                    string = "aws.ecr.repository"
 	ResourceAwsEcrLifecyclePolicy                                               string = "aws.ecr.lifecyclePolicy"
@@ -292,6 +298,12 @@ const (
 	ResourceAwsNeptuneCluster                                                   string = "aws.neptune.cluster"
 	ResourceAwsNeptuneInstance                                                  string = "aws.neptune.instance"
 	ResourceAwsNeptuneSnapshot                                                  string = "aws.neptune.snapshot"
+	ResourceAwsCognito                                                          string = "aws.cognito"
+	ResourceAwsCognitoUserPool                                                  string = "aws.cognito.userPool"
+	ResourceAwsCognitoIdentityPool                                              string = "aws.cognito.identityPool"
+	ResourceAwsDocumentdb                                                       string = "aws.documentdb"
+	ResourceAwsDocumentdbCluster                                                string = "aws.documentdb.cluster"
+	ResourceAwsDocumentdbInstance                                               string = "aws.documentdb.instance"
 	ResourceAwsTimestreamLiveanalytics                                          string = "aws.timestream.liveanalytics"
 	ResourceAwsTimestreamLiveanalyticsDatabase                                  string = "aws.timestream.liveanalytics.database"
 	ResourceAwsTimestreamLiveanalyticsTable                                     string = "aws.timestream.liveanalytics.table"
@@ -305,6 +317,8 @@ const (
 	ResourceAwsAppstreamFleet                                                   string = "aws.appstream.fleet"
 	ResourceAwsAppstreamStack                                                   string = "aws.appstream.stack"
 	ResourceAwsAppstreamImageBuilder                                            string = "aws.appstream.imageBuilder"
+	ResourceAwsAthena                                                           string = "aws.athena"
+	ResourceAwsAthenaWorkgroup                                                  string = "aws.athena.workgroup"
 	ResourceAwsDirectoryservice                                                 string = "aws.directoryservice"
 	ResourceAwsDirectoryserviceDirectory                                        string = "aws.directoryservice.directory"
 	ResourceAwsDirectoryserviceRadiusSettings                                   string = "aws.directoryservice.radiusSettings"
@@ -319,6 +333,14 @@ const (
 	ResourceAwsWorkspacesBundle                                                 string = "aws.workspaces.bundle"
 	ResourceAwsWorkspacesIpGroup                                                string = "aws.workspaces.ipGroup"
 	ResourceAwsWorkspaceswebUserAccessLoggingSetting                            string = "aws.workspacesweb.userAccessLoggingSetting"
+	ResourceAwsKinesis                                                          string = "aws.kinesis"
+	ResourceAwsKinesisStream                                                    string = "aws.kinesis.stream"
+	ResourceAwsKinesisFirehoseDeliveryStream                                    string = "aws.kinesis.firehoseDeliveryStream"
+	ResourceAwsMemorydb                                                         string = "aws.memorydb"
+	ResourceAwsMemorydbCluster                                                  string = "aws.memorydb.cluster"
+	ResourceAwsTimestreamInfluxdb                                               string = "aws.timestream.influxdb"
+	ResourceAwsTimestreamInfluxdbInstance                                       string = "aws.timestream.influxdb.instance"
+	ResourceAwsTimestreamInfluxdbCluster                                        string = "aws.timestream.influxdb.cluster"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -508,6 +530,14 @@ func init() {
 		"aws.waf.ipset": {
 			// to override args, implement: initAwsWafIpset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsWafIpset,
+		},
+		"aws.waf.regexPatternSet": {
+			// to override args, implement: initAwsWafRegexPatternSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRegexPatternSet,
+		},
+		"aws.waf.acl.loggingConfiguration": {
+			// to override args, implement: initAwsWafAclLoggingConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafAclLoggingConfiguration,
 		},
 		"aws.efs": {
 			// to override args, implement: initAwsEfs(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -869,6 +899,18 @@ func init() {
 			// to override args, implement: initAwsEmrCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEmrCluster,
 		},
+		"aws.eventbridge": {
+			// to override args, implement: initAwsEventbridge(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridge,
+		},
+		"aws.eventbridge.eventBus": {
+			// to override args, implement: initAwsEventbridgeEventBus(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgeEventBus,
+		},
+		"aws.eventbridge.rule": {
+			// to override args, implement: initAwsEventbridgeRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgeRule,
+		},
 		"aws.cloudwatch": {
 			// to override args, implement: initAwsCloudwatch(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsCloudwatch,
@@ -1157,6 +1199,10 @@ func init() {
 			// to override args, implement: initAwsRoute53KeySigningKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsRoute53KeySigningKey,
 		},
+		"aws.route53.domain": {
+			// to override args, implement: initAwsRoute53Domain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsRoute53Domain,
+		},
 		"aws.ecr": {
 			// to override args, implement: initAwsEcr(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEcr,
@@ -1425,6 +1471,30 @@ func init() {
 			// to override args, implement: initAwsNeptuneSnapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsNeptuneSnapshot,
 		},
+		"aws.cognito": {
+			// to override args, implement: initAwsCognito(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCognito,
+		},
+		"aws.cognito.userPool": {
+			// to override args, implement: initAwsCognitoUserPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCognitoUserPool,
+		},
+		"aws.cognito.identityPool": {
+			// to override args, implement: initAwsCognitoIdentityPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCognitoIdentityPool,
+		},
+		"aws.documentdb": {
+			// to override args, implement: initAwsDocumentdb(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDocumentdb,
+		},
+		"aws.documentdb.cluster": {
+			// to override args, implement: initAwsDocumentdbCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDocumentdbCluster,
+		},
+		"aws.documentdb.instance": {
+			// to override args, implement: initAwsDocumentdbInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDocumentdbInstance,
+		},
 		"aws.timestream.liveanalytics": {
 			// to override args, implement: initAwsTimestreamLiveanalytics(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsTimestreamLiveanalytics,
@@ -1476,6 +1546,14 @@ func init() {
 		"aws.appstream.imageBuilder": {
 			// to override args, implement: initAwsAppstreamImageBuilder(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsAppstreamImageBuilder,
+		},
+		"aws.athena": {
+			// to override args, implement: initAwsAthena(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsAthena,
+		},
+		"aws.athena.workgroup": {
+			// to override args, implement: initAwsAthenaWorkgroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsAthenaWorkgroup,
 		},
 		"aws.directoryservice": {
 			// to override args, implement: initAwsDirectoryservice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1532,6 +1610,38 @@ func init() {
 		"aws.workspacesweb.userAccessLoggingSetting": {
 			// to override args, implement: initAwsWorkspaceswebUserAccessLoggingSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsWorkspaceswebUserAccessLoggingSetting,
+		},
+		"aws.kinesis": {
+			// to override args, implement: initAwsKinesis(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsKinesis,
+		},
+		"aws.kinesis.stream": {
+			// to override args, implement: initAwsKinesisStream(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsKinesisStream,
+		},
+		"aws.kinesis.firehoseDeliveryStream": {
+			// to override args, implement: initAwsKinesisFirehoseDeliveryStream(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsKinesisFirehoseDeliveryStream,
+		},
+		"aws.memorydb": {
+			// to override args, implement: initAwsMemorydb(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMemorydb,
+		},
+		"aws.memorydb.cluster": {
+			// to override args, implement: initAwsMemorydbCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMemorydbCluster,
+		},
+		"aws.timestream.influxdb": {
+			// to override args, implement: initAwsTimestreamInfluxdb(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsTimestreamInfluxdb,
+		},
+		"aws.timestream.influxdb.instance": {
+			// to override args, implement: initAwsTimestreamInfluxdbInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsTimestreamInfluxdbInstance,
+		},
+		"aws.timestream.influxdb.cluster": {
+			// to override args, implement: initAwsTimestreamInfluxdbCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsTimestreamInfluxdbCluster,
 		},
 	}
 }
@@ -1985,6 +2095,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.waf.ipSets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWaf).GetIpSets()).ToDataRes(types.Array(types.Resource("aws.waf.ipset")))
 	},
+	"aws.waf.regexPatternSets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWaf).GetRegexPatternSets()).ToDataRes(types.Array(types.Resource("aws.waf.regexPatternSet")))
+	},
 	"aws.waf.scope": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWaf).GetScope()).ToDataRes(types.String)
 	},
@@ -2008,6 +2121,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.waf.acl.scope": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafAcl).GetScope()).ToDataRes(types.String)
+	},
+	"aws.waf.acl.loggingConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAcl).GetLoggingConfiguration()).ToDataRes(types.Resource("aws.waf.acl.loggingConfiguration"))
+	},
+	"aws.waf.acl.associatedResources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAcl).GetAssociatedResources()).ToDataRes(types.Array(types.String))
 	},
 	"aws.waf.rulegroup.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRulegroup).GetArn()).ToDataRes(types.String)
@@ -2458,6 +2577,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.waf.ipset.addresses": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafIpset).GetAddresses()).ToDataRes(types.Dict)
+	},
+	"aws.waf.regexPatternSet.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRegexPatternSet).GetArn()).ToDataRes(types.String)
+	},
+	"aws.waf.regexPatternSet.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRegexPatternSet).GetId()).ToDataRes(types.String)
+	},
+	"aws.waf.regexPatternSet.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRegexPatternSet).GetScope()).ToDataRes(types.String)
+	},
+	"aws.waf.regexPatternSet.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRegexPatternSet).GetName()).ToDataRes(types.String)
+	},
+	"aws.waf.regexPatternSet.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRegexPatternSet).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.waf.regexPatternSet.regularExpressions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRegexPatternSet).GetRegularExpressions()).ToDataRes(types.Array(types.String))
+	},
+	"aws.waf.acl.loggingConfiguration.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAclLoggingConfiguration).GetArn()).ToDataRes(types.String)
+	},
+	"aws.waf.acl.loggingConfiguration.logDestinationConfigs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAclLoggingConfiguration).GetLogDestinationConfigs()).ToDataRes(types.Array(types.String))
+	},
+	"aws.waf.acl.loggingConfiguration.managedByFirewallManager": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAclLoggingConfiguration).GetManagedByFirewallManager()).ToDataRes(types.Bool)
+	},
+	"aws.waf.acl.loggingConfiguration.redactedFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAclLoggingConfiguration).GetRedactedFields()).ToDataRes(types.Array(types.String))
 	},
 	"aws.efs.filesystems": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfs).GetFilesystems()).ToDataRes(types.Array(types.Resource("aws.efs.filesystem")))
@@ -4664,6 +4813,60 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.emr.cluster.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEmrCluster).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"aws.eventbridge.eventBuses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridge).GetEventBuses()).ToDataRes(types.Array(types.Resource("aws.eventbridge.eventBus")))
+	},
+	"aws.eventbridge.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridge).GetRules()).ToDataRes(types.Array(types.Resource("aws.eventbridge.rule")))
+	},
+	"aws.eventbridge.eventBus.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeEventBus).GetArn()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.eventBus.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeEventBus).GetName()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.eventBus.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeEventBus).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.eventBus.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeEventBus).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.eventbridge.eventBus.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeEventBus).GetRules()).ToDataRes(types.Array(types.Resource("aws.eventbridge.rule")))
+	},
+	"aws.eventbridge.rule.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeRule).GetArn()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.rule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeRule).GetName()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.rule.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeRule).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.rule.eventBusName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeRule).GetEventBusName()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.rule.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeRule).GetState()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.rule.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeRule).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.rule.eventPattern": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeRule).GetEventPattern()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.rule.scheduleExpression": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeRule).GetScheduleExpression()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.rule.roleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeRule).GetRoleArn()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.rule.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeRule).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.eventbridge.rule.targets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeRule).GetTargets()).ToDataRes(types.Array(types.Dict))
+	},
 	"aws.cloudwatch.logGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudwatch).GetLogGroups()).ToDataRes(types.Array(types.Resource("aws.cloudwatch.loggroup")))
 	},
@@ -6518,6 +6721,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.route53.queryLoggingConfigs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRoute53).GetQueryLoggingConfigs()).ToDataRes(types.Array(types.Resource("aws.route53.queryLoggingConfig")))
 	},
+	"aws.route53.domains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53).GetDomains()).ToDataRes(types.Array(types.Resource("aws.route53.domain")))
+	},
 	"aws.route53.hostedZone.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRoute53HostedZone).GetId()).ToDataRes(types.String)
 	},
@@ -6760,6 +6966,48 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.route53.keySigningKey.kmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRoute53KeySigningKey).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.route53.domain.domainName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Domain).GetDomainName()).ToDataRes(types.String)
+	},
+	"aws.route53.domain.autoRenew": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Domain).GetAutoRenew()).ToDataRes(types.Bool)
+	},
+	"aws.route53.domain.transferLock": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Domain).GetTransferLock()).ToDataRes(types.Bool)
+	},
+	"aws.route53.domain.expiresAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Domain).GetExpiresAt()).ToDataRes(types.Time)
+	},
+	"aws.route53.domain.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Domain).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.route53.domain.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Domain).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.route53.domain.adminPrivacy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Domain).GetAdminPrivacy()).ToDataRes(types.Bool)
+	},
+	"aws.route53.domain.registrantPrivacy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Domain).GetRegistrantPrivacy()).ToDataRes(types.Bool)
+	},
+	"aws.route53.domain.techPrivacy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Domain).GetTechPrivacy()).ToDataRes(types.Bool)
+	},
+	"aws.route53.domain.dnssec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Domain).GetDnssec()).ToDataRes(types.String)
+	},
+	"aws.route53.domain.statusList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Domain).GetStatusList()).ToDataRes(types.Array(types.String))
+	},
+	"aws.route53.domain.nameservers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Domain).GetNameservers()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.route53.domain.registrarName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Domain).GetRegistrarName()).ToDataRes(types.String)
+	},
+	"aws.route53.domain.abuseContactEmail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Domain).GetAbuseContactEmail()).ToDataRes(types.String)
 	},
 	"aws.ecr.privateRepositories": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcr).GetPrivateRepositories()).ToDataRes(types.Array(types.Resource("aws.ecr.repository")))
@@ -8759,6 +9007,222 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.neptune.snapshot.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNeptuneSnapshot).GetRegion()).ToDataRes(types.String)
 	},
+	"aws.cognito.userPools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognito).GetUserPools()).ToDataRes(types.Array(types.Resource("aws.cognito.userPool")))
+	},
+	"aws.cognito.identityPools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognito).GetIdentityPools()).ToDataRes(types.Array(types.Resource("aws.cognito.identityPool")))
+	},
+	"aws.cognito.userPool.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPool).GetArn()).ToDataRes(types.String)
+	},
+	"aws.cognito.userPool.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPool).GetId()).ToDataRes(types.String)
+	},
+	"aws.cognito.userPool.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPool).GetName()).ToDataRes(types.String)
+	},
+	"aws.cognito.userPool.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPool).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.cognito.userPool.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPool).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.cognito.userPool.deletionProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPool).GetDeletionProtection()).ToDataRes(types.Bool)
+	},
+	"aws.cognito.userPool.mfaConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPool).GetMfaConfiguration()).ToDataRes(types.String)
+	},
+	"aws.cognito.userPool.passwordPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPool).GetPasswordPolicy()).ToDataRes(types.Dict)
+	},
+	"aws.cognito.userPool.advancedSecurityMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPool).GetAdvancedSecurityMode()).ToDataRes(types.String)
+	},
+	"aws.cognito.userPool.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPool).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.cognito.userPool.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPool).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.cognito.userPool.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPool).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.cognito.identityPool.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoIdentityPool).GetId()).ToDataRes(types.String)
+	},
+	"aws.cognito.identityPool.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoIdentityPool).GetName()).ToDataRes(types.String)
+	},
+	"aws.cognito.identityPool.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoIdentityPool).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.cognito.identityPool.allowUnauthenticatedIdentities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoIdentityPool).GetAllowUnauthenticatedIdentities()).ToDataRes(types.Bool)
+	},
+	"aws.cognito.identityPool.allowClassicFlow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoIdentityPool).GetAllowClassicFlow()).ToDataRes(types.Bool)
+	},
+	"aws.cognito.identityPool.developerProviderName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoIdentityPool).GetDeveloperProviderName()).ToDataRes(types.String)
+	},
+	"aws.cognito.identityPool.openIdConnectProviderArns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoIdentityPool).GetOpenIdConnectProviderArns()).ToDataRes(types.Array(types.String))
+	},
+	"aws.cognito.identityPool.samlProviderArns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoIdentityPool).GetSamlProviderArns()).ToDataRes(types.Array(types.String))
+	},
+	"aws.cognito.identityPool.supportedLoginProviders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoIdentityPool).GetSupportedLoginProviders()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.cognito.identityPool.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoIdentityPool).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.documentdb.clusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdb).GetClusters()).ToDataRes(types.Array(types.Resource("aws.documentdb.cluster")))
+	},
+	"aws.documentdb.instances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdb).GetInstances()).ToDataRes(types.Array(types.Resource("aws.documentdb.instance")))
+	},
+	"aws.documentdb.cluster.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetArn()).ToDataRes(types.String)
+	},
+	"aws.documentdb.cluster.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetName()).ToDataRes(types.String)
+	},
+	"aws.documentdb.cluster.clusterIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetClusterIdentifier()).ToDataRes(types.String)
+	},
+	"aws.documentdb.cluster.engine": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetEngine()).ToDataRes(types.String)
+	},
+	"aws.documentdb.cluster.engineVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetEngineVersion()).ToDataRes(types.String)
+	},
+	"aws.documentdb.cluster.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.documentdb.cluster.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.documentdb.cluster.availabilityZones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetAvailabilityZones()).ToDataRes(types.Array(types.String))
+	},
+	"aws.documentdb.cluster.backupRetentionPeriod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetBackupRetentionPeriod()).ToDataRes(types.Int)
+	},
+	"aws.documentdb.cluster.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.documentdb.cluster.clusterParameterGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetClusterParameterGroup()).ToDataRes(types.String)
+	},
+	"aws.documentdb.cluster.subnetGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetSubnetGroup()).ToDataRes(types.String)
+	},
+	"aws.documentdb.cluster.clusterResourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetClusterResourceId()).ToDataRes(types.String)
+	},
+	"aws.documentdb.cluster.deletionProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetDeletionProtection()).ToDataRes(types.Bool)
+	},
+	"aws.documentdb.cluster.earliestRestorableTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetEarliestRestorableTime()).ToDataRes(types.Time)
+	},
+	"aws.documentdb.cluster.enabledCloudwatchLogsExports": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetEnabledCloudwatchLogsExports()).ToDataRes(types.Array(types.String))
+	},
+	"aws.documentdb.cluster.endpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetEndpoint()).ToDataRes(types.String)
+	},
+	"aws.documentdb.cluster.masterUsername": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetMasterUsername()).ToDataRes(types.String)
+	},
+	"aws.documentdb.cluster.multiAZ": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetMultiAZ()).ToDataRes(types.Bool)
+	},
+	"aws.documentdb.cluster.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetPort()).ToDataRes(types.Int)
+	},
+	"aws.documentdb.cluster.preferredBackupWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetPreferredBackupWindow()).ToDataRes(types.String)
+	},
+	"aws.documentdb.cluster.preferredMaintenanceWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetPreferredMaintenanceWindow()).ToDataRes(types.String)
+	},
+	"aws.documentdb.cluster.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.documentdb.cluster.storageEncrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetStorageEncrypted()).ToDataRes(types.Bool)
+	},
+	"aws.documentdb.cluster.storageType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetStorageType()).ToDataRes(types.String)
+	},
+	"aws.documentdb.cluster.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.documentdb.instance.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetArn()).ToDataRes(types.String)
+	},
+	"aws.documentdb.instance.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetName()).ToDataRes(types.String)
+	},
+	"aws.documentdb.instance.clusterIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetClusterIdentifier()).ToDataRes(types.String)
+	},
+	"aws.documentdb.instance.autoMinorVersionUpgrade": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetAutoMinorVersionUpgrade()).ToDataRes(types.Bool)
+	},
+	"aws.documentdb.instance.availabilityZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetAvailabilityZone()).ToDataRes(types.String)
+	},
+	"aws.documentdb.instance.backupRetentionPeriod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetBackupRetentionPeriod()).ToDataRes(types.Int)
+	},
+	"aws.documentdb.instance.instanceClass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetInstanceClass()).ToDataRes(types.String)
+	},
+	"aws.documentdb.instance.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.documentdb.instance.enabledCloudwatchLogsExports": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetEnabledCloudwatchLogsExports()).ToDataRes(types.Array(types.String))
+	},
+	"aws.documentdb.instance.endpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetEndpoint()).ToDataRes(types.Dict)
+	},
+	"aws.documentdb.instance.engine": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetEngine()).ToDataRes(types.String)
+	},
+	"aws.documentdb.instance.engineVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetEngineVersion()).ToDataRes(types.String)
+	},
+	"aws.documentdb.instance.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.documentdb.instance.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.documentdb.instance.preferredBackupWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetPreferredBackupWindow()).ToDataRes(types.String)
+	},
+	"aws.documentdb.instance.preferredMaintenanceWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetPreferredMaintenanceWindow()).ToDataRes(types.String)
+	},
+	"aws.documentdb.instance.promotionTier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetPromotionTier()).ToDataRes(types.Int)
+	},
+	"aws.documentdb.instance.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.documentdb.instance.storageEncrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetStorageEncrypted()).ToDataRes(types.Bool)
+	},
+	"aws.documentdb.instance.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"aws.timestream.liveanalytics.databases": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsTimestreamLiveanalytics).GetDatabases()).ToDataRes(types.Array(types.Resource("aws.timestream.liveanalytics.database")))
 	},
@@ -9158,6 +9622,48 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.appstream.imageBuilder.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppstreamImageBuilder).GetRegion()).ToDataRes(types.String)
 	},
+	"aws.athena.workgroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthena).GetWorkgroups()).ToDataRes(types.Array(types.Resource("aws.athena.workgroup")))
+	},
+	"aws.athena.workgroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetName()).ToDataRes(types.String)
+	},
+	"aws.athena.workgroup.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetArn()).ToDataRes(types.String)
+	},
+	"aws.athena.workgroup.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetState()).ToDataRes(types.String)
+	},
+	"aws.athena.workgroup.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.athena.workgroup.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.athena.workgroup.enforceWorkGroupConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetEnforceWorkGroupConfiguration()).ToDataRes(types.Bool)
+	},
+	"aws.athena.workgroup.publishCloudWatchMetricsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetPublishCloudWatchMetricsEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.athena.workgroup.bytesScannedCutoffPerQuery": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetBytesScannedCutoffPerQuery()).ToDataRes(types.Int)
+	},
+	"aws.athena.workgroup.requesterPaysEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetRequesterPaysEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.athena.workgroup.engineVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetEngineVersion()).ToDataRes(types.Dict)
+	},
+	"aws.athena.workgroup.resultConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetResultConfiguration()).ToDataRes(types.Dict)
+	},
+	"aws.athena.workgroup.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.athena.workgroup.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"aws.directoryservice.directories": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDirectoryservice).GetDirectories()).ToDataRes(types.Array(types.Resource("aws.directoryservice.directory")))
 	},
@@ -9458,6 +9964,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.workspaces.workspace.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkspacesWorkspace).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"aws.workspaces.workspace.connectionState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesWorkspace).GetConnectionState()).ToDataRes(types.String)
+	},
+	"aws.workspaces.workspace.connectionStateCheckTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesWorkspace).GetConnectionStateCheckTimestamp()).ToDataRes(types.Time)
+	},
+	"aws.workspaces.workspace.lastKnownUserConnectionTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesWorkspace).GetLastKnownUserConnectionTimestamp()).ToDataRes(types.Time)
+	},
+	"aws.workspaces.workspace.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesWorkspace).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
 	"aws.workspaces.workspace.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkspacesWorkspace).GetRegion()).ToDataRes(types.String)
 	},
@@ -9547,6 +10065,285 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.workspacesweb.userAccessLoggingSetting.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkspaceswebUserAccessLoggingSetting).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.kinesis.streams": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesis).GetStreams()).ToDataRes(types.Array(types.Resource("aws.kinesis.stream")))
+	},
+	"aws.kinesis.firehoseDeliveryStreams": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesis).GetFirehoseDeliveryStreams()).ToDataRes(types.Array(types.Resource("aws.kinesis.firehoseDeliveryStream")))
+	},
+	"aws.kinesis.stream.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisStream).GetArn()).ToDataRes(types.String)
+	},
+	"aws.kinesis.stream.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisStream).GetName()).ToDataRes(types.String)
+	},
+	"aws.kinesis.stream.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisStream).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.kinesis.stream.encryptionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisStream).GetEncryptionType()).ToDataRes(types.String)
+	},
+	"aws.kinesis.stream.keyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisStream).GetKeyId()).ToDataRes(types.String)
+	},
+	"aws.kinesis.stream.retentionPeriodHours": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisStream).GetRetentionPeriodHours()).ToDataRes(types.Int)
+	},
+	"aws.kinesis.stream.openShardCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisStream).GetOpenShardCount()).ToDataRes(types.Int)
+	},
+	"aws.kinesis.stream.consumerCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisStream).GetConsumerCount()).ToDataRes(types.Int)
+	},
+	"aws.kinesis.stream.streamModeDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisStream).GetStreamModeDetails()).ToDataRes(types.Dict)
+	},
+	"aws.kinesis.stream.enhancedMonitoring": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisStream).GetEnhancedMonitoring()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.kinesis.stream.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisStream).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.kinesis.stream.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisStream).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.kinesis.stream.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisStream).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.kinesis.firehoseDeliveryStream.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisFirehoseDeliveryStream).GetArn()).ToDataRes(types.String)
+	},
+	"aws.kinesis.firehoseDeliveryStream.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisFirehoseDeliveryStream).GetName()).ToDataRes(types.String)
+	},
+	"aws.kinesis.firehoseDeliveryStream.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisFirehoseDeliveryStream).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.kinesis.firehoseDeliveryStream.deliveryStreamType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisFirehoseDeliveryStream).GetDeliveryStreamType()).ToDataRes(types.String)
+	},
+	"aws.kinesis.firehoseDeliveryStream.encryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisFirehoseDeliveryStream).GetEncryption()).ToDataRes(types.Dict)
+	},
+	"aws.kinesis.firehoseDeliveryStream.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisFirehoseDeliveryStream).GetSource()).ToDataRes(types.Dict)
+	},
+	"aws.kinesis.firehoseDeliveryStream.destinations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisFirehoseDeliveryStream).GetDestinations()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.kinesis.firehoseDeliveryStream.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisFirehoseDeliveryStream).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.kinesis.firehoseDeliveryStream.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisFirehoseDeliveryStream).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.kinesis.firehoseDeliveryStream.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisFirehoseDeliveryStream).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.memorydb.clusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydb).GetClusters()).ToDataRes(types.Array(types.Resource("aws.memorydb.cluster")))
+	},
+	"aws.memorydb.cluster.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetArn()).ToDataRes(types.String)
+	},
+	"aws.memorydb.cluster.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetName()).ToDataRes(types.String)
+	},
+	"aws.memorydb.cluster.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.memorydb.cluster.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.memorydb.cluster.nodeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetNodeType()).ToDataRes(types.String)
+	},
+	"aws.memorydb.cluster.engine": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetEngine()).ToDataRes(types.String)
+	},
+	"aws.memorydb.cluster.engineVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetEngineVersion()).ToDataRes(types.String)
+	},
+	"aws.memorydb.cluster.enginePatchVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetEnginePatchVersion()).ToDataRes(types.String)
+	},
+	"aws.memorydb.cluster.numberOfShards": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetNumberOfShards()).ToDataRes(types.Int)
+	},
+	"aws.memorydb.cluster.tlsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetTlsEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.memorydb.cluster.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.memorydb.cluster.aclName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetAclName()).ToDataRes(types.String)
+	},
+	"aws.memorydb.cluster.parameterGroupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetParameterGroupName()).ToDataRes(types.String)
+	},
+	"aws.memorydb.cluster.subnetGroupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetSubnetGroupName()).ToDataRes(types.String)
+	},
+	"aws.memorydb.cluster.snapshotRetentionLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetSnapshotRetentionLimit()).ToDataRes(types.Int)
+	},
+	"aws.memorydb.cluster.snapshotWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetSnapshotWindow()).ToDataRes(types.String)
+	},
+	"aws.memorydb.cluster.maintenanceWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetMaintenanceWindow()).ToDataRes(types.String)
+	},
+	"aws.memorydb.cluster.autoMinorVersionUpgrade": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetAutoMinorVersionUpgrade()).ToDataRes(types.Bool)
+	},
+	"aws.memorydb.cluster.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.memorydb.cluster.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.memorydb.cluster.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbCluster).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.timestream.influxdb.instances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdb).GetInstances()).ToDataRes(types.Array(types.Resource("aws.timestream.influxdb.instance")))
+	},
+	"aws.timestream.influxdb.clusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdb).GetClusters()).ToDataRes(types.Array(types.Resource("aws.timestream.influxdb.cluster")))
+	},
+	"aws.timestream.influxdb.instance.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetArn()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.instance.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetId()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.instance.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetName()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.instance.allocatedStorage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetAllocatedStorage()).ToDataRes(types.Int)
+	},
+	"aws.timestream.influxdb.instance.dbInstanceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetDbInstanceType()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.instance.dbStorageType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetDbStorageType()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.instance.deploymentType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetDeploymentType()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.instance.endpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetEndpoint()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.instance.networkType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetNetworkType()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.instance.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetPort()).ToDataRes(types.Int)
+	},
+	"aws.timestream.influxdb.instance.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.instance.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.instance.publiclyAccessible": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetPubliclyAccessible()).ToDataRes(types.Bool)
+	},
+	"aws.timestream.influxdb.instance.vpcSubnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetVpcSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
+	"aws.timestream.influxdb.instance.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.timestream.influxdb.instance.influxAuthParametersSecretArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetInfluxAuthParametersSecretArn()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.instance.logDeliveryEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetLogDeliveryEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.timestream.influxdb.instance.logDeliveryS3Bucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetLogDeliveryS3Bucket()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.instance.dbParameterGroupIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetDbParameterGroupIdentifier()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.instance.availabilityZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetAvailabilityZone()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.instance.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbInstance).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.timestream.influxdb.cluster.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetArn()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.cluster.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetId()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.cluster.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetName()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.cluster.allocatedStorage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetAllocatedStorage()).ToDataRes(types.Int)
+	},
+	"aws.timestream.influxdb.cluster.dbInstanceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetDbInstanceType()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.cluster.dbStorageType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetDbStorageType()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.cluster.deploymentType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetDeploymentType()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.cluster.endpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetEndpoint()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.cluster.readerEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetReaderEndpoint()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.cluster.networkType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetNetworkType()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.cluster.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetPort()).ToDataRes(types.Int)
+	},
+	"aws.timestream.influxdb.cluster.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.cluster.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.cluster.engineType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetEngineType()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.cluster.publiclyAccessible": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetPubliclyAccessible()).ToDataRes(types.Bool)
+	},
+	"aws.timestream.influxdb.cluster.vpcSubnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetVpcSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
+	"aws.timestream.influxdb.cluster.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.timestream.influxdb.cluster.influxAuthParametersSecretArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetInfluxAuthParametersSecretArn()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.cluster.logDeliveryEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetLogDeliveryEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.timestream.influxdb.cluster.logDeliveryS3Bucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetLogDeliveryS3Bucket()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.cluster.dbParameterGroupIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetDbParameterGroupIdentifier()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.cluster.failoverMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetFailoverMode()).ToDataRes(types.String)
+	},
+	"aws.timestream.influxdb.cluster.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 }
 
@@ -10108,6 +10905,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsWaf).IpSets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.waf.regexPatternSets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWaf).RegexPatternSets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.waf.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWaf).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -10142,6 +10943,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.waf.acl.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafAcl).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.acl.loggingConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAcl).LoggingConfiguration, ok = plugin.RawToTValue[*mqlAwsWafAclLoggingConfiguration](v.Value, v.Error)
+		return
+	},
+	"aws.waf.acl.associatedResources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAcl).AssociatedResources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.waf.rulegroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10870,6 +11679,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.waf.ipset.addresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafIpset).Addresses, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.waf.regexPatternSet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRegexPatternSet).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.waf.regexPatternSet.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRegexPatternSet).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.regexPatternSet.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRegexPatternSet).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.regexPatternSet.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRegexPatternSet).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.regexPatternSet.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRegexPatternSet).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.regexPatternSet.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRegexPatternSet).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.regexPatternSet.regularExpressions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRegexPatternSet).RegularExpressions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.waf.acl.loggingConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAclLoggingConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.waf.acl.loggingConfiguration.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAclLoggingConfiguration).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.acl.loggingConfiguration.logDestinationConfigs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAclLoggingConfiguration).LogDestinationConfigs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.waf.acl.loggingConfiguration.managedByFirewallManager": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAclLoggingConfiguration).ManagedByFirewallManager, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.waf.acl.loggingConfiguration.redactedFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAclLoggingConfiguration).RedactedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.efs.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14172,6 +15029,90 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEmrCluster).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"aws.eventbridge.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridge).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.eventBuses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridge).EventBuses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridge).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.eventBus.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeEventBus).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.eventBus.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeEventBus).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.eventBus.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeEventBus).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.eventBus.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeEventBus).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.eventBus.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeEventBus).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.eventBus.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeEventBus).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeRule).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.rule.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeRule).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.rule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.rule.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeRule).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.rule.eventBusName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeRule).EventBusName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.rule.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeRule).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.rule.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeRule).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.rule.eventPattern": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeRule).EventPattern, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.rule.scheduleExpression": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeRule).ScheduleExpression, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.rule.roleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeRule).RoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.rule.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeRule).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.rule.targets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeRule).Targets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.cloudwatch.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudwatch).__id, ok = v.Value.(string)
 		return
@@ -16912,6 +17853,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsRoute53).QueryLoggingConfigs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.route53.domains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53).Domains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.route53.hostedZone.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRoute53HostedZone).__id, ok = v.Value.(string)
 		return
@@ -17254,6 +18199,66 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.route53.keySigningKey.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRoute53KeySigningKey).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.route53.domain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Domain).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.route53.domain.domainName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Domain).DomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.domain.autoRenew": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Domain).AutoRenew, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.route53.domain.transferLock": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Domain).TransferLock, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.route53.domain.expiresAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Domain).ExpiresAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.route53.domain.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Domain).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.route53.domain.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Domain).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.route53.domain.adminPrivacy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Domain).AdminPrivacy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.route53.domain.registrantPrivacy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Domain).RegistrantPrivacy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.route53.domain.techPrivacy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Domain).TechPrivacy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.route53.domain.dnssec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Domain).Dnssec, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.domain.statusList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Domain).StatusList, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.domain.nameservers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Domain).Nameservers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.domain.registrarName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Domain).RegistrarName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.domain.abuseContactEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Domain).AbuseContactEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ecr.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20188,6 +21193,318 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsNeptuneSnapshot).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.cognito.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognito).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.cognito.userPools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognito).UserPools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.identityPools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognito).IdentityPools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPool).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.cognito.userPool.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPool).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPool.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPool).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPool.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPool).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPool.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPool).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPool.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPool).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPool.deletionProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPool).DeletionProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPool.mfaConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPool).MfaConfiguration, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPool.passwordPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPool).PasswordPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPool.advancedSecurityMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPool).AdvancedSecurityMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPool.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPool).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPool.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPool).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPool.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPool).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.identityPool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoIdentityPool).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.cognito.identityPool.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoIdentityPool).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.identityPool.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoIdentityPool).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.identityPool.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoIdentityPool).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.identityPool.allowUnauthenticatedIdentities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoIdentityPool).AllowUnauthenticatedIdentities, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.identityPool.allowClassicFlow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoIdentityPool).AllowClassicFlow, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.identityPool.developerProviderName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoIdentityPool).DeveloperProviderName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.identityPool.openIdConnectProviderArns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoIdentityPool).OpenIdConnectProviderArns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.identityPool.samlProviderArns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoIdentityPool).SamlProviderArns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.identityPool.supportedLoginProviders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoIdentityPool).SupportedLoginProviders, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.identityPool.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoIdentityPool).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdb).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.documentdb.clusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdb).Clusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdb).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.documentdb.cluster.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.clusterIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).ClusterIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.engine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).Engine, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.engineVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).EngineVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.availabilityZones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).AvailabilityZones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.backupRetentionPeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).BackupRetentionPeriod, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.clusterParameterGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).ClusterParameterGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.subnetGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).SubnetGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.clusterResourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).ClusterResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.deletionProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).DeletionProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.earliestRestorableTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).EarliestRestorableTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.enabledCloudwatchLogsExports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).EnabledCloudwatchLogsExports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.endpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).Endpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.masterUsername": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).MasterUsername, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.multiAZ": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).MultiAZ, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.preferredBackupWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).PreferredBackupWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.preferredMaintenanceWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).PreferredMaintenanceWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.storageEncrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).StorageEncrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.storageType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).StorageType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.documentdb.instance.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instance.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instance.clusterIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).ClusterIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instance.autoMinorVersionUpgrade": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).AutoMinorVersionUpgrade, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instance.availabilityZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).AvailabilityZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instance.backupRetentionPeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).BackupRetentionPeriod, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instance.instanceClass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).InstanceClass, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instance.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instance.enabledCloudwatchLogsExports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).EnabledCloudwatchLogsExports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instance.endpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).Endpoint, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instance.engine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).Engine, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instance.engineVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).EngineVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instance.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instance.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instance.preferredBackupWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).PreferredBackupWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instance.preferredMaintenanceWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).PreferredMaintenanceWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instance.promotionTier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).PromotionTier, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instance.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instance.storageEncrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).StorageEncrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instance.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"aws.timestream.liveanalytics.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsTimestreamLiveanalytics).__id, ok = v.Value.(string)
 		return
@@ -20772,6 +22089,70 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsAppstreamImageBuilder).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.athena.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthena).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.athena.workgroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthena).Workgroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.athena.workgroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.enforceWorkGroupConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).EnforceWorkGroupConfiguration, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.publishCloudWatchMetricsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).PublishCloudWatchMetricsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.bytesScannedCutoffPerQuery": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).BytesScannedCutoffPerQuery, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.requesterPaysEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).RequesterPaysEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.engineVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).EngineVersion, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.resultConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).ResultConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"aws.directoryservice.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDirectoryservice).__id, ok = v.Value.(string)
 		return
@@ -21212,6 +22593,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsWorkspacesWorkspace).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"aws.workspaces.workspace.connectionState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesWorkspace).ConnectionState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.workspace.connectionStateCheckTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesWorkspace).ConnectionStateCheckTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.workspace.lastKnownUserConnectionTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesWorkspace).LastKnownUserConnectionTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.workspace.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesWorkspace).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.workspaces.workspace.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWorkspacesWorkspace).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -21346,6 +22743,410 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.workspacesweb.userAccessLoggingSetting.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWorkspaceswebUserAccessLoggingSetting).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesis).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.kinesis.streams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesis).Streams, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.firehoseDeliveryStreams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesis).FirehoseDeliveryStreams, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.stream.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisStream).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.kinesis.stream.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisStream).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.stream.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisStream).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.stream.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisStream).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.stream.encryptionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisStream).EncryptionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.stream.keyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisStream).KeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.stream.retentionPeriodHours": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisStream).RetentionPeriodHours, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.stream.openShardCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisStream).OpenShardCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.stream.consumerCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisStream).ConsumerCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.stream.streamModeDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisStream).StreamModeDetails, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.stream.enhancedMonitoring": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisStream).EnhancedMonitoring, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.stream.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisStream).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.stream.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisStream).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.stream.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisStream).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.firehoseDeliveryStream.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisFirehoseDeliveryStream).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.kinesis.firehoseDeliveryStream.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisFirehoseDeliveryStream).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.firehoseDeliveryStream.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisFirehoseDeliveryStream).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.firehoseDeliveryStream.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisFirehoseDeliveryStream).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.firehoseDeliveryStream.deliveryStreamType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisFirehoseDeliveryStream).DeliveryStreamType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.firehoseDeliveryStream.encryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisFirehoseDeliveryStream).Encryption, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.firehoseDeliveryStream.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisFirehoseDeliveryStream).Source, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.firehoseDeliveryStream.destinations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisFirehoseDeliveryStream).Destinations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.firehoseDeliveryStream.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisFirehoseDeliveryStream).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.firehoseDeliveryStream.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisFirehoseDeliveryStream).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.firehoseDeliveryStream.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisFirehoseDeliveryStream).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydb).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.memorydb.clusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydb).Clusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.memorydb.cluster.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.nodeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).NodeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.engine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).Engine, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.engineVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).EngineVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.enginePatchVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).EnginePatchVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.numberOfShards": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).NumberOfShards, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.tlsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).TlsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.aclName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).AclName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.parameterGroupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).ParameterGroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.subnetGroupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).SubnetGroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.snapshotRetentionLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).SnapshotRetentionLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.snapshotWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).SnapshotWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.maintenanceWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).MaintenanceWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.autoMinorVersionUpgrade": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).AutoMinorVersionUpgrade, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.cluster.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbCluster).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdb).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.timestream.influxdb.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdb).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.clusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdb).Clusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.timestream.influxdb.instance.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.allocatedStorage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).AllocatedStorage, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.dbInstanceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).DbInstanceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.dbStorageType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).DbStorageType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.deploymentType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).DeploymentType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.endpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).Endpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.networkType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).NetworkType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.publiclyAccessible": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).PubliclyAccessible, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.vpcSubnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).VpcSubnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.influxAuthParametersSecretArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).InfluxAuthParametersSecretArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.logDeliveryEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).LogDeliveryEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.logDeliveryS3Bucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).LogDeliveryS3Bucket, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.dbParameterGroupIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).DbParameterGroupIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.availabilityZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).AvailabilityZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.instance.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbInstance).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.timestream.influxdb.cluster.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.allocatedStorage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).AllocatedStorage, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.dbInstanceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).DbInstanceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.dbStorageType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).DbStorageType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.deploymentType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).DeploymentType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.endpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).Endpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.readerEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).ReaderEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.networkType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).NetworkType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.engineType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).EngineType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.publiclyAccessible": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).PubliclyAccessible, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.vpcSubnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).VpcSubnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.influxAuthParametersSecretArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).InfluxAuthParametersSecretArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.logDeliveryEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).LogDeliveryEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.logDeliveryS3Bucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).LogDeliveryS3Bucket, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.dbParameterGroupIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).DbParameterGroupIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.failoverMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).FailoverMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.influxdb.cluster.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamInfluxdbCluster).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 }
@@ -22762,10 +24563,11 @@ type mqlAwsWaf struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsWafInternal it will be used here
-	Acls       plugin.TValue[[]any]
-	RuleGroups plugin.TValue[[]any]
-	IpSets     plugin.TValue[[]any]
-	Scope      plugin.TValue[string]
+	Acls             plugin.TValue[[]any]
+	RuleGroups       plugin.TValue[[]any]
+	IpSets           plugin.TValue[[]any]
+	RegexPatternSets plugin.TValue[[]any]
+	Scope            plugin.TValue[string]
 }
 
 // createAwsWaf creates a new instance of this resource
@@ -22853,6 +24655,22 @@ func (c *mqlAwsWaf) GetIpSets() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsWaf) GetRegexPatternSets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RegexPatternSets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.waf", c.__id, "regexPatternSets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.regexPatternSets()
+	})
+}
+
 func (c *mqlAwsWaf) GetScope() *plugin.TValue[string] {
 	return &c.Scope
 }
@@ -22869,6 +24687,8 @@ type mqlAwsWafAcl struct {
 	ManagedByFirewallManager plugin.TValue[bool]
 	Rules                    plugin.TValue[[]any]
 	Scope                    plugin.TValue[string]
+	LoggingConfiguration     plugin.TValue[*mqlAwsWafAclLoggingConfiguration]
+	AssociatedResources      plugin.TValue[[]any]
 }
 
 // createAwsWafAcl creates a new instance of this resource
@@ -22946,6 +24766,28 @@ func (c *mqlAwsWafAcl) GetRules() *plugin.TValue[[]any] {
 
 func (c *mqlAwsWafAcl) GetScope() *plugin.TValue[string] {
 	return &c.Scope
+}
+
+func (c *mqlAwsWafAcl) GetLoggingConfiguration() *plugin.TValue[*mqlAwsWafAclLoggingConfiguration] {
+	return plugin.GetOrCompute[*mqlAwsWafAclLoggingConfiguration](&c.LoggingConfiguration, func() (*mqlAwsWafAclLoggingConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.waf.acl", c.__id, "loggingConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsWafAclLoggingConfiguration), nil
+			}
+		}
+
+		return c.loggingConfiguration()
+	})
+}
+
+func (c *mqlAwsWafAcl) GetAssociatedResources() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AssociatedResources, func() ([]any, error) {
+		return c.associatedResources()
+	})
 }
 
 // mqlAwsWafRulegroup for the aws.waf.rulegroup resource
@@ -25106,6 +26948,144 @@ func (c *mqlAwsWafIpset) GetAddressType() *plugin.TValue[string] {
 
 func (c *mqlAwsWafIpset) GetAddresses() *plugin.TValue[any] {
 	return &c.Addresses
+}
+
+// mqlAwsWafRegexPatternSet for the aws.waf.regexPatternSet resource
+type mqlAwsWafRegexPatternSet struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsWafRegexPatternSetInternal it will be used here
+	Arn                plugin.TValue[string]
+	Id                 plugin.TValue[string]
+	Scope              plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Description        plugin.TValue[string]
+	RegularExpressions plugin.TValue[[]any]
+}
+
+// createAwsWafRegexPatternSet creates a new instance of this resource
+func createAwsWafRegexPatternSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRegexPatternSet{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.regexPatternSet", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRegexPatternSet) MqlName() string {
+	return "aws.waf.regexPatternSet"
+}
+
+func (c *mqlAwsWafRegexPatternSet) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRegexPatternSet) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsWafRegexPatternSet) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsWafRegexPatternSet) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
+func (c *mqlAwsWafRegexPatternSet) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsWafRegexPatternSet) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsWafRegexPatternSet) GetRegularExpressions() *plugin.TValue[[]any] {
+	return &c.RegularExpressions
+}
+
+// mqlAwsWafAclLoggingConfiguration for the aws.waf.acl.loggingConfiguration resource
+type mqlAwsWafAclLoggingConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsWafAclLoggingConfigurationInternal it will be used here
+	Arn                      plugin.TValue[string]
+	LogDestinationConfigs    plugin.TValue[[]any]
+	ManagedByFirewallManager plugin.TValue[bool]
+	RedactedFields           plugin.TValue[[]any]
+}
+
+// createAwsWafAclLoggingConfiguration creates a new instance of this resource
+func createAwsWafAclLoggingConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafAclLoggingConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.acl.loggingConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafAclLoggingConfiguration) MqlName() string {
+	return "aws.waf.acl.loggingConfiguration"
+}
+
+func (c *mqlAwsWafAclLoggingConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafAclLoggingConfiguration) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsWafAclLoggingConfiguration) GetLogDestinationConfigs() *plugin.TValue[[]any] {
+	return &c.LogDestinationConfigs
+}
+
+func (c *mqlAwsWafAclLoggingConfiguration) GetManagedByFirewallManager() *plugin.TValue[bool] {
+	return &c.ManagedByFirewallManager
+}
+
+func (c *mqlAwsWafAclLoggingConfiguration) GetRedactedFields() *plugin.TValue[[]any] {
+	return &c.RedactedFields
 }
 
 // mqlAwsEfs for the aws.efs resource
@@ -34051,6 +36031,260 @@ func (c *mqlAwsEmrCluster) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
+// mqlAwsEventbridge for the aws.eventbridge resource
+type mqlAwsEventbridge struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEventbridgeInternal it will be used here
+	EventBuses plugin.TValue[[]any]
+	Rules      plugin.TValue[[]any]
+}
+
+// createAwsEventbridge creates a new instance of this resource
+func createAwsEventbridge(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridge{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridge) MqlName() string {
+	return "aws.eventbridge"
+}
+
+func (c *mqlAwsEventbridge) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridge) GetEventBuses() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EventBuses, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge", c.__id, "eventBuses")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.eventBuses()
+	})
+}
+
+func (c *mqlAwsEventbridge) GetRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge", c.__id, "rules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rules()
+	})
+}
+
+// mqlAwsEventbridgeEventBus for the aws.eventbridge.eventBus resource
+type mqlAwsEventbridgeEventBus struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEventbridgeEventBusInternal it will be used here
+	Arn    plugin.TValue[string]
+	Name   plugin.TValue[string]
+	Region plugin.TValue[string]
+	Tags   plugin.TValue[map[string]any]
+	Rules  plugin.TValue[[]any]
+}
+
+// createAwsEventbridgeEventBus creates a new instance of this resource
+func createAwsEventbridgeEventBus(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgeEventBus{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.eventBus", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgeEventBus) MqlName() string {
+	return "aws.eventbridge.eventBus"
+}
+
+func (c *mqlAwsEventbridgeEventBus) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgeEventBus) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsEventbridgeEventBus) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsEventbridgeEventBus) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsEventbridgeEventBus) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsEventbridgeEventBus) GetRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.eventBus", c.__id, "rules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rules()
+	})
+}
+
+// mqlAwsEventbridgeRule for the aws.eventbridge.rule resource
+type mqlAwsEventbridgeRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEventbridgeRuleInternal it will be used here
+	Arn                plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Region             plugin.TValue[string]
+	EventBusName       plugin.TValue[string]
+	State              plugin.TValue[string]
+	Description        plugin.TValue[string]
+	EventPattern       plugin.TValue[string]
+	ScheduleExpression plugin.TValue[string]
+	RoleArn            plugin.TValue[string]
+	Tags               plugin.TValue[map[string]any]
+	Targets            plugin.TValue[[]any]
+}
+
+// createAwsEventbridgeRule creates a new instance of this resource
+func createAwsEventbridgeRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgeRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.rule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgeRule) MqlName() string {
+	return "aws.eventbridge.rule"
+}
+
+func (c *mqlAwsEventbridgeRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgeRule) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsEventbridgeRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsEventbridgeRule) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsEventbridgeRule) GetEventBusName() *plugin.TValue[string] {
+	return &c.EventBusName
+}
+
+func (c *mqlAwsEventbridgeRule) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsEventbridgeRule) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsEventbridgeRule) GetEventPattern() *plugin.TValue[string] {
+	return &c.EventPattern
+}
+
+func (c *mqlAwsEventbridgeRule) GetScheduleExpression() *plugin.TValue[string] {
+	return &c.ScheduleExpression
+}
+
+func (c *mqlAwsEventbridgeRule) GetRoleArn() *plugin.TValue[string] {
+	return &c.RoleArn
+}
+
+func (c *mqlAwsEventbridgeRule) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsEventbridgeRule) GetTargets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Targets, func() ([]any, error) {
+		return c.targets()
+	})
+}
+
 // mqlAwsCloudwatch for the aws.cloudwatch resource
 type mqlAwsCloudwatch struct {
 	MqlRuntime *plugin.Runtime
@@ -40906,6 +43140,7 @@ type mqlAwsRoute53 struct {
 	HostedZones         plugin.TValue[[]any]
 	HealthChecks        plugin.TValue[[]any]
 	QueryLoggingConfigs plugin.TValue[[]any]
+	Domains             plugin.TValue[[]any]
 }
 
 // createAwsRoute53 creates a new instance of this resource
@@ -40990,6 +43225,22 @@ func (c *mqlAwsRoute53) GetQueryLoggingConfigs() *plugin.TValue[[]any] {
 		}
 
 		return c.queryLoggingConfigs()
+	})
+}
+
+func (c *mqlAwsRoute53) GetDomains() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Domains, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53", c.__id, "domains")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.domains()
 	})
 }
 
@@ -41723,6 +43974,140 @@ func (c *mqlAwsRoute53KeySigningKey) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
 		}
 
 		return c.kmsKey()
+	})
+}
+
+// mqlAwsRoute53Domain for the aws.route53.domain resource
+type mqlAwsRoute53Domain struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsRoute53DomainInternal
+	DomainName        plugin.TValue[string]
+	AutoRenew         plugin.TValue[bool]
+	TransferLock      plugin.TValue[bool]
+	ExpiresAt         plugin.TValue[*time.Time]
+	CreatedAt         plugin.TValue[*time.Time]
+	UpdatedAt         plugin.TValue[*time.Time]
+	AdminPrivacy      plugin.TValue[bool]
+	RegistrantPrivacy plugin.TValue[bool]
+	TechPrivacy       plugin.TValue[bool]
+	Dnssec            plugin.TValue[string]
+	StatusList        plugin.TValue[[]any]
+	Nameservers       plugin.TValue[[]any]
+	RegistrarName     plugin.TValue[string]
+	AbuseContactEmail plugin.TValue[string]
+}
+
+// createAwsRoute53Domain creates a new instance of this resource
+func createAwsRoute53Domain(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRoute53Domain{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.route53.domain", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRoute53Domain) MqlName() string {
+	return "aws.route53.domain"
+}
+
+func (c *mqlAwsRoute53Domain) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRoute53Domain) GetDomainName() *plugin.TValue[string] {
+	return &c.DomainName
+}
+
+func (c *mqlAwsRoute53Domain) GetAutoRenew() *plugin.TValue[bool] {
+	return &c.AutoRenew
+}
+
+func (c *mqlAwsRoute53Domain) GetTransferLock() *plugin.TValue[bool] {
+	return &c.TransferLock
+}
+
+func (c *mqlAwsRoute53Domain) GetExpiresAt() *plugin.TValue[*time.Time] {
+	return &c.ExpiresAt
+}
+
+func (c *mqlAwsRoute53Domain) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
+		return c.createdAt()
+	})
+}
+
+func (c *mqlAwsRoute53Domain) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.UpdatedAt, func() (*time.Time, error) {
+		return c.updatedAt()
+	})
+}
+
+func (c *mqlAwsRoute53Domain) GetAdminPrivacy() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AdminPrivacy, func() (bool, error) {
+		return c.adminPrivacy()
+	})
+}
+
+func (c *mqlAwsRoute53Domain) GetRegistrantPrivacy() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RegistrantPrivacy, func() (bool, error) {
+		return c.registrantPrivacy()
+	})
+}
+
+func (c *mqlAwsRoute53Domain) GetTechPrivacy() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.TechPrivacy, func() (bool, error) {
+		return c.techPrivacy()
+	})
+}
+
+func (c *mqlAwsRoute53Domain) GetDnssec() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Dnssec, func() (string, error) {
+		return c.dnssec()
+	})
+}
+
+func (c *mqlAwsRoute53Domain) GetStatusList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.StatusList, func() ([]any, error) {
+		return c.statusList()
+	})
+}
+
+func (c *mqlAwsRoute53Domain) GetNameservers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Nameservers, func() ([]any, error) {
+		return c.nameservers()
+	})
+}
+
+func (c *mqlAwsRoute53Domain) GetRegistrarName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RegistrarName, func() (string, error) {
+		return c.registrarName()
+	})
+}
+
+func (c *mqlAwsRoute53Domain) GetAbuseContactEmail() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AbuseContactEmail, func() (string, error) {
+		return c.abuseContactEmail()
 	})
 }
 
@@ -48884,6 +51269,710 @@ func (c *mqlAwsNeptuneSnapshot) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
+// mqlAwsCognito for the aws.cognito resource
+type mqlAwsCognito struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsCognitoInternal it will be used here
+	UserPools     plugin.TValue[[]any]
+	IdentityPools plugin.TValue[[]any]
+}
+
+// createAwsCognito creates a new instance of this resource
+func createAwsCognito(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCognito{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.cognito", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCognito) MqlName() string {
+	return "aws.cognito"
+}
+
+func (c *mqlAwsCognito) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCognito) GetUserPools() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UserPools, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cognito", c.__id, "userPools")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.userPools()
+	})
+}
+
+func (c *mqlAwsCognito) GetIdentityPools() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IdentityPools, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cognito", c.__id, "identityPools")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.identityPools()
+	})
+}
+
+// mqlAwsCognitoUserPool for the aws.cognito.userPool resource
+type mqlAwsCognitoUserPool struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsCognitoUserPoolInternal
+	Arn                  plugin.TValue[string]
+	Id                   plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Region               plugin.TValue[string]
+	Status               plugin.TValue[string]
+	DeletionProtection   plugin.TValue[bool]
+	MfaConfiguration     plugin.TValue[string]
+	PasswordPolicy       plugin.TValue[any]
+	AdvancedSecurityMode plugin.TValue[string]
+	Tags                 plugin.TValue[map[string]any]
+	CreatedAt            plugin.TValue[*time.Time]
+	UpdatedAt            plugin.TValue[*time.Time]
+}
+
+// createAwsCognitoUserPool creates a new instance of this resource
+func createAwsCognitoUserPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCognitoUserPool{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.cognito.userPool", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCognitoUserPool) MqlName() string {
+	return "aws.cognito.userPool"
+}
+
+func (c *mqlAwsCognitoUserPool) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCognitoUserPool) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsCognitoUserPool) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsCognitoUserPool) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsCognitoUserPool) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsCognitoUserPool) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsCognitoUserPool) GetDeletionProtection() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DeletionProtection, func() (bool, error) {
+		return c.deletionProtection()
+	})
+}
+
+func (c *mqlAwsCognitoUserPool) GetMfaConfiguration() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MfaConfiguration, func() (string, error) {
+		return c.mfaConfiguration()
+	})
+}
+
+func (c *mqlAwsCognitoUserPool) GetPasswordPolicy() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.PasswordPolicy, func() (any, error) {
+		return c.passwordPolicy()
+	})
+}
+
+func (c *mqlAwsCognitoUserPool) GetAdvancedSecurityMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AdvancedSecurityMode, func() (string, error) {
+		return c.advancedSecurityMode()
+	})
+}
+
+func (c *mqlAwsCognitoUserPool) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsCognitoUserPool) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsCognitoUserPool) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlAwsCognitoIdentityPool for the aws.cognito.identityPool resource
+type mqlAwsCognitoIdentityPool struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsCognitoIdentityPoolInternal
+	Id                             plugin.TValue[string]
+	Name                           plugin.TValue[string]
+	Region                         plugin.TValue[string]
+	AllowUnauthenticatedIdentities plugin.TValue[bool]
+	AllowClassicFlow               plugin.TValue[bool]
+	DeveloperProviderName          plugin.TValue[string]
+	OpenIdConnectProviderArns      plugin.TValue[[]any]
+	SamlProviderArns               plugin.TValue[[]any]
+	SupportedLoginProviders        plugin.TValue[map[string]any]
+	Tags                           plugin.TValue[map[string]any]
+}
+
+// createAwsCognitoIdentityPool creates a new instance of this resource
+func createAwsCognitoIdentityPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCognitoIdentityPool{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.cognito.identityPool", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCognitoIdentityPool) MqlName() string {
+	return "aws.cognito.identityPool"
+}
+
+func (c *mqlAwsCognitoIdentityPool) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCognitoIdentityPool) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsCognitoIdentityPool) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsCognitoIdentityPool) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsCognitoIdentityPool) GetAllowUnauthenticatedIdentities() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowUnauthenticatedIdentities, func() (bool, error) {
+		return c.allowUnauthenticatedIdentities()
+	})
+}
+
+func (c *mqlAwsCognitoIdentityPool) GetAllowClassicFlow() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowClassicFlow, func() (bool, error) {
+		return c.allowClassicFlow()
+	})
+}
+
+func (c *mqlAwsCognitoIdentityPool) GetDeveloperProviderName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DeveloperProviderName, func() (string, error) {
+		return c.developerProviderName()
+	})
+}
+
+func (c *mqlAwsCognitoIdentityPool) GetOpenIdConnectProviderArns() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OpenIdConnectProviderArns, func() ([]any, error) {
+		return c.openIdConnectProviderArns()
+	})
+}
+
+func (c *mqlAwsCognitoIdentityPool) GetSamlProviderArns() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SamlProviderArns, func() ([]any, error) {
+		return c.samlProviderArns()
+	})
+}
+
+func (c *mqlAwsCognitoIdentityPool) GetSupportedLoginProviders() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.SupportedLoginProviders, func() (map[string]any, error) {
+		return c.supportedLoginProviders()
+	})
+}
+
+func (c *mqlAwsCognitoIdentityPool) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsDocumentdb for the aws.documentdb resource
+type mqlAwsDocumentdb struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsDocumentdbInternal it will be used here
+	Clusters  plugin.TValue[[]any]
+	Instances plugin.TValue[[]any]
+}
+
+// createAwsDocumentdb creates a new instance of this resource
+func createAwsDocumentdb(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDocumentdb{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.documentdb", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDocumentdb) MqlName() string {
+	return "aws.documentdb"
+}
+
+func (c *mqlAwsDocumentdb) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDocumentdb) GetClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Clusters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb", c.__id, "clusters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.clusters()
+	})
+}
+
+func (c *mqlAwsDocumentdb) GetInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Instances, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb", c.__id, "instances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.instances()
+	})
+}
+
+// mqlAwsDocumentdbCluster for the aws.documentdb.cluster resource
+type mqlAwsDocumentdbCluster struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsDocumentdbClusterInternal
+	Arn                          plugin.TValue[string]
+	Name                         plugin.TValue[string]
+	ClusterIdentifier            plugin.TValue[string]
+	Engine                       plugin.TValue[string]
+	EngineVersion                plugin.TValue[string]
+	KmsKey                       plugin.TValue[*mqlAwsKmsKey]
+	Region                       plugin.TValue[string]
+	AvailabilityZones            plugin.TValue[[]any]
+	BackupRetentionPeriod        plugin.TValue[int64]
+	CreatedAt                    plugin.TValue[*time.Time]
+	ClusterParameterGroup        plugin.TValue[string]
+	SubnetGroup                  plugin.TValue[string]
+	ClusterResourceId            plugin.TValue[string]
+	DeletionProtection           plugin.TValue[bool]
+	EarliestRestorableTime       plugin.TValue[*time.Time]
+	EnabledCloudwatchLogsExports plugin.TValue[[]any]
+	Endpoint                     plugin.TValue[string]
+	MasterUsername               plugin.TValue[string]
+	MultiAZ                      plugin.TValue[bool]
+	Port                         plugin.TValue[int64]
+	PreferredBackupWindow        plugin.TValue[string]
+	PreferredMaintenanceWindow   plugin.TValue[string]
+	Status                       plugin.TValue[string]
+	StorageEncrypted             plugin.TValue[bool]
+	StorageType                  plugin.TValue[string]
+	Tags                         plugin.TValue[map[string]any]
+}
+
+// createAwsDocumentdbCluster creates a new instance of this resource
+func createAwsDocumentdbCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDocumentdbCluster{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.documentdb.cluster", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDocumentdbCluster) MqlName() string {
+	return "aws.documentdb.cluster"
+}
+
+func (c *mqlAwsDocumentdbCluster) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDocumentdbCluster) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsDocumentdbCluster) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsDocumentdbCluster) GetClusterIdentifier() *plugin.TValue[string] {
+	return &c.ClusterIdentifier
+}
+
+func (c *mqlAwsDocumentdbCluster) GetEngine() *plugin.TValue[string] {
+	return &c.Engine
+}
+
+func (c *mqlAwsDocumentdbCluster) GetEngineVersion() *plugin.TValue[string] {
+	return &c.EngineVersion
+}
+
+func (c *mqlAwsDocumentdbCluster) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb.cluster", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsDocumentdbCluster) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsDocumentdbCluster) GetAvailabilityZones() *plugin.TValue[[]any] {
+	return &c.AvailabilityZones
+}
+
+func (c *mqlAwsDocumentdbCluster) GetBackupRetentionPeriod() *plugin.TValue[int64] {
+	return &c.BackupRetentionPeriod
+}
+
+func (c *mqlAwsDocumentdbCluster) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsDocumentdbCluster) GetClusterParameterGroup() *plugin.TValue[string] {
+	return &c.ClusterParameterGroup
+}
+
+func (c *mqlAwsDocumentdbCluster) GetSubnetGroup() *plugin.TValue[string] {
+	return &c.SubnetGroup
+}
+
+func (c *mqlAwsDocumentdbCluster) GetClusterResourceId() *plugin.TValue[string] {
+	return &c.ClusterResourceId
+}
+
+func (c *mqlAwsDocumentdbCluster) GetDeletionProtection() *plugin.TValue[bool] {
+	return &c.DeletionProtection
+}
+
+func (c *mqlAwsDocumentdbCluster) GetEarliestRestorableTime() *plugin.TValue[*time.Time] {
+	return &c.EarliestRestorableTime
+}
+
+func (c *mqlAwsDocumentdbCluster) GetEnabledCloudwatchLogsExports() *plugin.TValue[[]any] {
+	return &c.EnabledCloudwatchLogsExports
+}
+
+func (c *mqlAwsDocumentdbCluster) GetEndpoint() *plugin.TValue[string] {
+	return &c.Endpoint
+}
+
+func (c *mqlAwsDocumentdbCluster) GetMasterUsername() *plugin.TValue[string] {
+	return &c.MasterUsername
+}
+
+func (c *mqlAwsDocumentdbCluster) GetMultiAZ() *plugin.TValue[bool] {
+	return &c.MultiAZ
+}
+
+func (c *mqlAwsDocumentdbCluster) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlAwsDocumentdbCluster) GetPreferredBackupWindow() *plugin.TValue[string] {
+	return &c.PreferredBackupWindow
+}
+
+func (c *mqlAwsDocumentdbCluster) GetPreferredMaintenanceWindow() *plugin.TValue[string] {
+	return &c.PreferredMaintenanceWindow
+}
+
+func (c *mqlAwsDocumentdbCluster) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsDocumentdbCluster) GetStorageEncrypted() *plugin.TValue[bool] {
+	return &c.StorageEncrypted
+}
+
+func (c *mqlAwsDocumentdbCluster) GetStorageType() *plugin.TValue[string] {
+	return &c.StorageType
+}
+
+func (c *mqlAwsDocumentdbCluster) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsDocumentdbInstance for the aws.documentdb.instance resource
+type mqlAwsDocumentdbInstance struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsDocumentdbInstanceInternal
+	Arn                          plugin.TValue[string]
+	Name                         plugin.TValue[string]
+	ClusterIdentifier            plugin.TValue[string]
+	AutoMinorVersionUpgrade      plugin.TValue[bool]
+	AvailabilityZone             plugin.TValue[string]
+	BackupRetentionPeriod        plugin.TValue[int64]
+	InstanceClass                plugin.TValue[string]
+	Status                       plugin.TValue[string]
+	EnabledCloudwatchLogsExports plugin.TValue[[]any]
+	Endpoint                     plugin.TValue[any]
+	Engine                       plugin.TValue[string]
+	EngineVersion                plugin.TValue[string]
+	CreatedAt                    plugin.TValue[*time.Time]
+	KmsKey                       plugin.TValue[*mqlAwsKmsKey]
+	PreferredBackupWindow        plugin.TValue[string]
+	PreferredMaintenanceWindow   plugin.TValue[string]
+	PromotionTier                plugin.TValue[int64]
+	Region                       plugin.TValue[string]
+	StorageEncrypted             plugin.TValue[bool]
+	Tags                         plugin.TValue[map[string]any]
+}
+
+// createAwsDocumentdbInstance creates a new instance of this resource
+func createAwsDocumentdbInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDocumentdbInstance{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.documentdb.instance", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDocumentdbInstance) MqlName() string {
+	return "aws.documentdb.instance"
+}
+
+func (c *mqlAwsDocumentdbInstance) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDocumentdbInstance) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsDocumentdbInstance) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsDocumentdbInstance) GetClusterIdentifier() *plugin.TValue[string] {
+	return &c.ClusterIdentifier
+}
+
+func (c *mqlAwsDocumentdbInstance) GetAutoMinorVersionUpgrade() *plugin.TValue[bool] {
+	return &c.AutoMinorVersionUpgrade
+}
+
+func (c *mqlAwsDocumentdbInstance) GetAvailabilityZone() *plugin.TValue[string] {
+	return &c.AvailabilityZone
+}
+
+func (c *mqlAwsDocumentdbInstance) GetBackupRetentionPeriod() *plugin.TValue[int64] {
+	return &c.BackupRetentionPeriod
+}
+
+func (c *mqlAwsDocumentdbInstance) GetInstanceClass() *plugin.TValue[string] {
+	return &c.InstanceClass
+}
+
+func (c *mqlAwsDocumentdbInstance) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsDocumentdbInstance) GetEnabledCloudwatchLogsExports() *plugin.TValue[[]any] {
+	return &c.EnabledCloudwatchLogsExports
+}
+
+func (c *mqlAwsDocumentdbInstance) GetEndpoint() *plugin.TValue[any] {
+	return &c.Endpoint
+}
+
+func (c *mqlAwsDocumentdbInstance) GetEngine() *plugin.TValue[string] {
+	return &c.Engine
+}
+
+func (c *mqlAwsDocumentdbInstance) GetEngineVersion() *plugin.TValue[string] {
+	return &c.EngineVersion
+}
+
+func (c *mqlAwsDocumentdbInstance) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsDocumentdbInstance) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb.instance", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsDocumentdbInstance) GetPreferredBackupWindow() *plugin.TValue[string] {
+	return &c.PreferredBackupWindow
+}
+
+func (c *mqlAwsDocumentdbInstance) GetPreferredMaintenanceWindow() *plugin.TValue[string] {
+	return &c.PreferredMaintenanceWindow
+}
+
+func (c *mqlAwsDocumentdbInstance) GetPromotionTier() *plugin.TValue[int64] {
+	return &c.PromotionTier
+}
+
+func (c *mqlAwsDocumentdbInstance) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsDocumentdbInstance) GetStorageEncrypted() *plugin.TValue[bool] {
+	return &c.StorageEncrypted
+}
+
+func (c *mqlAwsDocumentdbInstance) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
 // mqlAwsTimestreamLiveanalytics for the aws.timestream.liveanalytics resource
 type mqlAwsTimestreamLiveanalytics struct {
 	MqlRuntime *plugin.Runtime
@@ -50301,6 +53390,173 @@ func (c *mqlAwsAppstreamImageBuilder) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
+// mqlAwsAthena for the aws.athena resource
+type mqlAwsAthena struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsAthenaInternal it will be used here
+	Workgroups plugin.TValue[[]any]
+}
+
+// createAwsAthena creates a new instance of this resource
+func createAwsAthena(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsAthena{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.athena", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsAthena) MqlName() string {
+	return "aws.athena"
+}
+
+func (c *mqlAwsAthena) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsAthena) GetWorkgroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Workgroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.athena", c.__id, "workgroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.workgroups()
+	})
+}
+
+// mqlAwsAthenaWorkgroup for the aws.athena.workgroup resource
+type mqlAwsAthenaWorkgroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsAthenaWorkgroupInternal it will be used here
+	Name                            plugin.TValue[string]
+	Arn                             plugin.TValue[string]
+	State                           plugin.TValue[string]
+	Description                     plugin.TValue[string]
+	CreatedAt                       plugin.TValue[*time.Time]
+	EnforceWorkGroupConfiguration   plugin.TValue[bool]
+	PublishCloudWatchMetricsEnabled plugin.TValue[bool]
+	BytesScannedCutoffPerQuery      plugin.TValue[int64]
+	RequesterPaysEnabled            plugin.TValue[bool]
+	EngineVersion                   plugin.TValue[any]
+	ResultConfiguration             plugin.TValue[any]
+	Region                          plugin.TValue[string]
+	Tags                            plugin.TValue[map[string]any]
+}
+
+// createAwsAthenaWorkgroup creates a new instance of this resource
+func createAwsAthenaWorkgroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsAthenaWorkgroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.athena.workgroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsAthenaWorkgroup) MqlName() string {
+	return "aws.athena.workgroup"
+}
+
+func (c *mqlAwsAthenaWorkgroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetEnforceWorkGroupConfiguration() *plugin.TValue[bool] {
+	return &c.EnforceWorkGroupConfiguration
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetPublishCloudWatchMetricsEnabled() *plugin.TValue[bool] {
+	return &c.PublishCloudWatchMetricsEnabled
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetBytesScannedCutoffPerQuery() *plugin.TValue[int64] {
+	return &c.BytesScannedCutoffPerQuery
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetRequesterPaysEnabled() *plugin.TValue[bool] {
+	return &c.RequesterPaysEnabled
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetEngineVersion() *plugin.TValue[any] {
+	return &c.EngineVersion
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetResultConfiguration() *plugin.TValue[any] {
+	return &c.ResultConfiguration
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
 // mqlAwsDirectoryservice for the aws.directoryservice resource
 type mqlAwsDirectoryservice struct {
 	MqlRuntime *plugin.Runtime
@@ -51268,21 +54524,25 @@ type mqlAwsWorkspacesWorkspace struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsWorkspacesWorkspaceInternal it will be used here
-	WorkspaceId                 plugin.TValue[string]
-	DirectoryId                 plugin.TValue[string]
-	UserName                    plugin.TValue[string]
-	IpAddress                   plugin.TValue[string]
-	ComputerName                plugin.TValue[string]
-	BundleId                    plugin.TValue[string]
-	SubnetId                    plugin.TValue[string]
-	State                       plugin.TValue[string]
-	RootVolumeEncryptionEnabled plugin.TValue[bool]
-	UserVolumeEncryptionEnabled plugin.TValue[bool]
-	VolumeEncryptionKey         plugin.TValue[string]
-	ErrorCode                   plugin.TValue[string]
-	ErrorMessage                plugin.TValue[string]
-	Tags                        plugin.TValue[map[string]any]
-	Region                      plugin.TValue[string]
+	WorkspaceId                      plugin.TValue[string]
+	DirectoryId                      plugin.TValue[string]
+	UserName                         plugin.TValue[string]
+	IpAddress                        plugin.TValue[string]
+	ComputerName                     plugin.TValue[string]
+	BundleId                         plugin.TValue[string]
+	SubnetId                         plugin.TValue[string]
+	State                            plugin.TValue[string]
+	RootVolumeEncryptionEnabled      plugin.TValue[bool]
+	UserVolumeEncryptionEnabled      plugin.TValue[bool]
+	VolumeEncryptionKey              plugin.TValue[string]
+	ErrorCode                        plugin.TValue[string]
+	ErrorMessage                     plugin.TValue[string]
+	Tags                             plugin.TValue[map[string]any]
+	ConnectionState                  plugin.TValue[string]
+	ConnectionStateCheckTimestamp    plugin.TValue[*time.Time]
+	LastKnownUserConnectionTimestamp plugin.TValue[*time.Time]
+	SecurityGroups                   plugin.TValue[[]any]
+	Region                           plugin.TValue[string]
 }
 
 // createAwsWorkspacesWorkspace creates a new instance of this resource
@@ -51377,6 +54637,40 @@ func (c *mqlAwsWorkspacesWorkspace) GetErrorMessage() *plugin.TValue[string] {
 func (c *mqlAwsWorkspacesWorkspace) GetTags() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
+	})
+}
+
+func (c *mqlAwsWorkspacesWorkspace) GetConnectionState() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ConnectionState, func() (string, error) {
+		return c.connectionState()
+	})
+}
+
+func (c *mqlAwsWorkspacesWorkspace) GetConnectionStateCheckTimestamp() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.ConnectionStateCheckTimestamp, func() (*time.Time, error) {
+		return c.connectionStateCheckTimestamp()
+	})
+}
+
+func (c *mqlAwsWorkspacesWorkspace) GetLastKnownUserConnectionTimestamp() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LastKnownUserConnectionTimestamp, func() (*time.Time, error) {
+		return c.lastKnownUserConnectionTimestamp()
+	})
+}
+
+func (c *mqlAwsWorkspacesWorkspace) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.workspaces.workspace", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
 	})
 }
 
@@ -51703,4 +54997,962 @@ func (c *mqlAwsWorkspaceswebUserAccessLoggingSetting) GetKinesisStreamArn() *plu
 
 func (c *mqlAwsWorkspaceswebUserAccessLoggingSetting) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+// mqlAwsKinesis for the aws.kinesis resource
+type mqlAwsKinesis struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsKinesisInternal it will be used here
+	Streams                 plugin.TValue[[]any]
+	FirehoseDeliveryStreams plugin.TValue[[]any]
+}
+
+// createAwsKinesis creates a new instance of this resource
+func createAwsKinesis(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsKinesis{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.kinesis", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsKinesis) MqlName() string {
+	return "aws.kinesis"
+}
+
+func (c *mqlAwsKinesis) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsKinesis) GetStreams() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Streams, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.kinesis", c.__id, "streams")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.streams()
+	})
+}
+
+func (c *mqlAwsKinesis) GetFirehoseDeliveryStreams() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FirehoseDeliveryStreams, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.kinesis", c.__id, "firehoseDeliveryStreams")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.firehoseDeliveryStreams()
+	})
+}
+
+// mqlAwsKinesisStream for the aws.kinesis.stream resource
+type mqlAwsKinesisStream struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsKinesisStreamInternal it will be used here
+	Arn                  plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Status               plugin.TValue[string]
+	EncryptionType       plugin.TValue[string]
+	KeyId                plugin.TValue[string]
+	RetentionPeriodHours plugin.TValue[int64]
+	OpenShardCount       plugin.TValue[int64]
+	ConsumerCount        plugin.TValue[int64]
+	StreamModeDetails    plugin.TValue[any]
+	EnhancedMonitoring   plugin.TValue[[]any]
+	CreatedAt            plugin.TValue[*time.Time]
+	Region               plugin.TValue[string]
+	Tags                 plugin.TValue[map[string]any]
+}
+
+// createAwsKinesisStream creates a new instance of this resource
+func createAwsKinesisStream(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsKinesisStream{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.kinesis.stream", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsKinesisStream) MqlName() string {
+	return "aws.kinesis.stream"
+}
+
+func (c *mqlAwsKinesisStream) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsKinesisStream) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsKinesisStream) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsKinesisStream) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsKinesisStream) GetEncryptionType() *plugin.TValue[string] {
+	return &c.EncryptionType
+}
+
+func (c *mqlAwsKinesisStream) GetKeyId() *plugin.TValue[string] {
+	return &c.KeyId
+}
+
+func (c *mqlAwsKinesisStream) GetRetentionPeriodHours() *plugin.TValue[int64] {
+	return &c.RetentionPeriodHours
+}
+
+func (c *mqlAwsKinesisStream) GetOpenShardCount() *plugin.TValue[int64] {
+	return &c.OpenShardCount
+}
+
+func (c *mqlAwsKinesisStream) GetConsumerCount() *plugin.TValue[int64] {
+	return &c.ConsumerCount
+}
+
+func (c *mqlAwsKinesisStream) GetStreamModeDetails() *plugin.TValue[any] {
+	return &c.StreamModeDetails
+}
+
+func (c *mqlAwsKinesisStream) GetEnhancedMonitoring() *plugin.TValue[[]any] {
+	return &c.EnhancedMonitoring
+}
+
+func (c *mqlAwsKinesisStream) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsKinesisStream) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsKinesisStream) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsKinesisFirehoseDeliveryStream for the aws.kinesis.firehoseDeliveryStream resource
+type mqlAwsKinesisFirehoseDeliveryStream struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsKinesisFirehoseDeliveryStreamInternal it will be used here
+	Arn                plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Status             plugin.TValue[string]
+	DeliveryStreamType plugin.TValue[string]
+	Encryption         plugin.TValue[any]
+	Source             plugin.TValue[any]
+	Destinations       plugin.TValue[[]any]
+	CreatedAt          plugin.TValue[*time.Time]
+	Region             plugin.TValue[string]
+	Tags               plugin.TValue[map[string]any]
+}
+
+// createAwsKinesisFirehoseDeliveryStream creates a new instance of this resource
+func createAwsKinesisFirehoseDeliveryStream(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsKinesisFirehoseDeliveryStream{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.kinesis.firehoseDeliveryStream", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsKinesisFirehoseDeliveryStream) MqlName() string {
+	return "aws.kinesis.firehoseDeliveryStream"
+}
+
+func (c *mqlAwsKinesisFirehoseDeliveryStream) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsKinesisFirehoseDeliveryStream) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsKinesisFirehoseDeliveryStream) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsKinesisFirehoseDeliveryStream) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsKinesisFirehoseDeliveryStream) GetDeliveryStreamType() *plugin.TValue[string] {
+	return &c.DeliveryStreamType
+}
+
+func (c *mqlAwsKinesisFirehoseDeliveryStream) GetEncryption() *plugin.TValue[any] {
+	return &c.Encryption
+}
+
+func (c *mqlAwsKinesisFirehoseDeliveryStream) GetSource() *plugin.TValue[any] {
+	return &c.Source
+}
+
+func (c *mqlAwsKinesisFirehoseDeliveryStream) GetDestinations() *plugin.TValue[[]any] {
+	return &c.Destinations
+}
+
+func (c *mqlAwsKinesisFirehoseDeliveryStream) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsKinesisFirehoseDeliveryStream) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsKinesisFirehoseDeliveryStream) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsMemorydb for the aws.memorydb resource
+type mqlAwsMemorydb struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsMemorydbInternal it will be used here
+	Clusters plugin.TValue[[]any]
+}
+
+// createAwsMemorydb creates a new instance of this resource
+func createAwsMemorydb(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMemorydb{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.memorydb", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMemorydb) MqlName() string {
+	return "aws.memorydb"
+}
+
+func (c *mqlAwsMemorydb) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMemorydb) GetClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Clusters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.memorydb", c.__id, "clusters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.clusters()
+	})
+}
+
+// mqlAwsMemorydbCluster for the aws.memorydb.cluster resource
+type mqlAwsMemorydbCluster struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsMemorydbClusterInternal
+	Arn                     plugin.TValue[string]
+	Name                    plugin.TValue[string]
+	Description             plugin.TValue[string]
+	Status                  plugin.TValue[string]
+	NodeType                plugin.TValue[string]
+	Engine                  plugin.TValue[string]
+	EngineVersion           plugin.TValue[string]
+	EnginePatchVersion      plugin.TValue[string]
+	NumberOfShards          plugin.TValue[int64]
+	TlsEnabled              plugin.TValue[bool]
+	KmsKey                  plugin.TValue[*mqlAwsKmsKey]
+	AclName                 plugin.TValue[string]
+	ParameterGroupName      plugin.TValue[string]
+	SubnetGroupName         plugin.TValue[string]
+	SnapshotRetentionLimit  plugin.TValue[int64]
+	SnapshotWindow          plugin.TValue[string]
+	MaintenanceWindow       plugin.TValue[string]
+	AutoMinorVersionUpgrade plugin.TValue[bool]
+	Region                  plugin.TValue[string]
+	Tags                    plugin.TValue[map[string]any]
+	SecurityGroups          plugin.TValue[[]any]
+}
+
+// createAwsMemorydbCluster creates a new instance of this resource
+func createAwsMemorydbCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMemorydbCluster{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.memorydb.cluster", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMemorydbCluster) MqlName() string {
+	return "aws.memorydb.cluster"
+}
+
+func (c *mqlAwsMemorydbCluster) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMemorydbCluster) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsMemorydbCluster) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsMemorydbCluster) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsMemorydbCluster) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsMemorydbCluster) GetNodeType() *plugin.TValue[string] {
+	return &c.NodeType
+}
+
+func (c *mqlAwsMemorydbCluster) GetEngine() *plugin.TValue[string] {
+	return &c.Engine
+}
+
+func (c *mqlAwsMemorydbCluster) GetEngineVersion() *plugin.TValue[string] {
+	return &c.EngineVersion
+}
+
+func (c *mqlAwsMemorydbCluster) GetEnginePatchVersion() *plugin.TValue[string] {
+	return &c.EnginePatchVersion
+}
+
+func (c *mqlAwsMemorydbCluster) GetNumberOfShards() *plugin.TValue[int64] {
+	return &c.NumberOfShards
+}
+
+func (c *mqlAwsMemorydbCluster) GetTlsEnabled() *plugin.TValue[bool] {
+	return &c.TlsEnabled
+}
+
+func (c *mqlAwsMemorydbCluster) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.memorydb.cluster", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsMemorydbCluster) GetAclName() *plugin.TValue[string] {
+	return &c.AclName
+}
+
+func (c *mqlAwsMemorydbCluster) GetParameterGroupName() *plugin.TValue[string] {
+	return &c.ParameterGroupName
+}
+
+func (c *mqlAwsMemorydbCluster) GetSubnetGroupName() *plugin.TValue[string] {
+	return &c.SubnetGroupName
+}
+
+func (c *mqlAwsMemorydbCluster) GetSnapshotRetentionLimit() *plugin.TValue[int64] {
+	return &c.SnapshotRetentionLimit
+}
+
+func (c *mqlAwsMemorydbCluster) GetSnapshotWindow() *plugin.TValue[string] {
+	return &c.SnapshotWindow
+}
+
+func (c *mqlAwsMemorydbCluster) GetMaintenanceWindow() *plugin.TValue[string] {
+	return &c.MaintenanceWindow
+}
+
+func (c *mqlAwsMemorydbCluster) GetAutoMinorVersionUpgrade() *plugin.TValue[bool] {
+	return &c.AutoMinorVersionUpgrade
+}
+
+func (c *mqlAwsMemorydbCluster) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsMemorydbCluster) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsMemorydbCluster) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.memorydb.cluster", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+// mqlAwsTimestreamInfluxdb for the aws.timestream.influxdb resource
+type mqlAwsTimestreamInfluxdb struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsTimestreamInfluxdbInternal it will be used here
+	Instances plugin.TValue[[]any]
+	Clusters  plugin.TValue[[]any]
+}
+
+// createAwsTimestreamInfluxdb creates a new instance of this resource
+func createAwsTimestreamInfluxdb(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsTimestreamInfluxdb{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.timestream.influxdb", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsTimestreamInfluxdb) MqlName() string {
+	return "aws.timestream.influxdb"
+}
+
+func (c *mqlAwsTimestreamInfluxdb) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsTimestreamInfluxdb) GetInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Instances, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.timestream.influxdb", c.__id, "instances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.instances()
+	})
+}
+
+func (c *mqlAwsTimestreamInfluxdb) GetClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Clusters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.timestream.influxdb", c.__id, "clusters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.clusters()
+	})
+}
+
+// mqlAwsTimestreamInfluxdbInstance for the aws.timestream.influxdb.instance resource
+type mqlAwsTimestreamInfluxdbInstance struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsTimestreamInfluxdbInstanceInternal
+	Arn                           plugin.TValue[string]
+	Id                            plugin.TValue[string]
+	Name                          plugin.TValue[string]
+	AllocatedStorage              plugin.TValue[int64]
+	DbInstanceType                plugin.TValue[string]
+	DbStorageType                 plugin.TValue[string]
+	DeploymentType                plugin.TValue[string]
+	Endpoint                      plugin.TValue[string]
+	NetworkType                   plugin.TValue[string]
+	Port                          plugin.TValue[int64]
+	Status                        plugin.TValue[string]
+	Region                        plugin.TValue[string]
+	PubliclyAccessible            plugin.TValue[bool]
+	VpcSubnets                    plugin.TValue[[]any]
+	SecurityGroups                plugin.TValue[[]any]
+	InfluxAuthParametersSecretArn plugin.TValue[string]
+	LogDeliveryEnabled            plugin.TValue[bool]
+	LogDeliveryS3Bucket           plugin.TValue[string]
+	DbParameterGroupIdentifier    plugin.TValue[string]
+	AvailabilityZone              plugin.TValue[string]
+	Tags                          plugin.TValue[map[string]any]
+}
+
+// createAwsTimestreamInfluxdbInstance creates a new instance of this resource
+func createAwsTimestreamInfluxdbInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsTimestreamInfluxdbInstance{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.timestream.influxdb.instance", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) MqlName() string {
+	return "aws.timestream.influxdb.instance"
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetAllocatedStorage() *plugin.TValue[int64] {
+	return &c.AllocatedStorage
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetDbInstanceType() *plugin.TValue[string] {
+	return &c.DbInstanceType
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetDbStorageType() *plugin.TValue[string] {
+	return &c.DbStorageType
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetDeploymentType() *plugin.TValue[string] {
+	return &c.DeploymentType
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetEndpoint() *plugin.TValue[string] {
+	return &c.Endpoint
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetNetworkType() *plugin.TValue[string] {
+	return &c.NetworkType
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetPubliclyAccessible() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PubliclyAccessible, func() (bool, error) {
+		return c.publiclyAccessible()
+	})
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetVpcSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VpcSubnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.timestream.influxdb.instance", c.__id, "vpcSubnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vpcSubnets()
+	})
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.timestream.influxdb.instance", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetInfluxAuthParametersSecretArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.InfluxAuthParametersSecretArn, func() (string, error) {
+		return c.influxAuthParametersSecretArn()
+	})
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetLogDeliveryEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LogDeliveryEnabled, func() (bool, error) {
+		return c.logDeliveryEnabled()
+	})
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetLogDeliveryS3Bucket() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LogDeliveryS3Bucket, func() (string, error) {
+		return c.logDeliveryS3Bucket()
+	})
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetDbParameterGroupIdentifier() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DbParameterGroupIdentifier, func() (string, error) {
+		return c.dbParameterGroupIdentifier()
+	})
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetAvailabilityZone() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AvailabilityZone, func() (string, error) {
+		return c.availabilityZone()
+	})
+}
+
+func (c *mqlAwsTimestreamInfluxdbInstance) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsTimestreamInfluxdbCluster for the aws.timestream.influxdb.cluster resource
+type mqlAwsTimestreamInfluxdbCluster struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsTimestreamInfluxdbClusterInternal
+	Arn                           plugin.TValue[string]
+	Id                            plugin.TValue[string]
+	Name                          plugin.TValue[string]
+	AllocatedStorage              plugin.TValue[int64]
+	DbInstanceType                plugin.TValue[string]
+	DbStorageType                 plugin.TValue[string]
+	DeploymentType                plugin.TValue[string]
+	Endpoint                      plugin.TValue[string]
+	ReaderEndpoint                plugin.TValue[string]
+	NetworkType                   plugin.TValue[string]
+	Port                          plugin.TValue[int64]
+	Status                        plugin.TValue[string]
+	Region                        plugin.TValue[string]
+	EngineType                    plugin.TValue[string]
+	PubliclyAccessible            plugin.TValue[bool]
+	VpcSubnets                    plugin.TValue[[]any]
+	SecurityGroups                plugin.TValue[[]any]
+	InfluxAuthParametersSecretArn plugin.TValue[string]
+	LogDeliveryEnabled            plugin.TValue[bool]
+	LogDeliveryS3Bucket           plugin.TValue[string]
+	DbParameterGroupIdentifier    plugin.TValue[string]
+	FailoverMode                  plugin.TValue[string]
+	Tags                          plugin.TValue[map[string]any]
+}
+
+// createAwsTimestreamInfluxdbCluster creates a new instance of this resource
+func createAwsTimestreamInfluxdbCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsTimestreamInfluxdbCluster{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.timestream.influxdb.cluster", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) MqlName() string {
+	return "aws.timestream.influxdb.cluster"
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetAllocatedStorage() *plugin.TValue[int64] {
+	return &c.AllocatedStorage
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetDbInstanceType() *plugin.TValue[string] {
+	return &c.DbInstanceType
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetDbStorageType() *plugin.TValue[string] {
+	return &c.DbStorageType
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetDeploymentType() *plugin.TValue[string] {
+	return &c.DeploymentType
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetEndpoint() *plugin.TValue[string] {
+	return &c.Endpoint
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetReaderEndpoint() *plugin.TValue[string] {
+	return &c.ReaderEndpoint
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetNetworkType() *plugin.TValue[string] {
+	return &c.NetworkType
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetEngineType() *plugin.TValue[string] {
+	return &c.EngineType
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetPubliclyAccessible() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PubliclyAccessible, func() (bool, error) {
+		return c.publiclyAccessible()
+	})
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetVpcSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VpcSubnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.timestream.influxdb.cluster", c.__id, "vpcSubnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vpcSubnets()
+	})
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.timestream.influxdb.cluster", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetInfluxAuthParametersSecretArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.InfluxAuthParametersSecretArn, func() (string, error) {
+		return c.influxAuthParametersSecretArn()
+	})
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetLogDeliveryEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LogDeliveryEnabled, func() (bool, error) {
+		return c.logDeliveryEnabled()
+	})
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetLogDeliveryS3Bucket() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LogDeliveryS3Bucket, func() (string, error) {
+		return c.logDeliveryS3Bucket()
+	})
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetDbParameterGroupIdentifier() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DbParameterGroupIdentifier, func() (string, error) {
+		return c.dbParameterGroupIdentifier()
+	})
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetFailoverMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.FailoverMode, func() (string, error) {
+		return c.failoverMode()
+	})
+}
+
+func (c *mqlAwsTimestreamInfluxdbCluster) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
 }

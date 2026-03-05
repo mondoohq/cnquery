@@ -74,7 +74,7 @@ var DefaultProviders Providers = map[string]*Provider{
 	"aws": {
 		Provider: &plugin.Provider{
 			Name:            "aws",
-			ID:              "go.mondoo.com/mql/v13/providers/aws",
+			ID:              "go.mondoo.com/cnquery/v9/providers/aws",
 			ConnectionTypes: []string{"aws", "ebs"},
 			Connectors: []plugin.Connector{
 				{
