@@ -177,6 +177,8 @@ github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.41.12 h1:l8nLdmOl
 github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.41.12/go.mod h1:57t2hFtz4rmQin/p8xRQlUJXwO/EcKUwZEfK1YruIco=
 github.com/aws/aws-sdk-go-v2/service/appstream v1.54.2 h1:TAxlod/6aqYGK91WWoNOT/oFxWMV0CUKv36SX8SE7zI=
 github.com/aws/aws-sdk-go-v2/service/appstream v1.54.2/go.mod h1:z7f47jBxNYcngzuE3aRLZ20B0PfF458yZBLh8J5ngRQ=
+github.com/aws/aws-sdk-go-v2/service/athena v1.57.2 h1:rxrP6hget2gn77fo/w9/fw0AMzt/pwsYCTR6sp3KIV0=
+github.com/aws/aws-sdk-go-v2/service/athena v1.57.2/go.mod h1:9+Y9vgcoZprTgdsgVHksxCPKVaJeocOBn8WizxZe6UY=
 github.com/aws/aws-sdk-go-v2/service/autoscaling v1.64.2 h1:pzFtdV2DArJul6aM3+WiWjUQ63IzrSnSbvBr8FAokt4=
 github.com/aws/aws-sdk-go-v2/service/autoscaling v1.64.2/go.mod h1:8xQlcle6cf4R66HrXbiahORXakWpLlvJXoiGae5BlIc=
 github.com/aws/aws-sdk-go-v2/service/backup v1.54.8 h1:Sc1eQ0cuid0QJHhoZOIH01kfaewRRPOxsrKPDMaxJlg=

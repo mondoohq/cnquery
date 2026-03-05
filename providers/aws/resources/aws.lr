@@ -6257,6 +6257,42 @@ private aws.appstream.imageBuilder @defaults("name state platform region") {
   region string
 }
 
+// Amazon Athena
+aws.athena @defaults("workgroups") {
+  // List of Athena workgroups
+  workgroups() []aws.athena.workgroup
+}
+
+// Amazon Athena workgroup
+private aws.athena.workgroup @defaults("name state region") {
+  // Name of the workgroup
+  name string
+  // ARN of the workgroup (synthetic: arn:aws:athena:{region}:{account}:workgroup/{name})
+  arn string
+  // State of the workgroup: ENABLED or DISABLED
+  state string
+  // Description of the workgroup
+  description string
+  // Date and time the workgroup was created
+  createdAt time
+  // Whether workgroup settings override client-side settings
+  enforceWorkGroupConfiguration bool
+  // Whether Amazon CloudWatch metrics are enabled for the workgroup
+  publishCloudWatchMetricsEnabled bool
+  // Upper data usage limit for the amount of bytes scanned per query
+  bytesScannedCutoffPerQuery int
+  // Whether requester pays is enabled for the workgroup
+  requesterPaysEnabled bool
+  // Engine version information
+  engineVersion dict
+  // Result configuration (output location and encryption)
+  resultConfiguration dict
+  // Region where the workgroup exists
+  region string
+  // Tags for the workgroup
+  tags() map[string]string
+}
+
 // AWS Directory Service
 aws.directoryservice @defaults("directories") {
   // List of directories across all enabled regions

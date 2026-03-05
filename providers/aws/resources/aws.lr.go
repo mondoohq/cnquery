@@ -307,6 +307,8 @@ const (
 	ResourceAwsAppstreamFleet                                                   string = "aws.appstream.fleet"
 	ResourceAwsAppstreamStack                                                   string = "aws.appstream.stack"
 	ResourceAwsAppstreamImageBuilder                                            string = "aws.appstream.imageBuilder"
+	ResourceAwsAthena                                                           string = "aws.athena"
+	ResourceAwsAthenaWorkgroup                                                  string = "aws.athena.workgroup"
 	ResourceAwsDirectoryservice                                                 string = "aws.directoryservice"
 	ResourceAwsDirectoryserviceDirectory                                        string = "aws.directoryservice.directory"
 	ResourceAwsDirectoryserviceRadiusSettings                                   string = "aws.directoryservice.radiusSettings"
@@ -1486,6 +1488,14 @@ func init() {
 		"aws.appstream.imageBuilder": {
 			// to override args, implement: initAwsAppstreamImageBuilder(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsAppstreamImageBuilder,
+		},
+		"aws.athena": {
+			// to override args, implement: initAwsAthena(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsAthena,
+		},
+		"aws.athena.workgroup": {
+			// to override args, implement: initAwsAthenaWorkgroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsAthenaWorkgroup,
 		},
 		"aws.directoryservice": {
 			// to override args, implement: initAwsDirectoryservice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -9233,6 +9243,48 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.appstream.imageBuilder.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppstreamImageBuilder).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.athena.workgroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthena).GetWorkgroups()).ToDataRes(types.Array(types.Resource("aws.athena.workgroup")))
+	},
+	"aws.athena.workgroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetName()).ToDataRes(types.String)
+	},
+	"aws.athena.workgroup.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetArn()).ToDataRes(types.String)
+	},
+	"aws.athena.workgroup.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetState()).ToDataRes(types.String)
+	},
+	"aws.athena.workgroup.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.athena.workgroup.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.athena.workgroup.enforceWorkGroupConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetEnforceWorkGroupConfiguration()).ToDataRes(types.Bool)
+	},
+	"aws.athena.workgroup.publishCloudWatchMetricsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetPublishCloudWatchMetricsEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.athena.workgroup.bytesScannedCutoffPerQuery": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetBytesScannedCutoffPerQuery()).ToDataRes(types.Int)
+	},
+	"aws.athena.workgroup.requesterPaysEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetRequesterPaysEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.athena.workgroup.engineVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetEngineVersion()).ToDataRes(types.Dict)
+	},
+	"aws.athena.workgroup.resultConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetResultConfiguration()).ToDataRes(types.Dict)
+	},
+	"aws.athena.workgroup.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.athena.workgroup.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAthenaWorkgroup).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.directoryservice.directories": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDirectoryservice).GetDirectories()).ToDataRes(types.Array(types.Resource("aws.directoryservice.directory")))
@@ -20942,6 +20994,70 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.appstream.imageBuilder.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAppstreamImageBuilder).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.athena.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthena).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.athena.workgroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthena).Workgroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.athena.workgroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.enforceWorkGroupConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).EnforceWorkGroupConfiguration, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.publishCloudWatchMetricsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).PublishCloudWatchMetricsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.bytesScannedCutoffPerQuery": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).BytesScannedCutoffPerQuery, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.requesterPaysEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).RequesterPaysEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.engineVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).EngineVersion, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.resultConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).ResultConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.athena.workgroup.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAthenaWorkgroup).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.directoryservice.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -50700,6 +50816,173 @@ func (c *mqlAwsAppstreamImageBuilder) GetTags() *plugin.TValue[map[string]any] {
 
 func (c *mqlAwsAppstreamImageBuilder) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+// mqlAwsAthena for the aws.athena resource
+type mqlAwsAthena struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsAthenaInternal it will be used here
+	Workgroups plugin.TValue[[]any]
+}
+
+// createAwsAthena creates a new instance of this resource
+func createAwsAthena(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsAthena{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.athena", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsAthena) MqlName() string {
+	return "aws.athena"
+}
+
+func (c *mqlAwsAthena) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsAthena) GetWorkgroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Workgroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.athena", c.__id, "workgroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.workgroups()
+	})
+}
+
+// mqlAwsAthenaWorkgroup for the aws.athena.workgroup resource
+type mqlAwsAthenaWorkgroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsAthenaWorkgroupInternal it will be used here
+	Name                            plugin.TValue[string]
+	Arn                             plugin.TValue[string]
+	State                           plugin.TValue[string]
+	Description                     plugin.TValue[string]
+	CreatedAt                       plugin.TValue[*time.Time]
+	EnforceWorkGroupConfiguration   plugin.TValue[bool]
+	PublishCloudWatchMetricsEnabled plugin.TValue[bool]
+	BytesScannedCutoffPerQuery      plugin.TValue[int64]
+	RequesterPaysEnabled            plugin.TValue[bool]
+	EngineVersion                   plugin.TValue[any]
+	ResultConfiguration             plugin.TValue[any]
+	Region                          plugin.TValue[string]
+	Tags                            plugin.TValue[map[string]any]
+}
+
+// createAwsAthenaWorkgroup creates a new instance of this resource
+func createAwsAthenaWorkgroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsAthenaWorkgroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.athena.workgroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsAthenaWorkgroup) MqlName() string {
+	return "aws.athena.workgroup"
+}
+
+func (c *mqlAwsAthenaWorkgroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetEnforceWorkGroupConfiguration() *plugin.TValue[bool] {
+	return &c.EnforceWorkGroupConfiguration
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetPublishCloudWatchMetricsEnabled() *plugin.TValue[bool] {
+	return &c.PublishCloudWatchMetricsEnabled
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetBytesScannedCutoffPerQuery() *plugin.TValue[int64] {
+	return &c.BytesScannedCutoffPerQuery
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetRequesterPaysEnabled() *plugin.TValue[bool] {
+	return &c.RequesterPaysEnabled
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetEngineVersion() *plugin.TValue[any] {
+	return &c.EngineVersion
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetResultConfiguration() *plugin.TValue[any] {
+	return &c.ResultConfiguration
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsAthenaWorkgroup) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
 }
 
 // mqlAwsDirectoryservice for the aws.directoryservice resource
