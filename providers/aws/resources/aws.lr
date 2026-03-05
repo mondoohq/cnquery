@@ -315,6 +315,8 @@ aws.waf {
   ruleGroups() []aws.waf.rulegroup
   // List of WAF IP sets
   ipSets() []aws.waf.ipset
+  // List of WAF regex pattern sets
+  regexPatternSets() []aws.waf.regexPatternSet
   // Scope either REGIONAL or CLOUDFRONT
   scope string
 }
@@ -335,6 +337,10 @@ private aws.waf.acl @defaults("name") {
   rules() []aws.waf.rule
   // Scope either REGIONAL or CLOUDFRONT
   scope string
+  // Logging configuration for the ACL
+  loggingConfiguration() aws.waf.acl.loggingConfiguration
+  // ARNs of resources associated with this web ACL
+  associatedResources() []string
 }
 
 // Amazon WAF v2 RuleGroup
@@ -762,6 +768,33 @@ private aws.waf.ipset @defaults("name") {
   addresses dict
 }
 
+// Amazon WAF regex pattern set
+private aws.waf.regexPatternSet @defaults("name") {
+  // ARN of the regex pattern set
+  arn string
+  // ID of the regex pattern set
+  id string
+  // Scope: REGIONAL or CLOUDFRONT
+  scope string
+  // Name of the regex pattern set
+  name string
+  // Description of the regex pattern set
+  description string
+  // List of regular expression patterns
+  regularExpressions []string
+}
+
+// Amazon WAF ACL logging configuration
+private aws.waf.acl.loggingConfiguration @defaults("arn") {
+  // ARN of the web ACL this logging config belongs to
+  arn string
+  // Log destination ARNs (CloudWatch, S3, or Firehose)
+  logDestinationConfigs []string
+  // Whether managed by Firewall Manager
+  managedByFirewallManager bool
+  // Fields that are redacted from logs
+  redactedFields []dict
+}
 
 // AWS Elastic File System (EFS) service
 aws.efs @defaults("filesystems") {
