@@ -2,7 +2,7 @@
 providers = ["core", "os"]
 
 [mondoo.""]
-version = "unstable"
+version = "v13.0.0-rolling"
 build = "development"
 
 [command."uname -s"]
