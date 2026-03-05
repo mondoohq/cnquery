@@ -171,8 +171,6 @@ func (s *mqlSshdConfig) parse(file *mqlFile) error {
 	filesIdx := map[string]*mqlFile{
 		file.Path.Data: file,
 	}
-	var allContents strings.Builder
-
 	// Function to get file content by path
 	fileContent := func(path string) (string, error) {
 		file, ok := filesIdx[path]
@@ -192,9 +190,7 @@ func (s *mqlSshdConfig) parse(file *mqlFile) error {
 			return "", fileContent.Error
 		}
 
-		content := fileContent.Data + "\n"
-		allContents.WriteString(content)
-		return content, nil
+		return fileContent.Data + "\n", nil
 	}
 
 	// Function to expand glob patterns

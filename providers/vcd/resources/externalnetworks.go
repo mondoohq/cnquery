@@ -35,6 +35,7 @@ func (v *mqlVcd) externalNetworks() ([]any, error) {
 
 func newMqlVcdExternalNetwork(runtime *plugin.Runtime, networkPool *types.ExternalNetworkReference) (any, error) {
 	return CreateResource(runtime, "vcd.externalNetwork", map[string]*llx.RawData{
+		"__id": llx.StringData("vcd.externalNetwork/" + networkPool.Name),
 		"name": llx.StringData(networkPool.Name),
 	})
 }

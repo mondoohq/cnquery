@@ -205,6 +205,7 @@ func initAwsS3Bucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	log.Debug().Msgf("no bucket found for %s", arn)
 	mqlAwsS3Bucket, err := CreateResource(runtime, "aws.s3.bucket",
 		map[string]*llx.RawData{
+			"__id":   llx.StringData(arn),
 			"arn":    llx.StringData(arn),
 			"name":   llx.StringData(name),
 			"exists": llx.BoolData(false),

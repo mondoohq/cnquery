@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"go.mondoo.com/mql/v13/llx"
@@ -313,7 +312,6 @@ func (g *mqlGcpProjects) list() ([]any, error) {
 func projectToMql(runtime *plugin.Runtime, p *cloudresourcemanager.Project) (*mqlGcpProject, error) {
 	res, err := CreateResource(runtime, "gcp.project", map[string]*llx.RawData{
 		"id":         llx.StringData(p.ProjectId),
-		"number":     llx.StringData(strings.TrimPrefix(p.Name, "projects/")[0:10]),
 		"name":       llx.StringData(p.DisplayName),
 		"parentId":   llx.StringData(p.Parent),
 		"state":      llx.StringData(p.State),

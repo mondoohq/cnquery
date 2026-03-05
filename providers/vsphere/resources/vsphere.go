@@ -161,39 +161,6 @@ func esxiHostProperties(conn *connection.VsphereConnection) (*object.HostSystem,
 	return h, hostInfo, nil
 }
 
-func esxiVmProperties(conn *connection.VsphereConnection) (*object.VirtualMachine, *mo.VirtualMachine, error) {
-	vClient := conn.Client()
-	cl := resourceclient.New(vClient)
-
-	// check if the connection was initialized with a specific host
-	identifier, err := conn.Identifier()
-	if err != nil || !connection.IsVsphereResourceID(identifier) {
-		return nil, nil, errors.New("esxi resource is only supported for esxi connections or vsphere vm connections")
-	}
-
-	// extract type and inventory
-	moid, err := connection.ParseVsphereResourceID(identifier)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	if moid.Type != "VirtualMachine" {
-		return nil, nil, errors.New("esxi resource is not supported for vsphere type " + moid.Type)
-	}
-
-	vm, err := cl.VirtualMachineByMoid(moid)
-	if err != nil {
-		return nil, nil, errors.New("could not find the esxi vm via platform id: " + identifier)
-	}
-
-	vmInfo, err := resourceclient.VmInfo(vm)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return vm, vmInfo, nil
-}
-
 func (v *mqlEsxiCommand) id() (string, error) {
 	return v.Command.Data, nil
 }
