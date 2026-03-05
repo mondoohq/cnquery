@@ -242,6 +242,10 @@ microsoft.identityAndAccess {
   roleEligibilityScheduleInstances() []microsoft.identityAndAccess.roleEligibilityScheduleInstance
   // Identity and sign-in policies
   identityAndSignIn() microsoft.identityAndAccess.identityAndSignIn
+  // Mobile device management (MDM) policies that control device enrollment and management
+  mobileDeviceManagementPolicies() []microsoft.identityAndAccess.mobileDeviceManagementPolicy
+  // Mobile application management (MAM) policies that control app-level protection without device enrollment
+  mobilityManagementPolicies() []microsoft.identityAndAccess.mobilityManagementPolicy
 }
 
 // Represents an instance of a role eligibility in PIM
@@ -264,6 +268,62 @@ private microsoft.identityAndAccess.roleEligibilityScheduleInstance @defaults("m
   memberType string
   // The identifier of the role eligibility schedule from which this instance is created
   roleEligibilityScheduleId string
+}
+
+// Mobile device management (MDM) policy for enrolling and managing devices with services like Microsoft Intune
+private microsoft.identityAndAccess.mobileDeviceManagementPolicy @defaults("id displayName appliesTo") {
+  // Unique identifier for the policy
+  id string
+  // Display name of the policy
+  displayName string
+  // Description of the policy
+  description string
+  // Scope of the policy: "none", "all", or "selected" (specific groups)
+  appliesTo string
+  // URL for the MDM compliance endpoint
+  complianceUrl string
+  // URL for the MDM discovery endpoint used during device enrollment
+  discoveryUrl string
+  // URL for the MDM terms of use
+  termsOfUseUrl string
+  // Groups targeted by this policy when appliesTo is "selected"
+  includedGroups []microsoft.identityAndAccess.mobileDeviceManagementPolicy.includedGroup
+}
+
+// Group targeted by a mobile device management policy
+private microsoft.identityAndAccess.mobileDeviceManagementPolicy.includedGroup @defaults("id displayName") {
+  // Unique identifier of the group
+  id string
+  // Display name of the group
+  displayName string
+}
+
+// Mobile application management (MAM) policy for protecting apps without requiring device enrollment
+private microsoft.identityAndAccess.mobilityManagementPolicy @defaults("id displayName appliesTo") {
+  // Unique identifier for the policy
+  id string
+  // Display name of the policy
+  displayName string
+  // Description of the policy
+  description string
+  // Scope of the policy: "none", "all", or "selected" (specific groups)
+  appliesTo string
+  // URL for the MAM compliance endpoint
+  complianceUrl string
+  // URL for the MAM discovery endpoint
+  discoveryUrl string
+  // URL for the MAM terms of use
+  termsOfUseUrl string
+  // Groups targeted by this policy when appliesTo is "selected"
+  includedGroups []microsoft.identityAndAccess.mobilityManagementPolicy.includedGroup
+}
+
+// Group targeted by a mobile application management policy
+private microsoft.identityAndAccess.mobilityManagementPolicy.includedGroup @defaults("id displayName") {
+  // Unique identifier of the group
+  id string
+  // Display name of the group
+  displayName string
 }
 
 // A PIM role management policy for Microsoft Entra ID roles
