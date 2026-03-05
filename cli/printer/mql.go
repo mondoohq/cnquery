@@ -663,7 +663,12 @@ func (print *Printer) autoExpand(blockRef uint64, data any, indent string, cache
 		name = "<unknown>"
 	}
 
-	res.WriteString(name)
+	// Only show the resource name if there are no entrypoints (defaults) to display.
+	// When entrypoints exist, their label=value pairs are self-descriptive enough.
+	hasEntrypoints := block != nil && len(block.Entrypoints) > 0
+	if !hasEntrypoints {
+		res.WriteString(name)
+	}
 
 	// hasContext := false
 	// resourceInfo := print.schema.Lookup(name)
@@ -673,6 +678,7 @@ func (print *Printer) autoExpand(blockRef uint64, data any, indent string, cache
 
 	if block != nil {
 		// important to process them in this order
+		first := true
 		for _, ref := range block.Entrypoints {
 			checksum := cache.bundle.CodeV2.Checksums[ref]
 			v, ok := m[checksum]
@@ -701,7 +707,10 @@ func (print *Printer) autoExpand(blockRef uint64, data any, indent string, cache
 			}
 
 			val := print.data(vv.Type, vv.Value, checksum, indent, cache)
-			res.WriteByte(' ')
+			if !first || !hasEntrypoints {
+				res.WriteByte(' ')
+			}
+			first = false
 			res.WriteString(label)
 			res.WriteByte('=')
 			res.WriteString(val)
@@ -820,12 +829,10 @@ func (print *Printer) data(typ types.Type, data any, checksum string, indent str
 		}
 
 		r := data.(llx.Resource)
-		idline := r.MqlName()
 		if id := r.MqlID(); id != "" {
-			idline += " id = " + id
+			return id
 		}
-
-		return idline
+		return r.MqlName()
 
 	case types.FunctionLike:
 		if d, ok := data.(uint64); ok {
