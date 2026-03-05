@@ -92,12 +92,10 @@ func (a *mqlAwsS3) buckets() ([]any, error) {
 
 	res := []any{}
 	for _, bwr := range bucketsWithRegions {
-		arn := fmt.Sprintf(s3ArnPattern, convert.ToValue(bwr.bucket.Name))
 		mqlS3Bucket, err := CreateResource(a.MqlRuntime, ResourceAwsS3Bucket,
 			map[string]*llx.RawData{
-				"__id":      llx.StringData(arn),
 				"name":      llx.StringDataPtr(bwr.bucket.Name),
-				"arn":       llx.StringData(arn),
+				"arn":       llx.StringData(fmt.Sprintf(s3ArnPattern, convert.ToValue(bwr.bucket.Name))),
 				"exists":    llx.BoolData(true),
 				"location":  llx.StringData(bwr.region),
 				"createdAt": llx.TimeDataPtr(bwr.bucket.CreationDate),
@@ -205,12 +203,16 @@ func initAwsS3Bucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	log.Debug().Msgf("no bucket found for %s", arn)
 	mqlAwsS3Bucket, err := CreateResource(runtime, "aws.s3.bucket",
 		map[string]*llx.RawData{
-			"__id":   llx.StringData(arn),
 			"arn":    llx.StringData(arn),
 			"name":   llx.StringData(name),
 			"exists": llx.BoolData(false),
 		})
 	return nil, mqlAwsS3Bucket, err
+}
+
+func (a *mqlAwsS3Bucket) id() (string, error) {
+	// assumes bucket names are globally unique, which they are right now
+	return a.Arn.Data, nil
 }
 
 func (a *mqlAwsS3Bucket) policy() (*mqlAwsS3BucketPolicy, error) {
