@@ -67,19 +67,7 @@ func (a *mqlAwsKinesis) getStreams(conn *connection.AwsConnection) []*jobpool.Jo
 					return nil, err
 				}
 				for _, streamSummary := range page.StreamSummaries {
-					// Get full stream details via DescribeStreamSummary
-					descResp, err := svc.DescribeStreamSummary(ctx, &kinesis.DescribeStreamSummaryInput{
-						StreamARN: streamSummary.StreamARN,
-					})
-					if err != nil {
-						log.Warn().Str("stream", convert.ToValue(streamSummary.StreamName)).Err(err).Msg("could not describe stream")
-						continue
-					}
-					if descResp.StreamDescriptionSummary == nil {
-						log.Warn().Str("stream", convert.ToValue(streamSummary.StreamName)).Msg("nil stream description summary")
-						continue
-					}
-					mqlStream, err := newMqlAwsKinesisStream(a.MqlRuntime, region, descResp.StreamDescriptionSummary)
+					mqlStream, err := newMqlAwsKinesisStream(a.MqlRuntime, region, svc, ctx, &streamSummary)
 					if err != nil {
 						return nil, err
 					}
@@ -93,33 +81,50 @@ func (a *mqlAwsKinesis) getStreams(conn *connection.AwsConnection) []*jobpool.Jo
 	return tasks
 }
 
-func newMqlAwsKinesisStream(runtime *plugin.Runtime, region string, stream *kinesis_types.StreamDescriptionSummary) (*mqlAwsKinesisStream, error) {
-	enhancedMonitoring, err := convert.JsonToDictSlice(stream.EnhancedMonitoring)
+func newMqlAwsKinesisStream(runtime *plugin.Runtime, region string, svc *kinesis.Client, ctx context.Context, summary *kinesis_types.StreamSummary) (*mqlAwsKinesisStream, error) {
+	// Use fields available from ListStreams StreamSummary
+	streamModeDetails, err := convert.JsonToDict(summary.StreamModeDetails)
 	if err != nil {
 		return nil, err
 	}
 
-	streamModeDetails, err := convert.JsonToDict(stream.StreamModeDetails)
-	if err != nil {
-		return nil, err
+	args := map[string]*llx.RawData{
+		"__id":              llx.StringDataPtr(summary.StreamARN),
+		"arn":               llx.StringDataPtr(summary.StreamARN),
+		"name":              llx.StringDataPtr(summary.StreamName),
+		"status":            llx.StringData(string(summary.StreamStatus)),
+		"streamModeDetails": llx.DictData(streamModeDetails),
+		"createdAt":         llx.TimeDataPtr(summary.StreamCreationTimestamp),
+		"region":            llx.StringData(region),
 	}
 
-	resource, err := CreateResource(runtime, "aws.kinesis.stream",
-		map[string]*llx.RawData{
-			"__id":                 llx.StringDataPtr(stream.StreamARN),
-			"arn":                  llx.StringDataPtr(stream.StreamARN),
-			"name":                 llx.StringDataPtr(stream.StreamName),
-			"status":               llx.StringData(string(stream.StreamStatus)),
-			"encryptionType":       llx.StringData(string(stream.EncryptionType)),
-			"keyId":                llx.StringDataPtr(stream.KeyId),
-			"retentionPeriodHours": llx.IntDataDefault(stream.RetentionPeriodHours, 0),
-			"openShardCount":       llx.IntDataDefault(stream.OpenShardCount, 0),
-			"consumerCount":        llx.IntDataDefault(stream.ConsumerCount, 0),
-			"streamModeDetails":    llx.DictData(streamModeDetails),
-			"enhancedMonitoring":   llx.ArrayData(enhancedMonitoring, types.Any),
-			"createdAt":            llx.TimeDataPtr(stream.StreamCreationTimestamp),
-			"region":               llx.StringData(region),
-		})
+	// Fetch additional fields from DescribeStreamSummary (encryption, retention, shard/consumer counts)
+	descResp, err := svc.DescribeStreamSummary(ctx, &kinesis.DescribeStreamSummaryInput{
+		StreamARN: summary.StreamARN,
+	})
+	if err != nil {
+		log.Warn().Str("stream", convert.ToValue(summary.StreamName)).Err(err).Msg("could not describe stream, using defaults for detail fields")
+		args["encryptionType"] = llx.StringData("")
+		args["keyId"] = llx.StringData("")
+		args["retentionPeriodHours"] = llx.IntData(0)
+		args["openShardCount"] = llx.IntData(0)
+		args["consumerCount"] = llx.IntData(0)
+		args["enhancedMonitoring"] = llx.ArrayData([]any{}, types.Any)
+	} else if descResp.StreamDescriptionSummary != nil {
+		desc := descResp.StreamDescriptionSummary
+		enhancedMonitoring, err := convert.JsonToDictSlice(desc.EnhancedMonitoring)
+		if err != nil {
+			return nil, err
+		}
+		args["encryptionType"] = llx.StringData(string(desc.EncryptionType))
+		args["keyId"] = llx.StringDataPtr(desc.KeyId)
+		args["retentionPeriodHours"] = llx.IntDataDefault(desc.RetentionPeriodHours, 0)
+		args["openShardCount"] = llx.IntDataDefault(desc.OpenShardCount, 0)
+		args["consumerCount"] = llx.IntDataDefault(desc.ConsumerCount, 0)
+		args["enhancedMonitoring"] = llx.ArrayData(enhancedMonitoring, types.Any)
+	}
+
+	resource, err := CreateResource(runtime, "aws.kinesis.stream", args)
 	if err != nil {
 		return nil, err
 	}
