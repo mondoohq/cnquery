@@ -19,6 +19,7 @@ import (
 const (
 	ResourceGitlabUser                   string = "gitlab.user"
 	ResourceGitlabMember                 string = "gitlab.member"
+	ResourceGitlabNamespace              string = "gitlab.namespace"
 	ResourceGitlabGroup                  string = "gitlab.group"
 	ResourceGitlabProject                string = "gitlab.project"
 	ResourceGitlabProjectApprovalRule    string = "gitlab.project.approvalRule"
@@ -57,6 +58,10 @@ func init() {
 		"gitlab.member": {
 			// to override args, implement: initGitlabMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGitlabMember,
+		},
+		"gitlab.namespace": {
+			Init:   initGitlabNamespace,
+			Create: createGitlabNamespace,
 		},
 		"gitlab.group": {
 			Init:   initGitlabGroup,
@@ -289,6 +294,48 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gitlab.member.role": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabMember).GetRole()).ToDataRes(types.String)
 	},
+	"gitlab.namespace.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabNamespace).GetId()).ToDataRes(types.Int)
+	},
+	"gitlab.namespace.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabNamespace).GetName()).ToDataRes(types.String)
+	},
+	"gitlab.namespace.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabNamespace).GetPath()).ToDataRes(types.String)
+	},
+	"gitlab.namespace.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabNamespace).GetKind()).ToDataRes(types.String)
+	},
+	"gitlab.namespace.fullPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabNamespace).GetFullPath()).ToDataRes(types.String)
+	},
+	"gitlab.namespace.parentId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabNamespace).GetParentId()).ToDataRes(types.Int)
+	},
+	"gitlab.namespace.webURL": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabNamespace).GetWebURL()).ToDataRes(types.String)
+	},
+	"gitlab.namespace.membersCountWithDescendants": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabNamespace).GetMembersCountWithDescendants()).ToDataRes(types.Int)
+	},
+	"gitlab.namespace.billableMembersCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabNamespace).GetBillableMembersCount()).ToDataRes(types.Int)
+	},
+	"gitlab.namespace.plan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabNamespace).GetPlan()).ToDataRes(types.String)
+	},
+	"gitlab.namespace.trial": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabNamespace).GetTrial()).ToDataRes(types.Bool)
+	},
+	"gitlab.namespace.trialEndsOn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabNamespace).GetTrialEndsOn()).ToDataRes(types.Time)
+	},
+	"gitlab.namespace.maxSeatsUsed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabNamespace).GetMaxSeatsUsed()).ToDataRes(types.Int)
+	},
+	"gitlab.namespace.seatsInUse": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabNamespace).GetSeatsInUse()).ToDataRes(types.Int)
+	},
 	"gitlab.group.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabGroup).GetId()).ToDataRes(types.Int)
 	},
@@ -333,6 +380,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gitlab.group.markedForDeletionOn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabGroup).GetMarkedForDeletionOn()).ToDataRes(types.Time)
+	},
+	"gitlab.group.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroup).GetNamespace()).ToDataRes(types.Resource("gitlab.namespace"))
 	},
 	"gitlab.group.projects": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabGroup).GetProjects()).ToDataRes(types.Array(types.Resource("gitlab.project")))
@@ -1208,6 +1258,66 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGitlabMember).Role, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gitlab.namespace.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabNamespace).__id, ok = v.Value.(string)
+		return
+	},
+	"gitlab.namespace.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabNamespace).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.namespace.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabNamespace).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.namespace.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabNamespace).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.namespace.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabNamespace).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.namespace.fullPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabNamespace).FullPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.namespace.parentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabNamespace).ParentId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.namespace.webURL": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabNamespace).WebURL, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.namespace.membersCountWithDescendants": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabNamespace).MembersCountWithDescendants, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.namespace.billableMembersCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabNamespace).BillableMembersCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.namespace.plan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabNamespace).Plan, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.namespace.trial": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabNamespace).Trial, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.namespace.trialEndsOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabNamespace).TrialEndsOn, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gitlab.namespace.maxSeatsUsed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabNamespace).MaxSeatsUsed, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.namespace.seatsInUse": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabNamespace).SeatsInUse, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"gitlab.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabGroup).__id, ok = v.Value.(string)
 		return
@@ -1270,6 +1380,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gitlab.group.markedForDeletionOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabGroup).MarkedForDeletionOn, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroup).Namespace, ok = plugin.RawToTValue[*mqlGitlabNamespace](v.Value, v.Error)
 		return
 	},
 	"gitlab.group.projects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2613,6 +2727,120 @@ func (c *mqlGitlabMember) GetRole() *plugin.TValue[string] {
 	return &c.Role
 }
 
+// mqlGitlabNamespace for the gitlab.namespace resource
+type mqlGitlabNamespace struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGitlabNamespaceInternal it will be used here
+	Id                          plugin.TValue[int64]
+	Name                        plugin.TValue[string]
+	Path                        plugin.TValue[string]
+	Kind                        plugin.TValue[string]
+	FullPath                    plugin.TValue[string]
+	ParentId                    plugin.TValue[int64]
+	WebURL                      plugin.TValue[string]
+	MembersCountWithDescendants plugin.TValue[int64]
+	BillableMembersCount        plugin.TValue[int64]
+	Plan                        plugin.TValue[string]
+	Trial                       plugin.TValue[bool]
+	TrialEndsOn                 plugin.TValue[*time.Time]
+	MaxSeatsUsed                plugin.TValue[int64]
+	SeatsInUse                  plugin.TValue[int64]
+}
+
+// createGitlabNamespace creates a new instance of this resource
+func createGitlabNamespace(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGitlabNamespace{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gitlab.namespace", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGitlabNamespace) MqlName() string {
+	return "gitlab.namespace"
+}
+
+func (c *mqlGitlabNamespace) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGitlabNamespace) GetId() *plugin.TValue[int64] {
+	return &c.Id
+}
+
+func (c *mqlGitlabNamespace) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGitlabNamespace) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlGitlabNamespace) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlGitlabNamespace) GetFullPath() *plugin.TValue[string] {
+	return &c.FullPath
+}
+
+func (c *mqlGitlabNamespace) GetParentId() *plugin.TValue[int64] {
+	return &c.ParentId
+}
+
+func (c *mqlGitlabNamespace) GetWebURL() *plugin.TValue[string] {
+	return &c.WebURL
+}
+
+func (c *mqlGitlabNamespace) GetMembersCountWithDescendants() *plugin.TValue[int64] {
+	return &c.MembersCountWithDescendants
+}
+
+func (c *mqlGitlabNamespace) GetBillableMembersCount() *plugin.TValue[int64] {
+	return &c.BillableMembersCount
+}
+
+func (c *mqlGitlabNamespace) GetPlan() *plugin.TValue[string] {
+	return &c.Plan
+}
+
+func (c *mqlGitlabNamespace) GetTrial() *plugin.TValue[bool] {
+	return &c.Trial
+}
+
+func (c *mqlGitlabNamespace) GetTrialEndsOn() *plugin.TValue[*time.Time] {
+	return &c.TrialEndsOn
+}
+
+func (c *mqlGitlabNamespace) GetMaxSeatsUsed() *plugin.TValue[int64] {
+	return &c.MaxSeatsUsed
+}
+
+func (c *mqlGitlabNamespace) GetSeatsInUse() *plugin.TValue[int64] {
+	return &c.SeatsInUse
+}
+
 // mqlGitlabGroup for the gitlab.group resource
 type mqlGitlabGroup struct {
 	MqlRuntime *plugin.Runtime
@@ -2633,6 +2861,7 @@ type mqlGitlabGroup struct {
 	MentionsDisabled               plugin.TValue[bool]
 	RequestAccessEnabled           plugin.TValue[bool]
 	MarkedForDeletionOn            plugin.TValue[*time.Time]
+	Namespace                      plugin.TValue[*mqlGitlabNamespace]
 	Projects                       plugin.TValue[[]any]
 	AllowedEmailDomainsList        plugin.TValue[string]
 	LfsEnabled                     plugin.TValue[bool]
@@ -2740,6 +2969,22 @@ func (c *mqlGitlabGroup) GetRequestAccessEnabled() *plugin.TValue[bool] {
 
 func (c *mqlGitlabGroup) GetMarkedForDeletionOn() *plugin.TValue[*time.Time] {
 	return &c.MarkedForDeletionOn
+}
+
+func (c *mqlGitlabGroup) GetNamespace() *plugin.TValue[*mqlGitlabNamespace] {
+	return plugin.GetOrCompute[*mqlGitlabNamespace](&c.Namespace, func() (*mqlGitlabNamespace, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.group", c.__id, "namespace")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGitlabNamespace), nil
+			}
+		}
+
+		return c.namespace()
+	})
 }
 
 func (c *mqlGitlabGroup) GetProjects() *plugin.TValue[[]any] {
