@@ -491,10 +491,10 @@ func (a *mqlAwsIam) roles() ([]any, error) {
 			var policyDocumentMap map[string]any
 			if role.AssumeRolePolicyDocument != nil {
 				policyDocument := *role.AssumeRolePolicyDocument
-				decodedPolicyDocument, decodeErr := url.QueryUnescape(policyDocument)
-				if decodeErr == nil {
-					json.Unmarshal([]byte(decodedPolicyDocument), &policyDocumentMap)
+				if decoded, err := url.QueryUnescape(policyDocument); err == nil {
+					policyDocument = decoded
 				}
+				json.Unmarshal([]byte(policyDocument), &policyDocumentMap)
 			}
 
 			var lastUsedAt *time.Time

@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -1106,7 +1107,22 @@ func (a *mqlAwsEcs) createEphemeralStorageResource(es *ecstypes.EphemeralStorage
 		})
 }
 
+type mqlAwsEcsTaskDefinitionInternal struct {
+	cacheTags   map[string]any
+	tagsFetched bool
+	tagsLock    sync.Mutex
+}
+
 func (a *mqlAwsEcsTaskDefinition) tags() (map[string]any, error) {
+	if a.tagsFetched {
+		return a.cacheTags, nil
+	}
+	a.tagsLock.Lock()
+	defer a.tagsLock.Unlock()
+	if a.tagsFetched {
+		return a.cacheTags, nil
+	}
+
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.Ecs(a.Region.Data)
 	ctx := context.Background()
@@ -1117,14 +1133,18 @@ func (a *mqlAwsEcsTaskDefinition) tags() (map[string]any, error) {
 	})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
+			a.tagsFetched = true
 			return nil, nil
 		}
 		return nil, err
 	}
 	if tagsResp != nil && tagsResp.Tags != nil {
-		return ecsTagsToMap(tagsResp.Tags), nil
+		a.cacheTags = ecsTagsToMap(tagsResp.Tags)
+	} else {
+		a.cacheTags = map[string]any{}
 	}
-	return map[string]any{}, nil
+	a.tagsFetched = true
+	return a.cacheTags, nil
 }
 
 // Getter methods for task definition resources
