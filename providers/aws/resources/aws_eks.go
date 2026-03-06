@@ -384,7 +384,7 @@ func (a *mqlAwsEksNodegroup) tags() (map[string]any, error) {
 		return nil, err
 	}
 	new := make(map[string]any)
-	for k, v := range ng.Labels {
+	for k, v := range ng.Tags {
 		new[k] = v
 	}
 	return new, nil
