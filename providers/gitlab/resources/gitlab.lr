@@ -46,6 +46,38 @@ private gitlab.member @defaults("user role") {
   role string
 }
 
+// GitLab namespace
+gitlab.namespace @defaults("name kind plan") {
+  // Namespace ID
+  id int
+  // Namespace name
+  name string
+  // Namespace path
+  path string
+  // Namespace kind (group or user)
+  kind string
+  // Full URL path
+  fullPath string
+  // Parent namespace ID
+  parentId int
+  // Web URL
+  webURL string
+  // Number of members including descendants
+  membersCountWithDescendants int
+  // Number of billable members
+  billableMembersCount int
+  // Subscription plan (free, premium, ultimate)
+  plan string
+  // Whether the namespace is on a trial
+  trial bool
+  // Trial end date
+  trialEndsOn time
+  // Maximum seats used
+  maxSeatsUsed int
+  // Seats currently in use
+  seatsInUse int
+}
+
 // GitLab group
 gitlab.group @defaults("name visibility webURL") {
   // Group ID
@@ -78,6 +110,8 @@ gitlab.group @defaults("name visibility webURL") {
   requestAccessEnabled bool
   // Date when the group is scheduled for deletion
   markedForDeletionOn time
+  // Namespace associated with this group
+  namespace() gitlab.namespace
   // List of all projects that belong to the group
   projects() []gitlab.project
   // List of allowed email domains for the group
