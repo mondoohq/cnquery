@@ -109,7 +109,7 @@ func (a *mqlAwsCloudwatch) getMetrics(conn *connection.AwsConnection) []*jobpool
 
 func (a *mqlAwsCloudwatchMetricdimension) id() (string, error) {
 	name := a.Name.Data
-	val := a.Name.Data
+	val := a.Value.Data
 
 	return name + "/" + val, nil
 }
