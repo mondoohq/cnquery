@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -172,12 +173,19 @@ func (a *mqlAwsKmsKey) keyState() (string, error) {
 
 type mqlAwsKmsKeyInternal struct {
 	cachedKeyMetadata *types.KeyMetadata
+	metadataLock      sync.Mutex
 }
 
 func (a *mqlAwsKmsKey) getKeyMetadata() (*types.KeyMetadata, error) {
 	if a.cachedKeyMetadata != nil {
 		return a.cachedKeyMetadata, nil
 	}
+	a.metadataLock.Lock()
+	defer a.metadataLock.Unlock()
+	if a.cachedKeyMetadata != nil {
+		return a.cachedKeyMetadata, nil
+	}
+
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	keyArn := a.Arn.Data
 

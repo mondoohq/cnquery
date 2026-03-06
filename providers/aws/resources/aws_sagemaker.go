@@ -306,34 +306,42 @@ func (a *mqlAwsSagemakerNotebookinstancedetails) subnet() (*mqlAwsVpcSubnet, err
 	return nil, nil
 }
 
-type mqlAwsSagemakerEndpointInternal struct {
+// sagemakerTagsCache provides lazy-loaded tag caching with double-check locking.
+// Embed in Internal structs for SageMaker resources that need lazy tags.
+type sagemakerTagsCache struct {
 	cacheTags   map[string]any
 	tagsFetched bool
 	tagsLock    sync.Mutex
 }
 
-func (a *mqlAwsSagemakerEndpoint) tags() (map[string]any, error) {
-	if a.tagsFetched {
-		return a.cacheTags, nil
+func (c *sagemakerTagsCache) fetchTags(conn *connection.AwsConnection, region, arn string) (map[string]any, error) {
+	if c.tagsFetched {
+		return c.cacheTags, nil
 	}
-	a.tagsLock.Lock()
-	defer a.tagsLock.Unlock()
-	if a.tagsFetched {
-		return a.cacheTags, nil
+	c.tagsLock.Lock()
+	defer c.tagsLock.Unlock()
+	if c.tagsFetched {
+		return c.cacheTags, nil
 	}
 
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	svc := conn.Sagemaker(a.Region.Data)
+	svc := conn.Sagemaker(region)
 	ctx := context.Background()
-
-	arnVal := a.Arn.Data
-	tags, err := getSagemakerTags(ctx, svc, &arnVal)
+	tags, err := getSagemakerTags(ctx, svc, &arn)
 	if err != nil {
 		return nil, err
 	}
-	a.cacheTags = tags
-	a.tagsFetched = true
+	c.cacheTags = tags
+	c.tagsFetched = true
 	return tags, nil
+}
+
+type mqlAwsSagemakerEndpointInternal struct {
+	sagemakerTagsCache
+}
+
+func (a *mqlAwsSagemakerEndpoint) tags() (map[string]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return a.fetchTags(conn, a.Region.Data, a.Arn.Data)
 }
 
 func (a *mqlAwsSagemakerEndpoint) id() (string, error) {
@@ -341,33 +349,12 @@ func (a *mqlAwsSagemakerEndpoint) id() (string, error) {
 }
 
 type mqlAwsSagemakerNotebookinstanceInternal struct {
-	cacheTags   map[string]any
-	tagsFetched bool
-	tagsLock    sync.Mutex
+	sagemakerTagsCache
 }
 
 func (a *mqlAwsSagemakerNotebookinstance) tags() (map[string]any, error) {
-	if a.tagsFetched {
-		return a.cacheTags, nil
-	}
-	a.tagsLock.Lock()
-	defer a.tagsLock.Unlock()
-	if a.tagsFetched {
-		return a.cacheTags, nil
-	}
-
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	svc := conn.Sagemaker(a.Region.Data)
-	ctx := context.Background()
-
-	arnVal := a.Arn.Data
-	tags, err := getSagemakerTags(ctx, svc, &arnVal)
-	if err != nil {
-		return nil, err
-	}
-	a.cacheTags = tags
-	a.tagsFetched = true
-	return tags, nil
+	return a.fetchTags(conn, a.Region.Data, a.Arn.Data)
 }
 
 func (a *mqlAwsSagemakerNotebookinstance) id() (string, error) {
