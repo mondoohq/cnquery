@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"maps"
+	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -304,9 +305,15 @@ type mqlAwsLambdaFunctionInternal struct {
 	cacheRoleArn *string
 	cacheTags    map[string]string
 	tagsFetched  bool
+	tagsLock     sync.Mutex
 }
 
 func (a *mqlAwsLambdaFunction) tags() (map[string]any, error) {
+	if a.tagsFetched {
+		return toInterfaceMap(a.cacheTags), nil
+	}
+	a.tagsLock.Lock()
+	defer a.tagsLock.Unlock()
 	if a.tagsFetched {
 		return toInterfaceMap(a.cacheTags), nil
 	}
@@ -318,6 +325,10 @@ func (a *mqlAwsLambdaFunction) tags() (map[string]any, error) {
 	funcArn := a.Arn.Data
 	tagsResp, err := svc.ListTags(ctx, &lambda.ListTagsInput{Resource: &funcArn})
 	if err != nil {
+		if Is400AccessDeniedError(err) {
+			a.tagsFetched = true
+			return nil, nil
+		}
 		return nil, err
 	}
 	a.cacheTags = tagsResp.Tags

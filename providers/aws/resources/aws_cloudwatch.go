@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -683,9 +684,15 @@ func initAwsCloudwatchLoggroup(runtime *plugin.Runtime, args map[string]*llx.Raw
 type mqlAwsCloudwatchLoggroupInternal struct {
 	cacheTags   map[string]string
 	tagsFetched bool
+	tagsLock    sync.Mutex
 }
 
 func (a *mqlAwsCloudwatchLoggroup) tags() (map[string]any, error) {
+	if a.tagsFetched {
+		return toInterfaceMap(a.cacheTags), nil
+	}
+	a.tagsLock.Lock()
+	defer a.tagsLock.Unlock()
 	if a.tagsFetched {
 		return toInterfaceMap(a.cacheTags), nil
 	}
@@ -697,6 +704,10 @@ func (a *mqlAwsCloudwatchLoggroup) tags() (map[string]any, error) {
 	arnVal := a.Arn.Data
 	tagsResp, err := svc.ListTagsForResource(ctx, &cloudwatchlogs.ListTagsForResourceInput{ResourceArn: &arnVal})
 	if err != nil {
+		if Is400AccessDeniedError(err) {
+			a.tagsFetched = true
+			return nil, nil
+		}
 		return nil, err
 	}
 	a.cacheTags = tagsResp.Tags
