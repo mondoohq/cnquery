@@ -96,15 +96,26 @@ func (r *mqlNmapHost) scan() error {
 
 	log.Info().Str("host", r.Name.Data).Str("id", r.MqlID()).Msg("Scanning host")
 
-	// nmap -sT -sV  -n --min-parallelism 100 -T4 192.168.1.0/24
-	scanner, err := nmap.NewScanner(
-		ctx,
+	// nmap -sT -sV  -n --min-parallelism 100 -T4 [-p ports] <target>
+	scanOpts := []nmap.Option{
 		nmap.WithConnectScan(),           // -sT
 		nmap.WithServiceInfo(),           // -sV
 		nmap.WithDisabledDNSResolution(), // -n
 		nmap.WithMinParallelism(100),
 		nmap.WithTimingTemplate(nmap.TimingAggressive),
 		nmap.WithTargets(r.Name.Data),
+	}
+
+	conn := r.MqlRuntime.Connection.(*connection.NmapConnection)
+	if conn.Conf.Options != nil {
+		if ports, ok := conn.Conf.Options["ports"]; ok && ports != "" {
+			scanOpts = append(scanOpts, nmap.WithPorts(ports)) // -p
+		}
+	}
+
+	scanner, err := nmap.NewScanner(
+		ctx,
+		scanOpts...,
 	)
 	if err != nil {
 		setError(err)
