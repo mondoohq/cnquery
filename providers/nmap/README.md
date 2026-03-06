@@ -125,3 +125,16 @@ nmap.version: {
   ]
 }
 ```
+
+## Inventory Yaml
+
+```yaml
+spec:
+  assets:
+    - name: "Web Server Scan"
+      connections:
+        - type: nmap
+          host: 192.168.1.1
+          options:
+            ports: "22,80,443"
+```

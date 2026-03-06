@@ -81,6 +81,12 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		}
 	}
 
+	if ports, ok := flags["ports"]; ok {
+		if string(ports.Value) != "" {
+			conf.Options["ports"] = string(ports.Value)
+		}
+	}
+
 	asset := inventory.Asset{
 		Name:        name,
 		Connections: []*inventory.Config{conf},

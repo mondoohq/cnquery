@@ -30,6 +30,7 @@ Examples:
   cnspec shell nmap --networks 10.0.0.0/8,192.168.0.0/16
   cnspec shell nmap --networks "192.168.1.0/24" --discover hosts
   cnspec scan nmap host 192.168.1.1
+  cnspec shell nmap host 192.168.1.1 --ports 22,80,443
 `,
 			MinArgs: 0,
 			MaxArgs: 2,
@@ -44,6 +45,12 @@ Examples:
 					Type:    plugin.FlagType_List,
 					Default: "",
 					Desc:    "Comma-separated list of networks to scan (e.g., 10.0.0.0/8,192.168.0.0/16)",
+				},
+				{
+					Long:    "ports",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "Ports to scan (e.g., 22,80,443 or 1-1024)",
 				},
 			},
 		},

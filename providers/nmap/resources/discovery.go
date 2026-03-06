@@ -47,6 +47,11 @@ func Discover(runtime *plugin.Runtime, opts map[string]string) (*inventory.Inven
 			entry := hosts[i]
 			host := entry.(*mqlNmapHost)
 
+			childOpts := map[string]string{}
+			if ports, ok := conf.Options["ports"]; ok && ports != "" {
+				childOpts["ports"] = ports
+			}
+
 			a := &inventory.Asset{
 				Name: host.GetName().Data,
 				Connections: []*inventory.Config{
@@ -54,6 +59,7 @@ func Discover(runtime *plugin.Runtime, opts map[string]string) (*inventory.Inven
 						Type:        "nmap",
 						Host:        host.GetName().Data,
 						Credentials: conf.Credentials,
+						Options:     childOpts,
 					},
 				},
 			}
