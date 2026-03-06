@@ -1436,6 +1436,14 @@ private aws.sagemaker.notebookinstance @defaults("arn name") {
   region string
   // Tags for the notebook instance
   tags map[string]string
+  // Time when the notebook instance was created
+  createdAt time
+  // Time when the notebook instance was last modified
+  lastModifiedAt time
+  // Status of the notebook instance: Pending, InService, Stopping, Stopped, Failed, Deleting, or Updating
+  status string
+  // URL to connect to the Jupyter notebook
+  url string
 }
 
 // AWS SageMaker notebook instance details
@@ -1466,6 +1474,12 @@ private aws.sagemaker.endpoint @defaults("arn name") {
   region string
   // Tags for the endpoint
   tags map[string]string
+  // Time when the endpoint was created
+  createdAt time
+  // Time when the endpoint was last modified
+  lastModifiedAt time
+  // Status of the endpoint: OutOfService, Creating, Updating, SystemUpdating, RollingBack, InService, Deleting, or Failed
+  status string
 }
 
 // AWS Simple Notification Service (SNS)
@@ -1648,6 +1662,8 @@ private aws.opensearch.domain @defaults("name engineVersion") {
   serviceSoftwareNewVersion string
   // Whether automatic software updates are enabled
   autoSoftwareUpdateEnabled bool
+  // Whether the off-peak maintenance window is enabled
+  offPeakWindowEnabled bool
   // Tags for the domain
   tags() map[string]string
   // Security groups associated with the VPC domain
@@ -3600,6 +3616,16 @@ private aws.dynamodb.table @defaults("name region") {
   status string
   // Label of the latest DynamoDB stream
   latestStreamLabel string
+  // Table class: STANDARD or STANDARD_INFREQUENT_ACCESS
+  tableClass string
+  // Whether DynamoDB Streams is enabled on the table
+  streamEnabled bool
+  // Type of information written to the stream: KEYS_ONLY, NEW_IMAGE, OLD_IMAGE, or NEW_AND_OLD_IMAGES
+  streamViewType string
+  // Billing mode: PROVISIONED or PAY_PER_REQUEST
+  billingMode string
+  // Regions where the table is replicated (global tables)
+  replicaRegions []string
 }
 
 // Amazon Simple Queue Service (SQS)
@@ -3784,6 +3810,8 @@ aws.rds.dbcluster @defaults("id region engine engineVersion") {
   activityStreamKmsKey() aws.kms.key
   // Master user secret managed by Secrets Manager
   masterUserSecret dict
+  // Whether tags are automatically copied to snapshots of the DB cluster
+  copyTagsToSnapshot bool
 }
 
 // Amazon RDS snapshot
@@ -3932,6 +3960,8 @@ aws.rds.dbinstance @defaults("id region engine engineVersion") {
   activityStreamKmsKey() aws.kms.key
   // Master user secret managed by Secrets Manager
   masterUserSecret dict
+  // Whether the DB instance uses a customer-owned IP address (CoIP) for Outpost deployments
+  customerOwnedIpEnabled bool
 }
 
 // Amazon RDS pending maintenance action
@@ -4183,6 +4213,12 @@ private aws.redshift.cluster @defaults("dbName clusterVersion clusterStatus regi
   clusterAvailabilityStatus string
   // Total storage capacity in megabytes
   totalStorageCapacityInMegaBytes int
+  // Name of the maintenance track for the cluster
+  maintenanceTrackName string
+  // HSM status for the cluster
+  hsmStatus dict
+  // Status of modifications to the cluster (e.g., resizing)
+  modifyStatus string
   // Whether the cluster is a Multi-AZ deployment
   multiAZ bool
   // Number of days manual snapshots are retained (-1 means indefinite)
@@ -5324,6 +5360,8 @@ private aws.ec2.volume @defaults("id region volumeType size encrypted state") {
   iops int
   // KMS key used for volume encryption
   kmsKey() aws.kms.key
+  // Server-side encryption type: sse-ebs, sse-kms, or none
+  sseType string
 }
 
 // Amazon Inspector

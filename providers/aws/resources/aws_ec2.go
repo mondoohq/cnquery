@@ -1851,6 +1851,7 @@ func (a *mqlAwsEc2) getVolumes(conn *connection.AwsConnection) []*jobpool.Job {
 							"tags":               llx.MapData(toInterfaceMap(ec2TagsToMap(vol.Tags)), types.String),
 							"throughput":         llx.IntDataDefault(vol.Throughput, 0),
 							"volumeType":         llx.StringData(string(vol.VolumeType)),
+							"sseType":            llx.StringData(string(vol.SseType)),
 						})
 					if err != nil {
 						return nil, err

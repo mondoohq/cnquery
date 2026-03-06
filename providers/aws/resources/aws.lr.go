@@ -3471,6 +3471,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.sagemaker.notebookinstance.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerNotebookinstance).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"aws.sagemaker.notebookinstance.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerNotebookinstance).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.notebookinstance.lastModifiedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerNotebookinstance).GetLastModifiedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.notebookinstance.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerNotebookinstance).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.notebookinstance.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerNotebookinstance).GetUrl()).ToDataRes(types.String)
+	},
 	"aws.sagemaker.notebookinstancedetails.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerNotebookinstancedetails).GetArn()).ToDataRes(types.String)
 	},
@@ -3503,6 +3515,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.sagemaker.endpoint.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerEndpoint).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.sagemaker.endpoint.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpoint).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.endpoint.lastModifiedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpoint).GetLastModifiedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.endpoint.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpoint).GetStatus()).ToDataRes(types.String)
 	},
 	"aws.sns.topics": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSns).GetTopics()).ToDataRes(types.Array(types.Resource("aws.sns.topic")))
@@ -3731,6 +3752,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.opensearch.domain.autoSoftwareUpdateEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOpensearchDomain).GetAutoSoftwareUpdateEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.opensearch.domain.offPeakWindowEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetOffPeakWindowEnabled()).ToDataRes(types.Bool)
 	},
 	"aws.opensearch.domain.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOpensearchDomain).GetTags()).ToDataRes(types.Map(types.String, types.String))
@@ -6036,6 +6060,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.dynamodb.table.latestStreamLabel": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDynamodbTable).GetLatestStreamLabel()).ToDataRes(types.String)
 	},
+	"aws.dynamodb.table.tableClass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetTableClass()).ToDataRes(types.String)
+	},
+	"aws.dynamodb.table.streamEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetStreamEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.dynamodb.table.streamViewType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetStreamViewType()).ToDataRes(types.String)
+	},
+	"aws.dynamodb.table.billingMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetBillingMode()).ToDataRes(types.String)
+	},
+	"aws.dynamodb.table.replicaRegions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetReplicaRegions()).ToDataRes(types.Array(types.String))
+	},
 	"aws.sqs.queues": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSqs).GetQueues()).ToDataRes(types.Array(types.Resource("aws.sqs.queue")))
 	},
@@ -6282,6 +6321,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.dbcluster.masterUserSecret": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbcluster).GetMasterUserSecret()).ToDataRes(types.Dict)
 	},
+	"aws.rds.dbcluster.copyTagsToSnapshot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetCopyTagsToSnapshot()).ToDataRes(types.Bool)
+	},
 	"aws.rds.snapshot.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsSnapshot).GetArn()).ToDataRes(types.String)
 	},
@@ -6491,6 +6533,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.rds.dbinstance.masterUserSecret": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetMasterUserSecret()).ToDataRes(types.Dict)
+	},
+	"aws.rds.dbinstance.customerOwnedIpEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetCustomerOwnedIpEnabled()).ToDataRes(types.Bool)
 	},
 	"aws.rds.pendingMaintenanceAction.resourceArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsPendingMaintenanceAction).GetResourceArn()).ToDataRes(types.String)
@@ -6812,6 +6857,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.redshift.cluster.totalStorageCapacityInMegaBytes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftCluster).GetTotalStorageCapacityInMegaBytes()).ToDataRes(types.Int)
+	},
+	"aws.redshift.cluster.maintenanceTrackName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetMaintenanceTrackName()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.hsmStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetHsmStatus()).ToDataRes(types.Dict)
+	},
+	"aws.redshift.cluster.modifyStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetModifyStatus()).ToDataRes(types.String)
 	},
 	"aws.redshift.cluster.multiAZ": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftCluster).GetMultiAZ()).ToDataRes(types.Bool)
@@ -8240,6 +8294,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.volume.kmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Volume).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.ec2.volume.sseType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Volume).GetSseType()).ToDataRes(types.String)
 	},
 	"aws.inspector.coverages": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsInspector).GetCoverages()).ToDataRes(types.Array(types.Resource("aws.inspector.coverage")))
@@ -13714,6 +13771,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSagemakerNotebookinstance).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"aws.sagemaker.notebookinstance.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerNotebookinstance).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.notebookinstance.lastModifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerNotebookinstance).LastModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.notebookinstance.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerNotebookinstance).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.notebookinstance.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerNotebookinstance).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.sagemaker.notebookinstancedetails.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerNotebookinstancedetails).__id, ok = v.Value.(string)
 		return
@@ -13764,6 +13837,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.sagemaker.endpoint.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerEndpoint).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpoint.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpoint).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpoint.lastModifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpoint).LastModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpoint.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpoint).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.sns.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14096,6 +14181,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.opensearch.domain.autoSoftwareUpdateEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsOpensearchDomain).AutoSoftwareUpdateEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.offPeakWindowEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).OffPeakWindowEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.opensearch.domain.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -17586,6 +17675,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsDynamodbTable).LatestStreamLabel, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.dynamodb.table.tableClass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).TableClass, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.table.streamEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).StreamEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.table.streamViewType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).StreamViewType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.table.billingMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).BillingMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.table.replicaRegions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).ReplicaRegions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.sqs.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSqs).__id, ok = v.Value.(string)
 		return
@@ -17934,6 +18043,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsRdsDbcluster).MasterUserSecret, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.rds.dbcluster.copyTagsToSnapshot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).CopyTagsToSnapshot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.rds.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsSnapshot).__id, ok = v.Value.(string)
 		return
@@ -18220,6 +18333,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.rds.dbinstance.masterUserSecret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbinstance).MasterUserSecret, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.customerOwnedIpEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).CustomerOwnedIpEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.rds.pendingMaintenanceAction.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -18684,6 +18801,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.redshift.cluster.totalStorageCapacityInMegaBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRedshiftCluster).TotalStorageCapacityInMegaBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.maintenanceTrackName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).MaintenanceTrackName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.hsmStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).HsmStatus, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.modifyStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).ModifyStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.redshift.cluster.multiAZ": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20776,6 +20905,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.volume.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Volume).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.volume.sseType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Volume).SseType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.inspector.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -32058,11 +32191,15 @@ type mqlAwsSagemakerNotebookinstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsSagemakerNotebookinstanceInternal it will be used here
-	Arn     plugin.TValue[string]
-	Name    plugin.TValue[string]
-	Details plugin.TValue[*mqlAwsSagemakerNotebookinstancedetails]
-	Region  plugin.TValue[string]
-	Tags    plugin.TValue[map[string]any]
+	Arn            plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Details        plugin.TValue[*mqlAwsSagemakerNotebookinstancedetails]
+	Region         plugin.TValue[string]
+	Tags           plugin.TValue[map[string]any]
+	CreatedAt      plugin.TValue[*time.Time]
+	LastModifiedAt plugin.TValue[*time.Time]
+	Status         plugin.TValue[string]
+	Url            plugin.TValue[string]
 }
 
 // createAwsSagemakerNotebookinstance creates a new instance of this resource
@@ -32132,6 +32269,22 @@ func (c *mqlAwsSagemakerNotebookinstance) GetRegion() *plugin.TValue[string] {
 
 func (c *mqlAwsSagemakerNotebookinstance) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
+}
+
+func (c *mqlAwsSagemakerNotebookinstance) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSagemakerNotebookinstance) GetLastModifiedAt() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedAt
+}
+
+func (c *mqlAwsSagemakerNotebookinstance) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsSagemakerNotebookinstance) GetUrl() *plugin.TValue[string] {
+	return &c.Url
 }
 
 // mqlAwsSagemakerNotebookinstancedetails for the aws.sagemaker.notebookinstancedetails resource
@@ -32237,11 +32390,14 @@ type mqlAwsSagemakerEndpoint struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsSagemakerEndpointInternal it will be used here
-	Arn    plugin.TValue[string]
-	Name   plugin.TValue[string]
-	Config plugin.TValue[any]
-	Region plugin.TValue[string]
-	Tags   plugin.TValue[map[string]any]
+	Arn            plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Config         plugin.TValue[any]
+	Region         plugin.TValue[string]
+	Tags           plugin.TValue[map[string]any]
+	CreatedAt      plugin.TValue[*time.Time]
+	LastModifiedAt plugin.TValue[*time.Time]
+	Status         plugin.TValue[string]
 }
 
 // createAwsSagemakerEndpoint creates a new instance of this resource
@@ -32301,6 +32457,18 @@ func (c *mqlAwsSagemakerEndpoint) GetRegion() *plugin.TValue[string] {
 
 func (c *mqlAwsSagemakerEndpoint) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
+}
+
+func (c *mqlAwsSagemakerEndpoint) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSagemakerEndpoint) GetLastModifiedAt() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedAt
+}
+
+func (c *mqlAwsSagemakerEndpoint) GetStatus() *plugin.TValue[string] {
+	return &c.Status
 }
 
 // mqlAwsSns for the aws.sns resource
@@ -32878,6 +33046,7 @@ type mqlAwsOpensearchDomain struct {
 	IpAddressType               plugin.TValue[string]
 	ServiceSoftwareNewVersion   plugin.TValue[string]
 	AutoSoftwareUpdateEnabled   plugin.TValue[bool]
+	OffPeakWindowEnabled        plugin.TValue[bool]
 	Tags                        plugin.TValue[map[string]any]
 	SecurityGroups              plugin.TValue[[]any]
 	Subnets                     plugin.TValue[[]any]
@@ -33110,6 +33279,10 @@ func (c *mqlAwsOpensearchDomain) GetServiceSoftwareNewVersion() *plugin.TValue[s
 
 func (c *mqlAwsOpensearchDomain) GetAutoSoftwareUpdateEnabled() *plugin.TValue[bool] {
 	return &c.AutoSoftwareUpdateEnabled
+}
+
+func (c *mqlAwsOpensearchDomain) GetOffPeakWindowEnabled() *plugin.TValue[bool] {
+	return &c.OffPeakWindowEnabled
 }
 
 func (c *mqlAwsOpensearchDomain) GetTags() *plugin.TValue[map[string]any] {
@@ -42648,6 +42821,11 @@ type mqlAwsDynamodbTable struct {
 	LatestStreamArn           plugin.TValue[string]
 	Status                    plugin.TValue[string]
 	LatestStreamLabel         plugin.TValue[string]
+	TableClass                plugin.TValue[string]
+	StreamEnabled             plugin.TValue[bool]
+	StreamViewType            plugin.TValue[string]
+	BillingMode               plugin.TValue[string]
+	ReplicaRegions            plugin.TValue[[]any]
 }
 
 // createAwsDynamodbTable creates a new instance of this resource
@@ -42759,6 +42937,26 @@ func (c *mqlAwsDynamodbTable) GetStatus() *plugin.TValue[string] {
 
 func (c *mqlAwsDynamodbTable) GetLatestStreamLabel() *plugin.TValue[string] {
 	return &c.LatestStreamLabel
+}
+
+func (c *mqlAwsDynamodbTable) GetTableClass() *plugin.TValue[string] {
+	return &c.TableClass
+}
+
+func (c *mqlAwsDynamodbTable) GetStreamEnabled() *plugin.TValue[bool] {
+	return &c.StreamEnabled
+}
+
+func (c *mqlAwsDynamodbTable) GetStreamViewType() *plugin.TValue[string] {
+	return &c.StreamViewType
+}
+
+func (c *mqlAwsDynamodbTable) GetBillingMode() *plugin.TValue[string] {
+	return &c.BillingMode
+}
+
+func (c *mqlAwsDynamodbTable) GetReplicaRegions() *plugin.TValue[[]any] {
+	return &c.ReplicaRegions
 }
 
 // mqlAwsSqs for the aws.sqs resource
@@ -43306,6 +43504,7 @@ type mqlAwsRdsDbcluster struct {
 	EarliestRestorableTime     plugin.TValue[*time.Time]
 	ActivityStreamKmsKey       plugin.TValue[*mqlAwsKmsKey]
 	MasterUserSecret           plugin.TValue[any]
+	CopyTagsToSnapshot         plugin.TValue[bool]
 }
 
 // createAwsRdsDbcluster creates a new instance of this resource
@@ -43597,6 +43796,10 @@ func (c *mqlAwsRdsDbcluster) GetMasterUserSecret() *plugin.TValue[any] {
 	return &c.MasterUserSecret
 }
 
+func (c *mqlAwsRdsDbcluster) GetCopyTagsToSnapshot() *plugin.TValue[bool] {
+	return &c.CopyTagsToSnapshot
+}
+
 // mqlAwsRdsSnapshot for the aws.rds.snapshot resource
 type mqlAwsRdsSnapshot struct {
 	MqlRuntime *plugin.Runtime
@@ -43790,6 +43993,7 @@ type mqlAwsRdsDbinstance struct {
 	StorageThroughput             plugin.TValue[int64]
 	ActivityStreamKmsKey          plugin.TValue[*mqlAwsKmsKey]
 	MasterUserSecret              plugin.TValue[any]
+	CustomerOwnedIpEnabled        plugin.TValue[bool]
 }
 
 // createAwsRdsDbinstance creates a new instance of this resource
@@ -44143,6 +44347,10 @@ func (c *mqlAwsRdsDbinstance) GetActivityStreamKmsKey() *plugin.TValue[*mqlAwsKm
 
 func (c *mqlAwsRdsDbinstance) GetMasterUserSecret() *plugin.TValue[any] {
 	return &c.MasterUserSecret
+}
+
+func (c *mqlAwsRdsDbinstance) GetCustomerOwnedIpEnabled() *plugin.TValue[bool] {
+	return &c.CustomerOwnedIpEnabled
 }
 
 // mqlAwsRdsPendingMaintenanceAction for the aws.rds.pendingMaintenanceAction resource
@@ -44999,6 +45207,9 @@ type mqlAwsRedshiftCluster struct {
 	Vpc                              plugin.TValue[*mqlAwsVpc]
 	ClusterAvailabilityStatus        plugin.TValue[string]
 	TotalStorageCapacityInMegaBytes  plugin.TValue[int64]
+	MaintenanceTrackName             plugin.TValue[string]
+	HsmStatus                        plugin.TValue[any]
+	ModifyStatus                     plugin.TValue[string]
 	MultiAZ                          plugin.TValue[bool]
 	ManualSnapshotRetentionPeriod    plugin.TValue[int64]
 	IpAddressType                    plugin.TValue[string]
@@ -45184,6 +45395,18 @@ func (c *mqlAwsRedshiftCluster) GetClusterAvailabilityStatus() *plugin.TValue[st
 
 func (c *mqlAwsRedshiftCluster) GetTotalStorageCapacityInMegaBytes() *plugin.TValue[int64] {
 	return &c.TotalStorageCapacityInMegaBytes
+}
+
+func (c *mqlAwsRedshiftCluster) GetMaintenanceTrackName() *plugin.TValue[string] {
+	return &c.MaintenanceTrackName
+}
+
+func (c *mqlAwsRedshiftCluster) GetHsmStatus() *plugin.TValue[any] {
+	return &c.HsmStatus
+}
+
+func (c *mqlAwsRedshiftCluster) GetModifyStatus() *plugin.TValue[string] {
+	return &c.ModifyStatus
 }
 
 func (c *mqlAwsRedshiftCluster) GetMultiAZ() *plugin.TValue[bool] {
@@ -50258,6 +50481,7 @@ type mqlAwsEc2Volume struct {
 	Size               plugin.TValue[int64]
 	Iops               plugin.TValue[int64]
 	KmsKey             plugin.TValue[*mqlAwsKmsKey]
+	SseType            plugin.TValue[string]
 }
 
 // createAwsEc2Volume creates a new instance of this resource
@@ -50367,6 +50591,10 @@ func (c *mqlAwsEc2Volume) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
 
 		return c.kmsKey()
 	})
+}
+
+func (c *mqlAwsEc2Volume) GetSseType() *plugin.TValue[string] {
+	return &c.SseType
 }
 
 // mqlAwsInspector for the aws.inspector resource

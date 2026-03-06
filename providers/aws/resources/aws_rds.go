@@ -470,6 +470,7 @@ func newMqlAwsRdsInstance(runtime *plugin.Runtime, region string, accountID stri
 			"dbClusterIdentifier":           llx.StringDataPtr(dbInstance.DBClusterIdentifier),
 			"storageThroughput":             llx.IntDataDefault(dbInstance.StorageThroughput, 0),
 			"masterUserSecret":              llx.DictData(masterUserSecretToDict(dbInstance.MasterUserSecret)),
+			"customerOwnedIpEnabled":        llx.BoolDataPtr(dbInstance.CustomerOwnedIpEnabled),
 		})
 	if err != nil {
 		return nil, err
@@ -894,6 +895,7 @@ func newMqlAwsRdsCluster(runtime *plugin.Runtime, region string, accountID strin
 			"engineMode":                 llx.StringDataPtr(cluster.EngineMode),
 			"earliestRestorableTime":     llx.TimeDataPtr(cluster.EarliestRestorableTime),
 			"masterUserSecret":           llx.DictData(masterUserSecretToDict(cluster.MasterUserSecret)),
+			"copyTagsToSnapshot":         llx.BoolDataPtr(cluster.CopyTagsToSnapshot),
 		})
 	if err != nil {
 		return nil, err

@@ -81,10 +81,13 @@ func (a *mqlAwsSagemaker) getEndpoints(conn *connection.AwsConnection) []*jobpoo
 
 					mqlEndpoint, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerEndpoint,
 						map[string]*llx.RawData{
-							"arn":    llx.StringDataPtr(endpoint.EndpointArn),
-							"name":   llx.StringDataPtr(endpoint.EndpointName),
-							"region": llx.StringData(region),
-							"tags":   llx.MapData(tags, types.String),
+							"arn":            llx.StringDataPtr(endpoint.EndpointArn),
+							"name":           llx.StringDataPtr(endpoint.EndpointName),
+							"region":         llx.StringData(region),
+							"tags":           llx.MapData(tags, types.String),
+							"createdAt":      llx.TimeDataPtr(endpoint.CreationTime),
+							"lastModifiedAt": llx.TimeDataPtr(endpoint.LastModifiedTime),
+							"status":         llx.StringData(string(endpoint.EndpointStatus)),
 						})
 					if err != nil {
 						return nil, err
@@ -169,10 +172,14 @@ func (a *mqlAwsSagemaker) getNotebookInstances(conn *connection.AwsConnection) [
 
 					mqlEndpoint, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerNotebookinstance,
 						map[string]*llx.RawData{
-							"arn":    llx.StringData(convert.ToValue(instance.NotebookInstanceArn)),
-							"name":   llx.StringData(convert.ToValue(instance.NotebookInstanceName)),
-							"region": llx.StringData(region),
-							"tags":   llx.MapData(tags, types.String),
+							"arn":            llx.StringData(convert.ToValue(instance.NotebookInstanceArn)),
+							"name":           llx.StringData(convert.ToValue(instance.NotebookInstanceName)),
+							"region":         llx.StringData(region),
+							"tags":           llx.MapData(tags, types.String),
+							"createdAt":      llx.TimeDataPtr(instance.CreationTime),
+							"lastModifiedAt": llx.TimeDataPtr(instance.LastModifiedTime),
+							"status":         llx.StringData(string(instance.NotebookInstanceStatus)),
+							"url":            llx.StringDataPtr(instance.Url),
 						})
 					if err != nil {
 						return nil, err
