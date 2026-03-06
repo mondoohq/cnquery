@@ -487,16 +487,14 @@ func (a *mqlAwsIam) roles() ([]any, error) {
 			return nil, err
 		}
 
-		// Added Trust relationship policy attached to each role
 		for _, role := range rolesResp.Roles {
-			policyOutput, err := svc.GetRole(ctx, &iam.GetRoleInput{RoleName: role.RoleName})
 			var policyDocumentMap map[string]any
-			if err == nil && policyOutput.Role != nil && policyOutput.Role.AssumeRolePolicyDocument != nil {
-				policyDocument := *policyOutput.Role.AssumeRolePolicyDocument
-				decodedPolicyDocument, decodeErr := url.QueryUnescape(policyDocument)
-				if decodeErr == nil {
-					json.Unmarshal([]byte(decodedPolicyDocument), &policyDocumentMap)
+			if role.AssumeRolePolicyDocument != nil {
+				policyDocument := *role.AssumeRolePolicyDocument
+				if decoded, err := url.QueryUnescape(policyDocument); err == nil {
+					policyDocument = decoded
 				}
+				json.Unmarshal([]byte(policyDocument), &policyDocumentMap)
 			}
 
 			var lastUsedAt *time.Time

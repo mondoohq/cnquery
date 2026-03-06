@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -610,24 +611,7 @@ func (a *mqlAwsEcs) getECSTaskDefinitions(conn *connection.AwsConnection) []*job
 
 					td := describeResp.TaskDefinition
 
-					// Fetch tags using ListTagsForResource API
-					tags := make(map[string]any)
-					if td.TaskDefinitionArn != nil {
-						tagsResp, err := svc.ListTagsForResource(ctx, &ecsservice.ListTagsForResourceInput{
-							ResourceArn: td.TaskDefinitionArn,
-						})
-						if err != nil {
-							if Is400AccessDeniedError(err) {
-								log.Warn().Str("region", region).Str("taskDef", *td.TaskDefinitionArn).Msg("access denied when fetching tags for task definition")
-							} else {
-								log.Warn().Err(err).Str("taskDef", *td.TaskDefinitionArn).Msg("could not fetch tags for task definition")
-							}
-						} else if tagsResp != nil && tagsResp.Tags != nil {
-							tags = ecsTagsToMap(tagsResp.Tags)
-						}
-					}
-
-					mqlTaskDef, err := a.createTaskDefinitionResource(region, td, tags)
+					mqlTaskDef, err := a.createTaskDefinitionResource(region, td)
 					if err != nil {
 						return nil, err
 					}
@@ -641,7 +625,7 @@ func (a *mqlAwsEcs) getECSTaskDefinitions(conn *connection.AwsConnection) []*job
 	return tasks
 }
 
-func (a *mqlAwsEcs) createTaskDefinitionResource(region string, td *ecstypes.TaskDefinition, tags map[string]any) (any, error) {
+func (a *mqlAwsEcs) createTaskDefinitionResource(region string, td *ecstypes.TaskDefinition) (any, error) {
 	// Extract basic fields
 	arn := ""
 	if td.TaskDefinitionArn != nil {
@@ -715,7 +699,6 @@ func (a *mqlAwsEcs) createTaskDefinitionResource(region string, td *ecstypes.Tas
 		ephemeralStorage = mqlEphemeralStorage
 	}
 
-	// Tags are passed as parameter (fetched via ListTagsForResource)
 	// Type assert ephemeralStorage to Resource
 	ephemeralStorageResource, ok := ephemeralStorage.(plugin.Resource)
 	if !ok {
@@ -737,7 +720,6 @@ func (a *mqlAwsEcs) createTaskDefinitionResource(region string, td *ecstypes.Tas
 			"containerDefinitions": llx.ArrayData(containerDefs, types.Resource("aws.ecs.taskDefinition.containerDefinition")),
 			"volumes":              llx.ArrayData(volumes, types.Resource("aws.ecs.taskDefinition.volume")),
 			"ephemeralStorage":     llx.ResourceData(ephemeralStorageResource, "aws.ecs.taskDefinition.ephemeralStorage"),
-			"tags":                 llx.MapData(tags, types.String),
 			"region":               llx.StringData(region),
 			"cpu":                  llx.StringDataPtr(td.Cpu),
 			"memory":               llx.StringDataPtr(td.Memory),
@@ -1123,6 +1105,46 @@ func (a *mqlAwsEcs) createEphemeralStorageResource(es *ecstypes.EphemeralStorage
 			"__id":      llx.StringData("ephemeralStorage"),
 			"sizeInGiB": llx.IntData(sizeInGiB),
 		})
+}
+
+type mqlAwsEcsTaskDefinitionInternal struct {
+	cacheTags   map[string]any
+	tagsFetched bool
+	tagsLock    sync.Mutex
+}
+
+func (a *mqlAwsEcsTaskDefinition) tags() (map[string]any, error) {
+	if a.tagsFetched {
+		return a.cacheTags, nil
+	}
+	a.tagsLock.Lock()
+	defer a.tagsLock.Unlock()
+	if a.tagsFetched {
+		return a.cacheTags, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Ecs(a.Region.Data)
+	ctx := context.Background()
+
+	arnVal := a.Arn.Data
+	tagsResp, err := svc.ListTagsForResource(ctx, &ecsservice.ListTagsForResourceInput{
+		ResourceArn: &arnVal,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			a.tagsFetched = true
+			return nil, nil
+		}
+		return nil, err
+	}
+	if tagsResp != nil && tagsResp.Tags != nil {
+		a.cacheTags = ecsTagsToMap(tagsResp.Tags)
+	} else {
+		a.cacheTags = map[string]any{}
+	}
+	a.tagsFetched = true
+	return a.cacheTags, nil
 }
 
 // Getter methods for task definition resources

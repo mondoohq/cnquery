@@ -2387,7 +2387,7 @@ private aws.ecs.taskDefinition @defaults("arn family revision") {
   // Ephemeral storage settings for the task
   ephemeralStorage() aws.ecs.taskDefinition.ephemeralStorage
   // Tags associated with the task definition
-  tags map[string]string
+  tags() map[string]string
   // Region where the task definition is located
   region string
   // Total CPU units for the task (e.g., "256", "1024")
@@ -2842,7 +2842,7 @@ private aws.cloudwatch.loggroup @defaults("arn") {
   // Number of days to retain the log events in the specified log group
   retentionInDays int
   // Tags for the log group
-  tags map[string]string
+  tags() map[string]string
   // Data protection policy status (ACTIVATED, DELETED, ARCHIVED, DISABLED)
   dataProtectionStatus string
   // Whether deletion protection is enabled for the log group
@@ -4690,7 +4690,7 @@ private aws.lambda.function @defaults("arn") {
   // Region where the function exists
   region string
   // Tags for the function
-  tags map[string]string
+  tags() map[string]string
   // Instruction set architectures supported by the function (x86_64, arm64)
   architectures []string
   // Size of the /tmp directory in MB (512-10240)
