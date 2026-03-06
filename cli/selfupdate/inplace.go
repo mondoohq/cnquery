@@ -65,6 +65,13 @@ func swapBinaryInPlaceFrom(stagedBinaryPath, originalPath string) (string, error
 
 	oldPath := originalPath + ".old"
 
+	// On Windows os.Rename fails if the destination already exists. Remove a
+	// leftover .old file from a previous swap that wasn't cleaned up (e.g.,
+	// crash, or file was still locked at cleanup time).
+	if err := os.Remove(oldPath); err != nil && !os.IsNotExist(err) {
+		return "", errors.Wrap(err, "failed to remove leftover .old binary")
+	}
+
 	// Rename the running binary out of the way (safe on Windows for a running exe).
 	if err := os.Rename(originalPath, oldPath); err != nil {
 		return "", errors.Wrap(err, "failed to rename running binary to .old")
@@ -117,7 +124,7 @@ func CleanupOldBinary() {
 }
 
 // copyFile copies src to dst, creating dst with the same permissions as src.
-func copyFile(src, dst string) error {
+func copyFile(src, dst string) (err error) {
 	srcInfo, err := os.Stat(src)
 	if err != nil {
 		return err

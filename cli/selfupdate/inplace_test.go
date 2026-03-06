@@ -65,6 +65,34 @@ func TestSwapBinaryInPlace(t *testing.T) {
 		assert.True(t, os.IsNotExist(err))
 	})
 
+	t.Run("succeeds with leftover .old file", func(t *testing.T) {
+		dir := t.TempDir()
+		originalPath := filepath.Join(dir, "mybinary")
+		stagedPath := filepath.Join(dir, "staged", "mybinary")
+
+		// Create the "original" binary and a leftover .old from a previous swap.
+		require.NoError(t, os.WriteFile(originalPath, []byte("original-content"), 0o755))
+		require.NoError(t, os.WriteFile(originalPath+".old", []byte("stale-old"), 0o755))
+
+		// Create the "staged" binary.
+		require.NoError(t, os.MkdirAll(filepath.Dir(stagedPath), 0o755))
+		require.NoError(t, os.WriteFile(stagedPath, []byte("new-content"), 0o755))
+
+		resultPath, err := swapBinaryInPlaceFrom(stagedPath, originalPath)
+		require.NoError(t, err)
+		assert.Equal(t, originalPath, resultPath)
+
+		// Original path has the new content.
+		content, err := os.ReadFile(originalPath)
+		require.NoError(t, err)
+		assert.Equal(t, "new-content", string(content))
+
+		// .old now contains the previous original, not the stale leftover.
+		oldContent, err := os.ReadFile(originalPath + ".old")
+		require.NoError(t, err)
+		assert.Equal(t, "original-content", string(oldContent))
+	})
+
 	t.Run("no-op when staged equals original", func(t *testing.T) {
 		dir := t.TempDir()
 		binaryPath := filepath.Join(dir, "mybinary")
