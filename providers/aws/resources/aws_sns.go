@@ -227,9 +227,15 @@ func (a *mqlAwsSnsTopic) subscriptions() ([]any, error) {
 			return nil, err
 		}
 		for _, sub := range subsByTopic.Subscriptions {
+			// Pending subscriptions have ARN "PendingConfirmation" which is not unique.
+			// Synthesize a stable __id from topic ARN + protocol + endpoint.
+			subId := convert.ToValue(sub.SubscriptionArn)
+			if !arn.IsARN(subId) {
+				subId = arnValue + "/" + convert.ToValue(sub.Protocol) + "/" + convert.ToValue(sub.Endpoint)
+			}
 			mqlSub, err := CreateResource(a.MqlRuntime, "aws.sns.subscription",
 				map[string]*llx.RawData{
-					"__id":     llx.StringDataPtr(sub.SubscriptionArn),
+					"__id":     llx.StringData(subId),
 					"arn":      llx.StringDataPtr(sub.SubscriptionArn),
 					"protocol": llx.StringDataPtr(sub.Protocol),
 					"endpoint": llx.StringDataPtr(sub.Endpoint),
@@ -280,6 +286,16 @@ func (a *mqlAwsSnsSubscription) fetchAttributes() (map[string]string, error) {
 	}
 
 	arnVal := a.Arn.Data
+
+	// Unconfirmed subscriptions have ARN set to "PendingConfirmation" which is
+	// not a valid ARN. GetSubscriptionAttributes will reject it, so return
+	// a minimal attribute map with the pending status instead.
+	if !arn.IsARN(arnVal) {
+		a.fetched = true
+		a.attrs = map[string]string{"PendingConfirmation": "true"}
+		return a.attrs, nil
+	}
+
 	regionVal := a.Region.Data
 
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)

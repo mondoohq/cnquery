@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/service/athena"
 	athena_types "github.com/aws/aws-sdk-go-v2/service/athena/types"
@@ -219,9 +220,15 @@ type mqlAwsAthenaDataCatalogInternal struct {
 	fetchedDetail bool
 	cachedDesc    string
 	cachedParams  map[string]interface{}
+	lock          sync.Mutex
 }
 
 func (a *mqlAwsAthenaDataCatalog) fetchDetail() error {
+	if a.fetchedDetail {
+		return nil
+	}
+	a.lock.Lock()
+	defer a.lock.Unlock()
 	if a.fetchedDetail {
 		return nil
 	}
