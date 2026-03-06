@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -96,17 +97,11 @@ func (a *mqlAwsKms) getKeys(conn *connection.AwsConnection) []*jobpool.Job {
 }
 
 func (a *mqlAwsKmsKey) metadata() (any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	key := a.Arn.Data
-
-	svc := conn.Kms(a.Region.Data)
-	ctx := context.Background()
-
-	keyMetadata, err := svc.DescribeKey(ctx, &kms.DescribeKeyInput{KeyId: &key})
+	md, err := a.getKeyMetadata()
 	if err != nil {
 		return nil, err
 	}
-	return convert.JsonToDict(keyMetadata.KeyMetadata)
+	return convert.JsonToDict(md)
 }
 
 func (a *mqlAwsKmsKey) keyRotationEnabled() (bool, error) {
@@ -130,15 +125,17 @@ func (a *mqlAwsKmsKey) tags() (map[string]any, error) {
 	svc := conn.Kms(a.Region.Data)
 	ctx := context.Background()
 
-	tags, err := svc.ListResourceTags(ctx, &kms.ListResourceTagsInput{KeyId: &keyArn})
-	if err != nil {
-		return nil, err
-	}
-
 	res := map[string]any{}
-	for i := range tags.Tags {
-		tag := tags.Tags[i]
-		res[convert.ToValue(tag.TagKey)] = convert.ToValue(tag.TagValue)
+	paginator := kms.NewListResourceTagsPaginator(svc, &kms.ListResourceTagsInput{KeyId: &keyArn})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for i := range page.Tags {
+			tag := page.Tags[i]
+			res[convert.ToValue(tag.TagKey)] = convert.ToValue(tag.TagValue)
+		}
 	}
 
 	return res, nil
@@ -151,41 +148,44 @@ func (a *mqlAwsKmsKey) aliases() ([]any, error) {
 	svc := conn.Kms(a.Region.Data)
 	ctx := context.Background()
 
-	resp, err := svc.ListAliases(ctx, &kms.ListAliasesInput{KeyId: &keyArn})
-	if err != nil {
-		return nil, err
-	}
-
 	aliases := []any{}
-	for _, a := range resp.Aliases {
-		aliases = append(aliases, *a.AliasName)
+	paginator := kms.NewListAliasesPaginator(svc, &kms.ListAliasesInput{KeyId: &keyArn})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, alias := range page.Aliases {
+			aliases = append(aliases, *alias.AliasName)
+		}
 	}
 
 	return aliases, nil
 }
 
 func (a *mqlAwsKmsKey) keyState() (string, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	keyArn := a.Arn.Data
-
-	svc := conn.Kms(a.Region.Data)
-	ctx := context.Background()
-
-	keyMetadata, err := svc.DescribeKey(ctx, &kms.DescribeKeyInput{KeyId: &keyArn})
+	md, err := a.getKeyMetadata()
 	if err != nil {
 		return "", err
 	}
-	return string(keyMetadata.KeyMetadata.KeyState), nil
+	return string(md.KeyState), nil
 }
 
 type mqlAwsKmsKeyInternal struct {
 	cachedKeyMetadata *types.KeyMetadata
+	metadataLock      sync.Mutex
 }
 
 func (a *mqlAwsKmsKey) getKeyMetadata() (*types.KeyMetadata, error) {
 	if a.cachedKeyMetadata != nil {
 		return a.cachedKeyMetadata, nil
 	}
+	a.metadataLock.Lock()
+	defer a.metadataLock.Unlock()
+	if a.cachedKeyMetadata != nil {
+		return a.cachedKeyMetadata, nil
+	}
+
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	keyArn := a.Arn.Data
 

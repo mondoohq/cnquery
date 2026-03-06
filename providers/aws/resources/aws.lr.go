@@ -32057,7 +32057,7 @@ func (c *mqlAwsSagemaker) GetNotebookInstances() *plugin.TValue[[]any] {
 type mqlAwsSagemakerNotebookinstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsSagemakerNotebookinstanceInternal it will be used here
+	mqlAwsSagemakerNotebookinstanceInternal
 	Arn     plugin.TValue[string]
 	Name    plugin.TValue[string]
 	Details plugin.TValue[*mqlAwsSagemakerNotebookinstancedetails]
@@ -32131,7 +32131,9 @@ func (c *mqlAwsSagemakerNotebookinstance) GetRegion() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsSagemakerNotebookinstance) GetTags() *plugin.TValue[map[string]any] {
-	return &c.Tags
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
 }
 
 // mqlAwsSagemakerNotebookinstancedetails for the aws.sagemaker.notebookinstancedetails resource
@@ -32236,7 +32238,7 @@ func (c *mqlAwsSagemakerNotebookinstancedetails) GetSubnet() *plugin.TValue[*mql
 type mqlAwsSagemakerEndpoint struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsSagemakerEndpointInternal it will be used here
+	mqlAwsSagemakerEndpointInternal
 	Arn    plugin.TValue[string]
 	Name   plugin.TValue[string]
 	Config plugin.TValue[any]
@@ -32300,7 +32302,9 @@ func (c *mqlAwsSagemakerEndpoint) GetRegion() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsSagemakerEndpoint) GetTags() *plugin.TValue[map[string]any] {
-	return &c.Tags
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
 }
 
 // mqlAwsSns for the aws.sns resource
@@ -34063,7 +34067,7 @@ func (c *mqlAwsElbTargetgroupAttributes) GetTargetFailoverOnUnhealthy() *plugin.
 type mqlAwsElbLoadbalancer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsElbLoadbalancerInternal it will be used here
+	mqlAwsElbLoadbalancerInternal
 	Arn                  plugin.TValue[string]
 	DnsName              plugin.TValue[string]
 	ListenerDescriptions plugin.TValue[[]any]

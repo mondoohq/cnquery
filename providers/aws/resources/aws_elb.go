@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -64,7 +65,7 @@ func (a *mqlAwsElb) getClassicLoadBalancers(conn *connection.AwsConnection) []*j
 			for paginator.HasMorePages() {
 				lbs, err := paginator.NextPage(ctx)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
+					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
@@ -155,6 +156,50 @@ func (a *mqlAwsElbLoadbalancer) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+type mqlAwsElbLoadbalancerInternal struct {
+	// Cached v2 DescribeLoadBalancerAttributes response, shared between attributes() and attribute().
+	cachedV2Attrs  []elbtypes.LoadBalancerAttribute
+	v2AttrsFetched bool
+	v2AttrsLock    sync.Mutex
+
+	// Tag caching for the filter guard pattern during listing.
+	cacheTags   map[string]any
+	tagsFetched bool
+	tagsLock    sync.Mutex
+}
+
+// fetchV2Attrs fetches and caches v2 load balancer attributes with double-check locking.
+func (a *mqlAwsElbLoadbalancer) fetchV2Attrs() ([]elbtypes.LoadBalancerAttribute, error) {
+	if a.v2AttrsFetched {
+		return a.cachedV2Attrs, nil
+	}
+	a.v2AttrsLock.Lock()
+	defer a.v2AttrsLock.Unlock()
+	if a.v2AttrsFetched {
+		return a.cachedV2Attrs, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	arnVal := a.Arn.Data
+	region, err := GetRegionFromArn(arnVal)
+	if err != nil {
+		return nil, err
+	}
+	svc := conn.Elbv2(region)
+	ctx := context.Background()
+
+	resp, err := svc.DescribeLoadBalancerAttributes(ctx, &elasticloadbalancingv2.DescribeLoadBalancerAttributesInput{
+		LoadBalancerArn: &arnVal,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	a.cachedV2Attrs = resp.Attributes
+	a.v2AttrsFetched = true
+	return a.cachedV2Attrs, nil
+}
+
 func (a *mqlAwsElb) loadBalancers() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
@@ -192,7 +237,7 @@ func (a *mqlAwsElb) getLoadBalancers(conn *connection.AwsConnection) []*jobpool.
 			for paginator.HasMorePages() {
 				lbs, err := paginator.NextPage(ctx)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
+					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
@@ -353,17 +398,17 @@ func (a *mqlAwsElbLoadbalancer) listenerDescriptions() ([]any, error) {
 
 func (a *mqlAwsElbLoadbalancer) attributes() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	arn := a.Arn.Data
+	arnVal := a.Arn.Data
 	name := a.Name.Data
 
-	region, err := GetRegionFromArn(arn)
+	region, err := GetRegionFromArn(arnVal)
 	if err != nil {
 		return nil, err
 	}
-	ctx := context.Background()
 
-	if isV1LoadBalancerArn(arn) {
+	if isV1LoadBalancerArn(arnVal) {
 		svc := conn.Elb(region)
+		ctx := context.Background()
 		attributes, err := svc.DescribeLoadBalancerAttributes(ctx, &elasticloadbalancing.DescribeLoadBalancerAttributesInput{LoadBalancerName: &name})
 		if err != nil {
 			return nil, err
@@ -374,12 +419,11 @@ func (a *mqlAwsElbLoadbalancer) attributes() ([]any, error) {
 		}
 		return []any{j}, nil
 	}
-	svc := conn.Elbv2(region)
-	attributes, err := svc.DescribeLoadBalancerAttributes(ctx, &elasticloadbalancingv2.DescribeLoadBalancerAttributesInput{LoadBalancerArn: &arn})
+	attrs, err := a.fetchV2Attrs()
 	if err != nil {
 		return nil, err
 	}
-	return convert.JsonToDictSlice(attributes.Attributes)
+	return convert.JsonToDictSlice(attrs)
 }
 
 func (a *mqlAwsElbListener) id() (string, error) {
@@ -469,6 +513,15 @@ func elbv1TagsToMap(tags []elbv1types.Tag) map[string]any {
 }
 
 func (a *mqlAwsElbLoadbalancer) tags() (map[string]any, error) {
+	if a.tagsFetched {
+		return a.cacheTags, nil
+	}
+	a.tagsLock.Lock()
+	defer a.tagsLock.Unlock()
+	if a.tagsFetched {
+		return a.cacheTags, nil
+	}
+
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	lbArn := a.Arn.Data
 	name := a.Name.Data
@@ -479,6 +532,7 @@ func (a *mqlAwsElbLoadbalancer) tags() (map[string]any, error) {
 	}
 	ctx := context.Background()
 
+	var tags map[string]any
 	if isV1LoadBalancerArn(lbArn) {
 		svc := conn.Elb(region)
 		resp, err := svc.DescribeTags(ctx, &elasticloadbalancing.DescribeTagsInput{LoadBalancerNames: []string{name}})
@@ -487,23 +541,30 @@ func (a *mqlAwsElbLoadbalancer) tags() (map[string]any, error) {
 		}
 		for _, desc := range resp.TagDescriptions {
 			if convert.ToValue(desc.LoadBalancerName) == name {
-				return elbv1TagsToMap(desc.Tags), nil
+				tags = elbv1TagsToMap(desc.Tags)
+				break
 			}
 		}
-		return map[string]any{}, nil
-	}
-
-	svc := conn.Elbv2(region)
-	resp, err := svc.DescribeTags(ctx, &elasticloadbalancingv2.DescribeTagsInput{ResourceArns: []string{lbArn}})
-	if err != nil {
-		return nil, err
-	}
-	for _, desc := range resp.TagDescriptions {
-		if convert.ToValue(desc.ResourceArn) == lbArn {
-			return elbv2TagsToMap(desc.Tags), nil
+	} else {
+		svc := conn.Elbv2(region)
+		resp, err := svc.DescribeTags(ctx, &elasticloadbalancingv2.DescribeTagsInput{ResourceArns: []string{lbArn}})
+		if err != nil {
+			return nil, err
+		}
+		for _, desc := range resp.TagDescriptions {
+			if convert.ToValue(desc.ResourceArn) == lbArn {
+				tags = elbv2TagsToMap(desc.Tags)
+				break
+			}
 		}
 	}
-	return map[string]any{}, nil
+	if tags == nil {
+		tags = map[string]any{}
+	}
+
+	a.cacheTags = tags
+	a.tagsFetched = true
+	return tags, nil
 }
 
 func (a *mqlAwsElbTargetgroup) id() (string, error) {
@@ -664,7 +725,6 @@ func (a *mqlAwsElbLoadbalancerAttribute) id() (string, error) {
 }
 
 func (a *mqlAwsElbLoadbalancer) attribute() (*mqlAwsElbLoadbalancerAttribute, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	arnVal := a.Arn.Data
 
 	if isV1LoadBalancerArn(arnVal) {
@@ -672,22 +732,13 @@ func (a *mqlAwsElbLoadbalancer) attribute() (*mqlAwsElbLoadbalancerAttribute, er
 		return nil, nil
 	}
 
-	region, err := GetRegionFromArn(arnVal)
-	if err != nil {
-		return nil, err
-	}
-	ctx := context.Background()
-	svc := conn.Elbv2(region)
-
-	resp, err := svc.DescribeLoadBalancerAttributes(ctx, &elasticloadbalancingv2.DescribeLoadBalancerAttributesInput{
-		LoadBalancerArn: &arnVal,
-	})
+	attrs, err := a.fetchV2Attrs()
 	if err != nil {
 		return nil, err
 	}
 
 	attrMap := make(map[string]string)
-	for _, attr := range resp.Attributes {
+	for _, attr := range attrs {
 		if attr.Key != nil && attr.Value != nil {
 			attrMap[*attr.Key] = *attr.Value
 		}

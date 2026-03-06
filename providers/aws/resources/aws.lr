@@ -1435,7 +1435,7 @@ private aws.sagemaker.notebookinstance @defaults("arn name") {
   // Region where the notebook instance exists
   region string
   // Tags for the notebook instance
-  tags map[string]string
+  tags() map[string]string
 }
 
 // AWS SageMaker notebook instance details
@@ -1465,7 +1465,7 @@ private aws.sagemaker.endpoint @defaults("arn name") {
   // Region where the endpoint exists
   region string
   // Tags for the endpoint
-  tags map[string]string
+  tags() map[string]string
 }
 
 // AWS Simple Notification Service (SNS)
