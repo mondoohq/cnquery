@@ -26600,7 +26600,7 @@ func (c *mqlAwsWaf) GetScope() *plugin.TValue[string] {
 type mqlAwsWafAcl struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsWafAclInternal it will be used here
+	mqlAwsWafAclInternal
 	Arn                      plugin.TValue[string]
 	Id                       plugin.TValue[string]
 	Name                     plugin.TValue[string]
@@ -26666,7 +26666,9 @@ func (c *mqlAwsWafAcl) GetDescription() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsWafAcl) GetManagedByFirewallManager() *plugin.TValue[bool] {
-	return &c.ManagedByFirewallManager
+	return plugin.GetOrCompute[bool](&c.ManagedByFirewallManager, func() (bool, error) {
+		return c.managedByFirewallManager()
+	})
 }
 
 func (c *mqlAwsWafAcl) GetRules() *plugin.TValue[[]any] {
@@ -28796,7 +28798,7 @@ func (c *mqlAwsWafRuleStatementSqlimatchstatement) GetSensitivityLevel() *plugin
 type mqlAwsWafIpset struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsWafIpsetInternal it will be used here
+	mqlAwsWafIpsetInternal
 	Arn         plugin.TValue[string]
 	Id          plugin.TValue[string]
 	Scope       plugin.TValue[string]
@@ -28864,11 +28866,15 @@ func (c *mqlAwsWafIpset) GetDescription() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsWafIpset) GetAddressType() *plugin.TValue[string] {
-	return &c.AddressType
+	return plugin.GetOrCompute[string](&c.AddressType, func() (string, error) {
+		return c.addressType()
+	})
 }
 
 func (c *mqlAwsWafIpset) GetAddresses() *plugin.TValue[any] {
-	return &c.Addresses
+	return plugin.GetOrCompute[any](&c.Addresses, func() (any, error) {
+		return c.addresses()
+	})
 }
 
 // mqlAwsWafRegexPatternSet for the aws.waf.regexPatternSet resource
@@ -56074,7 +56080,7 @@ func (c *mqlAwsAthena) GetNamedQueries() *plugin.TValue[[]any] {
 type mqlAwsAthenaWorkgroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsAthenaWorkgroupInternal it will be used here
+	mqlAwsAthenaWorkgroupInternal
 	Name                            plugin.TValue[string]
 	Arn                             plugin.TValue[string]
 	State                           plugin.TValue[string]
@@ -56143,27 +56149,39 @@ func (c *mqlAwsAthenaWorkgroup) GetCreatedAt() *plugin.TValue[*time.Time] {
 }
 
 func (c *mqlAwsAthenaWorkgroup) GetEnforceWorkGroupConfiguration() *plugin.TValue[bool] {
-	return &c.EnforceWorkGroupConfiguration
+	return plugin.GetOrCompute[bool](&c.EnforceWorkGroupConfiguration, func() (bool, error) {
+		return c.enforceWorkGroupConfiguration()
+	})
 }
 
 func (c *mqlAwsAthenaWorkgroup) GetPublishCloudWatchMetricsEnabled() *plugin.TValue[bool] {
-	return &c.PublishCloudWatchMetricsEnabled
+	return plugin.GetOrCompute[bool](&c.PublishCloudWatchMetricsEnabled, func() (bool, error) {
+		return c.publishCloudWatchMetricsEnabled()
+	})
 }
 
 func (c *mqlAwsAthenaWorkgroup) GetBytesScannedCutoffPerQuery() *plugin.TValue[int64] {
-	return &c.BytesScannedCutoffPerQuery
+	return plugin.GetOrCompute[int64](&c.BytesScannedCutoffPerQuery, func() (int64, error) {
+		return c.bytesScannedCutoffPerQuery()
+	})
 }
 
 func (c *mqlAwsAthenaWorkgroup) GetRequesterPaysEnabled() *plugin.TValue[bool] {
-	return &c.RequesterPaysEnabled
+	return plugin.GetOrCompute[bool](&c.RequesterPaysEnabled, func() (bool, error) {
+		return c.requesterPaysEnabled()
+	})
 }
 
 func (c *mqlAwsAthenaWorkgroup) GetEngineVersion() *plugin.TValue[any] {
-	return &c.EngineVersion
+	return plugin.GetOrCompute[any](&c.EngineVersion, func() (any, error) {
+		return c.engineVersion()
+	})
 }
 
 func (c *mqlAwsAthenaWorkgroup) GetResultConfiguration() *plugin.TValue[any] {
-	return &c.ResultConfiguration
+	return plugin.GetOrCompute[any](&c.ResultConfiguration, func() (any, error) {
+		return c.resultConfiguration()
+	})
 }
 
 func (c *mqlAwsAthenaWorkgroup) GetRegion() *plugin.TValue[string] {
@@ -57874,7 +57892,7 @@ func (c *mqlAwsKinesis) GetStreamConsumers() *plugin.TValue[[]any] {
 type mqlAwsKinesisStream struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsKinesisStreamInternal it will be used here
+	mqlAwsKinesisStreamInternal
 	Arn                  plugin.TValue[string]
 	Name                 plugin.TValue[string]
 	Status               plugin.TValue[string]
@@ -57936,23 +57954,33 @@ func (c *mqlAwsKinesisStream) GetStatus() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsKinesisStream) GetEncryptionType() *plugin.TValue[string] {
-	return &c.EncryptionType
+	return plugin.GetOrCompute[string](&c.EncryptionType, func() (string, error) {
+		return c.encryptionType()
+	})
 }
 
 func (c *mqlAwsKinesisStream) GetKeyId() *plugin.TValue[string] {
-	return &c.KeyId
+	return plugin.GetOrCompute[string](&c.KeyId, func() (string, error) {
+		return c.keyId()
+	})
 }
 
 func (c *mqlAwsKinesisStream) GetRetentionPeriodHours() *plugin.TValue[int64] {
-	return &c.RetentionPeriodHours
+	return plugin.GetOrCompute[int64](&c.RetentionPeriodHours, func() (int64, error) {
+		return c.retentionPeriodHours()
+	})
 }
 
 func (c *mqlAwsKinesisStream) GetOpenShardCount() *plugin.TValue[int64] {
-	return &c.OpenShardCount
+	return plugin.GetOrCompute[int64](&c.OpenShardCount, func() (int64, error) {
+		return c.openShardCount()
+	})
 }
 
 func (c *mqlAwsKinesisStream) GetConsumerCount() *plugin.TValue[int64] {
-	return &c.ConsumerCount
+	return plugin.GetOrCompute[int64](&c.ConsumerCount, func() (int64, error) {
+		return c.consumerCount()
+	})
 }
 
 func (c *mqlAwsKinesisStream) GetStreamModeDetails() *plugin.TValue[any] {
@@ -57960,7 +57988,9 @@ func (c *mqlAwsKinesisStream) GetStreamModeDetails() *plugin.TValue[any] {
 }
 
 func (c *mqlAwsKinesisStream) GetEnhancedMonitoring() *plugin.TValue[[]any] {
-	return &c.EnhancedMonitoring
+	return plugin.GetOrCompute[[]any](&c.EnhancedMonitoring, func() ([]any, error) {
+		return c.enhancedMonitoring()
+	})
 }
 
 func (c *mqlAwsKinesisStream) GetCreatedAt() *plugin.TValue[*time.Time] {

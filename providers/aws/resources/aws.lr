@@ -332,7 +332,7 @@ private aws.waf.acl @defaults("name") {
   // Description of the ACL
   description string
   // Whether the ACL is managed by Firewall Manager
-  managedByFirewallManager bool
+  managedByFirewallManager() bool
   // List of WAF rules
   rules() []aws.waf.rule
   // Scope either REGIONAL or CLOUDFRONT
@@ -763,9 +763,9 @@ private aws.waf.ipset @defaults("name") {
   // Description of the IP set
   description string
   // Address type: ipv4 or ipv6
-  addressType string
+  addressType() string
   // List of IP addresses
-  addresses dict
+  addresses() dict
 }
 
 // Amazon WAF regex pattern set
@@ -6659,17 +6659,17 @@ private aws.athena.workgroup @defaults("name state region") {
   // Date and time the workgroup was created
   createdAt time
   // Whether workgroup settings override client-side settings
-  enforceWorkGroupConfiguration bool
+  enforceWorkGroupConfiguration() bool
   // Whether Amazon CloudWatch metrics are enabled for the workgroup
-  publishCloudWatchMetricsEnabled bool
+  publishCloudWatchMetricsEnabled() bool
   // Upper data usage limit for the amount of bytes scanned per query
-  bytesScannedCutoffPerQuery int
+  bytesScannedCutoffPerQuery() int
   // Whether requester pays is enabled for the workgroup
-  requesterPaysEnabled bool
+  requesterPaysEnabled() bool
   // Engine version information
-  engineVersion dict
+  engineVersion() dict
   // Result configuration (output location and encryption)
-  resultConfiguration dict
+  resultConfiguration() dict
   // Region where the workgroup exists
   region string
   // Tags for the workgroup
@@ -7057,19 +7057,19 @@ private aws.kinesis.stream @defaults("name status region") {
   // Current status of the stream: CREATING, DELETING, ACTIVE, or UPDATING
   status string
   // Encryption type used (NONE or KMS)
-  encryptionType string
+  encryptionType() string
   // KMS key ID for encryption
-  keyId string
+  keyId() string
   // Number of hours data records are accessible after being added to the stream
-  retentionPeriodHours int
+  retentionPeriodHours() int
   // Number of open shards in the stream
-  openShardCount int
+  openShardCount() int
   // Number of enhanced fan-out consumers registered with the stream
-  consumerCount int
+  consumerCount() int
   // Stream mode details (ON_DEMAND or PROVISIONED)
   streamModeDetails dict
   // Enhanced monitoring settings
-  enhancedMonitoring []dict
+  enhancedMonitoring() []dict
   // Date and time the stream was created
   createdAt time
   // Region where the stream exists

@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
@@ -36,6 +37,39 @@ func (a *mqlAwsWafAcl) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+type mqlAwsWafAclInternal struct {
+	fetched                  bool
+	cachedManagedByFwManager bool
+	lock                     sync.Mutex
+}
+
+func (a *mqlAwsWafAcl) managedByFirewallManager() (bool, error) {
+	if a.fetched {
+		return a.cachedManagedByFwManager, nil
+	}
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	if a.fetched {
+		return a.cachedManagedByFwManager, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Wafv2(wafRegionForScope(a.Scope.Data))
+	ctx := context.Background()
+
+	resp, err := svc.GetWebACL(ctx, &wafv2.GetWebACLInput{
+		Id:    &a.Id.Data,
+		Name:  &a.Name.Data,
+		Scope: waftypes.Scope(a.Scope.Data),
+	})
+	if err != nil {
+		return false, err
+	}
+	a.cachedManagedByFwManager = resp.WebACL.ManagedByFirewallManager
+	a.fetched = true
+	return a.cachedManagedByFwManager, nil
+}
+
 func (a *mqlAwsWafRule) id() (string, error) {
 	return a.Id.Data, nil
 }
@@ -50,6 +84,55 @@ func (a *mqlAwsWafRulegroup) id() (string, error) {
 
 func (a *mqlAwsWafIpset) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+type mqlAwsWafIpsetInternal struct {
+	fetched         bool
+	cachedAddrType  string
+	cachedAddresses []any
+	lock            sync.Mutex
+}
+
+func (a *mqlAwsWafIpset) fetchIPSet() error {
+	if a.fetched {
+		return nil
+	}
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	if a.fetched {
+		return nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Wafv2(wafRegionForScope(a.Scope.Data))
+	ctx := context.Background()
+
+	resp, err := svc.GetIPSet(ctx, &wafv2.GetIPSetInput{
+		Id:    &a.Id.Data,
+		Name:  &a.Name.Data,
+		Scope: waftypes.Scope(a.Scope.Data),
+	})
+	if err != nil {
+		return err
+	}
+	a.cachedAddrType = string(resp.IPSet.IPAddressVersion)
+	a.cachedAddresses = convert.SliceAnyToInterface(resp.IPSet.Addresses)
+	a.fetched = true
+	return nil
+}
+
+func (a *mqlAwsWafIpset) addressType() (string, error) {
+	if err := a.fetchIPSet(); err != nil {
+		return "", err
+	}
+	return a.cachedAddrType, nil
+}
+
+func (a *mqlAwsWafIpset) addresses() (any, error) {
+	if err := a.fetchIPSet(); err != nil {
+		return nil, err
+	}
+	return a.cachedAddresses, nil
 }
 
 func initAwsWaf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -91,24 +174,14 @@ func (a *mqlAwsWaf) acls() ([]any, error) {
 		}
 
 		for _, acl := range aclsRes.WebACLs {
-			params := &wafv2.GetWebACLInput{
-				Id:    acl.Id,
-				Name:  acl.Name,
-				Scope: scope,
-			}
-			aclDetails, err := svc.GetWebACL(ctx, params)
-			if err != nil {
-				return nil, err
-			}
 			mqlAcl, err := CreateResource(a.MqlRuntime, "aws.waf.acl",
 				map[string]*llx.RawData{
-					"__id":                     llx.StringDataPtr(acl.ARN),
-					"id":                       llx.StringDataPtr(acl.Id),
-					"scope":                    llx.StringData(scopeString),
-					"arn":                      llx.StringDataPtr(acl.ARN),
-					"name":                     llx.StringDataPtr(acl.Name),
-					"description":              llx.StringDataPtr(acl.Description),
-					"managedByFirewallManager": llx.BoolData(aclDetails.WebACL.ManagedByFirewallManager),
+					"__id":        llx.StringDataPtr(acl.ARN),
+					"id":          llx.StringDataPtr(acl.Id),
+					"scope":       llx.StringData(scopeString),
+					"arn":         llx.StringDataPtr(acl.ARN),
+					"name":        llx.StringDataPtr(acl.Name),
+					"description": llx.StringDataPtr(acl.Description),
 				},
 			)
 			if err != nil {
@@ -330,16 +403,6 @@ func (a *mqlAwsWaf) ipSets() ([]any, error) {
 		}
 
 		for _, ipset := range aclsRes.IPSets {
-			params := &wafv2.GetIPSetInput{
-				Id:    ipset.Id,
-				Name:  ipset.Name,
-				Scope: scope,
-			}
-			ipsetDetails, err := svc.GetIPSet(ctx, params)
-			if err != nil {
-				return nil, err
-			}
-			ipsetAddresses := convert.SliceAnyToInterface(ipsetDetails.IPSet.Addresses)
 			mqlIPSet, err := CreateResource(a.MqlRuntime, "aws.waf.ipset",
 				map[string]*llx.RawData{
 					"__id":        llx.StringDataPtr(ipset.ARN),
@@ -347,8 +410,6 @@ func (a *mqlAwsWaf) ipSets() ([]any, error) {
 					"arn":         llx.StringDataPtr(ipset.ARN),
 					"name":        llx.StringDataPtr(ipset.Name),
 					"description": llx.StringDataPtr(ipset.Description),
-					"addressType": llx.StringDataPtr((*string)(&ipsetDetails.IPSet.IPAddressVersion)),
-					"addresses":   llx.ArrayData(ipsetAddresses, types.String),
 					"scope":       llx.StringData(scopeString),
 				},
 			)
