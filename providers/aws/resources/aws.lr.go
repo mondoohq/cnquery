@@ -36440,7 +36440,7 @@ func (c *mqlAwsEcsContainer) GetReason() *plugin.TValue[string] {
 type mqlAwsEcsTaskDefinition struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsEcsTaskDefinitionInternal it will be used here
+	mqlAwsEcsTaskDefinitionInternal
 	Arn                  plugin.TValue[string]
 	Family               plugin.TValue[string]
 	Revision             plugin.TValue[int64]
@@ -36582,7 +36582,9 @@ func (c *mqlAwsEcsTaskDefinition) GetEphemeralStorage() *plugin.TValue[*mqlAwsEc
 }
 
 func (c *mqlAwsEcsTaskDefinition) GetTags() *plugin.TValue[map[string]any] {
-	return &c.Tags
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
 }
 
 func (c *mqlAwsEcsTaskDefinition) GetRegion() *plugin.TValue[string] {
@@ -38927,7 +38929,7 @@ func (c *mqlAwsCloudwatchMetricDatapoint) GetUnit() *plugin.TValue[string] {
 type mqlAwsCloudwatchLoggroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsCloudwatchLoggroupInternal it will be used here
+	mqlAwsCloudwatchLoggroupInternal
 	Arn                       plugin.TValue[string]
 	Name                      plugin.TValue[string]
 	MetricsFilters            plugin.TValue[[]any]
@@ -39025,7 +39027,9 @@ func (c *mqlAwsCloudwatchLoggroup) GetRetentionInDays() *plugin.TValue[int64] {
 }
 
 func (c *mqlAwsCloudwatchLoggroup) GetTags() *plugin.TValue[map[string]any] {
-	return &c.Tags
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
 }
 
 func (c *mqlAwsCloudwatchLoggroup) GetDataProtectionStatus() *plugin.TValue[string] {
@@ -47460,7 +47464,9 @@ func (c *mqlAwsLambdaFunction) GetRegion() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsLambdaFunction) GetTags() *plugin.TValue[map[string]any] {
-	return &c.Tags
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
 }
 
 func (c *mqlAwsLambdaFunction) GetArchitectures() *plugin.TValue[[]any] {

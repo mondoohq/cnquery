@@ -81,15 +81,18 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 					if function.DeadLetterConfig != nil {
 						dlqTarget = convert.ToValue(function.DeadLetterConfig.TargetArn)
 					}
-					tags := make(map[string]string)
-					tagsResp, err := svc.ListTags(ctx, &lambda.ListTagsInput{Resource: function.FunctionArn})
-					if err == nil {
-						maps.Copy(tags, tagsResp.Tags)
-					}
-
-					if conn.Filters.General.IsFilteredOutByTags(tags) {
-						log.Debug().Interface("function", function.FunctionArn).Msg("excluding function due to filters")
-						continue
+					// Only fetch tags eagerly when tag-based filters are configured
+					var tags map[string]string
+					if conn.Filters.General.HasTags() {
+						tags = make(map[string]string)
+						tagsResp, err := svc.ListTags(ctx, &lambda.ListTagsInput{Resource: function.FunctionArn})
+						if err == nil {
+							maps.Copy(tags, tagsResp.Tags)
+						}
+						if conn.Filters.General.IsFilteredOutByTags(tags) {
+							log.Debug().Interface("function", function.FunctionArn).Msg("excluding function due to filters")
+							continue
+						}
 					}
 
 					// Convert architectures to []any
@@ -180,7 +183,6 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 						"dlqTargetArn":                llx.StringData(dlqTarget),
 						"vpcConfig":                   llx.MapData(vpcConfigJson, types.Any),
 						"region":                      llx.StringData(region),
-						"tags":                        llx.MapData(toInterfaceMap(tags), types.String),
 						"architectures":               llx.ArrayData(architectures, types.String),
 						"ephemeralStorageSize":        llx.IntData(ephemeralStorageSize),
 						"memorySize":                  llx.IntDataDefault(function.MemorySize, 0),
@@ -216,7 +218,12 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 					if err != nil {
 						return nil, err
 					}
-					mqlFunc.(*mqlAwsLambdaFunction).cacheRoleArn = function.Role
+					f := mqlFunc.(*mqlAwsLambdaFunction)
+					f.cacheRoleArn = function.Role
+					if tags != nil {
+						f.cacheTags = tags
+						f.tagsFetched = true
+					}
 					res = append(res, mqlFunc)
 				}
 			}
@@ -295,6 +302,27 @@ func (a *mqlAwsLambdaFunction) id() (string, error) {
 
 type mqlAwsLambdaFunctionInternal struct {
 	cacheRoleArn *string
+	cacheTags    map[string]string
+	tagsFetched  bool
+}
+
+func (a *mqlAwsLambdaFunction) tags() (map[string]any, error) {
+	if a.tagsFetched {
+		return toInterfaceMap(a.cacheTags), nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Lambda(a.Region.Data)
+	ctx := context.Background()
+
+	funcArn := a.Arn.Data
+	tagsResp, err := svc.ListTags(ctx, &lambda.ListTagsInput{Resource: &funcArn})
+	if err != nil {
+		return nil, err
+	}
+	a.cacheTags = tagsResp.Tags
+	a.tagsFetched = true
+	return toInterfaceMap(tagsResp.Tags), nil
 }
 
 func (a *mqlAwsLambdaFunction) kmsKey() (*mqlAwsKmsKey, error) {

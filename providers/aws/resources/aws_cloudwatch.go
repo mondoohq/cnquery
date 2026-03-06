@@ -584,19 +584,23 @@ func (a *mqlAwsCloudwatch) getLogGroups(conn *connection.AwsConnection) []*jobpo
 					}
 					return nil, errors.Wrap(err, "could not gather AWS CloudWatch log groups")
 				}
-				args := make(map[string]*llx.RawData)
 				for _, loggroup := range logGroups.LogGroups {
-					groupTags, err := svc.ListTagsForResource(ctx, &cloudwatchlogs.ListTagsForResourceInput{ResourceArn: loggroup.LogGroupArn})
-					if err == nil {
-						if conn.Filters.General.IsFilteredOutByTags(groupTags.Tags) {
-							log.Debug().Interface("log_group", loggroup.LogGroupName).Msg("excluding log group due to filters")
-							continue
+					// Only fetch tags eagerly when tag-based filters are configured
+					var groupTags map[string]string
+					if conn.Filters.General.HasTags() {
+						tagsResp, err := svc.ListTagsForResource(ctx, &cloudwatchlogs.ListTagsForResourceInput{ResourceArn: loggroup.LogGroupArn})
+						if err == nil {
+							groupTags = tagsResp.Tags
+							if conn.Filters.General.IsFilteredOutByTags(groupTags) {
+								log.Debug().Interface("log_group", loggroup.LogGroupName).Msg("excluding log group due to filters")
+								continue
+							}
+						} else {
+							log.Warn().Err(err).Interface("log_group", loggroup.LogGroupName).Msg("could not get tags for log group")
 						}
-						args["tags"] = llx.MapData(toInterfaceMap(groupTags.Tags), types.String)
-					} else {
-						log.Warn().Err(err).Interface("log_group", loggroup.LogGroupName).Msg("could not get tags for log group")
 					}
 
+					args := make(map[string]*llx.RawData)
 					args["arn"] = llx.StringDataPtr(loggroup.Arn)
 					args["name"] = llx.StringDataPtr(loggroup.LogGroupName)
 					args["region"] = llx.StringData(region)
@@ -623,6 +627,11 @@ func (a *mqlAwsCloudwatch) getLogGroups(conn *connection.AwsConnection) []*jobpo
 					mqlLogGroup, err := CreateResource(a.MqlRuntime, ResourceAwsCloudwatchLoggroup, args)
 					if err != nil {
 						return nil, err
+					}
+					lg := mqlLogGroup.(*mqlAwsCloudwatchLoggroup)
+					if groupTags != nil {
+						lg.cacheTags = groupTags
+						lg.tagsFetched = true
 					}
 					res = append(res, mqlLogGroup)
 				}
@@ -669,6 +678,30 @@ func initAwsCloudwatchLoggroup(runtime *plugin.Runtime, args map[string]*llx.Raw
 		}
 	}
 	return nil, nil, errors.New("cloudwatch log group does not exist")
+}
+
+type mqlAwsCloudwatchLoggroupInternal struct {
+	cacheTags   map[string]string
+	tagsFetched bool
+}
+
+func (a *mqlAwsCloudwatchLoggroup) tags() (map[string]any, error) {
+	if a.tagsFetched {
+		return toInterfaceMap(a.cacheTags), nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.CloudwatchLogs(a.Region.Data)
+	ctx := context.Background()
+
+	arnVal := a.Arn.Data
+	tagsResp, err := svc.ListTagsForResource(ctx, &cloudwatchlogs.ListTagsForResourceInput{ResourceArn: &arnVal})
+	if err != nil {
+		return nil, err
+	}
+	a.cacheTags = tagsResp.Tags
+	a.tagsFetched = true
+	return toInterfaceMap(tagsResp.Tags), nil
 }
 
 func (a *mqlAwsCloudwatchLoggroup) kmsKey() (*mqlAwsKmsKey, error) {
