@@ -21,7 +21,7 @@ var Config = plugin.Provider{
 			Long: `Use the cloudflare provider to query resources in your Cloudflare account, including zones, DNS records, and account settings.
 
 Examples:
-  cnquery shell cloudflare --token <access_token>
+  cnspec shell cloudflare --token <access_token>
   cnspec scan cloudflare --token <access_token>
 
 Notes:

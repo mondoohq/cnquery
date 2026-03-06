@@ -32,7 +32,7 @@ Available commands:
   state                      Terraform state file
 
 Examples:
-  cnquery shell terraform <PATH-TO-HCL-DIRECTORY>
+  cnspec shell terraform <PATH-TO-HCL-DIRECTORY>
   cnspec scan terraform <PATH-TO-HCL-FILE>
   cnspec scan terraform plan <PATH-TO-PLAN-JSON>
   cnspec scan terraform state <PATH-TO-STATE-JSON>

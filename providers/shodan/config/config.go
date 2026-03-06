@@ -23,8 +23,8 @@ var Config = plugin.Provider{
 			Long: `Use the shodan provider to query domain and IP security information in the Shodan search engine.
 
 Examples:
-  cnquery shell shodan --token <api-token>
-  cnquery shell shodan --networks <ip-range> --discover hosts
+  cnspec shell shodan --token <api-token>
+  cnspec shell shodan --networks <ip-range> --discover hosts
   cnspec scan shodan --token <api-token>
 
 Notes:

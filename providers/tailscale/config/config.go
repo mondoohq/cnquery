@@ -29,11 +29,11 @@ known as a tailnet.
 
 To authenticate using an API access token:
 
-  cnquery shell tailscale --token <access-token>
+  cnspec shell tailscale --token <access-token>
 
 To authenticate using an OAuth client:
 
-  cnquery shell tailscale --client-id <id> --client-secret <secret>
+  cnspec shell tailscale --client-id <id> --client-secret <secret>
 
 You can also use the default environment variables '%s', '%s',
 and '%s' to provide your credentials.

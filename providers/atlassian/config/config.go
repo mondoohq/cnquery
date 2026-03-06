@@ -36,10 +36,10 @@ Available commands:
   scim                      SCIM instance
 
 Examples:
-  cnquery shell atlassian admin --admin-token <token>
-  cnquery shell atlassian jira --host <host> --user <user> --user-token <token>
-  cnquery shell atlassian confluence --host <host> --user <user> --user-token <token>
-  cnquery shell atlassian scim <directory-id> --scim-token <token>
+  cnspec shell atlassian admin --admin-token <token>
+  cnspec shell atlassian jira --host <host> --user <user> --user-token <token>
+  cnspec shell atlassian confluence --host <host> --user <user> --user-token <token>
+  cnspec shell atlassian scim <directory-id> --scim-token <token>
 
 Notes:
   If you set the ATLASSIAN_ADMIN_TOKEN environment variable, you can omit the admin-token flag. 

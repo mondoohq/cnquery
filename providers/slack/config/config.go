@@ -22,7 +22,7 @@ var Config = plugin.Provider{
 			Long: `Use the slack provider to query resources in a Slack team.
 
 Examples:
-  cnquery shell slack --token <api-token>
+  cnspec shell slack --token <api-token>
   cnspec scan slack --team-id <team-id> --token <api-token>
 `,
 			MinArgs:   0,
