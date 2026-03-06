@@ -315,23 +315,18 @@ func (a *mqlAwsS3Bucket) location() (string, error) {
 }
 
 func (a *mqlAwsS3Bucket) gatherAcl() (*s3.GetBucketAclOutput, error) {
-	bucketname := a.Name.Data
-	location := a.Location.Data
+	a.aclOnce.Do(func() {
+		bucketname := a.Name.Data
+		location := a.Location.Data
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		svc := conn.S3(location)
+		ctx := context.Background()
 
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
-	svc := conn.S3(location)
-	ctx := context.Background()
-
-	acl, err := svc.GetBucketAcl(ctx, &s3.GetBucketAclInput{
-		Bucket: &bucketname,
+		a.aclOutput, a.aclErr = svc.GetBucketAcl(ctx, &s3.GetBucketAclInput{
+			Bucket: &bucketname,
+		})
 	})
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO: store in cache
-	return acl, nil
+	return a.aclOutput, a.aclErr
 }
 
 func (a *mqlAwsS3Bucket) acl() ([]any, error) {
@@ -380,25 +375,38 @@ func (a *mqlAwsS3Bucket) acl() ([]any, error) {
 	return res, nil
 }
 
-func (a *mqlAwsS3Bucket) publicAccessBlock() (any, error) {
-	bucketname := a.Name.Data
-	location := a.Location.Data
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+func (a *mqlAwsS3Bucket) fetchPublicAccessBlock() (*s3types.PublicAccessBlockConfiguration, error) {
+	a.publicAccessOnce.Do(func() {
+		bucketname := a.Name.Data
+		location := a.Location.Data
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		svc := conn.S3(location)
+		ctx := context.Background()
 
-	svc := conn.S3(location)
-	ctx := context.Background()
-
-	publicAccessBlock, err := svc.GetPublicAccessBlock(ctx, &s3.GetPublicAccessBlockInput{
-		Bucket: &bucketname,
-	})
-	if err != nil {
-		if isNotFoundForS3(err) {
-			return nil, nil
+		resp, err := svc.GetPublicAccessBlock(ctx, &s3.GetPublicAccessBlockInput{
+			Bucket: &bucketname,
+		})
+		if err != nil {
+			if isNotFoundForS3(err) {
+				return
+			}
+			a.publicAccessErr = err
+			return
 		}
+		a.publicAccessConfig = resp.PublicAccessBlockConfiguration
+	})
+	return a.publicAccessConfig, a.publicAccessErr
+}
+
+func (a *mqlAwsS3Bucket) publicAccessBlock() (any, error) {
+	config, err := a.fetchPublicAccessBlock()
+	if err != nil {
 		return nil, err
 	}
-
-	return convert.JsonToDict(publicAccessBlock.PublicAccessBlockConfiguration)
+	if config == nil {
+		return nil, nil
+	}
+	return convert.JsonToDict(config)
 }
 
 func (a *mqlAwsS3Bucket) owner() (map[string]any, error) {
@@ -433,17 +441,14 @@ func (a *mqlAwsS3Bucket) public() (bool, error) {
 		ctx        = context.Background()
 	)
 
-	// Check Public Access Block settings first
-	publicAccess, err := svc.GetPublicAccessBlock(ctx, &s3.GetPublicAccessBlockInput{
-		Bucket: &bucketname,
-	})
-	if err != nil && !isNotFoundForS3(err) {
+	// Check Public Access Block settings first (reuses cached result)
+	accessBlock, err := a.fetchPublicAccessBlock()
+	if err != nil {
 		return false, err
 	}
 
 	notPublic := false
-	if publicAccess != nil && publicAccess.PublicAccessBlockConfiguration != nil {
-		accessBlock := publicAccess.PublicAccessBlockConfiguration
+	if accessBlock != nil {
 		if accessBlock.BlockPublicAcls != nil && *accessBlock.BlockPublicAcls {
 			notPublic = true
 		}
@@ -612,12 +617,21 @@ func (a *mqlAwsS3Bucket) versioning() (map[string]any, error) {
 }
 
 type mqlAwsS3BucketInternal struct {
-	replicationOnce   sync.Once
-	replicationConfig *s3types.ReplicationConfiguration
-	replicationErr    error
-	encryptionOnce    sync.Once
-	encryptionConfig  *s3types.ServerSideEncryptionConfiguration
-	encryptionErr     error
+	replicationOnce    sync.Once
+	replicationConfig  *s3types.ReplicationConfiguration
+	replicationErr     error
+	encryptionOnce     sync.Once
+	encryptionConfig   *s3types.ServerSideEncryptionConfiguration
+	encryptionErr      error
+	aclOnce            sync.Once
+	aclOutput          *s3.GetBucketAclOutput
+	aclErr             error
+	publicAccessOnce   sync.Once
+	publicAccessConfig *s3types.PublicAccessBlockConfiguration
+	publicAccessErr    error
+	objectLockOnce     sync.Once
+	objectLockConfig   *s3types.ObjectLockConfiguration
+	objectLockErr      error
 }
 
 func (a *mqlAwsS3Bucket) fetchReplicationConfig() (*s3types.ReplicationConfiguration, error) {
@@ -813,48 +827,49 @@ func (a *mqlAwsS3Bucket) encryptionRules() ([]any, error) {
 	return res, nil
 }
 
-func (a *mqlAwsS3Bucket) defaultLock() (string, error) {
-	bucketname := a.Name.Data
-	region := a.Location.Data
+func (a *mqlAwsS3Bucket) fetchObjectLockConfig() (*s3types.ObjectLockConfiguration, error) {
+	a.objectLockOnce.Do(func() {
+		bucketname := a.Name.Data
+		region := a.Location.Data
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		svc := conn.S3(region)
+		ctx := context.Background()
 
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
-	svc := conn.S3(region)
-	ctx := context.Background()
-
-	objectLockConfiguration, err := svc.GetObjectLockConfiguration(ctx, &s3.GetObjectLockConfigurationInput{
-		Bucket: &bucketname,
-	})
-	if err != nil {
-		if isNotFoundForS3(err) {
-			return "", nil
+		resp, err := svc.GetObjectLockConfiguration(ctx, &s3.GetObjectLockConfigurationInput{
+			Bucket: &bucketname,
+		})
+		if err != nil {
+			if isNotFoundForS3(err) {
+				return
+			}
+			a.objectLockErr = err
+			return
 		}
+		a.objectLockConfig = resp.ObjectLockConfiguration
+	})
+	return a.objectLockConfig, a.objectLockErr
+}
+
+func (a *mqlAwsS3Bucket) defaultLock() (string, error) {
+	config, err := a.fetchObjectLockConfig()
+	if err != nil {
 		return "", err
 	}
-
-	return string(objectLockConfiguration.ObjectLockConfiguration.ObjectLockEnabled), nil
+	if config == nil {
+		return "", nil
+	}
+	return string(config.ObjectLockEnabled), nil
 }
 
 func (a *mqlAwsS3Bucket) objectLockEnabled() (bool, error) {
-	bucketname := a.Name.Data
-	region := a.Location.Data
-
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
-	svc := conn.S3(region)
-	ctx := context.Background()
-
-	objectLockConfiguration, err := svc.GetObjectLockConfiguration(ctx, &s3.GetObjectLockConfigurationInput{
-		Bucket: &bucketname,
-	})
+	config, err := a.fetchObjectLockConfig()
 	if err != nil {
-		if isNotFoundForS3(err) {
-			return false, nil
-		}
 		return false, err
 	}
-
-	return objectLockConfiguration.ObjectLockConfiguration.ObjectLockEnabled == "Enabled", nil
+	if config == nil {
+		return false, nil
+	}
+	return config.ObjectLockEnabled == "Enabled", nil
 }
 
 func (a *mqlAwsS3Bucket) staticWebsiteHosting() (map[string]any, error) {

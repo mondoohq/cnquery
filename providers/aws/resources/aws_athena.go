@@ -5,7 +5,6 @@ package resources
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync"
 
@@ -66,19 +65,7 @@ func (a *mqlAwsAthena) getWorkgroups(conn *connection.AwsConnection) []*jobpool.
 					return nil, err
 				}
 				for _, wgSummary := range page.WorkGroups {
-					// GetWorkGroup provides full configuration details
-					wgResp, err := svc.GetWorkGroup(ctx, &athena.GetWorkGroupInput{
-						WorkGroup: wgSummary.Name,
-					})
-					if err != nil {
-						var nfe *athena_types.ResourceNotFoundException
-						if errors.As(err, &nfe) {
-							log.Warn().Str("workgroup", convert.ToValue(wgSummary.Name)).Msg("workgroup not found, skipping")
-							continue
-						}
-						return nil, err
-					}
-					mqlWg, err := newMqlAwsAthenaWorkgroup(a.MqlRuntime, region, conn.AccountId(), wgResp.WorkGroup)
+					mqlWg, err := newMqlAwsAthenaWorkgroupFromSummary(a.MqlRuntime, region, conn.AccountId(), &wgSummary)
 					if err != nil {
 						return nil, err
 					}
@@ -92,52 +79,128 @@ func (a *mqlAwsAthena) getWorkgroups(conn *connection.AwsConnection) []*jobpool.
 	return tasks
 }
 
-func newMqlAwsAthenaWorkgroup(runtime *plugin.Runtime, region string, accountID string, wg *athena_types.WorkGroup) (*mqlAwsAthenaWorkgroup, error) {
+func newMqlAwsAthenaWorkgroupFromSummary(runtime *plugin.Runtime, region string, accountID string, wg *athena_types.WorkGroupSummary) (*mqlAwsAthenaWorkgroup, error) {
 	if wg == nil {
-		return nil, fmt.Errorf("workgroup is nil")
+		return nil, fmt.Errorf("workgroup summary is nil")
 	}
 	arn := fmt.Sprintf("arn:aws:athena:%s:%s:workgroup/%s", region, accountID, convert.ToValue(wg.Name))
 
-	var engineVersion, resultConfig interface{}
-	var enforceConfig, publishMetrics, requesterPays *bool
-	var bytesScannedCutoff *int64
-
-	if wg.Configuration != nil {
-		enforceConfig = wg.Configuration.EnforceWorkGroupConfiguration
-		publishMetrics = wg.Configuration.PublishCloudWatchMetricsEnabled
-		requesterPays = wg.Configuration.RequesterPaysEnabled
-		bytesScannedCutoff = wg.Configuration.BytesScannedCutoffPerQuery
-		var err error
-		engineVersion, err = convert.JsonToDict(wg.Configuration.EngineVersion)
-		if err != nil {
-			return nil, err
-		}
-		resultConfig, err = convert.JsonToDict(wg.Configuration.ResultConfiguration)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	resource, err := CreateResource(runtime, "aws.athena.workgroup",
 		map[string]*llx.RawData{
-			"__id":                            llx.StringData(arn),
-			"arn":                             llx.StringData(arn),
-			"name":                            llx.StringDataPtr(wg.Name),
-			"state":                           llx.StringData(string(wg.State)),
-			"description":                     llx.StringDataPtr(wg.Description),
-			"createdAt":                       llx.TimeDataPtr(wg.CreationTime),
-			"enforceWorkGroupConfiguration":   llx.BoolDataPtr(enforceConfig),
-			"publishCloudWatchMetricsEnabled": llx.BoolDataPtr(publishMetrics),
-			"bytesScannedCutoffPerQuery":      llx.IntDataPtr(bytesScannedCutoff),
-			"requesterPaysEnabled":            llx.BoolDataPtr(requesterPays),
-			"engineVersion":                   llx.DictData(engineVersion),
-			"resultConfiguration":             llx.DictData(resultConfig),
-			"region":                          llx.StringData(region),
+			"__id":        llx.StringData(arn),
+			"arn":         llx.StringData(arn),
+			"name":        llx.StringDataPtr(wg.Name),
+			"state":       llx.StringData(string(wg.State)),
+			"description": llx.StringDataPtr(wg.Description),
+			"createdAt":   llx.TimeDataPtr(wg.CreationTime),
+			"region":      llx.StringData(region),
 		})
 	if err != nil {
 		return nil, err
 	}
 	return resource.(*mqlAwsAthenaWorkgroup), nil
+}
+
+type mqlAwsAthenaWorkgroupInternal struct {
+	fetched           bool
+	cachedEnforce     bool
+	cachedPublish     bool
+	cachedRequester   bool
+	cachedBytesCutoff int64
+	cachedEngineVer   interface{}
+	cachedResultCfg   interface{}
+	lock              sync.Mutex
+}
+
+func (a *mqlAwsAthenaWorkgroup) fetchConfig() error {
+	if a.fetched {
+		return nil
+	}
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	if a.fetched {
+		return nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Athena(a.Region.Data)
+	ctx := context.Background()
+
+	name := a.Name.Data
+	resp, err := svc.GetWorkGroup(ctx, &athena.GetWorkGroupInput{
+		WorkGroup: &name,
+	})
+	if err != nil {
+		return err
+	}
+	if resp.WorkGroup != nil && resp.WorkGroup.Configuration != nil {
+		cfg := resp.WorkGroup.Configuration
+		if cfg.EnforceWorkGroupConfiguration != nil {
+			a.cachedEnforce = *cfg.EnforceWorkGroupConfiguration
+		}
+		if cfg.PublishCloudWatchMetricsEnabled != nil {
+			a.cachedPublish = *cfg.PublishCloudWatchMetricsEnabled
+		}
+		if cfg.RequesterPaysEnabled != nil {
+			a.cachedRequester = *cfg.RequesterPaysEnabled
+		}
+		if cfg.BytesScannedCutoffPerQuery != nil {
+			a.cachedBytesCutoff = *cfg.BytesScannedCutoffPerQuery
+		}
+		var err2 error
+		a.cachedEngineVer, err2 = convert.JsonToDict(cfg.EngineVersion)
+		if err2 != nil {
+			return err2
+		}
+		a.cachedResultCfg, err2 = convert.JsonToDict(cfg.ResultConfiguration)
+		if err2 != nil {
+			return err2
+		}
+	}
+	a.fetched = true
+	return nil
+}
+
+func (a *mqlAwsAthenaWorkgroup) enforceWorkGroupConfiguration() (bool, error) {
+	if err := a.fetchConfig(); err != nil {
+		return false, err
+	}
+	return a.cachedEnforce, nil
+}
+
+func (a *mqlAwsAthenaWorkgroup) publishCloudWatchMetricsEnabled() (bool, error) {
+	if err := a.fetchConfig(); err != nil {
+		return false, err
+	}
+	return a.cachedPublish, nil
+}
+
+func (a *mqlAwsAthenaWorkgroup) bytesScannedCutoffPerQuery() (int64, error) {
+	if err := a.fetchConfig(); err != nil {
+		return 0, err
+	}
+	return a.cachedBytesCutoff, nil
+}
+
+func (a *mqlAwsAthenaWorkgroup) requesterPaysEnabled() (bool, error) {
+	if err := a.fetchConfig(); err != nil {
+		return false, err
+	}
+	return a.cachedRequester, nil
+}
+
+func (a *mqlAwsAthenaWorkgroup) engineVersion() (interface{}, error) {
+	if err := a.fetchConfig(); err != nil {
+		return nil, err
+	}
+	return a.cachedEngineVer, nil
+}
+
+func (a *mqlAwsAthenaWorkgroup) resultConfiguration() (interface{}, error) {
+	if err := a.fetchConfig(); err != nil {
+		return nil, err
+	}
+	return a.cachedResultCfg, nil
 }
 
 func (a *mqlAwsAthena) dataCatalogs() ([]any, error) {

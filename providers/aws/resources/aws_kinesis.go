@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/service/firehose"
 	firehose_types "github.com/aws/aws-sdk-go-v2/service/firehose/types"
@@ -67,7 +68,7 @@ func (a *mqlAwsKinesis) getStreams(conn *connection.AwsConnection) []*jobpool.Jo
 					return nil, err
 				}
 				for _, streamSummary := range page.StreamSummaries {
-					mqlStream, err := newMqlAwsKinesisStream(a.MqlRuntime, region, svc, ctx, &streamSummary)
+					mqlStream, err := newMqlAwsKinesisStream(a.MqlRuntime, region, &streamSummary)
 					if err != nil {
 						return nil, err
 					}
@@ -81,62 +82,131 @@ func (a *mqlAwsKinesis) getStreams(conn *connection.AwsConnection) []*jobpool.Jo
 	return tasks
 }
 
-func newMqlAwsKinesisStream(runtime *plugin.Runtime, region string, svc *kinesis.Client, ctx context.Context, summary *kinesis_types.StreamSummary) (*mqlAwsKinesisStream, error) {
+func newMqlAwsKinesisStream(runtime *plugin.Runtime, region string, summary *kinesis_types.StreamSummary) (*mqlAwsKinesisStream, error) {
 	// Use fields available from ListStreams StreamSummary
 	streamModeDetails, err := convert.JsonToDict(summary.StreamModeDetails)
 	if err != nil {
 		return nil, err
 	}
 
-	args := map[string]*llx.RawData{
-		"__id":              llx.StringDataPtr(summary.StreamARN),
-		"arn":               llx.StringDataPtr(summary.StreamARN),
-		"name":              llx.StringDataPtr(summary.StreamName),
-		"status":            llx.StringData(string(summary.StreamStatus)),
-		"streamModeDetails": llx.DictData(streamModeDetails),
-		"createdAt":         llx.TimeDataPtr(summary.StreamCreationTimestamp),
-		"region":            llx.StringData(region),
-	}
-
-	// Fetch additional fields from DescribeStreamSummary (encryption, retention, shard/consumer counts)
-	descResp, err := svc.DescribeStreamSummary(ctx, &kinesis.DescribeStreamSummaryInput{
-		StreamARN: summary.StreamARN,
-	})
-	if err != nil {
-		log.Warn().Str("stream", convert.ToValue(summary.StreamName)).Err(err).Msg("could not describe stream, using defaults for detail fields")
-		args["encryptionType"] = llx.StringData("")
-		args["keyId"] = llx.StringData("")
-		args["retentionPeriodHours"] = llx.IntData(0)
-		args["openShardCount"] = llx.IntData(0)
-		args["consumerCount"] = llx.IntData(0)
-		args["enhancedMonitoring"] = llx.ArrayData([]any{}, types.Any)
-	} else if descResp.StreamDescriptionSummary != nil {
-		desc := descResp.StreamDescriptionSummary
-		enhancedMonitoring, err := convert.JsonToDictSlice(desc.EnhancedMonitoring)
-		if err != nil {
-			return nil, err
-		}
-		args["encryptionType"] = llx.StringData(string(desc.EncryptionType))
-		args["keyId"] = llx.StringDataPtr(desc.KeyId)
-		args["retentionPeriodHours"] = llx.IntDataDefault(desc.RetentionPeriodHours, 0)
-		args["openShardCount"] = llx.IntDataDefault(desc.OpenShardCount, 0)
-		args["consumerCount"] = llx.IntDataDefault(desc.ConsumerCount, 0)
-		args["enhancedMonitoring"] = llx.ArrayData(enhancedMonitoring, types.Any)
-	} else {
-		log.Warn().Str("stream", convert.ToValue(summary.StreamName)).Msg("nil stream description summary")
-		args["encryptionType"] = llx.StringData("")
-		args["keyId"] = llx.StringData("")
-		args["retentionPeriodHours"] = llx.IntData(0)
-		args["openShardCount"] = llx.IntData(0)
-		args["consumerCount"] = llx.IntData(0)
-		args["enhancedMonitoring"] = llx.ArrayData([]any{}, types.Any)
-	}
-
-	resource, err := CreateResource(runtime, "aws.kinesis.stream", args)
+	resource, err := CreateResource(runtime, "aws.kinesis.stream",
+		map[string]*llx.RawData{
+			"__id":              llx.StringDataPtr(summary.StreamARN),
+			"arn":               llx.StringDataPtr(summary.StreamARN),
+			"name":              llx.StringDataPtr(summary.StreamName),
+			"status":            llx.StringData(string(summary.StreamStatus)),
+			"streamModeDetails": llx.DictData(streamModeDetails),
+			"createdAt":         llx.TimeDataPtr(summary.StreamCreationTimestamp),
+			"region":            llx.StringData(region),
+		})
 	if err != nil {
 		return nil, err
 	}
 	return resource.(*mqlAwsKinesisStream), nil
+}
+
+type mqlAwsKinesisStreamInternal struct {
+	fetched          bool
+	cachedEncType    string
+	cachedKeyId      string
+	cachedRetention  int64
+	cachedOpenShards int64
+	cachedConsumers  int64
+	cachedEnhMonitor []any
+	lock             sync.Mutex
+}
+
+func (a *mqlAwsKinesisStream) fetchStreamDetails() error {
+	if a.fetched {
+		return nil
+	}
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	if a.fetched {
+		return nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Kinesis(a.Region.Data)
+	ctx := context.Background()
+
+	arnVal := a.Arn.Data
+	descResp, err := svc.DescribeStreamSummary(ctx, &kinesis.DescribeStreamSummaryInput{
+		StreamARN: &arnVal,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			log.Warn().Str("stream", arnVal).Msg("access denied describing kinesis stream, using defaults")
+			a.fetched = true
+			return nil
+		}
+		return err
+	}
+	if descResp.StreamDescriptionSummary != nil {
+		desc := descResp.StreamDescriptionSummary
+		a.cachedEncType = string(desc.EncryptionType)
+		if desc.KeyId != nil {
+			a.cachedKeyId = *desc.KeyId
+		}
+		if desc.RetentionPeriodHours != nil {
+			a.cachedRetention = int64(*desc.RetentionPeriodHours)
+		}
+		if desc.OpenShardCount != nil {
+			a.cachedOpenShards = int64(*desc.OpenShardCount)
+		}
+		if desc.ConsumerCount != nil {
+			a.cachedConsumers = int64(*desc.ConsumerCount)
+		}
+		var err2 error
+		a.cachedEnhMonitor, err2 = convert.JsonToDictSlice(desc.EnhancedMonitoring)
+		if err2 != nil {
+			return err2
+		}
+	}
+	a.fetched = true
+	return nil
+}
+
+func (a *mqlAwsKinesisStream) encryptionType() (string, error) {
+	if err := a.fetchStreamDetails(); err != nil {
+		return "", err
+	}
+	return a.cachedEncType, nil
+}
+
+func (a *mqlAwsKinesisStream) keyId() (string, error) {
+	if err := a.fetchStreamDetails(); err != nil {
+		return "", err
+	}
+	return a.cachedKeyId, nil
+}
+
+func (a *mqlAwsKinesisStream) retentionPeriodHours() (int64, error) {
+	if err := a.fetchStreamDetails(); err != nil {
+		return 0, err
+	}
+	return a.cachedRetention, nil
+}
+
+func (a *mqlAwsKinesisStream) openShardCount() (int64, error) {
+	if err := a.fetchStreamDetails(); err != nil {
+		return 0, err
+	}
+	return a.cachedOpenShards, nil
+}
+
+func (a *mqlAwsKinesisStream) consumerCount() (int64, error) {
+	if err := a.fetchStreamDetails(); err != nil {
+		return 0, err
+	}
+	return a.cachedConsumers, nil
+}
+
+func (a *mqlAwsKinesisStream) enhancedMonitoring() ([]any, error) {
+	if err := a.fetchStreamDetails(); err != nil {
+		return nil, err
+	}
+	return a.cachedEnhMonitor, nil
 }
 
 func (a *mqlAwsKinesisStream) consumers() ([]any, error) {
