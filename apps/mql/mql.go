@@ -17,6 +17,9 @@ import (
 func main() {
 	defer health.ReportPanic("mql", mql.Version, mql.Build)
 
+	// Clean up leftover .old binary from a previous in-place update (Windows).
+	selfupdate.CleanupOldBinary()
+
 	// Normalize --auto-update flag to handle both "--auto-update false" and "--auto-update=false" formats
 	// This must happen before any argument parsing (self-update check or cobra)
 	normalizeAutoUpdateFlag()

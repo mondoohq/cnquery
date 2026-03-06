@@ -176,6 +176,19 @@ func CheckAndUpdate(cfg Config) (bool, error) {
 		Str("path", binaryPath).
 		Msg("self-update: successfully installed new version, re-executing")
 
+	// On Windows, swap the binary in-place so the firewall rule for the
+	// original path keeps working (no second firewall prompt).
+	if inPlaceUpdateEnabled {
+		if err := verifyBinary(binaryPath); err != nil {
+			return false, errors.Wrap(err, "new binary verification failed")
+		}
+		originalPath, err := swapBinaryInPlace(binaryPath)
+		if err != nil {
+			return false, errors.Wrap(err, "in-place swap failed")
+		}
+		binaryPath = originalPath
+	}
+
 	// Re-execute with the new binary
 	if err := ExecUpdatedBinary(binaryPath, os.Args); err != nil {
 		return false, errors.Wrap(err, "failed to re-execute with updated binary")
@@ -236,6 +249,16 @@ func execLocalIfNewer(binPath, binName, currentVersion string) (bool, error) {
 		Str("current", currentVersion).
 		Str("path", localBinary).
 		Msg("self-update: switching to local binary")
+
+	// On Windows, swap the binary in-place so the firewall rule stays valid.
+	// No extra verification needed: getLocalBinaryVersion already ran the binary.
+	if inPlaceUpdateEnabled {
+		originalPath, err := swapBinaryInPlace(localBinary)
+		if err != nil {
+			return false, errors.Wrap(err, "in-place swap failed")
+		}
+		localBinary = originalPath
+	}
 
 	// Exec to the newer local binary
 	if err := ExecUpdatedBinary(localBinary, os.Args); err != nil {
