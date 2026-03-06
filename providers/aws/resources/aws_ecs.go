@@ -521,6 +521,7 @@ func batchFetchENIPublicIPs(ctx context.Context, conn *connection.AwsConnection,
 	svc := conn.Ec2(region)
 	resp, err := svc.DescribeNetworkInterfaces(ctx, &ec2.DescribeNetworkInterfacesInput{NetworkInterfaceIds: eniIDs})
 	if err != nil {
+		log.Warn().Err(err).Msg("failed to batch-fetch ENI public IPs")
 		return result
 	}
 	for _, ni := range resp.NetworkInterfaces {
