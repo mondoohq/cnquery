@@ -112,68 +112,95 @@ func staticWindowsDetector(pf *inventory.Platform, conn shared.Connection) (bool
 		return false, nil
 	}
 
-	pf.Name = "windows"
-	productName, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion", "ProductName")
-	if err == nil {
-		log.Debug().Str("productName", productName.Value.String).Msg("found productName")
-		pf.Title = productName.Value.String
-	}
-
-	editionID, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion", "EditionID")
-	if err == nil {
-		log.Debug().Str("editionID", editionID.Value.String).Msg("found editionID")
-		pf.Labels["windows.mondoo.com/edition-id"] = editionID.Value.String
-	}
-
-	arch, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion", "Architecture")
-	if err == nil && arch.Value.String != "" {
-		log.Debug().Str("architecture", arch.Value.String).Msg("found architecture")
-		pf.Arch = arch.Value.String
-	}
-
-	ubr, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion", "UBR")
-	if err == nil && ubr.Value.String != "" {
-		log.Debug().Str("ubr", ubr.Value.String).Msg("found ubr")
-		pf.Build = ubr.Value.String
-	}
-	// we try both CurrentBuild and CurrentBuildNumber for the version number
-	currentBuild, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion", "CurrentBuild")
-	if err == nil && currentBuild.Value.String != "" {
-		log.Debug().Str("currentBuild", currentBuild.Value.String).Msg("found currentBuild")
-		pf.Version = currentBuild.Value.String
+	// Load SYSTEM hive for ProductType, VBS, and HotPatchTableSize reads
+	systemFi, err := conn.FileInfo(registry.SystemRegPath)
+	if err != nil {
+		log.Debug().Err(err).Msg("could not find SYSTEM registry key file")
 	} else {
-		currentBuildNumber, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion", "CurrentBuildNumber")
-		if err == nil && currentBuildNumber.Value.String != "" {
-			log.Debug().Str("currentBuildNumber", currentBuildNumber.Value.String).Msg("found currentBuildNumber")
-			pf.Version = currentBuildNumber.Value.String
+		err = rh.LoadSubkey(registry.System, systemFi.Path)
+		if err != nil {
+			log.Debug().Err(err).Msg("could not load SYSTEM registry key file")
 		}
 	}
 
+	// Build a WindowsCurrentVersion from the registry hives and reuse platformFromWinCurrentVersion
+	current := &win.WindowsCurrentVersion{}
+
+	if v, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion", "ProductName"); err == nil {
+		current.ProductName = v.Value.String
+	}
+	if v, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion", "EditionID"); err == nil {
+		current.EditionID = v.Value.String
+	}
+	if v, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion", "Architecture"); err == nil {
+		current.Architecture = v.Value.String
+	}
+	if v, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion", "DisplayVersion"); err == nil {
+		current.DisplayVersion = v.Value.String
+	}
+	if v, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion", "UBR"); err == nil {
+		current.UBR, _ = strconv.Atoi(v.Value.String)
+	}
+	// we try both CurrentBuild and CurrentBuildNumber for the version number
+	if v, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion", "CurrentBuild"); err == nil && v.Value.String != "" {
+		current.CurrentBuild = v.Value.String
+	} else if v, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion", "CurrentBuildNumber"); err == nil {
+		current.CurrentBuild = v.Value.String
+	}
+	if v, err := rh.GetRegistryItemValue(registry.System, "CurrentControlSet\\Control\\ProductOptions", "ProductType"); err == nil {
+		current.ProductType = v.Value.String
+	}
+
+	platformFromWinCurrentVersion(pf, current)
+
+	var hotpatchEnabled bool
+	if pf.Labels["windows.mondoo.com/product-type"] == "1" {
+		hotpatchEnabled = staticClientHotpatch(rh)
+	} else {
+		hotpatchEnabled = staticServerHotpatch(rh, pf.Arch)
+	}
+	pf.Labels["windows.mondoo.com/hotpatch"] = strconv.FormatBool(hotpatchEnabled)
+
+	return true, nil
+}
+
+// staticClientHotpatch checks AllowRebootlessUpdates + VBS from offline registry hives.
+func staticClientHotpatch(rh *registry.RegistryHandler) bool {
+	allowRebootless, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\PolicyManager\\current\\device\\Update", "AllowRebootlessUpdates")
+	if err == nil && allowRebootless.Value.String != "" {
+		log.Debug().Str("allowRebootlessUpdates", allowRebootless.Value.String).Msg("found AllowRebootlessUpdates")
+	}
+
+	enableVBS, err := rh.GetRegistryItemValue(registry.System, "CurrentControlSet\\Control\\DeviceGuard", "EnableVirtualizationBasedSecurity")
+	if err == nil && enableVBS.Value.String != "" {
+		log.Debug().Str("enableVirtualizationBasedSecurity", enableVBS.Value.String).Msg("found enableVirtualizationBasedSecurity")
+	}
+
+	return allowRebootless.Value.String == "1" && enableVBS.Value.String == "1"
+}
+
+// staticServerHotpatch checks hotpatch enrollment package + VBS + HotPatchTableSize from offline registry hives.
+func staticServerHotpatch(rh *registry.RegistryHandler, arch string) bool {
 	platformArch := "amd64"
-	if pf.Arch != "" {
-		platformArch = strings.ToLower(pf.Arch)
+	if arch != "" {
+		platformArch = strings.ToLower(arch)
 	}
 	hotpatchPackage, err := rh.GetRegistryItemValue(registry.Software, "Microsoft\\Windows NT\\CurrentVersion\\Update\\TargetingInfo\\DynamicInstalled\\Hotpatch."+platformArch, "Name")
 	if err == nil && hotpatchPackage.Value.String != "" {
 		log.Debug().Str("hotpatchPackage", hotpatchPackage.Value.String).Msg("found hotpatchPackage")
 	}
 
-	enableVirtualizationBasedSecurity, err := rh.GetRegistryItemValue(registry.System, "CurrentControlSet\\Control\\DeviceGuard", "EnableVirtualizationBasedSecurity")
-	if err == nil && enableVirtualizationBasedSecurity.Value.String != "" {
-		log.Debug().Str("enableVirtualizationBasedSecurity", enableVirtualizationBasedSecurity.Value.String).Msg("found enableVirtualizationBasedSecurity")
+	enableVBS, err := rh.GetRegistryItemValue(registry.System, "CurrentControlSet\\Control\\DeviceGuard", "EnableVirtualizationBasedSecurity")
+	if err == nil && enableVBS.Value.String != "" {
+		log.Debug().Str("enableVirtualizationBasedSecurity", enableVBS.Value.String).Msg("found enableVirtualizationBasedSecurity")
 	}
 
 	hotPatchTableSize, err := rh.GetRegistryItemValue(registry.System, "CurrentControlSet\\Control\\Session Manager\\Memory Management", "HotPatchTableSize")
-	if err == nil && enableVirtualizationBasedSecurity.Value.String != "" {
+	if err == nil && hotPatchTableSize.Value.String != "" {
 		log.Debug().Str("hotPatchTableSize", hotPatchTableSize.Value.String).Msg("found hotPatchTableSize")
 	}
 
-	hotpatchEnabled := hotpatchPackage.Value.String == win.HotpatchPackage && enableVirtualizationBasedSecurity.Value.String == "1" && hotPatchTableSize.Value.String != "0"
-	pf.Labels["windows.mondoo.com/hotpatch"] = strconv.FormatBool(hotpatchEnabled)
-
-	correctForWindows11(pf)
-
-	return true, nil
+	return hotpatchPackage.Value.String == win.HotpatchPackage && enableVBS.Value.String == "1" && hotPatchTableSize.Value.String != "0" && hotPatchTableSize.Value.String != ""
 }
 
 // detectIntuneDeviceID detects the Intune device ID for Windows client systems.

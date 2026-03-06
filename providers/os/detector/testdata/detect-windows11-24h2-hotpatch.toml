@@ -1,0 +1,21 @@
+[commands."55dbc0e9b838caa11145eed07f6e73644bda27bf65a0c58a52291f9a18384481"]
+stdout="""
+{
+    "CurrentBuild":  "26100",
+    "UBR":  3000,
+    "InstallationType":  "Client",
+    "EditionID":  "Enterprise",
+    "ProductName":  "Windows 11 Enterprise",
+    "DisplayVersion":  "24H2",
+    "Architecture":  "AMD64",
+    "ProductType":  "WinNT"
+}
+"""
+
+[commands."abb2e2bc03d2148718d9bb1a8069ea307dd97f1c2d81845558b0ea6d560b9900"]
+stdout="""
+{
+    "AllowRebootlessUpdates":  "1",
+    "EnableVirtualizationBasedSecurity":  "1"
+}
+"""
