@@ -38,6 +38,7 @@ func runtimeWindowsDetector(pf *inventory.Platform, conn shared.Connection) (boo
 		pf.Labels["windows.mondoo.com/hotpatch"] = strconv.FormatBool(hotpatchEnabled)
 
 		detectIntuneDeviceID(pf, conn)
+		detectESU(pf, conn)
 		return true, nil
 	}
 
@@ -62,6 +63,7 @@ func runtimeWindowsDetector(pf *inventory.Platform, conn shared.Connection) (boo
 	correctForWindows11(pf)
 
 	detectIntuneDeviceID(pf, conn)
+	detectESU(pf, conn)
 	return true, nil
 }
 
@@ -223,6 +225,34 @@ func detectIntuneDeviceID(pf *inventory.Platform, conn shared.Connection) {
 
 	if intuneDeviceID != "" {
 		pf.Labels["windows.mondoo.com/intune-device-id"] = intuneDeviceID
+	}
+}
+
+// detectESU checks if Windows 10 Extended Security Updates (ESU) are enabled.
+// ESU is only relevant for Windows 10 version 22H2 (build 19045).
+func detectESU(pf *inventory.Platform, conn shared.Connection) {
+	// pf.Version holds the numeric OS build number (e.g. "19045" for Win10 22H2).
+	buildNumber, err := strconv.Atoi(pf.Version)
+	if err != nil {
+		return
+	}
+	// Skip pre-Windows 10 builds (e.g. older Windows Server) and Windows 11+ (build >= 22000).
+	// Only Windows 10 version 22H2 (build 19045) is supported for ESU.
+	if buildNumber != 19045 {
+		return
+	}
+
+	esuStatus, err := win.GetWindowsESUStatus(conn)
+	if err != nil {
+		log.Debug().Err(err).Msg("could not get Windows ESU status")
+		return
+	}
+
+	if esuStatus.ESUEnabled() {
+		if pf.Metadata == nil {
+			pf.Metadata = map[string]string{}
+		}
+		pf.Metadata["windows.mondoo.com/support-type"] = "esu"
 	}
 }
 
