@@ -36440,7 +36440,7 @@ func (c *mqlAwsEcsContainer) GetReason() *plugin.TValue[string] {
 type mqlAwsEcsTaskDefinition struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlAwsEcsTaskDefinitionInternal
+	// optional: if you define mqlAwsEcsTaskDefinitionInternal it will be used here
 	Arn                  plugin.TValue[string]
 	Family               plugin.TValue[string]
 	Revision             plugin.TValue[int64]

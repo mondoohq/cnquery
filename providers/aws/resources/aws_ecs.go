@@ -614,7 +614,6 @@ func (a *mqlAwsEcs) getECSTaskDefinitions(conn *connection.AwsConnection) []*job
 					if err != nil {
 						return nil, err
 					}
-					mqlTaskDef.(*mqlAwsEcsTaskDefinition).region = region
 					res = append(res, mqlTaskDef)
 				}
 			}
@@ -1107,13 +1106,9 @@ func (a *mqlAwsEcs) createEphemeralStorageResource(es *ecstypes.EphemeralStorage
 		})
 }
 
-type mqlAwsEcsTaskDefinitionInternal struct {
-	region string
-}
-
 func (a *mqlAwsEcsTaskDefinition) tags() (map[string]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	svc := conn.Ecs(a.region)
+	svc := conn.Ecs(a.Region.Data)
 	ctx := context.Background()
 
 	arnVal := a.Arn.Data
