@@ -147,8 +147,15 @@ func (a *mqlAwsAthenaWorkgroup) fetchConfig() error {
 		if cfg.BytesScannedCutoffPerQuery != nil {
 			a.cachedBytesCutoff = *cfg.BytesScannedCutoffPerQuery
 		}
-		a.cachedEngineVer, _ = convert.JsonToDict(cfg.EngineVersion)
-		a.cachedResultCfg, _ = convert.JsonToDict(cfg.ResultConfiguration)
+		var err2 error
+		a.cachedEngineVer, err2 = convert.JsonToDict(cfg.EngineVersion)
+		if err2 != nil {
+			return err2
+		}
+		a.cachedResultCfg, err2 = convert.JsonToDict(cfg.ResultConfiguration)
+		if err2 != nil {
+			return err2
+		}
 	}
 	a.fetched = true
 	return nil

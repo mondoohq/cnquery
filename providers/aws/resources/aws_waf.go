@@ -40,17 +40,18 @@ func (a *mqlAwsWafAcl) id() (string, error) {
 type mqlAwsWafAclInternal struct {
 	fetched                  bool
 	cachedManagedByFwManager bool
+	cachedRules              []waftypes.Rule
 	lock                     sync.Mutex
 }
 
-func (a *mqlAwsWafAcl) managedByFirewallManager() (bool, error) {
+func (a *mqlAwsWafAcl) fetchACLDetails() error {
 	if a.fetched {
-		return a.cachedManagedByFwManager, nil
+		return nil
 	}
 	a.lock.Lock()
 	defer a.lock.Unlock()
 	if a.fetched {
-		return a.cachedManagedByFwManager, nil
+		return nil
 	}
 
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
@@ -63,10 +64,18 @@ func (a *mqlAwsWafAcl) managedByFirewallManager() (bool, error) {
 		Scope: waftypes.Scope(a.Scope.Data),
 	})
 	if err != nil {
-		return false, err
+		return err
 	}
 	a.cachedManagedByFwManager = resp.WebACL.ManagedByFirewallManager
+	a.cachedRules = resp.WebACL.Rules
 	a.fetched = true
+	return nil
+}
+
+func (a *mqlAwsWafAcl) managedByFirewallManager() (bool, error) {
+	if err := a.fetchACLDetails(); err != nil {
+		return false, err
+	}
 	return a.cachedManagedByFwManager, nil
 }
 
@@ -423,23 +432,11 @@ func (a *mqlAwsWaf) ipSets() ([]any, error) {
 }
 
 func (a *mqlAwsWafAcl) rules() ([]any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
-	scopeString := a.Scope.Data
-	scope := waftypes.Scope(scopeString)
-	ctx := context.Background()
-	svc := conn.Wafv2(wafRegionForScope(scopeString))
-	rules := []any{}
-	params := &wafv2.GetWebACLInput{
-		Id:    &a.Id.Data,
-		Name:  &a.Name.Data,
-		Scope: scope,
-	}
-	aclDetails, err := svc.GetWebACL(ctx, params)
-	if err != nil {
+	if err := a.fetchACLDetails(); err != nil {
 		return nil, err
 	}
-	for _, rule := range aclDetails.WebACL.Rules {
+	rules := []any{}
+	for _, rule := range a.cachedRules {
 		ruleID := a.Arn.Data + "/" + *rule.Name
 		mqlStatement, err := createStatementResource(a.MqlRuntime, rule.Statement, rule.Name, ruleID)
 		if err != nil {

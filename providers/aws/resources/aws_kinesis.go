@@ -135,6 +135,11 @@ func (a *mqlAwsKinesisStream) fetchStreamDetails() error {
 		StreamARN: &arnVal,
 	})
 	if err != nil {
+		if Is400AccessDeniedError(err) {
+			log.Warn().Str("stream", arnVal).Msg("access denied describing kinesis stream, using defaults")
+			a.fetched = true
+			return nil
+		}
 		return err
 	}
 	if descResp.StreamDescriptionSummary != nil {
@@ -152,7 +157,11 @@ func (a *mqlAwsKinesisStream) fetchStreamDetails() error {
 		if desc.ConsumerCount != nil {
 			a.cachedConsumers = int64(*desc.ConsumerCount)
 		}
-		a.cachedEnhMonitor, _ = convert.JsonToDictSlice(desc.EnhancedMonitoring)
+		var err2 error
+		a.cachedEnhMonitor, err2 = convert.JsonToDictSlice(desc.EnhancedMonitoring)
+		if err2 != nil {
+			return err2
+		}
 	}
 	a.fetched = true
 	return nil
