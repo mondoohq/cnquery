@@ -593,7 +593,7 @@ func (a *mqlAwsCloudwatch) getLogGroups(conn *connection.AwsConnection) []*jobpo
 						if err == nil {
 							groupTags = tagsResp.Tags
 							if conn.Filters.General.IsFilteredOutByTags(groupTags) {
-								log.Debug().Interface("log_group", loggroup.LogGroupName).Msg("excluding log group due to filters")
+								log.Debug().Interface("log_group", loggroup.LogGroupName).Interface("tags", groupTags).Msg("excluding log group due to tag filters")
 								continue
 							}
 						} else {
