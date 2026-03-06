@@ -202,14 +202,16 @@ func detectIntuneDeviceID(pf *inventory.Platform, conn shared.Connection) {
 }
 
 // detectESU checks if Windows 10 Extended Security Updates (ESU) are enabled.
-// ESU is only relevant for Windows 10 (build < 22000).
+// ESU is only relevant for Windows 10 (build 10240–21999).
 func detectESU(pf *inventory.Platform, conn shared.Connection) {
+	// pf.Version holds the numeric OS build number (e.g. "19045" for Win10 22H2)
 	buildNumber, err := strconv.Atoi(pf.Version)
 	if err != nil {
 		return
 	}
-	// ESU is only for Windows 10 (build < 22000)
-	if buildNumber >= 22000 {
+	// Windows 10 builds range from 10240 to 19045; builds >= 22000 are Windows 11.
+	// Skip older builds (Server 2012 R2, etc.) and Windows 11+.
+	if buildNumber < 10240 || buildNumber >= 22000 {
 		return
 	}
 
