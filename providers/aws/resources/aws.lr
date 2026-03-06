@@ -7693,3 +7693,121 @@ private aws.glue.workflow @defaults("name region") {
   // Tags for the workflow
   tags() map[string]string
 }
+
+// Amazon MSK (Managed Streaming for Apache Kafka)
+aws.msk @defaults("clusters") {
+  // List of MSK clusters
+  clusters() []aws.msk.cluster
+}
+
+// Amazon MSK cluster
+private aws.msk.cluster @defaults("name state clusterType region") {
+  // ARN of the cluster
+  arn string
+  // Name of the cluster
+  name string
+  // Current state of the cluster: ACTIVE, CREATING, DELETING, FAILED, HEALING, MAINTENANCE, REBOOTING_BROKER, UPDATING
+  state string
+  // Cluster type: PROVISIONED or SERVERLESS
+  clusterType string
+  // Region where the cluster is deployed
+  region string
+  // Current version of the cluster
+  currentVersion string
+  // Kafka version running on the cluster
+  kafkaVersion() string
+  // Number of broker nodes
+  numberOfBrokerNodes() int
+  // Broker instance type
+  brokerInstanceType() string
+  // Whether encryption in transit between clients and brokers uses TLS, TLS_PLAINTEXT, or PLAINTEXT
+  encryptionInTransitClientBroker() string
+  // Whether broker-to-broker communication within the cluster is encrypted
+  encryptionInTransitInCluster() bool
+  // KMS key used for encryption at rest
+  kmsKey() aws.kms.key
+  // Whether IAM authentication is enabled
+  iamAuthEnabled() bool
+  // Whether SASL/SCRAM authentication is enabled
+  scramAuthEnabled() bool
+  // Whether TLS client authentication is enabled
+  tlsAuthEnabled() bool
+  // Whether public access is enabled
+  publicAccess() bool
+  // Whether CloudWatch logging is enabled for broker logs
+  cloudwatchLogsEnabled() bool
+  // CloudWatch log group for broker logs
+  cloudwatchLogsGroup() string
+  // Whether S3 logging is enabled for broker logs
+  s3LogsEnabled() bool
+  // S3 bucket for broker logs
+  s3LogsBucket() string
+  // Whether Firehose logging is enabled for broker logs
+  firehoseLogsEnabled() bool
+  // Enhanced monitoring level: DEFAULT, PER_BROKER, PER_TOPIC_PER_BROKER, PER_TOPIC_PER_PARTITION
+  enhancedMonitoring() string
+  // Whether JMX exporter is enabled for Prometheus
+  jmxExporterEnabled() bool
+  // Whether Node exporter is enabled for Prometheus
+  nodeExporterEnabled() bool
+  // Subnets where brokers are deployed
+  subnets() []aws.vpc.subnet
+  // Security groups attached to the cluster
+  securityGroups() []aws.ec2.securitygroup
+  // Date the cluster was created
+  createdAt time
+  // Tags for the cluster
+  tags map[string]string
+}
+
+// Amazon MQ
+aws.mq @defaults("brokers") {
+  // List of MQ brokers
+  brokers() []aws.mq.broker
+}
+
+// Amazon MQ message broker
+private aws.mq.broker @defaults("name engineType deploymentMode state region") {
+  // ARN of the broker
+  arn string
+  // Unique ID of the broker
+  brokerId string
+  // Name of the broker
+  name string
+  // Current state of the broker: CREATION_IN_PROGRESS, RUNNING, REBOOT_IN_PROGRESS, CREATION_FAILED, DELETION_IN_PROGRESS, CRITICAL_ACTION_REQUIRED
+  state string
+  // Engine type: ACTIVEMQ or RABBITMQ
+  engineType string
+  // Engine version
+  engineVersion() string
+  // Deployment mode: SINGLE_INSTANCE, ACTIVE_STANDBY_MULTI_AZ, or CLUSTER_MULTI_AZ
+  deploymentMode string
+  // Host instance type
+  hostInstanceType string
+  // Region where the broker is deployed
+  region string
+  // Whether the broker has a public endpoint
+  publiclyAccessible() bool
+  // Authentication strategy: SIMPLE, LDAP, or CONFIG_MANAGED
+  authenticationStrategy() string
+  // Whether the broker uses an AWS-owned KMS key for encryption at rest
+  useAwsOwnedKey() bool
+  // KMS key used for encryption at rest
+  kmsKey() aws.kms.key
+  // Whether general logging is enabled
+  generalLogsEnabled() bool
+  // Whether audit logging is enabled (ActiveMQ only)
+  auditLogsEnabled() bool
+  // Whether automatic minor version upgrades are enabled
+  autoMinorVersionUpgrade() bool
+  // Storage type: EBS or EFS
+  storageType() string
+  // Subnets where the broker is deployed
+  subnets() []aws.vpc.subnet
+  // Security groups attached to the broker
+  securityGroups() []aws.ec2.securitygroup
+  // Date the broker was created
+  createdAt time
+  // Tags for the broker
+  tags map[string]string
+}
