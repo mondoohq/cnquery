@@ -435,11 +435,9 @@ func (t *mqlAwsEcsTask) containers() ([]any, error) {
 
 	containers := []any{}
 	for _, c := range t.cacheContainers {
-		containerLogDriverMap := make(map[string]string)
-		containerCommandMap := make(map[string]string)
 		cmds := []any{}
-		for i := range containerCommandMap[convert.ToValue(c.Name)] {
-			cmds = append(cmds, containerCommandMap[convert.ToValue(c.Name)][i])
+		for _, cmd := range containerCommandMap[convert.ToValue(c.Name)] {
+			cmds = append(cmds, cmd)
 		}
 		publicIp := getContainerIP(ctx, conn, t.attachments, c, t.region)
 		name := convert.ToValue(c.Name)
