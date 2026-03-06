@@ -75,6 +75,8 @@ nfpms:
     formats:
       - deb
       - rpm
+    provides:
+      - cnquery
     overrides:
       deb:
         conflicts:
