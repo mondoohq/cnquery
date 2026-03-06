@@ -492,7 +492,10 @@ func initAwsCodedeployApplication(runtime *plugin.Runtime, args map[string]*llx.
 		return nil, nil, rawResources.Error
 	}
 
-	arnVal := args["arn"].Value.(string)
+	arnVal, ok := args["arn"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("arn must be a string")
+	}
 	for _, r := range rawResources.Data {
 		app := r.(*mqlAwsCodedeployApplication)
 		if app.Arn.Data == arnVal {

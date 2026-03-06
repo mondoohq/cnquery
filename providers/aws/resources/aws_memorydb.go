@@ -552,7 +552,7 @@ func (a *mqlAwsMemorydbSubnetGroup) vpc() (*mqlAwsVpc, error) {
 	}
 	mqlVpc, err := NewResource(a.MqlRuntime, "aws.vpc",
 		map[string]*llx.RawData{
-			"id": llx.StringDataPtr(a.cacheVpcId),
+			"arn": llx.StringData(fmt.Sprintf(vpcArnPattern, a.region, a.accountID, *a.cacheVpcId)),
 		})
 	if err != nil {
 		return nil, err

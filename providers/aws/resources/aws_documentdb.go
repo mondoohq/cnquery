@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/docdb"
 	docdb_types "github.com/aws/aws-sdk-go-v2/service/docdb/types"
@@ -409,9 +410,10 @@ func (a *mqlAwsDocumentdbSnapshot) vpc() (*mqlAwsVpc, error) {
 		a.Vpc.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	mqlVpc, err := NewResource(a.MqlRuntime, "aws.vpc",
 		map[string]*llx.RawData{
-			"id": llx.StringDataPtr(a.cacheVpcId),
+			"arn": llx.StringData(fmt.Sprintf(vpcArnPattern, a.Region.Data, conn.AccountId(), *a.cacheVpcId)),
 		})
 	if err != nil {
 		return nil, err
