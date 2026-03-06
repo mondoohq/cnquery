@@ -11,17 +11,19 @@ import (
 )
 
 type PackageDetails struct {
-	Name         string
-	File         string
-	License      string
-	Author       string
-	AuthorEmail  string
-	Summary      string
-	Version      string
-	Dependencies []string
-	IsLeaf       bool
-	Purl         string
-	Cpes         []string
+	Name           string
+	File           string
+	License        string
+	Author         string
+	AuthorEmail    string
+	Summary        string
+	Version        string
+	RequiresPython string
+	ProjectUrls    map[string]string
+	Dependencies   []string
+	IsLeaf         bool
+	Purl           string
+	Cpes           []string
 }
 
 func NewPackageUrl(name string, version string) string {

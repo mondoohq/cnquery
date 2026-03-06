@@ -5,6 +5,7 @@ alloydb
 alpn
 antispam
 appslot
+arp
 atlassian
 auditlog
 Auths
@@ -25,6 +26,7 @@ BYOS
 bytematchstatement
 cavium
 cdn
+cname
 certificatechains
 clcerts
 cloudflare
@@ -47,6 +49,7 @@ ddos
 deliverychannel
 dfw
 directoryservice
+documentdb
 dlp
 dlq
 dlv
@@ -59,6 +62,8 @@ ekm
 ekus
 elbv
 endpointslice
+EPP
+ETL
 exo
 failback
 fargate
@@ -72,6 +77,7 @@ ftps
 fumadocs
 gcfs
 gcs
+GENEVE
 geomatchstatement
 gistfile
 gotestsum
@@ -113,6 +119,7 @@ managedrulegroupstatement
 managedzone
 maxmemory
 mcp
+memorydb
 mcr
 meid
 messagestoragepolicy
@@ -121,6 +128,7 @@ mgroup
 minfree
 MINIMALUSER
 mkey
+MULTIAZ
 Mpim
 naflags
 natgateway
@@ -225,6 +233,7 @@ WEBSERVERS
 wil
 workdir
 WORKSPACESUSER
+workspacesweb
 xssmatchstatement
 zrt
 ZSTD

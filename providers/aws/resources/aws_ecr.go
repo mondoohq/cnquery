@@ -7,11 +7,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	ecrtypes "github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/aws/aws-sdk-go-v2/service/ecrpublic"
+	ecrpublic_types "github.com/aws/aws-sdk-go-v2/service/ecrpublic/types"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
@@ -481,4 +483,87 @@ func (a *mqlAwsEcr) publicRepositories() ([]any, error) {
 	}
 
 	return res, nil
+}
+
+type mqlAwsEcrRepositoryInternal struct {
+	catalogFetched bool
+	catalogData    *ecrpublic_types.RepositoryCatalogData
+	catalogLock    sync.Mutex
+}
+
+func (a *mqlAwsEcrRepository) fetchCatalogData() (*ecrpublic_types.RepositoryCatalogData, error) {
+	if a.catalogFetched {
+		return a.catalogData, nil
+	}
+	a.catalogLock.Lock()
+	defer a.catalogLock.Unlock()
+	if a.catalogFetched {
+		return a.catalogData, nil
+	}
+
+	if !a.Public.Data {
+		a.catalogFetched = true
+		a.catalogData = nil
+		return nil, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.EcrPublic("us-east-1")
+	ctx := context.Background()
+
+	name := a.Name.Data
+	resp, err := svc.GetRepositoryCatalogData(ctx, &ecrpublic.GetRepositoryCatalogDataInput{
+		RegistryId:     aws.String(conn.AccountId()),
+		RepositoryName: &name,
+	})
+	if err != nil {
+		log.Warn().Str("repository", name).Err(err).Msg("could not fetch ECR public catalog data")
+		a.catalogFetched = true
+		a.catalogData = nil
+		return nil, nil
+	}
+
+	a.catalogFetched = true
+	a.catalogData = resp.CatalogData
+	return a.catalogData, nil
+}
+
+func (a *mqlAwsEcrRepository) aboutText() (string, error) {
+	data, err := a.fetchCatalogData()
+	if err != nil || data == nil {
+		return "", err
+	}
+	return convert.ToValue(data.AboutText), nil
+}
+
+func (a *mqlAwsEcrRepository) usageText() (string, error) {
+	data, err := a.fetchCatalogData()
+	if err != nil || data == nil {
+		return "", err
+	}
+	return convert.ToValue(data.UsageText), nil
+}
+
+func (a *mqlAwsEcrRepository) catalogDescription() (string, error) {
+	data, err := a.fetchCatalogData()
+	if err != nil || data == nil {
+		return "", err
+	}
+	return convert.ToValue(data.Description), nil
+}
+
+func (a *mqlAwsEcrRepository) operatingSystems() ([]any, error) {
+	data, err := a.fetchCatalogData()
+	if err != nil || data == nil {
+		return []any{}, err
+	}
+	return convert.SliceAnyToInterface(data.OperatingSystems), nil
+}
+
+func (a *mqlAwsEcrRepository) architectures() ([]any, error) {
+	data, err := a.fetchCatalogData()
+	if err != nil || data == nil {
+		return []any{}, err
+	}
+	return convert.SliceAnyToInterface(data.Architectures), nil
 }

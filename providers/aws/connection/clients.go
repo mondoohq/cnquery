@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/applicationautoscaling"
 	"github.com/aws/aws-sdk-go-v2/service/appstream"
+	"github.com/aws/aws-sdk-go-v2/service/athena"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
@@ -20,9 +21,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild"
 	"github.com/aws/aws-sdk-go-v2/service/codedeploy"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
+	"github.com/aws/aws-sdk-go-v2/service/docdb"
 	"github.com/aws/aws-sdk-go-v2/service/drs"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -32,23 +36,30 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
+	"github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	"github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
 	"github.com/aws/aws-sdk-go-v2/service/emr"
+	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
+	"github.com/aws/aws-sdk-go-v2/service/firehose"
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
+	"github.com/aws/aws-sdk-go-v2/service/kinesis"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/macie2"
+	"github.com/aws/aws-sdk-go-v2/service/memorydb"
 	"github.com/aws/aws-sdk-go-v2/service/neptune"
 	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
+	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
@@ -63,6 +74,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	"github.com/aws/aws-sdk-go-v2/service/workdocs"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
+	"github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	"github.com/rs/zerolog/log"
 )
 
@@ -572,6 +584,26 @@ func (t *AwsConnection) Efs(region string) *efs.Client {
 	return client
 }
 
+func (t *AwsConnection) EventBridge(region string) *eventbridge.Client {
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_eventbridge_" + region
+
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached eventbridge client")
+		return c.Data.(*eventbridge.Client)
+	}
+
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := eventbridge.NewFromConfig(cfg)
+
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
 func (t *AwsConnection) Fsx(region string) *fsx.Client {
 	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
@@ -592,6 +624,46 @@ func (t *AwsConnection) Fsx(region string) *fsx.Client {
 	client := fsx.NewFromConfig(cfg)
 
 	// cache it
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) Firehose(region string) *firehose.Client {
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_firehose_" + region
+
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached firehose client")
+		return c.Data.(*firehose.Client)
+	}
+
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := firehose.NewFromConfig(cfg)
+
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) Kinesis(region string) *kinesis.Client {
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_kinesis_" + region
+
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached kinesis client")
+		return c.Data.(*kinesis.Client)
+	}
+
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := kinesis.NewFromConfig(cfg)
+
 	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
 	return client
 }
@@ -712,6 +784,26 @@ func (t *AwsConnection) Macie2(region string) *macie2.Client {
 	client := macie2.NewFromConfig(cfg)
 
 	// cache it
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) Memorydb(region string) *memorydb.Client {
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_memorydb_" + region
+
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached memorydb client")
+		return c.Data.(*memorydb.Client)
+	}
+
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := memorydb.NewFromConfig(cfg)
+
 	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
 	return client
 }
@@ -937,29 +1029,22 @@ func (t *AwsConnection) TimestreamLiveAnalytics(region string) *timestreamwrite.
 	return client
 }
 
-// TimestreamInflux returns a Timestream client for InfluxDB
 func (t *AwsConnection) TimestreamInfluxDB(region string) *timestreaminfluxdb.Client {
-	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
 		region = t.cfg.Region
 	}
-	cacheVal := "_timestream_" + region
+	cacheVal := "_timestream_influxdb_" + region
 
-	// check for cached client and return it if it exists
 	c, ok := t.clientcache.Load(cacheVal)
 	if ok {
 		log.Debug().Msg("use cached timestreaminfluxdb client")
 		return c.Data.(*timestreaminfluxdb.Client)
 	}
 
-	// create the client
 	cfg := t.cfg.Copy()
 	cfg.Region = region
-
-	// Create a Neptune client from just a session.
 	client := timestreaminfluxdb.NewFromConfig(cfg)
 
-	// cache it
 	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
 	return client
 }
@@ -1008,6 +1093,26 @@ func (t *AwsConnection) Acm(region string) *acm.Client {
 	client := acm.NewFromConfig(cfg)
 
 	// cache it
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) Athena(region string) *athena.Client {
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_athena_" + region
+
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached athena client")
+		return c.Data.(*athena.Client)
+	}
+
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := athena.NewFromConfig(cfg)
+
 	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
 	return client
 }
@@ -1444,6 +1549,23 @@ func (t *AwsConnection) Workspaces(region string) *workspaces.Client {
 	return client
 }
 
+func (t *AwsConnection) WorkspacesWeb(region string) *workspacesweb.Client {
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_workspacesweb_" + region
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached workspacesweb client")
+		return c.Data.(*workspacesweb.Client)
+	}
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := workspacesweb.NewFromConfig(cfg)
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
 func (t *AwsConnection) STS(region string) *sts.Client {
 	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
@@ -1464,6 +1586,126 @@ func (t *AwsConnection) STS(region string) *sts.Client {
 	client := sts.NewFromConfig(cfg)
 
 	// cache it
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) Glue(region string) *glue.Client {
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_glue_" + region
+
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached glue client")
+		return c.Data.(*glue.Client)
+	}
+
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := glue.NewFromConfig(cfg)
+
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) Route53Domains(region string) *route53domains.Client {
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_route53domains_" + region
+
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached route53domains client")
+		return c.Data.(*route53domains.Client)
+	}
+
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := route53domains.NewFromConfig(cfg)
+
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) CognitoIdentity(region string) *cognitoidentity.Client {
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_cognitoidentity_" + region
+
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached cognitoidentity client")
+		return c.Data.(*cognitoidentity.Client)
+	}
+
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := cognitoidentity.NewFromConfig(cfg)
+
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) CognitoIdentityProvider(region string) *cognitoidentityprovider.Client {
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_cognitoidentityprovider_" + region
+
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached cognitoidentityprovider client")
+		return c.Data.(*cognitoidentityprovider.Client)
+	}
+
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := cognitoidentityprovider.NewFromConfig(cfg)
+
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) DocumentDB(region string) *docdb.Client {
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_docdb_" + region
+
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached docdb client")
+		return c.Data.(*docdb.Client)
+	}
+
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := docdb.NewFromConfig(cfg)
+
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) ElasticBeanstalk(region string) *elasticbeanstalk.Client {
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_elasticbeanstalk_" + region
+
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached elasticbeanstalk client")
+		return c.Data.(*elasticbeanstalk.Client)
+	}
+
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := elasticbeanstalk.NewFromConfig(cfg)
+
 	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
 	return client
 }

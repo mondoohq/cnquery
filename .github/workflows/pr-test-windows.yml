@@ -55,7 +55,7 @@ jobs:
         env:
           WIN_TEST_PACKAGES: ${{ steps.find-packages.outputs.packages }}
         run: |
-          $packages = ($env:WIN_TEST_PACKAGES -split " ") | Where-Object { $_ -ne '' }
+          [string[]]$packages = ($env:WIN_TEST_PACKAGES -split " ") | Where-Object { $_ -ne '' }
           go test -count=1 -v @packages 2>&1 | Tee-Object -FilePath windows-test-output.txt
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 

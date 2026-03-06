@@ -55,6 +55,8 @@ const (
 	DiscoveryKMSKeys                    = "kms-keys"
 	DiscoverySagemakerNotebookInstances = "sagemaker-notebookinstances"
 	DiscoverySecretsManagerSecrets      = "secretsmanager-secrets"
+	DiscoveryElasticacheClusters        = "elasticache-clusters"
+	DiscoveryCloudfrontDistributions    = "cloudfront-distributions"
 )
 
 var All = []string{
@@ -95,6 +97,8 @@ var Auto = []string{
 	DiscoveryKMSKeys,
 	DiscoverySagemakerNotebookInstances,
 	DiscoverySecretsManagerSecrets,
+	DiscoveryElasticacheClusters,
+	DiscoveryCloudfrontDistributions,
 }
 
 var AllAPIResources = []string{
@@ -126,6 +130,8 @@ var AllAPIResources = []string{
 	DiscoveryKMSKeys,
 	DiscoverySagemakerNotebookInstances,
 	DiscoverySecretsManagerSecrets,
+	DiscoveryElasticacheClusters,
+	DiscoveryCloudfrontDistributions,
 }
 
 func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
@@ -1039,6 +1045,62 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 				awsObject: awsObject{
 					account: accountId, region: region, arn: f.Arn.Data,
 					id: f.Name.Data, service: "secretsmanager", objectType: "secret",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
+		}
+	case DiscoveryElasticacheClusters:
+		res, err := NewResource(runtime, "aws.elasticache", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		ec := res.(*mqlAwsElasticache)
+
+		clusters := ec.GetCacheClusters()
+		if clusters == nil {
+			return assetList, nil
+		}
+		if clusters.Error != nil {
+			return nil, clusters.Error
+		}
+
+		for i := range clusters.Data {
+			f := clusters.Data[i].(*mqlAwsElasticacheCluster)
+
+			m := mqlObject{
+				name: f.CacheClusterId.Data, labels: map[string]string{},
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.CacheClusterId.Data, service: "elasticache", objectType: "cluster",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
+		}
+	case DiscoveryCloudfrontDistributions:
+		res, err := NewResource(runtime, "aws.cloudfront", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		cf := res.(*mqlAwsCloudfront)
+
+		distributions := cf.GetDistributions()
+		if distributions == nil {
+			return assetList, nil
+		}
+		if distributions.Error != nil {
+			return nil, distributions.Error
+		}
+
+		for i := range distributions.Data {
+			f := distributions.Data[i].(*mqlAwsCloudfrontDistribution)
+
+			m := mqlObject{
+				name: f.DomainName.Data, labels: map[string]string{},
+				awsObject: awsObject{
+					account: accountId, region: "global", arn: f.Arn.Data,
+					id: f.DomainName.Data, service: "cloudfront", objectType: "distribution",
 				},
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))

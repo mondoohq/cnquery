@@ -162,6 +162,28 @@ enabled=1`,
 			expected: []string{"e4s", "eus"},
 		},
 		{
+			name: "els repos",
+			files: map[string]string{
+				"/etc/yum.repos.d/rh-cloud.repo": `[rhui-rhel-7-server-els-rhui-rpms]
+name=Red Hat Enterprise Linux 7 Server - Extended Life Cycle Support from RHUI (RPMs)
+enabled=1
+[rhui-rhel-7-server-els-rhui-debug-rpms]
+name=Red Hat Enterprise Linux 7 Server - Extended Life Cycle Support from RHUI (Debug RPMs)
+enabled=1
+`,
+			},
+			expected: []string{"els"},
+		},
+		{
+			name: "disabled els repo",
+			files: map[string]string{
+				"/etc/yum.repos.d/rh-cloud.repo": `[rhui-rhel-7-server-els-rhui-rpms]
+name=Red Hat Enterprise Linux 7 Server - Extended Life Cycle Support from RHUI (RPMs)
+enabled=0`,
+			},
+			expected: []string{},
+		},
+		{
 			name: "invalid content",
 			files: map[string]string{
 				"/etc/yum.repos.d/rhel.repo": `invalid content`,

@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"sync"
 
@@ -95,6 +96,7 @@ func (a *mqlAwsSns) getTopics(conn *connection.AwsConnection) []*jobpool.Job {
 				for _, topic := range topics.Topics {
 					mqlTopic, err := CreateResource(a.MqlRuntime, "aws.sns.topic",
 						map[string]*llx.RawData{
+							"__id":   llx.StringDataPtr(topic.TopicArn),
 							"arn":    llx.StringDataPtr(topic.TopicArn),
 							"region": llx.StringData(region),
 						},
@@ -225,16 +227,177 @@ func (a *mqlAwsSnsTopic) subscriptions() ([]any, error) {
 			return nil, err
 		}
 		for _, sub := range subsByTopic.Subscriptions {
+			// Pending subscriptions have ARN "PendingConfirmation" which is not unique.
+			// Synthesize a stable __id from topic ARN + protocol + endpoint.
+			subId := convert.ToValue(sub.SubscriptionArn)
+			if !arn.IsARN(subId) {
+				subId = arnValue + "/" + convert.ToValue(sub.Protocol) + "/" + convert.ToValue(sub.Endpoint)
+			}
 			mqlSub, err := CreateResource(a.MqlRuntime, "aws.sns.subscription",
 				map[string]*llx.RawData{
+					"__id":     llx.StringData(subId),
 					"arn":      llx.StringDataPtr(sub.SubscriptionArn),
 					"protocol": llx.StringDataPtr(sub.Protocol),
+					"endpoint": llx.StringDataPtr(sub.Endpoint),
+					"owner":    llx.StringDataPtr(sub.Owner),
+					"region":   llx.StringData(regionVal),
 				})
 			if err != nil {
 				return nil, err
 			}
+			mqlSub.(*mqlAwsSnsSubscription).cacheTopicArn = sub.TopicArn
 			mqlSubs = append(mqlSubs, mqlSub)
 		}
 	}
 	return mqlSubs, nil
+}
+
+// Internal caching for subscription attributes
+type mqlAwsSnsSubscriptionInternal struct {
+	cacheTopicArn *string
+	fetched       bool
+	attrs         map[string]string
+	lock          sync.Mutex
+}
+
+func (a *mqlAwsSnsSubscription) topic() (*mqlAwsSnsTopic, error) {
+	if a.cacheTopicArn == nil || *a.cacheTopicArn == "" {
+		a.Topic.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlTopic, err := NewResource(a.MqlRuntime, "aws.sns.topic",
+		map[string]*llx.RawData{
+			"arn": llx.StringDataPtr(a.cacheTopicArn),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlTopic.(*mqlAwsSnsTopic), nil
+}
+
+func (a *mqlAwsSnsSubscription) fetchAttributes() (map[string]string, error) {
+	if a.fetched {
+		return a.attrs, nil
+	}
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	if a.fetched {
+		return a.attrs, nil
+	}
+
+	arnVal := a.Arn.Data
+
+	// Unconfirmed subscriptions have ARN set to "PendingConfirmation" which is
+	// not a valid ARN. GetSubscriptionAttributes will reject it, so return
+	// a minimal attribute map with the pending status instead.
+	if !arn.IsARN(arnVal) {
+		a.fetched = true
+		a.attrs = map[string]string{"PendingConfirmation": "true"}
+		return a.attrs, nil
+	}
+
+	regionVal := a.Region.Data
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Sns(regionVal)
+	ctx := context.Background()
+
+	resp, err := svc.GetSubscriptionAttributes(ctx, &sns.GetSubscriptionAttributesInput{
+		SubscriptionArn: &arnVal,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	a.fetched = true
+	a.attrs = resp.Attributes
+	return a.attrs, nil
+}
+
+func (a *mqlAwsSnsSubscription) attributes() (any, error) {
+	attrs, err := a.fetchAttributes()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(attrs)
+}
+
+func (a *mqlAwsSnsSubscription) rawMessageDelivery() (bool, error) {
+	attrs, err := a.fetchAttributes()
+	if err != nil {
+		return false, err
+	}
+	return attrs["RawMessageDelivery"] == "true", nil
+}
+
+func (a *mqlAwsSnsSubscription) filterPolicy() (any, error) {
+	attrs, err := a.fetchAttributes()
+	if err != nil {
+		return nil, err
+	}
+	val, ok := attrs["FilterPolicy"]
+	if !ok || val == "" {
+		return nil, nil
+	}
+	var result map[string]any
+	if err := json.Unmarshal([]byte(val), &result); err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(result)
+}
+
+func (a *mqlAwsSnsSubscription) filterPolicyScope() (string, error) {
+	attrs, err := a.fetchAttributes()
+	if err != nil {
+		return "", err
+	}
+	return attrs["FilterPolicyScope"], nil
+}
+
+func (a *mqlAwsSnsSubscription) redrivePolicy() (any, error) {
+	attrs, err := a.fetchAttributes()
+	if err != nil {
+		return nil, err
+	}
+	val, ok := attrs["RedrivePolicy"]
+	if !ok || val == "" {
+		return nil, nil
+	}
+	var result map[string]any
+	if err := json.Unmarshal([]byte(val), &result); err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(result)
+}
+
+func (a *mqlAwsSnsSubscription) confirmationWasAuthenticated() (bool, error) {
+	attrs, err := a.fetchAttributes()
+	if err != nil {
+		return false, err
+	}
+	return attrs["ConfirmationWasAuthenticated"] == "true", nil
+}
+
+func (a *mqlAwsSnsSubscription) deliveryPolicy() (any, error) {
+	attrs, err := a.fetchAttributes()
+	if err != nil {
+		return nil, err
+	}
+	val, ok := attrs["DeliveryPolicy"]
+	if !ok || val == "" {
+		return nil, nil
+	}
+	var result map[string]any
+	if err := json.Unmarshal([]byte(val), &result); err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(result)
+}
+
+func (a *mqlAwsSnsSubscription) pendingConfirmation() (bool, error) {
+	attrs, err := a.fetchAttributes()
+	if err != nil {
+		return false, err
+	}
+	return attrs["PendingConfirmation"] == "true", nil
 }

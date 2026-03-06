@@ -386,6 +386,7 @@ func initAwsEcsTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	args["platformFamily"] = llx.StringData(convert.ToValue(t.PlatformFamily))
 	args["platformVersion"] = llx.StringData(convert.ToValue(t.PlatformVersion))
 	args["tags"] = llx.MapData(ecsTagsToMap(t.Tags), types.String)
+	args["region"] = llx.StringData(region)
 	res, err := CreateResource(runtime, "aws.ecs.task", args)
 	if err != nil {
 		return args, nil, err

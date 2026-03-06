@@ -195,6 +195,7 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 						"codeSize":                    llx.IntData(function.CodeSize),
 						"stateReason":                 llx.StringDataPtr(function.StateReason),
 						"lastUpdateStatus":            llx.StringData(string(function.LastUpdateStatus)),
+						"lastUpdateStatusReason":      llx.StringDataPtr(function.LastUpdateStatusReason),
 						"kmsKeyArn":                   llx.StringDataPtr(function.KMSKeyArn),
 						"environment":                 llx.MapData(envVars, types.String),
 						"snapStartApplyOn":            llx.StringData(snapStartApplyOn),
@@ -294,6 +295,21 @@ func (a *mqlAwsLambdaFunction) id() (string, error) {
 
 type mqlAwsLambdaFunctionInternal struct {
 	cacheRoleArn *string
+}
+
+func (a *mqlAwsLambdaFunction) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.KmsKeyArn.Data == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{
+			"arn": llx.StringData(a.KmsKeyArn.Data),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
 func (a *mqlAwsLambdaFunction) concurrency() (int64, error) {

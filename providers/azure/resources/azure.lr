@@ -2669,30 +2669,50 @@ private azure.subscription.cloudDefenderService @defaults("defenderForServers.en
   subscriptionId string
   // Whether the monitoring agent is automatically provisioned on new VMs
   monitoringAgentAutoProvision() bool
+  // Deprecated; use "forServers" instead. List of Defender for Servers components and whether they are enabled
+  defenderForServers() dict
   // List of Defender for Servers components and whether they are enabled
-  defenderForServers() azure.subscription.cloudDefenderService.defenderForServers
+  forServers() azure.subscription.cloudDefenderService.defenderForServers
+  // Deprecated; use "forAppServices" instead. Microsoft Defender for App Service configuration
+  defenderForAppServices() dict
   // Microsoft Defender for App Service configuration
-  defenderForAppServices() azure.subscription.cloudDefenderService.defenderForAppServices
+  forAppServices() azure.subscription.cloudDefenderService.defenderForAppServices
+  // Deprecated; use "forSqlServersOnMachines" instead. Microsoft Defender for SQL servers on machines configuration
+  defenderForSqlServersOnMachines() dict
   // Microsoft Defender for SQL servers on machines configuration
-  defenderForSqlServersOnMachines() azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines
+  forSqlServersOnMachines() azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines
+  // Deprecated; use "forSqlDatabases" instead. Microsoft Defender for Azure SQL Databases configuration
+  defenderForSqlDatabases() dict
   // Microsoft Defender for Azure SQL Databases configuration
-  defenderForSqlDatabases() azure.subscription.cloudDefenderService.defenderForSqlDatabases
+  forSqlDatabases() azure.subscription.cloudDefenderService.defenderForSqlDatabases
+  // Deprecated; use "forOpenSourceDatabases" instead. Microsoft Defender for open-source relational databases configuration
+  defenderForOpenSourceDatabases() dict
   // Microsoft Defender for open-source relational databases configuration
-  defenderForOpenSourceDatabases() azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases
+  forOpenSourceDatabases() azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases
+  // Deprecated; use "forCosmosDb" instead. Microsoft Defender for Azure Cosmos DB configuration
+  defenderForCosmosDb() dict
   // Microsoft Defender for Azure Cosmos DB configuration
-  defenderForCosmosDb() azure.subscription.cloudDefenderService.defenderForCosmosDb
+  forCosmosDb() azure.subscription.cloudDefenderService.defenderForCosmosDb
+  // Deprecated; use "forStorageAccounts" instead. Microsoft Defender for Storage Accounts configuration
+  defenderForStorageAccounts() dict
   // Microsoft Defender for Storage Accounts configuration
-  defenderForStorageAccounts() azure.subscription.cloudDefenderService.defenderForStorageAccounts
+  forStorageAccounts() azure.subscription.cloudDefenderService.defenderForStorageAccounts
+  // Deprecated; use "forKeyVaults" instead. Microsoft Defender for Key Vault configuration
+  defenderForKeyVaults() dict
   // Microsoft Defender for Key Vault configuration
-  defenderForKeyVaults() azure.subscription.cloudDefenderService.defenderForKeyVaults
+  forKeyVaults() azure.subscription.cloudDefenderService.defenderForKeyVaults
+  // Deprecated; use "forResourceManager" instead. Microsoft Defender for Resource Manager configuration
+  defenderForResourceManager() dict
   // Microsoft Defender for Resource Manager configuration
-  defenderForResourceManager() azure.subscription.cloudDefenderService.defenderForResourceManager
+  forResourceManager() azure.subscription.cloudDefenderService.defenderForResourceManager
   // Microsoft Defender for APIs configuration
   defenderForApis() azure.subscription.cloudDefenderService.defenderForApis
   // Microsoft Defender Cloud Security Posture Management (CSPM) configuration
   defenderCSPM() azure.subscription.cloudDefenderService.defenderCSPM
+  // Deprecated; use "forContainers" instead. Defender for Containers components configuration
+  defenderForContainers() dict
   // Defender for Containers components configuration
-  defenderForContainers() azure.subscription.cloudDefenderService.defenderForContainers
+  forContainers() azure.subscription.cloudDefenderService.defenderForContainers
   // List of configured security contacts
   securityContacts() []azure.subscription.cloudDefenderService.securityContact
   // Settings for MCAS

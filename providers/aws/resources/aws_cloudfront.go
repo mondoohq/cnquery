@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	"github.com/cockroachdb/errors"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
 	"go.mondoo.com/mql/v13/types"
@@ -77,8 +78,10 @@ func (a *mqlAwsCloudfront) distributions() ([]any, error) {
 			}
 
 			cnames := []any{}
-			for _, alias := range distribution.Aliases.Items {
-				cnames = append(cnames, alias)
+			if distribution.Aliases != nil {
+				for _, alias := range distribution.Aliases.Items {
+					cnames = append(cnames, alias)
+				}
 			}
 
 			var viewerProtocolPolicy string
@@ -188,3 +191,43 @@ func (a *mqlAwsCloudfront) functions() ([]any, error) {
 }
 
 const cloudfrontFunctionPattern = "arn:aws:cloudfront:%s:%s::/functions/%s"
+
+func initAwsCloudfrontDistribution(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["domainName"] = llx.StringData(ids.name)
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
+
+	if args["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch cloudfront distribution")
+	}
+
+	obj, err := CreateResource(runtime, "aws.cloudfront", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	cf := obj.(*mqlAwsCloudfront)
+	rawResources := cf.GetDistributions()
+	if rawResources.Error != nil {
+		return nil, nil, rawResources.Error
+	}
+
+	arnVal, ok := args["arn"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("arn must be a string")
+	}
+	for _, rawResource := range rawResources.Data {
+		distribution := rawResource.(*mqlAwsCloudfrontDistribution)
+		if distribution.Arn.Data == arnVal {
+			return args, distribution, nil
+		}
+	}
+	return nil, nil, errors.New("cloudfront distribution does not exist")
+}

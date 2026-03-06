@@ -5,7 +5,6 @@ package resources
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -284,89 +283,76 @@ func (a *mqlAwsWorkspacesWorkspace) fetchConnectionStatus() error {
 		return err
 	}
 
+	var connState string
+	var checkTimestamp *time.Time
+	var lastUserTimestamp *time.Time
 	if len(resp.WorkspacesConnectionStatus) > 0 {
 		status := resp.WorkspacesConnectionStatus[0]
-		a.ConnectionState = plugin.TValue[string]{Data: string(status.ConnectionState), State: plugin.StateIsSet}
-		if status.ConnectionStateCheckTimestamp != nil {
-			a.ConnectionStateCheckTimestamp = plugin.TValue[*time.Time]{Data: status.ConnectionStateCheckTimestamp, State: plugin.StateIsSet}
-		} else {
-			a.ConnectionStateCheckTimestamp = plugin.TValue[*time.Time]{State: plugin.StateIsSet | plugin.StateIsNull}
-		}
-		if status.LastKnownUserConnectionTimestamp != nil {
-			a.LastKnownUserConnectionTimestamp = plugin.TValue[*time.Time]{Data: status.LastKnownUserConnectionTimestamp, State: plugin.StateIsSet}
-		} else {
-			a.LastKnownUserConnectionTimestamp = plugin.TValue[*time.Time]{State: plugin.StateIsSet | plugin.StateIsNull}
-		}
-	} else {
-		a.ConnectionState = plugin.TValue[string]{Data: "UNKNOWN", State: plugin.StateIsSet}
-		a.ConnectionStateCheckTimestamp = plugin.TValue[*time.Time]{State: plugin.StateIsSet | plugin.StateIsNull}
-		a.LastKnownUserConnectionTimestamp = plugin.TValue[*time.Time]{State: plugin.StateIsSet | plugin.StateIsNull}
+		connState = string(status.ConnectionState)
+		checkTimestamp = status.ConnectionStateCheckTimestamp
+		lastUserTimestamp = status.LastKnownUserConnectionTimestamp
 	}
+
+	a.ConnectionState = plugin.TValue[string]{Data: connState, State: plugin.StateIsSet}
+	a.ConnectionStateCheckTimestamp = plugin.TValue[*time.Time]{Data: checkTimestamp, State: plugin.StateIsSet}
+	a.LastKnownUserConnectionTimestamp = plugin.TValue[*time.Time]{Data: lastUserTimestamp, State: plugin.StateIsSet}
 	return nil
 }
 
 func (a *mqlAwsWorkspacesWorkspace) connectionState() (string, error) {
-	if err := a.fetchConnectionStatus(); err != nil {
-		return "", err
-	}
-	return a.ConnectionState.Data, nil
+	return "", a.fetchConnectionStatus()
 }
 
 func (a *mqlAwsWorkspacesWorkspace) connectionStateCheckTimestamp() (*time.Time, error) {
-	if err := a.fetchConnectionStatus(); err != nil {
-		return nil, err
-	}
-	return a.ConnectionStateCheckTimestamp.Data, nil
+	return nil, a.fetchConnectionStatus()
 }
 
 func (a *mqlAwsWorkspacesWorkspace) lastKnownUserConnectionTimestamp() (*time.Time, error) {
-	if err := a.fetchConnectionStatus(); err != nil {
-		return nil, err
-	}
-	return a.LastKnownUserConnectionTimestamp.Data, nil
+	return nil, a.fetchConnectionStatus()
 }
 
 func (a *mqlAwsWorkspacesWorkspace) securityGroups() ([]any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	region := a.Region.Data
-	ipAddr := a.IpAddress.Data
-
-	if ipAddr == "" {
-		// Workspaces in PENDING, TERMINATING, etc. may not have an IP address
+	ipAddress := a.IpAddress.Data
+	if ipAddress == "" {
 		return []any{}, nil
 	}
 
-	ec2Svc := conn.Ec2(region)
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Ec2(a.Region.Data)
 	ctx := context.Background()
 
-	resp, err := ec2Svc.DescribeNetworkInterfaces(ctx, &ec2.DescribeNetworkInterfacesInput{
+	sgIdSet := map[string]struct{}{}
+	paginator := ec2.NewDescribeNetworkInterfacesPaginator(svc, &ec2.DescribeNetworkInterfacesInput{
 		Filters: []ec2types.Filter{
-			{
-				Name:   aws.String("addresses.private-ip-address"),
-				Values: []string{ipAddr},
-			},
+			{Name: aws.String("addresses.private-ip-address"), Values: []string{ipAddress}},
 		},
 	})
-	if err != nil {
-		return nil, err
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, ni := range page.NetworkInterfaces {
+			for _, sg := range ni.Groups {
+				if sg.GroupId != nil {
+					sgIdSet[*sg.GroupId] = struct{}{}
+				}
+			}
+		}
 	}
 
-	sgs := []any{}
-	seen := map[string]bool{}
-	for _, eni := range resp.NetworkInterfaces {
-		for _, group := range eni.Groups {
-			groupId := convert.ToValue(group.GroupId)
-			if groupId == "" || seen[groupId] {
-				continue
-			}
-			seen[groupId] = true
-			mqlSg, err := NewResource(a.MqlRuntime, ResourceAwsEc2Securitygroup,
-				map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(securityGroupArnPattern, region, conn.AccountId(), groupId))})
-			if err != nil {
-				return nil, err
-			}
-			sgs = append(sgs, mqlSg)
+	region := a.Region.Data
+	sgs := make([]any, 0, len(sgIdSet))
+	for sgId := range sgIdSet {
+		mqlSg, err := NewResource(a.MqlRuntime, "aws.ec2.securitygroup",
+			map[string]*llx.RawData{
+				"id":     llx.StringData(sgId),
+				"region": llx.StringData(region),
+			})
+		if err != nil {
+			return nil, err
 		}
+		sgs = append(sgs, mqlSg)
 	}
 	return sgs, nil
 }

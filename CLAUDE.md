@@ -4,7 +4,7 @@ This directory contains information to help Claude AI assistants understand and 
 
 ## 1. Project Context
 
-**mql** (formerly cnquery) is a cloud-native infrastructure querying tool. It uses **MQL (Mondoo Query Language)** to query over 850 resources across cloud accounts (AWS, Azure, GCP), Kubernetes, containers, OS internals, and APIs.
+**mql** (formerly cnquery) is a cloud-native infrastructure querying tool. It uses **MQL (Mondoo Query Language)** to query over 1,300 resources across cloud accounts (AWS, Azure, GCP), Kubernetes, containers, OS internals, and APIs.
 
 > **v13 Rename:** In v13 the project was renamed from `cnquery` to `mql`. The Go module is `go.mondoo.com/mql/v13`, the CLI binary is `mql`, and all build targets use the `mql/` prefix. The `scan` and `sbom` subcommands have moved to **cnspec**.
 
@@ -51,6 +51,74 @@ Implement the generated interfaces in the provider's Go code. Use one of these p
 **Pattern C: Cross-References**
 *Best for:* Linking resources (e.g., GCP Address -> Network).
 *   Use an `init` function to cache all instances and filter in memory to avoid N+1 API calls.
+
+**Pattern D: Internal Structs for Caching & Cross-References**
+*Best for:* Storing data from the creation context that's needed later for lazy-loaded typed resource references.
+
+The code generator detects `mql<ResourceName>Internal` structs and embeds them into the generated resource struct. Use them to cache values needed for computed methods:
+
+```go
+type mqlAwsDocumentdbSnapshotInternal struct {
+    cacheVpcId    *string
+    cacheKmsKeyId *string
+}
+
+// In the creator function, after CreateResource:
+mqlSnapshot := resource.(*mqlAwsDocumentdbSnapshot)
+mqlSnapshot.cacheVpcId = snapshot.VpcId
+mqlSnapshot.cacheKmsKeyId = snapshot.KmsKeyId
+
+// Lazy-loaded typed reference method:
+func (a *mqlAwsDocumentdbSnapshot) vpc() (*mqlAwsVpc, error) {
+    if a.cacheVpcId == nil || *a.cacheVpcId == "" {
+        a.Vpc.State = plugin.StateIsNull | plugin.StateIsSet
+        return nil, nil
+    }
+    mqlVpc, err := NewResource(a.MqlRuntime, "aws.vpc",
+        map[string]*llx.RawData{"id": llx.StringDataPtr(a.cacheVpcId)})
+    if err != nil {
+        return nil, err
+    }
+    return mqlVpc.(*mqlAwsVpc), nil
+}
+```
+
+**Important:** If you add an Internal struct *after* the first code generation, you must run `./mqlr generate` a **second time** for the generator to detect and embed it.
+
+**`securityGroupIdHandler`**: A reusable embedded struct (defined in `aws_ec2.go`) for converting security group ID lists to typed `[]aws.ec2.securitygroup` references. Embed it in your Internal struct:
+```go
+type mqlAwsRdsProxyInternal struct {
+    securityGroupIdHandler  // provides securityGroups() automatically
+    region    string
+    accountID string
+}
+```
+
+**Never hardcode empty/default values for fields the API doesn't return.** If a list API (e.g., `ListDataCatalogs`) returns a summary without certain fields (e.g., `description`, `parameters`), do NOT set them to empty strings or nil maps in `CreateResource`. Instead:
+1. Declare them as computed methods in `.lr`: `description() string` (not `description string`)
+2. Implement a lazy-loading fetch function that calls the detail API (e.g., `GetDataCatalog`) on demand
+3. Cache the results in an Internal struct to avoid repeated API calls
+
+**Lazy-loading with double-check locking** (for fields that require a separate API call):
+```go
+type mqlAwsResourceInternal struct {
+    fetched bool
+    attrs   map[string]string
+    lock    sync.Mutex
+}
+
+func (a *mqlAwsResource) fetchAttributes() (map[string]string, error) {
+    if a.fetched { return a.attrs, nil }
+    a.lock.Lock()
+    defer a.lock.Unlock()
+    if a.fetched { return a.attrs, nil }
+    // ... fetch from API ...
+    a.fetched = true
+    a.attrs = resp.Attributes
+    return a.attrs, nil
+}
+```
+Multiple computed methods can share the same fetch function to batch-load related fields from a single API call.
 
 **Patterns to avoid**
 - **Never use `os/exec` or `exec.CommandContext` directly.** Instead, use the `command` resource to delegate execution through the provider system:
@@ -274,6 +342,11 @@ Think of it as: MQL (like SQL or even better GraphQL) → MQLC (compiler) → LL
 - Must be unique and stable (ARN, UUID, or composite key)
 - If `__id` is empty or duplicate, caching breaks and performance degrades
 
+**Performance notes:**
+- Resource field access is lazy: fields are only fetched when needed
+- Cross-references should leverage caching to avoid redundant API calls
+- Use `init` functions for expensive operations to enable result sharing across queries
+
 ### Code Generation Dependencies
 The build process has several code generation steps:
 1. Protocol buffers (`.proto` → `.pb.go`)
@@ -295,63 +368,20 @@ When navigating the codebase, these are the critical types you'll encounter:
 
 ## 6. Development Workflow Patterns
 
-See "Local Provider Debugging" above. That pattern should be used for most development (start, bulk of the work and verification, end).
-
-But this also works:
-
-### Adding a New Resource to a Provider
-1. Edit the provider's `.lr` file (e.g., `providers/aws/resources/aws.lr`)
-2. Run code generation:
-   ```bash
-   make providers/mqlr # if mqlr is not already available
-   ./mqlr generate providers/aws/resources/aws.lr --dist providers/aws/resources
-   ```
-3. Implement the resource methods in Go
-4. Rebuild and install the provider:
-   ```bash
-   make providers/build/aws && make providers/install/aws
-   ```
-
-### Implementing Resource Cross-References
-When one resource references another (e.g., GCP address → network), use an init function to cache all instances and filter in memory. This avoids excessive N+1 API calls.
+The primary workflow for provider changes is the "Local Provider Debugging" pattern in Section 4. For resource-only changes, follow Steps 1-4 in Section 2.
 
 ### Provider Version Updates
-Use the version utility to check and update provider versions:
 ```bash
-# Set up alias (recommended)
 alias version="go run providers-sdk/v1/util/version/version.go"
-
-# Check which providers need version updates
-version check providers/*/
-
-# Update provider versions interactively
-version update providers/*/
-
-# Auto-increment and commit
-version update providers/*/ --increment=patch --commit
+version check providers/*/                              # check which need updates
+version update providers/*/                              # interactive update
+version update providers/*/ --increment=patch --commit   # auto-increment and commit
 ```
 
-### Using Go Workspaces for Multi-Repo Development
-If developing mql alongside cnspec or providers, create a `go.work` file in a parent directory:
-```go
-go 1.25
-
-use (
-   ./mql
-   ./mql/providers/aws
-   ./mql/providers/k8s
-   // add other providers as needed
-   ./cnspec
-)
-```
+### Go Workspaces for Multi-Repo Development
+When developing mql alongside cnspec, create a `go.work` in a parent directory with `use (./mql, ./mql/providers/aws, ./cnspec)` etc.
 
 ## 7. Important Implementation Details
-
-### Resource Caching & Performance
-- Resource field access is lazy: fields are only fetched when needed
-- Results are cached automatically by the executor using `__id` as cache key
-- Cross-references should leverage this caching to avoid redundant API calls
-- Use `init` functions for expensive operations to enable result sharing across queries
 
 ### Provider Connection Management
 - Implement proper connection lifecycle: `Connect()`, `GetData()`, `StoreData()`, `Disconnect()`
@@ -392,7 +422,15 @@ for {
 - Date fields use expanded format: "date:{property}:start", "date:{property}:end", "date:{property}:is_datetime"
 - Place fields split into multiple properties: name, address, latitude, longitude, google_place_id
 - Use JavaScript number types for numeric fields, not strings
-- Prefer typed resource references over raw ID strings. Instead of a `vpcId string` field, define a `vpc aws.vpc` field that returns the actual resource. This enables MQL traversal (e.g., `aws.ec2.instance.vpc.cidrBlock`) instead of requiring users to manually look up IDs.
+- **Always use typed resource references over raw ID/ARN strings.** This is critical for good MQL UX:
+  - `vpcId string` → `vpc() aws.vpc`
+  - `vpcSubnetIds []string` → `subnets() []aws.vpc.subnet`
+  - `vpcSecurityGroupIds []string` → `securityGroups() []aws.ec2.securitygroup`
+  - `roleArn string` → `iamRole() aws.iam.role` (use `iamRole` not `role` to avoid ambiguity)
+  - `kmsMasterKeyId string` → `kmsMasterKey() aws.kms.key`
+  - `topicArn string` → `topic() aws.sns.topic`
+  - `streamArn string` → `stream() aws.kinesis.stream`
+  These enable MQL traversal (e.g., `aws.rds.proxy.vpc.cidrBlock`) instead of requiring manual lookups. Store the raw ID/ARN in a `cache*` field on the Internal struct, then implement the typed method using `NewResource`.
 - Every resource and field has an explicit entry in `.lr.versions`. When a new field is added to an `.lr` file that isn't yet tracked, the `versions` command automatically assigns it the next patch version (current provider version + 1 patch). Existing entries are never overwritten.
 - **Match SDK types faithfully:** If an SDK field is `*bool`, use `bool` in `.lr` and `llx.BoolDataPtr()` in Go — don't cast it to `string`. If an SDK enum has only two states (Enabled/Disabled), prefer `bool`. Use `*type` intermediate variables with `llx.*DataPtr` helpers to preserve nil semantics.
 - **Consistency with existing fields:** Before adding new fields to a resource, check how its existing fields handle pointers, nil checks, and type conversions. Follow the same pattern.
@@ -417,6 +455,7 @@ for {
 - Generated code includes resource structs, schema definitions, and accessor methods
 - Never manually edit generated `.lr.go` files - they get overwritten
 - Use `make providers/mqlr` for faster provider-specific regeneration
+- **Internal structs require a second generation pass.** If you add a new `mql*Internal` struct to a Go file, the first `./mqlr generate` won't embed it (the struct didn't exist when the generator ran). Run `./mqlr generate` again after adding Internal structs.
 
 ### Testing & Verification
 - If you want to test simple changes, build and install the provider and use mql run ....
@@ -516,7 +555,7 @@ Use emojis in commit messages (but don't worry about it, since you're NEVER goin
 ## 10. Additional Resources
 
 ### External Documentation
-- [Official Documentation](https://mondoo.com/docs/cnquery/home/)
+- [Official Documentation](https://mondoo.com/docs/llms.txt)
 - [MQL Introduction](https://mondoohq.github.io/mql-intro/index.html)
 - [MQL Language Reference](https://mondoo.com/docs/mql/resources/)
 - [GitHub Repository](https://github.com/mondoohq/mql)

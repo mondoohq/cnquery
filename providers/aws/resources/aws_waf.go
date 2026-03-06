@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
@@ -17,6 +18,15 @@ import (
 	"go.mondoo.com/mql/v13/providers/aws/connection"
 	"go.mondoo.com/mql/v13/types"
 )
+
+// wafRegionForScope returns the region to use for WAF API calls.
+// CLOUDFRONT-scoped resources must use us-east-1; REGIONAL uses the default.
+func wafRegionForScope(scope string) string {
+	if scope == "CLOUDFRONT" {
+		return "us-east-1"
+	}
+	return ""
+}
 
 func (a *mqlAwsWaf) id() (string, error) {
 	return "aws.waf", nil
@@ -63,12 +73,11 @@ func initAwsWaf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 func (a *mqlAwsWaf) acls() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	region := ""
-	svc := conn.Wafv2(region)
+	scopeString := a.Scope.Data
+	svc := conn.Wafv2(wafRegionForScope(scopeString))
 	ctx := context.Background()
 	acls := []any{}
 	nextMarker := aws.String("No-Marker-to-begin-with")
-	scopeString := a.Scope.Data
 	scope := waftypes.Scope(scopeString)
 	params := &wafv2.ListWebACLsInput{Scope: scope}
 	for nextMarker != nil {
@@ -93,6 +102,7 @@ func (a *mqlAwsWaf) acls() ([]any, error) {
 			}
 			mqlAcl, err := CreateResource(a.MqlRuntime, "aws.waf.acl",
 				map[string]*llx.RawData{
+					"__id":                     llx.StringDataPtr(acl.ARN),
 					"id":                       llx.StringDataPtr(acl.Id),
 					"scope":                    llx.StringData(scopeString),
 					"arn":                      llx.StringDataPtr(acl.ARN),
@@ -220,8 +230,7 @@ func (a *mqlAwsWafRulegroup) rules() ([]any, error) {
 	scopeString := a.Scope.Data
 	scope := waftypes.Scope(scopeString)
 	ctx := context.Background()
-	region := ""
-	svc := conn.Wafv2(region)
+	svc := conn.Wafv2(wafRegionForScope(scopeString))
 	rules := []any{}
 	params := &wafv2.GetRuleGroupInput{
 		Id:    &a.Id.Data,
@@ -235,7 +244,13 @@ func (a *mqlAwsWafRulegroup) rules() ([]any, error) {
 	for _, rule := range ruleGroupDetails.RuleGroup.Rules {
 		ruleID := a.Arn.Data + "/" + *rule.Name
 		mqlStatement, err := createStatementResource(a.MqlRuntime, rule.Statement, rule.Name, ruleID)
+		if err != nil {
+			return nil, err
+		}
 		ruleAction, err := createActionResource(a.MqlRuntime, rule.Action, rule.Name)
+		if err != nil {
+			return nil, err
+		}
 		mqlRule, err := CreateResource(a.MqlRuntime, "aws.waf.rule",
 			map[string]*llx.RawData{
 				"id":        llx.StringData(ruleID),
@@ -257,12 +272,11 @@ func (a *mqlAwsWafRulegroup) rules() ([]any, error) {
 func (a *mqlAwsWaf) ruleGroups() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	region := ""
-	svc := conn.Wafv2(region)
+	scopeString := a.Scope.Data
+	svc := conn.Wafv2(wafRegionForScope(scopeString))
 	ctx := context.Background()
 	acls := []any{}
 	nextMarker := aws.String("No-Marker-to-begin-with")
-	scopeString := a.Scope.Data
 	scope := waftypes.Scope(scopeString)
 	params := &wafv2.ListRuleGroupsInput{Scope: scope}
 	for nextMarker != nil {
@@ -278,6 +292,7 @@ func (a *mqlAwsWaf) ruleGroups() ([]any, error) {
 		for _, ruleGroup := range aclsRes.RuleGroups {
 			mqlRuleGroup, err := CreateResource(a.MqlRuntime, "aws.waf.rulegroup",
 				map[string]*llx.RawData{
+					"__id":        llx.StringDataPtr(ruleGroup.ARN),
 					"id":          llx.StringDataPtr(ruleGroup.Id),
 					"arn":         llx.StringDataPtr(ruleGroup.ARN),
 					"name":        llx.StringDataPtr(ruleGroup.Name),
@@ -297,12 +312,11 @@ func (a *mqlAwsWaf) ruleGroups() ([]any, error) {
 func (a *mqlAwsWaf) ipSets() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	region := ""
-	svc := conn.Wafv2(region)
+	scopeString := a.Scope.Data
+	svc := conn.Wafv2(wafRegionForScope(scopeString))
 	ctx := context.Background()
 	acls := []any{}
 	nextMarker := aws.String("No-Marker-to-begin-with")
-	scopeString := a.Scope.Data
 	scope := waftypes.Scope(scopeString)
 	params := &wafv2.ListIPSetsInput{Scope: scope}
 	for nextMarker != nil {
@@ -328,6 +342,7 @@ func (a *mqlAwsWaf) ipSets() ([]any, error) {
 			ipsetAddresses := convert.SliceAnyToInterface(ipsetDetails.IPSet.Addresses)
 			mqlIPSet, err := CreateResource(a.MqlRuntime, "aws.waf.ipset",
 				map[string]*llx.RawData{
+					"__id":        llx.StringDataPtr(ipset.ARN),
 					"id":          llx.StringDataPtr(ipset.Id),
 					"arn":         llx.StringDataPtr(ipset.ARN),
 					"name":        llx.StringDataPtr(ipset.Name),
@@ -352,8 +367,7 @@ func (a *mqlAwsWafAcl) rules() ([]any, error) {
 	scopeString := a.Scope.Data
 	scope := waftypes.Scope(scopeString)
 	ctx := context.Background()
-	region := ""
-	svc := conn.Wafv2(region)
+	svc := conn.Wafv2(wafRegionForScope(scopeString))
 	rules := []any{}
 	params := &wafv2.GetWebACLInput{
 		Id:    &a.Id.Data,
@@ -367,7 +381,13 @@ func (a *mqlAwsWafAcl) rules() ([]any, error) {
 	for _, rule := range aclDetails.WebACL.Rules {
 		ruleID := a.Arn.Data + "/" + *rule.Name
 		mqlStatement, err := createStatementResource(a.MqlRuntime, rule.Statement, rule.Name, ruleID)
+		if err != nil {
+			return nil, err
+		}
 		ruleAction, err := createActionResource(a.MqlRuntime, rule.Action, rule.Name)
+		if err != nil {
+			return nil, err
+		}
 		mqlRule, err := CreateResource(a.MqlRuntime, "aws.waf.rule",
 			map[string]*llx.RawData{
 				"id":        llx.StringData(ruleID),
@@ -447,11 +467,15 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 	var kind string
 	if statement != nil {
 		statementJson, err = convert.JsonToDict(statement)
+		if err != nil {
+			return nil, err
+		}
 		if statement.RegexMatchStatement != nil {
 			kind = "RegexMatchStatement"
 			var fieldToMatch plugin.Resource
 			fieldToMatch, err = createFieldToMatchResource(runtime, statement.RegexMatchStatement.FieldToMatch, ruleName, mqlStatementID)
-			if statement.RegexMatchStatement.FieldToMatch != nil {
+			if err != nil {
+				return nil, err
 			}
 			regexmatchstatement, err = CreateResource(runtime, "aws.waf.rule.statement.regexmatchstatement", map[string]*llx.RawData{
 				"statementID":  llx.StringData(mqlStatementID),
@@ -467,6 +491,9 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 			kind = "ByteMatchStatement"
 			var fieldToMatch plugin.Resource
 			fieldToMatch, err = createFieldToMatchResource(runtime, statement.ByteMatchStatement.FieldToMatch, ruleName, mqlStatementID)
+			if err != nil {
+				return nil, err
+			}
 			bytematchstatement, err = CreateResource(runtime, "aws.waf.rule.statement.bytematchstatement", map[string]*llx.RawData{
 				"statementID":  llx.StringData(mqlStatementID),
 				"ruleName":     llx.StringDataPtr(ruleName),
@@ -481,6 +508,9 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 			kind = "XssMatchStatement"
 			var fieldToMatch plugin.Resource
 			fieldToMatch, err = createFieldToMatchResource(runtime, statement.XssMatchStatement.FieldToMatch, ruleName, mqlStatementID)
+			if err != nil {
+				return nil, err
+			}
 			xssmatchstatement, err = CreateResource(runtime, "aws.waf.rule.statement.xssmatchstatement", map[string]*llx.RawData{
 				"statementID":  llx.StringData(mqlStatementID),
 				"ruleName":     llx.StringDataPtr(ruleName),
@@ -494,6 +524,9 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 			kind = "SqliMatchStatement"
 			var fieldToMatch plugin.Resource
 			fieldToMatch, err := createFieldToMatchResource(runtime, statement.SqliMatchStatement.FieldToMatch, ruleName, mqlStatementID)
+			if err != nil {
+				return nil, err
+			}
 			sqlimatchstatement, err = CreateResource(runtime, "aws.waf.rule.statement.sqlimatchstatement", map[string]*llx.RawData{
 				"statementID":      llx.StringData(mqlStatementID),
 				"ruleName":         llx.StringDataPtr(ruleName),
@@ -628,6 +661,9 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 			kind = "RegexPatternSetReferenceStatement"
 			var fieldToMatch plugin.Resource
 			fieldToMatch, err = createFieldToMatchResource(runtime, statement.RegexPatternSetReferenceStatement.FieldToMatch, ruleName, mqlStatementID)
+			if err != nil {
+				return nil, err
+			}
 			regexpatternsetreferencestatement, err = CreateResource(runtime, "aws.waf.rule.statement.regexpatternsetreferencestatement", map[string]*llx.RawData{
 				"statementID":  llx.StringData(mqlStatementID),
 				"ruleName":     llx.StringDataPtr(ruleName),
@@ -655,6 +691,9 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 			kind = "SizeConstraintStatement"
 			var fieldToMatch plugin.Resource
 			fieldToMatch, err = createFieldToMatchResource(runtime, statement.SizeConstraintStatement.FieldToMatch, ruleName, mqlStatementID)
+			if err != nil {
+				return nil, err
+			}
 			sizeconstraintstatement, err = CreateResource(runtime, "aws.waf.rule.statement.sizeconstraintstatement", map[string]*llx.RawData{
 				"statementID":        llx.StringData(mqlStatementID),
 				"ruleName":           llx.StringDataPtr(ruleName),
@@ -734,6 +773,9 @@ func createFieldToMatchResource(runtime *plugin.Runtime, fieldToMatch *waftypes.
 			"ruleName":         llx.StringDataPtr(ruleName),
 			"overSizeHandling": llx.StringData(string(fieldToMatch.Body.OversizeHandling)),
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	if fieldToMatch.Cookies != nil {
 		target = "Cookies"
@@ -742,24 +784,21 @@ func createFieldToMatchResource(runtime *plugin.Runtime, fieldToMatch *waftypes.
 			"ruleName":         llx.StringDataPtr(ruleName),
 			"overSizeHandling": llx.StringData(string(fieldToMatch.Cookies.OversizeHandling)),
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	if fieldToMatch.HeaderOrder != nil {
 		target = "HeaderOrder"
 		headerOrder, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.headerOrder", map[string]*llx.RawData{
 			"statementID":      llx.StringData(mqlStatementID),
 			"ruleName":         llx.StringDataPtr(ruleName),
-			"overSizeHandling": llx.StringData(string(fieldToMatch.Headers.OversizeHandling)),
+			"overSizeHandling": llx.StringData(string(fieldToMatch.HeaderOrder.OversizeHandling)),
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
-	if fieldToMatch.SingleQueryArgument != nil {
-		target = "SingleQueryArgument"
-		singleQueryArgument, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.singlequeryargument", map[string]*llx.RawData{
-			"statementID": llx.StringData(mqlStatementID),
-			"ruleName":    llx.StringDataPtr(ruleName),
-			"name":        llx.StringDataPtr(fieldToMatch.SingleQueryArgument.Name),
-		})
-	}
-
 	if fieldToMatch.JA3Fingerprint != nil {
 		target = "JA3Fingerprint"
 		ja3Fingerprint, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.ja3fingerprint", map[string]*llx.RawData{
@@ -767,6 +806,9 @@ func createFieldToMatchResource(runtime *plugin.Runtime, fieldToMatch *waftypes.
 			"ruleName":         llx.StringDataPtr(ruleName),
 			"fallbackBehavior": llx.StringData(string(fieldToMatch.JA3Fingerprint.FallbackBehavior)),
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if fieldToMatch.Headers != nil {
@@ -782,6 +824,9 @@ func createFieldToMatchResource(runtime *plugin.Runtime, fieldToMatch *waftypes.
 				"includeHeaders": llx.ArrayData(includeHeaders, types.String),
 				"excludeHeaders": llx.ArrayData(excludeHeaders, types.String),
 			})
+			if err != nil {
+				return nil, err
+			}
 		}
 		headers, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.headers", map[string]*llx.RawData{
 			"statementID":      llx.StringData(mqlStatementID),
@@ -790,13 +835,15 @@ func createFieldToMatchResource(runtime *plugin.Runtime, fieldToMatch *waftypes.
 			"overSizeHandling": llx.StringData(string(fieldToMatch.Headers.OversizeHandling)),
 			"matchScope":       llx.StringData(string(fieldToMatch.Headers.MatchScope)),
 		})
-
+		if err != nil {
+			return nil, err
+		}
 	}
 	if fieldToMatch.JsonBody != nil {
 		target = "JsonBody"
 		var matchPattern plugin.Resource
-		includePathsArray := convert.SliceAnyToInterface(fieldToMatch.JsonBody.MatchPattern.IncludedPaths)
 		if fieldToMatch.JsonBody.MatchPattern != nil {
+			includePathsArray := convert.SliceAnyToInterface(fieldToMatch.JsonBody.MatchPattern.IncludedPaths)
 			matchPattern, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.jsonbody.matchpattern", map[string]*llx.RawData{
 				"statementID":  llx.StringData(mqlStatementID),
 				"ruleName":     llx.StringDataPtr(ruleName),
@@ -853,4 +900,167 @@ func createFieldToMatchResource(runtime *plugin.Runtime, fieldToMatch *waftypes.
 	}
 
 	return mqlFieldToMatch, nil
+}
+
+func (a *mqlAwsWafRegexPatternSet) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsWaf) regexPatternSets() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	scopeString := a.Scope.Data
+	svc := conn.Wafv2(wafRegionForScope(scopeString))
+	ctx := context.Background()
+	res := []any{}
+	nextMarker := aws.String("No-Marker-to-begin-with")
+	scope := waftypes.Scope(scopeString)
+	params := &wafv2.ListRegexPatternSetsInput{Scope: scope}
+	for nextMarker != nil {
+		setsRes, err := svc.ListRegexPatternSets(ctx, params)
+		if err != nil {
+			return nil, err
+		}
+		nextMarker = setsRes.NextMarker
+		if setsRes.NextMarker != nil {
+			params.NextMarker = nextMarker
+		}
+
+		for _, summary := range setsRes.RegexPatternSets {
+			getParams := &wafv2.GetRegexPatternSetInput{
+				Id:    summary.Id,
+				Name:  summary.Name,
+				Scope: scope,
+			}
+			details, err := svc.GetRegexPatternSet(ctx, getParams)
+			if err != nil {
+				return nil, err
+			}
+			regexes := []any{}
+			if details.RegexPatternSet != nil {
+				for _, r := range details.RegexPatternSet.RegularExpressionList {
+					if r.RegexString != nil {
+						regexes = append(regexes, *r.RegexString)
+					}
+				}
+			}
+			mqlSet, err := CreateResource(a.MqlRuntime, "aws.waf.regexPatternSet",
+				map[string]*llx.RawData{
+					"__id":               llx.StringDataPtr(summary.ARN),
+					"id":                 llx.StringDataPtr(summary.Id),
+					"arn":                llx.StringDataPtr(summary.ARN),
+					"name":               llx.StringDataPtr(summary.Name),
+					"description":        llx.StringDataPtr(summary.Description),
+					"scope":              llx.StringData(scopeString),
+					"regularExpressions": llx.ArrayData(regexes, types.String),
+				},
+			)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlSet)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsWafAclLoggingConfiguration) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsWafAcl) loggingConfiguration() (*mqlAwsWafAclLoggingConfiguration, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Wafv2(wafRegionForScope(a.Scope.Data))
+	ctx := context.Background()
+
+	arnVal := a.Arn.Data
+	resp, err := svc.GetLoggingConfiguration(ctx, &wafv2.GetLoggingConfigurationInput{
+		ResourceArn: &arnVal,
+	})
+	if err != nil {
+		var notFound *waftypes.WAFNonexistentItemException
+		if !errors.As(err, &notFound) {
+			return nil, err
+		}
+		// No logging configuration exists — return resource with empty destinations
+		log.Debug().Str("acl", arnVal).Msg("no logging configuration found for web ACL")
+		res, createErr := CreateResource(a.MqlRuntime, "aws.waf.acl.loggingConfiguration",
+			map[string]*llx.RawData{
+				"__id":                     llx.StringData(arnVal),
+				"arn":                      llx.StringData(arnVal),
+				"logDestinationConfigs":    llx.ArrayData([]any{}, types.String),
+				"managedByFirewallManager": llx.BoolData(false),
+				"redactedFields":           llx.ArrayData([]any{}, types.String),
+			},
+		)
+		if createErr != nil {
+			return nil, createErr
+		}
+		return res.(*mqlAwsWafAclLoggingConfiguration), nil
+	}
+
+	logConfig := resp.LoggingConfiguration
+	destinations := convert.SliceAnyToInterface(logConfig.LogDestinationConfigs)
+
+	redactedFields := []any{}
+	for _, field := range logConfig.RedactedFields {
+		if field.SingleHeader != nil {
+			redactedFields = append(redactedFields, "SingleHeader:"+convert.ToValue(field.SingleHeader.Name))
+		} else if field.UriPath != nil {
+			redactedFields = append(redactedFields, "UriPath")
+		} else if field.QueryString != nil {
+			redactedFields = append(redactedFields, "QueryString")
+		} else if field.Method != nil {
+			redactedFields = append(redactedFields, "Method")
+		}
+	}
+
+	res, err := CreateResource(a.MqlRuntime, "aws.waf.acl.loggingConfiguration",
+		map[string]*llx.RawData{
+			"__id":                     llx.StringData(arnVal),
+			"arn":                      llx.StringData(arnVal),
+			"logDestinationConfigs":    llx.ArrayData(destinations, types.String),
+			"managedByFirewallManager": llx.BoolData(logConfig.ManagedByFirewallManager),
+			"redactedFields":           llx.ArrayData(redactedFields, types.String),
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsWafAclLoggingConfiguration), nil
+}
+
+func (a *mqlAwsWafAcl) associatedResources() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	scopeString := a.Scope.Data
+
+	// ListResourcesForWebACL only supports REGIONAL scope ACLs.
+	// CLOUDFRONT ACLs are associated via CloudFront distributions, not this API.
+	if scopeString == "CLOUDFRONT" {
+		return []any{}, nil
+	}
+
+	svc := conn.Wafv2(wafRegionForScope(scopeString))
+	ctx := context.Background()
+
+	arnVal := a.Arn.Data
+
+	// ListResourcesForWebACL without a ResourceType only returns ALBs for regional ACLs.
+	// Iterate over all resource types to get the full set of associated resources.
+	var allArns []any
+	for _, rt := range waftypes.ResourceType("").Values() {
+		resp, err := svc.ListResourcesForWebACL(ctx, &wafv2.ListResourcesForWebACLInput{
+			WebACLArn:    &arnVal,
+			ResourceType: rt,
+		})
+		if err != nil {
+			log.Warn().Str("acl", arnVal).Str("resourceType", string(rt)).Err(err).Msg("could not list resources for web ACL")
+			continue
+		}
+		allArns = append(allArns, convert.SliceAnyToInterface(resp.ResourceArns)...)
+	}
+
+	return allArns, nil
 }

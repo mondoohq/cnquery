@@ -48,3 +48,32 @@ License-File: LICENSE
 	assert.Equal(t, "1.5.7", pkg.Version)
 	assert.Equal(t, "MIT", pkg.License)
 }
+
+func TestMimeParserRequiresPythonAndProjectUrls(t *testing.T) {
+	content := `Metadata-Version: 2.1
+Name: requests
+Version: 2.31.0
+Summary: Python HTTP for Humans.
+Author-email: Kenneth Reitz <me@kennethreitz.org>
+License: Apache-2.0
+Requires-Python: >=3.7
+Project-URL: Homepage, https://requests.readthedocs.io
+Project-URL: Source, https://github.com/psf/requests
+Project-URL: Documentation, https://requests.readthedocs.io
+Requires-Dist: charset-normalizer (<4,>=2)
+Requires-Dist: idna (<4,>=2.5)
+Requires-Dist: urllib3 (<3,>=1.21.1)
+`
+	pkg, err := ParseMIME(strings.NewReader(content), "/usr/lib/python3.11/site-packages/requests-2.31.0.dist-info/METADATA")
+	require.NoError(t, err)
+
+	assert.Equal(t, "requests", pkg.Name)
+	assert.Equal(t, "2.31.0", pkg.Version)
+	assert.Equal(t, ">=3.7", pkg.RequiresPython)
+	assert.Equal(t, map[string]string{
+		"Homepage":      "https://requests.readthedocs.io",
+		"Source":        "https://github.com/psf/requests",
+		"Documentation": "https://requests.readthedocs.io",
+	}, pkg.ProjectUrls)
+	assert.Equal(t, []string{"charset-normalizer", "idna", "urllib3"}, pkg.Dependencies)
+}

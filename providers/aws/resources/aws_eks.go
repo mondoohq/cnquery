@@ -437,8 +437,9 @@ func (a *mqlAwsEksCluster) addons() ([]any, error) {
 	for i := range addonsRes.Addons {
 		addon := addonsRes.Addons[i]
 		args := map[string]*llx.RawData{
-			"__id": llx.StringData(fmt.Sprintf("%s/%s/%s", ResourceAwsEksAddon, a.Name.Data, addon)),
-			"name": llx.StringData(addon),
+			"__id":   llx.StringData(fmt.Sprintf("%s/%s/%s", ResourceAwsEksAddon, a.Name.Data, addon)),
+			"name":   llx.StringData(addon),
+			"region": llx.StringData(regionVal),
 		}
 
 		mqlNg, err := CreateResource(a.MqlRuntime, ResourceAwsEksAddon, args)

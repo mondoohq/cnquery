@@ -301,6 +301,7 @@ type mqlAwsRdsDbinstanceInternal struct {
 	cacheSubnets                     *rds_types.DBSubnetGroup
 	cacheKmsKeyId                    *string
 	cachePerformanceInsightsKmsKeyId *string
+	cacheActivityStreamKmsKeyId      *string
 	region                           string
 }
 
@@ -469,6 +470,7 @@ func newMqlAwsRdsInstance(runtime *plugin.Runtime, region string, accountID stri
 			"dbiResourceId":                 llx.StringDataPtr(dbInstance.DbiResourceId),
 			"dbClusterIdentifier":           llx.StringDataPtr(dbInstance.DBClusterIdentifier),
 			"storageThroughput":             llx.IntDataDefault(dbInstance.StorageThroughput, 0),
+			"masterUserSecret":              llx.DictData(masterUserSecretToDict(dbInstance.MasterUserSecret)),
 		})
 	if err != nil {
 		return nil, err
@@ -478,6 +480,7 @@ func newMqlAwsRdsInstance(runtime *plugin.Runtime, region string, accountID stri
 	mqlDBInstance.cacheSubnets = dbInstance.DBSubnetGroup
 	mqlDBInstance.cacheKmsKeyId = dbInstance.KmsKeyId
 	mqlDBInstance.cachePerformanceInsightsKmsKeyId = dbInstance.PerformanceInsightsKMSKeyId
+	mqlDBInstance.cacheActivityStreamKmsKeyId = dbInstance.ActivityStreamKmsKeyId
 	mqlDBInstance.setSecurityGroupArns(sgsArn)
 	return mqlDBInstance, nil
 }
@@ -506,6 +509,9 @@ func initAwsRdsDbcluster(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 
 	rds := obj.(*mqlAwsRds)
 	rawResources := rds.GetClusters()
+	if rawResources.Error != nil {
+		return nil, nil, rawResources.Error
+	}
 
 	arnVal := args["arn"].Value.(string)
 	for _, rawResource := range rawResources.Data {
@@ -541,6 +547,9 @@ func initAwsRdsDbinstance(runtime *plugin.Runtime, args map[string]*llx.RawData)
 
 	rds := obj.(*mqlAwsRds)
 	rawResources := rds.GetInstances()
+	if rawResources.Error != nil {
+		return nil, nil, rawResources.Error
+	}
 
 	arnVal := args["arn"].Value.(string)
 	for _, rawResource := range rawResources.Data {
@@ -594,6 +603,21 @@ func (a *mqlAwsRdsDbinstance) performanceInsightsKmsKey() (*mqlAwsKmsKey, error)
 	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
 		map[string]*llx.RawData{
 			"arn": llx.StringDataPtr(a.cachePerformanceInsightsKmsKeyId),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
+func (a *mqlAwsRdsDbinstance) activityStreamKmsKey() (*mqlAwsKmsKey, error) {
+	if a.cacheActivityStreamKmsKeyId == nil || *a.cacheActivityStreamKmsKeyId == "" {
+		a.ActivityStreamKmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{
+			"arn": llx.StringDataPtr(a.cacheActivityStreamKmsKeyId),
 		})
 	if err != nil {
 		return nil, err
@@ -692,6 +716,23 @@ func newMqlAwsPendingMaintenanceAction(runtime *plugin.Runtime, resourceArn stri
 	return res.(*mqlAwsRdsPendingMaintenanceAction), nil
 }
 
+func masterUserSecretToDict(secret *rds_types.MasterUserSecret) interface{} {
+	if secret == nil {
+		return nil
+	}
+	result := map[string]interface{}{}
+	if secret.SecretArn != nil {
+		result["secretArn"] = *secret.SecretArn
+	}
+	if secret.KmsKeyId != nil {
+		result["kmsKeyId"] = *secret.KmsKeyId
+	}
+	if secret.SecretStatus != nil {
+		result["secretStatus"] = *secret.SecretStatus
+	}
+	return result
+}
+
 func rdsTagsToMap(tags []rds_types.Tag) map[string]any {
 	tagsMap := make(map[string]any)
 	for _, tag := range tags {
@@ -773,7 +814,8 @@ func (a *mqlAwsRds) getDbClusters(conn *connection.AwsConnection) []*jobpool.Job
 
 type mqlAwsRdsDbclusterInternal struct {
 	securityGroupIdHandler
-	cacheKmsKeyId *string
+	cacheKmsKeyId               *string
+	cacheActivityStreamKmsKeyId *string
 }
 
 func (a *mqlAwsRdsDbcluster) id() (string, error) {
@@ -853,12 +895,14 @@ func newMqlAwsRdsCluster(runtime *plugin.Runtime, region string, accountID strin
 			"performanceInsightsEnabled": llx.BoolDataPtr(cluster.PerformanceInsightsEnabled),
 			"engineMode":                 llx.StringDataPtr(cluster.EngineMode),
 			"earliestRestorableTime":     llx.TimeDataPtr(cluster.EarliestRestorableTime),
+			"masterUserSecret":           llx.DictData(masterUserSecretToDict(cluster.MasterUserSecret)),
 		})
 	if err != nil {
 		return nil, err
 	}
 	mqlDbCluster := resource.(*mqlAwsRdsDbcluster)
 	mqlDbCluster.cacheKmsKeyId = cluster.KmsKeyId
+	mqlDbCluster.cacheActivityStreamKmsKeyId = cluster.ActivityStreamKmsKeyId
 	mqlDbCluster.setSecurityGroupArns(sgsArns)
 	return mqlDbCluster, nil
 }
@@ -876,6 +920,21 @@ func (a *mqlAwsRdsDbcluster) kmsKey() (*mqlAwsKmsKey, error) {
 	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
 		map[string]*llx.RawData{
 			"arn": llx.StringDataPtr(a.cacheKmsKeyId),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
+func (a *mqlAwsRdsDbcluster) activityStreamKmsKey() (*mqlAwsKmsKey, error) {
+	if a.cacheActivityStreamKmsKeyId == nil || *a.cacheActivityStreamKmsKeyId == "" {
+		a.ActivityStreamKmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{
+			"arn": llx.StringDataPtr(a.cacheActivityStreamKmsKeyId),
 		})
 	if err != nil {
 		return nil, err
@@ -1132,4 +1191,180 @@ func (a *mqlAwsRdsSnapshot) attributes() ([]any, error) {
 		return nil, err
 	}
 	return convert.JsonToDictSlice(snapshotAttributes.DBSnapshotAttributesResult.DBSnapshotAttributes)
+}
+
+func (a *mqlAwsRds) proxies() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getProxies(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		if poolOfJobs.Jobs[i].Result != nil {
+			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+		}
+	}
+
+	return res, nil
+}
+
+func (a *mqlAwsRds) getProxies(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("rds>getProxies>calling aws with region %s", region)
+
+			res := []any{}
+			svc := conn.Rds(region)
+			ctx := context.Background()
+
+			paginator := rds.NewDescribeDBProxiesPaginator(svc, &rds.DescribeDBProxiesInput{})
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					if IsServiceNotAvailableInRegionError(err) {
+						log.Debug().Str("region", region).Msg("rds proxy service not available in region")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, proxy := range page.DBProxies {
+					mqlProxy, err := newMqlAwsRdsProxy(a.MqlRuntime, region, conn.AccountId(), proxy)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlProxy)
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func newMqlAwsRdsProxy(runtime *plugin.Runtime, region string, accountID string, proxy rds_types.DBProxy) (*mqlAwsRdsProxy, error) {
+	// Build security group ARNs
+	sgs := []string{}
+	for _, sgId := range proxy.VpcSecurityGroupIds {
+		sgs = append(sgs, NewSecurityGroupArn(region, accountID, sgId))
+	}
+
+	resource, err := CreateResource(runtime, "aws.rds.proxy",
+		map[string]*llx.RawData{
+			"__id":                llx.StringDataPtr(proxy.DBProxyArn),
+			"arn":                 llx.StringDataPtr(proxy.DBProxyArn),
+			"name":                llx.StringDataPtr(proxy.DBProxyName),
+			"region":              llx.StringData(region),
+			"debugLogging":        llx.BoolDataPtr(proxy.DebugLogging),
+			"endpoint":            llx.StringDataPtr(proxy.Endpoint),
+			"endpointNetworkType": llx.StringData(string(proxy.EndpointNetworkType)),
+			"engineFamily":        llx.StringDataPtr(proxy.EngineFamily),
+			"idleClientTimeout":   llx.IntDataDefault(proxy.IdleClientTimeout, 0),
+			"requireTLS":          llx.BoolDataPtr(proxy.RequireTLS),
+			"status":              llx.StringData(string(proxy.Status)),
+			"createdAt":           llx.TimeDataPtr(proxy.CreatedDate),
+			"updatedAt":           llx.TimeDataPtr(proxy.UpdatedDate),
+		})
+	if err != nil {
+		return nil, err
+	}
+	mqlProxy := resource.(*mqlAwsRdsProxy)
+	mqlProxy.cacheVpcId = proxy.VpcId
+	mqlProxy.cacheRoleArn = proxy.RoleArn
+	mqlProxy.setSecurityGroupArns(sgs)
+	mqlProxy.cacheSubnetIds = proxy.VpcSubnetIds
+	mqlProxy.region = region
+	mqlProxy.accountID = accountID
+	return mqlProxy, nil
+}
+
+type mqlAwsRdsProxyInternal struct {
+	securityGroupIdHandler
+	cacheVpcId     *string
+	cacheRoleArn   *string
+	cacheSubnetIds []string
+	region         string
+	accountID      string
+}
+
+func (a *mqlAwsRdsProxy) vpc() (*mqlAwsVpc, error) {
+	if a.cacheVpcId == nil || *a.cacheVpcId == "" {
+		a.Vpc.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlVpc, err := NewResource(a.MqlRuntime, "aws.vpc",
+		map[string]*llx.RawData{
+			"arn": llx.StringData(fmt.Sprintf(vpcArnPattern, a.region, a.accountID, *a.cacheVpcId)),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlVpc.(*mqlAwsVpc), nil
+}
+
+func (a *mqlAwsRdsProxy) securityGroups() ([]any, error) {
+	return a.newSecurityGroupResources(a.MqlRuntime)
+}
+
+func (a *mqlAwsRdsProxy) subnets() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	for _, subnetId := range a.cacheSubnetIds {
+		mqlSubnet, err := NewResource(a.MqlRuntime, "aws.vpc.subnet",
+			map[string]*llx.RawData{
+				"arn": llx.StringData(fmt.Sprintf(subnetArnPattern, a.region, conn.AccountId(), subnetId)),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlSubnet)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsRdsProxy) iamRole() (*mqlAwsIamRole, error) {
+	if a.cacheRoleArn == nil || *a.cacheRoleArn == "" {
+		a.IamRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlRole, err := NewResource(a.MqlRuntime, "aws.iam.role",
+		map[string]*llx.RawData{
+			"arn": llx.StringDataPtr(a.cacheRoleArn),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlRole.(*mqlAwsIamRole), nil
+}
+
+func (a *mqlAwsRdsProxy) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsRdsProxy) tags() (map[string]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Rds(a.Region.Data)
+	ctx := context.Background()
+	arn := a.Arn.Data
+
+	resp, err := svc.ListTagsForResource(ctx, &rds.ListTagsForResourceInput{
+		ResourceName: &arn,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return rdsTagsToMap(resp.TagList), nil
 }

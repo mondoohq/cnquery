@@ -555,6 +555,7 @@ func (a *mqlAwsElbLoadbalancer) targetGroups() ([]any, error) {
 				"targetType":                 llx.StringData(string(tg.TargetType)),
 				"unhealthyThresholdCount":    llx.IntDataPtr(tg.UnhealthyThresholdCount),
 				"healthyThresholdCount":      llx.IntDataPtr(tg.HealthyThresholdCount),
+				"region":                     llx.StringData(regionVal),
 			}
 
 			mqlLb, err := CreateResource(a.MqlRuntime, ResourceAwsElbTargetgroup, args)

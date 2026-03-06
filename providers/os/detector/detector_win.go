@@ -36,6 +36,8 @@ func runtimeWindowsDetector(pf *inventory.Platform, conn shared.Connection) (boo
 		}
 
 		pf.Labels["windows.mondoo.com/hotpatch"] = strconv.FormatBool(hotpatchEnabled)
+
+		detectIntuneDeviceID(pf, conn)
 		return true, nil
 	}
 
@@ -58,6 +60,8 @@ func runtimeWindowsDetector(pf *inventory.Platform, conn shared.Connection) (boo
 	pf.Labels["windows.mondoo.com/product-type"] = data.ProductType
 
 	correctForWindows11(pf)
+
+	detectIntuneDeviceID(pf, conn)
 	return true, nil
 }
 
@@ -170,6 +174,29 @@ func staticWindowsDetector(pf *inventory.Platform, conn shared.Connection) (bool
 	correctForWindows11(pf)
 
 	return true, nil
+}
+
+// detectIntuneDeviceID detects the Intune device ID for Windows client systems.
+// This includes workstations (product-type "1") and Windows 11 Enterprise Multi-Session
+// systems which report as product-type "3" but are manageable via Intune.
+func detectIntuneDeviceID(pf *inventory.Platform, conn shared.Connection) {
+	isWorkstation := pf.Labels["windows.mondoo.com/product-type"] == "1"
+	isWindows11MultiSession := pf.Labels["windows.mondoo.com/product-type"] == "3" &&
+		strings.Contains(pf.Title, "Windows 11") &&
+		strings.Contains(pf.Title, "Multi-Session")
+	if !isWorkstation && !isWindows11MultiSession {
+		return
+	}
+
+	intuneDeviceID, err := win.GetIntuneDeviceID(conn)
+	if err != nil {
+		log.Debug().Err(err).Msg("could not get Intune device ID")
+		return
+	}
+
+	if intuneDeviceID != "" {
+		pf.Labels["windows.mondoo.com/intune-device-id"] = intuneDeviceID
+	}
 }
 
 // correctForWindows11 replaces the windows 10 title with windows 11 if the build number is greater than 22000
