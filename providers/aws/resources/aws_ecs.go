@@ -433,13 +433,16 @@ func (t *mqlAwsEcsTask) containers() ([]any, error) {
 		}
 	}
 
+	// Batch-fetch all ENI public IPs for this task's containers in a single API call.
+	eniPublicIPs := batchFetchENIPublicIPs(ctx, conn, t.attachments, t.region)
+
 	containers := []any{}
 	for _, c := range t.cacheContainers {
 		cmds := []any{}
 		for _, cmd := range containerCommandMap[convert.ToValue(c.Name)] {
 			cmds = append(cmds, cmd)
 		}
-		publicIp := getContainerIP(ctx, conn, t.attachments, c, t.region)
+		publicIp := getContainerIP(eniPublicIPs, t.attachments, c)
 		name := convert.ToValue(c.Name)
 		if publicIp != "" {
 			name = name + "-" + publicIp
@@ -480,35 +483,52 @@ func (t *mqlAwsEcsTask) containers() ([]any, error) {
 	return containers, nil
 }
 
-func getContainerIP(ctx context.Context, conn *connection.AwsConnection, attachments []ecstypes.Attachment, c ecstypes.Container, region string) string {
+func getContainerIP(eniPublicIPs map[string]string, attachments []ecstypes.Attachment, c ecstypes.Container) string {
 	containerAttachmentIds := []string{}
 	for _, ca := range c.NetworkInterfaces {
 		containerAttachmentIds = append(containerAttachmentIds, *ca.AttachmentId)
 	}
-	var publicIp string
 	for _, a := range attachments {
 		if stringx.Contains(containerAttachmentIds, *a.Id) {
 			for _, detail := range a.Details {
 				if *detail.Name == "networkInterfaceId" {
-					publicIp = getPublicIpForContainer(ctx, conn, *detail.Value, region)
+					if ip, ok := eniPublicIPs[*detail.Value]; ok {
+						return ip
+					}
 				}
 			}
 		}
 	}
-	return publicIp
+	return ""
 }
 
-func getPublicIpForContainer(ctx context.Context, conn *connection.AwsConnection, nii string, region string) string {
-	svc := conn.Ec2(region)
-	ni, err := svc.DescribeNetworkInterfaces(ctx, &ec2.DescribeNetworkInterfacesInput{NetworkInterfaceIds: []string{nii}})
-	if err == nil {
-		if len(ni.NetworkInterfaces) == 1 {
-			if ni.NetworkInterfaces[0].Association != nil {
-				return *ni.NetworkInterfaces[0].Association.PublicIp
+// batchFetchENIPublicIPs collects all network interface IDs from task attachments
+// and fetches their public IPs in a single DescribeNetworkInterfaces call.
+func batchFetchENIPublicIPs(ctx context.Context, conn *connection.AwsConnection, attachments []ecstypes.Attachment, region string) map[string]string {
+	eniIDs := []string{}
+	for _, a := range attachments {
+		for _, detail := range a.Details {
+			if detail.Name != nil && *detail.Name == "networkInterfaceId" && detail.Value != nil {
+				eniIDs = append(eniIDs, *detail.Value)
 			}
 		}
 	}
-	return ""
+	result := make(map[string]string)
+	if len(eniIDs) == 0 {
+		return result
+	}
+
+	svc := conn.Ec2(region)
+	resp, err := svc.DescribeNetworkInterfaces(ctx, &ec2.DescribeNetworkInterfacesInput{NetworkInterfaceIds: eniIDs})
+	if err != nil {
+		return result
+	}
+	for _, ni := range resp.NetworkInterfaces {
+		if ni.NetworkInterfaceId != nil && ni.Association != nil && ni.Association.PublicIp != nil {
+			result[*ni.NetworkInterfaceId] = *ni.Association.PublicIp
+		}
+	}
+	return result
 }
 
 func (s *mqlAwsEcsContainer) id() (string, error) {
