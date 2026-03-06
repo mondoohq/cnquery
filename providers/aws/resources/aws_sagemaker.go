@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	"github.com/aws/smithy-go/transport/http"
@@ -16,8 +17,6 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
-
-	"go.mondoo.com/mql/v13/types"
 )
 
 func (a *mqlAwsSagemaker) id() (string, error) {
@@ -69,14 +68,18 @@ func (a *mqlAwsSagemaker) getEndpoints(conn *connection.AwsConnection) []*jobpoo
 				}
 
 				for _, endpoint := range endpoints.Endpoints {
-					tags, err := getSagemakerTags(ctx, svc, endpoint.EndpointArn)
-					if err != nil {
-						return nil, err
-					}
-
-					if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(tags)) {
-						log.Debug().Interface("endpoint", endpoint.EndpointArn).Msg("skipping sagemaker endpoint due to filters")
-						continue
+					// Only fetch tags eagerly when tag-based filters are configured
+					var eagerTags map[string]any
+					if conn.Filters.General.HasTags() {
+						tags, err := getSagemakerTags(ctx, svc, endpoint.EndpointArn)
+						if err != nil {
+							return nil, err
+						}
+						if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(tags)) {
+							log.Debug().Interface("endpoint", endpoint.EndpointArn).Msg("skipping sagemaker endpoint due to filters")
+							continue
+						}
+						eagerTags = tags
 					}
 
 					mqlEndpoint, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerEndpoint,
@@ -84,10 +87,14 @@ func (a *mqlAwsSagemaker) getEndpoints(conn *connection.AwsConnection) []*jobpoo
 							"arn":    llx.StringDataPtr(endpoint.EndpointArn),
 							"name":   llx.StringDataPtr(endpoint.EndpointName),
 							"region": llx.StringData(region),
-							"tags":   llx.MapData(tags, types.String),
 						})
 					if err != nil {
 						return nil, err
+					}
+					ep := mqlEndpoint.(*mqlAwsSagemakerEndpoint)
+					if eagerTags != nil {
+						ep.cacheTags = eagerTags
+						ep.tagsFetched = true
 					}
 					res = append(res, mqlEndpoint)
 				}
@@ -157,27 +164,35 @@ func (a *mqlAwsSagemaker) getNotebookInstances(conn *connection.AwsConnection) [
 					return nil, err
 				}
 				for _, instance := range notebookInstances.NotebookInstances {
-					tags, err := getSagemakerTags(ctx, svc, instance.NotebookInstanceArn)
-					if err != nil {
-						return nil, err
+					// Only fetch tags eagerly when tag-based filters are configured
+					var eagerTags map[string]any
+					if conn.Filters.General.HasTags() {
+						tags, err := getSagemakerTags(ctx, svc, instance.NotebookInstanceArn)
+						if err != nil {
+							return nil, err
+						}
+						if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(tags)) {
+							log.Debug().Interface("notebook", instance.NotebookInstanceArn).Msg("skipping sagemaker notebook instance due to filters")
+							continue
+						}
+						eagerTags = tags
 					}
 
-					if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(tags)) {
-						log.Debug().Interface("notebook", instance.NotebookInstanceArn).Msg("skipping sagemaker notebook instance due to filters")
-						continue
-					}
-
-					mqlEndpoint, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerNotebookinstance,
+					mqlNb, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerNotebookinstance,
 						map[string]*llx.RawData{
 							"arn":    llx.StringData(convert.ToValue(instance.NotebookInstanceArn)),
 							"name":   llx.StringData(convert.ToValue(instance.NotebookInstanceName)),
 							"region": llx.StringData(region),
-							"tags":   llx.MapData(tags, types.String),
 						})
 					if err != nil {
 						return nil, err
 					}
-					res = append(res, mqlEndpoint)
+					nb := mqlNb.(*mqlAwsSagemakerNotebookinstance)
+					if eagerTags != nil {
+						nb.cacheTags = eagerTags
+						nb.tagsFetched = true
+					}
+					res = append(res, mqlNb)
 				}
 			}
 			return jobpool.JobResult(res), nil
@@ -291,8 +306,68 @@ func (a *mqlAwsSagemakerNotebookinstancedetails) subnet() (*mqlAwsVpcSubnet, err
 	return nil, nil
 }
 
+type mqlAwsSagemakerEndpointInternal struct {
+	cacheTags   map[string]any
+	tagsFetched bool
+	tagsLock    sync.Mutex
+}
+
+func (a *mqlAwsSagemakerEndpoint) tags() (map[string]any, error) {
+	if a.tagsFetched {
+		return a.cacheTags, nil
+	}
+	a.tagsLock.Lock()
+	defer a.tagsLock.Unlock()
+	if a.tagsFetched {
+		return a.cacheTags, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Sagemaker(a.Region.Data)
+	ctx := context.Background()
+
+	arnVal := a.Arn.Data
+	tags, err := getSagemakerTags(ctx, svc, &arnVal)
+	if err != nil {
+		return nil, err
+	}
+	a.cacheTags = tags
+	a.tagsFetched = true
+	return tags, nil
+}
+
 func (a *mqlAwsSagemakerEndpoint) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+type mqlAwsSagemakerNotebookinstanceInternal struct {
+	cacheTags   map[string]any
+	tagsFetched bool
+	tagsLock    sync.Mutex
+}
+
+func (a *mqlAwsSagemakerNotebookinstance) tags() (map[string]any, error) {
+	if a.tagsFetched {
+		return a.cacheTags, nil
+	}
+	a.tagsLock.Lock()
+	defer a.tagsLock.Unlock()
+	if a.tagsFetched {
+		return a.cacheTags, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Sagemaker(a.Region.Data)
+	ctx := context.Background()
+
+	arnVal := a.Arn.Data
+	tags, err := getSagemakerTags(ctx, svc, &arnVal)
+	if err != nil {
+		return nil, err
+	}
+	a.cacheTags = tags
+	a.tagsFetched = true
+	return tags, nil
 }
 
 func (a *mqlAwsSagemakerNotebookinstance) id() (string, error) {
