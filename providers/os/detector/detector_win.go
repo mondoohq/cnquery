@@ -209,9 +209,8 @@ func detectESU(pf *inventory.Platform, conn shared.Connection) {
 	if err != nil {
 		return
 	}
-	// Windows 10 builds range from 10240 to 19045; builds >= 22000 are Windows 11.
-	// Skip older builds (Server 2012 R2, etc.) and Windows 11+.
-	if buildNumber < 10240 || buildNumber >= 22000 {
+	// Only Windows 10 version 22H2 (build 19045) is supported for ESU.
+	if buildNumber != 19045 {
 		return
 	}
 
