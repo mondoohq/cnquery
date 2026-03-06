@@ -56,6 +56,7 @@ Notes:
 			MaxArgs: 4,
 			Discovery: []string{
 				resources.DiscoveryAccounts,
+				resources.DiscoveryCloudfrontDistributions,
 				resources.DiscoveryCloudtrailTrails,
 				resources.DiscoveryCloudwatchLoggroups,
 				resources.DiscoveryDynamoDBGlobalTables,
@@ -69,6 +70,7 @@ Notes:
 				resources.DiscoveryECSContainersAPI,
 				resources.DiscoveryEFSFilesystems,
 				resources.DiscoveryEKSClusters,
+				resources.DiscoveryElasticacheClusters,
 				resources.DiscoveryELBLoadBalancers,
 				resources.DiscoveryESDomains,
 				resources.DiscoveryOpenSearchDomains,
