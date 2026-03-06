@@ -4,7 +4,6 @@
 package resources
 
 import (
-	"bytes"
 	"errors"
 	"io"
 	"os"
@@ -46,14 +45,10 @@ func (s *mqlApache2) version() (string, error) {
 	conn := s.MqlRuntime.Connection.(shared.Connection)
 	afs := &afero.Afero{Fs: conn.FileSystem()}
 
-	// Prefer file-based detection: read the httpd binary and scan for the
-	// embedded "Apache/x.y.z" version string.
+	// Prefer file-based detection: scan the httpd binary for the embedded
+	// "Apache/x.y.z" version string without loading the full binary into memory.
 	for _, bin := range apacheVersionBinaries {
-		data, err := afs.ReadFile(bin)
-		if err != nil {
-			continue
-		}
-		if v := extractApacheVersion(data); v != "" {
+		if v := scanBinaryForTag(afs, bin, apacheVersionTag); v != "" {
 			return v, nil
 		}
 	}
@@ -81,23 +76,6 @@ func (s *mqlApache2) version() (string, error) {
 	// Apache is likely not installed; return nil rather than an error.
 	s.Version = plugin.TValue[string]{State: plugin.StateIsSet | plugin.StateIsNull}
 	return "", nil
-}
-
-// extractApacheVersion scans binary data for an embedded "Apache/x.y.z" string.
-func extractApacheVersion(data []byte) string {
-	idx := bytes.Index(data, apacheVersionTag)
-	if idx < 0 {
-		return ""
-	}
-	start := idx + len(apacheVersionTag)
-	end := start
-	for end < len(data) && (data[end] == '.' || (data[end] >= '0' && data[end] <= '9')) {
-		end++
-	}
-	if end == start {
-		return ""
-	}
-	return string(data[start:end])
 }
 
 var reApacheVersion = regexp.MustCompile(`Apache/(\S+)`)
@@ -333,6 +311,10 @@ func (s *mqlApache2Conf) setEmpty() {
 func (s *mqlApache2Conf) parse(file *mqlFile) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
+
+	if s.Params.State == plugin.StateIsSet {
+		return nil
+	}
 
 	if file == nil {
 		s.setEmpty()
