@@ -60,93 +60,92 @@ func (a *mqlAwsEks) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 			ctx := context.Background()
 			res := []any{}
 
-			describeClusterRes, err := svc.ListClusters(ctx, &eks.ListClustersInput{})
-			if err != nil {
-				if Is400AccessDeniedError(err) {
-					log.Warn().Str("region", region).Msg("error accessing region for AWS API")
-					return res, nil
-				}
-				return nil, err
-			}
-
-			if describeClusterRes == nil {
-				return jobpool.JobResult(res), nil
-			}
-
-			for _, clusterName := range describeClusterRes.Clusters {
-				// get cluster details
-				log.Debug().Str("cluster", clusterName).Str("region", region).Msg("get info for cluster")
-				describeClusterOutput, err := svc.DescribeCluster(ctx, &eks.DescribeClusterInput{
-					Name: aws.String(clusterName),
-				})
+			paginator := eks.NewListClustersPaginator(svc, &eks.ListClustersInput{})
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
 				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
 					return nil, err
 				}
 
-				if describeClusterOutput == nil {
-					continue
-				}
-
-				cluster := describeClusterOutput.Cluster
-				if conn.Filters.General.IsFilteredOutByTags(cluster.Tags) {
-					log.Debug().Interface("cluster", cluster.Arn).Msg("skipping eks cluster due to filters")
-					continue
-				}
-
-				encryptionConfig, _ := convert.JsonToDictSlice(cluster.EncryptionConfig)
-				logging, _ := convert.JsonToDict(cluster.Logging)
-				kubernetesNetworkConfig, _ := convert.JsonToDict(cluster.KubernetesNetworkConfig)
-				vpcConfig, _ := convert.JsonToDict(cluster.ResourcesVpcConfig)
-
-				var endpointPublicAccess, endpointPrivateAccess bool
-				publicAccessCidrs := []any{}
-				if cluster.ResourcesVpcConfig != nil {
-					endpointPublicAccess = cluster.ResourcesVpcConfig.EndpointPublicAccess
-					endpointPrivateAccess = cluster.ResourcesVpcConfig.EndpointPrivateAccess
-					for _, cidr := range cluster.ResourcesVpcConfig.PublicAccessCidrs {
-						publicAccessCidrs = append(publicAccessCidrs, cidr)
-					}
-				}
-
-				args := map[string]*llx.RawData{
-					"arn":                   llx.StringDataPtr(cluster.Arn),
-					"authenticationMode":    llx.StringData(string(cluster.AccessConfig.AuthenticationMode)),
-					"createdAt":             llx.TimeDataPtr(cluster.CreatedAt),
-					"encryptionConfig":      llx.ArrayData(encryptionConfig, types.Any),
-					"endpoint":              llx.StringDataPtr(cluster.Endpoint),
-					"iamRole":               llx.NilData, // set iamRole to nil as default, if iam is not set
-					"logging":               llx.MapData(logging, types.Any),
-					"name":                  llx.StringDataPtr(cluster.Name),
-					"networkConfig":         llx.MapData(kubernetesNetworkConfig, types.Any),
-					"platformVersion":       llx.StringDataPtr(cluster.PlatformVersion),
-					"region":                llx.StringData(region),
-					"resourcesVpcConfig":    llx.MapData(vpcConfig, types.Any),
-					"status":                llx.StringData(string(cluster.Status)),
-					"supportType":           llx.StringData(string(cluster.UpgradePolicy.SupportType)),
-					"tags":                  llx.MapData(toInterfaceMap(cluster.Tags), types.String),
-					"version":               llx.StringDataPtr(cluster.Version),
-					"deletionProtection":    llx.BoolDataPtr(cluster.DeletionProtection),
-					"endpointPublicAccess":  llx.BoolData(endpointPublicAccess),
-					"endpointPrivateAccess": llx.BoolData(endpointPrivateAccess),
-					"publicAccessCidrs":     llx.ArrayData(publicAccessCidrs, types.String),
-				}
-
-				if cluster.RoleArn != nil {
-					mqlIam, err := NewResource(a.MqlRuntime, ResourceAwsIamRole,
-						map[string]*llx.RawData{"arn": llx.StringDataPtr(cluster.RoleArn)},
-					)
+				for _, clusterName := range page.Clusters {
+					// get cluster details
+					log.Debug().Str("cluster", clusterName).Str("region", region).Msg("get info for cluster")
+					describeClusterOutput, err := svc.DescribeCluster(ctx, &eks.DescribeClusterInput{
+						Name: aws.String(clusterName),
+					})
 					if err != nil {
 						return nil, err
 					}
-					// update the iam setting
-					args["iamRole"] = llx.ResourceData(mqlIam, mqlIam.MqlName())
-				}
 
-				mqlFilesystem, err := CreateResource(a.MqlRuntime, ResourceAwsEksCluster, args)
-				if err != nil {
-					return nil, err
+					if describeClusterOutput == nil {
+						continue
+					}
+
+					cluster := describeClusterOutput.Cluster
+					if conn.Filters.General.IsFilteredOutByTags(cluster.Tags) {
+						log.Debug().Interface("cluster", cluster.Arn).Msg("skipping eks cluster due to filters")
+						continue
+					}
+
+					encryptionConfig, _ := convert.JsonToDictSlice(cluster.EncryptionConfig)
+					logging, _ := convert.JsonToDict(cluster.Logging)
+					kubernetesNetworkConfig, _ := convert.JsonToDict(cluster.KubernetesNetworkConfig)
+					vpcConfig, _ := convert.JsonToDict(cluster.ResourcesVpcConfig)
+
+					var endpointPublicAccess, endpointPrivateAccess bool
+					publicAccessCidrs := []any{}
+					if cluster.ResourcesVpcConfig != nil {
+						endpointPublicAccess = cluster.ResourcesVpcConfig.EndpointPublicAccess
+						endpointPrivateAccess = cluster.ResourcesVpcConfig.EndpointPrivateAccess
+						for _, cidr := range cluster.ResourcesVpcConfig.PublicAccessCidrs {
+							publicAccessCidrs = append(publicAccessCidrs, cidr)
+						}
+					}
+
+					args := map[string]*llx.RawData{
+						"arn":                   llx.StringDataPtr(cluster.Arn),
+						"authenticationMode":    llx.StringData(string(cluster.AccessConfig.AuthenticationMode)),
+						"createdAt":             llx.TimeDataPtr(cluster.CreatedAt),
+						"encryptionConfig":      llx.ArrayData(encryptionConfig, types.Any),
+						"endpoint":              llx.StringDataPtr(cluster.Endpoint),
+						"iamRole":               llx.NilData, // set iamRole to nil as default, if iam is not set
+						"logging":               llx.MapData(logging, types.Any),
+						"name":                  llx.StringDataPtr(cluster.Name),
+						"networkConfig":         llx.MapData(kubernetesNetworkConfig, types.Any),
+						"platformVersion":       llx.StringDataPtr(cluster.PlatformVersion),
+						"region":                llx.StringData(region),
+						"resourcesVpcConfig":    llx.MapData(vpcConfig, types.Any),
+						"status":                llx.StringData(string(cluster.Status)),
+						"supportType":           llx.StringData(string(cluster.UpgradePolicy.SupportType)),
+						"tags":                  llx.MapData(toInterfaceMap(cluster.Tags), types.String),
+						"version":               llx.StringDataPtr(cluster.Version),
+						"deletionProtection":    llx.BoolDataPtr(cluster.DeletionProtection),
+						"endpointPublicAccess":  llx.BoolData(endpointPublicAccess),
+						"endpointPrivateAccess": llx.BoolData(endpointPrivateAccess),
+						"publicAccessCidrs":     llx.ArrayData(publicAccessCidrs, types.String),
+					}
+
+					if cluster.RoleArn != nil {
+						mqlIam, err := NewResource(a.MqlRuntime, ResourceAwsIamRole,
+							map[string]*llx.RawData{"arn": llx.StringDataPtr(cluster.RoleArn)},
+						)
+						if err != nil {
+							return nil, err
+						}
+						// update the iam setting
+						args["iamRole"] = llx.ResourceData(mqlIam, mqlIam.MqlName())
+					}
+
+					mqlFilesystem, err := CreateResource(a.MqlRuntime, ResourceAwsEksCluster, args)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlFilesystem)
 				}
-				res = append(res, mqlFilesystem)
 			}
 
 			return jobpool.JobResult(res), nil
@@ -204,33 +203,32 @@ func (a *mqlAwsEksCluster) nodeGroups() ([]any, error) {
 	ctx := context.Background()
 	res := []any{}
 
-	nodeGroupsRes, err := svc.ListNodegroups(ctx, &eks.ListNodegroupsInput{ClusterName: aws.String(a.Name.Data)})
-	if err != nil {
-		if Is400AccessDeniedError(err) {
-			log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
-			return res, nil
-		}
-		return nil, err
-	}
-
-	if nodeGroupsRes == nil {
-		return nil, nil
-	}
-
-	for i := range nodeGroupsRes.Nodegroups {
-		nodegroup := nodeGroupsRes.Nodegroups[i]
-		args := map[string]*llx.RawData{
-			"name":   llx.StringData(nodegroup),
-			"region": llx.StringData(regionVal),
-		}
-
-		mqlNg, err := CreateResource(a.MqlRuntime, ResourceAwsEksNodegroup, args)
+	paginator := eks.NewListNodegroupsPaginator(svc, &eks.ListNodegroupsInput{ClusterName: aws.String(a.Name.Data)})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
 		if err != nil {
+			if Is400AccessDeniedError(err) {
+				log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+				return res, nil
+			}
 			return nil, err
 		}
-		mqlNg.(*mqlAwsEksNodegroup).clusterName = a.Name.Data
-		mqlNg.(*mqlAwsEksNodegroup).region = regionVal
-		res = append(res, mqlNg)
+
+		for i := range page.Nodegroups {
+			nodegroup := page.Nodegroups[i]
+			args := map[string]*llx.RawData{
+				"name":   llx.StringData(nodegroup),
+				"region": llx.StringData(regionVal),
+			}
+
+			mqlNg, err := CreateResource(a.MqlRuntime, ResourceAwsEksNodegroup, args)
+			if err != nil {
+				return nil, err
+			}
+			mqlNg.(*mqlAwsEksNodegroup).clusterName = a.Name.Data
+			mqlNg.(*mqlAwsEksNodegroup).region = regionVal
+			res = append(res, mqlNg)
+		}
 	}
 	return res, nil
 }
@@ -421,34 +419,33 @@ func (a *mqlAwsEksCluster) addons() ([]any, error) {
 	ctx := context.Background()
 	res := []any{}
 
-	addonsRes, err := svc.ListAddons(ctx, &eks.ListAddonsInput{ClusterName: aws.String(a.Name.Data)})
-	if err != nil {
-		if Is400AccessDeniedError(err) {
-			log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
-			return res, nil
-		}
-		return nil, err
-	}
-
-	if addonsRes == nil {
-		return nil, nil
-	}
-
-	for i := range addonsRes.Addons {
-		addon := addonsRes.Addons[i]
-		args := map[string]*llx.RawData{
-			"__id":   llx.StringData(fmt.Sprintf("%s/%s/%s", ResourceAwsEksAddon, a.Name.Data, addon)),
-			"name":   llx.StringData(addon),
-			"region": llx.StringData(regionVal),
-		}
-
-		mqlNg, err := CreateResource(a.MqlRuntime, ResourceAwsEksAddon, args)
+	paginator := eks.NewListAddonsPaginator(svc, &eks.ListAddonsInput{ClusterName: aws.String(a.Name.Data)})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
 		if err != nil {
+			if Is400AccessDeniedError(err) {
+				log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+				return res, nil
+			}
 			return nil, err
 		}
-		mqlNg.(*mqlAwsEksAddon).clusterName = a.Name.Data
-		mqlNg.(*mqlAwsEksAddon).region = regionVal
-		res = append(res, mqlNg)
+
+		for i := range page.Addons {
+			addon := page.Addons[i]
+			args := map[string]*llx.RawData{
+				"__id":   llx.StringData(fmt.Sprintf("%s/%s/%s", ResourceAwsEksAddon, a.Name.Data, addon)),
+				"name":   llx.StringData(addon),
+				"region": llx.StringData(regionVal),
+			}
+
+			mqlNg, err := CreateResource(a.MqlRuntime, ResourceAwsEksAddon, args)
+			if err != nil {
+				return nil, err
+			}
+			mqlNg.(*mqlAwsEksAddon).clusterName = a.Name.Data
+			mqlNg.(*mqlAwsEksAddon).region = regionVal
+			res = append(res, mqlNg)
+		}
 	}
 	return res, nil
 }
