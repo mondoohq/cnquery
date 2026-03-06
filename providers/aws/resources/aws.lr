@@ -1521,7 +1521,7 @@ private aws.sagemaker.notebookinstance @defaults("arn name") {
   // Region where the notebook instance exists
   region string
   // Tags for the notebook instance
-  tags map[string]string
+  tags() map[string]string
   // Time when the notebook instance was created
   createdAt time
   // Time when the notebook instance was last modified
@@ -1559,7 +1559,7 @@ private aws.sagemaker.endpoint @defaults("arn name") {
   // Region where the endpoint exists
   region string
   // Tags for the endpoint
-  tags map[string]string
+  tags() map[string]string
   // Time when the endpoint was created
   createdAt time
   // Time when the endpoint was last modified
