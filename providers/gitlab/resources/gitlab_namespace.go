@@ -4,9 +4,11 @@
 package resources
 
 import (
+	"errors"
 	"strconv"
 	"time"
 
+	gitlab "gitlab.com/gitlab-org/api/client-go"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/gitlab/connection"
@@ -16,32 +18,15 @@ func (n *mqlGitlabNamespace) id() (string, error) {
 	return "gitlab.namespace/" + strconv.FormatInt(n.Id.Data, 10), nil
 }
 
-func (g *mqlGitlabGroup) namespace() (*mqlGitlabNamespace, error) {
-	conn := g.MqlRuntime.Connection.(*connection.GitLabConnection)
-
-	groupID := int(g.Id.Data)
-	ns, _, err := conn.Client().Namespaces.GetNamespace(groupID)
-	if err != nil {
-		return nil, err
-	}
-
+// namespaceArgs converts a GitLab SDK Namespace to an MQL args map.
+func namespaceArgs(ns *gitlab.Namespace) map[string]*llx.RawData {
 	var trialEndsOn *time.Time
 	if ns.TrialEndsOn != nil {
 		t := time.Time(*ns.TrialEndsOn)
 		trialEndsOn = &t
 	}
 
-	var maxSeatsUsed int64
-	if ns.MaxSeatsUsed != nil {
-		maxSeatsUsed = *ns.MaxSeatsUsed
-	}
-
-	var seatsInUse int64
-	if ns.SeatsInUse != nil {
-		seatsInUse = *ns.SeatsInUse
-	}
-
-	nsArgs := map[string]*llx.RawData{
+	return map[string]*llx.RawData{
 		"id":                          llx.IntData(ns.ID),
 		"name":                        llx.StringData(ns.Name),
 		"path":                        llx.StringData(ns.Path),
@@ -54,11 +39,21 @@ func (g *mqlGitlabGroup) namespace() (*mqlGitlabNamespace, error) {
 		"plan":                        llx.StringData(ns.Plan),
 		"trial":                       llx.BoolData(ns.Trial),
 		"trialEndsOn":                 llx.TimeDataPtr(trialEndsOn),
-		"maxSeatsUsed":                llx.IntData(maxSeatsUsed),
-		"seatsInUse":                  llx.IntData(seatsInUse),
+		"maxSeatsUsed":                llx.IntDataPtr(ns.MaxSeatsUsed),
+		"seatsInUse":                  llx.IntDataPtr(ns.SeatsInUse),
+	}
+}
+
+func (g *mqlGitlabGroup) namespace() (*mqlGitlabNamespace, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	groupID := int(g.Id.Data)
+	ns, _, err := conn.Client().Namespaces.GetNamespace(groupID)
+	if err != nil {
+		return nil, err
 	}
 
-	mqlNs, err := CreateResource(g.MqlRuntime, "gitlab.namespace", nsArgs)
+	mqlNs, err := CreateResource(g.MqlRuntime, "gitlab.namespace", namespaceArgs(ns))
 	if err != nil {
 		return nil, err
 	}
@@ -73,48 +68,22 @@ func initGitlabNamespace(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 
 	conn := runtime.Connection.(*connection.GitLabConnection)
 
-	// If we have a group connection, get the namespace for that group
-	if conn.IsGroup() {
-		grp, err := conn.Group()
-		if err != nil {
-			return nil, nil, err
-		}
+	if !conn.IsGroup() {
+		return nil, nil, errors.New("gitlab.namespace requires a group connection, use --group to specify a group")
+	}
 
-		ns, _, err := conn.Client().Namespaces.GetNamespace(int(grp.ID))
-		if err != nil {
-			return nil, nil, err
-		}
+	grp, err := conn.Group()
+	if err != nil {
+		return nil, nil, err
+	}
 
-		var trialEndsOn *time.Time
-		if ns.TrialEndsOn != nil {
-			t := time.Time(*ns.TrialEndsOn)
-			trialEndsOn = &t
-		}
+	ns, _, err := conn.Client().Namespaces.GetNamespace(int(grp.ID))
+	if err != nil {
+		return nil, nil, err
+	}
 
-		var maxSeatsUsed int64
-		if ns.MaxSeatsUsed != nil {
-			maxSeatsUsed = *ns.MaxSeatsUsed
-		}
-
-		var seatsInUse int64
-		if ns.SeatsInUse != nil {
-			seatsInUse = *ns.SeatsInUse
-		}
-
-		args["id"] = llx.IntData(ns.ID)
-		args["name"] = llx.StringData(ns.Name)
-		args["path"] = llx.StringData(ns.Path)
-		args["kind"] = llx.StringData(ns.Kind)
-		args["fullPath"] = llx.StringData(ns.FullPath)
-		args["parentId"] = llx.IntData(ns.ParentID)
-		args["webURL"] = llx.StringData(ns.WebURL)
-		args["membersCountWithDescendants"] = llx.IntData(ns.MembersCountWithDescendants)
-		args["billableMembersCount"] = llx.IntData(ns.BillableMembersCount)
-		args["plan"] = llx.StringData(ns.Plan)
-		args["trial"] = llx.BoolData(ns.Trial)
-		args["trialEndsOn"] = llx.TimeDataPtr(trialEndsOn)
-		args["maxSeatsUsed"] = llx.IntData(maxSeatsUsed)
-		args["seatsInUse"] = llx.IntData(seatsInUse)
+	for k, v := range namespaceArgs(ns) {
+		args[k] = v
 	}
 
 	return args, nil, nil
