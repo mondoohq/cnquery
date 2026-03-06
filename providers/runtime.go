@@ -23,6 +23,9 @@ import (
 
 const defaultShutdownTimeout = time.Duration(time.Second * 120)
 
+// Can be used to infer that detecting a provider has failed because there were no available connection options.
+var ErrNoConnections = errors.New("asset has no connections, can't detect provider")
+
 // Runtimes are associated with one asset and carry all providers
 // and open connections for that asset.
 type Runtime struct {
@@ -182,7 +185,7 @@ func (r *Runtime) providerForAsset(asset *inventory.Asset) (*Provider, error) {
 		return nil, errors.New("please provide an asset to detect the provider")
 	}
 	if len(asset.Connections) == 0 {
-		return nil, errors.New("asset has no connections, can't detect provider")
+		return nil, ErrNoConnections
 	}
 
 	var errs multierr.Errors
