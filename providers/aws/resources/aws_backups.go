@@ -63,31 +63,34 @@ func (a *mqlAwsBackup) getVaults(conn *connection.AwsConnection) []*jobpool.Job 
 			ctx := context.Background()
 			res := []any{}
 
-			vaults, err := svc.ListBackupVaults(ctx, &backup.ListBackupVaultsInput{})
-			if err != nil {
-				if Is400AccessDeniedError(err) {
-					log.Warn().Str("region", region).Msg("error accessing region for AWS API")
-					return res, nil
-				}
-				return nil, err
-			}
-			for _, v := range vaults.BackupVaultList {
-				mqlGroup, err := CreateResource(a.MqlRuntime, "aws.backup.vault",
-					map[string]*llx.RawData{
-						"arn":              llx.StringDataPtr(v.BackupVaultArn),
-						"createdAt":        llx.TimeDataPtr(v.CreationDate),
-						"encryptionKeyArn": llx.StringDataPtr(v.EncryptionKeyArn),
-						"locked":           llx.BoolDataPtr(v.Locked),
-						"lockedAt":         llx.TimeDataPtr(v.LockDate),
-						"maxRetentionDays": llx.IntDataPtr(v.MaxRetentionDays),
-						"minRetentionDays": llx.IntDataPtr(v.MinRetentionDays),
-						"name":             llx.StringDataPtr(v.BackupVaultName),
-						"region":           llx.StringData(region),
-					})
+			paginator := backup.NewListBackupVaultsPaginator(svc, &backup.ListBackupVaultsInput{})
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
 				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
 					return nil, err
 				}
-				res = append(res, mqlGroup)
+				for _, v := range page.BackupVaultList {
+					mqlGroup, err := CreateResource(a.MqlRuntime, "aws.backup.vault",
+						map[string]*llx.RawData{
+							"arn":              llx.StringDataPtr(v.BackupVaultArn),
+							"createdAt":        llx.TimeDataPtr(v.CreationDate),
+							"encryptionKeyArn": llx.StringDataPtr(v.EncryptionKeyArn),
+							"locked":           llx.BoolDataPtr(v.Locked),
+							"lockedAt":         llx.TimeDataPtr(v.LockDate),
+							"maxRetentionDays": llx.IntDataPtr(v.MaxRetentionDays),
+							"minRetentionDays": llx.IntDataPtr(v.MinRetentionDays),
+							"name":             llx.StringDataPtr(v.BackupVaultName),
+							"region":           llx.StringData(region),
+						})
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlGroup)
+				}
 			}
 
 			return jobpool.JobResult(res), nil
