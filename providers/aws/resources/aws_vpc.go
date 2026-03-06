@@ -526,24 +526,24 @@ func (a *mqlAwsVpcPeeringConnectionPeeringVpc) vpc() (*mqlAwsVpc, error) {
 }
 
 func (a *mqlAwsVpcPeeringConnection) requestorVpc() (*mqlAwsVpcPeeringConnectionPeeringVpc, error) {
-	acceptor := a.peeringConnectionCache.AccepterVpcInfo
+	requestor := a.peeringConnectionCache.RequesterVpcInfo
 	ipv4 := []any{}
-	for i := range acceptor.CidrBlockSet {
-		ipv4 = append(ipv4, *acceptor.CidrBlockSet[i].CidrBlock)
+	for i := range requestor.CidrBlockSet {
+		ipv4 = append(ipv4, *requestor.CidrBlockSet[i].CidrBlock)
 	}
 	ipv6 := []any{}
-	for i := range acceptor.Ipv6CidrBlockSet {
-		ipv6 = append(ipv6, *acceptor.Ipv6CidrBlockSet[i].Ipv6CidrBlock)
+	for i := range requestor.Ipv6CidrBlockSet {
+		ipv6 = append(ipv6, *requestor.Ipv6CidrBlockSet[i].Ipv6CidrBlock)
 	}
 	mql, err := CreateResource(a.MqlRuntime, ResourceAwsVpcPeeringConnectionPeeringVpc,
 		map[string]*llx.RawData{
-			"allowDnsResolutionFromRemoteVpc": llx.BoolDataPtr(acceptor.PeeringOptions.AllowDnsResolutionFromRemoteVpc),
+			"allowDnsResolutionFromRemoteVpc": llx.BoolDataPtr(requestor.PeeringOptions.AllowDnsResolutionFromRemoteVpc),
 			"ipv4CiderBlocks":                 llx.ArrayData(ipv4, types.String),
 			"ipv6CiderBlocks":                 llx.ArrayData(ipv6, types.String),
-			"ownerID":                         llx.StringDataPtr(acceptor.OwnerId),
+			"ownerID":                         llx.StringDataPtr(requestor.OwnerId),
 			"region":                          llx.StringData(a.region),
 			// vpc() aws.vpc // ← We can populate this if the VPC is in this account
-			"vpcId": llx.StringDataPtr(acceptor.VpcId),
+			"vpcId": llx.StringDataPtr(requestor.VpcId),
 		},
 	)
 	if err != nil {

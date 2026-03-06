@@ -237,16 +237,11 @@ func (a *mqlAwsIam) users() ([]any, error) {
 }
 
 func iamTagsToMap(tags []iamtypes.Tag) map[string]any {
-	var tagsMap map[string]any
-
-	if len(tags) > 0 {
-		tagsMap := map[string]any{}
-		for i := range tags {
-			tag := tags[i]
-			tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
-		}
+	tagsMap := map[string]any{}
+	for i := range tags {
+		tag := tags[i]
+		tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
 	}
-
 	return tagsMap
 }
 
