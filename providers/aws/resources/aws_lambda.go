@@ -195,6 +195,7 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 						"codeSize":                    llx.IntData(function.CodeSize),
 						"stateReason":                 llx.StringDataPtr(function.StateReason),
 						"lastUpdateStatus":            llx.StringData(string(function.LastUpdateStatus)),
+						"lastUpdateStatusReason":      llx.StringDataPtr(function.LastUpdateStatusReason),
 						"kmsKeyArn":                   llx.StringDataPtr(function.KMSKeyArn),
 						"environment":                 llx.MapData(envVars, types.String),
 						"snapStartApplyOn":            llx.StringData(snapStartApplyOn),

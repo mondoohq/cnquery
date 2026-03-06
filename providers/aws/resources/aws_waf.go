@@ -799,18 +799,6 @@ func createFieldToMatchResource(runtime *plugin.Runtime, fieldToMatch *waftypes.
 			return nil, err
 		}
 	}
-	if fieldToMatch.SingleQueryArgument != nil {
-		target = "SingleQueryArgument"
-		singleQueryArgument, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.singlequeryargument", map[string]*llx.RawData{
-			"statementID": llx.StringData(mqlStatementID),
-			"ruleName":    llx.StringDataPtr(ruleName),
-			"name":        llx.StringDataPtr(fieldToMatch.SingleQueryArgument.Name),
-		})
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	if fieldToMatch.JA3Fingerprint != nil {
 		target = "JA3Fingerprint"
 		ja3Fingerprint, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.ja3fingerprint", map[string]*llx.RawData{

@@ -159,7 +159,10 @@ func (a *mqlAwsElasticbeanstalk) getEnvironments(conn *connection.AwsConnection)
 				}
 
 				for _, env := range resp.Environments {
-					tier, _ := convert.JsonToDict(env.Tier)
+					tier, err := convert.JsonToDict(env.Tier)
+					if err != nil {
+						return nil, err
+					}
 					mqlEnv, err := CreateResource(a.MqlRuntime, "aws.elasticbeanstalk.environment",
 						map[string]*llx.RawData{
 							"__id":              llx.StringDataPtr(env.EnvironmentArn),

@@ -32,7 +32,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/docdb v1.48.11
 	github.com/aws/aws-sdk-go-v2/service/drs v1.36.11
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.56.1
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.293.1
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.294.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.55.4
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.11
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.73.1
@@ -44,11 +44,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.54.8
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.39.0
 	github.com/aws/aws-sdk-go-v2/service/emr v1.57.7
-	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.45.20
+	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.45.21
 	github.com/aws/aws-sdk-go-v2/service/firehose v1.42.11
 	github.com/aws/aws-sdk-go-v2/service/fsx v1.65.5
 	github.com/aws/aws-sdk-go-v2/service/glue v1.137.2
-	github.com/aws/aws-sdk-go-v2/service/guardduty v1.73.2
+	github.com/aws/aws-sdk-go-v2/service/guardduty v1.74.0
 	github.com/aws/aws-sdk-go-v2/service/iam v1.53.4
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.47.2
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.43.2
@@ -63,9 +63,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.62.3
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.62.3
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.34.17
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.96.3
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.96.4
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.68.2
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.234.0
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.235.0
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.41.3
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.68.1
 	github.com/aws/aws-sdk-go-v2/service/sns v1.39.13
@@ -126,7 +126,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.19 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.19 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.5 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.19 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.20 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.32.18 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.9.11 // indirect
