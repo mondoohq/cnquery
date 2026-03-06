@@ -353,7 +353,6 @@ func initParseOpenpgp(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 			return nil, nil, err
 		}
 		args["file"] = llx.ResourceData(f, "file")
-		args["path"] = llx.StringData(virtualPath)
 
 	} else {
 		return nil, nil, errors.New("missing 'path' or 'content' for parse.json initialization")

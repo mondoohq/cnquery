@@ -128,7 +128,6 @@ func (a *mqlAwsBackupVault) recoveryPoints() ([]any, error) {
 					"completionDate":   llx.TimeDataPtr(rp.CompletionDate),
 					"createdAt":        llx.TimeDataPtr(rp.CreationDate),
 					"createdBy":        llx.MapData(createdBy, types.String),
-					"creationDate":     llx.TimeDataPtr(rp.CreationDate),
 					"encryptionKeyArn": llx.StringDataPtr(rp.EncryptionKeyArn),
 					"iamRoleArn":       llx.StringDataPtr(rp.IamRoleArn),
 					"isEncrypted":      llx.BoolData(rp.IsEncrypted),

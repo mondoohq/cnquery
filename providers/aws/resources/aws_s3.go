@@ -94,12 +94,11 @@ func (a *mqlAwsS3) buckets() ([]any, error) {
 	for _, bwr := range bucketsWithRegions {
 		mqlS3Bucket, err := CreateResource(a.MqlRuntime, ResourceAwsS3Bucket,
 			map[string]*llx.RawData{
-				"name":        llx.StringDataPtr(bwr.bucket.Name),
-				"arn":         llx.StringData(fmt.Sprintf(s3ArnPattern, convert.ToValue(bwr.bucket.Name))),
-				"exists":      llx.BoolData(true),
-				"location":    llx.StringData(bwr.region),
-				"createdTime": llx.TimeDataPtr(bwr.bucket.CreationDate),
-				"createdAt":   llx.TimeDataPtr(bwr.bucket.CreationDate),
+				"name":      llx.StringDataPtr(bwr.bucket.Name),
+				"arn":       llx.StringData(fmt.Sprintf(s3ArnPattern, convert.ToValue(bwr.bucket.Name))),
+				"exists":    llx.BoolData(true),
+				"location":  llx.StringData(bwr.region),
+				"createdAt": llx.TimeDataPtr(bwr.bucket.CreationDate),
 			})
 		if err != nil {
 			return nil, err
@@ -137,7 +136,6 @@ func initAwsS3BucketPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData
 
 	// no policy found
 	resource := &mqlAwsS3BucketPolicy{}
-	resource.Id.State = plugin.StateIsNull | plugin.StateIsSet
 	resource.Name.State = plugin.StateIsNull | plugin.StateIsSet
 	resource.Document.State = plugin.StateIsNull | plugin.StateIsSet
 	resource.Version.State = plugin.StateIsNull | plugin.StateIsSet
@@ -244,7 +242,6 @@ func (a *mqlAwsS3Bucket) policy() (*mqlAwsS3BucketPolicy, error) {
 		// create the policy resource
 		mqlS3BucketPolicy, err := CreateResource(a.MqlRuntime, "aws.s3.bucket.policy",
 			map[string]*llx.RawData{
-				"id":         llx.StringData(parsedPolicy.Id),
 				"name":       llx.StringData(bucketname),
 				"bucketName": llx.StringData(bucketname),
 				"version":    llx.StringData(parsedPolicy.Version),

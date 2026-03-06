@@ -972,9 +972,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.organization.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpOrganization).GetState()).ToDataRes(types.String)
 	},
-	"gcp.organization.lifecycleState": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpOrganization).GetLifecycleState()).ToDataRes(types.String)
-	},
 	"gcp.organization.iamPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpOrganization).GetIamPolicy()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.binding")))
 	},
@@ -1416,14 +1413,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.parentId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetParentId()).ToDataRes(types.String)
 	},
-	"gcp.project.number": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProject).GetNumber()).ToDataRes(types.String)
-	},
 	"gcp.project.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetState()).ToDataRes(types.String)
-	},
-	"gcp.project.lifecycleState": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProject).GetLifecycleState()).ToDataRes(types.String)
 	},
 	"gcp.project.createTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetCreateTime()).ToDataRes(types.Time)
@@ -2667,9 +2658,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.sqlService.instance.created": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstance).GetCreated()).ToDataRes(types.Time)
 	},
-	"gcp.project.sqlService.instance.currentDiskSize": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectSqlServiceInstance).GetCurrentDiskSize()).ToDataRes(types.Int)
-	},
 	"gcp.project.sqlService.instance.databaseInstalledVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstance).GetDatabaseInstalledVersion()).ToDataRes(types.String)
 	},
@@ -2705,9 +2693,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.sqlService.instance.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstance).GetName()).ToDataRes(types.String)
-	},
-	"gcp.project.sqlService.instance.project": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectSqlServiceInstance).GetProject()).ToDataRes(types.String)
 	},
 	"gcp.project.sqlService.instance.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstance).GetRegion()).ToDataRes(types.String)
@@ -3272,9 +3257,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.gkeService.cluster.autopilotEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceCluster).GetAutopilotEnabled()).ToDataRes(types.Bool)
-	},
-	"gcp.project.gkeService.cluster.zone": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectGkeServiceCluster).GetZone()).ToDataRes(types.String)
 	},
 	"gcp.project.gkeService.cluster.location": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceCluster).GetLocation()).ToDataRes(types.String)
@@ -6034,10 +6016,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpOrganization).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"gcp.organization.lifecycleState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpOrganization).LifecycleState, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"gcp.organization.iamPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpOrganization).IamPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -6686,16 +6664,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProject).ParentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"gcp.project.number": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProject).Number, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"gcp.project.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProject).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"gcp.project.lifecycleState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProject).LifecycleState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8478,10 +8448,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectSqlServiceInstance).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
-	"gcp.project.sqlService.instance.currentDiskSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectSqlServiceInstance).CurrentDiskSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
 	"gcp.project.sqlService.instance.databaseInstalledVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSqlServiceInstance).DatabaseInstalledVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8528,10 +8494,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.sqlService.instance.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSqlServiceInstance).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"gcp.project.sqlService.instance.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectSqlServiceInstance).Project, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.sqlService.instance.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9364,10 +9326,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.gkeService.cluster.autopilotEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceCluster).AutopilotEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"gcp.project.gkeService.cluster.zone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectGkeServiceCluster).Zone, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.gkeService.cluster.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13462,7 +13420,6 @@ type mqlGcpOrganization struct {
 	Id                     plugin.TValue[string]
 	Name                   plugin.TValue[string]
 	State                  plugin.TValue[string]
-	LifecycleState         plugin.TValue[string]
 	IamPolicy              plugin.TValue[[]any]
 	AuditConfig            plugin.TValue[[]any]
 	OrgPolicies            plugin.TValue[[]any]
@@ -13521,12 +13478,6 @@ func (c *mqlGcpOrganization) GetName() *plugin.TValue[string] {
 func (c *mqlGcpOrganization) GetState() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.State, func() (string, error) {
 		return c.state()
-	})
-}
-
-func (c *mqlGcpOrganization) GetLifecycleState() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.LifecycleState, func() (string, error) {
-		return c.lifecycleState()
 	})
 }
 
@@ -15048,9 +14999,7 @@ type mqlGcpProject struct {
 	Id                     plugin.TValue[string]
 	Name                   plugin.TValue[string]
 	ParentId               plugin.TValue[string]
-	Number                 plugin.TValue[string]
 	State                  plugin.TValue[string]
-	LifecycleState         plugin.TValue[string]
 	CreateTime             plugin.TValue[*time.Time]
 	Labels                 plugin.TValue[map[string]any]
 	IamPolicy              plugin.TValue[[]any]
@@ -15139,21 +15088,9 @@ func (c *mqlGcpProject) GetParentId() *plugin.TValue[string] {
 	})
 }
 
-func (c *mqlGcpProject) GetNumber() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.Number, func() (string, error) {
-		return c.number()
-	})
-}
-
 func (c *mqlGcpProject) GetState() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.State, func() (string, error) {
 		return c.state()
-	})
-}
-
-func (c *mqlGcpProject) GetLifecycleState() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.LifecycleState, func() (string, error) {
-		return c.lifecycleState()
 	})
 }
 
@@ -19185,7 +19122,6 @@ type mqlGcpProjectSqlServiceInstance struct {
 	BackendType                  plugin.TValue[string]
 	ConnectionName               plugin.TValue[string]
 	Created                      plugin.TValue[*time.Time]
-	CurrentDiskSize              plugin.TValue[int64]
 	DatabaseInstalledVersion     plugin.TValue[string]
 	DatabaseVersion              plugin.TValue[string]
 	DiskEncryptionConfiguration  plugin.TValue[any]
@@ -19198,7 +19134,6 @@ type mqlGcpProjectSqlServiceInstance struct {
 	MasterInstanceName           plugin.TValue[string]
 	MaxDiskSize                  plugin.TValue[int64]
 	Name                         plugin.TValue[string]
-	Project                      plugin.TValue[string]
 	Region                       plugin.TValue[string]
 	ReplicaNames                 plugin.TValue[[]any]
 	Settings                     plugin.TValue[*mqlGcpProjectSqlServiceInstanceSettings]
@@ -19264,10 +19199,6 @@ func (c *mqlGcpProjectSqlServiceInstance) GetCreated() *plugin.TValue[*time.Time
 	return &c.Created
 }
 
-func (c *mqlGcpProjectSqlServiceInstance) GetCurrentDiskSize() *plugin.TValue[int64] {
-	return &c.CurrentDiskSize
-}
-
 func (c *mqlGcpProjectSqlServiceInstance) GetDatabaseInstalledVersion() *plugin.TValue[string] {
 	return &c.DatabaseInstalledVersion
 }
@@ -19314,10 +19245,6 @@ func (c *mqlGcpProjectSqlServiceInstance) GetMaxDiskSize() *plugin.TValue[int64]
 
 func (c *mqlGcpProjectSqlServiceInstance) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlGcpProjectSqlServiceInstance) GetProject() *plugin.TValue[string] {
-	return &c.Project
 }
 
 func (c *mqlGcpProjectSqlServiceInstance) GetRegion() *plugin.TValue[string] {
@@ -21163,7 +21090,6 @@ type mqlGcpProjectGkeServiceCluster struct {
 	Locations                      plugin.TValue[[]any]
 	EnableKubernetesAlpha          plugin.TValue[bool]
 	AutopilotEnabled               plugin.TValue[bool]
-	Zone                           plugin.TValue[string]
 	Location                       plugin.TValue[string]
 	Endpoint                       plugin.TValue[string]
 	InitialClusterVersion          plugin.TValue[string]
@@ -21277,10 +21203,6 @@ func (c *mqlGcpProjectGkeServiceCluster) GetEnableKubernetesAlpha() *plugin.TVal
 
 func (c *mqlGcpProjectGkeServiceCluster) GetAutopilotEnabled() *plugin.TValue[bool] {
 	return &c.AutopilotEnabled
-}
-
-func (c *mqlGcpProjectGkeServiceCluster) GetZone() *plugin.TValue[string] {
-	return &c.Zone
 }
 
 func (c *mqlGcpProjectGkeServiceCluster) GetLocation() *plugin.TValue[string] {

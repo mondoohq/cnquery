@@ -10,10 +10,6 @@ option go_package = "go.mondoo.com/mql/v13/providers/vsphere/resources"
 extend asset {
   // Common Platform Enumeration (CPE) for the asset
   cpes() []core.cpe
-  // Advisory & vulnerability report
-  // Deprecated: will be removed in version 13.0; Full advisory & vulnerability report
-  // Use vulnmgmt instead
-  vulnerabilityReport() dict
 }
 
 // Vulnerability Information
@@ -102,14 +98,6 @@ private vsphere.license @defaults("name") {
   total int
   // Used licenses
   used int
-}
-
-// VMware ESXi resource
-esxi {
-  // Current targeted ESXi host
-  host() vsphere.host
-  // Current targeted virtual machine
-  vm() vsphere.vm
 }
 
 // vSphere datacenter inventory
@@ -263,6 +251,9 @@ private vsphere.vmknic @defaults("name") {
   // Network interface tag
   tags []string
 }
+
+// VMware ESXi resource
+esxi {}
 
 // Run a command on ESXi
 esxi.command {

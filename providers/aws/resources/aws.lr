@@ -1861,7 +1861,7 @@ private aws.elb.targetgroup.attributes {
 }
 
 // AWS Elastic Load Balancing load balancer
-private aws.elb.loadbalancer @defaults("name region elbType scheme vpcId dnsName") {
+private aws.elb.loadbalancer @defaults("name region elbType scheme dnsName") {
   // ARN for the load balancer
   arn string
   // DNS name for the load balancer
@@ -1874,10 +1874,6 @@ private aws.elb.loadbalancer @defaults("name region elbType scheme vpcId dnsName
   scheme string
   // A list of attributes for the load balancer
   attributes() []dict
-  // Deprecated: Use `vpc` instead
-  vpcId string
-  // Deprecated (use `createdAt` instead)
-  createdTime time
   // Date and time the load balancer was created
   createdAt time
   // Availability zone where the load balancer runs
@@ -2937,8 +2933,6 @@ private aws.cloudfront.function @defaults("name status") {
   arn string
   // Date and time when the function was last updated
   lastModifiedTime time
-  // Deprecated (use `createdAt` instead)
-  createdTime time
   // Date and time the function was created
   createdAt time
   // Stage that the function is in
@@ -3050,8 +3044,6 @@ private aws.s3.bucket @defaults("name location public") {
   objectLockEnabled() bool
   // Whether the bucket still exists (stale reference)
   exists bool
-  // Deprecated (use `createdAt` instead)
-  createdTime time
   // Date and time the bucket was created
   createdAt time
 }
@@ -3121,8 +3113,6 @@ private aws.s3.bucket.replicationRule @defaults("id status") {
 // Amazon S3 bucket policy
 private aws.s3.bucket.policy @defaults("bucketName version") {
   // Unique ID for the policy
-  id string
-  // Deprecated. Use `bucketName` instead
   name string
   // Bucket name that this policy belongs
   bucketName string
@@ -3412,8 +3402,6 @@ private aws.backup.vaultRecoveryPoint @defaults("resourceType completionDate sta
   status string
   // Date the recovery point was created
   createdAt time
-  // Deprecated (use `createdAt` instead)
-  creationDate time
   // Date the recovery point completed
   completionDate time
   // ARN of the key used to encrypt the recovery point
@@ -3596,8 +3584,6 @@ private aws.dynamodb.table @defaults("name region") {
   continuousBackups() dict
   // Tags for the table
   tags() map[string]string
-  // Deprecated (use `createdAt` instead)
-  createdTime time
   // Date and time the table was created
   createdAt time
   // Whether deletion protection is enabled
@@ -3724,8 +3710,6 @@ aws.rds.dbcluster @defaults("id region engine engineVersion") {
   storageType string
   // Current state of the cluster
   status string
-  // Deprecated (use `createdAt` instead)
-  createdTime time
   // Date and time the RDS cluster was created
   createdAt time
   // Number of days automated snapshots are retained
@@ -3888,8 +3872,6 @@ aws.rds.dbinstance @defaults("id region engine engineVersion") {
   status string
   // Whether minor version patches are applied automatically
   autoMinorVersionUpgrade bool
-  // Deprecated (use `createdAt` instead)
-  createdTime time
   // Date and time the RDS instance was created
   createdAt time
   // Port that the database instance listens on. If the database instance is part of a DB cluster, this can be a different port than the DB cluster port.

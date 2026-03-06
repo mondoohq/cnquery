@@ -32,8 +32,6 @@ gcp.organization @defaults("name") {
   name() string
   // Organization state
   state() string
-  // Deprecated. Use `state` instead.
-  lifecycleState() string
   // Organization IAM policy
   iamPolicy() []gcp.resourcemanager.binding
   // Audit logging configuration
@@ -389,12 +387,8 @@ gcp.project @defaults("name") {
   name() string
   // Parent ID
   parentId() string
-  // Deprecated. Use `id` instead.
-  number() string
   // Project lifecycle state
   state() string
-  // Deprecated. Use `state` instead.
-  lifecycleState() string
   // Creation time
   createTime() time
   // Labels associated with this project
@@ -1375,8 +1369,6 @@ private gcp.project.sqlService.instance @defaults("name") {
   connectionName string
   // Creation timestamp
   created time
-  // Deprecated: This field is no longer used
-  currentDiskSize int
   // Current database version running on the instance
   databaseInstalledVersion string
   // Database engine type and version
@@ -1401,8 +1393,6 @@ private gcp.project.sqlService.instance @defaults("name") {
   maxDiskSize int
   // Instance name
   name string
-  // This is deprecated; use projectId instead.
-  project string
   // Region
   region string
   // Replicas
@@ -1859,8 +1849,6 @@ private gcp.project.gkeService.cluster @defaults("name description zone status c
   enableKubernetesAlpha bool
   // Whether Autopilot is enabled for the cluster
   autopilotEnabled bool
-  // Deprecated; use location instead
-  zone string
   // Name of the Google Compute Engine zone/region in which the cluster exists
   location string
   // The IP address of the cluster's master endpoint
