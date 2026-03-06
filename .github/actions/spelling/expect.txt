@@ -127,7 +127,6 @@ mfs
 mgroup
 minfree
 MINIMALUSER
-MULTIAZ
 mkey
 MULTIAZ
 Mpim
