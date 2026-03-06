@@ -911,10 +911,10 @@ func (a *mqlAwsIamUser) attachedPolicies() ([]any, error) {
 }
 
 type mqlAwsIamPolicyInternal struct {
-	cachePolicy         *iamtypes.Policy
-	cachedVersions      []iamtypes.PolicyVersion
-	versionsFetched     bool
-	versionsLock        sync.Mutex
+	cachePolicy     *iamtypes.Policy
+	cachedVersions  []iamtypes.PolicyVersion
+	versionsFetched bool
+	versionsLock    sync.Mutex
 }
 
 func (a *mqlAwsIamPolicy) loadPolicy(arn string) (*iamtypes.Policy, error) {
