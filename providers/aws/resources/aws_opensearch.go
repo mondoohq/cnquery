@@ -316,6 +316,12 @@ func newMqlAwsOpensearchDomain(runtime *plugin.Runtime, region string, accountID
 		autoSoftwareUpdateEnabled = convert.ToValue(domain.SoftwareUpdateOptions.AutoSoftwareUpdateEnabled)
 	}
 
+	// Off-peak window options
+	var offPeakWindowEnabled bool
+	if domain.OffPeakWindowOptions != nil {
+		offPeakWindowEnabled = convert.ToValue(domain.OffPeakWindowOptions.Enabled)
+	}
+
 	// Created timestamp
 	var createdAt *llx.RawData
 	if domain.Created != nil && *domain.Created {
@@ -367,6 +373,7 @@ func newMqlAwsOpensearchDomain(runtime *plugin.Runtime, region string, accountID
 			"ipAddressType":               llx.StringData(string(domain.IPAddressType)),
 			"serviceSoftwareNewVersion":   llx.StringData(serviceSoftwareNewVersion),
 			"autoSoftwareUpdateEnabled":   llx.BoolData(autoSoftwareUpdateEnabled),
+			"offPeakWindowEnabled":        llx.BoolData(offPeakWindowEnabled),
 		})
 	if err != nil {
 		return nil, err

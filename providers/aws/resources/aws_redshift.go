@@ -115,6 +115,9 @@ func (a *mqlAwsRedshift) getClusters(conn *connection.AwsConnection) []*jobpool.
 							"multiAZ":                          llx.BoolData(convert.ToValue(cluster.MultiAZ) == "enabled"),
 							"manualSnapshotRetentionPeriod":    llx.IntDataDefault(cluster.ManualSnapshotRetentionPeriod, 0),
 							"ipAddressType":                    llx.StringDataPtr(cluster.IpAddressType),
+							"maintenanceTrackName":             llx.StringDataPtr(cluster.MaintenanceTrackName),
+							"hsmStatus":                        llx.DictData(redshiftHsmStatusToDict(cluster.HsmStatus)),
+							"modifyStatus":                     llx.StringDataPtr(cluster.ModifyStatus),
 						})
 					if err != nil {
 						return nil, err
@@ -128,6 +131,17 @@ func (a *mqlAwsRedshift) getClusters(conn *connection.AwsConnection) []*jobpool.
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func redshiftHsmStatusToDict(hsm *redshifttypes.HsmStatus) map[string]any {
+	if hsm == nil {
+		return nil
+	}
+	return map[string]any{
+		"hsmClientCertificateIdentifier": convert.ToValue(hsm.HsmClientCertificateIdentifier),
+		"hsmConfigurationIdentifier":     convert.ToValue(hsm.HsmConfigurationIdentifier),
+		"status":                         convert.ToValue(hsm.Status),
+	}
 }
 
 func redshiftTagsToMap(tags []redshifttypes.Tag) map[string]any {

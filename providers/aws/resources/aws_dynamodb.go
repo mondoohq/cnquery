@@ -19,6 +19,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
+	"go.mondoo.com/mql/v13/types"
 )
 
 func (a *mqlAwsDynamodb) id() (string, error) {
@@ -501,6 +502,11 @@ func (a *mqlAwsDynamodb) getTables(conn *connection.AwsConnection) []*jobpool.Jo
 						"items":                     llx.IntDataPtr(table.Table.ItemCount),
 						"latestStreamArn":           llx.StringDataPtr(table.Table.LatestStreamArn),
 						"latestStreamLabel":         llx.StringDataPtr(table.Table.LatestStreamLabel),
+						"tableClass":                llx.StringData(tableClassFromSummary(table.Table.TableClassSummary)),
+						"streamEnabled":             llx.BoolData(streamEnabledFromSpec(table.Table.StreamSpecification)),
+						"streamViewType":            llx.StringData(streamViewTypeFromSpec(table.Table.StreamSpecification)),
+						"billingMode":               llx.StringData(billingModeFromSummary(table.Table.BillingModeSummary)),
+						"replicaRegions":            llx.ArrayData(replicaRegionsFromDescriptions(table.Table.Replicas), types.String),
 					})
 				if err != nil {
 					return nil, err
@@ -512,6 +518,44 @@ func (a *mqlAwsDynamodb) getTables(conn *connection.AwsConnection) []*jobpool.Jo
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func tableClassFromSummary(s *ddtypes.TableClassSummary) string {
+	if s == nil {
+		return string(ddtypes.TableClassStandard)
+	}
+	return string(s.TableClass)
+}
+
+func streamEnabledFromSpec(s *ddtypes.StreamSpecification) bool {
+	if s == nil || s.StreamEnabled == nil {
+		return false
+	}
+	return *s.StreamEnabled
+}
+
+func streamViewTypeFromSpec(s *ddtypes.StreamSpecification) string {
+	if s == nil {
+		return ""
+	}
+	return string(s.StreamViewType)
+}
+
+func billingModeFromSummary(s *ddtypes.BillingModeSummary) string {
+	if s == nil {
+		return string(ddtypes.BillingModeProvisioned)
+	}
+	return string(s.BillingMode)
+}
+
+func replicaRegionsFromDescriptions(replicas []ddtypes.ReplicaDescription) []any {
+	res := make([]any, 0, len(replicas))
+	for _, r := range replicas {
+		if r.RegionName != nil {
+			res = append(res, *r.RegionName)
+		}
+	}
+	return res
 }
 
 func dynamoDBTagsToMap(tags []ddtypes.Tag) map[string]any {
