@@ -88,28 +88,34 @@ func (a *mqlAwsDynamodb) getExports(conn *connection.AwsConnection) []*jobpool.J
 			ctx := context.Background()
 			res := []any{}
 
-			// no pagination required
-			listExportsResp, err := svc.ListExports(ctx, &dynamodb.ListExportsInput{})
-			if err != nil {
-				if Is400AccessDeniedError(err) {
-					log.Warn().Str("region", region).Msg("error accessing region for AWS API")
-					return res, nil
-				}
-				return nil, errors.Wrap(err, "could not gather aws dynamodb exports")
-			}
-			for _, exp := range listExportsResp.ExportSummaries {
-				mqlExport, err := CreateResource(a.MqlRuntime, "aws.dynamodb.export",
-					map[string]*llx.RawData{
-						"arn":    llx.StringDataPtr(exp.ExportArn),
-						"type":   llx.StringData(string(exp.ExportType)),
-						"status": llx.StringData(string(exp.ExportStatus)),
-					})
+			var nextToken *string
+			for {
+				listExportsResp, err := svc.ListExports(ctx, &dynamodb.ListExportsInput{NextToken: nextToken})
 				if err != nil {
-					return nil, err
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, errors.Wrap(err, "could not gather aws dynamodb exports")
 				}
-				mqlExport.(*mqlAwsDynamodbExport).arn = *exp.ExportArn
-				mqlExport.(*mqlAwsDynamodbExport).region = region
-				res = append(res, mqlExport)
+				for _, exp := range listExportsResp.ExportSummaries {
+					mqlExport, err := CreateResource(a.MqlRuntime, "aws.dynamodb.export",
+						map[string]*llx.RawData{
+							"arn":    llx.StringDataPtr(exp.ExportArn),
+							"type":   llx.StringData(string(exp.ExportType)),
+							"status": llx.StringData(string(exp.ExportStatus)),
+						})
+					if err != nil {
+						return nil, err
+					}
+					mqlExport.(*mqlAwsDynamodbExport).arn = *exp.ExportArn
+					mqlExport.(*mqlAwsDynamodbExport).region = region
+					res = append(res, mqlExport)
+				}
+				if listExportsResp.NextToken == nil {
+					break
+				}
+				nextToken = listExportsResp.NextToken
 			}
 
 			return jobpool.JobResult(res), nil
@@ -256,16 +262,26 @@ func (a *mqlAwsDynamodb) getBackups(conn *connection.AwsConnection) []*jobpool.J
 			ctx := context.Background()
 			res := []any{}
 
-			// no pagination required
-			listBackupsResp, err := svc.ListBackups(ctx, &dynamodb.ListBackupsInput{})
-			if err != nil {
-				if Is400AccessDeniedError(err) {
-					log.Warn().Str("region", region).Msg("error accessing region for AWS API")
-					return res, nil
+			var allBackups []ddtypes.BackupSummary
+			var exclusiveStartBackupArn *string
+			for {
+				listBackupsResp, err := svc.ListBackups(ctx, &dynamodb.ListBackupsInput{
+					ExclusiveStartBackupArn: exclusiveStartBackupArn,
+				})
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, errors.Wrap(err, "could not gather aws dynamodb backups")
 				}
-				return nil, errors.Wrap(err, "could not gather aws dynamodb backups")
+				allBackups = append(allBackups, listBackupsResp.BackupSummaries...)
+				if listBackupsResp.LastEvaluatedBackupArn == nil {
+					break
+				}
+				exclusiveStartBackupArn = listBackupsResp.LastEvaluatedBackupArn
 			}
-			backupSummary, err := convert.JsonToDictSlice(listBackupsResp.BackupSummaries)
+			backupSummary, err := convert.JsonToDictSlice(allBackups)
 			if err != nil {
 				return nil, err
 			}
