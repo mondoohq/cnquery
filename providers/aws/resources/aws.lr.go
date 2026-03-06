@@ -35522,7 +35522,7 @@ func (c *mqlAwsElbTargetgroupAttributes) GetTargetFailoverOnUnhealthy() *plugin.
 type mqlAwsElbLoadbalancer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsElbLoadbalancerInternal it will be used here
+	mqlAwsElbLoadbalancerInternal
 	Arn                  plugin.TValue[string]
 	DnsName              plugin.TValue[string]
 	ListenerDescriptions plugin.TValue[[]any]
