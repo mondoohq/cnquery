@@ -7,8 +7,6 @@
 package windows
 
 import (
-	"runtime"
-
 	wmi "github.com/StackExchange/wmi"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
@@ -21,7 +19,7 @@ func GetWindowsESUStatus(conn shared.Connection) (*WindowsESUStatus, error) {
 	log.Debug().Msg("checking Windows 10 ESU status")
 
 	// if we are running locally on windows, check registry and WMI directly
-	if conn.Type() == shared.Type_Local && runtime.GOOS == "windows" {
+	if conn.Type() == shared.Type_Local {
 		status := &WindowsESUStatus{}
 
 		// Check subscription-based ESU via registry

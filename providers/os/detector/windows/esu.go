@@ -64,5 +64,9 @@ $result | ConvertTo-Json -Compress
 		log.Debug().Err(err).Msg("could not run powershell command to get ESU status")
 		return &WindowsESUStatus{}, nil
 	}
+	if cmd.ExitStatus != 0 {
+		log.Debug().Int("exitCode", cmd.ExitStatus).Msg("ESU status powershell command failed")
+		return &WindowsESUStatus{}, nil
+	}
 	return ParseWindowsESUStatus(cmd.Stdout)
 }
