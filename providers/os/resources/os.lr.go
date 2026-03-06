@@ -13574,7 +13574,7 @@ func (c *mqlApache2ConfDirectory) GetParams() *plugin.TValue[map[string]any] {
 type mqlNginx struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlNginxInternal
+	// optional: if you define mqlNginxInternal it will be used here
 	Version plugin.TValue[string]
 	Modules plugin.TValue[[]any]
 }

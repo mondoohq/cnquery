@@ -20,10 +20,6 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
-type mqlNginxInternal struct {
-	lock sync.Mutex
-}
-
 // nginxVersionBinaries lists the well-known binary paths for the nginx server.
 // The version string (e.g. "nginx/1.25.3") is embedded as a constant in the
 // binary, so we can extract it by reading the file directly — no command

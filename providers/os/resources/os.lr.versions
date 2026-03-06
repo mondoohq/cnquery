@@ -242,7 +242,6 @@ docker.image.labels 9.0.0
 docker.image.repoDigests 11.4.52
 docker.image.size 9.0.0
 docker.image.tags 9.0.0
-docker.image.virtualsize 9.0.0
 docker.images 9.0.0
 file 9.0.0
 file.basename 9.0.0
@@ -769,7 +768,6 @@ parse.openpgp 9.0.1
 parse.openpgp.content 9.0.1
 parse.openpgp.file 9.0.1
 parse.openpgp.list 9.0.1
-parse.openpgp.path 9.0.1
 parse.plist 9.0.0
 parse.plist.content 9.0.0
 parse.plist.file 9.0.0
@@ -785,7 +783,6 @@ parse.yaml.file 9.0.0
 parse.yaml.params 9.0.0
 pkgFileInfo 10.2.0
 pkgFileInfo.path 10.2.0
-platform 9.0.9
 platform.advisories 9.0.1
 platform.advisories.cvss 9.0.1
 platform.advisories.list 9.0.1
@@ -794,11 +791,6 @@ platform.cves 9.0.1
 platform.cves.cvss 9.0.1
 platform.cves.list 9.0.1
 platform.cves.stats 9.0.1
-platform.eol 9.0.1
-platform.eol.date 9.0.1
-platform.eol.docsUrl 9.0.1
-platform.eol.productUrl 9.0.1
-platform.vulnerabilityReport 9.0.9
 port 9.0.1
 port.address 9.0.1
 port.port 9.0.1
@@ -909,7 +901,6 @@ sshd 9.0.0
 sshd.config 9.0.0
 sshd.config.blocks 10.0.5
 sshd.config.ciphers 9.0.0
-sshd.config.content 9.0.0
 sshd.config.file 9.0.0
 sshd.config.files 9.0.0
 sshd.config.hostkeys 9.0.0
@@ -1038,14 +1029,6 @@ windows.bitlocker.volume.protectionStatus 9.0.1
 windows.bitlocker.volume.version 9.0.1
 windows.bitlocker.volumes 9.0.1
 windows.computerInfo 9.0.1
-windows.feature 9.0.1
-windows.feature.description 9.0.1
-windows.feature.displayName 9.0.1
-windows.feature.installState 9.0.1
-windows.feature.installed 9.0.1
-windows.feature.name 9.0.1
-windows.feature.path 9.0.1
-windows.features 9.0.1
 windows.firewall 9.0.1
 windows.firewall.profile 9.0.1
 windows.firewall.profile.allowInboundRules 9.0.1
@@ -1132,7 +1115,6 @@ yum.repo.baseurl 9.0.1
 yum.repo.enabled 9.0.1
 yum.repo.expire 9.0.1
 yum.repo.file 9.0.1
-yum.repo.filename 9.0.1
 yum.repo.id 9.0.1
 yum.repo.mirrors 9.0.1
 yum.repo.name 9.0.1
