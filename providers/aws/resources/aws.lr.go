@@ -9413,6 +9413,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.workspaces.workspace.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkspacesWorkspace).GetRegion()).ToDataRes(types.String)
 	},
+	"aws.workspaces.workspace.connectionState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesWorkspace).GetConnectionState()).ToDataRes(types.String)
+	},
+	"aws.workspaces.workspace.connectionStateCheckTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesWorkspace).GetConnectionStateCheckTimestamp()).ToDataRes(types.Time)
+	},
+	"aws.workspaces.workspace.lastKnownUserConnectionTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesWorkspace).GetLastKnownUserConnectionTimestamp()).ToDataRes(types.Time)
+	},
+	"aws.workspaces.workspace.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspacesWorkspace).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
 	"aws.workspaces.image.imageId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkspacesImage).GetImageId()).ToDataRes(types.String)
 	},
@@ -21105,6 +21117,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.workspaces.workspace.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWorkspacesWorkspace).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.workspace.connectionState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesWorkspace).ConnectionState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.workspace.connectionStateCheckTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesWorkspace).ConnectionStateCheckTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.workspace.lastKnownUserConnectionTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesWorkspace).LastKnownUserConnectionTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.workspaces.workspace.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspacesWorkspace).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.workspaces.image.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -50981,21 +51009,25 @@ type mqlAwsWorkspacesWorkspace struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsWorkspacesWorkspaceInternal it will be used here
-	WorkspaceId                 plugin.TValue[string]
-	DirectoryId                 plugin.TValue[string]
-	UserName                    plugin.TValue[string]
-	IpAddress                   plugin.TValue[string]
-	ComputerName                plugin.TValue[string]
-	BundleId                    plugin.TValue[string]
-	SubnetId                    plugin.TValue[string]
-	State                       plugin.TValue[string]
-	RootVolumeEncryptionEnabled plugin.TValue[bool]
-	UserVolumeEncryptionEnabled plugin.TValue[bool]
-	VolumeEncryptionKey         plugin.TValue[string]
-	ErrorCode                   plugin.TValue[string]
-	ErrorMessage                plugin.TValue[string]
-	Tags                        plugin.TValue[map[string]any]
-	Region                      plugin.TValue[string]
+	WorkspaceId                      plugin.TValue[string]
+	DirectoryId                      plugin.TValue[string]
+	UserName                         plugin.TValue[string]
+	IpAddress                        plugin.TValue[string]
+	ComputerName                     plugin.TValue[string]
+	BundleId                         plugin.TValue[string]
+	SubnetId                         plugin.TValue[string]
+	State                            plugin.TValue[string]
+	RootVolumeEncryptionEnabled      plugin.TValue[bool]
+	UserVolumeEncryptionEnabled      plugin.TValue[bool]
+	VolumeEncryptionKey              plugin.TValue[string]
+	ErrorCode                        plugin.TValue[string]
+	ErrorMessage                     plugin.TValue[string]
+	Tags                             plugin.TValue[map[string]any]
+	Region                           plugin.TValue[string]
+	ConnectionState                  plugin.TValue[string]
+	ConnectionStateCheckTimestamp    plugin.TValue[*time.Time]
+	LastKnownUserConnectionTimestamp plugin.TValue[*time.Time]
+	SecurityGroups                   plugin.TValue[[]any]
 }
 
 // createAwsWorkspacesWorkspace creates a new instance of this resource
@@ -51095,6 +51127,40 @@ func (c *mqlAwsWorkspacesWorkspace) GetTags() *plugin.TValue[map[string]any] {
 
 func (c *mqlAwsWorkspacesWorkspace) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+func (c *mqlAwsWorkspacesWorkspace) GetConnectionState() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ConnectionState, func() (string, error) {
+		return c.connectionState()
+	})
+}
+
+func (c *mqlAwsWorkspacesWorkspace) GetConnectionStateCheckTimestamp() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.ConnectionStateCheckTimestamp, func() (*time.Time, error) {
+		return c.connectionStateCheckTimestamp()
+	})
+}
+
+func (c *mqlAwsWorkspacesWorkspace) GetLastKnownUserConnectionTimestamp() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LastKnownUserConnectionTimestamp, func() (*time.Time, error) {
+		return c.lastKnownUserConnectionTimestamp()
+	})
+}
+
+func (c *mqlAwsWorkspacesWorkspace) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.workspaces.workspace", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
 }
 
 // mqlAwsWorkspacesImage for the aws.workspaces.image resource

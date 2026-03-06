@@ -6416,6 +6416,14 @@ private aws.workspaces.workspace @defaults("workspaceId userName state region") 
   tags() map[string]string
   // AWS region
   region string
+  // Connection state: CONNECTED, DISCONNECTED, or UNKNOWN
+  connectionState() string
+  // Timestamp of last connection state check
+  connectionStateCheckTimestamp() time
+  // Timestamp of last known user connection
+  lastKnownUserConnectionTimestamp() time
+  // Security groups associated with the workspace network interface
+  securityGroups() []aws.ec2.securitygroup
 }
 
 // Amazon WorkSpaces image

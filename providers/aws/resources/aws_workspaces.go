@@ -5,7 +5,12 @@ package resources
 
 import (
 	"context"
+	"fmt"
+	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	workspacestypes "github.com/aws/aws-sdk-go-v2/service/workspaces/types"
 	"github.com/rs/zerolog/log"
@@ -263,6 +268,107 @@ func (a *mqlAwsWorkspacesWorkspace) tags() (map[string]any, error) {
 		}
 	}
 	return tags, nil
+}
+
+// fetchConnectionStatus calls DescribeWorkspacesConnectionStatus and populates
+// connectionState, connectionStateCheckTimestamp, and lastKnownUserConnectionTimestamp.
+func (a *mqlAwsWorkspacesWorkspace) fetchConnectionStatus() error {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Workspaces(a.Region.Data)
+	ctx := context.Background()
+
+	resp, err := svc.DescribeWorkspacesConnectionStatus(ctx, &workspaces.DescribeWorkspacesConnectionStatusInput{
+		WorkspaceIds: []string{a.WorkspaceId.Data},
+	})
+	if err != nil {
+		return err
+	}
+
+	if len(resp.WorkspacesConnectionStatus) > 0 {
+		status := resp.WorkspacesConnectionStatus[0]
+		a.ConnectionState = plugin.TValue[string]{Data: string(status.ConnectionState), State: plugin.StateIsSet}
+		if status.ConnectionStateCheckTimestamp != nil {
+			a.ConnectionStateCheckTimestamp = plugin.TValue[*time.Time]{Data: status.ConnectionStateCheckTimestamp, State: plugin.StateIsSet}
+		} else {
+			a.ConnectionStateCheckTimestamp = plugin.TValue[*time.Time]{State: plugin.StateIsSet | plugin.StateIsNull}
+		}
+		if status.LastKnownUserConnectionTimestamp != nil {
+			a.LastKnownUserConnectionTimestamp = plugin.TValue[*time.Time]{Data: status.LastKnownUserConnectionTimestamp, State: plugin.StateIsSet}
+		} else {
+			a.LastKnownUserConnectionTimestamp = plugin.TValue[*time.Time]{State: plugin.StateIsSet | plugin.StateIsNull}
+		}
+	} else {
+		a.ConnectionState = plugin.TValue[string]{Data: "UNKNOWN", State: plugin.StateIsSet}
+		a.ConnectionStateCheckTimestamp = plugin.TValue[*time.Time]{State: plugin.StateIsSet | plugin.StateIsNull}
+		a.LastKnownUserConnectionTimestamp = plugin.TValue[*time.Time]{State: plugin.StateIsSet | plugin.StateIsNull}
+	}
+	return nil
+}
+
+func (a *mqlAwsWorkspacesWorkspace) connectionState() (string, error) {
+	if err := a.fetchConnectionStatus(); err != nil {
+		return "", err
+	}
+	return a.ConnectionState.Data, nil
+}
+
+func (a *mqlAwsWorkspacesWorkspace) connectionStateCheckTimestamp() (*time.Time, error) {
+	if err := a.fetchConnectionStatus(); err != nil {
+		return nil, err
+	}
+	return a.ConnectionStateCheckTimestamp.Data, nil
+}
+
+func (a *mqlAwsWorkspacesWorkspace) lastKnownUserConnectionTimestamp() (*time.Time, error) {
+	if err := a.fetchConnectionStatus(); err != nil {
+		return nil, err
+	}
+	return a.LastKnownUserConnectionTimestamp.Data, nil
+}
+
+func (a *mqlAwsWorkspacesWorkspace) securityGroups() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := a.Region.Data
+	ipAddr := a.IpAddress.Data
+
+	if ipAddr == "" {
+		// Workspaces in PENDING, TERMINATING, etc. may not have an IP address
+		return []any{}, nil
+	}
+
+	ec2Svc := conn.Ec2(region)
+	ctx := context.Background()
+
+	resp, err := ec2Svc.DescribeNetworkInterfaces(ctx, &ec2.DescribeNetworkInterfacesInput{
+		Filters: []ec2types.Filter{
+			{
+				Name:   aws.String("addresses.private-ip-address"),
+				Values: []string{ipAddr},
+			},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	sgs := []any{}
+	seen := map[string]bool{}
+	for _, eni := range resp.NetworkInterfaces {
+		for _, group := range eni.Groups {
+			groupId := convert.ToValue(group.GroupId)
+			if groupId == "" || seen[groupId] {
+				continue
+			}
+			seen[groupId] = true
+			mqlSg, err := NewResource(a.MqlRuntime, ResourceAwsEc2Securitygroup,
+				map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(securityGroupArnPattern, region, conn.AccountId(), groupId))})
+			if err != nil {
+				return nil, err
+			}
+			sgs = append(sgs, mqlSg)
+		}
+	}
+	return sgs, nil
 }
 
 // ---- Images ----

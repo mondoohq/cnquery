@@ -2895,12 +2895,16 @@ aws.workspaces.ipGroups 11.16.1
 aws.workspaces.workspace 11.16.1
 aws.workspaces.workspace.bundleId 11.16.1
 aws.workspaces.workspace.computerName 11.16.1
+aws.workspaces.workspace.connectionState 11.16.1
+aws.workspaces.workspace.connectionStateCheckTimestamp 11.16.1
 aws.workspaces.workspace.directoryId 11.16.1
 aws.workspaces.workspace.errorCode 11.16.1
 aws.workspaces.workspace.errorMessage 11.16.1
 aws.workspaces.workspace.ipAddress 11.16.1
+aws.workspaces.workspace.lastKnownUserConnectionTimestamp 11.16.1
 aws.workspaces.workspace.region 11.16.1
 aws.workspaces.workspace.rootVolumeEncryptionEnabled 11.16.1
+aws.workspaces.workspace.securityGroups 11.16.1
 aws.workspaces.workspace.state 11.16.1
 aws.workspaces.workspace.subnetId 11.16.1
 aws.workspaces.workspace.tags 11.16.1
