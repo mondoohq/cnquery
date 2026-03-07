@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"go.mondoo.com/mql/v13/llx"
@@ -34,6 +35,9 @@ func (g *mqlGcpProjects) id() (string, error) {
 type mqlGcpProjectInternal struct {
 	// serviceEnabled services
 	enabledServices map[string]struct{}
+	iamPolicyOnce   sync.Once
+	iamPolicyCache  *cloudresourcemanager.Policy
+	iamPolicyErr    error
 }
 
 func initGcpProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -121,26 +125,33 @@ func (g *mqlGcpProject) number() (string, error) {
 	return "", errors.New("not implemented")
 }
 
+func (g *mqlGcpProject) fetchIamPolicy() (*cloudresourcemanager.Policy, error) {
+	g.iamPolicyOnce.Do(func() {
+		projectId := g.Id.Data
+		conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+		client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+		if err != nil {
+			g.iamPolicyErr = err
+			return
+		}
+		ctx := context.Background()
+		svc, err := cloudresourcemanager.NewService(ctx, option.WithHTTPClient(client))
+		if err != nil {
+			g.iamPolicyErr = err
+			return
+		}
+		g.iamPolicyCache, g.iamPolicyErr = svc.Projects.GetIamPolicy(fmt.Sprintf("projects/%s", projectId), &cloudresourcemanager.GetIamPolicyRequest{}).Do()
+	})
+	return g.iamPolicyCache, g.iamPolicyErr
+}
+
 func (g *mqlGcpProject) iamPolicy() ([]any, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
 	}
 	projectId := g.Id.Data
 
-	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
-
-	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
-	if err != nil {
-		return nil, err
-	}
-
-	ctx := context.Background()
-	svc, err := cloudresourcemanager.NewService(ctx, option.WithHTTPClient(client))
-	if err != nil {
-		return nil, err
-	}
-
-	policy, err := svc.Projects.GetIamPolicy(fmt.Sprintf("projects/%s", projectId), &cloudresourcemanager.GetIamPolicyRequest{}).Do()
+	policy, err := g.fetchIamPolicy()
 	if err != nil {
 		return nil, err
 	}
@@ -169,20 +180,7 @@ func (g *mqlGcpProject) auditConfig() ([]any, error) {
 	}
 	projectId := g.Id.Data
 
-	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
-
-	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
-	if err != nil {
-		return nil, err
-	}
-
-	ctx := context.Background()
-	svc, err := cloudresourcemanager.NewService(ctx, option.WithHTTPClient(client))
-	if err != nil {
-		return nil, err
-	}
-
-	policy, err := svc.Projects.GetIamPolicy(fmt.Sprintf("projects/%s", projectId), &cloudresourcemanager.GetIamPolicyRequest{}).Do()
+	policy, err := g.fetchIamPolicy()
 	if err != nil {
 		return nil, err
 	}

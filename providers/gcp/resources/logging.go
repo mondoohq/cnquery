@@ -62,66 +62,67 @@ func (g *mqlGcpProjectLoggingservice) buckets() ([]any, error) {
 		return nil, err
 	}
 
-	buckets, err := loggingSvc.Projects.Locations.Buckets.List(fmt.Sprintf("projects/%s/locations/-", projectId)).Do()
-	if err != nil {
+	var mqlBuckets []any
+	req := loggingSvc.Projects.Locations.Buckets.List(fmt.Sprintf("projects/%s/locations/-", projectId))
+	if err := req.Pages(ctx, func(page *logging.ListBucketsResponse) error {
+		for _, bucket := range page.Buckets {
+
+			var mqlCmekSettingsDict map[string]any
+			if bucket.CmekSettings != nil {
+				type mqlCmekSettings struct {
+					KmsKeyName        string `json:"kmsKeyName"`
+					KmsKeyVersionName string `json:"kmsKeyVersionName"`
+					Name              string `json:"name"`
+					ServiceAccountId  string `json:"serviceAccountId"`
+				}
+				mqlCmekSettingsDict, err = convert.JsonToDict(mqlCmekSettings{
+					KmsKeyName:        bucket.CmekSettings.KmsKeyName,
+					KmsKeyVersionName: bucket.CmekSettings.KmsKeyVersionName,
+					Name:              bucket.CmekSettings.Name,
+					ServiceAccountId:  bucket.CmekSettings.ServiceAccountId,
+				})
+				if err != nil {
+					return err
+				}
+			}
+
+			indexConfigs := make([]any, 0, len(bucket.IndexConfigs))
+			for i, cfg := range bucket.IndexConfigs {
+				mqlIndexConfig, err := CreateResource(g.MqlRuntime, "gcp.project.loggingservice.bucket.indexConfigs", map[string]*llx.RawData{
+					"id":        llx.StringData(fmt.Sprintf("%s/indexConfigs/%d", bucket.Name, i)),
+					"created":   llx.TimeDataPtr(parseTime(cfg.CreateTime)),
+					"fieldPath": llx.StringData(cfg.FieldPath),
+					"type":      llx.StringData(cfg.Type),
+				})
+				if err != nil {
+					return err
+				}
+				indexConfigs = append(indexConfigs, mqlIndexConfig)
+			}
+
+			mqlBucket, err := CreateResource(g.MqlRuntime, "gcp.project.loggingservice.bucket", map[string]*llx.RawData{
+				"projectId":           llx.StringData(projectId),
+				"location":            llx.StringData(parseLocationFromPath(bucket.Name)),
+				"cmekSettings":        llx.DictData(mqlCmekSettingsDict),
+				"created":             llx.TimeDataPtr(parseTime(bucket.CreateTime)),
+				"description":         llx.StringData(bucket.Description),
+				"indexConfigs":        llx.ArrayData(indexConfigs, types.Resource("gcp.project.loggingservice.bucket.indexConfig")),
+				"lifecycleState":      llx.StringData(bucket.LifecycleState),
+				"locked":              llx.BoolData(bucket.Locked),
+				"name":                llx.StringData(bucket.Name),
+				"restrictedFields":    llx.ArrayData(convert.SliceAnyToInterface(bucket.RestrictedFields), types.String),
+				"retentionDays":       llx.IntData(bucket.RetentionDays),
+				"updated":             llx.TimeDataPtr(parseTime(bucket.UpdateTime)),
+				"logAnalyticsEnabled": llx.BoolData(bucket.AnalyticsEnabled),
+			})
+			if err != nil {
+				return err
+			}
+			mqlBuckets = append(mqlBuckets, mqlBucket)
+		}
+		return nil
+	}); err != nil {
 		return nil, err
-	}
-
-	mqlBuckets := make([]any, 0, len(buckets.Buckets))
-	for _, bucket := range buckets.Buckets {
-
-		var mqlCmekSettingsDict map[string]any
-		if bucket.CmekSettings != nil {
-			type mqlCmekSettings struct {
-				KmsKeyName        string `json:"kmsKeyName"`
-				KmsKeyVersionName string `json:"kmsKeyVersionName"`
-				Name              string `json:"name"`
-				ServiceAccountId  string `json:"serviceAccountId"`
-			}
-			mqlCmekSettingsDict, err = convert.JsonToDict(mqlCmekSettings{
-				KmsKeyName:        bucket.CmekSettings.KmsKeyName,
-				KmsKeyVersionName: bucket.CmekSettings.KmsKeyVersionName,
-				Name:              bucket.CmekSettings.Name,
-				ServiceAccountId:  bucket.CmekSettings.ServiceAccountId,
-			})
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		indexConfigs := make([]any, 0, len(bucket.IndexConfigs))
-		for i, cfg := range bucket.IndexConfigs {
-			mqlIndexConfig, err := CreateResource(g.MqlRuntime, "gcp.project.loggingservice.bucket.indexConfigs", map[string]*llx.RawData{
-				"id":        llx.StringData(fmt.Sprintf("%s/indexConfigs/%d", bucket.Name, i)),
-				"created":   llx.TimeDataPtr(parseTime(cfg.CreateTime)),
-				"fieldPath": llx.StringData(cfg.FieldPath),
-				"type":      llx.StringData(cfg.Type),
-			})
-			if err != nil {
-				return nil, err
-			}
-			indexConfigs = append(indexConfigs, mqlIndexConfig)
-		}
-
-		mqlBucket, err := CreateResource(g.MqlRuntime, "gcp.project.loggingservice.bucket", map[string]*llx.RawData{
-			"projectId":           llx.StringData(projectId),
-			"location":            llx.StringData(parseLocationFromPath(bucket.Name)),
-			"cmekSettings":        llx.DictData(mqlCmekSettingsDict),
-			"created":             llx.TimeDataPtr(parseTime(bucket.CreateTime)),
-			"description":         llx.StringData(bucket.Description),
-			"indexConfigs":        llx.ArrayData(indexConfigs, types.Resource("gcp.project.loggingservice.bucket.indexConfig")),
-			"lifecycleState":      llx.StringData(bucket.LifecycleState),
-			"locked":              llx.BoolData(bucket.Locked),
-			"name":                llx.StringData(bucket.Name),
-			"restrictedFields":    llx.ArrayData(convert.SliceAnyToInterface(bucket.RestrictedFields), types.String),
-			"retentionDays":       llx.IntData(bucket.RetentionDays),
-			"updated":             llx.TimeDataPtr(parseTime(bucket.UpdateTime)),
-			"logAnalyticsEnabled": llx.BoolData(bucket.AnalyticsEnabled),
-		})
-		if err != nil {
-			return nil, err
-		}
-		mqlBuckets = append(mqlBuckets, mqlBucket)
 	}
 	return mqlBuckets, nil
 }
