@@ -51,11 +51,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.74.0
 	github.com/aws/aws-sdk-go-v2/service/iam v1.53.4
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.47.2
+	github.com/aws/aws-sdk-go-v2/service/kafka v1.48.2
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.43.2
 	github.com/aws/aws-sdk-go-v2/service/kms v1.50.2
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.88.2
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.50.11
 	github.com/aws/aws-sdk-go-v2/service/memorydb v1.33.12
+	github.com/aws/aws-sdk-go-v2/service/mq v1.34.17
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.44.1
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.59.0
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.50.4

@@ -48,11 +48,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
+	"github.com/aws/aws-sdk-go-v2/service/kafka"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/macie2"
 	"github.com/aws/aws-sdk-go-v2/service/memorydb"
+	"github.com/aws/aws-sdk-go-v2/service/mq"
 	"github.com/aws/aws-sdk-go-v2/service/neptune"
 	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
@@ -803,6 +805,46 @@ func (t *AwsConnection) Memorydb(region string) *memorydb.Client {
 	cfg := t.cfg.Copy()
 	cfg.Region = region
 	client := memorydb.NewFromConfig(cfg)
+
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) Kafka(region string) *kafka.Client {
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_kafka_" + region
+
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached kafka client")
+		return c.Data.(*kafka.Client)
+	}
+
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := kafka.NewFromConfig(cfg)
+
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) Mq(region string) *mq.Client {
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_mq_" + region
+
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached mq client")
+		return c.Data.(*mq.Client)
+	}
+
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := mq.NewFromConfig(cfg)
 
 	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
 	return client

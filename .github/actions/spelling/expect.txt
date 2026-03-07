@@ -1,5 +1,6 @@
 aad
 ACCOUNTADMIN
+ACTIVEMQ
 advancedthreatprotection
 alloydb
 alpn
@@ -121,6 +122,7 @@ maxmemory
 mcp
 memorydb
 mcr
+msk
 meid
 messagestoragepolicy
 mfs
@@ -169,6 +171,7 @@ priorityclass
 psc
 pushconfig
 querypack
+RABBITMQ
 ratebasedstatement
 recaptcha
 regexmatchstatement
@@ -180,6 +183,7 @@ rulegroup
 rulegroupreferencestatement
 saas
 Sas
+SASL
 sbom
 scim
 scm

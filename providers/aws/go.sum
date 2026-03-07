@@ -261,6 +261,8 @@ github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.19 h1:X1Tow7su
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.19/go.mod h1:/rARO8psX+4sfjUQXp5LLifjUt8DuATZ31WptNJTyQA=
 github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.19 h1:JnQeStZvPHFHeyky/7LbMlyQjUa+jIBj36OlWm0pzIk=
 github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.19/go.mod h1:HGyasyHvYdFQeJhvDHfH7HXkHh57htcJGKDZ+7z+I24=
+github.com/aws/aws-sdk-go-v2/service/kafka v1.48.2 h1:vfmr7oFym8C157Oz8e4HXc1Boi6qjMAB3k2m24Un/2k=
+github.com/aws/aws-sdk-go-v2/service/kafka v1.48.2/go.mod h1:lU7xpeY4j0/f1Klx/Inm4ljp6TTyMoVlVJAyZNeQGJU=
 github.com/aws/aws-sdk-go-v2/service/kinesis v1.43.2 h1:WhTMEbudr8A351zRMU48WLERglge1qMzmb6BrlbekPg=
 github.com/aws/aws-sdk-go-v2/service/kinesis v1.43.2/go.mod h1:yDk2FJbvOCzH16j8Pa2FLGKh8MEH6/8/2Vqn3IKzmXE=
 github.com/aws/aws-sdk-go-v2/service/kms v1.50.2 h1:UOHOXigIzDRaEU03CBQcZ5uW7FNC7E+vwfhsQWXl5RQ=
@@ -271,6 +273,8 @@ github.com/aws/aws-sdk-go-v2/service/macie2 v1.50.11 h1:xVA8bNIG+Jk0qJedaIzv8S8a
 github.com/aws/aws-sdk-go-v2/service/macie2 v1.50.11/go.mod h1:ni1hQqlr8F40BzrH8GcH37dN7wNpryGUkiHnE+MIN1Q=
 github.com/aws/aws-sdk-go-v2/service/memorydb v1.33.12 h1:BUd9RyiCSQ3gau/LAh6ZppvuQ1IxjetxpB25pc9YbAg=
 github.com/aws/aws-sdk-go-v2/service/memorydb v1.33.12/go.mod h1:rxCveQsDbPAecIQjIcDlzsH93PrHovX8bz3llcRAgt0=
+github.com/aws/aws-sdk-go-v2/service/mq v1.34.17 h1:mW26pSlEZG2OGSoC2ZE0AJs2w8YEXHo1AgJDfGEFQFU=
+github.com/aws/aws-sdk-go-v2/service/mq v1.34.17/go.mod h1:3ru7bRS2mF6C5UbPdVNSaUeo2lwL+42YZUhm8bQypFk=
 github.com/aws/aws-sdk-go-v2/service/neptune v1.44.1 h1:Akp3PA62O+s8Tze5/4f3YthrAT6OHhay9QhUPv7zw6Y=
 github.com/aws/aws-sdk-go-v2/service/neptune v1.44.1/go.mod h1:YNCq3tFuuD8sxXKR9NC7n8gdafguPzxp+WFKuivplTw=
 github.com/aws/aws-sdk-go-v2/service/opensearch v1.59.0 h1:rhlLa2SwSeKva0DEUrbRc5DN2bAsIPvcmW7N/c2MUgI=
