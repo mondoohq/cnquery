@@ -130,6 +130,7 @@ const (
 	ResourceGcpProjectLoggingserviceMetric                                            string = "gcp.project.loggingservice.metric"
 	ResourceGcpProjectLoggingserviceSink                                              string = "gcp.project.loggingservice.sink"
 	ResourceGcpProjectIamService                                                      string = "gcp.project.iamService"
+	ResourceGcpProjectIamServiceRole                                                  string = "gcp.project.iamService.role"
 	ResourceGcpProjectIamServiceServiceAccount                                        string = "gcp.project.iamService.serviceAccount"
 	ResourceGcpProjectIamServiceServiceAccountKey                                     string = "gcp.project.iamService.serviceAccount.key"
 	ResourceGcpProjectCloudFunction                                                   string = "gcp.project.cloudFunction"
@@ -652,6 +653,10 @@ func init() {
 		"gcp.project.iamService": {
 			// to override args, implement: initGcpProjectIamService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectIamService,
+		},
+		"gcp.project.iamService.role": {
+			// to override args, implement: initGcpProjectIamServiceRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectIamServiceRole,
 		},
 		"gcp.project.iamService.serviceAccount": {
 			Init:   initGcpProjectIamServiceServiceAccount,
@@ -4421,6 +4426,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.iamService.serviceAccounts": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamService).GetServiceAccounts()).ToDataRes(types.Array(types.Resource("gcp.project.iamService.serviceAccount")))
+	},
+	"gcp.project.iamService.roles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamService).GetRoles()).ToDataRes(types.Array(types.Resource("gcp.project.iamService.role")))
+	},
+	"gcp.project.iamService.role.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceRole).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.role.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceRole).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.role.title": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceRole).GetTitle()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.role.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceRole).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.role.stage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceRole).GetStage()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.role.includedPermissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceRole).GetIncludedPermissions()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.iamService.role.deleted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceRole).GetDeleted()).ToDataRes(types.Bool)
 	},
 	"gcp.project.iamService.serviceAccount.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceServiceAccount).GetProjectId()).ToDataRes(types.String)
@@ -11439,6 +11468,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.iamService.serviceAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectIamService).ServiceAccounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamService).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceRole).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.iamService.role.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceRole).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.role.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceRole).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.role.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceRole).Title, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.role.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceRole).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.role.stage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceRole).Stage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.role.includedPermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceRole).IncludedPermissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.role.deleted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceRole).Deleted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.iamService.serviceAccount.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26342,6 +26407,7 @@ type mqlGcpProjectIamService struct {
 	// optional: if you define mqlGcpProjectIamServiceInternal it will be used here
 	ProjectId       plugin.TValue[string]
 	ServiceAccounts plugin.TValue[[]any]
+	Roles           plugin.TValue[[]any]
 }
 
 // createGcpProjectIamService creates a new instance of this resource
@@ -26399,6 +26465,101 @@ func (c *mqlGcpProjectIamService) GetServiceAccounts() *plugin.TValue[[]any] {
 
 		return c.serviceAccounts()
 	})
+}
+
+func (c *mqlGcpProjectIamService) GetRoles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Roles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.iamService", c.__id, "roles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.roles()
+	})
+}
+
+// mqlGcpProjectIamServiceRole for the gcp.project.iamService.role resource
+type mqlGcpProjectIamServiceRole struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectIamServiceRoleInternal it will be used here
+	ProjectId           plugin.TValue[string]
+	Name                plugin.TValue[string]
+	Title               plugin.TValue[string]
+	Description         plugin.TValue[string]
+	Stage               plugin.TValue[string]
+	IncludedPermissions plugin.TValue[[]any]
+	Deleted             plugin.TValue[bool]
+}
+
+// createGcpProjectIamServiceRole creates a new instance of this resource
+func createGcpProjectIamServiceRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectIamServiceRole{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.iamService.role", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectIamServiceRole) MqlName() string {
+	return "gcp.project.iamService.role"
+}
+
+func (c *mqlGcpProjectIamServiceRole) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectIamServiceRole) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectIamServiceRole) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectIamServiceRole) GetTitle() *plugin.TValue[string] {
+	return &c.Title
+}
+
+func (c *mqlGcpProjectIamServiceRole) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectIamServiceRole) GetStage() *plugin.TValue[string] {
+	return &c.Stage
+}
+
+func (c *mqlGcpProjectIamServiceRole) GetIncludedPermissions() *plugin.TValue[[]any] {
+	return &c.IncludedPermissions
+}
+
+func (c *mqlGcpProjectIamServiceRole) GetDeleted() *plugin.TValue[bool] {
+	return &c.Deleted
 }
 
 // mqlGcpProjectIamServiceServiceAccount for the gcp.project.iamService.serviceAccount resource

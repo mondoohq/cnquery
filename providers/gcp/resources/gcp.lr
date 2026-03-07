@@ -2795,6 +2795,26 @@ private gcp.project.iamService {
   projectId string
   // List of service accounts
   serviceAccounts() []gcp.project.iamService.serviceAccount
+  // Custom IAM roles defined in the project
+  roles() []gcp.project.iamService.role
+}
+
+// Google Cloud (GCP) IAM custom role
+private gcp.project.iamService.role @defaults("title name") {
+  // Project ID
+  projectId string
+  // Full resource name of the role
+  name string
+  // Title of the role
+  title string
+  // Description
+  description string
+  // Launch stage of the role (ALPHA, BETA, GA, DEPRECATED, DISABLED)
+  stage string
+  // Permissions included in this role
+  includedPermissions []string
+  // Whether the role has been deleted
+  deleted bool
 }
 
 // Google Cloud (GCP) service account
