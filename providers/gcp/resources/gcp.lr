@@ -388,7 +388,7 @@ private gcp.projects {
 }
 
 // Google Cloud (GCP) project
-gcp.project @defaults("name") {
+gcp.project @defaults("name number") {
   // Unique, user-assigned ID of the project
   id string
   // Unique resource name
