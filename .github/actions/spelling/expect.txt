@@ -23,6 +23,7 @@ backupshorttermretentionpolicy
 bigquery
 bigtable
 blackhole
+Blobstore
 BYOS
 bytematchstatement
 cavium
@@ -56,6 +57,7 @@ dlq
 dlv
 dnskey
 documentdb
+Doublings
 dsse
 eas
 Ecmp
@@ -69,6 +71,7 @@ ETL
 exo
 failback
 fargate
+filestore
 filesz
 firefox
 firestore
