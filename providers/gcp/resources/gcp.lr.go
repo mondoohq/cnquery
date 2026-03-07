@@ -196,6 +196,10 @@ const (
 	ResourceGcpResourcemanagerAuditConfig                                             string = "gcp.resourcemanager.auditConfig"
 	ResourceGcpResourcemanagerAuditConfigLogConfig                                    string = "gcp.resourcemanager.auditConfig.logConfig"
 	ResourceGcpOrgPolicy                                                              string = "gcp.orgPolicy"
+	ResourceGcpProjectComputeServiceInstanceGroup                                     string = "gcp.project.computeService.instanceGroup"
+	ResourceGcpProjectComputeServiceInstanceGroupManager                              string = "gcp.project.computeService.instanceGroupManager"
+	ResourceGcpProjectComputeServiceFirewallPolicy                                    string = "gcp.project.computeService.firewallPolicy"
+	ResourceGcpProjectComputeServiceFirewallPolicyRule                                string = "gcp.project.computeService.firewallPolicy.rule"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -917,6 +921,22 @@ func init() {
 		"gcp.orgPolicy": {
 			// to override args, implement: initGcpOrgPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpOrgPolicy,
+		},
+		"gcp.project.computeService.instanceGroup": {
+			// to override args, implement: initGcpProjectComputeServiceInstanceGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectComputeServiceInstanceGroup,
+		},
+		"gcp.project.computeService.instanceGroupManager": {
+			// to override args, implement: initGcpProjectComputeServiceInstanceGroupManager(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectComputeServiceInstanceGroupManager,
+		},
+		"gcp.project.computeService.firewallPolicy": {
+			// to override args, implement: initGcpProjectComputeServiceFirewallPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectComputeServiceFirewallPolicy,
+		},
+		"gcp.project.computeService.firewallPolicy.rule": {
+			// to override args, implement: initGcpProjectComputeServiceFirewallPolicyRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectComputeServiceFirewallPolicyRule,
 		},
 	}
 }
@@ -1696,6 +1716,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.storagePools": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeService).GetStoragePools()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.storagePool")))
+	},
+	"gcp.project.computeService.instanceGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeService).GetInstanceGroups()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.instanceGroup")))
+	},
+	"gcp.project.computeService.instanceGroupManagers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeService).GetInstanceGroupManagers()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.instanceGroupManager")))
+	},
+	"gcp.project.computeService.firewallPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeService).GetFirewallPolicies()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.firewallPolicy")))
 	},
 	"gcp.project.computeService.address.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceAddress).GetId()).ToDataRes(types.String)
@@ -3736,6 +3765,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.gkeService.cluster.nodepool.instanceGroupUrls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceClusterNodepool).GetInstanceGroupUrls()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.gkeService.cluster.nodepool.instanceGroupManagers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterNodepool).GetInstanceGroupManagers()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.instanceGroupManager")))
 	},
 	"gcp.project.gkeService.cluster.nodepool.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceClusterNodepool).GetStatus()).ToDataRes(types.String)
@@ -6434,6 +6466,159 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.orgPolicy.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpOrgPolicy).GetUpdatedAt()).ToDataRes(types.Time)
 	},
+	"gcp.project.computeService.instanceGroup.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceGroup).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instanceGroup.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceGroup).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instanceGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceGroup).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instanceGroup.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceGroup).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instanceGroup.zoneUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceGroup).GetZoneUrl()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instanceGroup.networkUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceGroup).GetNetworkUrl()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instanceGroup.network": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceGroup).GetNetwork()).ToDataRes(types.Resource("gcp.project.computeService.network"))
+	},
+	"gcp.project.computeService.instanceGroup.subnetwork": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceGroup).GetSubnetwork()).ToDataRes(types.Resource("gcp.project.computeService.subnetwork"))
+	},
+	"gcp.project.computeService.instanceGroup.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceGroup).GetSize()).ToDataRes(types.Int)
+	},
+	"gcp.project.computeService.instanceGroup.namedPorts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceGroup).GetNamedPorts()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.computeService.instanceGroup.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceGroup).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.computeService.instanceGroup.selfLink": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceGroup).GetSelfLink()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instanceGroupManager.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceGroupManager).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instanceGroupManager.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceGroupManager).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instanceGroupManager.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceGroupManager).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instanceGroupManager.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceGroupManager).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instanceGroupManager.zoneUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceGroupManager).GetZoneUrl()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instanceGroupManager.regionUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceGroupManager).GetRegionUrl()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instanceGroupManager.instanceTemplateUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceGroupManager).GetInstanceTemplateUrl()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instanceGroupManager.targetSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceGroupManager).GetTargetSize()).ToDataRes(types.Int)
+	},
+	"gcp.project.computeService.instanceGroupManager.currentActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceGroupManager).GetCurrentActions()).ToDataRes(types.Dict)
+	},
+	"gcp.project.computeService.instanceGroupManager.statefulPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceGroupManager).GetStatefulPolicy()).ToDataRes(types.Dict)
+	},
+	"gcp.project.computeService.instanceGroupManager.autoHealingPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceGroupManager).GetAutoHealingPolicies()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.computeService.instanceGroupManager.instanceGroupUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceGroupManager).GetInstanceGroupUrl()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instanceGroupManager.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceGroupManager).GetStatus()).ToDataRes(types.Dict)
+	},
+	"gcp.project.computeService.instanceGroupManager.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceGroupManager).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.computeService.instanceGroupManager.selfLink": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceGroupManager).GetSelfLink()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instanceGroupManager.baseInstanceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceGroupManager).GetBaseInstanceName()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.firewallPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicy).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.firewallPolicy.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicy).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.firewallPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicy).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.firewallPolicy.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicy).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.firewallPolicy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.firewallPolicy.selfLink": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicy).GetSelfLink()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.firewallPolicy.ruleTupleCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicy).GetRuleTupleCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.computeService.firewallPolicy.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicy).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.computeService.firewallPolicy.regionUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicy).GetRegionUrl()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.firewallPolicy.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicy).GetRules()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.firewallPolicy.rule")))
+	},
+	"gcp.project.computeService.firewallPolicy.associations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicy).GetAssociations()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.computeService.firewallPolicy.rule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.firewallPolicy.rule.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).GetPriority()).ToDataRes(types.Int)
+	},
+	"gcp.project.computeService.firewallPolicy.rule.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).GetAction()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.firewallPolicy.rule.direction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).GetDirection()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.firewallPolicy.rule.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.firewallPolicy.rule.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.firewallPolicy.rule.enableLogging": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).GetEnableLogging()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.firewallPolicy.rule.match": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).GetMatch()).ToDataRes(types.Dict)
+	},
+	"gcp.project.computeService.firewallPolicy.rule.targetResources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).GetTargetResources()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.computeService.firewallPolicy.rule.targetServiceAccounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).GetTargetServiceAccounts()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.computeService.firewallPolicy.rule.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).GetRuleName()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.firewallPolicy.rule.securityProfileGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).GetSecurityProfileGroup()).ToDataRes(types.String)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -7456,6 +7641,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.storagePools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeService).StoragePools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeService).InstanceGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceGroupManagers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeService).InstanceGroupManagers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeService).FirewallPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.address.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10388,6 +10585,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.gkeService.cluster.nodepool.instanceGroupUrls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceClusterNodepool).InstanceGroupUrls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.nodepool.instanceGroupManagers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterNodepool).InstanceGroupManagers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.gkeService.cluster.nodepool.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14410,6 +14611,226 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpOrgPolicy).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.instanceGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.computeService.instanceGroup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceGroup.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceGroup).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceGroup.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceGroup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceGroup.zoneUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceGroup).ZoneUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceGroup.networkUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceGroup).NetworkUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceGroup.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceGroup).Network, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceNetwork](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceGroup.subnetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceGroup).Subnetwork, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceSubnetwork](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceGroup.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceGroup).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceGroup.namedPorts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceGroup).NamedPorts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceGroup.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceGroup).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceGroup.selfLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceGroup).SelfLink, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceGroupManager.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceGroupManager).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.computeService.instanceGroupManager.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceGroupManager).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceGroupManager.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceGroupManager).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceGroupManager.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceGroupManager).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceGroupManager.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceGroupManager).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceGroupManager.zoneUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceGroupManager).ZoneUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceGroupManager.regionUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceGroupManager).RegionUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceGroupManager.instanceTemplateUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceGroupManager).InstanceTemplateUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceGroupManager.targetSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceGroupManager).TargetSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceGroupManager.currentActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceGroupManager).CurrentActions, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceGroupManager.statefulPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceGroupManager).StatefulPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceGroupManager.autoHealingPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceGroupManager).AutoHealingPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceGroupManager.instanceGroupUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceGroupManager).InstanceGroupUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceGroupManager.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceGroupManager).Status, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceGroupManager.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceGroupManager).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceGroupManager.selfLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceGroupManager).SelfLink, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceGroupManager.baseInstanceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceGroupManager).BaseInstanceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicy).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicy).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.selfLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicy).SelfLink, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.ruleTupleCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicy).RuleTupleCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicy).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.regionUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicy).RegionUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicy).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.associations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicy).Associations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.rule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.rule.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.rule.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.rule.direction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).Direction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.rule.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.rule.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.rule.enableLogging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).EnableLogging, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.rule.match": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).Match, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.rule.targetResources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).TargetResources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.rule.targetServiceAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).TargetServiceAccounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.rule.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.rule.securityProfileGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).SecurityProfileGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -16892,28 +17313,31 @@ type mqlGcpProjectComputeService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectComputeServiceInternal it will be used here
-	ProjectId        plugin.TValue[string]
-	Enabled          plugin.TValue[bool]
-	Instances        plugin.TValue[[]any]
-	Snapshots        plugin.TValue[[]any]
-	Disks            plugin.TValue[[]any]
-	Images           plugin.TValue[[]any]
-	Firewalls        plugin.TValue[[]any]
-	Networks         plugin.TValue[[]any]
-	Subnetworks      plugin.TValue[[]any]
-	Routers          plugin.TValue[[]any]
-	MachineTypes     plugin.TValue[[]any]
-	Regions          plugin.TValue[[]any]
-	Zones            plugin.TValue[[]any]
-	BackendServices  plugin.TValue[[]any]
-	Addresses        plugin.TValue[[]any]
-	ForwardingRules  plugin.TValue[[]any]
-	SecurityPolicies plugin.TValue[[]any]
-	SslPolicies      plugin.TValue[[]any]
-	SslCertificates  plugin.TValue[[]any]
-	VpnGateways      plugin.TValue[[]any]
-	VpnTunnels       plugin.TValue[[]any]
-	StoragePools     plugin.TValue[[]any]
+	ProjectId             plugin.TValue[string]
+	Enabled               plugin.TValue[bool]
+	Instances             plugin.TValue[[]any]
+	Snapshots             plugin.TValue[[]any]
+	Disks                 plugin.TValue[[]any]
+	Images                plugin.TValue[[]any]
+	Firewalls             plugin.TValue[[]any]
+	Networks              plugin.TValue[[]any]
+	Subnetworks           plugin.TValue[[]any]
+	Routers               plugin.TValue[[]any]
+	MachineTypes          plugin.TValue[[]any]
+	Regions               plugin.TValue[[]any]
+	Zones                 plugin.TValue[[]any]
+	BackendServices       plugin.TValue[[]any]
+	Addresses             plugin.TValue[[]any]
+	ForwardingRules       plugin.TValue[[]any]
+	SecurityPolicies      plugin.TValue[[]any]
+	SslPolicies           plugin.TValue[[]any]
+	SslCertificates       plugin.TValue[[]any]
+	VpnGateways           plugin.TValue[[]any]
+	VpnTunnels            plugin.TValue[[]any]
+	StoragePools          plugin.TValue[[]any]
+	InstanceGroups        plugin.TValue[[]any]
+	InstanceGroupManagers plugin.TValue[[]any]
+	FirewallPolicies      plugin.TValue[[]any]
 }
 
 // createGcpProjectComputeService creates a new instance of this resource
@@ -17280,6 +17704,54 @@ func (c *mqlGcpProjectComputeService) GetStoragePools() *plugin.TValue[[]any] {
 		}
 
 		return c.storagePools()
+	})
+}
+
+func (c *mqlGcpProjectComputeService) GetInstanceGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InstanceGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService", c.__id, "instanceGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.instanceGroups()
+	})
+}
+
+func (c *mqlGcpProjectComputeService) GetInstanceGroupManagers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InstanceGroupManagers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService", c.__id, "instanceGroupManagers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.instanceGroupManagers()
+	})
+}
+
+func (c *mqlGcpProjectComputeService) GetFirewallPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FirewallPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService", c.__id, "firewallPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.firewallPolicies()
 	})
 }
 
@@ -23263,21 +23735,22 @@ func (c *mqlGcpProjectGkeServiceClusterNetworkConfig) GetEnableCiliumClusterwide
 type mqlGcpProjectGkeServiceClusterNodepool struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectGkeServiceClusterNodepoolInternal it will be used here
-	Id                plugin.TValue[string]
-	Name              plugin.TValue[string]
-	Config            plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfig]
-	InitialNodeCount  plugin.TValue[int64]
-	Locations         plugin.TValue[[]any]
-	NetworkConfig     plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolNetworkConfig]
-	Version           plugin.TValue[string]
-	InstanceGroupUrls plugin.TValue[[]any]
-	Status            plugin.TValue[string]
-	Management        plugin.TValue[any]
-	Autoscaling       plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling]
-	StatusMessage     plugin.TValue[string]
-	PodIpv4CidrSize   plugin.TValue[int64]
-	UpgradeSettings   plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolUpgradeSettings]
+	mqlGcpProjectGkeServiceClusterNodepoolInternal
+	Id                    plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Config                plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfig]
+	InitialNodeCount      plugin.TValue[int64]
+	Locations             plugin.TValue[[]any]
+	NetworkConfig         plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolNetworkConfig]
+	Version               plugin.TValue[string]
+	InstanceGroupUrls     plugin.TValue[[]any]
+	InstanceGroupManagers plugin.TValue[[]any]
+	Status                plugin.TValue[string]
+	Management            plugin.TValue[any]
+	Autoscaling           plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling]
+	StatusMessage         plugin.TValue[string]
+	PodIpv4CidrSize       plugin.TValue[int64]
+	UpgradeSettings       plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolUpgradeSettings]
 }
 
 // createGcpProjectGkeServiceClusterNodepool creates a new instance of this resource
@@ -23347,6 +23820,22 @@ func (c *mqlGcpProjectGkeServiceClusterNodepool) GetVersion() *plugin.TValue[str
 
 func (c *mqlGcpProjectGkeServiceClusterNodepool) GetInstanceGroupUrls() *plugin.TValue[[]any] {
 	return &c.InstanceGroupUrls
+}
+
+func (c *mqlGcpProjectGkeServiceClusterNodepool) GetInstanceGroupManagers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InstanceGroupManagers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.gkeService.cluster.nodepool", c.__id, "instanceGroupManagers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.instanceGroupManagers()
+	})
 }
 
 func (c *mqlGcpProjectGkeServiceClusterNodepool) GetStatus() *plugin.TValue[string] {
@@ -33062,4 +33551,471 @@ func (c *mqlGcpOrgPolicy) GetEtag() *plugin.TValue[string] {
 
 func (c *mqlGcpOrgPolicy) GetUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.UpdatedAt
+}
+
+// mqlGcpProjectComputeServiceInstanceGroup for the gcp.project.computeService.instanceGroup resource
+type mqlGcpProjectComputeServiceInstanceGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectComputeServiceInstanceGroupInternal
+	Id          plugin.TValue[string]
+	ProjectId   plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Description plugin.TValue[string]
+	ZoneUrl     plugin.TValue[string]
+	NetworkUrl  plugin.TValue[string]
+	Network     plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
+	Subnetwork  plugin.TValue[*mqlGcpProjectComputeServiceSubnetwork]
+	Size        plugin.TValue[int64]
+	NamedPorts  plugin.TValue[[]any]
+	Created     plugin.TValue[*time.Time]
+	SelfLink    plugin.TValue[string]
+}
+
+// createGcpProjectComputeServiceInstanceGroup creates a new instance of this resource
+func createGcpProjectComputeServiceInstanceGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectComputeServiceInstanceGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.computeService.instanceGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceGroup) MqlName() string {
+	return "gcp.project.computeService.instanceGroup"
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceGroup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceGroup) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceGroup) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceGroup) GetZoneUrl() *plugin.TValue[string] {
+	return &c.ZoneUrl
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceGroup) GetNetworkUrl() *plugin.TValue[string] {
+	return &c.NetworkUrl
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceGroup) GetNetwork() *plugin.TValue[*mqlGcpProjectComputeServiceNetwork] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceNetwork](&c.Network, func() (*mqlGcpProjectComputeServiceNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.instanceGroup", c.__id, "network")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceNetwork), nil
+			}
+		}
+
+		return c.network()
+	})
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceGroup) GetSubnetwork() *plugin.TValue[*mqlGcpProjectComputeServiceSubnetwork] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceSubnetwork](&c.Subnetwork, func() (*mqlGcpProjectComputeServiceSubnetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.instanceGroup", c.__id, "subnetwork")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceSubnetwork), nil
+			}
+		}
+
+		return c.subnetwork()
+	})
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceGroup) GetSize() *plugin.TValue[int64] {
+	return &c.Size
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceGroup) GetNamedPorts() *plugin.TValue[[]any] {
+	return &c.NamedPorts
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceGroup) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceGroup) GetSelfLink() *plugin.TValue[string] {
+	return &c.SelfLink
+}
+
+// mqlGcpProjectComputeServiceInstanceGroupManager for the gcp.project.computeService.instanceGroupManager resource
+type mqlGcpProjectComputeServiceInstanceGroupManager struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectComputeServiceInstanceGroupManagerInternal it will be used here
+	Id                  plugin.TValue[string]
+	ProjectId           plugin.TValue[string]
+	Name                plugin.TValue[string]
+	Description         plugin.TValue[string]
+	ZoneUrl             plugin.TValue[string]
+	RegionUrl           plugin.TValue[string]
+	InstanceTemplateUrl plugin.TValue[string]
+	TargetSize          plugin.TValue[int64]
+	CurrentActions      plugin.TValue[any]
+	StatefulPolicy      plugin.TValue[any]
+	AutoHealingPolicies plugin.TValue[[]any]
+	InstanceGroupUrl    plugin.TValue[string]
+	Status              plugin.TValue[any]
+	Created             plugin.TValue[*time.Time]
+	SelfLink            plugin.TValue[string]
+	BaseInstanceName    plugin.TValue[string]
+}
+
+// createGcpProjectComputeServiceInstanceGroupManager creates a new instance of this resource
+func createGcpProjectComputeServiceInstanceGroupManager(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectComputeServiceInstanceGroupManager{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.computeService.instanceGroupManager", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceGroupManager) MqlName() string {
+	return "gcp.project.computeService.instanceGroupManager"
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceGroupManager) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceGroupManager) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceGroupManager) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceGroupManager) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceGroupManager) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceGroupManager) GetZoneUrl() *plugin.TValue[string] {
+	return &c.ZoneUrl
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceGroupManager) GetRegionUrl() *plugin.TValue[string] {
+	return &c.RegionUrl
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceGroupManager) GetInstanceTemplateUrl() *plugin.TValue[string] {
+	return &c.InstanceTemplateUrl
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceGroupManager) GetTargetSize() *plugin.TValue[int64] {
+	return &c.TargetSize
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceGroupManager) GetCurrentActions() *plugin.TValue[any] {
+	return &c.CurrentActions
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceGroupManager) GetStatefulPolicy() *plugin.TValue[any] {
+	return &c.StatefulPolicy
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceGroupManager) GetAutoHealingPolicies() *plugin.TValue[[]any] {
+	return &c.AutoHealingPolicies
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceGroupManager) GetInstanceGroupUrl() *plugin.TValue[string] {
+	return &c.InstanceGroupUrl
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceGroupManager) GetStatus() *plugin.TValue[any] {
+	return &c.Status
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceGroupManager) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceGroupManager) GetSelfLink() *plugin.TValue[string] {
+	return &c.SelfLink
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceGroupManager) GetBaseInstanceName() *plugin.TValue[string] {
+	return &c.BaseInstanceName
+}
+
+// mqlGcpProjectComputeServiceFirewallPolicy for the gcp.project.computeService.firewallPolicy resource
+type mqlGcpProjectComputeServiceFirewallPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectComputeServiceFirewallPolicyInternal
+	Id             plugin.TValue[string]
+	ProjectId      plugin.TValue[string]
+	Name           plugin.TValue[string]
+	DisplayName    plugin.TValue[string]
+	Description    plugin.TValue[string]
+	SelfLink       plugin.TValue[string]
+	RuleTupleCount plugin.TValue[int64]
+	Created        plugin.TValue[*time.Time]
+	RegionUrl      plugin.TValue[string]
+	Rules          plugin.TValue[[]any]
+	Associations   plugin.TValue[[]any]
+}
+
+// createGcpProjectComputeServiceFirewallPolicy creates a new instance of this resource
+func createGcpProjectComputeServiceFirewallPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectComputeServiceFirewallPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.computeService.firewallPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicy) MqlName() string {
+	return "gcp.project.computeService.firewallPolicy"
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicy) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicy) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicy) GetSelfLink() *plugin.TValue[string] {
+	return &c.SelfLink
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicy) GetRuleTupleCount() *plugin.TValue[int64] {
+	return &c.RuleTupleCount
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicy) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicy) GetRegionUrl() *plugin.TValue[string] {
+	return &c.RegionUrl
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicy) GetRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.firewallPolicy", c.__id, "rules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rules()
+	})
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicy) GetAssociations() *plugin.TValue[[]any] {
+	return &c.Associations
+}
+
+// mqlGcpProjectComputeServiceFirewallPolicyRule for the gcp.project.computeService.firewallPolicy.rule resource
+type mqlGcpProjectComputeServiceFirewallPolicyRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectComputeServiceFirewallPolicyRuleInternal it will be used here
+	Id                    plugin.TValue[string]
+	Priority              plugin.TValue[int64]
+	Action                plugin.TValue[string]
+	Direction             plugin.TValue[string]
+	Description           plugin.TValue[string]
+	Disabled              plugin.TValue[bool]
+	EnableLogging         plugin.TValue[bool]
+	Match                 plugin.TValue[any]
+	TargetResources       plugin.TValue[[]any]
+	TargetServiceAccounts plugin.TValue[[]any]
+	RuleName              plugin.TValue[string]
+	SecurityProfileGroup  plugin.TValue[string]
+}
+
+// createGcpProjectComputeServiceFirewallPolicyRule creates a new instance of this resource
+func createGcpProjectComputeServiceFirewallPolicyRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectComputeServiceFirewallPolicyRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.computeService.firewallPolicy.rule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) MqlName() string {
+	return "gcp.project.computeService.firewallPolicy.rule"
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetPriority() *plugin.TValue[int64] {
+	return &c.Priority
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetDirection() *plugin.TValue[string] {
+	return &c.Direction
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetEnableLogging() *plugin.TValue[bool] {
+	return &c.EnableLogging
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetMatch() *plugin.TValue[any] {
+	return &c.Match
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetTargetResources() *plugin.TValue[[]any] {
+	return &c.TargetResources
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetTargetServiceAccounts() *plugin.TValue[[]any] {
+	return &c.TargetServiceAccounts
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetSecurityProfileGroup() *plugin.TValue[string] {
+	return &c.SecurityProfileGroup
 }

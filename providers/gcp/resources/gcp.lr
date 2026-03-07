@@ -569,6 +569,12 @@ private gcp.project.computeService {
   vpnTunnels() []gcp.project.computeService.vpnTunnel
   // Storage pools
   storagePools() []gcp.project.computeService.storagePool
+  // Instance groups
+  instanceGroups() []gcp.project.computeService.instanceGroup
+  // Instance group managers (managed instance groups)
+  instanceGroupManagers() []gcp.project.computeService.instanceGroupManager
+  // Network firewall policies
+  firewallPolicies() []gcp.project.computeService.firewallPolicy
 }
 
 // Google Cloud (GCP) Compute address
@@ -2169,6 +2175,8 @@ private gcp.project.gkeService.cluster.nodepool @defaults("name") {
   version string
   // The resource URLs of the managed instance groups associated with this node pool
   instanceGroupUrls []string
+  // The managed instance group managers associated with this node pool
+  instanceGroupManagers() []gcp.project.computeService.instanceGroupManager
   // The current status of this node pool
   status string
   // Node management configuration
@@ -4392,4 +4400,122 @@ private gcp.orgPolicy @defaults("constraintName") {
   etag string
   // Time last updated
   updatedAt time
+}
+
+// Google Cloud (GCP) Compute instance group
+private gcp.project.computeService.instanceGroup @defaults("name size") {
+  // Unique identifier
+  id string
+  // Project ID
+  projectId string
+  // Name of the instance group
+  name string
+  // Description
+  description string
+  // Zone URL
+  zoneUrl string
+  // Network URL
+  networkUrl string
+  // Network resource
+  network() gcp.project.computeService.network
+  // Subnetwork resource
+  subnetwork() gcp.project.computeService.subnetwork
+  // Number of instances in the group
+  size int
+  // Named ports configured for the instance group
+  namedPorts []dict
+  // Creation timestamp
+  created time
+  // Server-defined URL for the resource
+  selfLink string
+}
+
+// Google Cloud (GCP) Compute instance group manager (managed instance group)
+private gcp.project.computeService.instanceGroupManager @defaults("name targetSize") {
+  // Unique identifier
+  id string
+  // Project ID
+  projectId string
+  // Name of the instance group manager
+  name string
+  // Description
+  description string
+  // Zone URL (empty for regional)
+  zoneUrl string
+  // Region URL (empty for zonal)
+  regionUrl string
+  // Instance template URL
+  instanceTemplateUrl string
+  // Target number of running instances
+  targetSize int
+  // Current actions being performed on instances
+  currentActions dict
+  // Stateful policy for the managed instance group
+  statefulPolicy dict
+  // Auto-healing policies
+  autoHealingPolicies []dict
+  // Instance group URL managed by this manager
+  instanceGroupUrl string
+  // Status of the managed instance group
+  status dict
+  // Creation timestamp
+  created time
+  // Server-defined URL for the resource
+  selfLink string
+  // Base instance name
+  baseInstanceName string
+}
+
+// Google Cloud (GCP) Compute network firewall policy
+private gcp.project.computeService.firewallPolicy @defaults("name") {
+  // Unique identifier
+  id string
+  // Project ID
+  projectId string
+  // Short name of the firewall policy
+  name string
+  // Display name
+  displayName string
+  // Description
+  description string
+  // Server-defined URL for the resource
+  selfLink string
+  // Total count of all firewall policy rule tuples
+  ruleTupleCount int
+  // Creation timestamp
+  created time
+  // Region URL (empty for global policies)
+  regionUrl string
+  // Rules associated with this firewall policy
+  rules() []gcp.project.computeService.firewallPolicy.rule
+  // Associations of this policy with networks
+  associations []dict
+}
+
+// Google Cloud (GCP) Compute network firewall policy rule
+private gcp.project.computeService.firewallPolicy.rule @defaults("priority action direction") {
+  // Internal ID
+  id string
+  // Priority of the rule (lower is higher priority)
+  priority int
+  // Action to take (allow, deny, goto_next, apply_security_profile_group)
+  action string
+  // Direction of traffic (INGRESS, EGRESS)
+  direction string
+  // Description
+  description string
+  // Whether the rule is disabled
+  disabled bool
+  // Whether this is a logging-enabled rule
+  enableLogging bool
+  // Match conditions for the rule
+  match dict
+  // Target resources for the rule
+  targetResources []string
+  // Target service accounts for the rule
+  targetServiceAccounts []string
+  // Rule name (optional)
+  ruleName string
+  // Security profile group URL
+  securityProfileGroup string
 }
