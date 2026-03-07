@@ -104,18 +104,19 @@ func (g *mqlGcpProjectLoggingservice) buckets() ([]any, error) {
 		}
 
 		mqlBucket, err := CreateResource(g.MqlRuntime, "gcp.project.loggingservice.bucket", map[string]*llx.RawData{
-			"projectId":        llx.StringData(projectId),
-			"location":         llx.StringData(parseLocationFromPath(bucket.Name)),
-			"cmekSettings":     llx.DictData(mqlCmekSettingsDict),
-			"created":          llx.TimeDataPtr(parseTime(bucket.CreateTime)),
-			"description":      llx.StringData(bucket.Description),
-			"indexConfigs":     llx.ArrayData(indexConfigs, types.Resource("gcp.project.loggingservice.bucket.indexConfig")),
-			"lifecycleState":   llx.StringData(bucket.LifecycleState),
-			"locked":           llx.BoolData(bucket.Locked),
-			"name":             llx.StringData(bucket.Name),
-			"restrictedFields": llx.ArrayData(convert.SliceAnyToInterface(bucket.RestrictedFields), types.String),
-			"retentionDays":    llx.IntData(bucket.RetentionDays),
-			"updated":          llx.TimeDataPtr(parseTime(bucket.UpdateTime)),
+			"projectId":           llx.StringData(projectId),
+			"location":            llx.StringData(parseLocationFromPath(bucket.Name)),
+			"cmekSettings":        llx.DictData(mqlCmekSettingsDict),
+			"created":             llx.TimeDataPtr(parseTime(bucket.CreateTime)),
+			"description":         llx.StringData(bucket.Description),
+			"indexConfigs":        llx.ArrayData(indexConfigs, types.Resource("gcp.project.loggingservice.bucket.indexConfig")),
+			"lifecycleState":      llx.StringData(bucket.LifecycleState),
+			"locked":              llx.BoolData(bucket.Locked),
+			"name":                llx.StringData(bucket.Name),
+			"restrictedFields":    llx.ArrayData(convert.SliceAnyToInterface(bucket.RestrictedFields), types.String),
+			"retentionDays":       llx.IntData(bucket.RetentionDays),
+			"updated":             llx.TimeDataPtr(parseTime(bucket.UpdateTime)),
+			"logAnalyticsEnabled": llx.BoolData(bucket.AnalyticsEnabled),
 		})
 		if err != nil {
 			return nil, err

@@ -38,6 +38,12 @@ gcp.organization @defaults("name") {
   auditConfig() []gcp.resourcemanager.auditConfig
   // Organization policies
   orgPolicies() []gcp.orgPolicy
+  // Creation timestamp
+  created time
+  // Last modified timestamp
+  updated time
+  // Timestamp when deletion was requested
+  deleteTime time
   // Access approval settings
   accessApprovalSettings() gcp.accessApprovalSettings
   // List of folders
@@ -364,6 +370,8 @@ private gcp.folder @defaults("name") {
   parentId string
   // Folder state
   state string
+  // Timestamp when deletion was requested
+  deleteTime time
   // List of folders
   folders() gcp.folders
   // List of projects
@@ -393,6 +401,10 @@ gcp.project @defaults("name") {
   createTime() time
   // Labels associated with this project
   labels() map[string]string
+  // Timestamp when deletion was requested
+  deleteTime() time
+  // Project number
+  number() string
   // IAM policy
   iamPolicy() []gcp.resourcemanager.binding
   // Audit logging configuration
@@ -551,6 +563,12 @@ private gcp.project.computeService {
   sslPolicies() []gcp.project.computeService.sslPolicy
   // SSL/TLS certificates
   sslCertificates() []gcp.project.computeService.sslCertificate
+  // HA VPN gateways
+  vpnGateways() []gcp.project.computeService.vpnGateway
+  // VPN tunnels
+  vpnTunnels() []gcp.project.computeService.vpnTunnel
+  // Storage pools
+  storagePools() []gcp.project.computeService.storagePool
 }
 
 // Google Cloud (GCP) Compute address
@@ -571,6 +589,8 @@ private gcp.project.computeService.address @defaults("name address addressType")
   ipv6EndpointType string
   // Address name
   name string
+  // Labels applied to this resource
+  labels map[string]string
   // URL of the network in which to reserve the address
   networkUrl string
   // Network in which to reserve the address
@@ -649,6 +669,12 @@ private gcp.project.computeService.forwardingRule {
   subnetwork() gcp.project.computeService.subnetwork
   // URL of the target resource to receive the matched traffic
   targetUrl string
+  // Whether PSC global access is allowed for the forwarding rule
+  allowPscGlobalAccess bool
+  // The PSC connection status of this forwarding rule (ACCEPTED, CLOSED, NEEDS_ATTENTION, PENDING, REJECTED, STATUS_UNSPECIFIED)
+  pscConnectionStatus string
+  // If this load balancer can be used for packet mirroring, the source IP ranges to mirror
+  sourceIpRanges []string
 }
 
 // Google Cloud (GCP) Compute region
@@ -667,6 +693,8 @@ private gcp.project.computeService.region @defaults("name") {
   quotas map[string]float
   // Deprecation status
   deprecated dict
+  // Whether the region supports Protected Zone Separation
+  supportsPzs bool
 }
 
 // Google Cloud (GCP) Compute zone
@@ -791,6 +819,10 @@ private gcp.project.computeService.instance @defaults("name") {
   machineType() gcp.project.computeService.machineType
   // Instance zone
   zone gcp.project.computeService.zone
+  // Whether the instance satisfies Google's Protected Zone Integration requirements
+  satisfiesPzi bool
+  // Whether the instance satisfies Google's Protected Zone Separation requirements
+  satisfiesPzs bool
 }
 
 // Google Cloud (GCP) Compute Shielded Instance configuration
@@ -849,6 +881,22 @@ private gcp.project.computeService.disk @defaults("name") {
   created time
   // Disk encryption key
   diskEncryptionKey dict
+  // Whether the disk uses confidential compute mode encryption
+  enableConfidentialCompute bool
+  // URL of the disk type resource (e.g., pd-standard, pd-ssd, pd-balanced)
+  type string
+  // Links to the instances the disk is attached to
+  users []string
+  // Access mode of the disk (READ_WRITE_SINGLE, READ_WRITE_MANY, READ_ONLY_MANY)
+  accessMode string
+  // Source image used to create the disk
+  sourceImage() gcp.project.computeService.image
+  // Source snapshot used to create the disk
+  sourceSnapshot() gcp.project.computeService.snapshot
+  // Provisioned throughput of the disk in MB/s
+  provisionedThroughput int
+  // Storage pool where the disk resides
+  storagePool() gcp.project.computeService.storagePool
 }
 
 // Google Cloud (GCP) Compute attached disk
@@ -919,6 +967,16 @@ private gcp.project.computeService.snapshot @defaults("name") {
   created time
   // The status of the snapshot
   status string
+  // Cloud Storage locations where the snapshot resides
+  storageLocations []string
+  // Whether the snapshot uses confidential compute mode encryption
+  enableConfidentialCompute bool
+  // Whether the snapshot satisfies Google's Protected Zone Integration requirements
+  satisfiesPzi bool
+  // Whether the snapshot satisfies Google's Protected Zone Separation requirements
+  satisfiesPzs bool
+  // URL of the source disk used to create this snapshot
+  sourceDisk string
 }
 
 // Google Cloud (GCP) Compute
@@ -947,6 +1005,12 @@ private gcp.project.computeService.image @defaults("id name") {
   created time
   // The status of the image
   status string
+  // Whether the image uses confidential compute mode encryption
+  enableConfidentialCompute bool
+  // Whether the image satisfies Google's Protected Zone Integration requirements
+  satisfiesPzi bool
+  // Whether the image satisfies Google's Protected Zone Separation requirements
+  satisfiesPzs bool
 }
 
 // Google Cloud (GCP) Compute firewall
@@ -981,6 +1045,10 @@ private gcp.project.computeService.firewall @defaults("name") {
   allowed []dict
   // List of DENY rules specified by this firewall
   denied []dict
+  // Instance tags that the firewall rule applies to
+  targetTags []string
+  // Whether firewall logging is enabled for this rule
+  loggingEnabled bool
 }
 
 // Google Cloud (GCP) Compute VPC network resource
@@ -1015,6 +1083,10 @@ private gcp.project.computeService.network @defaults("name") {
   subnetworkUrls []string
   // Subnetworks in the network
   subnetworks() []gcp.project.computeService.subnetwork
+  // The range of internal IPv6 addresses owned by this network
+  internalIpv6Range string
+  // URL of the firewall policy applied to this network
+  firewallPolicy string
 }
 
 // Google Cloud (GCP) Compute VPC network partitioning
@@ -1063,6 +1135,8 @@ private gcp.project.computeService.subnetwork @defaults("name") {
   state string
   // Creation timestamp
   created time
+  // The URL of the reserved internal range
+  reservedInternalRange string
 }
 
 // Google Cloud (GCP) Compute VPC network partitioning log configuration
@@ -1103,6 +1177,10 @@ private gcp.project.computeService.router @defaults("name")  {
   natServices []gcp.project.computeService.router.nat
   // Creation timestamp
   created time
+  // URL of the network to which this router belongs
+  networkUrl string
+  // Network to which this router belongs
+  network() gcp.project.computeService.network
 }
 
 // Google Cloud (GCP) Compute backend service
@@ -1173,6 +1251,12 @@ private gcp.project.computeService.backendService @defaults("name") {
   sessionAffinity string
   // Backend service timeout in settings
   timeoutSec int
+  // Backend service port
+  port int
+  // URL of the service load balancing policy resource
+  serviceLbPolicy string
+  // Specifies the IP address selection policy for the backend service (IPV4_ONLY, PREFER_IPV6, IPV6_ONLY)
+  ipAddressSelectionPolicy string
 }
 
 // Google Cloud (GCP) Compute backend service backend
@@ -1275,6 +1359,14 @@ private gcp.project.storageService.bucket @defaults("id") {
   encryption dict
   // Lifecycle configuration
   lifecycle []gcp.project.storageService.bucket.lifecycleRule
+  // Whether a default event-based hold is enabled for newly created objects
+  defaultEventBasedHold bool
+  // Recovery Point Objective for cross-region replication (DEFAULT, ASYNC_TURBO)
+  rpo string
+  // Whether the bucket satisfies Google's Protected Zone Separation requirements
+  satisfiesPZS bool
+  // Whether object versioning is enabled
+  versioningEnabled bool
 }
 
 // Google Cloud bucket's lifecycle configuration
@@ -1379,8 +1471,10 @@ private gcp.project.sqlService.instance @defaults("name") {
   diskEncryptionStatus dict
   // Name and status of the failover replica
   failoverReplica dict
-  // Compute Engine zone that the instance is currently serviced from
+  // Deprecated: Use zone instead
   gceZone string
+  // Compute Engine zone that the instance is currently serviced from
+  zone() gcp.project.computeService.zone
   // Instance type
   instanceType string
   // Assigned IP addresses
@@ -1405,6 +1499,28 @@ private gcp.project.sqlService.instance @defaults("name") {
   state string
   // List of the databases in the current SQL instance
   databases() []gcp.project.sqlService.instance.database
+  // Whether the instance satisfies Google's Protected Zone Integration requirements
+  satisfiesPzi bool
+  // Whether the instance satisfies Google's Protected Zone Separation requirements
+  satisfiesPzs bool
+  // The DNS name of the instance
+  dnsName string
+  // Deprecated: Use secondaryZone instead
+  secondaryGceZone string
+  // Compute Engine zone of the failover instance
+  secondaryZone() gcp.project.computeService.zone
+  // The SQL network architecture for the instance (NEW_NETWORK_ARCHITECTURE or OLD_NETWORK_ARCHITECTURE)
+  sqlNetworkArchitecture string
+  // If the instance state is SUSPENDED, the reason for the suspension
+  suspensionReason []string
+  // Whether transaction logs can switch to Cloud Storage
+  switchTransactionLogsToCloudStorageEnabled bool
+  // Primary DNS name for the replication group
+  primaryDnsName string
+  // Write endpoint DNS name
+  writeEndpoint string
+  // PSC service attachment link
+  pscServiceAttachmentLink string
 }
 
 // Google Cloud (GCP) SQL instance database
@@ -1611,6 +1727,8 @@ private gcp.project.bigqueryService.dataset @defaults("id name") {
   kmsName string
   // Access permissions
   access []gcp.project.bigqueryService.dataset.accessEntry
+  // Default expiration time (in milliseconds) for tables in the dataset
+  defaultTableExpirationMs int
   // Returns tables in the dataset
   tables() []gcp.project.bigqueryService.table
   // Returns models in the dataset
@@ -1739,6 +1857,8 @@ private gcp.project.bigqueryService.routine @defaults("id") {
   modified time
   // Type of routine
   type string
+  // The body of the routine
+  body string
 }
 
 // Google Cloud (GCP) DNS
@@ -1773,6 +1893,10 @@ private gcp.project.dnsService.managedzone @defaults("name") {
   visibility string
   // Creation timestamp
   created time
+  // User-defined labels
+  labels map[string]string
+  // Whether Cloud Logging is enabled for queries in this zone
+  cloudLoggingEnabled bool
   // Cloud DNS record set in the zone
   recordSets() []gcp.project.dnsService.recordset
 }
@@ -1897,6 +2021,44 @@ private gcp.project.gkeService.cluster @defaults("name description zone status c
   networkPolicyConfig dict
   // The release channel that the cluster is subscribed to
   releaseChannel string
+  // Whether Cloud TPU integration is enabled
+  enableTpu bool
+  // The number of nodes currently in the cluster
+  currentNodeCount int
+  // Security posture configuration
+  securityPostureConfig gcp.project.gkeService.cluster.securityPostureConfig
+  // Maintenance policy for the cluster
+  maintenancePolicy gcp.project.gkeService.cluster.maintenancePolicy
+}
+
+// Google Kubernetes Engine (GKE) cluster maintenance policy
+private gcp.project.gkeService.cluster.maintenancePolicy {
+  // Internal ID
+  id string
+  // Resource version for optimistic locking
+  resourceVersion string
+  // Daily maintenance window start time (HH:MM format, GMT)
+  dailyMaintenanceWindowStartTime string
+  // Daily maintenance window duration (PTnHnMnS format)
+  dailyMaintenanceWindowDuration string
+  // Recurring maintenance window recurrence (RRULE format)
+  recurringWindowRecurrence string
+  // Recurring maintenance window start time
+  recurringWindowStartTime time
+  // Recurring maintenance window end time
+  recurringWindowEndTime time
+  // Maintenance exclusions (name -> time window dict)
+  maintenanceExclusions dict
+}
+
+// Google Kubernetes Engine (GKE) cluster security posture configuration
+private gcp.project.gkeService.cluster.securityPostureConfig {
+  // Internal ID
+  id string
+  // Security posture mode (DISABLED, BASIC, ENTERPRISE)
+  mode string
+  // Vulnerability scanning mode (VULNERABILITY_DISABLED, VULNERABILITY_BASIC, VULNERABILITY_ENTERPRISE)
+  vulnerabilityMode string
 }
 
 // Google Kubernetes Engine (GKE) cluster addons config
@@ -2017,6 +2179,26 @@ private gcp.project.gkeService.cluster.nodepool @defaults("name") {
   management dict
   // Autoscaler configuration for this NodePool
   autoscaling gcp.project.gkeService.cluster.nodepool.autoscaling
+  // Additional information about the current status of this node pool
+  statusMessage string
+  // The pod CIDR block size per node in this node pool
+  podIpv4CidrSize int
+  // Upgrade settings for the node pool
+  upgradeSettings gcp.project.gkeService.cluster.nodepool.upgradeSettings
+}
+
+// Google Kubernetes Engine (GKE) node pool upgrade settings
+private gcp.project.gkeService.cluster.nodepool.upgradeSettings @defaults("strategy") {
+  // Internal ID
+  id string
+  // Maximum number of nodes that can be created beyond the current size during upgrade
+  maxSurge int
+  // Maximum number of nodes that can be simultaneously unavailable during upgrade
+  maxUnavailable int
+  // Update strategy (SURGE, BLUE_GREEN, SHORT_LIVED)
+  strategy string
+  // Blue-green upgrade settings
+  blueGreenSettings dict
 }
 
 private gcp.project.gkeService.cluster.nodepool.autoscaling @defaults( "enabled" ) {
@@ -2266,6 +2448,8 @@ private gcp.project.pubsubService.topic.config @defaults("kmsKeyName messageStor
   messageStoragePolicy gcp.project.pubsubService.topic.config.messagestoragepolicy
   // State of the topic (STATE_UNSPECIFIED, ACTIVE, INGESTION_RESOURCE_ERROR)
   state string
+  // How long a published message is retained (0 means not set)
+  retentionDuration time
 }
 
 // Google Cloud (GCP) Pub/Sub topic message storage policy
@@ -2318,6 +2502,8 @@ private gcp.project.pubsubService.subscription.config @defaults("topic.name ackD
   detached bool
   // State of the subscription (STATE_UNSPECIFIED, ACTIVE, RESOURCE_ERROR)
   state string
+  // The minimum duration the topic retains messages after publishing
+  topicMessageRetentionDuration time
 }
 
 // GCP Pub/Sub configuration for subscriptions that operate in push mode
@@ -2559,6 +2745,8 @@ private gcp.project.loggingservice.bucket @defaults("name") {
   retentionDays int
   // Last update timestamp of the bucket
   updated time
+  // Whether Log Analytics is enabled for the bucket
+  logAnalyticsEnabled bool
 }
 
 // Google Cloud (GCP) Logging bucket index config
@@ -3902,6 +4090,106 @@ private gcp.project.computeService.sslCertificate @defaults("name type") {
   expireTime string
   // Creation timestamp
   createdAt time
+}
+
+// Google Cloud (GCP) Compute HA VPN gateway
+private gcp.project.computeService.vpnGateway @defaults("name") {
+  // Unique identifier
+  id string
+  // Name of the resource
+  name string
+  // Description of the resource
+  description string
+  // Creation timestamp
+  created time
+  // Labels applied to this resource
+  labels map[string]string
+  // URL of the network to which this VPN gateway is attached
+  networkUrl string
+  // Network to which this VPN gateway is attached
+  network() gcp.project.computeService.network
+  // IP family of the gateway IPs (IPV4, IPV6)
+  gatewayIpVersion string
+  // Stack type for this VPN gateway (IPV4_ONLY, IPV4_IPV6, IPV6_ONLY)
+  stackType string
+  // Region URL where the VPN gateway resides
+  regionUrl string
+  // VPN interfaces associated with this VPN gateway
+  vpnInterfaces []dict
+}
+
+// Google Cloud (GCP) Compute VPN tunnel
+private gcp.project.computeService.vpnTunnel @defaults("name status") {
+  // Unique identifier
+  id string
+  // Name of the resource
+  name string
+  // Description of the resource
+  description string
+  // Creation timestamp
+  created time
+  // Labels applied to this resource
+  labels map[string]string
+  // Detailed status message
+  detailedStatus string
+  // IKE protocol version (1 or 2)
+  ikeVersion int
+  // Local traffic selector CIDRs
+  localTrafficSelector []string
+  // Remote traffic selector CIDRs
+  remoteTrafficSelector []string
+  // URL of the peer side external VPN gateway
+  peerExternalGateway string
+  // Interface ID of the external VPN gateway
+  peerExternalGatewayInterface int
+  // URL of the peer side HA VPN gateway
+  peerGcpGateway string
+  // IP address of the peer VPN gateway
+  peerIp string
+  // Region URL where the VPN tunnel resides
+  regionUrl string
+  // URL of the router resource used for dynamic routing
+  routerUrl string
+  // Hash of the shared secret
+  sharedSecretHash string
+  // Status of the VPN tunnel
+  status string
+  // URL of the Target VPN gateway (Classic VPN only)
+  targetVpnGateway string
+  // URL of the VPN gateway (HA VPN)
+  vpnGatewayUrl string
+  // Interface ID of the VPN gateway
+  vpnGatewayInterface int
+}
+
+// Google Cloud (GCP) Compute storage pool
+private gcp.project.computeService.storagePool @defaults("name state") {
+  // Unique identifier
+  id string
+  // Name of the resource
+  name string
+  // Description of the resource
+  description string
+  // Creation timestamp
+  created time
+  // Labels applied to this resource
+  labels map[string]string
+  // Capacity provisioning type (ADVANCED, STANDARD)
+  capacityProvisioningType string
+  // Performance provisioning type (ADVANCED, STANDARD)
+  performanceProvisioningType string
+  // Provisioned capacity in GiB
+  poolProvisionedCapacityGb int
+  // Provisioned IOPS
+  poolProvisionedIops int
+  // Provisioned throughput in MiB/s
+  poolProvisionedThroughput int
+  // State of the storage pool (CREATING, READY, DELETING, FAILED)
+  state string
+  // Storage pool type
+  storagePoolType string
+  // Zone URL where the storage pool resides
+  zone string
 }
 
 // Google Cloud (GCP) Compute Cloud NAT configuration on a router
