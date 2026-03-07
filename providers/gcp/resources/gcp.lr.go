@@ -200,6 +200,11 @@ const (
 	ResourceGcpProjectComputeServiceInstanceGroupManager                              string = "gcp.project.computeService.instanceGroupManager"
 	ResourceGcpProjectComputeServiceFirewallPolicy                                    string = "gcp.project.computeService.firewallPolicy"
 	ResourceGcpProjectComputeServiceFirewallPolicyRule                                string = "gcp.project.computeService.firewallPolicy.rule"
+	ResourceGcpProjectComputeServiceHealthCheck                                       string = "gcp.project.computeService.healthCheck"
+	ResourceGcpProjectComputeServiceUrlMap                                            string = "gcp.project.computeService.urlMap"
+	ResourceGcpProjectComputeServiceTargetHttpProxy                                   string = "gcp.project.computeService.targetHttpProxy"
+	ResourceGcpProjectComputeServiceTargetHttpsProxy                                  string = "gcp.project.computeService.targetHttpsProxy"
+	ResourceGcpProjectComputeServiceNetworkPeering                                    string = "gcp.project.computeService.network.peering"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -937,6 +942,26 @@ func init() {
 		"gcp.project.computeService.firewallPolicy.rule": {
 			// to override args, implement: initGcpProjectComputeServiceFirewallPolicyRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectComputeServiceFirewallPolicyRule,
+		},
+		"gcp.project.computeService.healthCheck": {
+			// to override args, implement: initGcpProjectComputeServiceHealthCheck(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectComputeServiceHealthCheck,
+		},
+		"gcp.project.computeService.urlMap": {
+			// to override args, implement: initGcpProjectComputeServiceUrlMap(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectComputeServiceUrlMap,
+		},
+		"gcp.project.computeService.targetHttpProxy": {
+			// to override args, implement: initGcpProjectComputeServiceTargetHttpProxy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectComputeServiceTargetHttpProxy,
+		},
+		"gcp.project.computeService.targetHttpsProxy": {
+			// to override args, implement: initGcpProjectComputeServiceTargetHttpsProxy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectComputeServiceTargetHttpsProxy,
+		},
+		"gcp.project.computeService.network.peering": {
+			// to override args, implement: initGcpProjectComputeServiceNetworkPeering(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectComputeServiceNetworkPeering,
 		},
 	}
 }
@@ -1726,6 +1751,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.firewallPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeService).GetFirewallPolicies()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.firewallPolicy")))
 	},
+	"gcp.project.computeService.healthChecks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeService).GetHealthChecks()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.healthCheck")))
+	},
+	"gcp.project.computeService.urlMaps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeService).GetUrlMaps()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.urlMap")))
+	},
+	"gcp.project.computeService.targetHttpProxies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeService).GetTargetHttpProxies()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.targetHttpProxy")))
+	},
+	"gcp.project.computeService.targetHttpsProxies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeService).GetTargetHttpsProxies()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.targetHttpsProxy")))
+	},
 	"gcp.project.computeService.address.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceAddress).GetId()).ToDataRes(types.String)
 	},
@@ -2400,6 +2437,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.network.peerings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceNetwork).GetPeerings()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.computeService.network.networkPeerings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceNetwork).GetNetworkPeerings()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.network.peering")))
 	},
 	"gcp.project.computeService.network.routingMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceNetwork).GetRoutingMode()).ToDataRes(types.String)
@@ -6619,6 +6659,204 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.firewallPolicy.rule.securityProfileGroup": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).GetSecurityProfileGroup()).ToDataRes(types.String)
 	},
+	"gcp.project.computeService.healthCheck.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceHealthCheck).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.healthCheck.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceHealthCheck).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.healthCheck.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceHealthCheck).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.healthCheck.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceHealthCheck).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.healthCheck.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceHealthCheck).GetType()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.healthCheck.checkIntervalSec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceHealthCheck).GetCheckIntervalSec()).ToDataRes(types.Int)
+	},
+	"gcp.project.computeService.healthCheck.timeoutSec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceHealthCheck).GetTimeoutSec()).ToDataRes(types.Int)
+	},
+	"gcp.project.computeService.healthCheck.healthyThreshold": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceHealthCheck).GetHealthyThreshold()).ToDataRes(types.Int)
+	},
+	"gcp.project.computeService.healthCheck.unhealthyThreshold": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceHealthCheck).GetUnhealthyThreshold()).ToDataRes(types.Int)
+	},
+	"gcp.project.computeService.healthCheck.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceHealthCheck).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.computeService.healthCheck.selfLink": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceHealthCheck).GetSelfLink()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.healthCheck.httpHealthCheck": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceHealthCheck).GetHttpHealthCheck()).ToDataRes(types.Dict)
+	},
+	"gcp.project.computeService.healthCheck.httpsHealthCheck": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceHealthCheck).GetHttpsHealthCheck()).ToDataRes(types.Dict)
+	},
+	"gcp.project.computeService.healthCheck.tcpHealthCheck": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceHealthCheck).GetTcpHealthCheck()).ToDataRes(types.Dict)
+	},
+	"gcp.project.computeService.healthCheck.sslHealthCheck": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceHealthCheck).GetSslHealthCheck()).ToDataRes(types.Dict)
+	},
+	"gcp.project.computeService.healthCheck.http2HealthCheck": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceHealthCheck).GetHttp2HealthCheck()).ToDataRes(types.Dict)
+	},
+	"gcp.project.computeService.healthCheck.grpcHealthCheck": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceHealthCheck).GetGrpcHealthCheck()).ToDataRes(types.Dict)
+	},
+	"gcp.project.computeService.healthCheck.logConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceHealthCheck).GetLogConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.computeService.healthCheck.regionUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceHealthCheck).GetRegionUrl()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.urlMap.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceUrlMap).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.urlMap.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceUrlMap).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.urlMap.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceUrlMap).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.urlMap.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceUrlMap).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.urlMap.defaultService": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceUrlMap).GetDefaultService()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.urlMap.hostRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceUrlMap).GetHostRules()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.computeService.urlMap.pathMatchers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceUrlMap).GetPathMatchers()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.computeService.urlMap.tests": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceUrlMap).GetTests()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.computeService.urlMap.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceUrlMap).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.computeService.urlMap.selfLink": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceUrlMap).GetSelfLink()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.urlMap.regionUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceUrlMap).GetRegionUrl()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.targetHttpProxy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceTargetHttpProxy).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.targetHttpProxy.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceTargetHttpProxy).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.targetHttpProxy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceTargetHttpProxy).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.targetHttpProxy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceTargetHttpProxy).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.targetHttpProxy.urlMapUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceTargetHttpProxy).GetUrlMapUrl()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.targetHttpProxy.urlMap": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceTargetHttpProxy).GetUrlMap()).ToDataRes(types.Resource("gcp.project.computeService.urlMap"))
+	},
+	"gcp.project.computeService.targetHttpProxy.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceTargetHttpProxy).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.computeService.targetHttpProxy.selfLink": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceTargetHttpProxy).GetSelfLink()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.targetHttpProxy.proxyBind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceTargetHttpProxy).GetProxyBind()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.targetHttpProxy.regionUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceTargetHttpProxy).GetRegionUrl()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.targetHttpsProxy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.targetHttpsProxy.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.targetHttpsProxy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.targetHttpsProxy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.targetHttpsProxy.urlMapUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).GetUrlMapUrl()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.targetHttpsProxy.urlMap": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).GetUrlMap()).ToDataRes(types.Resource("gcp.project.computeService.urlMap"))
+	},
+	"gcp.project.computeService.targetHttpsProxy.sslCertificateUrls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).GetSslCertificateUrls()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.computeService.targetHttpsProxy.sslPolicyUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).GetSslPolicyUrl()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.targetHttpsProxy.sslPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).GetSslPolicy()).ToDataRes(types.Resource("gcp.project.computeService.sslPolicy"))
+	},
+	"gcp.project.computeService.targetHttpsProxy.quicOverride": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).GetQuicOverride()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.targetHttpsProxy.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.computeService.targetHttpsProxy.selfLink": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).GetSelfLink()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.targetHttpsProxy.proxyBind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).GetProxyBind()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.targetHttpsProxy.regionUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).GetRegionUrl()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.network.peering.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceNetworkPeering).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.network.peering.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceNetworkPeering).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.network.peering.networkUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceNetworkPeering).GetNetworkUrl()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.network.peering.network": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceNetworkPeering).GetNetwork()).ToDataRes(types.Resource("gcp.project.computeService.network"))
+	},
+	"gcp.project.computeService.network.peering.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceNetworkPeering).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.network.peering.stateDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceNetworkPeering).GetStateDetails()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.network.peering.autoCreateRoutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceNetworkPeering).GetAutoCreateRoutes()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.network.peering.exchangeSubnetRoutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceNetworkPeering).GetExchangeSubnetRoutes()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.network.peering.exportCustomRoutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceNetworkPeering).GetExportCustomRoutes()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.network.peering.importCustomRoutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceNetworkPeering).GetImportCustomRoutes()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.network.peering.exportSubnetRoutesWithPublicIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceNetworkPeering).GetExportSubnetRoutesWithPublicIp()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.network.peering.importSubnetRoutesWithPublicIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceNetworkPeering).GetImportSubnetRoutesWithPublicIp()).ToDataRes(types.Bool)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -7655,6 +7893,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeService).FirewallPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.healthChecks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeService).HealthChecks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.urlMaps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeService).UrlMaps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.targetHttpProxies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeService).TargetHttpProxies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.targetHttpsProxies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeService).TargetHttpsProxies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.address.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceAddress).__id, ok = v.Value.(string)
 		return
@@ -8609,6 +8863,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.network.peerings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceNetwork).Peerings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.network.networkPeerings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceNetwork).NetworkPeerings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.network.routingMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14831,6 +15089,290 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).SecurityProfileGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.healthCheck.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceHealthCheck).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.computeService.healthCheck.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceHealthCheck).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.healthCheck.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceHealthCheck).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.healthCheck.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceHealthCheck).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.healthCheck.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceHealthCheck).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.healthCheck.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceHealthCheck).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.healthCheck.checkIntervalSec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceHealthCheck).CheckIntervalSec, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.healthCheck.timeoutSec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceHealthCheck).TimeoutSec, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.healthCheck.healthyThreshold": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceHealthCheck).HealthyThreshold, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.healthCheck.unhealthyThreshold": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceHealthCheck).UnhealthyThreshold, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.healthCheck.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceHealthCheck).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.healthCheck.selfLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceHealthCheck).SelfLink, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.healthCheck.httpHealthCheck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceHealthCheck).HttpHealthCheck, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.healthCheck.httpsHealthCheck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceHealthCheck).HttpsHealthCheck, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.healthCheck.tcpHealthCheck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceHealthCheck).TcpHealthCheck, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.healthCheck.sslHealthCheck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceHealthCheck).SslHealthCheck, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.healthCheck.http2HealthCheck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceHealthCheck).Http2HealthCheck, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.healthCheck.grpcHealthCheck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceHealthCheck).GrpcHealthCheck, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.healthCheck.logConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceHealthCheck).LogConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.healthCheck.regionUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceHealthCheck).RegionUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.urlMap.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceUrlMap).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.computeService.urlMap.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceUrlMap).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.urlMap.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceUrlMap).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.urlMap.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceUrlMap).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.urlMap.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceUrlMap).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.urlMap.defaultService": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceUrlMap).DefaultService, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.urlMap.hostRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceUrlMap).HostRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.urlMap.pathMatchers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceUrlMap).PathMatchers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.urlMap.tests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceUrlMap).Tests, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.urlMap.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceUrlMap).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.urlMap.selfLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceUrlMap).SelfLink, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.urlMap.regionUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceUrlMap).RegionUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.targetHttpProxy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceTargetHttpProxy).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.computeService.targetHttpProxy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceTargetHttpProxy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.targetHttpProxy.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceTargetHttpProxy).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.targetHttpProxy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceTargetHttpProxy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.targetHttpProxy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceTargetHttpProxy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.targetHttpProxy.urlMapUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceTargetHttpProxy).UrlMapUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.targetHttpProxy.urlMap": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceTargetHttpProxy).UrlMap, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceUrlMap](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.targetHttpProxy.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceTargetHttpProxy).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.targetHttpProxy.selfLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceTargetHttpProxy).SelfLink, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.targetHttpProxy.proxyBind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceTargetHttpProxy).ProxyBind, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.targetHttpProxy.regionUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceTargetHttpProxy).RegionUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.targetHttpsProxy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.computeService.targetHttpsProxy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.targetHttpsProxy.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.targetHttpsProxy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.targetHttpsProxy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.targetHttpsProxy.urlMapUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).UrlMapUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.targetHttpsProxy.urlMap": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).UrlMap, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceUrlMap](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.targetHttpsProxy.sslCertificateUrls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).SslCertificateUrls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.targetHttpsProxy.sslPolicyUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).SslPolicyUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.targetHttpsProxy.sslPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).SslPolicy, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceSslPolicy](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.targetHttpsProxy.quicOverride": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).QuicOverride, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.targetHttpsProxy.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.targetHttpsProxy.selfLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).SelfLink, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.targetHttpsProxy.proxyBind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).ProxyBind, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.targetHttpsProxy.regionUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).RegionUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.network.peering.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceNetworkPeering).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.computeService.network.peering.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceNetworkPeering).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.network.peering.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceNetworkPeering).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.network.peering.networkUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceNetworkPeering).NetworkUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.network.peering.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceNetworkPeering).Network, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceNetwork](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.network.peering.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceNetworkPeering).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.network.peering.stateDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceNetworkPeering).StateDetails, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.network.peering.autoCreateRoutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceNetworkPeering).AutoCreateRoutes, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.network.peering.exchangeSubnetRoutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceNetworkPeering).ExchangeSubnetRoutes, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.network.peering.exportCustomRoutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceNetworkPeering).ExportCustomRoutes, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.network.peering.importCustomRoutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceNetworkPeering).ImportCustomRoutes, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.network.peering.exportSubnetRoutesWithPublicIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceNetworkPeering).ExportSubnetRoutesWithPublicIp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.network.peering.importSubnetRoutesWithPublicIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceNetworkPeering).ImportSubnetRoutesWithPublicIp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -17338,6 +17880,10 @@ type mqlGcpProjectComputeService struct {
 	InstanceGroups        plugin.TValue[[]any]
 	InstanceGroupManagers plugin.TValue[[]any]
 	FirewallPolicies      plugin.TValue[[]any]
+	HealthChecks          plugin.TValue[[]any]
+	UrlMaps               plugin.TValue[[]any]
+	TargetHttpProxies     plugin.TValue[[]any]
+	TargetHttpsProxies    plugin.TValue[[]any]
 }
 
 // createGcpProjectComputeService creates a new instance of this resource
@@ -17752,6 +18298,70 @@ func (c *mqlGcpProjectComputeService) GetFirewallPolicies() *plugin.TValue[[]any
 		}
 
 		return c.firewallPolicies()
+	})
+}
+
+func (c *mqlGcpProjectComputeService) GetHealthChecks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.HealthChecks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService", c.__id, "healthChecks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.healthChecks()
+	})
+}
+
+func (c *mqlGcpProjectComputeService) GetUrlMaps() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UrlMaps, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService", c.__id, "urlMaps")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.urlMaps()
+	})
+}
+
+func (c *mqlGcpProjectComputeService) GetTargetHttpProxies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TargetHttpProxies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService", c.__id, "targetHttpProxies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.targetHttpProxies()
+	})
+}
+
+func (c *mqlGcpProjectComputeService) GetTargetHttpsProxies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TargetHttpsProxies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService", c.__id, "targetHttpsProxies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.targetHttpsProxies()
 	})
 }
 
@@ -19504,7 +20114,7 @@ func (c *mqlGcpProjectComputeServiceFirewall) GetLoggingEnabled() *plugin.TValue
 type mqlGcpProjectComputeServiceNetwork struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectComputeServiceNetworkInternal it will be used here
+	mqlGcpProjectComputeServiceNetworkInternal
 	Id                                    plugin.TValue[string]
 	ProjectId                             plugin.TValue[string]
 	Name                                  plugin.TValue[string]
@@ -19516,6 +20126,7 @@ type mqlGcpProjectComputeServiceNetwork struct {
 	NetworkFirewallPolicyEnforcementOrder plugin.TValue[string]
 	Created                               plugin.TValue[*time.Time]
 	Peerings                              plugin.TValue[[]any]
+	NetworkPeerings                       plugin.TValue[[]any]
 	RoutingMode                           plugin.TValue[string]
 	Mode                                  plugin.TValue[string]
 	SubnetworkUrls                        plugin.TValue[[]any]
@@ -19603,6 +20214,22 @@ func (c *mqlGcpProjectComputeServiceNetwork) GetCreated() *plugin.TValue[*time.T
 
 func (c *mqlGcpProjectComputeServiceNetwork) GetPeerings() *plugin.TValue[[]any] {
 	return &c.Peerings
+}
+
+func (c *mqlGcpProjectComputeServiceNetwork) GetNetworkPeerings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NetworkPeerings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.network", c.__id, "networkPeerings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.networkPeerings()
+	})
 }
 
 func (c *mqlGcpProjectComputeServiceNetwork) GetRoutingMode() *plugin.TValue[string] {
@@ -34018,4 +34645,602 @@ func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetRuleName() *plugin.TV
 
 func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetSecurityProfileGroup() *plugin.TValue[string] {
 	return &c.SecurityProfileGroup
+}
+
+// mqlGcpProjectComputeServiceHealthCheck for the gcp.project.computeService.healthCheck resource
+type mqlGcpProjectComputeServiceHealthCheck struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectComputeServiceHealthCheckInternal it will be used here
+	Id                 plugin.TValue[string]
+	ProjectId          plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Description        plugin.TValue[string]
+	Type               plugin.TValue[string]
+	CheckIntervalSec   plugin.TValue[int64]
+	TimeoutSec         plugin.TValue[int64]
+	HealthyThreshold   plugin.TValue[int64]
+	UnhealthyThreshold plugin.TValue[int64]
+	Created            plugin.TValue[*time.Time]
+	SelfLink           plugin.TValue[string]
+	HttpHealthCheck    plugin.TValue[any]
+	HttpsHealthCheck   plugin.TValue[any]
+	TcpHealthCheck     plugin.TValue[any]
+	SslHealthCheck     plugin.TValue[any]
+	Http2HealthCheck   plugin.TValue[any]
+	GrpcHealthCheck    plugin.TValue[any]
+	LogConfig          plugin.TValue[any]
+	RegionUrl          plugin.TValue[string]
+}
+
+// createGcpProjectComputeServiceHealthCheck creates a new instance of this resource
+func createGcpProjectComputeServiceHealthCheck(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectComputeServiceHealthCheck{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.computeService.healthCheck", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectComputeServiceHealthCheck) MqlName() string {
+	return "gcp.project.computeService.healthCheck"
+}
+
+func (c *mqlGcpProjectComputeServiceHealthCheck) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectComputeServiceHealthCheck) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectComputeServiceHealthCheck) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectComputeServiceHealthCheck) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectComputeServiceHealthCheck) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectComputeServiceHealthCheck) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlGcpProjectComputeServiceHealthCheck) GetCheckIntervalSec() *plugin.TValue[int64] {
+	return &c.CheckIntervalSec
+}
+
+func (c *mqlGcpProjectComputeServiceHealthCheck) GetTimeoutSec() *plugin.TValue[int64] {
+	return &c.TimeoutSec
+}
+
+func (c *mqlGcpProjectComputeServiceHealthCheck) GetHealthyThreshold() *plugin.TValue[int64] {
+	return &c.HealthyThreshold
+}
+
+func (c *mqlGcpProjectComputeServiceHealthCheck) GetUnhealthyThreshold() *plugin.TValue[int64] {
+	return &c.UnhealthyThreshold
+}
+
+func (c *mqlGcpProjectComputeServiceHealthCheck) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectComputeServiceHealthCheck) GetSelfLink() *plugin.TValue[string] {
+	return &c.SelfLink
+}
+
+func (c *mqlGcpProjectComputeServiceHealthCheck) GetHttpHealthCheck() *plugin.TValue[any] {
+	return &c.HttpHealthCheck
+}
+
+func (c *mqlGcpProjectComputeServiceHealthCheck) GetHttpsHealthCheck() *plugin.TValue[any] {
+	return &c.HttpsHealthCheck
+}
+
+func (c *mqlGcpProjectComputeServiceHealthCheck) GetTcpHealthCheck() *plugin.TValue[any] {
+	return &c.TcpHealthCheck
+}
+
+func (c *mqlGcpProjectComputeServiceHealthCheck) GetSslHealthCheck() *plugin.TValue[any] {
+	return &c.SslHealthCheck
+}
+
+func (c *mqlGcpProjectComputeServiceHealthCheck) GetHttp2HealthCheck() *plugin.TValue[any] {
+	return &c.Http2HealthCheck
+}
+
+func (c *mqlGcpProjectComputeServiceHealthCheck) GetGrpcHealthCheck() *plugin.TValue[any] {
+	return &c.GrpcHealthCheck
+}
+
+func (c *mqlGcpProjectComputeServiceHealthCheck) GetLogConfig() *plugin.TValue[any] {
+	return &c.LogConfig
+}
+
+func (c *mqlGcpProjectComputeServiceHealthCheck) GetRegionUrl() *plugin.TValue[string] {
+	return &c.RegionUrl
+}
+
+// mqlGcpProjectComputeServiceUrlMap for the gcp.project.computeService.urlMap resource
+type mqlGcpProjectComputeServiceUrlMap struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectComputeServiceUrlMapInternal it will be used here
+	Id             plugin.TValue[string]
+	ProjectId      plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Description    plugin.TValue[string]
+	DefaultService plugin.TValue[string]
+	HostRules      plugin.TValue[[]any]
+	PathMatchers   plugin.TValue[[]any]
+	Tests          plugin.TValue[[]any]
+	Created        plugin.TValue[*time.Time]
+	SelfLink       plugin.TValue[string]
+	RegionUrl      plugin.TValue[string]
+}
+
+// createGcpProjectComputeServiceUrlMap creates a new instance of this resource
+func createGcpProjectComputeServiceUrlMap(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectComputeServiceUrlMap{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.computeService.urlMap", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectComputeServiceUrlMap) MqlName() string {
+	return "gcp.project.computeService.urlMap"
+}
+
+func (c *mqlGcpProjectComputeServiceUrlMap) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectComputeServiceUrlMap) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectComputeServiceUrlMap) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectComputeServiceUrlMap) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectComputeServiceUrlMap) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectComputeServiceUrlMap) GetDefaultService() *plugin.TValue[string] {
+	return &c.DefaultService
+}
+
+func (c *mqlGcpProjectComputeServiceUrlMap) GetHostRules() *plugin.TValue[[]any] {
+	return &c.HostRules
+}
+
+func (c *mqlGcpProjectComputeServiceUrlMap) GetPathMatchers() *plugin.TValue[[]any] {
+	return &c.PathMatchers
+}
+
+func (c *mqlGcpProjectComputeServiceUrlMap) GetTests() *plugin.TValue[[]any] {
+	return &c.Tests
+}
+
+func (c *mqlGcpProjectComputeServiceUrlMap) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectComputeServiceUrlMap) GetSelfLink() *plugin.TValue[string] {
+	return &c.SelfLink
+}
+
+func (c *mqlGcpProjectComputeServiceUrlMap) GetRegionUrl() *plugin.TValue[string] {
+	return &c.RegionUrl
+}
+
+// mqlGcpProjectComputeServiceTargetHttpProxy for the gcp.project.computeService.targetHttpProxy resource
+type mqlGcpProjectComputeServiceTargetHttpProxy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectComputeServiceTargetHttpProxyInternal it will be used here
+	Id          plugin.TValue[string]
+	ProjectId   plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Description plugin.TValue[string]
+	UrlMapUrl   plugin.TValue[string]
+	UrlMap      plugin.TValue[*mqlGcpProjectComputeServiceUrlMap]
+	Created     plugin.TValue[*time.Time]
+	SelfLink    plugin.TValue[string]
+	ProxyBind   plugin.TValue[bool]
+	RegionUrl   plugin.TValue[string]
+}
+
+// createGcpProjectComputeServiceTargetHttpProxy creates a new instance of this resource
+func createGcpProjectComputeServiceTargetHttpProxy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectComputeServiceTargetHttpProxy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.computeService.targetHttpProxy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectComputeServiceTargetHttpProxy) MqlName() string {
+	return "gcp.project.computeService.targetHttpProxy"
+}
+
+func (c *mqlGcpProjectComputeServiceTargetHttpProxy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectComputeServiceTargetHttpProxy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectComputeServiceTargetHttpProxy) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectComputeServiceTargetHttpProxy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectComputeServiceTargetHttpProxy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectComputeServiceTargetHttpProxy) GetUrlMapUrl() *plugin.TValue[string] {
+	return &c.UrlMapUrl
+}
+
+func (c *mqlGcpProjectComputeServiceTargetHttpProxy) GetUrlMap() *plugin.TValue[*mqlGcpProjectComputeServiceUrlMap] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceUrlMap](&c.UrlMap, func() (*mqlGcpProjectComputeServiceUrlMap, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.targetHttpProxy", c.__id, "urlMap")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceUrlMap), nil
+			}
+		}
+
+		return c.urlMap()
+	})
+}
+
+func (c *mqlGcpProjectComputeServiceTargetHttpProxy) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectComputeServiceTargetHttpProxy) GetSelfLink() *plugin.TValue[string] {
+	return &c.SelfLink
+}
+
+func (c *mqlGcpProjectComputeServiceTargetHttpProxy) GetProxyBind() *plugin.TValue[bool] {
+	return &c.ProxyBind
+}
+
+func (c *mqlGcpProjectComputeServiceTargetHttpProxy) GetRegionUrl() *plugin.TValue[string] {
+	return &c.RegionUrl
+}
+
+// mqlGcpProjectComputeServiceTargetHttpsProxy for the gcp.project.computeService.targetHttpsProxy resource
+type mqlGcpProjectComputeServiceTargetHttpsProxy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectComputeServiceTargetHttpsProxyInternal it will be used here
+	Id                 plugin.TValue[string]
+	ProjectId          plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Description        plugin.TValue[string]
+	UrlMapUrl          plugin.TValue[string]
+	UrlMap             plugin.TValue[*mqlGcpProjectComputeServiceUrlMap]
+	SslCertificateUrls plugin.TValue[[]any]
+	SslPolicyUrl       plugin.TValue[string]
+	SslPolicy          plugin.TValue[*mqlGcpProjectComputeServiceSslPolicy]
+	QuicOverride       plugin.TValue[string]
+	Created            plugin.TValue[*time.Time]
+	SelfLink           plugin.TValue[string]
+	ProxyBind          plugin.TValue[bool]
+	RegionUrl          plugin.TValue[string]
+}
+
+// createGcpProjectComputeServiceTargetHttpsProxy creates a new instance of this resource
+func createGcpProjectComputeServiceTargetHttpsProxy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectComputeServiceTargetHttpsProxy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.computeService.targetHttpsProxy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectComputeServiceTargetHttpsProxy) MqlName() string {
+	return "gcp.project.computeService.targetHttpsProxy"
+}
+
+func (c *mqlGcpProjectComputeServiceTargetHttpsProxy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectComputeServiceTargetHttpsProxy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectComputeServiceTargetHttpsProxy) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectComputeServiceTargetHttpsProxy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectComputeServiceTargetHttpsProxy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectComputeServiceTargetHttpsProxy) GetUrlMapUrl() *plugin.TValue[string] {
+	return &c.UrlMapUrl
+}
+
+func (c *mqlGcpProjectComputeServiceTargetHttpsProxy) GetUrlMap() *plugin.TValue[*mqlGcpProjectComputeServiceUrlMap] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceUrlMap](&c.UrlMap, func() (*mqlGcpProjectComputeServiceUrlMap, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.targetHttpsProxy", c.__id, "urlMap")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceUrlMap), nil
+			}
+		}
+
+		return c.urlMap()
+	})
+}
+
+func (c *mqlGcpProjectComputeServiceTargetHttpsProxy) GetSslCertificateUrls() *plugin.TValue[[]any] {
+	return &c.SslCertificateUrls
+}
+
+func (c *mqlGcpProjectComputeServiceTargetHttpsProxy) GetSslPolicyUrl() *plugin.TValue[string] {
+	return &c.SslPolicyUrl
+}
+
+func (c *mqlGcpProjectComputeServiceTargetHttpsProxy) GetSslPolicy() *plugin.TValue[*mqlGcpProjectComputeServiceSslPolicy] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceSslPolicy](&c.SslPolicy, func() (*mqlGcpProjectComputeServiceSslPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.targetHttpsProxy", c.__id, "sslPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceSslPolicy), nil
+			}
+		}
+
+		return c.sslPolicy()
+	})
+}
+
+func (c *mqlGcpProjectComputeServiceTargetHttpsProxy) GetQuicOverride() *plugin.TValue[string] {
+	return &c.QuicOverride
+}
+
+func (c *mqlGcpProjectComputeServiceTargetHttpsProxy) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectComputeServiceTargetHttpsProxy) GetSelfLink() *plugin.TValue[string] {
+	return &c.SelfLink
+}
+
+func (c *mqlGcpProjectComputeServiceTargetHttpsProxy) GetProxyBind() *plugin.TValue[bool] {
+	return &c.ProxyBind
+}
+
+func (c *mqlGcpProjectComputeServiceTargetHttpsProxy) GetRegionUrl() *plugin.TValue[string] {
+	return &c.RegionUrl
+}
+
+// mqlGcpProjectComputeServiceNetworkPeering for the gcp.project.computeService.network.peering resource
+type mqlGcpProjectComputeServiceNetworkPeering struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectComputeServiceNetworkPeeringInternal it will be used here
+	Id                             plugin.TValue[string]
+	Name                           plugin.TValue[string]
+	NetworkUrl                     plugin.TValue[string]
+	Network                        plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
+	State                          plugin.TValue[string]
+	StateDetails                   plugin.TValue[string]
+	AutoCreateRoutes               plugin.TValue[bool]
+	ExchangeSubnetRoutes           plugin.TValue[bool]
+	ExportCustomRoutes             plugin.TValue[bool]
+	ImportCustomRoutes             plugin.TValue[bool]
+	ExportSubnetRoutesWithPublicIp plugin.TValue[bool]
+	ImportSubnetRoutesWithPublicIp plugin.TValue[bool]
+}
+
+// createGcpProjectComputeServiceNetworkPeering creates a new instance of this resource
+func createGcpProjectComputeServiceNetworkPeering(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectComputeServiceNetworkPeering{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.computeService.network.peering", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectComputeServiceNetworkPeering) MqlName() string {
+	return "gcp.project.computeService.network.peering"
+}
+
+func (c *mqlGcpProjectComputeServiceNetworkPeering) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectComputeServiceNetworkPeering) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectComputeServiceNetworkPeering) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectComputeServiceNetworkPeering) GetNetworkUrl() *plugin.TValue[string] {
+	return &c.NetworkUrl
+}
+
+func (c *mqlGcpProjectComputeServiceNetworkPeering) GetNetwork() *plugin.TValue[*mqlGcpProjectComputeServiceNetwork] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceNetwork](&c.Network, func() (*mqlGcpProjectComputeServiceNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.network.peering", c.__id, "network")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceNetwork), nil
+			}
+		}
+
+		return c.network()
+	})
+}
+
+func (c *mqlGcpProjectComputeServiceNetworkPeering) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectComputeServiceNetworkPeering) GetStateDetails() *plugin.TValue[string] {
+	return &c.StateDetails
+}
+
+func (c *mqlGcpProjectComputeServiceNetworkPeering) GetAutoCreateRoutes() *plugin.TValue[bool] {
+	return &c.AutoCreateRoutes
+}
+
+func (c *mqlGcpProjectComputeServiceNetworkPeering) GetExchangeSubnetRoutes() *plugin.TValue[bool] {
+	return &c.ExchangeSubnetRoutes
+}
+
+func (c *mqlGcpProjectComputeServiceNetworkPeering) GetExportCustomRoutes() *plugin.TValue[bool] {
+	return &c.ExportCustomRoutes
+}
+
+func (c *mqlGcpProjectComputeServiceNetworkPeering) GetImportCustomRoutes() *plugin.TValue[bool] {
+	return &c.ImportCustomRoutes
+}
+
+func (c *mqlGcpProjectComputeServiceNetworkPeering) GetExportSubnetRoutesWithPublicIp() *plugin.TValue[bool] {
+	return &c.ExportSubnetRoutesWithPublicIp
+}
+
+func (c *mqlGcpProjectComputeServiceNetworkPeering) GetImportSubnetRoutesWithPublicIp() *plugin.TValue[bool] {
+	return &c.ImportSubnetRoutesWithPublicIp
 }

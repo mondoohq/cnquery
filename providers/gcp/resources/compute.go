@@ -1292,12 +1292,55 @@ func (g *mqlGcpProjectComputeService) images() ([]any, error) {
 	return res, nil
 }
 
+type mqlGcpProjectComputeServiceNetworkInternal struct {
+	cachePeerings []*compute.NetworkPeering
+}
+
 func (g *mqlGcpProjectComputeServiceNetwork) id() (string, error) {
 	if g.Id.Error != nil {
 		return "", g.Id.Error
 	}
 	id := g.Id.Data
 	return "gcloud.compute.network/" + id, nil
+}
+
+func (g *mqlGcpProjectComputeServiceNetwork) networkPeerings() ([]any, error) {
+	if g.cachePeerings == nil {
+		return nil, nil
+	}
+	networkId := g.Id.Data
+	res := make([]any, 0, len(g.cachePeerings))
+	for i, p := range g.cachePeerings {
+		mqlPeering, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.network.peering", map[string]*llx.RawData{
+			"id":                             llx.StringData(fmt.Sprintf("gcloud.compute.network/%s/peering/%d", networkId, i)),
+			"name":                           llx.StringData(p.Name),
+			"networkUrl":                     llx.StringData(p.Network),
+			"state":                          llx.StringData(p.State),
+			"stateDetails":                   llx.StringData(p.StateDetails),
+			"autoCreateRoutes":               llx.BoolData(p.AutoCreateRoutes),
+			"exchangeSubnetRoutes":           llx.BoolData(p.ExchangeSubnetRoutes),
+			"exportCustomRoutes":             llx.BoolData(p.ExportCustomRoutes),
+			"importCustomRoutes":             llx.BoolData(p.ImportCustomRoutes),
+			"exportSubnetRoutesWithPublicIp": llx.BoolData(p.ExportSubnetRoutesWithPublicIp),
+			"importSubnetRoutesWithPublicIp": llx.BoolData(p.ImportSubnetRoutesWithPublicIp),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlPeering)
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectComputeServiceNetworkPeering) id() (string, error) {
+	return g.Id.Data, g.Id.Error
+}
+
+func (g *mqlGcpProjectComputeServiceNetworkPeering) network() (*mqlGcpProjectComputeServiceNetwork, error) {
+	if g.NetworkUrl.Error != nil {
+		return nil, g.NetworkUrl.Error
+	}
+	return getNetworkByUrl(g.NetworkUrl.Data, g.MqlRuntime)
 }
 
 func (g *mqlGcpProjectComputeServiceNetwork) subnetworks() ([]any, error) {
@@ -1405,7 +1448,6 @@ func (g *mqlGcpProjectComputeService) networks() ([]any, error) {
 	req := computeSvc.Networks.List(projectId)
 	if err := req.Pages(ctx, func(page *compute.NetworkList) error {
 		for _, network := range page.Items {
-
 			peerings, err := convert.JsonToDictSlice(network.Peerings)
 			if err != nil {
 				return err
@@ -1437,6 +1479,8 @@ func (g *mqlGcpProjectComputeService) networks() ([]any, error) {
 			if err != nil {
 				return err
 			}
+			mqlNet := mqlNetwork.(*mqlGcpProjectComputeServiceNetwork)
+			mqlNet.cachePeerings = network.Peerings
 			res = append(res, mqlNetwork)
 		}
 		return nil
