@@ -6,7 +6,6 @@ package resources
 import (
 	"context"
 	"fmt"
-	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
 	kafka_types "github.com/aws/aws-sdk-go-v2/service/kafka/types"
@@ -156,39 +155,50 @@ type mqlAwsMskClusterInternal struct {
 	region         string
 	accountID      string
 	provisioned    *kafka_types.Provisioned
-	fetched        bool
-	lock           sync.Mutex
 }
 
 func (a *mqlAwsMskCluster) kafkaVersion() (string, error) {
-	if a.provisioned != nil && a.provisioned.CurrentBrokerSoftwareInfo != nil {
-		if a.provisioned.CurrentBrokerSoftwareInfo.KafkaVersion != nil {
-			return *a.provisioned.CurrentBrokerSoftwareInfo.KafkaVersion, nil
-		}
+	if a.provisioned == nil {
+		a.KafkaVersion.State = plugin.StateIsNull | plugin.StateIsSet
+		return "", nil
+	}
+	if a.provisioned.CurrentBrokerSoftwareInfo != nil && a.provisioned.CurrentBrokerSoftwareInfo.KafkaVersion != nil {
+		return *a.provisioned.CurrentBrokerSoftwareInfo.KafkaVersion, nil
 	}
 	a.KafkaVersion.State = plugin.StateIsNull | plugin.StateIsSet
 	return "", nil
 }
 
 func (a *mqlAwsMskCluster) numberOfBrokerNodes() (int64, error) {
-	if a.provisioned != nil && a.provisioned.NumberOfBrokerNodes != nil {
+	if a.provisioned == nil {
+		a.NumberOfBrokerNodes.State = plugin.StateIsNull | plugin.StateIsSet
+		return 0, nil
+	}
+	if a.provisioned.NumberOfBrokerNodes != nil {
 		return int64(*a.provisioned.NumberOfBrokerNodes), nil
 	}
+	a.NumberOfBrokerNodes.State = plugin.StateIsNull | plugin.StateIsSet
 	return 0, nil
 }
 
 func (a *mqlAwsMskCluster) brokerInstanceType() (string, error) {
-	if a.provisioned != nil && a.provisioned.BrokerNodeGroupInfo != nil {
-		if a.provisioned.BrokerNodeGroupInfo.InstanceType != nil {
-			return *a.provisioned.BrokerNodeGroupInfo.InstanceType, nil
-		}
+	if a.provisioned == nil {
+		a.BrokerInstanceType.State = plugin.StateIsNull | plugin.StateIsSet
+		return "", nil
+	}
+	if a.provisioned.BrokerNodeGroupInfo != nil && a.provisioned.BrokerNodeGroupInfo.InstanceType != nil {
+		return *a.provisioned.BrokerNodeGroupInfo.InstanceType, nil
 	}
 	a.BrokerInstanceType.State = plugin.StateIsNull | plugin.StateIsSet
 	return "", nil
 }
 
 func (a *mqlAwsMskCluster) encryptionInTransitClientBroker() (string, error) {
-	if a.provisioned != nil && a.provisioned.EncryptionInfo != nil && a.provisioned.EncryptionInfo.EncryptionInTransit != nil {
+	if a.provisioned == nil {
+		a.EncryptionInTransitClientBroker.State = plugin.StateIsNull | plugin.StateIsSet
+		return "", nil
+	}
+	if a.provisioned.EncryptionInfo != nil && a.provisioned.EncryptionInfo.EncryptionInTransit != nil {
 		return string(a.provisioned.EncryptionInfo.EncryptionInTransit.ClientBroker), nil
 	}
 	a.EncryptionInTransitClientBroker.State = plugin.StateIsNull | plugin.StateIsSet
@@ -196,12 +206,16 @@ func (a *mqlAwsMskCluster) encryptionInTransitClientBroker() (string, error) {
 }
 
 func (a *mqlAwsMskCluster) encryptionInTransitInCluster() (bool, error) {
-	if a.provisioned != nil && a.provisioned.EncryptionInfo != nil && a.provisioned.EncryptionInfo.EncryptionInTransit != nil {
+	if a.provisioned == nil {
+		a.EncryptionInTransitInCluster.State = plugin.StateIsNull | plugin.StateIsSet
+		return false, nil
+	}
+	if a.provisioned.EncryptionInfo != nil && a.provisioned.EncryptionInfo.EncryptionInTransit != nil {
 		if a.provisioned.EncryptionInfo.EncryptionInTransit.InCluster != nil {
 			return *a.provisioned.EncryptionInfo.EncryptionInTransit.InCluster, nil
 		}
 	}
-	// Default to true as AWS enables this by default.
+	// Default to true as AWS enables this by default for provisioned clusters.
 	return true, nil
 }
 
@@ -221,7 +235,11 @@ func (a *mqlAwsMskCluster) kmsKey() (*mqlAwsKmsKey, error) {
 }
 
 func (a *mqlAwsMskCluster) iamAuthEnabled() (bool, error) {
-	if a.provisioned != nil && a.provisioned.ClientAuthentication != nil {
+	if a.provisioned == nil {
+		a.IamAuthEnabled.State = plugin.StateIsNull | plugin.StateIsSet
+		return false, nil
+	}
+	if a.provisioned.ClientAuthentication != nil {
 		if a.provisioned.ClientAuthentication.Sasl != nil && a.provisioned.ClientAuthentication.Sasl.Iam != nil {
 			if a.provisioned.ClientAuthentication.Sasl.Iam.Enabled != nil {
 				return *a.provisioned.ClientAuthentication.Sasl.Iam.Enabled, nil
@@ -232,7 +250,11 @@ func (a *mqlAwsMskCluster) iamAuthEnabled() (bool, error) {
 }
 
 func (a *mqlAwsMskCluster) scramAuthEnabled() (bool, error) {
-	if a.provisioned != nil && a.provisioned.ClientAuthentication != nil {
+	if a.provisioned == nil {
+		a.ScramAuthEnabled.State = plugin.StateIsNull | plugin.StateIsSet
+		return false, nil
+	}
+	if a.provisioned.ClientAuthentication != nil {
 		if a.provisioned.ClientAuthentication.Sasl != nil && a.provisioned.ClientAuthentication.Sasl.Scram != nil {
 			if a.provisioned.ClientAuthentication.Sasl.Scram.Enabled != nil {
 				return *a.provisioned.ClientAuthentication.Sasl.Scram.Enabled, nil
@@ -243,7 +265,11 @@ func (a *mqlAwsMskCluster) scramAuthEnabled() (bool, error) {
 }
 
 func (a *mqlAwsMskCluster) tlsAuthEnabled() (bool, error) {
-	if a.provisioned != nil && a.provisioned.ClientAuthentication != nil {
+	if a.provisioned == nil {
+		a.TlsAuthEnabled.State = plugin.StateIsNull | plugin.StateIsSet
+		return false, nil
+	}
+	if a.provisioned.ClientAuthentication != nil {
 		if a.provisioned.ClientAuthentication.Tls != nil {
 			if a.provisioned.ClientAuthentication.Tls.Enabled != nil {
 				return *a.provisioned.ClientAuthentication.Tls.Enabled, nil
@@ -254,7 +280,11 @@ func (a *mqlAwsMskCluster) tlsAuthEnabled() (bool, error) {
 }
 
 func (a *mqlAwsMskCluster) publicAccess() (bool, error) {
-	if a.provisioned != nil && a.provisioned.BrokerNodeGroupInfo != nil {
+	if a.provisioned == nil {
+		a.PublicAccess.State = plugin.StateIsNull | plugin.StateIsSet
+		return false, nil
+	}
+	if a.provisioned.BrokerNodeGroupInfo != nil {
 		ci := a.provisioned.BrokerNodeGroupInfo.ConnectivityInfo
 		if ci != nil && ci.PublicAccess != nil && ci.PublicAccess.Type != nil {
 			return *ci.PublicAccess.Type != "DISABLED", nil
@@ -264,7 +294,11 @@ func (a *mqlAwsMskCluster) publicAccess() (bool, error) {
 }
 
 func (a *mqlAwsMskCluster) cloudwatchLogsEnabled() (bool, error) {
-	if a.provisioned != nil && a.provisioned.LoggingInfo != nil {
+	if a.provisioned == nil {
+		a.CloudwatchLogsEnabled.State = plugin.StateIsNull | plugin.StateIsSet
+		return false, nil
+	}
+	if a.provisioned.LoggingInfo != nil {
 		bl := a.provisioned.LoggingInfo.BrokerLogs
 		if bl.CloudWatchLogs != nil && bl.CloudWatchLogs.Enabled != nil {
 			return *bl.CloudWatchLogs.Enabled, nil
@@ -274,7 +308,11 @@ func (a *mqlAwsMskCluster) cloudwatchLogsEnabled() (bool, error) {
 }
 
 func (a *mqlAwsMskCluster) cloudwatchLogsGroup() (string, error) {
-	if a.provisioned != nil && a.provisioned.LoggingInfo != nil {
+	if a.provisioned == nil {
+		a.CloudwatchLogsGroup.State = plugin.StateIsNull | plugin.StateIsSet
+		return "", nil
+	}
+	if a.provisioned.LoggingInfo != nil {
 		bl := a.provisioned.LoggingInfo.BrokerLogs
 		if bl.CloudWatchLogs != nil && bl.CloudWatchLogs.LogGroup != nil {
 			return *bl.CloudWatchLogs.LogGroup, nil
@@ -285,7 +323,11 @@ func (a *mqlAwsMskCluster) cloudwatchLogsGroup() (string, error) {
 }
 
 func (a *mqlAwsMskCluster) s3LogsEnabled() (bool, error) {
-	if a.provisioned != nil && a.provisioned.LoggingInfo != nil {
+	if a.provisioned == nil {
+		a.S3LogsEnabled.State = plugin.StateIsNull | plugin.StateIsSet
+		return false, nil
+	}
+	if a.provisioned.LoggingInfo != nil {
 		bl := a.provisioned.LoggingInfo.BrokerLogs
 		if bl.S3 != nil && bl.S3.Enabled != nil {
 			return *bl.S3.Enabled, nil
@@ -295,7 +337,11 @@ func (a *mqlAwsMskCluster) s3LogsEnabled() (bool, error) {
 }
 
 func (a *mqlAwsMskCluster) s3LogsBucket() (string, error) {
-	if a.provisioned != nil && a.provisioned.LoggingInfo != nil {
+	if a.provisioned == nil {
+		a.S3LogsBucket.State = plugin.StateIsNull | plugin.StateIsSet
+		return "", nil
+	}
+	if a.provisioned.LoggingInfo != nil {
 		bl := a.provisioned.LoggingInfo.BrokerLogs
 		if bl.S3 != nil && bl.S3.Bucket != nil {
 			return *bl.S3.Bucket, nil
@@ -306,7 +352,11 @@ func (a *mqlAwsMskCluster) s3LogsBucket() (string, error) {
 }
 
 func (a *mqlAwsMskCluster) firehoseLogsEnabled() (bool, error) {
-	if a.provisioned != nil && a.provisioned.LoggingInfo != nil {
+	if a.provisioned == nil {
+		a.FirehoseLogsEnabled.State = plugin.StateIsNull | plugin.StateIsSet
+		return false, nil
+	}
+	if a.provisioned.LoggingInfo != nil {
 		bl := a.provisioned.LoggingInfo.BrokerLogs
 		if bl.Firehose != nil && bl.Firehose.Enabled != nil {
 			return *bl.Firehose.Enabled, nil
@@ -316,15 +366,19 @@ func (a *mqlAwsMskCluster) firehoseLogsEnabled() (bool, error) {
 }
 
 func (a *mqlAwsMskCluster) enhancedMonitoring() (string, error) {
-	if a.provisioned != nil {
-		return string(a.provisioned.EnhancedMonitoring), nil
+	if a.provisioned == nil {
+		a.EnhancedMonitoring.State = plugin.StateIsNull | plugin.StateIsSet
+		return "", nil
 	}
-	a.EnhancedMonitoring.State = plugin.StateIsNull | plugin.StateIsSet
-	return "", nil
+	return string(a.provisioned.EnhancedMonitoring), nil
 }
 
 func (a *mqlAwsMskCluster) jmxExporterEnabled() (bool, error) {
-	if a.provisioned != nil && a.provisioned.OpenMonitoring != nil && a.provisioned.OpenMonitoring.Prometheus != nil {
+	if a.provisioned == nil {
+		a.JmxExporterEnabled.State = plugin.StateIsNull | plugin.StateIsSet
+		return false, nil
+	}
+	if a.provisioned.OpenMonitoring != nil && a.provisioned.OpenMonitoring.Prometheus != nil {
 		if a.provisioned.OpenMonitoring.Prometheus.JmxExporter != nil && a.provisioned.OpenMonitoring.Prometheus.JmxExporter.EnabledInBroker != nil {
 			return *a.provisioned.OpenMonitoring.Prometheus.JmxExporter.EnabledInBroker, nil
 		}
@@ -333,7 +387,11 @@ func (a *mqlAwsMskCluster) jmxExporterEnabled() (bool, error) {
 }
 
 func (a *mqlAwsMskCluster) nodeExporterEnabled() (bool, error) {
-	if a.provisioned != nil && a.provisioned.OpenMonitoring != nil && a.provisioned.OpenMonitoring.Prometheus != nil {
+	if a.provisioned == nil {
+		a.NodeExporterEnabled.State = plugin.StateIsNull | plugin.StateIsSet
+		return false, nil
+	}
+	if a.provisioned.OpenMonitoring != nil && a.provisioned.OpenMonitoring.Prometheus != nil {
 		if a.provisioned.OpenMonitoring.Prometheus.NodeExporter != nil && a.provisioned.OpenMonitoring.Prometheus.NodeExporter.EnabledInBroker != nil {
 			return *a.provisioned.OpenMonitoring.Prometheus.NodeExporter.EnabledInBroker, nil
 		}
@@ -342,10 +400,18 @@ func (a *mqlAwsMskCluster) nodeExporterEnabled() (bool, error) {
 }
 
 func (a *mqlAwsMskCluster) securityGroups() ([]any, error) {
+	if a.provisioned == nil {
+		a.SecurityGroups.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
 	return a.newSecurityGroupResources(a.MqlRuntime)
 }
 
 func (a *mqlAwsMskCluster) subnets() ([]any, error) {
+	if a.provisioned == nil {
+		a.Subnets.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
 	res := []any{}
 	for _, subnetId := range a.cacheSubnetIds {
 		mqlSubnet, err := NewResource(a.MqlRuntime, "aws.vpc.subnet",

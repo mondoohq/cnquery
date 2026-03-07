@@ -7809,5 +7809,5 @@ private aws.mq.broker @defaults("name engineType deploymentMode state region") {
   // Date the broker was created
   createdAt time
   // Tags for the broker
-  tags map[string]string
+  tags() map[string]string
 }

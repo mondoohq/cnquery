@@ -15,7 +15,6 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
-	"go.mondoo.com/mql/v13/types"
 )
 
 func (a *mqlAwsMq) id() (string, error) {
@@ -90,9 +89,6 @@ func (a *mqlAwsMq) getBrokers(conn *connection.AwsConnection) []*jobpool.Job {
 }
 
 func newMqlAwsMqBroker(runtime *plugin.Runtime, region string, accountID string, broker mq_types.BrokerSummary) (*mqlAwsMqBroker, error) {
-	tags := make(map[string]any)
-	// Tags are not available from ListBrokers; they'll come from DescribeBroker.
-
 	var createdAt *llx.RawData
 	if broker.Created != nil {
 		createdAt = llx.TimeData(*broker.Created)
@@ -112,7 +108,6 @@ func newMqlAwsMqBroker(runtime *plugin.Runtime, region string, accountID string,
 			"hostInstanceType": llx.StringDataPtr(broker.HostInstanceType),
 			"region":           llx.StringData(region),
 			"createdAt":        createdAt,
-			"tags":             llx.MapData(tags, types.String),
 		})
 	if err != nil {
 		return nil, err
@@ -131,6 +126,7 @@ type mqlAwsMqBrokerInternal struct {
 	securityGroupIdHandler
 	cacheKmsKeyId  *string
 	cacheSubnetIds []string
+	cacheTags      map[string]any
 	region         string
 	accountID      string
 	cacheBrokerId  string
@@ -219,12 +215,12 @@ func (a *mqlAwsMqBroker) fetchDetails() error {
 
 	a.StorageType = plugin.TValue[string]{Data: string(resp.StorageType), State: plugin.StateIsSet}
 
-	// Update tags from the describe response.
-	tags := make(map[string]any)
+	// Cache tags from the describe response.
+	cacheTags := make(map[string]any)
 	for k, v := range resp.Tags {
-		tags[k] = v
+		cacheTags[k] = v
 	}
-	a.Tags = plugin.TValue[map[string]any]{Data: tags, State: plugin.StateIsSet}
+	a.cacheTags = cacheTags
 
 	a.fetched = true
 	return nil
@@ -278,6 +274,13 @@ func (a *mqlAwsMqBroker) autoMinorVersionUpgrade() (bool, error) {
 
 func (a *mqlAwsMqBroker) storageType() (string, error) {
 	return "", a.fetchDetails()
+}
+
+func (a *mqlAwsMqBroker) tags() (map[string]any, error) {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	return a.cacheTags, nil
 }
 
 func (a *mqlAwsMqBroker) securityGroups() ([]any, error) {
