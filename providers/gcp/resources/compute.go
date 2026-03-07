@@ -2372,7 +2372,18 @@ func (g *mqlGcpProjectComputeServiceForwardingRule) network() (*mqlGcpProjectCom
 		return nil, g.NetworkUrl.Error
 	}
 	networkUrl := g.NetworkUrl.Data
-	return getNetworkByUrl(networkUrl, g.MqlRuntime)
+	if networkUrl == "" {
+		g.Network.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	net, err := getNetworkByUrl(networkUrl, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if net == nil {
+		g.Network.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return net, nil
 }
 
 func (g *mqlGcpProjectComputeServiceForwardingRule) subnetwork() (*mqlGcpProjectComputeServiceSubnetwork, error) {
@@ -2380,7 +2391,18 @@ func (g *mqlGcpProjectComputeServiceForwardingRule) subnetwork() (*mqlGcpProject
 		return nil, g.SubnetworkUrl.Error
 	}
 	subnetUrl := g.SubnetworkUrl.Data
-	return getSubnetworkByUrl(subnetUrl, g.MqlRuntime)
+	if subnetUrl == "" {
+		g.Subnetwork.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	subnet, err := getSubnetworkByUrl(subnetUrl, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if subnet == nil {
+		g.Subnetwork.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return subnet, nil
 }
 
 // Cloud NAT

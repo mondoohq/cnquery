@@ -182,15 +182,15 @@ func (g *mqlGcpProjectComputeService) targetHttpProxies() ([]any, error) {
 		for _, scoped := range page.Items {
 			for _, proxy := range scoped.TargetHttpProxies {
 				mqlProxy, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.targetHttpProxy", map[string]*llx.RawData{
-					"id":        llx.StringData(strconv.FormatUint(proxy.Id, 10)),
-					"projectId": llx.StringData(projectId),
-					"name":      llx.StringData(proxy.Name),
+					"id":          llx.StringData(strconv.FormatUint(proxy.Id, 10)),
+					"projectId":   llx.StringData(projectId),
+					"name":        llx.StringData(proxy.Name),
 					"description": llx.StringData(proxy.Description),
-					"urlMapUrl": llx.StringData(proxy.UrlMap),
-					"created":   llx.TimeDataPtr(parseTime(proxy.CreationTimestamp)),
-					"selfLink":  llx.StringData(proxy.SelfLink),
-					"proxyBind": llx.BoolData(proxy.ProxyBind),
-					"regionUrl": llx.StringData(proxy.Region),
+					"urlMapUrl":   llx.StringData(proxy.UrlMap),
+					"created":     llx.TimeDataPtr(parseTime(proxy.CreationTimestamp)),
+					"selfLink":    llx.StringData(proxy.SelfLink),
+					"proxyBind":   llx.BoolData(proxy.ProxyBind),
+					"regionUrl":   llx.StringData(proxy.Region),
 				})
 				if err != nil {
 					return err
