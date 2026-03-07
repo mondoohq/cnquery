@@ -2447,9 +2447,21 @@ ipAddress @defaults("ip") {
 network {
   // Network interfaces
   interfaces() []networkInterface
-  
+
   // Routes
   routes() networkRoutes
+
+  // All IPv4 addresses detected on host interfaces
+  ipv4() []ipAddress
+
+  // All IPv6 addresses detected on host interfaces
+  ipv6() []ipAddress
+
+  // Primary IPv4 address determined by the default route
+  primaryIPv4() ipAddress
+
+  // Primary IPv6 address determined by the default route
+  primaryIPv6() ipAddress
 }
 
 // Detailed information of a network interface

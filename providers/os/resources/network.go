@@ -72,6 +72,130 @@ func (c *mqlNetwork) interfaces() ([]any, error) {
 	return resources, nil
 }
 
+// ipsByVersion collects all ipAddress resources from all interfaces matching the given IP version (4 or 6).
+func (c *mqlNetwork) ipsByVersion(version uint8) ([]any, error) {
+	interfaces := c.GetInterfaces()
+	if interfaces.Error != nil {
+		return nil, interfaces.Error
+	}
+
+	var result []any
+	for _, ifaceRes := range interfaces.Data {
+		iface, ok := ifaceRes.(*mqlNetworkInterface)
+		if !ok {
+			continue
+		}
+		ips := iface.GetIps()
+		if ips.Error != nil {
+			continue
+		}
+		for _, ipRes := range ips.Data {
+			ipAddr, ok := ipRes.(*mqlIpAddress)
+			if !ok {
+				continue
+			}
+			ip := ipAddr.GetIp()
+			if ip.Error != nil {
+				continue
+			}
+			if ip.Data.Version == version {
+				result = append(result, ipRes)
+			}
+		}
+	}
+	return result, nil
+}
+
+func (c *mqlNetwork) ipv4() ([]any, error) {
+	return c.ipsByVersion(4)
+}
+
+func (c *mqlNetwork) ipv6() ([]any, error) {
+	return c.ipsByVersion(6)
+}
+
+// primaryIPByDefaultRoute finds the first IP of the given version on the interface
+// associated with the default route for that IP version.
+func (c *mqlNetwork) primaryIPByDefaultRoute(version uint8, defaultDests []string) (*mqlIpAddress, error) {
+	routes := c.GetRoutes()
+	if routes.Error != nil {
+		return nil, routes.Error
+	}
+
+	defaults := routes.Data.GetDefaults()
+	if defaults.Error != nil {
+		return nil, defaults.Error
+	}
+
+	destSet := make(map[string]bool, len(defaultDests))
+	for _, d := range defaultDests {
+		destSet[d] = true
+	}
+
+	for _, routeRes := range defaults.Data {
+		route, ok := routeRes.(*mqlNetworkRoute)
+		if !ok {
+			continue
+		}
+
+		dest := route.GetDestination()
+		if dest.Error != nil {
+			continue
+		}
+		if !destSet[dest.Data] {
+			continue
+		}
+
+		iface := route.GetIface()
+		if iface.Error != nil || iface.Data == nil {
+			continue
+		}
+
+		ips := iface.Data.GetIps()
+		if ips.Error != nil {
+			continue
+		}
+
+		for _, ipRes := range ips.Data {
+			ipAddr, ok := ipRes.(*mqlIpAddress)
+			if !ok {
+				continue
+			}
+			ip := ipAddr.GetIp()
+			if ip.Error != nil {
+				continue
+			}
+			if ip.Data.Version == version {
+				return ipAddr, nil
+			}
+		}
+	}
+
+	return nil, nil
+}
+
+func (c *mqlNetwork) primaryIPv4() (*mqlIpAddress, error) {
+	res, err := c.primaryIPByDefaultRoute(4, []string{"0.0.0.0/0", "0.0.0.0", "default"})
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		c.PrimaryIPv4.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return res, nil
+}
+
+func (c *mqlNetwork) primaryIPv6() (*mqlIpAddress, error) {
+	res, err := c.primaryIPByDefaultRoute(6, []string{"::/0", "::"})
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		c.PrimaryIPv6.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return res, nil
+}
+
 func (c *mqlNetwork) routes() (*mqlNetworkRoutes, error) {
 	log.Debug().Msg("os.network> routes")
 	conn := c.MqlRuntime.Connection.(shared.Connection)
