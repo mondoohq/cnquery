@@ -74,6 +74,9 @@ func initGcpOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	args["id"] = llx.StringData(org.Name)
 	args["name"] = llx.StringData(org.DisplayName)
 	args["state"] = llx.StringData(org.State)
+	args["created"] = llx.TimeDataPtr(parseTime(org.CreateTime))
+	args["updated"] = llx.TimeDataPtr(parseTime(org.UpdateTime))
+	args["deleteTime"] = llx.TimeDataPtr(parseTime(org.DeleteTime))
 
 	return args, nil, nil
 }

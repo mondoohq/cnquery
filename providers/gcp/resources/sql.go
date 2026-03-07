@@ -14,7 +14,10 @@ import (
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
 	"go.mondoo.com/mql/v13/types"
 
+	"strconv"
+
 	"google.golang.org/api/cloudresourcemanager/v1"
+	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/iam/v1"
 	"google.golang.org/api/option"
 	"google.golang.org/api/sqladmin/v1"
@@ -440,6 +443,16 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 			"serviceAccountEmailAddress":   llx.StringData(instance.ServiceAccountEmailAddress),
 			"settings":                     llx.ResourceData(mqlSettings, "gcp.project.sqlService.instance.settings"),
 			"state":                        llx.StringData(instance.State),
+			"satisfiesPzi":                 llx.BoolData(instance.SatisfiesPzi),
+			"satisfiesPzs":                 llx.BoolData(instance.SatisfiesPzs),
+			"dnsName":                      llx.StringData(instance.DnsName),
+			"secondaryGceZone":             llx.StringData(instance.SecondaryGceZone),
+			"sqlNetworkArchitecture":       llx.StringData(instance.SqlNetworkArchitecture),
+			"suspensionReason":             llx.ArrayData(convert.SliceAnyToInterface(instance.SuspensionReason), types.String),
+			"switchTransactionLogsToCloudStorageEnabled": llx.BoolData(instance.SwitchTransactionLogsToCloudStorageEnabled),
+			"primaryDnsName":           llx.StringData(instance.PrimaryDnsName),
+			"writeEndpoint":            llx.StringData(instance.WriteEndpoint),
+			"pscServiceAttachmentLink": llx.StringData(instance.PscServiceAttachmentLink),
 		})
 		if err != nil {
 			return nil, err
@@ -523,6 +536,66 @@ func (g *mqlGcpProjectSqlServiceInstance) id() (string, error) {
 	}
 	name := g.Name.Data
 	return fmt.Sprintf("%s/%s", projectId, name), nil
+}
+
+func (g *mqlGcpProjectSqlServiceInstance) zone() (*mqlGcpProjectComputeServiceZone, error) {
+	if g.GceZone.Error != nil {
+		return nil, g.GceZone.Error
+	}
+	zoneName := g.GceZone.Data
+	if zoneName == "" {
+		g.Zone.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return g.fetchZone(zoneName)
+}
+
+func (g *mqlGcpProjectSqlServiceInstance) secondaryZone() (*mqlGcpProjectComputeServiceZone, error) {
+	if g.SecondaryGceZone.Error != nil {
+		return nil, g.SecondaryGceZone.Error
+	}
+	zoneName := g.SecondaryGceZone.Data
+	if zoneName == "" {
+		g.SecondaryZone.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return g.fetchZone(zoneName)
+}
+
+func (g *mqlGcpProjectSqlServiceInstance) fetchZone(zoneName string) (*mqlGcpProjectComputeServiceZone, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	client, err := conn.Client(compute.ComputeReadonlyScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	z, err := computeSvc.Zones.Get(projectId, zoneName).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.zone", map[string]*llx.RawData{
+		"id":          llx.StringData(strconv.FormatInt(int64(z.Id), 10)),
+		"name":        llx.StringData(z.Name),
+		"description": llx.StringData(z.Description),
+		"status":      llx.StringData(z.Status),
+		"created":     llx.TimeDataPtr(parseTime(z.CreationTimestamp)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectComputeServiceZone), nil
 }
 
 func (g *mqlGcpProjectSqlServiceInstanceDatabase) id() (string, error) {

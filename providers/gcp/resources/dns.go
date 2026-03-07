@@ -183,16 +183,18 @@ func (g *mqlGcpProjectDnsService) managedZones() ([]any, error) {
 			}
 
 			mqlManagedZone, err := CreateResource(g.MqlRuntime, "gcp.project.dnsService.managedzone", map[string]*llx.RawData{
-				"id":            llx.StringData(strconv.FormatInt(int64(managedZone.Id), 10)),
-				"projectId":     llx.StringData(projectId),
-				"name":          llx.StringData(managedZone.Name),
-				"description":   llx.StringData(managedZone.Description),
-				"dnssecConfig":  llx.DictData(mqlDnssecCfg),
-				"dnsName":       llx.StringData(managedZone.DnsName),
-				"nameServerSet": llx.StringData(managedZone.NameServerSet),
-				"nameServers":   llx.ArrayData(convert.SliceAnyToInterface(managedZone.NameServers), types.String),
-				"visibility":    llx.StringData(managedZone.Visibility),
-				"created":       llx.TimeDataPtr(parseTime(managedZone.CreationTime)),
+				"id":                  llx.StringData(strconv.FormatInt(int64(managedZone.Id), 10)),
+				"projectId":           llx.StringData(projectId),
+				"name":                llx.StringData(managedZone.Name),
+				"description":         llx.StringData(managedZone.Description),
+				"dnssecConfig":        llx.DictData(mqlDnssecCfg),
+				"dnsName":             llx.StringData(managedZone.DnsName),
+				"nameServerSet":       llx.StringData(managedZone.NameServerSet),
+				"nameServers":         llx.ArrayData(convert.SliceAnyToInterface(managedZone.NameServers), types.String),
+				"visibility":          llx.StringData(managedZone.Visibility),
+				"created":             llx.TimeDataPtr(parseTime(managedZone.CreationTime)),
+				"labels":              llx.MapData(convert.MapToInterfaceMap(managedZone.Labels), types.String),
+				"cloudLoggingEnabled": llx.BoolData(managedZone.CloudLoggingConfig != nil && managedZone.CloudLoggingConfig.EnableLogging),
 			})
 			if err != nil {
 				return err

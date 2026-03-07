@@ -123,6 +123,10 @@ func (g *mqlGcpProjectStorageService) buckets() ([]any, error) {
 				storageLifecycleRulesToArrayInterface(g.MqlRuntime, bucket.Id, bucket.Lifecycle),
 				types.Resource("gcp.project.storageService.bucket.lifecycleRule"),
 			),
+			"defaultEventBasedHold": llx.BoolData(bucket.DefaultEventBasedHold),
+			"rpo":                   llx.StringData(bucket.Rpo),
+			"satisfiesPZS":          llx.BoolData(bucket.SatisfiesPZS),
+			"versioningEnabled":     llx.BoolData(bucket.Versioning != nil && bucket.Versioning.Enabled),
 		})
 		if err != nil {
 			return nil, err

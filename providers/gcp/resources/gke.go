@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -529,6 +530,62 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 			}
 		}
 
+		secPostureConfig, err := CreateResource(g.MqlRuntime, "gcp.project.gkeService.cluster.securityPostureConfig", map[string]*llx.RawData{
+			"id":                llx.StringData(c.Id + "/securityPostureConfig"),
+			"mode":              llx.StringData(c.GetSecurityPostureConfig().GetMode().String()),
+			"vulnerabilityMode": llx.StringData(c.GetSecurityPostureConfig().GetVulnerabilityMode().String()),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		var dailyStartTime, dailyDuration, recurringRecurrence string
+		var recurringStartTime, recurringEndTime *time.Time
+		var maintenanceExclusions map[string]any
+		resourceVersion := ""
+		if c.MaintenancePolicy != nil {
+			resourceVersion = c.MaintenancePolicy.ResourceVersion
+			if w := c.MaintenancePolicy.Window; w != nil {
+				if dmw := w.GetDailyMaintenanceWindow(); dmw != nil {
+					dailyStartTime = dmw.StartTime
+					dailyDuration = dmw.Duration
+				}
+				if rw := w.GetRecurringWindow(); rw != nil {
+					recurringRecurrence = rw.Recurrence
+					if rw.Window != nil {
+						if rw.Window.StartTime != nil {
+							t := rw.Window.StartTime.AsTime()
+							recurringStartTime = &t
+						}
+						if rw.Window.EndTime != nil {
+							t := rw.Window.EndTime.AsTime()
+							recurringEndTime = &t
+						}
+					}
+				}
+				if len(w.MaintenanceExclusions) > 0 {
+					maintenanceExclusions = make(map[string]any, len(w.MaintenanceExclusions))
+					for k, v := range w.MaintenanceExclusions {
+						excl, _ := convert.JsonToDict(v)
+						maintenanceExclusions[k] = excl
+					}
+				}
+			}
+		}
+		maintenancePolicy, err := CreateResource(g.MqlRuntime, "gcp.project.gkeService.cluster.maintenancePolicy", map[string]*llx.RawData{
+			"id":                              llx.StringData(c.Id + "/maintenancePolicy"),
+			"resourceVersion":                 llx.StringData(resourceVersion),
+			"dailyMaintenanceWindowStartTime": llx.StringData(dailyStartTime),
+			"dailyMaintenanceWindowDuration":  llx.StringData(dailyDuration),
+			"recurringWindowRecurrence":       llx.StringData(recurringRecurrence),
+			"recurringWindowStartTime":        llx.TimeDataPtr(recurringStartTime),
+			"recurringWindowEndTime":          llx.TimeDataPtr(recurringEndTime),
+			"maintenanceExclusions":           llx.DictData(maintenanceExclusions),
+		})
+		if err != nil {
+			return nil, err
+		}
+
 		mqlCluster, err := CreateResource(g.MqlRuntime, "gcp.project.gkeService.cluster", map[string]*llx.RawData{
 			"projectId":                      llx.StringData(projectId),
 			"id":                             llx.StringData(c.Id),
@@ -567,6 +624,10 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 			"identityServiceConfig":          llx.DictData(identityServiceConfig),
 			"networkPolicyConfig":            llx.DictData(networkPolicyConfig),
 			"releaseChannel":                 llx.StringData(strings.ToLower(c.ReleaseChannel.GetChannel().String())),
+			"enableTpu":                      llx.BoolData(c.EnableTpu),
+			"currentNodeCount":               llx.IntData(int64(c.CurrentNodeCount)),
+			"securityPostureConfig":          llx.ResourceData(secPostureConfig, "gcp.project.gkeService.cluster.securityPostureConfig"),
+			"maintenancePolicy":              llx.ResourceData(maintenancePolicy, "gcp.project.gkeService.cluster.maintenancePolicy"),
 		})
 		if err != nil {
 			return nil, err
@@ -633,6 +694,29 @@ func createMqlNodePool(runtime *plugin.Runtime, np *containerpb.NodePool, cluste
 		}
 	}
 
+	var blueGreenSettings map[string]any
+	upgradeStrategy := ""
+	var maxSurge, maxUnavailable int32
+	if np.UpgradeSettings != nil {
+		maxSurge = np.UpgradeSettings.MaxSurge
+		maxUnavailable = np.UpgradeSettings.MaxUnavailable
+		if np.UpgradeSettings.Strategy != nil {
+			upgradeStrategy = np.UpgradeSettings.GetStrategy().String()
+		}
+		blueGreenSettings, _ = convert.JsonToDict(np.UpgradeSettings.BlueGreenSettings)
+	}
+
+	mqlUpgradeSettings, err := CreateResource(runtime, "gcp.project.gkeService.cluster.nodepool.upgradeSettings", map[string]*llx.RawData{
+		"id":                llx.StringData(nodePoolId + "/upgradeSettings"),
+		"maxSurge":          llx.IntData(int64(maxSurge)),
+		"maxUnavailable":    llx.IntData(int64(maxUnavailable)),
+		"strategy":          llx.StringData(upgradeStrategy),
+		"blueGreenSettings": llx.DictData(blueGreenSettings),
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	return CreateResource(runtime, "gcp.project.gkeService.cluster.nodepool", map[string]*llx.RawData{
 		"id":                llx.StringData(nodePoolId),
 		"name":              llx.StringData(np.Name),
@@ -645,6 +729,9 @@ func createMqlNodePool(runtime *plugin.Runtime, np *containerpb.NodePool, cluste
 		"status":            llx.StringData(np.Status.String()),
 		"management":        llx.DictData(management),
 		"autoscaling":       llx.ResourceData(mqlPoolAutoscaling, "gcp.project.gkeService.cluster.nodepool.autoscaling"),
+		"statusMessage":     llx.StringData(np.StatusMessage),
+		"podIpv4CidrSize":   llx.IntData(int64(np.PodIpv4CidrSize)),
+		"upgradeSettings":   llx.ResourceData(mqlUpgradeSettings, "gcp.project.gkeService.cluster.nodepool.upgradeSettings"),
 	})
 }
 
@@ -909,4 +996,16 @@ func (g *mqlGcpProjectGkeServiceClusterNetworkConfig) subnetwork() (*mqlGcpProje
 		return nil, err
 	}
 	return res.(*mqlGcpProjectComputeServiceSubnetwork), nil
+}
+
+func (g *mqlGcpProjectGkeServiceClusterMaintenancePolicy) id() (string, error) {
+	return g.Id.Data, g.Id.Error
+}
+
+func (g *mqlGcpProjectGkeServiceClusterSecurityPostureConfig) id() (string, error) {
+	return g.Id.Data, g.Id.Error
+}
+
+func (g *mqlGcpProjectGkeServiceClusterNodepoolUpgradeSettings) id() (string, error) {
+	return g.Id.Data, g.Id.Error
 }

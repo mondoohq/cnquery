@@ -72,6 +72,8 @@ func initGcpProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	args["state"] = llx.StringData(project.State)
 	args["createTime"] = llx.TimeDataPtr(parseTime(project.CreateTime))
 	args["labels"] = llx.MapData(convert.MapToInterfaceMap(project.Labels), types.String)
+	args["deleteTime"] = llx.TimeDataPtr(parseTime(project.DeleteTime))
+	args["number"] = llx.StringData(project.Name)
 	// TODO: add organization gcp.organization
 	return args, nil, nil
 }
@@ -108,6 +110,14 @@ func (g *mqlGcpProject) labels() (map[string]any, error) {
 	// placeholder to convince MQL that this is an optional field
 	// should never be called since the data is initialized in init
 	return nil, errors.New("not implemented")
+}
+
+func (g *mqlGcpProject) deleteTime() (*time.Time, error) {
+	return nil, errors.New("not implemented")
+}
+
+func (g *mqlGcpProject) number() (string, error) {
+	return "", errors.New("not implemented")
 }
 
 func (g *mqlGcpProject) iamPolicy() ([]any, error) {
