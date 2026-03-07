@@ -169,7 +169,10 @@ postgre
 POWERUSER
 priorityclass
 psc
+PTn
 pushconfig
+Pzi
+pzs
 querypack
 RABBITMQ
 ratebasedstatement
@@ -178,6 +181,8 @@ regexmatchstatement
 regexpatternsetreferencestatement
 resourcegroup
 resourcequota
+rpo
+RRULE
 rtsp
 rulegroup
 rulegroupreferencestatement

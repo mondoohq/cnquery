@@ -192,11 +192,12 @@ func (g *mqlGcpFolder) projects() (*mqlGcpProjects, error) {
 
 func folderToMql(runtime *plugin.Runtime, f *cloudresourcemanager.Folder) (any, error) {
 	return CreateResource(runtime, "gcp.folder", map[string]*llx.RawData{
-		"id":       llx.StringData(f.Name),
-		"name":     llx.StringData(f.DisplayName),
-		"created":  llx.TimeDataPtr(parseTime(f.CreateTime)),
-		"updated":  llx.TimeDataPtr(parseTime(f.UpdateTime)),
-		"parentId": llx.StringData(f.Parent),
-		"state":    llx.StringData(f.State),
+		"id":         llx.StringData(f.Name),
+		"name":       llx.StringData(f.DisplayName),
+		"created":    llx.TimeDataPtr(parseTime(f.CreateTime)),
+		"updated":    llx.TimeDataPtr(parseTime(f.UpdateTime)),
+		"parentId":   llx.StringData(f.Parent),
+		"state":      llx.StringData(f.State),
+		"deleteTime": llx.TimeDataPtr(parseTime(f.DeleteTime)),
 	})
 }

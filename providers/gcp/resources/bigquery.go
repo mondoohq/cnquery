@@ -165,17 +165,18 @@ func (g *mqlGcpProjectBigqueryService) datasets() ([]any, error) {
 		}
 
 		mqlInstance, err := CreateResource(g.MqlRuntime, "gcp.project.bigqueryService.dataset", map[string]*llx.RawData{
-			"id":          llx.StringData(dataset.DatasetID),
-			"projectId":   llx.StringData(dataset.ProjectID),
-			"name":        llx.StringData(metadata.Name),
-			"description": llx.StringData(metadata.Description),
-			"location":    llx.StringData(metadata.Location),
-			"labels":      llx.MapData(convert.MapToInterfaceMap(metadata.Labels), types.String),
-			"created":     llx.TimeData(metadata.CreationTime),
-			"modified":    llx.TimeData(metadata.LastModifiedTime),
-			"tags":        llx.MapData(convert.MapToInterfaceMap(tags), types.String),
-			"kmsName":     llx.StringData(kmsName),
-			"access":      llx.ArrayData(access, types.Resource("gcp.project.bigqueryService.dataset.accessEntry")),
+			"id":                       llx.StringData(dataset.DatasetID),
+			"projectId":                llx.StringData(dataset.ProjectID),
+			"name":                     llx.StringData(metadata.Name),
+			"description":              llx.StringData(metadata.Description),
+			"location":                 llx.StringData(metadata.Location),
+			"labels":                   llx.MapData(convert.MapToInterfaceMap(metadata.Labels), types.String),
+			"created":                  llx.TimeData(metadata.CreationTime),
+			"modified":                 llx.TimeData(metadata.LastModifiedTime),
+			"tags":                     llx.MapData(convert.MapToInterfaceMap(tags), types.String),
+			"kmsName":                  llx.StringData(kmsName),
+			"access":                   llx.ArrayData(access, types.Resource("gcp.project.bigqueryService.dataset.accessEntry")),
+			"defaultTableExpirationMs": llx.IntData(metadata.DefaultTableExpiration.Milliseconds()),
 		})
 		if err != nil {
 			return nil, err
@@ -524,6 +525,7 @@ func (g *mqlGcpProjectBigqueryServiceDataset) routines() ([]any, error) {
 			"created":     llx.TimeData(metadata.CreationTime),
 			"modified":    llx.TimeData(metadata.LastModifiedTime),
 			"type":        llx.StringData(string(metadata.Type)),
+			"body":        llx.StringData(metadata.Body),
 		})
 		if err != nil {
 			return nil, err
