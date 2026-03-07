@@ -108,7 +108,9 @@ func getNetworkByUrl(networkUrl string, runtime *plugin.Runtime) (*mqlGcpProject
 	}
 
 	// Format is https://www.googleapis.com/compute/v1/projects/project1/global/networks/net-1
+	// or https://compute.googleapis.com/compute/v1/projects/project1/global/networks/net-1
 	params := strings.TrimPrefix(networkUrl, "https://www.googleapis.com/compute/v1/")
+	params = strings.TrimPrefix(params, "https://compute.googleapis.com/compute/v1/")
 	parts := strings.Split(params, "/")
 	resId := resourceId{Project: parts[1], Region: parts[2], Name: parts[4]}
 

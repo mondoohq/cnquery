@@ -210,7 +210,22 @@ func (g *mqlGcpProjectComputeServiceTargetHttpProxy) id() (string, error) {
 }
 
 func (g *mqlGcpProjectComputeServiceTargetHttpProxy) urlMap() (*mqlGcpProjectComputeServiceUrlMap, error) {
-	return getUrlMapByUrl(g.UrlMapUrl.Data, g.MqlRuntime)
+	if g.UrlMapUrl.Error != nil {
+		return nil, g.UrlMapUrl.Error
+	}
+	url := g.UrlMapUrl.Data
+	if url == "" {
+		g.UrlMap.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	um, err := getUrlMapByUrl(url, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if um == nil {
+		g.UrlMap.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return um, nil
 }
 
 // Target HTTPS proxies
@@ -273,7 +288,22 @@ func (g *mqlGcpProjectComputeServiceTargetHttpsProxy) id() (string, error) {
 }
 
 func (g *mqlGcpProjectComputeServiceTargetHttpsProxy) urlMap() (*mqlGcpProjectComputeServiceUrlMap, error) {
-	return getUrlMapByUrl(g.UrlMapUrl.Data, g.MqlRuntime)
+	if g.UrlMapUrl.Error != nil {
+		return nil, g.UrlMapUrl.Error
+	}
+	url := g.UrlMapUrl.Data
+	if url == "" {
+		g.UrlMap.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	um, err := getUrlMapByUrl(url, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if um == nil {
+		g.UrlMap.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return um, nil
 }
 
 func (g *mqlGcpProjectComputeServiceTargetHttpsProxy) sslPolicy() (*mqlGcpProjectComputeServiceSslPolicy, error) {

@@ -1306,7 +1306,7 @@ func (g *mqlGcpProjectComputeServiceNetwork) id() (string, error) {
 
 func (g *mqlGcpProjectComputeServiceNetwork) networkPeerings() ([]any, error) {
 	if g.cachePeerings == nil {
-		return nil, nil
+		return []any{}, nil
 	}
 	networkId := g.Id.Data
 	res := make([]any, 0, len(g.cachePeerings))
@@ -1340,7 +1340,19 @@ func (g *mqlGcpProjectComputeServiceNetworkPeering) network() (*mqlGcpProjectCom
 	if g.NetworkUrl.Error != nil {
 		return nil, g.NetworkUrl.Error
 	}
-	return getNetworkByUrl(g.NetworkUrl.Data, g.MqlRuntime)
+	url := g.NetworkUrl.Data
+	if url == "" {
+		g.Network.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	net, err := getNetworkByUrl(url, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if net == nil {
+		g.Network.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return net, nil
 }
 
 func (g *mqlGcpProjectComputeServiceNetwork) subnetworks() ([]any, error) {
