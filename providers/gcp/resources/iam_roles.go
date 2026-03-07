@@ -38,6 +38,7 @@ func (g *mqlGcpProjectIamService) roles() ([]any, error) {
 	var roles []any
 	it := adminSvc.ListRolesIter(ctx, &adminpb.ListRolesRequest{
 		Parent:      fmt.Sprintf("projects/%s", projectId),
+		View:        adminpb.RoleView_FULL,
 		ShowDeleted: true,
 	})
 	for {

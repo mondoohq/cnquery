@@ -2809,7 +2809,7 @@ private gcp.project.iamService.role @defaults("title name") {
   title string
   // Description
   description string
-  // Launch stage of the role (ALPHA, BETA, GA, DEPRECATED, DISABLED, EAP)
+  // Launch stage of the role (ALPHA, BETA, GA, DEPRECATED, DISABLED)
   stage string
   // Permissions included in this role
   includedPermissions []string
