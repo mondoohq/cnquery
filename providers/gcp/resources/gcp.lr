@@ -2173,7 +2173,7 @@ private gcp.project.gkeService.cluster.nodepool @defaults("name") {
   networkConfig gcp.project.gkeService.cluster.nodepool.networkConfig
   // The Kubernetes version
   version string
-  // Deprecated: Use instanceGroups instead
+  // The resource URLs of the managed instance groups associated with this node pool
   instanceGroupUrls []string
   // The managed instance group managers associated with this node pool
   instanceGroupManagers() []gcp.project.computeService.instanceGroupManager
