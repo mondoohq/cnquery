@@ -78,14 +78,14 @@ nfpms:
     overrides:
       deb:
         conflicts:
-          - cnquery (< 13)
+          - cnquery
         replaces:
-          - cnquery (< 13)
+          - cnquery
       rpm:
         conflicts:
-          - cnquery < 13
+          - cnquery
         replaces:
-          - cnquery < 13
+          - cnquery
     rpm:
       signature:
         key_file: '{{ .Env.GPG_KEY_PATH }}'
