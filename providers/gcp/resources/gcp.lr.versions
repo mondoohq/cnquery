@@ -1344,6 +1344,15 @@ gcp.project.iam 9.0.0
 gcp.project.iamPolicy 9.0.0
 gcp.project.iamService 9.0.0
 gcp.project.iamService.projectId 9.0.0
+gcp.project.iamService.role 11.6.6
+gcp.project.iamService.role.deleted 11.6.6
+gcp.project.iamService.role.description 11.6.6
+gcp.project.iamService.role.includedPermissions 11.6.6
+gcp.project.iamService.role.name 11.6.6
+gcp.project.iamService.role.projectId 11.6.6
+gcp.project.iamService.role.stage 11.6.6
+gcp.project.iamService.role.title 11.6.6
+gcp.project.iamService.roles 11.6.6
 gcp.project.iamService.serviceAccount 9.0.0
 gcp.project.iamService.serviceAccount.description 9.0.0
 gcp.project.iamService.serviceAccount.disabled 9.0.0
