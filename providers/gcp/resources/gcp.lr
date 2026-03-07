@@ -4416,8 +4416,6 @@ private gcp.project.computeService.instanceGroup @defaults("name size") {
   networkUrl string
   // Network resource
   network() gcp.project.computeService.network
-  // Subnetwork URL
-  subnetworkUrl string
   // Subnetwork resource
   subnetwork() gcp.project.computeService.subnetwork
   // Number of instances in the group

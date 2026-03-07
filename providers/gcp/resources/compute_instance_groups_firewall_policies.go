@@ -49,21 +49,21 @@ func (g *mqlGcpProjectComputeService) instanceGroups() ([]any, error) {
 				namedPorts, _ := convert.JsonToDictSlice(ig.NamedPorts)
 
 				mqlIG, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.instanceGroup", map[string]*llx.RawData{
-					"id":            llx.StringData(strconv.FormatUint(ig.Id, 10)),
-					"projectId":     llx.StringData(projectId),
-					"name":          llx.StringData(ig.Name),
-					"description":   llx.StringData(ig.Description),
-					"zoneUrl":       llx.StringData(ig.Zone),
-					"networkUrl":    llx.StringData(ig.Network),
-					"subnetworkUrl": llx.StringData(ig.Subnetwork),
-					"size":          llx.IntData(ig.Size),
-					"namedPorts":    llx.ArrayData(namedPorts, types.Dict),
-					"created":       llx.TimeDataPtr(parseTime(ig.CreationTimestamp)),
-					"selfLink":      llx.StringData(ig.SelfLink),
+					"id":          llx.StringData(strconv.FormatUint(ig.Id, 10)),
+					"projectId":   llx.StringData(projectId),
+					"name":        llx.StringData(ig.Name),
+					"description": llx.StringData(ig.Description),
+					"zoneUrl":     llx.StringData(ig.Zone),
+					"networkUrl":  llx.StringData(ig.Network),
+					"size":        llx.IntData(ig.Size),
+					"namedPorts":  llx.ArrayData(namedPorts, types.Dict),
+					"created":     llx.TimeDataPtr(parseTime(ig.CreationTimestamp)),
+					"selfLink":    llx.StringData(ig.SelfLink),
 				})
 				if err != nil {
 					return err
 				}
+				mqlIG.(*mqlGcpProjectComputeServiceInstanceGroup).cacheSubnetworkUrl = ig.Subnetwork
 				res = append(res, mqlIG)
 			}
 		}
@@ -78,6 +78,10 @@ func (g *mqlGcpProjectComputeService) instanceGroups() ([]any, error) {
 	return res, nil
 }
 
+type mqlGcpProjectComputeServiceInstanceGroupInternal struct {
+	cacheSubnetworkUrl string
+}
+
 func (g *mqlGcpProjectComputeServiceInstanceGroup) id() (string, error) {
 	return "gcloud.compute.instanceGroup/" + g.Id.Data, g.Id.Error
 }
@@ -87,7 +91,7 @@ func (g *mqlGcpProjectComputeServiceInstanceGroup) network() (*mqlGcpProjectComp
 }
 
 func (g *mqlGcpProjectComputeServiceInstanceGroup) subnetwork() (*mqlGcpProjectComputeServiceSubnetwork, error) {
-	return getSubnetworkByUrl(g.SubnetworkUrl.Data, g.MqlRuntime)
+	return getSubnetworkByUrl(g.cacheSubnetworkUrl, g.MqlRuntime)
 }
 
 // Instance group managers

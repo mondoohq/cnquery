@@ -794,7 +794,6 @@ gcp.project.computeService.instanceGroup.projectId 11.6.6
 gcp.project.computeService.instanceGroup.selfLink 11.6.6
 gcp.project.computeService.instanceGroup.size 11.6.6
 gcp.project.computeService.instanceGroup.subnetwork 11.6.6
-gcp.project.computeService.instanceGroup.subnetworkUrl 11.6.6
 gcp.project.computeService.instanceGroup.zoneUrl 11.6.6
 gcp.project.computeService.instanceGroupManager 11.6.6
 gcp.project.computeService.instanceGroupManager.autoHealingPolicies 11.6.6

@@ -6484,9 +6484,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.instanceGroup.network": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstanceGroup).GetNetwork()).ToDataRes(types.Resource("gcp.project.computeService.network"))
 	},
-	"gcp.project.computeService.instanceGroup.subnetworkUrl": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectComputeServiceInstanceGroup).GetSubnetworkUrl()).ToDataRes(types.String)
-	},
 	"gcp.project.computeService.instanceGroup.subnetwork": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstanceGroup).GetSubnetwork()).ToDataRes(types.Resource("gcp.project.computeService.subnetwork"))
 	},
@@ -14637,10 +14634,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.instanceGroup.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceInstanceGroup).Network, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceNetwork](v.Value, v.Error)
-		return
-	},
-	"gcp.project.computeService.instanceGroup.subnetworkUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectComputeServiceInstanceGroup).SubnetworkUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.instanceGroup.subnetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33540,20 +33533,19 @@ func (c *mqlGcpOrgPolicy) GetUpdatedAt() *plugin.TValue[*time.Time] {
 type mqlGcpProjectComputeServiceInstanceGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectComputeServiceInstanceGroupInternal it will be used here
-	Id            plugin.TValue[string]
-	ProjectId     plugin.TValue[string]
-	Name          plugin.TValue[string]
-	Description   plugin.TValue[string]
-	ZoneUrl       plugin.TValue[string]
-	NetworkUrl    plugin.TValue[string]
-	Network       plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
-	SubnetworkUrl plugin.TValue[string]
-	Subnetwork    plugin.TValue[*mqlGcpProjectComputeServiceSubnetwork]
-	Size          plugin.TValue[int64]
-	NamedPorts    plugin.TValue[[]any]
-	Created       plugin.TValue[*time.Time]
-	SelfLink      plugin.TValue[string]
+	mqlGcpProjectComputeServiceInstanceGroupInternal
+	Id          plugin.TValue[string]
+	ProjectId   plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Description plugin.TValue[string]
+	ZoneUrl     plugin.TValue[string]
+	NetworkUrl  plugin.TValue[string]
+	Network     plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
+	Subnetwork  plugin.TValue[*mqlGcpProjectComputeServiceSubnetwork]
+	Size        plugin.TValue[int64]
+	NamedPorts  plugin.TValue[[]any]
+	Created     plugin.TValue[*time.Time]
+	SelfLink    plugin.TValue[string]
 }
 
 // createGcpProjectComputeServiceInstanceGroup creates a new instance of this resource
@@ -33631,10 +33623,6 @@ func (c *mqlGcpProjectComputeServiceInstanceGroup) GetNetwork() *plugin.TValue[*
 
 		return c.network()
 	})
-}
-
-func (c *mqlGcpProjectComputeServiceInstanceGroup) GetSubnetworkUrl() *plugin.TValue[string] {
-	return &c.SubnetworkUrl
 }
 
 func (c *mqlGcpProjectComputeServiceInstanceGroup) GetSubnetwork() *plugin.TValue[*mqlGcpProjectComputeServiceSubnetwork] {
