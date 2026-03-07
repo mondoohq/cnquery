@@ -6,10 +6,10 @@ go 1.25.1
 
 require (
 	cloud.google.com/go/accessapproval v1.8.8
-	cloud.google.com/go/alloydb v1.20.0
+	cloud.google.com/go/alloydb v1.21.0
 	cloud.google.com/go/bigquery v1.74.0
 	cloud.google.com/go/bigtable v1.42.0
-	cloud.google.com/go/compute v1.55.0
+	cloud.google.com/go/compute v1.56.0
 	cloud.google.com/go/container v1.46.0
 	cloud.google.com/go/firestore v1.21.0
 	cloud.google.com/go/functions v1.19.7
@@ -289,7 +289,7 @@ require (
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260226221140-a57be14db171 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260226221140-a57be14db171 // indirect
-	google.golang.org/grpc v1.79.1
+	google.golang.org/grpc v1.79.2
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	howett.net/plist v1.0.1 // indirect

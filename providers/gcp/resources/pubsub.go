@@ -350,6 +350,7 @@ func (g *mqlGcpProjectPubsubServiceTopic) config() (*mqlGcpProjectPubsubServiceT
 		"kmsKeyName":           llx.StringData(cfg.KMSKeyName),
 		"messageStoragePolicy": llx.ResourceData(messageStoragePolicy, "gcp.project.pubsubService.topic.config.messagestoragepolicy"),
 		"state":                llx.StringData(topicStateToString(cfg.State)),
+		"retentionDuration":    llx.TimeData(optionalDurationToTime(cfg.RetentionDuration)),
 	})
 	if err != nil {
 		return nil, err
@@ -455,20 +456,21 @@ func (g *mqlGcpProjectPubsubServiceSubscription) config() (*mqlGcpProjectPubsubS
 		expPolicy = llx.DurationToTime(int64(exp.Seconds()))
 	}
 	res, err := CreateResource(g.MqlRuntime, "gcp.project.pubsubService.subscription.config", map[string]*llx.RawData{
-		"projectId":                 llx.StringData(projectId),
-		"subscriptionName":          llx.StringData(s.ID()),
-		"topic":                     llx.ResourceData(topic, "gcp.project.pubsubService.topic"),
-		"pushConfig":                llx.ResourceData(pushConfig, "gcp.project.pubsubService.subscription.config.pushconfig"),
-		"ackDeadline":               llx.TimeData(llx.DurationToTime(int64(cfg.AckDeadline.Seconds()))),
-		"retainAckedMessages":       llx.BoolData(cfg.RetainAckedMessages),
-		"retentionDuration":         llx.TimeData(llx.DurationToTime(int64(cfg.RetentionDuration.Seconds()))),
-		"expirationPolicy":          llx.TimeData(expPolicy),
-		"labels":                    llx.MapData(convert.MapToInterfaceMap(cfg.Labels), types.String),
-		"enableMessageOrdering":     llx.BoolData(cfg.EnableMessageOrdering),
-		"enableExactlyOnceDelivery": llx.BoolData(cfg.EnableExactlyOnceDelivery),
-		"filter":                    llx.StringData(cfg.Filter),
-		"detached":                  llx.BoolData(cfg.Detached),
-		"state":                     llx.StringData(subscriptionStateToString(cfg.State)),
+		"projectId":                     llx.StringData(projectId),
+		"subscriptionName":              llx.StringData(s.ID()),
+		"topic":                         llx.ResourceData(topic, "gcp.project.pubsubService.topic"),
+		"pushConfig":                    llx.ResourceData(pushConfig, "gcp.project.pubsubService.subscription.config.pushconfig"),
+		"ackDeadline":                   llx.TimeData(llx.DurationToTime(int64(cfg.AckDeadline.Seconds()))),
+		"retainAckedMessages":           llx.BoolData(cfg.RetainAckedMessages),
+		"retentionDuration":             llx.TimeData(llx.DurationToTime(int64(cfg.RetentionDuration.Seconds()))),
+		"expirationPolicy":              llx.TimeData(expPolicy),
+		"labels":                        llx.MapData(convert.MapToInterfaceMap(cfg.Labels), types.String),
+		"enableMessageOrdering":         llx.BoolData(cfg.EnableMessageOrdering),
+		"enableExactlyOnceDelivery":     llx.BoolData(cfg.EnableExactlyOnceDelivery),
+		"filter":                        llx.StringData(cfg.Filter),
+		"detached":                      llx.BoolData(cfg.Detached),
+		"state":                         llx.StringData(subscriptionStateToString(cfg.State)),
+		"topicMessageRetentionDuration": llx.TimeData(llx.DurationToTime(int64(cfg.TopicMessageRetentionDuration.Seconds()))),
 	})
 	if err != nil {
 		return nil, err
@@ -658,6 +660,16 @@ func subscriptionStateToString(state pubsub.SubscriptionState) string {
 	default:
 		return "STATE_UNSPECIFIED"
 	}
+}
+
+func optionalDurationToTime(d interface{}) time.Time {
+	if d == nil {
+		return llx.DurationToTime(0)
+	}
+	if dur, ok := d.(time.Duration); ok {
+		return llx.DurationToTime(int64(dur.Seconds()))
+	}
+	return llx.DurationToTime(0)
 }
 
 func pubsubConfigId(projectId, parentName string) string {

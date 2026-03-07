@@ -654,6 +654,8 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 		"serviceAccounts":            llx.ArrayData(mqlServiceAccounts, types.Resource("gcp.project.computeService.serviceaccount")),
 		"disks":                      llx.ArrayData(attachedDisks, types.Resource("gcp.project.computeService.attachedDisk")),
 		"zone":                       llx.ResourceData(zone, "gcp.project.computeService.zone"),
+		"satisfiesPzi":               llx.BoolData(instance.SatisfiesPzi),
+		"satisfiesPzs":               llx.BoolData(instance.SatisfiesPzs),
 	})
 	if err != nil {
 		return nil, err
@@ -748,9 +750,79 @@ func (g *mqlGcpProjectComputeServiceDisk) id() (string, error) {
 	return "gcloud.compute.disk/" + id, nil
 }
 
+type mqlGcpProjectComputeServiceDiskInternal struct {
+	cacheSourceImageUrl    string
+	cacheSourceSnapshotUrl string
+	cacheStoragePoolUrl    string
+}
+
 func (g *mqlGcpProjectComputeServiceDisk) zone() (any, error) {
 	// TODO: implement
 	return nil, errors.New("not implemented")
+}
+
+func (g *mqlGcpProjectComputeServiceDisk) sourceImage() (*mqlGcpProjectComputeServiceImage, error) {
+	url := g.cacheSourceImageUrl
+	if url == "" {
+		g.SourceImage.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	// URL format: https://www.googleapis.com/compute/v1/projects/{project}/global/images/{image}
+	params := strings.TrimPrefix(url, "https://www.googleapis.com/compute/v1/")
+	parts := strings.Split(params, "/")
+	if len(parts) < 5 {
+		return nil, errors.New("invalid source image URL: " + url)
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.computeService.image", map[string]*llx.RawData{
+		"name":      llx.StringData(parts[4]),
+		"projectId": llx.StringData(parts[1]),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectComputeServiceImage), nil
+}
+
+func (g *mqlGcpProjectComputeServiceDisk) sourceSnapshot() (*mqlGcpProjectComputeServiceSnapshot, error) {
+	url := g.cacheSourceSnapshotUrl
+	if url == "" {
+		g.SourceSnapshot.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	// URL format: https://www.googleapis.com/compute/v1/projects/{project}/global/snapshots/{snapshot}
+	params := strings.TrimPrefix(url, "https://www.googleapis.com/compute/v1/")
+	parts := strings.Split(params, "/")
+	if len(parts) < 5 {
+		return nil, errors.New("invalid source snapshot URL: " + url)
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.computeService.snapshot", map[string]*llx.RawData{
+		"name": llx.StringData(parts[4]),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectComputeServiceSnapshot), nil
+}
+
+func (g *mqlGcpProjectComputeServiceDisk) storagePool() (*mqlGcpProjectComputeServiceStoragePool, error) {
+	url := g.cacheStoragePoolUrl
+	if url == "" {
+		g.StoragePool.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	// URL format: https://www.googleapis.com/compute/v1/projects/{project}/zones/{zone}/storagePools/{name}
+	params := strings.TrimPrefix(url, "https://www.googleapis.com/compute/v1/")
+	parts := strings.Split(params, "/")
+	if len(parts) < 6 {
+		return nil, errors.New("invalid storage pool URL: " + url)
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.computeService.storagePool", map[string]*llx.RawData{
+		"name": llx.StringData(parts[5]),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectComputeServiceStoragePool), nil
 }
 
 func (g *mqlGcpProjectComputeService) disks() ([]any, error) {
@@ -839,18 +911,26 @@ func (g *mqlGcpProjectComputeService) disks() ([]any, error) {
 						//"sourceDiskId": llx.StringData(disk.SourceDiskId),
 						//"sourceImageId": llx.StringData(disk.SourceImageId),
 						//"sourceSnapshotId": llx.StringData(disk.SourceSnapshotId),
-						"status":            llx.StringData(disk.Status),
-						"zone":              llx.ResourceData(zone, "gcp.project.computeService.zone"),
-						"created":           llx.TimeDataPtr(parseTime(disk.CreationTimestamp)),
-						"diskEncryptionKey": llx.DictData(mqlDiskEnc),
+						"status":                    llx.StringData(disk.Status),
+						"zone":                      llx.ResourceData(zone, "gcp.project.computeService.zone"),
+						"created":                   llx.TimeDataPtr(parseTime(disk.CreationTimestamp)),
+						"diskEncryptionKey":         llx.DictData(mqlDiskEnc),
+						"enableConfidentialCompute": llx.BoolData(disk.EnableConfidentialCompute),
+						"type":                      llx.StringData(disk.Type),
+						"users":                     llx.ArrayData(convert.SliceAnyToInterface(disk.Users), types.String),
+						"accessMode":                llx.StringData(disk.AccessMode),
+						"provisionedThroughput":     llx.IntData(disk.ProvisionedThroughput),
 					})
 					if err != nil {
 						return err
-					} else {
-						mux.Lock()
-						res = append(res, mqlDisk)
-						mux.Unlock()
 					}
+					mqlD := mqlDisk.(*mqlGcpProjectComputeServiceDisk)
+					mqlD.cacheSourceImageUrl = disk.SourceImage
+					mqlD.cacheSourceSnapshotUrl = disk.SourceSnapshot
+					mqlD.cacheStoragePoolUrl = disk.StoragePool
+					mux.Lock()
+					res = append(res, mqlDisk)
+					mux.Unlock()
 				}
 				return nil
 			}); err != nil {
@@ -990,6 +1070,8 @@ func (g *mqlGcpProjectComputeService) firewalls() ([]any, error) {
 				"created":               llx.TimeDataPtr(parseTime(firewall.CreationTimestamp)),
 				"allowed":               llx.ArrayData(allowedDict, types.Dict),
 				"denied":                llx.ArrayData(deniedDict, types.Dict),
+				"targetTags":            llx.ArrayData(convert.SliceAnyToInterface(firewall.TargetTags), types.String),
+				"loggingEnabled":        llx.BoolData(firewall.LogConfig != nil && firewall.LogConfig.Enable),
 			})
 			if err != nil {
 				return err
@@ -1048,22 +1130,27 @@ func (g *mqlGcpProjectComputeService) snapshots() ([]any, error) {
 	if err := req.Pages(ctx, func(page *compute.SnapshotList) error {
 		for _, snapshot := range page.Items {
 			mqlSnapshpt, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.snapshot", map[string]*llx.RawData{
-				"id":                 llx.StringData(strconv.FormatUint(snapshot.Id, 10)),
-				"name":               llx.StringData(snapshot.Name),
-				"description":        llx.StringData(snapshot.Description),
-				"architecture":       llx.StringData(snapshot.Architecture),
-				"autoCreated":        llx.BoolData(snapshot.AutoCreated),
-				"chainName":          llx.StringData(snapshot.ChainName),
-				"creationSizeBytes":  llx.IntData(snapshot.CreationSizeBytes),
-				"diskSizeGb":         llx.IntData(snapshot.DiskSizeGb),
-				"downloadBytes":      llx.IntData(snapshot.DownloadBytes),
-				"storageBytes":       llx.IntData(snapshot.StorageBytes),
-				"storageBytesStatus": llx.StringData(snapshot.StorageBytesStatus),
-				"snapshotType":       llx.StringData(snapshot.SnapshotType),
-				"licenses":           llx.ArrayData(convert.SliceAnyToInterface(snapshot.Licenses), types.String),
-				"labels":             llx.MapData(convert.MapToInterfaceMap(snapshot.Labels), types.String),
-				"status":             llx.StringData(snapshot.Status),
-				"created":            llx.TimeDataPtr(parseTime(snapshot.CreationTimestamp)),
+				"id":                        llx.StringData(strconv.FormatUint(snapshot.Id, 10)),
+				"name":                      llx.StringData(snapshot.Name),
+				"description":               llx.StringData(snapshot.Description),
+				"architecture":              llx.StringData(snapshot.Architecture),
+				"autoCreated":               llx.BoolData(snapshot.AutoCreated),
+				"chainName":                 llx.StringData(snapshot.ChainName),
+				"creationSizeBytes":         llx.IntData(snapshot.CreationSizeBytes),
+				"diskSizeGb":                llx.IntData(snapshot.DiskSizeGb),
+				"downloadBytes":             llx.IntData(snapshot.DownloadBytes),
+				"storageBytes":              llx.IntData(snapshot.StorageBytes),
+				"storageBytesStatus":        llx.StringData(snapshot.StorageBytesStatus),
+				"snapshotType":              llx.StringData(snapshot.SnapshotType),
+				"licenses":                  llx.ArrayData(convert.SliceAnyToInterface(snapshot.Licenses), types.String),
+				"labels":                    llx.MapData(convert.MapToInterfaceMap(snapshot.Labels), types.String),
+				"status":                    llx.StringData(snapshot.Status),
+				"created":                   llx.TimeDataPtr(parseTime(snapshot.CreationTimestamp)),
+				"storageLocations":          llx.ArrayData(convert.SliceAnyToInterface(snapshot.StorageLocations), types.String),
+				"enableConfidentialCompute": llx.BoolData(snapshot.EnableConfidentialCompute),
+				"satisfiesPzi":              llx.BoolData(snapshot.SatisfiesPzi),
+				"satisfiesPzs":              llx.BoolData(snapshot.SatisfiesPzs),
+				"sourceDisk":                llx.StringData(snapshot.SourceDisk),
 			})
 			if err != nil {
 				return err
@@ -1167,18 +1254,21 @@ func (g *mqlGcpProjectComputeService) images() ([]any, error) {
 	if err := req.Pages(ctx, func(page *compute.ImageList) error {
 		for _, image := range page.Items {
 			mqlImage, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.image", map[string]*llx.RawData{
-				"id":               llx.StringData(strconv.FormatUint(image.Id, 10)),
-				"projectId":        llx.StringData(projectId),
-				"name":             llx.StringData(image.Name),
-				"description":      llx.StringData(image.Description),
-				"architecture":     llx.StringData(image.Architecture),
-				"archiveSizeBytes": llx.IntData(image.ArchiveSizeBytes),
-				"diskSizeGb":       llx.IntData(image.DiskSizeGb),
-				"family":           llx.StringData(image.Family),
-				"licenses":         llx.ArrayData(convert.SliceAnyToInterface(image.Licenses), types.String),
-				"labels":           llx.MapData(convert.MapToInterfaceMap(image.Labels), types.String),
-				"status":           llx.StringData(image.Status),
-				"created":          llx.TimeDataPtr(parseTime(image.CreationTimestamp)),
+				"id":                        llx.StringData(strconv.FormatUint(image.Id, 10)),
+				"projectId":                 llx.StringData(projectId),
+				"name":                      llx.StringData(image.Name),
+				"description":               llx.StringData(image.Description),
+				"architecture":              llx.StringData(image.Architecture),
+				"archiveSizeBytes":          llx.IntData(image.ArchiveSizeBytes),
+				"diskSizeGb":                llx.IntData(image.DiskSizeGb),
+				"family":                    llx.StringData(image.Family),
+				"licenses":                  llx.ArrayData(convert.SliceAnyToInterface(image.Licenses), types.String),
+				"labels":                    llx.MapData(convert.MapToInterfaceMap(image.Labels), types.String),
+				"status":                    llx.StringData(image.Status),
+				"created":                   llx.TimeDataPtr(parseTime(image.CreationTimestamp)),
+				"enableConfidentialCompute": llx.BoolData(image.EnableConfidentialCompute),
+				"satisfiesPzi":              llx.BoolData(image.SatisfiesPzi),
+				"satisfiesPzs":              llx.BoolData(image.SatisfiesPzs),
 			})
 			if err != nil {
 				return err
@@ -1332,6 +1422,8 @@ func (g *mqlGcpProjectComputeService) networks() ([]any, error) {
 				"routingMode":                           llx.StringData(routingMode),
 				"mode":                                  llx.StringData(networkMode(network)),
 				"subnetworkUrls":                        llx.ArrayData(convert.SliceAnyToInterface(network.Subnetworks), types.String),
+				"internalIpv6Range":                     llx.StringData(network.InternalIpv6Range),
+				"firewallPolicy":                        llx.StringData(network.FirewallPolicy),
 			})
 			if err != nil {
 				return err
@@ -1483,6 +1575,7 @@ func newMqlRegion(runtime *plugin.Runtime, r *compute.Region) (any, error) {
 		"created":     llx.TimeDataPtr(parseTime(r.CreationTimestamp)),
 		"quotas":      llx.MapData(quotas, types.Float),
 		"deprecated":  llx.DictData(deprecated),
+		"supportsPzs": llx.BoolData(r.SupportsPzs),
 	})
 }
 
@@ -1527,6 +1620,7 @@ func newMqlSubnetwork(projectId string, runtime *plugin.Runtime, subnetwork *com
 		"stackType":               llx.StringData(subnetwork.GetStackType()),
 		"state":                   llx.StringData(subnetwork.GetState()),
 		"created":                 llx.TimeDataPtr(parseTime(subnetwork.GetCreationTimestamp())),
+		"reservedInternalRange":   llx.StringData(subnetwork.GetReservedInternalRange()),
 	}
 	if region != nil {
 		args["region"] = llx.ResourceData(region, "gcp.project.computeService.region")
@@ -1589,9 +1683,16 @@ func (g *mqlGcpProjectComputeServiceRouter) id() (string, error) {
 	return "gcloud.compute.router/" + id, nil
 }
 
-func (g *mqlGcpProjectComputeServiceRouter) network() ([]any, error) {
-	// TODO: implement
-	return nil, errors.New("not implemented")
+type mqlGcpProjectComputeServiceRouterInternal struct {
+	cacheNetworkUrl string
+}
+
+func (g *mqlGcpProjectComputeServiceRouter) network() (*mqlGcpProjectComputeServiceNetwork, error) {
+	if g.cacheNetworkUrl == "" {
+		g.Network.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return getNetworkByUrl(g.cacheNetworkUrl, g.MqlRuntime)
 }
 
 func (g *mqlGcpProjectComputeServiceRouter) region() ([]any, error) {
@@ -1657,7 +1758,7 @@ func newMqlRouter(projectId string, region *mqlGcpProjectComputeServiceRegion, r
 		natResources = append(natResources, mqlNat)
 	}
 
-	return CreateResource(runtime, "gcp.project.computeService.router", map[string]*llx.RawData{
+	res, err := CreateResource(runtime, "gcp.project.computeService.router", map[string]*llx.RawData{
 		"id":                          llx.StringData(routerId),
 		"name":                        llx.StringData(router.Name),
 		"description":                 llx.StringData(router.Description),
@@ -1668,6 +1769,12 @@ func newMqlRouter(projectId string, region *mqlGcpProjectComputeServiceRegion, r
 		"natServices":                 llx.ArrayData(natResources, types.Resource("gcp.project.computeService.router.nat")),
 		"created":                     llx.TimeDataPtr(parseTime(router.CreationTimestamp)),
 	})
+	if err != nil {
+		return nil, err
+	}
+	mqlRouter := res.(*mqlGcpProjectComputeServiceRouter)
+	mqlRouter.cacheNetworkUrl = router.Network
+	return res, nil
 }
 
 func (g *mqlGcpProjectComputeService) routers() ([]any, error) {
@@ -1981,6 +2088,9 @@ func (g *mqlGcpProjectComputeService) backendServices() ([]any, error) {
 				"serviceBindingUrls":       llx.ArrayData(convert.SliceAnyToInterface(b.ServiceBindings), types.String),
 				"sessionAffinity":          llx.StringData(b.SessionAffinity),
 				"timeoutSec":               llx.IntData(b.TimeoutSec),
+				"port":                     llx.IntData(b.Port),
+				"serviceLbPolicy":          llx.StringData(b.ServiceLbPolicy),
+				"ipAddressSelectionPolicy": llx.StringData(b.IpAddressSelectionPolicy),
 			})
 			if err != nil {
 				return nil, err
@@ -2057,6 +2167,7 @@ func (g *mqlGcpProjectComputeService) addresses() ([]any, error) {
 				"ipVersion":        llx.StringData(a.IpVersion),
 				"ipv6EndpointType": llx.StringData(a.Ipv6EndpointType),
 				"name":             llx.StringData(a.Name),
+				"labels":           llx.MapData(convert.MapToInterfaceMap(a.Labels), types.String),
 				"networkUrl":       llx.StringData(a.Network),
 				"networkTier":      llx.StringData(a.NetworkTier),
 				"prefixLength":     llx.IntData(a.PrefixLength),
@@ -2174,6 +2285,9 @@ func (g *mqlGcpProjectComputeService) forwardingRules() ([]any, error) {
 				"serviceName":                   llx.StringData(fwr.GetServiceName()),
 				"subnetworkUrl":                 llx.StringData(fwr.GetSubnetwork()),
 				"targetUrl":                     llx.StringData(fwr.GetTarget()),
+				"allowPscGlobalAccess":          llx.BoolData(fwr.GetAllowPscGlobalAccess()),
+				"pscConnectionStatus":           llx.StringData(fwr.GetPscConnectionStatus()),
+				"sourceIpRanges":                llx.ArrayData(convert.SliceAnyToInterface(fwr.GetSourceIpRanges()), types.String),
 			})
 			if err != nil {
 				return nil, err
@@ -2498,6 +2612,211 @@ func (g *mqlGcpProjectComputeService) sslCertificates() ([]any, error) {
 					return err
 				}
 				res = append(res, mqlCert)
+			}
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectComputeServiceVpnGateway) id() (string, error) {
+	return g.Id.Data, g.Id.Error
+}
+
+type mqlGcpProjectComputeServiceVpnGatewayInternal struct {
+	cacheNetworkUrl string
+}
+
+func (g *mqlGcpProjectComputeServiceVpnGateway) network() (*mqlGcpProjectComputeServiceNetwork, error) {
+	if g.cacheNetworkUrl == "" {
+		g.Network.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return getNetworkByUrl(g.cacheNetworkUrl, g.MqlRuntime)
+}
+
+func (g *mqlGcpProjectComputeService) vpnGateways() ([]any, error) {
+	if !g.GetEnabled().Data {
+		return nil, nil
+	}
+
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	var res []any
+	req := computeSvc.VpnGateways.AggregatedList(projectId)
+	if err := req.Pages(ctx, func(page *compute.VpnGatewayAggregatedList) error {
+		for _, scopedList := range page.Items {
+			for _, gw := range scopedList.VpnGateways {
+				vpnInterfaces := make([]any, 0, len(gw.VpnInterfaces))
+				for _, iface := range gw.VpnInterfaces {
+					ifaceDict, err := convert.JsonToDict(iface)
+					if err != nil {
+						return err
+					}
+					vpnInterfaces = append(vpnInterfaces, ifaceDict)
+				}
+
+				mqlGw, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.vpnGateway", map[string]*llx.RawData{
+					"id":               llx.StringData(fmt.Sprintf("%d", gw.Id)),
+					"name":             llx.StringData(gw.Name),
+					"description":      llx.StringData(gw.Description),
+					"created":          llx.TimeDataPtr(parseTime(gw.CreationTimestamp)),
+					"labels":           llx.MapData(convert.MapToInterfaceMap(gw.Labels), types.String),
+					"gatewayIpVersion": llx.StringData(gw.GatewayIpVersion),
+					"stackType":        llx.StringData(gw.StackType),
+					"regionUrl":        llx.StringData(gw.Region),
+					"vpnInterfaces":    llx.ArrayData(vpnInterfaces, types.Dict),
+				})
+				if err != nil {
+					return err
+				}
+				mqlGw.(*mqlGcpProjectComputeServiceVpnGateway).cacheNetworkUrl = gw.Network
+				res = append(res, mqlGw)
+			}
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectComputeServiceVpnTunnel) id() (string, error) {
+	return g.Id.Data, g.Id.Error
+}
+
+func (g *mqlGcpProjectComputeService) vpnTunnels() ([]any, error) {
+	if !g.GetEnabled().Data {
+		return nil, nil
+	}
+
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	var res []any
+	req := computeSvc.VpnTunnels.AggregatedList(projectId)
+	if err := req.Pages(ctx, func(page *compute.VpnTunnelAggregatedList) error {
+		for _, scopedList := range page.Items {
+			for _, t := range scopedList.VpnTunnels {
+				mqlTunnel, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.vpnTunnel", map[string]*llx.RawData{
+					"id":                           llx.StringData(fmt.Sprintf("%d", t.Id)),
+					"name":                         llx.StringData(t.Name),
+					"description":                  llx.StringData(t.Description),
+					"created":                      llx.TimeDataPtr(parseTime(t.CreationTimestamp)),
+					"labels":                       llx.MapData(convert.MapToInterfaceMap(t.Labels), types.String),
+					"detailedStatus":               llx.StringData(t.DetailedStatus),
+					"ikeVersion":                   llx.IntData(t.IkeVersion),
+					"localTrafficSelector":         llx.ArrayData(convert.SliceAnyToInterface(t.LocalTrafficSelector), types.String),
+					"remoteTrafficSelector":        llx.ArrayData(convert.SliceAnyToInterface(t.RemoteTrafficSelector), types.String),
+					"peerExternalGateway":          llx.StringData(t.PeerExternalGateway),
+					"peerExternalGatewayInterface": llx.IntData(t.PeerExternalGatewayInterface),
+					"peerGcpGateway":               llx.StringData(t.PeerGcpGateway),
+					"peerIp":                       llx.StringData(t.PeerIp),
+					"regionUrl":                    llx.StringData(t.Region),
+					"routerUrl":                    llx.StringData(t.Router),
+					"sharedSecretHash":             llx.StringData(t.SharedSecretHash),
+					"status":                       llx.StringData(t.Status),
+					"targetVpnGateway":             llx.StringData(t.TargetVpnGateway),
+					"vpnGatewayUrl":                llx.StringData(t.VpnGateway),
+					"vpnGatewayInterface":          llx.IntData(int64(t.VpnGatewayInterface)),
+				})
+				if err != nil {
+					return err
+				}
+				res = append(res, mqlTunnel)
+			}
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectComputeServiceStoragePool) id() (string, error) {
+	return g.Id.Data, g.Id.Error
+}
+
+func (g *mqlGcpProjectComputeService) storagePools() ([]any, error) {
+	if !g.GetEnabled().Data {
+		return nil, nil
+	}
+
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	var res []any
+	req := computeSvc.StoragePools.AggregatedList(projectId)
+	if err := req.Pages(ctx, func(page *compute.StoragePoolAggregatedList) error {
+		for _, scopedList := range page.Items {
+			for _, sp := range scopedList.StoragePools {
+				mqlSp, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.storagePool", map[string]*llx.RawData{
+					"id":                          llx.StringData(fmt.Sprintf("%d", sp.Id)),
+					"name":                        llx.StringData(sp.Name),
+					"description":                 llx.StringData(sp.Description),
+					"created":                     llx.TimeDataPtr(parseTime(sp.CreationTimestamp)),
+					"labels":                      llx.MapData(convert.MapToInterfaceMap(sp.Labels), types.String),
+					"capacityProvisioningType":    llx.StringData(sp.CapacityProvisioningType),
+					"performanceProvisioningType": llx.StringData(sp.PerformanceProvisioningType),
+					"poolProvisionedCapacityGb":   llx.IntData(sp.PoolProvisionedCapacityGb),
+					"poolProvisionedIops":         llx.IntData(sp.PoolProvisionedIops),
+					"poolProvisionedThroughput":   llx.IntData(sp.PoolProvisionedThroughput),
+					"state":                       llx.StringData(sp.State),
+					"storagePoolType":             llx.StringData(sp.StoragePoolType),
+					"zone":                        llx.StringData(sp.Zone),
+				})
+				if err != nil {
+					return err
+				}
+				res = append(res, mqlSp)
 			}
 		}
 		return nil
