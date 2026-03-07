@@ -116,8 +116,46 @@ func initGcpProjectGkeServiceCluster(runtime *plugin.Runtime, args map[string]*l
 	return nil, nil, errors.New("cluster not found")
 }
 
+type mqlGcpProjectGkeServiceClusterNodepoolInternal struct {
+	cacheInstanceGroupUrls []string
+	cacheProjectId         string
+}
+
 func (g *mqlGcpProjectGkeServiceClusterNodepool) id() (string, error) {
 	return g.Id.Data, g.Id.Error
+}
+
+func (g *mqlGcpProjectGkeServiceClusterNodepool) instanceGroupManagers() ([]any, error) {
+	if len(g.cacheInstanceGroupUrls) == 0 {
+		return nil, nil
+	}
+
+	obj, err := NewResource(g.MqlRuntime, "gcp.project.computeService", map[string]*llx.RawData{
+		"projectId": llx.StringData(g.cacheProjectId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	computeSvc := obj.(*mqlGcpProjectComputeService)
+	allManagers := computeSvc.GetInstanceGroupManagers()
+	if allManagers.Error != nil {
+		return nil, allManagers.Error
+	}
+
+	// Build a lookup by selfLink
+	bySelfLink := make(map[string]*mqlGcpProjectComputeServiceInstanceGroupManager, len(allManagers.Data))
+	for _, igm := range allManagers.Data {
+		mqlIGM := igm.(*mqlGcpProjectComputeServiceInstanceGroupManager)
+		bySelfLink[mqlIGM.SelfLink.Data] = mqlIGM
+	}
+
+	var res []any
+	for _, url := range g.cacheInstanceGroupUrls {
+		if igm, ok := bySelfLink[url]; ok {
+			res = append(res, igm)
+		}
+	}
+	return res, nil
 }
 
 func (g *mqlGcpProjectGkeServiceClusterNodepoolConfig) id() (string, error) {
@@ -717,7 +755,7 @@ func createMqlNodePool(runtime *plugin.Runtime, np *containerpb.NodePool, cluste
 		return nil, err
 	}
 
-	return CreateResource(runtime, "gcp.project.gkeService.cluster.nodepool", map[string]*llx.RawData{
+	res, err := CreateResource(runtime, "gcp.project.gkeService.cluster.nodepool", map[string]*llx.RawData{
 		"id":                llx.StringData(nodePoolId),
 		"name":              llx.StringData(np.Name),
 		"config":            llx.ResourceData(mqlPoolConfig, "gcp.project.gkeService.cluster.nodepool.config"),
@@ -733,6 +771,13 @@ func createMqlNodePool(runtime *plugin.Runtime, np *containerpb.NodePool, cluste
 		"podIpv4CidrSize":   llx.IntData(int64(np.PodIpv4CidrSize)),
 		"upgradeSettings":   llx.ResourceData(mqlUpgradeSettings, "gcp.project.gkeService.cluster.nodepool.upgradeSettings"),
 	})
+	if err != nil {
+		return nil, err
+	}
+	mqlNodePool := res.(*mqlGcpProjectGkeServiceClusterNodepool)
+	mqlNodePool.cacheInstanceGroupUrls = np.InstanceGroupUrls
+	mqlNodePool.cacheProjectId = projectId
+	return res, nil
 }
 
 func createMqlNodePoolConfig(runtime *plugin.Runtime, np *containerpb.NodePool, nodePoolId, projectId string) (plugin.Resource, error) {

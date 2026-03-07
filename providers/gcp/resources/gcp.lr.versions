@@ -1363,6 +1363,7 @@ gcp.project.gkeService.cluster.nodepool.config.taints 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.workloadMetadataMode 9.0.0
 gcp.project.gkeService.cluster.nodepool.id 9.0.0
 gcp.project.gkeService.cluster.nodepool.initialNodeCount 9.0.0
+gcp.project.gkeService.cluster.nodepool.instanceGroupManagers 11.6.6
 gcp.project.gkeService.cluster.nodepool.instanceGroupUrls 9.0.0
 gcp.project.gkeService.cluster.nodepool.locations 9.0.0
 gcp.project.gkeService.cluster.nodepool.management 9.0.0

@@ -3766,6 +3766,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.gkeService.cluster.nodepool.instanceGroupUrls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceClusterNodepool).GetInstanceGroupUrls()).ToDataRes(types.Array(types.String))
 	},
+	"gcp.project.gkeService.cluster.nodepool.instanceGroupManagers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterNodepool).GetInstanceGroupManagers()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.instanceGroupManager")))
+	},
 	"gcp.project.gkeService.cluster.nodepool.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceClusterNodepool).GetStatus()).ToDataRes(types.String)
 	},
@@ -10582,6 +10585,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.gkeService.cluster.nodepool.instanceGroupUrls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceClusterNodepool).InstanceGroupUrls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.nodepool.instanceGroupManagers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterNodepool).InstanceGroupManagers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.gkeService.cluster.nodepool.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -23728,21 +23735,22 @@ func (c *mqlGcpProjectGkeServiceClusterNetworkConfig) GetEnableCiliumClusterwide
 type mqlGcpProjectGkeServiceClusterNodepool struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectGkeServiceClusterNodepoolInternal it will be used here
-	Id                plugin.TValue[string]
-	Name              plugin.TValue[string]
-	Config            plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfig]
-	InitialNodeCount  plugin.TValue[int64]
-	Locations         plugin.TValue[[]any]
-	NetworkConfig     plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolNetworkConfig]
-	Version           plugin.TValue[string]
-	InstanceGroupUrls plugin.TValue[[]any]
-	Status            plugin.TValue[string]
-	Management        plugin.TValue[any]
-	Autoscaling       plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling]
-	StatusMessage     plugin.TValue[string]
-	PodIpv4CidrSize   plugin.TValue[int64]
-	UpgradeSettings   plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolUpgradeSettings]
+	mqlGcpProjectGkeServiceClusterNodepoolInternal
+	Id                    plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Config                plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfig]
+	InitialNodeCount      plugin.TValue[int64]
+	Locations             plugin.TValue[[]any]
+	NetworkConfig         plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolNetworkConfig]
+	Version               plugin.TValue[string]
+	InstanceGroupUrls     plugin.TValue[[]any]
+	InstanceGroupManagers plugin.TValue[[]any]
+	Status                plugin.TValue[string]
+	Management            plugin.TValue[any]
+	Autoscaling           plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolAutoscaling]
+	StatusMessage         plugin.TValue[string]
+	PodIpv4CidrSize       plugin.TValue[int64]
+	UpgradeSettings       plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolUpgradeSettings]
 }
 
 // createGcpProjectGkeServiceClusterNodepool creates a new instance of this resource
@@ -23812,6 +23820,22 @@ func (c *mqlGcpProjectGkeServiceClusterNodepool) GetVersion() *plugin.TValue[str
 
 func (c *mqlGcpProjectGkeServiceClusterNodepool) GetInstanceGroupUrls() *plugin.TValue[[]any] {
 	return &c.InstanceGroupUrls
+}
+
+func (c *mqlGcpProjectGkeServiceClusterNodepool) GetInstanceGroupManagers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InstanceGroupManagers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.gkeService.cluster.nodepool", c.__id, "instanceGroupManagers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.instanceGroupManagers()
+	})
 }
 
 func (c *mqlGcpProjectGkeServiceClusterNodepool) GetStatus() *plugin.TValue[string] {
