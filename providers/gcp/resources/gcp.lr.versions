@@ -1479,7 +1479,7 @@ gcp.project.monitoringService.alertPolicy.updatedBy 9.0.0
 gcp.project.monitoringService.alertPolicy.validity 9.0.0
 gcp.project.monitoringService.projectId 9.0.0
 gcp.project.name 9.0.0
-gcp.project.number 11.6.6
+gcp.project.number 9.0.0
 gcp.project.orgPolicies 11.5.1
 gcp.project.parentId 9.0.0
 gcp.project.pubsub 9.0.0

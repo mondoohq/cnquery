@@ -180,9 +180,9 @@ recaptcha
 regexmatchstatement
 regexpatternsetreferencestatement
 resourcegroup
+resourcequota
 rpo
 RRULE
-resourcequota
 rtsp
 rulegroup
 rulegroupreferencestatement

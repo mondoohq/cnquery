@@ -768,8 +768,11 @@ func (g *mqlGcpProjectComputeServiceDisk) sourceImage() (*mqlGcpProjectComputeSe
 		return nil, nil
 	}
 	// URL format: https://www.googleapis.com/compute/v1/projects/{project}/global/images/{image}
-	params := strings.TrimPrefix(url, "https://www.googleapis.com/compute/v1/")
-	parts := strings.Split(params, "/")
+	const computePrefix = "https://www.googleapis.com/compute/v1/"
+	if !strings.HasPrefix(url, computePrefix) {
+		return nil, errors.New("invalid source image URL: " + url)
+	}
+	parts := strings.Split(strings.TrimPrefix(url, computePrefix), "/")
 	if len(parts) < 5 {
 		return nil, errors.New("invalid source image URL: " + url)
 	}
@@ -790,8 +793,11 @@ func (g *mqlGcpProjectComputeServiceDisk) sourceSnapshot() (*mqlGcpProjectComput
 		return nil, nil
 	}
 	// URL format: https://www.googleapis.com/compute/v1/projects/{project}/global/snapshots/{snapshot}
-	params := strings.TrimPrefix(url, "https://www.googleapis.com/compute/v1/")
-	parts := strings.Split(params, "/")
+	const computePrefix = "https://www.googleapis.com/compute/v1/"
+	if !strings.HasPrefix(url, computePrefix) {
+		return nil, errors.New("invalid source snapshot URL: " + url)
+	}
+	parts := strings.Split(strings.TrimPrefix(url, computePrefix), "/")
 	if len(parts) < 5 {
 		return nil, errors.New("invalid source snapshot URL: " + url)
 	}
@@ -811,8 +817,11 @@ func (g *mqlGcpProjectComputeServiceDisk) storagePool() (*mqlGcpProjectComputeSe
 		return nil, nil
 	}
 	// URL format: https://www.googleapis.com/compute/v1/projects/{project}/zones/{zone}/storagePools/{name}
-	params := strings.TrimPrefix(url, "https://www.googleapis.com/compute/v1/")
-	parts := strings.Split(params, "/")
+	const computePrefix = "https://www.googleapis.com/compute/v1/"
+	if !strings.HasPrefix(url, computePrefix) {
+		return nil, errors.New("invalid storage pool URL: " + url)
+	}
+	parts := strings.Split(strings.TrimPrefix(url, computePrefix), "/")
 	if len(parts) < 6 {
 		return nil, errors.New("invalid storage pool URL: " + url)
 	}
