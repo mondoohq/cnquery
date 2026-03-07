@@ -2058,7 +2058,7 @@ private gcp.project.gkeService.cluster.securityPostureConfig {
 }
 
 // Google Kubernetes Engine (GKE) cluster addons config
-private gcp.project.gkeService.cluster.addonsConfig {
+private gcp.project.gkeService.cluster.addonsConfig @defaults("httpLoadBalancing horizontalPodAutoscaling kubernetesDashboard networkPolicyConfig cloudRunConfig dnsCacheConfig configConnectorConfig gcePersistentDiskCsiDriverConfig gcpFilestoreCsiDriverConfig gkeBackupAgentConfig gcsFuseCsiDriverConfig statefulHaConfig") {
   // Internal ID for this resource
   id string
   // Configuration for the HTTP (L7) load balancing controller addon
@@ -2088,7 +2088,7 @@ private gcp.project.gkeService.cluster.addonsConfig {
 }
 
 // Google Kubernetes Engine (GKE) cluster IP allocation policy
-private gcp.project.gkeService.cluster.ipAllocationPolicy {
+private gcp.project.gkeService.cluster.ipAllocationPolicy @defaults("stackType clusterIpv4CidrBlock servicesIpv4CidrBlock") {
   // Internal ID for this resource
   id string
   // Whether alias IPs are used for pod IPs in the cluster
