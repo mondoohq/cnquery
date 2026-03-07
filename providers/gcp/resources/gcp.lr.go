@@ -21404,7 +21404,7 @@ func (c *mqlGcpProjectBigqueryService) GetDatasets() *plugin.TValue[[]any] {
 type mqlGcpProjectBigqueryServiceDataset struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectBigqueryServiceDatasetInternal it will be used here
+	mqlGcpProjectBigqueryServiceDatasetInternal
 	Id                       plugin.TValue[string]
 	ProjectId                plugin.TValue[string]
 	Name                     plugin.TValue[string]

@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"go.mondoo.com/mql/v13/llx"
@@ -187,6 +188,27 @@ func (g *mqlGcpProjectBigqueryService) datasets() ([]any, error) {
 	return res, nil
 }
 
+type mqlGcpProjectBigqueryServiceDatasetInternal struct {
+	clientOnce sync.Once
+	client     *bigquery.Client
+	clientErr  error
+}
+
+func (g *mqlGcpProjectBigqueryServiceDataset) getClient() (*bigquery.Client, error) {
+	g.clientOnce.Do(func() {
+		conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+		httpClient, err := conn.Client("https://www.googleapis.com/auth/bigquery")
+		if err != nil {
+			g.clientErr = err
+			return
+		}
+		ctx := context.Background()
+		projectID := conn.ResourceID()
+		g.client, g.clientErr = bigquery.NewClient(ctx, projectID, option.WithHTTPClient(httpClient))
+	})
+	return g.client, g.clientErr
+}
+
 func (g *mqlGcpProjectBigqueryServiceDataset) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error
@@ -255,19 +277,11 @@ func (g *mqlGcpProjectBigqueryServiceDatasetAccessEntry) id() (string, error) {
 }
 
 func (g *mqlGcpProjectBigqueryServiceDataset) tables() ([]any, error) {
-	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
-
-	client, err := conn.Client("https://www.googleapis.com/auth/bigquery")
+	bigquerySvc, err := g.getClient()
 	if err != nil {
 		return nil, err
 	}
-
 	ctx := context.Background()
-	projectID := conn.ResourceID()
-	bigquerySvc, err := bigquery.NewClient(ctx, projectID, option.WithHTTPClient(client))
-	if err != nil {
-		return nil, err
-	}
 
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
@@ -390,19 +404,11 @@ func (g *mqlGcpProjectBigqueryServiceTable) id() (string, error) {
 }
 
 func (g *mqlGcpProjectBigqueryServiceDataset) models() ([]any, error) {
-	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
-
-	client, err := conn.Client("https://www.googleapis.com/auth/bigquery")
+	bigquerySvc, err := g.getClient()
 	if err != nil {
 		return nil, err
 	}
-
 	ctx := context.Background()
-	projectID := conn.ResourceID()
-	bigquerySvc, err := bigquery.NewClient(ctx, projectID, option.WithHTTPClient(client))
-	if err != nil {
-		return nil, err
-	}
 
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
@@ -476,19 +482,11 @@ func (g *mqlGcpProjectBigqueryServiceModel) id() (string, error) {
 }
 
 func (g *mqlGcpProjectBigqueryServiceDataset) routines() ([]any, error) {
-	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
-
-	client, err := conn.Client("https://www.googleapis.com/auth/bigquery")
+	bigquerySvc, err := g.getClient()
 	if err != nil {
 		return nil, err
 	}
-
 	ctx := context.Background()
-	projectID := conn.ResourceID()
-	bigquerySvc, err := bigquery.NewClient(ctx, projectID, option.WithHTTPClient(client))
-	if err != nil {
-		return nil, err
-	}
 
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
