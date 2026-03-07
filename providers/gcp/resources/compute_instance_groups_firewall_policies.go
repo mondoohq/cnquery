@@ -8,11 +8,13 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
 	"go.mondoo.com/mql/v13/types"
 	"google.golang.org/api/compute/v1"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 )
 
@@ -67,6 +69,10 @@ func (g *mqlGcpProjectComputeService) instanceGroups() ([]any, error) {
 		}
 		return nil
 	}); err != nil {
+		if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == 403 {
+			log.Warn().Str("project", projectId).Err(err).Msg("could not list compute instance groups")
+			return nil, nil
+		}
 		return nil, err
 	}
 	return res, nil
@@ -143,6 +149,10 @@ func (g *mqlGcpProjectComputeService) instanceGroupManagers() ([]any, error) {
 		}
 		return nil
 	}); err != nil {
+		if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == 403 {
+			log.Warn().Str("project", projectId).Err(err).Msg("could not list compute instance group managers")
+			return nil, nil
+		}
 		return nil, err
 	}
 	return res, nil
@@ -182,7 +192,7 @@ func (g *mqlGcpProjectComputeService) firewallPolicies() ([]any, error) {
 			associations, _ := convert.JsonToDictSlice(fp.Associations)
 
 			mqlFP, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.firewallPolicy", map[string]*llx.RawData{
-				"id":             llx.StringData(fmt.Sprintf("%d", fp.Id)),
+				"id":             llx.StringData(strconv.FormatUint(fp.Id, 10)),
 				"projectId":      llx.StringData(projectId),
 				"name":           llx.StringData(fp.ShortName),
 				"displayName":    llx.StringData(fp.DisplayName),
@@ -202,6 +212,10 @@ func (g *mqlGcpProjectComputeService) firewallPolicies() ([]any, error) {
 		}
 		return nil
 	}); err != nil {
+		if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == 403 {
+			log.Warn().Str("project", projectId).Err(err).Msg("could not list compute network firewall policies")
+			return nil, nil
+		}
 		return nil, err
 	}
 	return res, nil
@@ -215,9 +229,41 @@ func (g *mqlGcpProjectComputeServiceFirewallPolicy) id() (string, error) {
 	return "gcloud.compute.firewallPolicy/" + g.Id.Data, g.Id.Error
 }
 
+func (g *mqlGcpProjectComputeServiceFirewallPolicy) fetchRules() ([]*compute.FirewallPolicyRule, error) {
+	projectId := g.ProjectId.Data
+	name := g.Name.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	client, err := conn.Client(compute.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	policy, err := computeSvc.NetworkFirewallPolicies.Get(projectId, name).Context(ctx).Do()
+	if err != nil {
+		return nil, err
+	}
+	return policy.Rules, nil
+}
+
 func (g *mqlGcpProjectComputeServiceFirewallPolicy) rules() ([]any, error) {
 	if g.cacheRules == nil {
-		return nil, nil
+		// If the resource was resolved from cache rather than through the list,
+		// fetch the policy from the API to get its rules.
+		rules, err := g.fetchRules()
+		if err != nil {
+			return nil, err
+		}
+		g.cacheRules = rules
+		if g.cacheRules == nil {
+			return nil, nil
+		}
 	}
 	policyId := g.Id.Data
 	res := make([]any, 0, len(g.cacheRules))
