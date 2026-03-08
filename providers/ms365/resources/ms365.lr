@@ -161,6 +161,12 @@ microsoft.tenant @defaults("name") {
   technicalNotificationMails []string
   // Preferred language
   preferredLanguage string
+  // Country or region abbreviation for the tenant (ISO 3166-2)
+  countryLetterCode string
+  // List of security compliance notification email addresses
+  securityComplianceNotificationMails []string
+  // List of security compliance notification phone numbers
+  securityComplianceNotificationPhones []string
   // Tenant realm information for all verified domains
   realm() []microsoft.tenant.realmInfo
   // Tenant branding information for all verified domains
@@ -695,6 +701,22 @@ private microsoft.user @defaults("id displayName userPrincipalName") {
   employeeType string
   // The date and time when the user was hired
   employeeHireDate time
+  // The date and time when the user last changed or was assigned a password
+  lastPasswordChangeDateTime time
+  // Whether directory sync is enabled for the user
+  onPremisesSyncEnabled bool
+  // The last time the user was synced from on-premises
+  onPremisesLastSyncDateTime time
+  // The on-premises domain name of the user
+  onPremisesDomainName string
+  // The on-premises SAM account name of the user
+  onPremisesSamAccountName string
+  // The user's preferred language (ISO 639-1 code)
+  preferredLanguage string
+  // The two-letter country code for the user's usage location (required for license assignment)
+  usageLocation string
+  // The state of an external user's invitation (PendingAcceptance, Accepted, etc.)
+  externalUserState string
 }
 
 // Microsoft user authentication method states
@@ -867,6 +889,12 @@ private microsoft.group @defaults("id displayName") {
   deletedDateTime time
   // Email addresses including aliases for the group
   proxyAddresses []string
+  // The color theme for the group (blue, green, orange, pink, purple, red, teal)
+  theme string
+  // The group's preferred language (ISO 639-1 code)
+  preferredLanguage string
+  // The preferred data location for the group (e.g., a geo region)
+  preferredDataLocation string
 }
 
 // Group owner (can be a user or service principal)
@@ -944,6 +972,16 @@ private microsoft.device @defaults("id displayName") {
   systemLabels []string
   // Type of trust for the joined device
   trustType string
+  // Whether the device account is enabled
+  accountEnabled bool
+  // Soft-delete timestamp for the device
+  deletedDateTime time
+  // Whether the device is synced from an on-premises directory
+  onPremisesSyncEnabled bool
+  // The last time the device was synced from on-premises
+  onPremisesLastSyncDateTime time
+  // The profile type of the device (e.g., RegisteredDevice)
+  profileType string
 }
 
 // Microsoft domain
@@ -1179,6 +1217,12 @@ microsoft.serviceprincipal @defaults("name") {
   appRoles []microsoft.application.role
   // Permissions
   permissions() []microsoft.application.permission
+  // Alternative names for the service principal
+  alternativeNames []string
+  // Description provided by the associated application
+  appDescription string
+  // Whether Microsoft has disabled the service principal
+  disabledByMicrosoftStatus string
 }
 
 // Microsoft Service Principal Assignment

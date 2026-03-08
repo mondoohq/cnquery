@@ -144,6 +144,9 @@ func (a *mqlMicrosoftGroups) list() ([]any, error) {
 				"classification":                llx.StringDataPtr(grp.GetClassification()),
 				"deletedDateTime":               llx.TimeDataPtr(grp.GetDeletedDateTime()),
 				"proxyAddresses":                llx.ArrayData(llx.TArr2Raw(grp.GetProxyAddresses()), types.String),
+				"theme":                         llx.StringDataPtr(grp.GetTheme()),
+				"preferredLanguage":             llx.StringDataPtr(grp.GetPreferredLanguage()),
+				"preferredDataLocation":         llx.StringDataPtr(grp.GetPreferredDataLocation()),
 			})
 		if err != nil {
 			return nil, err
