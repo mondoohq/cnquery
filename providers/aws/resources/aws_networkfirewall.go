@@ -86,10 +86,10 @@ func (a *mqlAwsNetworkfirewall) getFirewalls(conn *connection.AwsConnection) []*
 					var encConfig any
 					if f.EncryptionConfiguration != nil {
 						var encErr error
-					encConfig, encErr = convert.JsonToDict(f.EncryptionConfiguration)
-					if encErr != nil {
-						log.Warn().Err(encErr).Msg("failed to convert encryption configuration")
-					}
+						encConfig, encErr = convert.JsonToDict(f.EncryptionConfiguration)
+						if encErr != nil {
+							log.Warn().Err(encErr).Msg("failed to convert encryption configuration")
+						}
 					}
 					tags := nfTagsToMap(f.Tags)
 
@@ -258,17 +258,17 @@ func networkfirewallPolicyToMql(runtime *plugin.Runtime, policyResp *nftypes.Fir
 
 	mqlPolicy, err := CreateResource(runtime, "aws.networkfirewall.policy",
 		map[string]*llx.RawData{
-			"arn":                              llx.StringDataPtr(policyResp.FirewallPolicyArn),
-			"name":                             llx.StringDataPtr(policyResp.FirewallPolicyName),
-			"description":                      llx.StringDataPtr(policyResp.Description),
-			"region":                           llx.StringData(region),
-			"statelessDefaultActions":          llx.ArrayData(llx.TArr2Raw(policy.StatelessDefaultActions), "string"),
-			"statelessFragmentDefaultActions":  llx.ArrayData(llx.TArr2Raw(policy.StatelessFragmentDefaultActions), "string"),
-			"statelessRuleGroupReferences":     llx.ArrayData(statelessRuleGroupRefs, "dict"),
-			"statefulDefaultActions":           llx.ArrayData(llx.TArr2Raw(policy.StatefulDefaultActions), "string"),
-			"statefulRuleGroupReferences":      llx.ArrayData(statefulRuleGroupRefs, "dict"),
-			"statefulEngineOptions":            llx.DictData(statefulEngineOpts),
-			"tags":                             llx.MapData(tags, "string"),
+			"arn":                             llx.StringDataPtr(policyResp.FirewallPolicyArn),
+			"name":                            llx.StringDataPtr(policyResp.FirewallPolicyName),
+			"description":                     llx.StringDataPtr(policyResp.Description),
+			"region":                          llx.StringData(region),
+			"statelessDefaultActions":         llx.ArrayData(llx.TArr2Raw(policy.StatelessDefaultActions), "string"),
+			"statelessFragmentDefaultActions": llx.ArrayData(llx.TArr2Raw(policy.StatelessFragmentDefaultActions), "string"),
+			"statelessRuleGroupReferences":    llx.ArrayData(statelessRuleGroupRefs, "dict"),
+			"statefulDefaultActions":          llx.ArrayData(llx.TArr2Raw(policy.StatefulDefaultActions), "string"),
+			"statefulRuleGroupReferences":     llx.ArrayData(statefulRuleGroupRefs, "dict"),
+			"statefulEngineOptions":           llx.DictData(statefulEngineOpts),
+			"tags":                            llx.MapData(tags, "string"),
 		})
 	if err != nil {
 		return nil, err

@@ -63,13 +63,13 @@ func (a *mqlAwsShield) subscription() (*mqlAwsShieldSubscription, error) {
 
 	mqlSub, err := CreateResource(a.MqlRuntime, "aws.shield.subscription",
 		map[string]*llx.RawData{
-			"arn":                        llx.StringDataPtr(sub.SubscriptionArn),
-			"startTime":                  llx.TimeDataPtr(sub.StartTime),
-			"endTime":                    llx.TimeDataPtr(sub.EndTime),
-			"timeCommitmentInDays":       llx.IntData(sub.TimeCommitmentInSeconds / 86400),
-			"autoRenew":                  llx.StringData(string(sub.AutoRenew)),
-			"limits":                     llx.ArrayData(limits, "dict"),
-			"proactiveEngagementStatus":  llx.StringData(string(sub.ProactiveEngagementStatus)),
+			"arn":                       llx.StringDataPtr(sub.SubscriptionArn),
+			"startTime":                 llx.TimeDataPtr(sub.StartTime),
+			"endTime":                   llx.TimeDataPtr(sub.EndTime),
+			"timeCommitmentInDays":      llx.IntData(sub.TimeCommitmentInSeconds / 86400),
+			"autoRenew":                 llx.StringData(string(sub.AutoRenew)),
+			"limits":                    llx.ArrayData(limits, "dict"),
+			"proactiveEngagementStatus": llx.StringData(string(sub.ProactiveEngagementStatus)),
 		})
 	if err != nil {
 		return nil, err
@@ -111,10 +111,10 @@ func (a *mqlAwsShield) protections() ([]any, error) {
 			}
 			mqlProtection, err := CreateResource(a.MqlRuntime, "aws.shield.protection",
 				map[string]*llx.RawData{
-					"id":           llx.StringDataPtr(p.Id),
-					"arn":          llx.StringDataPtr(p.ProtectionArn),
-					"name":         llx.StringDataPtr(p.Name),
-					"resourceArn":  llx.StringDataPtr(p.ResourceArn),
+					"id":             llx.StringDataPtr(p.Id),
+					"arn":            llx.StringDataPtr(p.ProtectionArn),
+					"name":           llx.StringDataPtr(p.Name),
+					"resourceArn":    llx.StringDataPtr(p.ResourceArn),
 					"healthCheckIds": llx.ArrayData(llx.TArr2Raw(p.HealthCheckIds), "string"),
 					"applicationLayerAutomaticResponseConfiguration": llx.DictData(appLayerConfig),
 				})
