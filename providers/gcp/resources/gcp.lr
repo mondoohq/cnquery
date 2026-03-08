@@ -575,6 +575,14 @@ private gcp.project.computeService {
   instanceGroupManagers() []gcp.project.computeService.instanceGroupManager
   // Network firewall policies
   firewallPolicies() []gcp.project.computeService.firewallPolicy
+  // Health checks
+  healthChecks() []gcp.project.computeService.healthCheck
+  // URL maps (load balancer routing rules)
+  urlMaps() []gcp.project.computeService.urlMap
+  // Target HTTP proxies
+  targetHttpProxies() []gcp.project.computeService.targetHttpProxy
+  // Target HTTPS proxies
+  targetHttpsProxies() []gcp.project.computeService.targetHttpsProxy
 }
 
 // Google Cloud (GCP) Compute address
@@ -1079,8 +1087,10 @@ private gcp.project.computeService.network @defaults("name") {
   networkFirewallPolicyEnforcementOrder string
   // Creation timestamp
   created time
-  // Network peerings for the resource
+  // Deprecated: Use networkPeerings instead
   peerings []dict
+  // Network peerings for the resource
+  networkPeerings() []gcp.project.computeService.network.peering
   // The network-wide routing mode to use
   routingMode string
   // Network mode: legacy, custom or auto
@@ -4518,4 +4528,156 @@ private gcp.project.computeService.firewallPolicy.rule @defaults("priority actio
   ruleName string
   // Security profile group URL
   securityProfileGroup string
+}
+
+// Google Cloud (GCP) Compute health check
+private gcp.project.computeService.healthCheck @defaults("name type") {
+  // Unique identifier
+  id string
+  // Project ID
+  projectId string
+  // Name of the health check
+  name string
+  // Description
+  description string
+  // Type of health check (HTTP, HTTPS, TCP, SSL, HTTP2, GRPC)
+  type string
+  // How often (in seconds) to send a health check
+  checkIntervalSec int
+  // How long (in seconds) to wait for a response
+  timeoutSec int
+  // Number of consecutive successes required
+  healthyThreshold int
+  // Number of consecutive failures required
+  unhealthyThreshold int
+  // Creation timestamp
+  created time
+  // Server-defined URL for the resource
+  selfLink string
+  // Configuration for HTTP health check
+  httpHealthCheck dict
+  // Configuration for HTTPS health check
+  httpsHealthCheck dict
+  // Configuration for TCP health check
+  tcpHealthCheck dict
+  // Configuration for SSL health check
+  sslHealthCheck dict
+  // Configuration for HTTP2 health check
+  http2HealthCheck dict
+  // Configuration for gRPC health check
+  grpcHealthCheck dict
+  // Whether to enable logging
+  logConfig dict
+  // Region URL (empty for global health checks)
+  regionUrl string
+}
+
+// Google Cloud (GCP) Compute URL map
+private gcp.project.computeService.urlMap @defaults("name") {
+  // Unique identifier
+  id string
+  // Project ID
+  projectId string
+  // Name of the URL map
+  name string
+  // Description
+  description string
+  // Default backend service URL
+  defaultService string
+  // Host rules for the URL map
+  hostRules []dict
+  // Path matchers for the URL map
+  pathMatchers []dict
+  // URL map tests
+  tests []dict
+  // Creation timestamp
+  created time
+  // Server-defined URL for the resource
+  selfLink string
+  // Region URL (empty for global URL maps)
+  regionUrl string
+}
+
+// Google Cloud (GCP) Compute target HTTP proxy
+private gcp.project.computeService.targetHttpProxy @defaults("name") {
+  // Unique identifier
+  id string
+  // Project ID
+  projectId string
+  // Name of the target HTTP proxy
+  name string
+  // Description
+  description string
+  // URL map URL
+  urlMapUrl string
+  // URL map resource
+  urlMap() gcp.project.computeService.urlMap
+  // Creation timestamp
+  created time
+  // Server-defined URL for the resource
+  selfLink string
+  // Whether the proxy can be used by Cloud Armor
+  proxyBind bool
+  // Region URL (empty for global proxies)
+  regionUrl string
+}
+
+// Google Cloud (GCP) Compute target HTTPS proxy
+private gcp.project.computeService.targetHttpsProxy @defaults("name") {
+  // Unique identifier
+  id string
+  // Project ID
+  projectId string
+  // Name of the target HTTPS proxy
+  name string
+  // Description
+  description string
+  // URL map URL
+  urlMapUrl string
+  // URL map resource
+  urlMap() gcp.project.computeService.urlMap
+  // SSL certificate URLs
+  sslCertificateUrls []string
+  // SSL policy URL
+  sslPolicyUrl string
+  // SSL policy resource
+  sslPolicy() gcp.project.computeService.sslPolicy
+  // QUIC override setting (NONE, ENABLE, DISABLE)
+  quicOverride string
+  // Creation timestamp
+  created time
+  // Server-defined URL for the resource
+  selfLink string
+  // Whether the proxy can be used by Cloud Armor
+  proxyBind bool
+  // Region URL (empty for global proxies)
+  regionUrl string
+}
+
+// Google Cloud (GCP) Compute network peering
+private gcp.project.computeService.network.peering @defaults("name state") {
+  // Internal ID
+  id string
+  // Name of the peering
+  name string
+  // URL of the peer network
+  networkUrl string
+  // Network resource of the peer
+  network() gcp.project.computeService.network
+  // State of the peering (ACTIVE, INACTIVE)
+  state string
+  // Details about the current state
+  stateDetails string
+  // Whether full mesh connectivity is created and managed automatically
+  autoCreateRoutes bool
+  // Whether to exchange custom routes
+  exchangeSubnetRoutes bool
+  // Whether to export custom routes to the peer
+  exportCustomRoutes bool
+  // Whether to import custom routes from the peer
+  importCustomRoutes bool
+  // Whether to export subnet routes with public IP ranges
+  exportSubnetRoutesWithPublicIp bool
+  // Whether to import subnet routes with public IP ranges
+  importSubnetRoutesWithPublicIp bool
 }
