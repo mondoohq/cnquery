@@ -46,6 +46,7 @@ func (a *mqlAwsNetworkfirewall) getFirewalls(conn *connection.AwsConnection) []*
 	}
 
 	for _, region := range regions {
+		region := region
 		f := func() (jobpool.JobResult, error) {
 			svc := conn.NetworkFirewall(region)
 			ctx := context.Background()
@@ -75,12 +76,20 @@ func (a *mqlAwsNetworkfirewall) getFirewalls(conn *connection.AwsConnection) []*
 					f := detail.Firewall
 					subnetMappings := make([]any, 0, len(f.SubnetMappings))
 					for _, sm := range f.SubnetMappings {
-						d, _ := convert.JsonToDict(sm)
+						d, err := convert.JsonToDict(sm)
+						if err != nil {
+							log.Warn().Err(err).Msg("failed to convert subnet mapping")
+							continue
+						}
 						subnetMappings = append(subnetMappings, d)
 					}
 					var encConfig any
 					if f.EncryptionConfiguration != nil {
-						encConfig, _ = convert.JsonToDict(f.EncryptionConfiguration)
+						var encErr error
+					encConfig, encErr = convert.JsonToDict(f.EncryptionConfiguration)
+					if encErr != nil {
+						log.Warn().Err(encErr).Msg("failed to convert encryption configuration")
+					}
 					}
 					tags := nfTagsToMap(f.Tags)
 
@@ -188,6 +197,7 @@ func (a *mqlAwsNetworkfirewall) getPolicies(conn *connection.AwsConnection) []*j
 	}
 
 	for _, region := range regions {
+		region := region
 		f := func() (jobpool.JobResult, error) {
 			svc := conn.NetworkFirewall(region)
 			ctx := context.Background()
@@ -228,11 +238,21 @@ func (a *mqlAwsNetworkfirewall) getPolicies(conn *connection.AwsConnection) []*j
 }
 
 func networkfirewallPolicyToMql(runtime *plugin.Runtime, policyResp *nftypes.FirewallPolicyResponse, policy *nftypes.FirewallPolicy, region string) (*mqlAwsNetworkfirewallPolicy, error) {
-	statelessRuleGroupRefs, _ := convert.JsonToDictSlice(policy.StatelessRuleGroupReferences)
-	statefulRuleGroupRefs, _ := convert.JsonToDictSlice(policy.StatefulRuleGroupReferences)
+	statelessRuleGroupRefs, err := convert.JsonToDictSlice(policy.StatelessRuleGroupReferences)
+	if err != nil {
+		log.Warn().Err(err).Msg("failed to convert stateless rule group references")
+	}
+	statefulRuleGroupRefs, err := convert.JsonToDictSlice(policy.StatefulRuleGroupReferences)
+	if err != nil {
+		log.Warn().Err(err).Msg("failed to convert stateful rule group references")
+	}
 	var statefulEngineOpts any
 	if policy.StatefulEngineOptions != nil {
-		statefulEngineOpts, _ = convert.JsonToDict(policy.StatefulEngineOptions)
+		var optErr error
+		statefulEngineOpts, optErr = convert.JsonToDict(policy.StatefulEngineOptions)
+		if optErr != nil {
+			log.Warn().Err(optErr).Msg("failed to convert stateful engine options")
+		}
 	}
 	tags := nfTagsToMap(policyResp.Tags)
 
@@ -286,6 +306,7 @@ func (a *mqlAwsNetworkfirewall) getRuleGroups(conn *connection.AwsConnection) []
 	}
 
 	for _, region := range regions {
+		region := region
 		f := func() (jobpool.JobResult, error) {
 			svc := conn.NetworkFirewall(region)
 			ctx := context.Background()
@@ -314,7 +335,11 @@ func (a *mqlAwsNetworkfirewall) getRuleGroups(conn *connection.AwsConnection) []
 					resp := detail.RuleGroupResponse
 					var rules any
 					if detail.RuleGroup != nil {
-						rules, _ = convert.JsonToDict(detail.RuleGroup)
+						var rulesErr error
+						rules, rulesErr = convert.JsonToDict(detail.RuleGroup)
+						if rulesErr != nil {
+							log.Warn().Err(rulesErr).Msg("failed to convert rule group")
+						}
 					}
 					tags := nfTagsToMap(resp.Tags)
 

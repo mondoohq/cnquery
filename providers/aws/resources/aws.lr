@@ -2286,7 +2286,7 @@ private aws.securityhub.hub @defaults("arn region") {
 
 // AWS Shield Advanced
 aws.shield @defaults("subscriptionState") {
-  // Whether Shield Advanced is active ("ACTIVE" or "INACTIVE")
+  // Whether Shield Advanced is active ("ACTIVE", "INACTIVE", or "UNKNOWN" if access is denied)
   subscriptionState string
   // Shield Advanced subscription details
   subscription() aws.shield.subscription

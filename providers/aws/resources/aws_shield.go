@@ -56,7 +56,10 @@ func (a *mqlAwsShield) subscription() (*mqlAwsShieldSubscription, error) {
 	}
 
 	sub := resp.Subscription
-	limits, _ := convert.JsonToDictSlice(sub.Limits)
+	limits, err := convert.JsonToDictSlice(sub.Limits)
+	if err != nil {
+		log.Warn().Err(err).Msg("failed to convert shield subscription limits")
+	}
 
 	mqlSub, err := CreateResource(a.MqlRuntime, "aws.shield.subscription",
 		map[string]*llx.RawData{
@@ -100,7 +103,11 @@ func (a *mqlAwsShield) protections() ([]any, error) {
 		for _, p := range page.Protections {
 			var appLayerConfig any
 			if p.ApplicationLayerAutomaticResponseConfiguration != nil {
-				appLayerConfig, _ = convert.JsonToDict(p.ApplicationLayerAutomaticResponseConfiguration)
+				var convErr error
+				appLayerConfig, convErr = convert.JsonToDict(p.ApplicationLayerAutomaticResponseConfiguration)
+				if convErr != nil {
+					log.Warn().Err(convErr).Msg("failed to convert application layer automatic response configuration")
+				}
 			}
 			mqlProtection, err := CreateResource(a.MqlRuntime, "aws.shield.protection",
 				map[string]*llx.RawData{
