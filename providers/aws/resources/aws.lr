@@ -2304,7 +2304,7 @@ private aws.shield.subscription @defaults("arn startTime") {
   startTime time
   // End time of the subscription
   endTime time
-  // Time period remaining in the subscription in days
+  // Time period remaining in the subscription in days (truncated from seconds)
   timeCommitmentInDays int
   // Whether auto-renew is enabled (ENABLED or DISABLED)
   autoRenew string

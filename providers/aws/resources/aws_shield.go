@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/shield"
 	shieldtypes "github.com/aws/aws-sdk-go-v2/service/shield/types"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -27,7 +28,8 @@ func (a *mqlAwsShield) subscriptionState() (string, error) {
 	resp, err := svc.GetSubscriptionState(ctx, &shield.GetSubscriptionStateInput{})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
-			return "INACTIVE", nil
+			log.Warn().Msg("access denied querying Shield subscription state; returning UNKNOWN")
+			return "UNKNOWN", nil
 		}
 		return "", err
 	}

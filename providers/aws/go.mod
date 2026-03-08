@@ -59,6 +59,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/memorydb v1.33.12
 	github.com/aws/aws-sdk-go-v2/service/mq v1.34.17
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.44.1
+	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.59.5
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.59.0
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.50.4
 	github.com/aws/aws-sdk-go-v2/service/rds v1.116.2
@@ -70,6 +71,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.235.0
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.41.3
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.68.1
+	github.com/aws/aws-sdk-go-v2/service/shield v1.34.19
 	github.com/aws/aws-sdk-go-v2/service/sns v1.39.13
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.42.23
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.68.2
@@ -135,8 +137,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.11.19 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.19 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.19 // indirect
-	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.59.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/shield v1.34.19 // indirect
 	github.com/aws/aws-sdk-go-v2/service/signin v1.0.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.30.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.35.16 // indirect
