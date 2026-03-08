@@ -37089,7 +37089,9 @@ func (c *mqlAwsShield) MqlID() string {
 }
 
 func (c *mqlAwsShield) GetSubscriptionState() *plugin.TValue[string] {
-	return &c.SubscriptionState
+	return plugin.GetOrCompute[string](&c.SubscriptionState, func() (string, error) {
+		return c.subscriptionState()
+	})
 }
 
 func (c *mqlAwsShield) GetSubscription() *plugin.TValue[*mqlAwsShieldSubscription] {
