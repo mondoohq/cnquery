@@ -1508,6 +1508,16 @@ aws.sagemaker {
   endpoints() []aws.sagemaker.endpoint
   // List of SageMaker notebook instances
   notebookInstances() []aws.sagemaker.notebookinstance
+  // List of SageMaker models
+  models() []aws.sagemaker.model
+  // List of SageMaker Studio domains
+  domains() []aws.sagemaker.domain
+  // List of SageMaker user profiles
+  userProfiles() []aws.sagemaker.userProfile
+  // List of SageMaker training jobs
+  trainingJobs() []aws.sagemaker.trainingJob
+  // List of SageMaker model package groups
+  modelPackageGroups() []aws.sagemaker.modelPackageGroup
 }
 
 // AWS SageMaker notebook instance
@@ -1566,6 +1576,156 @@ private aws.sagemaker.endpoint @defaults("arn name") {
   lastModifiedAt time
   // Status of the endpoint: OutOfService, Creating, Updating, SystemUpdating, RollingBack, InService, Deleting, or Failed
   status string
+}
+
+// AWS SageMaker model
+private aws.sagemaker.model @defaults("arn name") {
+  // ARN of the model
+  arn string
+  // Name of the model
+  name string
+  // Region where the model exists
+  region string
+  // Time when the model was created
+  createdAt time
+  // Tags for the model
+  tags map[string]string
+  // Container definitions for the model
+  containers() []dict
+  // Whether network isolation is enabled for the model
+  enableNetworkIsolation() bool
+  // IAM role used by the model
+  iamRole() aws.iam.role
+  // VPC subnets for the model
+  subnets() []aws.vpc.subnet
+  // Security groups for the model
+  securityGroups() []aws.ec2.securitygroup
+}
+
+// AWS SageMaker Studio domain
+private aws.sagemaker.domain @defaults("arn name") {
+  // ARN of the domain
+  arn string
+  // Name of the domain
+  name string
+  // Domain ID
+  domainId string
+  // Region where the domain exists
+  region string
+  // Status of the domain
+  status string
+  // Time when the domain was created
+  createdAt time
+  // Tags for the domain
+  tags map[string]string
+  // Authentication mode: SSO or IAM
+  authMode() string
+  // App network access type: PublicInternetOnly or VpcOnly
+  appNetworkAccessType() string
+  // Default user settings
+  defaultUserSettings() dict
+  // VPC where the domain is deployed
+  vpc() aws.vpc
+  // VPC subnets for the domain
+  subnets() []aws.vpc.subnet
+  // Security groups for the domain
+  securityGroups() []aws.ec2.securitygroup
+  // KMS key used for encryption
+  kmsKey() aws.kms.key
+}
+
+// AWS SageMaker user profile
+private aws.sagemaker.userProfile @defaults("name domainId") {
+  // ARN of the user profile
+  arn string
+  // Name of the user profile
+  name string
+  // Domain ID the user profile belongs to
+  domainId string
+  // Region where the user profile exists
+  region string
+  // Status of the user profile
+  status string
+  // Time when the user profile was created
+  createdAt time
+  // Tags for the user profile
+  tags map[string]string
+  // IAM execution role for the user profile
+  iamRole() aws.iam.role
+  // Security groups for the user profile
+  securityGroups() []aws.ec2.securitygroup
+}
+
+// AWS SageMaker training job
+private aws.sagemaker.trainingJob @defaults("arn name") {
+  // ARN of the training job
+  arn string
+  // Name of the training job
+  name string
+  // Region where the training job exists
+  region string
+  // Status of the training job: InProgress, Completed, Failed, Stopping, or Stopped
+  status string
+  // Time when the training job was created
+  createdAt time
+  // Time when the training job was last modified
+  lastModifiedAt time
+  // Tags for the training job
+  tags map[string]string
+  // Algorithm specification
+  algorithmSpecification() dict
+  // Input data configuration
+  inputDataConfig() []dict
+  // Output data configuration
+  outputDataConfig() dict
+  // Whether network isolation is enabled
+  enableNetworkIsolation() bool
+  // Whether inter-container traffic encryption is enabled
+  enableInterContainerTrafficEncryption() bool
+  // IAM role used by the training job
+  iamRole() aws.iam.role
+  // VPC subnets for the training job
+  subnets() []aws.vpc.subnet
+  // Security groups for the training job
+  securityGroups() []aws.ec2.securitygroup
+  // KMS key used for output data encryption
+  kmsKey() aws.kms.key
+}
+
+// AWS SageMaker model package group
+private aws.sagemaker.modelPackageGroup @defaults("arn name") {
+  // ARN of the model package group
+  arn string
+  // Name of the model package group
+  name string
+  // Region where the model package group exists
+  region string
+  // Status of the model package group
+  status string
+  // Time when the model package group was created
+  createdAt time
+  // Tags for the model package group
+  tags map[string]string
+  // Description of the model package group
+  description() string
+  // Model packages in this group
+  modelPackages() []aws.sagemaker.modelPackage
+}
+
+// AWS SageMaker model package
+private aws.sagemaker.modelPackage @defaults("arn") {
+  // ARN of the model package
+  arn string
+  // Name of the model package
+  name string
+  // Status of the model package: Pending, InProgress, Completed, Failed, or Deleting
+  status string
+  // Approval status: Approved, Rejected, or PendingManualApproval
+  approvalStatus string
+  // Description of the model package
+  description string
+  // Time when the model package was created
+  createdAt time
 }
 
 // AWS Simple Notification Service (SNS)
@@ -7957,5 +8117,179 @@ private aws.mq.broker @defaults("name engineType deploymentMode state region") {
   // Date the broker was created
   createdAt time
   // Tags for the broker
+  tags() map[string]string
+}
+
+// AWS Simple Email Service (SES) v2
+aws.ses {
+  // SES account-level settings
+  account() aws.ses.account
+  // List of email identities (domains and email addresses)
+  identities() []aws.ses.identity
+  // List of configuration sets
+  configurationSets() []aws.ses.configurationSet
+  // List of dedicated IP pools
+  dedicatedIpPools() []aws.ses.dedicatedIpPool
+  // List of email templates
+  templates() []aws.ses.template
+}
+
+// AWS SES account-level settings
+private aws.ses.account @defaults("sendingEnabled productionAccessEnabled") {
+  // Whether email sending is enabled
+  sendingEnabled bool
+  // Whether the account has production access
+  productionAccessEnabled bool
+  // Whether dedicated IP warmup is enabled
+  dedicatedIpWarmupEnabled bool
+  // Reputation metrics options
+  reputationMetrics dict
+  // Suppression options
+  suppressionOptions dict
+  // Virtual Deliverability Manager attributes
+  vdmAttributes dict
+}
+
+// AWS SES email identity (domain or email address)
+private aws.ses.identity @defaults("name type") {
+  // Name of the identity (email address or domain)
+  name string
+  // Region where the identity exists
+  region string
+  // Type of the identity: EMAIL_ADDRESS or DOMAIN
+  type string
+  // Whether sending is enabled for this identity
+  sendingEnabled bool
+  // Verification status of the identity
+  verificationStatus() string
+  // Whether DKIM signing is enabled
+  dkimSigningEnabled() bool
+  // DKIM verification status
+  dkimStatus() string
+  // DKIM tokens for DNS configuration
+  dkimTokens() []string
+  // Custom MAIL FROM domain
+  mailFromDomain() string
+  // MAIL FROM domain status
+  mailFromStatus() string
+  // Whether feedback forwarding is enabled
+  feedbackForwardingEnabled() bool
+  // Configuration set associated with this identity
+  configurationSetName() string
+  // Authorization policies for this identity
+  policies() map[string]string
+  // Tags for the identity
+  tags map[string]string
+}
+
+// AWS SES configuration set
+private aws.ses.configurationSet @defaults("name") {
+  // Name of the configuration set
+  name string
+  // Region where the configuration set exists
+  region string
+  // Event destinations for the configuration set
+  eventDestinations() []dict
+  // Delivery options including TLS policy
+  deliveryOptions() dict
+  // Tracking options for click and open tracking
+  trackingOptions() dict
+  // Reputation tracking options
+  reputationOptions() dict
+  // Suppression options
+  suppressionOptions() dict
+  // Sending options
+  sendingOptions() dict
+  // Tags for the configuration set
+  tags map[string]string
+}
+
+// AWS SES dedicated IP pool
+private aws.ses.dedicatedIpPool @defaults("name") {
+  // Name of the dedicated IP pool
+  name string
+  // Region where the pool exists
+  region string
+  // Scaling mode: STANDARD or MANAGED
+  scalingMode() string
+  // Dedicated IPs in the pool
+  ips() []dict
+}
+
+// AWS SES email template
+private aws.ses.template @defaults("name") {
+  // Name of the template
+  name string
+  // Region where the template exists
+  region string
+  // Time when the template was created
+  createdAt time
+  // Subject line of the template
+  subject() string
+  // HTML body of the template
+  htmlBody() string
+  // Text body of the template
+  textBody() string
+}
+
+// AWS Amazon Keyspaces (managed Apache Cassandra)
+aws.keyspaces {
+  // List of keyspaces
+  keyspaces() []aws.keyspaces.keyspace
+}
+
+// AWS Amazon Keyspaces keyspace
+private aws.keyspaces.keyspace @defaults("arn name") {
+  // ARN of the keyspace
+  arn string
+  // Name of the keyspace
+  name string
+  // Region where the keyspace exists
+  region string
+  // Replication strategy: SINGLE_REGION or MULTI_REGION
+  replicationStrategy string
+  // Regions the keyspace is replicated to
+  replicationRegions []string
+  // Status of the keyspace
+  status() string
+  // Tables in the keyspace
+  tables() []aws.keyspaces.table
+  // Tags for the keyspace
+  tags() map[string]string
+}
+
+// AWS Amazon Keyspaces table
+private aws.keyspaces.table @defaults("arn name") {
+  // ARN of the table
+  arn string
+  // Name of the table
+  name string
+  // Name of the keyspace this table belongs to
+  keyspaceName string
+  // Region where the table exists
+  region string
+  // Status of the table
+  status() string
+  // Schema definition
+  schemaDefinition() dict
+  // Capacity mode: PAY_PER_REQUEST or PROVISIONED
+  capacityMode() string
+  // Read capacity units (0 if on-demand)
+  readCapacityUnits() int
+  // Write capacity units (0 if on-demand)
+  writeCapacityUnits() int
+  // Encryption type: AWS_OWNED_KMS_KEY or CUSTOMER_MANAGED_KMS_KEY
+  encryptionType() string
+  // KMS key used for encryption (null if AWS-owned)
+  kmsKey() aws.kms.key
+  // Whether point-in-time recovery is enabled
+  pointInTimeRecoveryEnabled() bool
+  // Whether TTL is enabled
+  ttlEnabled() bool
+  // Default time to live in seconds
+  defaultTimeToLive() int
+  // Auto scaling settings
+  autoScalingSettings() dict
+  // Tags for the table
   tags() map[string]string
 }

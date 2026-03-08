@@ -49,6 +49,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
+	"github.com/aws/aws-sdk-go-v2/service/keyspaces"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
@@ -68,6 +69,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
+	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/aws/aws-sdk-go-v2/service/shield"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
@@ -1798,6 +1800,40 @@ func (t *AwsConnection) ElasticBeanstalk(region string) *elasticbeanstalk.Client
 	cfg.Region = region
 	client := elasticbeanstalk.NewFromConfig(cfg)
 
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) Sesv2(region string) *sesv2.Client {
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_sesv2_" + region
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached sesv2 client")
+		return c.Data.(*sesv2.Client)
+	}
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := sesv2.NewFromConfig(cfg)
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) Keyspaces(region string) *keyspaces.Client {
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_keyspaces_" + region
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached keyspaces client")
+		return c.Data.(*keyspaces.Client)
+	}
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := keyspaces.NewFromConfig(cfg)
 	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
 	return client
 }

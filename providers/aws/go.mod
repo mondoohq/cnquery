@@ -52,6 +52,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/iam v1.53.4
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.47.2
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.48.2
+	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.25.2
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.43.2
 	github.com/aws/aws-sdk-go-v2/service/kms v1.50.2
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.88.2
@@ -71,6 +72,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.235.0
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.41.3
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.68.1
+	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.60.0
 	github.com/aws/aws-sdk-go-v2/service/shield v1.34.19
 	github.com/aws/aws-sdk-go-v2/service/sns v1.39.13
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.42.23

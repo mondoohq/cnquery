@@ -263,6 +263,8 @@ github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.19 h1:JnQeStZvPHFHe
 github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.19/go.mod h1:HGyasyHvYdFQeJhvDHfH7HXkHh57htcJGKDZ+7z+I24=
 github.com/aws/aws-sdk-go-v2/service/kafka v1.48.2 h1:vfmr7oFym8C157Oz8e4HXc1Boi6qjMAB3k2m24Un/2k=
 github.com/aws/aws-sdk-go-v2/service/kafka v1.48.2/go.mod h1:lU7xpeY4j0/f1Klx/Inm4ljp6TTyMoVlVJAyZNeQGJU=
+github.com/aws/aws-sdk-go-v2/service/keyspaces v1.25.2 h1:Mwltt643ihsVsUOkuduMVzlfx775MXz2SER5zXQ2uC4=
+github.com/aws/aws-sdk-go-v2/service/keyspaces v1.25.2/go.mod h1:vbjuMOkSzu6VpRjos3+EX98HZ2d10KFDdi7cgNf2Uao=
 github.com/aws/aws-sdk-go-v2/service/kinesis v1.43.2 h1:WhTMEbudr8A351zRMU48WLERglge1qMzmb6BrlbekPg=
 github.com/aws/aws-sdk-go-v2/service/kinesis v1.43.2/go.mod h1:yDk2FJbvOCzH16j8Pa2FLGKh8MEH6/8/2Vqn3IKzmXE=
 github.com/aws/aws-sdk-go-v2/service/kms v1.50.2 h1:UOHOXigIzDRaEU03CBQcZ5uW7FNC7E+vwfhsQWXl5RQ=
@@ -301,6 +303,8 @@ github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.41.3 h1:9bb0dEq1WzA0ZxIGG
 github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.41.3/go.mod h1:2z9eg35jfuRtdPE4Ci0ousrOU9PBhDBilXA1cwq9Ptk=
 github.com/aws/aws-sdk-go-v2/service/securityhub v1.68.1 h1:bWNZbCQkZv4HNyH8EkN+paGvSKILdhxqr3EN7pDwJFY=
 github.com/aws/aws-sdk-go-v2/service/securityhub v1.68.1/go.mod h1:EpJtc67MNOLvWnoO1NaUhwSJQF3KvLgKB1cqSgFw4iQ=
+github.com/aws/aws-sdk-go-v2/service/sesv2 v1.60.0 h1:2lX163uc7cPcWXKbrlmXbbfZXHy8SpnEylGXbu0n5go=
+github.com/aws/aws-sdk-go-v2/service/sesv2 v1.60.0/go.mod h1:4dOflh7HfqHcjF1OIlt9Tr1T0rDsh906Yc75lAa2CJI=
 github.com/aws/aws-sdk-go-v2/service/shield v1.34.19 h1:hCdUgm4Dzlea7UCfSVH2Th4FPO+9slzaCIo78BPfn/0=
 github.com/aws/aws-sdk-go-v2/service/shield v1.34.19/go.mod h1:0Jb6iKeZPQeWSld13KbstkGhRWK0MQ0GAY70TiIWiok=
 github.com/aws/aws-sdk-go-v2/service/signin v1.0.7 h1:Y2cAXlClHsXkkOvWZFXATr34b0hxxloeQu/pAZz2row=

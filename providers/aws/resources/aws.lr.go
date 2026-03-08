@@ -100,6 +100,12 @@ const (
 	ResourceAwsSagemakerNotebookinstance                                        string = "aws.sagemaker.notebookinstance"
 	ResourceAwsSagemakerNotebookinstancedetails                                 string = "aws.sagemaker.notebookinstancedetails"
 	ResourceAwsSagemakerEndpoint                                                string = "aws.sagemaker.endpoint"
+	ResourceAwsSagemakerModel                                                   string = "aws.sagemaker.model"
+	ResourceAwsSagemakerDomain                                                  string = "aws.sagemaker.domain"
+	ResourceAwsSagemakerUserProfile                                             string = "aws.sagemaker.userProfile"
+	ResourceAwsSagemakerTrainingJob                                             string = "aws.sagemaker.trainingJob"
+	ResourceAwsSagemakerModelPackageGroup                                       string = "aws.sagemaker.modelPackageGroup"
+	ResourceAwsSagemakerModelPackage                                            string = "aws.sagemaker.modelPackage"
 	ResourceAwsSns                                                              string = "aws.sns"
 	ResourceAwsSnsTopic                                                         string = "aws.sns.topic"
 	ResourceAwsSnsSubscription                                                  string = "aws.sns.subscription"
@@ -372,6 +378,15 @@ const (
 	ResourceAwsMskCluster                                                       string = "aws.msk.cluster"
 	ResourceAwsMq                                                               string = "aws.mq"
 	ResourceAwsMqBroker                                                         string = "aws.mq.broker"
+	ResourceAwsSes                                                              string = "aws.ses"
+	ResourceAwsSesAccount                                                       string = "aws.ses.account"
+	ResourceAwsSesIdentity                                                      string = "aws.ses.identity"
+	ResourceAwsSesConfigurationSet                                              string = "aws.ses.configurationSet"
+	ResourceAwsSesDedicatedIpPool                                               string = "aws.ses.dedicatedIpPool"
+	ResourceAwsSesTemplate                                                      string = "aws.ses.template"
+	ResourceAwsKeyspaces                                                        string = "aws.keyspaces"
+	ResourceAwsKeyspacesKeyspace                                                string = "aws.keyspaces.keyspace"
+	ResourceAwsKeyspacesTable                                                   string = "aws.keyspaces.table"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -709,6 +724,30 @@ func init() {
 		"aws.sagemaker.endpoint": {
 			// to override args, implement: initAwsSagemakerEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsSagemakerEndpoint,
+		},
+		"aws.sagemaker.model": {
+			// to override args, implement: initAwsSagemakerModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerModel,
+		},
+		"aws.sagemaker.domain": {
+			// to override args, implement: initAwsSagemakerDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerDomain,
+		},
+		"aws.sagemaker.userProfile": {
+			// to override args, implement: initAwsSagemakerUserProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerUserProfile,
+		},
+		"aws.sagemaker.trainingJob": {
+			// to override args, implement: initAwsSagemakerTrainingJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerTrainingJob,
+		},
+		"aws.sagemaker.modelPackageGroup": {
+			// to override args, implement: initAwsSagemakerModelPackageGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerModelPackageGroup,
+		},
+		"aws.sagemaker.modelPackage": {
+			// to override args, implement: initAwsSagemakerModelPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerModelPackage,
 		},
 		"aws.sns": {
 			// to override args, implement: initAwsSns(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1797,6 +1836,42 @@ func init() {
 		"aws.mq.broker": {
 			// to override args, implement: initAwsMqBroker(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsMqBroker,
+		},
+		"aws.ses": {
+			// to override args, implement: initAwsSes(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSes,
+		},
+		"aws.ses.account": {
+			// to override args, implement: initAwsSesAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSesAccount,
+		},
+		"aws.ses.identity": {
+			// to override args, implement: initAwsSesIdentity(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSesIdentity,
+		},
+		"aws.ses.configurationSet": {
+			// to override args, implement: initAwsSesConfigurationSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSesConfigurationSet,
+		},
+		"aws.ses.dedicatedIpPool": {
+			// to override args, implement: initAwsSesDedicatedIpPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSesDedicatedIpPool,
+		},
+		"aws.ses.template": {
+			// to override args, implement: initAwsSesTemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSesTemplate,
+		},
+		"aws.keyspaces": {
+			// to override args, implement: initAwsKeyspaces(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsKeyspaces,
+		},
+		"aws.keyspaces.keyspace": {
+			// to override args, implement: initAwsKeyspacesKeyspace(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsKeyspacesKeyspace,
+		},
+		"aws.keyspaces.table": {
+			// to override args, implement: initAwsKeyspacesTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsKeyspacesTable,
 		},
 	}
 }
@@ -3621,6 +3696,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.sagemaker.notebookInstances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemaker).GetNotebookInstances()).ToDataRes(types.Array(types.Resource("aws.sagemaker.notebookinstance")))
 	},
+	"aws.sagemaker.models": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemaker).GetModels()).ToDataRes(types.Array(types.Resource("aws.sagemaker.model")))
+	},
+	"aws.sagemaker.domains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemaker).GetDomains()).ToDataRes(types.Array(types.Resource("aws.sagemaker.domain")))
+	},
+	"aws.sagemaker.userProfiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemaker).GetUserProfiles()).ToDataRes(types.Array(types.Resource("aws.sagemaker.userProfile")))
+	},
+	"aws.sagemaker.trainingJobs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemaker).GetTrainingJobs()).ToDataRes(types.Array(types.Resource("aws.sagemaker.trainingJob")))
+	},
+	"aws.sagemaker.modelPackageGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemaker).GetModelPackageGroups()).ToDataRes(types.Array(types.Resource("aws.sagemaker.modelPackageGroup")))
+	},
 	"aws.sagemaker.notebookinstance.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerNotebookinstance).GetArn()).ToDataRes(types.String)
 	},
@@ -3689,6 +3779,195 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.sagemaker.endpoint.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerEndpoint).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.model.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModel).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.model.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModel).GetName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.model.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModel).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.model.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModel).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.model.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModel).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.sagemaker.model.containers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModel).GetContainers()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.sagemaker.model.enableNetworkIsolation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModel).GetEnableNetworkIsolation()).ToDataRes(types.Bool)
+	},
+	"aws.sagemaker.model.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModel).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.sagemaker.model.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModel).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
+	"aws.sagemaker.model.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModel).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.sagemaker.domain.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDomain).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.domain.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDomain).GetName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.domain.domainId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDomain).GetDomainId()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.domain.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDomain).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.domain.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDomain).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.domain.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDomain).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.domain.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDomain).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.sagemaker.domain.authMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDomain).GetAuthMode()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.domain.appNetworkAccessType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDomain).GetAppNetworkAccessType()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.domain.defaultUserSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDomain).GetDefaultUserSettings()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.domain.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDomain).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
+	"aws.sagemaker.domain.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDomain).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
+	"aws.sagemaker.domain.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDomain).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.sagemaker.domain.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDomain).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.sagemaker.userProfile.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerUserProfile).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.userProfile.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerUserProfile).GetName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.userProfile.domainId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerUserProfile).GetDomainId()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.userProfile.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerUserProfile).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.userProfile.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerUserProfile).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.userProfile.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerUserProfile).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.userProfile.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerUserProfile).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.sagemaker.userProfile.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerUserProfile).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.sagemaker.userProfile.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerUserProfile).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.sagemaker.trainingJob.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerTrainingJob).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.trainingJob.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerTrainingJob).GetName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.trainingJob.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerTrainingJob).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.trainingJob.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerTrainingJob).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.trainingJob.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerTrainingJob).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.trainingJob.lastModifiedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerTrainingJob).GetLastModifiedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.trainingJob.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerTrainingJob).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.sagemaker.trainingJob.algorithmSpecification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerTrainingJob).GetAlgorithmSpecification()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.trainingJob.inputDataConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerTrainingJob).GetInputDataConfig()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.sagemaker.trainingJob.outputDataConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerTrainingJob).GetOutputDataConfig()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.trainingJob.enableNetworkIsolation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerTrainingJob).GetEnableNetworkIsolation()).ToDataRes(types.Bool)
+	},
+	"aws.sagemaker.trainingJob.enableInterContainerTrafficEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerTrainingJob).GetEnableInterContainerTrafficEncryption()).ToDataRes(types.Bool)
+	},
+	"aws.sagemaker.trainingJob.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerTrainingJob).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.sagemaker.trainingJob.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerTrainingJob).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
+	"aws.sagemaker.trainingJob.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerTrainingJob).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.sagemaker.trainingJob.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerTrainingJob).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.sagemaker.modelPackageGroup.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackageGroup).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelPackageGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackageGroup).GetName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelPackageGroup.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackageGroup).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelPackageGroup.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackageGroup).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelPackageGroup.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackageGroup).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.modelPackageGroup.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackageGroup).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.sagemaker.modelPackageGroup.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackageGroup).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelPackageGroup.modelPackages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackageGroup).GetModelPackages()).ToDataRes(types.Array(types.Resource("aws.sagemaker.modelPackage")))
+	},
+	"aws.sagemaker.modelPackage.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackage).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelPackage.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackage).GetName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelPackage.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackage).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelPackage.approvalStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackage).GetApprovalStatus()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelPackage.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackage).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelPackage.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackage).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"aws.sns.topics": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSns).GetTopics()).ToDataRes(types.Array(types.Resource("aws.sns.topic")))
@@ -11634,6 +11913,213 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.mq.broker.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMqBroker).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"aws.ses.account": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSes).GetAccount()).ToDataRes(types.Resource("aws.ses.account"))
+	},
+	"aws.ses.identities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSes).GetIdentities()).ToDataRes(types.Array(types.Resource("aws.ses.identity")))
+	},
+	"aws.ses.configurationSets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSes).GetConfigurationSets()).ToDataRes(types.Array(types.Resource("aws.ses.configurationSet")))
+	},
+	"aws.ses.dedicatedIpPools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSes).GetDedicatedIpPools()).ToDataRes(types.Array(types.Resource("aws.ses.dedicatedIpPool")))
+	},
+	"aws.ses.templates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSes).GetTemplates()).ToDataRes(types.Array(types.Resource("aws.ses.template")))
+	},
+	"aws.ses.account.sendingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesAccount).GetSendingEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.ses.account.productionAccessEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesAccount).GetProductionAccessEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.ses.account.dedicatedIpWarmupEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesAccount).GetDedicatedIpWarmupEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.ses.account.reputationMetrics": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesAccount).GetReputationMetrics()).ToDataRes(types.Dict)
+	},
+	"aws.ses.account.suppressionOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesAccount).GetSuppressionOptions()).ToDataRes(types.Dict)
+	},
+	"aws.ses.account.vdmAttributes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesAccount).GetVdmAttributes()).ToDataRes(types.Dict)
+	},
+	"aws.ses.identity.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentity).GetName()).ToDataRes(types.String)
+	},
+	"aws.ses.identity.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentity).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.ses.identity.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentity).GetType()).ToDataRes(types.String)
+	},
+	"aws.ses.identity.sendingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentity).GetSendingEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.ses.identity.verificationStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentity).GetVerificationStatus()).ToDataRes(types.String)
+	},
+	"aws.ses.identity.dkimSigningEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentity).GetDkimSigningEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.ses.identity.dkimStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentity).GetDkimStatus()).ToDataRes(types.String)
+	},
+	"aws.ses.identity.dkimTokens": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentity).GetDkimTokens()).ToDataRes(types.Array(types.String))
+	},
+	"aws.ses.identity.mailFromDomain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentity).GetMailFromDomain()).ToDataRes(types.String)
+	},
+	"aws.ses.identity.mailFromStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentity).GetMailFromStatus()).ToDataRes(types.String)
+	},
+	"aws.ses.identity.feedbackForwardingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentity).GetFeedbackForwardingEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.ses.identity.configurationSetName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentity).GetConfigurationSetName()).ToDataRes(types.String)
+	},
+	"aws.ses.identity.policies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentity).GetPolicies()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.ses.identity.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesIdentity).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.ses.configurationSet.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesConfigurationSet).GetName()).ToDataRes(types.String)
+	},
+	"aws.ses.configurationSet.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesConfigurationSet).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.ses.configurationSet.eventDestinations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesConfigurationSet).GetEventDestinations()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.ses.configurationSet.deliveryOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesConfigurationSet).GetDeliveryOptions()).ToDataRes(types.Dict)
+	},
+	"aws.ses.configurationSet.trackingOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesConfigurationSet).GetTrackingOptions()).ToDataRes(types.Dict)
+	},
+	"aws.ses.configurationSet.reputationOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesConfigurationSet).GetReputationOptions()).ToDataRes(types.Dict)
+	},
+	"aws.ses.configurationSet.suppressionOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesConfigurationSet).GetSuppressionOptions()).ToDataRes(types.Dict)
+	},
+	"aws.ses.configurationSet.sendingOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesConfigurationSet).GetSendingOptions()).ToDataRes(types.Dict)
+	},
+	"aws.ses.configurationSet.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesConfigurationSet).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.ses.dedicatedIpPool.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesDedicatedIpPool).GetName()).ToDataRes(types.String)
+	},
+	"aws.ses.dedicatedIpPool.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesDedicatedIpPool).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.ses.dedicatedIpPool.scalingMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesDedicatedIpPool).GetScalingMode()).ToDataRes(types.String)
+	},
+	"aws.ses.dedicatedIpPool.ips": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesDedicatedIpPool).GetIps()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.ses.template.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesTemplate).GetName()).ToDataRes(types.String)
+	},
+	"aws.ses.template.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesTemplate).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.ses.template.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesTemplate).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.ses.template.subject": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesTemplate).GetSubject()).ToDataRes(types.String)
+	},
+	"aws.ses.template.htmlBody": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesTemplate).GetHtmlBody()).ToDataRes(types.String)
+	},
+	"aws.ses.template.textBody": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSesTemplate).GetTextBody()).ToDataRes(types.String)
+	},
+	"aws.keyspaces.keyspaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspaces).GetKeyspaces()).ToDataRes(types.Array(types.Resource("aws.keyspaces.keyspace")))
+	},
+	"aws.keyspaces.keyspace.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesKeyspace).GetArn()).ToDataRes(types.String)
+	},
+	"aws.keyspaces.keyspace.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesKeyspace).GetName()).ToDataRes(types.String)
+	},
+	"aws.keyspaces.keyspace.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesKeyspace).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.keyspaces.keyspace.replicationStrategy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesKeyspace).GetReplicationStrategy()).ToDataRes(types.String)
+	},
+	"aws.keyspaces.keyspace.replicationRegions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesKeyspace).GetReplicationRegions()).ToDataRes(types.Array(types.String))
+	},
+	"aws.keyspaces.keyspace.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesKeyspace).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.keyspaces.keyspace.tables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesKeyspace).GetTables()).ToDataRes(types.Array(types.Resource("aws.keyspaces.table")))
+	},
+	"aws.keyspaces.keyspace.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesKeyspace).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.keyspaces.table.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetArn()).ToDataRes(types.String)
+	},
+	"aws.keyspaces.table.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetName()).ToDataRes(types.String)
+	},
+	"aws.keyspaces.table.keyspaceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetKeyspaceName()).ToDataRes(types.String)
+	},
+	"aws.keyspaces.table.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.keyspaces.table.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.keyspaces.table.schemaDefinition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetSchemaDefinition()).ToDataRes(types.Dict)
+	},
+	"aws.keyspaces.table.capacityMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetCapacityMode()).ToDataRes(types.String)
+	},
+	"aws.keyspaces.table.readCapacityUnits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetReadCapacityUnits()).ToDataRes(types.Int)
+	},
+	"aws.keyspaces.table.writeCapacityUnits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetWriteCapacityUnits()).ToDataRes(types.Int)
+	},
+	"aws.keyspaces.table.encryptionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetEncryptionType()).ToDataRes(types.String)
+	},
+	"aws.keyspaces.table.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.keyspaces.table.pointInTimeRecoveryEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetPointInTimeRecoveryEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.keyspaces.table.ttlEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetTtlEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.keyspaces.table.defaultTimeToLive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetDefaultTimeToLive()).ToDataRes(types.Int)
+	},
+	"aws.keyspaces.table.autoScalingSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetAutoScalingSettings()).ToDataRes(types.Dict)
+	},
+	"aws.keyspaces.table.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -14290,6 +14776,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSagemaker).NotebookInstances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.sagemaker.models": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemaker).Models, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.domains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemaker).Domains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.userProfiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemaker).UserProfiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.trainingJobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemaker).TrainingJobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackageGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemaker).ModelPackageGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.sagemaker.notebookinstance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerNotebookinstance).__id, ok = v.Value.(string)
 		return
@@ -14392,6 +14898,282 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.sagemaker.endpoint.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerEndpoint).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.model.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModel).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.model.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModel).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.model.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModel).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.model.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModel).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.model.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModel).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.model.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModel).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.model.containers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModel).Containers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.model.enableNetworkIsolation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModel).EnableNetworkIsolation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.model.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModel).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.model.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModel).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.model.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModel).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.domain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDomain).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.domain.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDomain).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.domain.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDomain).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.domain.domainId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDomain).DomainId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.domain.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDomain).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.domain.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDomain).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.domain.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDomain).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.domain.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDomain).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.domain.authMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDomain).AuthMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.domain.appNetworkAccessType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDomain).AppNetworkAccessType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.domain.defaultUserSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDomain).DefaultUserSettings, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.domain.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDomain).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.domain.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDomain).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.domain.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDomain).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.domain.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDomain).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.userProfile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerUserProfile).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.userProfile.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerUserProfile).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.userProfile.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerUserProfile).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.userProfile.domainId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerUserProfile).DomainId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.userProfile.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerUserProfile).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.userProfile.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerUserProfile).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.userProfile.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerUserProfile).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.userProfile.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerUserProfile).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.userProfile.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerUserProfile).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.userProfile.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerUserProfile).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.trainingJob.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingJob).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.trainingJob.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingJob).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.trainingJob.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingJob).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.trainingJob.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingJob).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.trainingJob.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingJob).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.trainingJob.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingJob).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.trainingJob.lastModifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingJob).LastModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.trainingJob.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingJob).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.trainingJob.algorithmSpecification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingJob).AlgorithmSpecification, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.trainingJob.inputDataConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingJob).InputDataConfig, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.trainingJob.outputDataConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingJob).OutputDataConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.trainingJob.enableNetworkIsolation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingJob).EnableNetworkIsolation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.trainingJob.enableInterContainerTrafficEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingJob).EnableInterContainerTrafficEncryption, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.trainingJob.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingJob).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.trainingJob.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingJob).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.trainingJob.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingJob).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.trainingJob.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingJob).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackageGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackageGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.modelPackageGroup.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackageGroup).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackageGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackageGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackageGroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackageGroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackageGroup.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackageGroup).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackageGroup.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackageGroup).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackageGroup.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackageGroup).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackageGroup.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackageGroup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackageGroup.modelPackages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackageGroup).ModelPackages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackage.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackage).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.modelPackage.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackage).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackage.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackage.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackage).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackage.approvalStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackage).ApprovalStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackage.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackage).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackage.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackage).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.sns.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26074,6 +26856,318 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsMqBroker).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"aws.ses.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSes).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ses.account": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSes).Account, ok = plugin.RawToTValue[*mqlAwsSesAccount](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSes).Identities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ses.configurationSets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSes).ConfigurationSets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ses.dedicatedIpPools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSes).DedicatedIpPools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ses.templates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSes).Templates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ses.account.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesAccount).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ses.account.sendingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesAccount).SendingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ses.account.productionAccessEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesAccount).ProductionAccessEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ses.account.dedicatedIpWarmupEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesAccount).DedicatedIpWarmupEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ses.account.reputationMetrics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesAccount).ReputationMetrics, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.ses.account.suppressionOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesAccount).SuppressionOptions, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.ses.account.vdmAttributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesAccount).VdmAttributes, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentity).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ses.identity.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentity).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentity).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentity).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.sendingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentity).SendingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.verificationStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentity).VerificationStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.dkimSigningEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentity).DkimSigningEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.dkimStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentity).DkimStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.dkimTokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentity).DkimTokens, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.mailFromDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentity).MailFromDomain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.mailFromStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentity).MailFromStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.feedbackForwardingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentity).FeedbackForwardingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.configurationSetName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentity).ConfigurationSetName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentity).Policies, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.ses.identity.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesIdentity).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.ses.configurationSet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesConfigurationSet).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ses.configurationSet.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesConfigurationSet).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.configurationSet.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesConfigurationSet).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.configurationSet.eventDestinations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesConfigurationSet).EventDestinations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ses.configurationSet.deliveryOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesConfigurationSet).DeliveryOptions, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.ses.configurationSet.trackingOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesConfigurationSet).TrackingOptions, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.ses.configurationSet.reputationOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesConfigurationSet).ReputationOptions, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.ses.configurationSet.suppressionOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesConfigurationSet).SuppressionOptions, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.ses.configurationSet.sendingOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesConfigurationSet).SendingOptions, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.ses.configurationSet.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesConfigurationSet).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.ses.dedicatedIpPool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesDedicatedIpPool).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ses.dedicatedIpPool.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesDedicatedIpPool).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.dedicatedIpPool.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesDedicatedIpPool).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.dedicatedIpPool.scalingMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesDedicatedIpPool).ScalingMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.dedicatedIpPool.ips": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesDedicatedIpPool).Ips, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ses.template.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesTemplate).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ses.template.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesTemplate).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.template.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesTemplate).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.template.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesTemplate).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.ses.template.subject": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesTemplate).Subject, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.template.htmlBody": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesTemplate).HtmlBody, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ses.template.textBody": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSesTemplate).TextBody, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspaces).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.keyspaces.keyspaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspaces).Keyspaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.keyspace.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesKeyspace).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.keyspaces.keyspace.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesKeyspace).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.keyspace.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesKeyspace).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.keyspace.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesKeyspace).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.keyspace.replicationStrategy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesKeyspace).ReplicationStrategy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.keyspace.replicationRegions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesKeyspace).ReplicationRegions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.keyspace.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesKeyspace).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.keyspace.tables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesKeyspace).Tables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.keyspace.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesKeyspace).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.keyspaces.table.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.keyspaceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).KeyspaceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.schemaDefinition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).SchemaDefinition, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.capacityMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).CapacityMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.readCapacityUnits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).ReadCapacityUnits, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.writeCapacityUnits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).WriteCapacityUnits, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.encryptionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).EncryptionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.pointInTimeRecoveryEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).PointInTimeRecoveryEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.ttlEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).TtlEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.defaultTimeToLive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).DefaultTimeToLive, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.autoScalingSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).AutoScalingSettings, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -33395,8 +34489,13 @@ type mqlAwsSagemaker struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsSagemakerInternal it will be used here
-	Endpoints         plugin.TValue[[]any]
-	NotebookInstances plugin.TValue[[]any]
+	Endpoints          plugin.TValue[[]any]
+	NotebookInstances  plugin.TValue[[]any]
+	Models             plugin.TValue[[]any]
+	Domains            plugin.TValue[[]any]
+	UserProfiles       plugin.TValue[[]any]
+	TrainingJobs       plugin.TValue[[]any]
+	ModelPackageGroups plugin.TValue[[]any]
 }
 
 // createAwsSagemaker creates a new instance of this resource
@@ -33465,6 +34564,86 @@ func (c *mqlAwsSagemaker) GetNotebookInstances() *plugin.TValue[[]any] {
 		}
 
 		return c.notebookInstances()
+	})
+}
+
+func (c *mqlAwsSagemaker) GetModels() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Models, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker", c.__id, "models")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.models()
+	})
+}
+
+func (c *mqlAwsSagemaker) GetDomains() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Domains, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker", c.__id, "domains")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.domains()
+	})
+}
+
+func (c *mqlAwsSagemaker) GetUserProfiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UserProfiles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker", c.__id, "userProfiles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.userProfiles()
+	})
+}
+
+func (c *mqlAwsSagemaker) GetTrainingJobs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TrainingJobs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker", c.__id, "trainingJobs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.trainingJobs()
+	})
+}
+
+func (c *mqlAwsSagemaker) GetModelPackageGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ModelPackageGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker", c.__id, "modelPackageGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.modelPackageGroups()
 	})
 }
 
@@ -33751,6 +34930,775 @@ func (c *mqlAwsSagemakerEndpoint) GetLastModifiedAt() *plugin.TValue[*time.Time]
 
 func (c *mqlAwsSagemakerEndpoint) GetStatus() *plugin.TValue[string] {
 	return &c.Status
+}
+
+// mqlAwsSagemakerModel for the aws.sagemaker.model resource
+type mqlAwsSagemakerModel struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerModelInternal
+	Arn                    plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	Region                 plugin.TValue[string]
+	CreatedAt              plugin.TValue[*time.Time]
+	Tags                   plugin.TValue[map[string]any]
+	Containers             plugin.TValue[[]any]
+	EnableNetworkIsolation plugin.TValue[bool]
+	IamRole                plugin.TValue[*mqlAwsIamRole]
+	Subnets                plugin.TValue[[]any]
+	SecurityGroups         plugin.TValue[[]any]
+}
+
+// createAwsSagemakerModel creates a new instance of this resource
+func createAwsSagemakerModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerModel{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.model", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerModel) MqlName() string {
+	return "aws.sagemaker.model"
+}
+
+func (c *mqlAwsSagemakerModel) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerModel) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSagemakerModel) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSagemakerModel) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSagemakerModel) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSagemakerModel) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAwsSagemakerModel) GetContainers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Containers, func() ([]any, error) {
+		return c.containers()
+	})
+}
+
+func (c *mqlAwsSagemakerModel) GetEnableNetworkIsolation() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EnableNetworkIsolation, func() (bool, error) {
+		return c.enableNetworkIsolation()
+	})
+}
+
+func (c *mqlAwsSagemakerModel) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.model", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsSagemakerModel) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.model", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
+}
+
+func (c *mqlAwsSagemakerModel) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.model", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+// mqlAwsSagemakerDomain for the aws.sagemaker.domain resource
+type mqlAwsSagemakerDomain struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerDomainInternal
+	Arn                  plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	DomainId             plugin.TValue[string]
+	Region               plugin.TValue[string]
+	Status               plugin.TValue[string]
+	CreatedAt            plugin.TValue[*time.Time]
+	Tags                 plugin.TValue[map[string]any]
+	AuthMode             plugin.TValue[string]
+	AppNetworkAccessType plugin.TValue[string]
+	DefaultUserSettings  plugin.TValue[any]
+	Vpc                  plugin.TValue[*mqlAwsVpc]
+	Subnets              plugin.TValue[[]any]
+	SecurityGroups       plugin.TValue[[]any]
+	KmsKey               plugin.TValue[*mqlAwsKmsKey]
+}
+
+// createAwsSagemakerDomain creates a new instance of this resource
+func createAwsSagemakerDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerDomain{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.domain", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerDomain) MqlName() string {
+	return "aws.sagemaker.domain"
+}
+
+func (c *mqlAwsSagemakerDomain) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerDomain) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSagemakerDomain) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSagemakerDomain) GetDomainId() *plugin.TValue[string] {
+	return &c.DomainId
+}
+
+func (c *mqlAwsSagemakerDomain) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSagemakerDomain) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsSagemakerDomain) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSagemakerDomain) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAwsSagemakerDomain) GetAuthMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AuthMode, func() (string, error) {
+		return c.authMode()
+	})
+}
+
+func (c *mqlAwsSagemakerDomain) GetAppNetworkAccessType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AppNetworkAccessType, func() (string, error) {
+		return c.appNetworkAccessType()
+	})
+}
+
+func (c *mqlAwsSagemakerDomain) GetDefaultUserSettings() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.DefaultUserSettings, func() (any, error) {
+		return c.defaultUserSettings()
+	})
+}
+
+func (c *mqlAwsSagemakerDomain) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.domain", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
+func (c *mqlAwsSagemakerDomain) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.domain", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
+}
+
+func (c *mqlAwsSagemakerDomain) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.domain", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsSagemakerDomain) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.domain", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+// mqlAwsSagemakerUserProfile for the aws.sagemaker.userProfile resource
+type mqlAwsSagemakerUserProfile struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerUserProfileInternal
+	Arn            plugin.TValue[string]
+	Name           plugin.TValue[string]
+	DomainId       plugin.TValue[string]
+	Region         plugin.TValue[string]
+	Status         plugin.TValue[string]
+	CreatedAt      plugin.TValue[*time.Time]
+	Tags           plugin.TValue[map[string]any]
+	IamRole        plugin.TValue[*mqlAwsIamRole]
+	SecurityGroups plugin.TValue[[]any]
+}
+
+// createAwsSagemakerUserProfile creates a new instance of this resource
+func createAwsSagemakerUserProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerUserProfile{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.userProfile", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerUserProfile) MqlName() string {
+	return "aws.sagemaker.userProfile"
+}
+
+func (c *mqlAwsSagemakerUserProfile) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerUserProfile) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSagemakerUserProfile) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSagemakerUserProfile) GetDomainId() *plugin.TValue[string] {
+	return &c.DomainId
+}
+
+func (c *mqlAwsSagemakerUserProfile) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSagemakerUserProfile) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsSagemakerUserProfile) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSagemakerUserProfile) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAwsSagemakerUserProfile) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.userProfile", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsSagemakerUserProfile) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.userProfile", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+// mqlAwsSagemakerTrainingJob for the aws.sagemaker.trainingJob resource
+type mqlAwsSagemakerTrainingJob struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerTrainingJobInternal
+	Arn                                   plugin.TValue[string]
+	Name                                  plugin.TValue[string]
+	Region                                plugin.TValue[string]
+	Status                                plugin.TValue[string]
+	CreatedAt                             plugin.TValue[*time.Time]
+	LastModifiedAt                        plugin.TValue[*time.Time]
+	Tags                                  plugin.TValue[map[string]any]
+	AlgorithmSpecification                plugin.TValue[any]
+	InputDataConfig                       plugin.TValue[[]any]
+	OutputDataConfig                      plugin.TValue[any]
+	EnableNetworkIsolation                plugin.TValue[bool]
+	EnableInterContainerTrafficEncryption plugin.TValue[bool]
+	IamRole                               plugin.TValue[*mqlAwsIamRole]
+	Subnets                               plugin.TValue[[]any]
+	SecurityGroups                        plugin.TValue[[]any]
+	KmsKey                                plugin.TValue[*mqlAwsKmsKey]
+}
+
+// createAwsSagemakerTrainingJob creates a new instance of this resource
+func createAwsSagemakerTrainingJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerTrainingJob{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.trainingJob", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerTrainingJob) MqlName() string {
+	return "aws.sagemaker.trainingJob"
+}
+
+func (c *mqlAwsSagemakerTrainingJob) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerTrainingJob) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSagemakerTrainingJob) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSagemakerTrainingJob) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSagemakerTrainingJob) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsSagemakerTrainingJob) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSagemakerTrainingJob) GetLastModifiedAt() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedAt
+}
+
+func (c *mqlAwsSagemakerTrainingJob) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAwsSagemakerTrainingJob) GetAlgorithmSpecification() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.AlgorithmSpecification, func() (any, error) {
+		return c.algorithmSpecification()
+	})
+}
+
+func (c *mqlAwsSagemakerTrainingJob) GetInputDataConfig() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InputDataConfig, func() ([]any, error) {
+		return c.inputDataConfig()
+	})
+}
+
+func (c *mqlAwsSagemakerTrainingJob) GetOutputDataConfig() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.OutputDataConfig, func() (any, error) {
+		return c.outputDataConfig()
+	})
+}
+
+func (c *mqlAwsSagemakerTrainingJob) GetEnableNetworkIsolation() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EnableNetworkIsolation, func() (bool, error) {
+		return c.enableNetworkIsolation()
+	})
+}
+
+func (c *mqlAwsSagemakerTrainingJob) GetEnableInterContainerTrafficEncryption() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EnableInterContainerTrafficEncryption, func() (bool, error) {
+		return c.enableInterContainerTrafficEncryption()
+	})
+}
+
+func (c *mqlAwsSagemakerTrainingJob) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.trainingJob", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsSagemakerTrainingJob) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.trainingJob", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
+}
+
+func (c *mqlAwsSagemakerTrainingJob) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.trainingJob", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsSagemakerTrainingJob) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.trainingJob", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+// mqlAwsSagemakerModelPackageGroup for the aws.sagemaker.modelPackageGroup resource
+type mqlAwsSagemakerModelPackageGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerModelPackageGroupInternal
+	Arn           plugin.TValue[string]
+	Name          plugin.TValue[string]
+	Region        plugin.TValue[string]
+	Status        plugin.TValue[string]
+	CreatedAt     plugin.TValue[*time.Time]
+	Tags          plugin.TValue[map[string]any]
+	Description   plugin.TValue[string]
+	ModelPackages plugin.TValue[[]any]
+}
+
+// createAwsSagemakerModelPackageGroup creates a new instance of this resource
+func createAwsSagemakerModelPackageGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerModelPackageGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.modelPackageGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerModelPackageGroup) MqlName() string {
+	return "aws.sagemaker.modelPackageGroup"
+}
+
+func (c *mqlAwsSagemakerModelPackageGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerModelPackageGroup) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSagemakerModelPackageGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSagemakerModelPackageGroup) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSagemakerModelPackageGroup) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsSagemakerModelPackageGroup) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSagemakerModelPackageGroup) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAwsSagemakerModelPackageGroup) GetDescription() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
+		return c.description()
+	})
+}
+
+func (c *mqlAwsSagemakerModelPackageGroup) GetModelPackages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ModelPackages, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.modelPackageGroup", c.__id, "modelPackages")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.modelPackages()
+	})
+}
+
+// mqlAwsSagemakerModelPackage for the aws.sagemaker.modelPackage resource
+type mqlAwsSagemakerModelPackage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsSagemakerModelPackageInternal it will be used here
+	Arn            plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Status         plugin.TValue[string]
+	ApprovalStatus plugin.TValue[string]
+	Description    plugin.TValue[string]
+	CreatedAt      plugin.TValue[*time.Time]
+}
+
+// createAwsSagemakerModelPackage creates a new instance of this resource
+func createAwsSagemakerModelPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerModelPackage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.modelPackage", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerModelPackage) MqlName() string {
+	return "aws.sagemaker.modelPackage"
+}
+
+func (c *mqlAwsSagemakerModelPackage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerModelPackage) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSagemakerModelPackage) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSagemakerModelPackage) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsSagemakerModelPackage) GetApprovalStatus() *plugin.TValue[string] {
+	return &c.ApprovalStatus
+}
+
+func (c *mqlAwsSagemakerModelPackage) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsSagemakerModelPackage) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 // mqlAwsSns for the aws.sns resource
@@ -62937,6 +64885,909 @@ func (c *mqlAwsMqBroker) GetCreatedAt() *plugin.TValue[*time.Time] {
 }
 
 func (c *mqlAwsMqBroker) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsSes for the aws.ses resource
+type mqlAwsSes struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsSesInternal it will be used here
+	Account           plugin.TValue[*mqlAwsSesAccount]
+	Identities        plugin.TValue[[]any]
+	ConfigurationSets plugin.TValue[[]any]
+	DedicatedIpPools  plugin.TValue[[]any]
+	Templates         plugin.TValue[[]any]
+}
+
+// createAwsSes creates a new instance of this resource
+func createAwsSes(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSes{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ses", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSes) MqlName() string {
+	return "aws.ses"
+}
+
+func (c *mqlAwsSes) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSes) GetAccount() *plugin.TValue[*mqlAwsSesAccount] {
+	return plugin.GetOrCompute[*mqlAwsSesAccount](&c.Account, func() (*mqlAwsSesAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ses", c.__id, "account")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSesAccount), nil
+			}
+		}
+
+		return c.account()
+	})
+}
+
+func (c *mqlAwsSes) GetIdentities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Identities, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ses", c.__id, "identities")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.identities()
+	})
+}
+
+func (c *mqlAwsSes) GetConfigurationSets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ConfigurationSets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ses", c.__id, "configurationSets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.configurationSets()
+	})
+}
+
+func (c *mqlAwsSes) GetDedicatedIpPools() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DedicatedIpPools, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ses", c.__id, "dedicatedIpPools")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.dedicatedIpPools()
+	})
+}
+
+func (c *mqlAwsSes) GetTemplates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Templates, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ses", c.__id, "templates")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.templates()
+	})
+}
+
+// mqlAwsSesAccount for the aws.ses.account resource
+type mqlAwsSesAccount struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsSesAccountInternal it will be used here
+	SendingEnabled           plugin.TValue[bool]
+	ProductionAccessEnabled  plugin.TValue[bool]
+	DedicatedIpWarmupEnabled plugin.TValue[bool]
+	ReputationMetrics        plugin.TValue[any]
+	SuppressionOptions       plugin.TValue[any]
+	VdmAttributes            plugin.TValue[any]
+}
+
+// createAwsSesAccount creates a new instance of this resource
+func createAwsSesAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSesAccount{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ses.account", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSesAccount) MqlName() string {
+	return "aws.ses.account"
+}
+
+func (c *mqlAwsSesAccount) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSesAccount) GetSendingEnabled() *plugin.TValue[bool] {
+	return &c.SendingEnabled
+}
+
+func (c *mqlAwsSesAccount) GetProductionAccessEnabled() *plugin.TValue[bool] {
+	return &c.ProductionAccessEnabled
+}
+
+func (c *mqlAwsSesAccount) GetDedicatedIpWarmupEnabled() *plugin.TValue[bool] {
+	return &c.DedicatedIpWarmupEnabled
+}
+
+func (c *mqlAwsSesAccount) GetReputationMetrics() *plugin.TValue[any] {
+	return &c.ReputationMetrics
+}
+
+func (c *mqlAwsSesAccount) GetSuppressionOptions() *plugin.TValue[any] {
+	return &c.SuppressionOptions
+}
+
+func (c *mqlAwsSesAccount) GetVdmAttributes() *plugin.TValue[any] {
+	return &c.VdmAttributes
+}
+
+// mqlAwsSesIdentity for the aws.ses.identity resource
+type mqlAwsSesIdentity struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSesIdentityInternal
+	Name                      plugin.TValue[string]
+	Region                    plugin.TValue[string]
+	Type                      plugin.TValue[string]
+	SendingEnabled            plugin.TValue[bool]
+	VerificationStatus        plugin.TValue[string]
+	DkimSigningEnabled        plugin.TValue[bool]
+	DkimStatus                plugin.TValue[string]
+	DkimTokens                plugin.TValue[[]any]
+	MailFromDomain            plugin.TValue[string]
+	MailFromStatus            plugin.TValue[string]
+	FeedbackForwardingEnabled plugin.TValue[bool]
+	ConfigurationSetName      plugin.TValue[string]
+	Policies                  plugin.TValue[map[string]any]
+	Tags                      plugin.TValue[map[string]any]
+}
+
+// createAwsSesIdentity creates a new instance of this resource
+func createAwsSesIdentity(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSesIdentity{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ses.identity", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSesIdentity) MqlName() string {
+	return "aws.ses.identity"
+}
+
+func (c *mqlAwsSesIdentity) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSesIdentity) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSesIdentity) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSesIdentity) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsSesIdentity) GetSendingEnabled() *plugin.TValue[bool] {
+	return &c.SendingEnabled
+}
+
+func (c *mqlAwsSesIdentity) GetVerificationStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.VerificationStatus, func() (string, error) {
+		return c.verificationStatus()
+	})
+}
+
+func (c *mqlAwsSesIdentity) GetDkimSigningEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DkimSigningEnabled, func() (bool, error) {
+		return c.dkimSigningEnabled()
+	})
+}
+
+func (c *mqlAwsSesIdentity) GetDkimStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DkimStatus, func() (string, error) {
+		return c.dkimStatus()
+	})
+}
+
+func (c *mqlAwsSesIdentity) GetDkimTokens() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DkimTokens, func() ([]any, error) {
+		return c.dkimTokens()
+	})
+}
+
+func (c *mqlAwsSesIdentity) GetMailFromDomain() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MailFromDomain, func() (string, error) {
+		return c.mailFromDomain()
+	})
+}
+
+func (c *mqlAwsSesIdentity) GetMailFromStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MailFromStatus, func() (string, error) {
+		return c.mailFromStatus()
+	})
+}
+
+func (c *mqlAwsSesIdentity) GetFeedbackForwardingEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.FeedbackForwardingEnabled, func() (bool, error) {
+		return c.feedbackForwardingEnabled()
+	})
+}
+
+func (c *mqlAwsSesIdentity) GetConfigurationSetName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ConfigurationSetName, func() (string, error) {
+		return c.configurationSetName()
+	})
+}
+
+func (c *mqlAwsSesIdentity) GetPolicies() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Policies, func() (map[string]any, error) {
+		return c.policies()
+	})
+}
+
+func (c *mqlAwsSesIdentity) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+// mqlAwsSesConfigurationSet for the aws.ses.configurationSet resource
+type mqlAwsSesConfigurationSet struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSesConfigurationSetInternal
+	Name               plugin.TValue[string]
+	Region             plugin.TValue[string]
+	EventDestinations  plugin.TValue[[]any]
+	DeliveryOptions    plugin.TValue[any]
+	TrackingOptions    plugin.TValue[any]
+	ReputationOptions  plugin.TValue[any]
+	SuppressionOptions plugin.TValue[any]
+	SendingOptions     plugin.TValue[any]
+	Tags               plugin.TValue[map[string]any]
+}
+
+// createAwsSesConfigurationSet creates a new instance of this resource
+func createAwsSesConfigurationSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSesConfigurationSet{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ses.configurationSet", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSesConfigurationSet) MqlName() string {
+	return "aws.ses.configurationSet"
+}
+
+func (c *mqlAwsSesConfigurationSet) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSesConfigurationSet) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSesConfigurationSet) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSesConfigurationSet) GetEventDestinations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EventDestinations, func() ([]any, error) {
+		return c.eventDestinations()
+	})
+}
+
+func (c *mqlAwsSesConfigurationSet) GetDeliveryOptions() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.DeliveryOptions, func() (any, error) {
+		return c.deliveryOptions()
+	})
+}
+
+func (c *mqlAwsSesConfigurationSet) GetTrackingOptions() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.TrackingOptions, func() (any, error) {
+		return c.trackingOptions()
+	})
+}
+
+func (c *mqlAwsSesConfigurationSet) GetReputationOptions() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.ReputationOptions, func() (any, error) {
+		return c.reputationOptions()
+	})
+}
+
+func (c *mqlAwsSesConfigurationSet) GetSuppressionOptions() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.SuppressionOptions, func() (any, error) {
+		return c.suppressionOptions()
+	})
+}
+
+func (c *mqlAwsSesConfigurationSet) GetSendingOptions() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.SendingOptions, func() (any, error) {
+		return c.sendingOptions()
+	})
+}
+
+func (c *mqlAwsSesConfigurationSet) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+// mqlAwsSesDedicatedIpPool for the aws.ses.dedicatedIpPool resource
+type mqlAwsSesDedicatedIpPool struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsSesDedicatedIpPoolInternal it will be used here
+	Name        plugin.TValue[string]
+	Region      plugin.TValue[string]
+	ScalingMode plugin.TValue[string]
+	Ips         plugin.TValue[[]any]
+}
+
+// createAwsSesDedicatedIpPool creates a new instance of this resource
+func createAwsSesDedicatedIpPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSesDedicatedIpPool{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ses.dedicatedIpPool", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSesDedicatedIpPool) MqlName() string {
+	return "aws.ses.dedicatedIpPool"
+}
+
+func (c *mqlAwsSesDedicatedIpPool) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSesDedicatedIpPool) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSesDedicatedIpPool) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSesDedicatedIpPool) GetScalingMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ScalingMode, func() (string, error) {
+		return c.scalingMode()
+	})
+}
+
+func (c *mqlAwsSesDedicatedIpPool) GetIps() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Ips, func() ([]any, error) {
+		return c.ips()
+	})
+}
+
+// mqlAwsSesTemplate for the aws.ses.template resource
+type mqlAwsSesTemplate struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSesTemplateInternal
+	Name      plugin.TValue[string]
+	Region    plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
+	Subject   plugin.TValue[string]
+	HtmlBody  plugin.TValue[string]
+	TextBody  plugin.TValue[string]
+}
+
+// createAwsSesTemplate creates a new instance of this resource
+func createAwsSesTemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSesTemplate{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ses.template", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSesTemplate) MqlName() string {
+	return "aws.ses.template"
+}
+
+func (c *mqlAwsSesTemplate) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSesTemplate) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSesTemplate) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSesTemplate) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSesTemplate) GetSubject() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Subject, func() (string, error) {
+		return c.subject()
+	})
+}
+
+func (c *mqlAwsSesTemplate) GetHtmlBody() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.HtmlBody, func() (string, error) {
+		return c.htmlBody()
+	})
+}
+
+func (c *mqlAwsSesTemplate) GetTextBody() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TextBody, func() (string, error) {
+		return c.textBody()
+	})
+}
+
+// mqlAwsKeyspaces for the aws.keyspaces resource
+type mqlAwsKeyspaces struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsKeyspacesInternal it will be used here
+	Keyspaces plugin.TValue[[]any]
+}
+
+// createAwsKeyspaces creates a new instance of this resource
+func createAwsKeyspaces(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsKeyspaces{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.keyspaces", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsKeyspaces) MqlName() string {
+	return "aws.keyspaces"
+}
+
+func (c *mqlAwsKeyspaces) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsKeyspaces) GetKeyspaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Keyspaces, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.keyspaces", c.__id, "keyspaces")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.keyspaces()
+	})
+}
+
+// mqlAwsKeyspacesKeyspace for the aws.keyspaces.keyspace resource
+type mqlAwsKeyspacesKeyspace struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsKeyspacesKeyspaceInternal
+	Arn                 plugin.TValue[string]
+	Name                plugin.TValue[string]
+	Region              plugin.TValue[string]
+	ReplicationStrategy plugin.TValue[string]
+	ReplicationRegions  plugin.TValue[[]any]
+	Status              plugin.TValue[string]
+	Tables              plugin.TValue[[]any]
+	Tags                plugin.TValue[map[string]any]
+}
+
+// createAwsKeyspacesKeyspace creates a new instance of this resource
+func createAwsKeyspacesKeyspace(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsKeyspacesKeyspace{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.keyspaces.keyspace", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsKeyspacesKeyspace) MqlName() string {
+	return "aws.keyspaces.keyspace"
+}
+
+func (c *mqlAwsKeyspacesKeyspace) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsKeyspacesKeyspace) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsKeyspacesKeyspace) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsKeyspacesKeyspace) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsKeyspacesKeyspace) GetReplicationStrategy() *plugin.TValue[string] {
+	return &c.ReplicationStrategy
+}
+
+func (c *mqlAwsKeyspacesKeyspace) GetReplicationRegions() *plugin.TValue[[]any] {
+	return &c.ReplicationRegions
+}
+
+func (c *mqlAwsKeyspacesKeyspace) GetStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
+		return c.status()
+	})
+}
+
+func (c *mqlAwsKeyspacesKeyspace) GetTables() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tables, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.keyspaces.keyspace", c.__id, "tables")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tables()
+	})
+}
+
+func (c *mqlAwsKeyspacesKeyspace) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsKeyspacesTable for the aws.keyspaces.table resource
+type mqlAwsKeyspacesTable struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsKeyspacesTableInternal
+	Arn                        plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	KeyspaceName               plugin.TValue[string]
+	Region                     plugin.TValue[string]
+	Status                     plugin.TValue[string]
+	SchemaDefinition           plugin.TValue[any]
+	CapacityMode               plugin.TValue[string]
+	ReadCapacityUnits          plugin.TValue[int64]
+	WriteCapacityUnits         plugin.TValue[int64]
+	EncryptionType             plugin.TValue[string]
+	KmsKey                     plugin.TValue[*mqlAwsKmsKey]
+	PointInTimeRecoveryEnabled plugin.TValue[bool]
+	TtlEnabled                 plugin.TValue[bool]
+	DefaultTimeToLive          plugin.TValue[int64]
+	AutoScalingSettings        plugin.TValue[any]
+	Tags                       plugin.TValue[map[string]any]
+}
+
+// createAwsKeyspacesTable creates a new instance of this resource
+func createAwsKeyspacesTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsKeyspacesTable{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.keyspaces.table", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsKeyspacesTable) MqlName() string {
+	return "aws.keyspaces.table"
+}
+
+func (c *mqlAwsKeyspacesTable) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsKeyspacesTable) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsKeyspacesTable) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsKeyspacesTable) GetKeyspaceName() *plugin.TValue[string] {
+	return &c.KeyspaceName
+}
+
+func (c *mqlAwsKeyspacesTable) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsKeyspacesTable) GetStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
+		return c.status()
+	})
+}
+
+func (c *mqlAwsKeyspacesTable) GetSchemaDefinition() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.SchemaDefinition, func() (any, error) {
+		return c.schemaDefinition()
+	})
+}
+
+func (c *mqlAwsKeyspacesTable) GetCapacityMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CapacityMode, func() (string, error) {
+		return c.capacityMode()
+	})
+}
+
+func (c *mqlAwsKeyspacesTable) GetReadCapacityUnits() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ReadCapacityUnits, func() (int64, error) {
+		return c.readCapacityUnits()
+	})
+}
+
+func (c *mqlAwsKeyspacesTable) GetWriteCapacityUnits() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.WriteCapacityUnits, func() (int64, error) {
+		return c.writeCapacityUnits()
+	})
+}
+
+func (c *mqlAwsKeyspacesTable) GetEncryptionType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.EncryptionType, func() (string, error) {
+		return c.encryptionType()
+	})
+}
+
+func (c *mqlAwsKeyspacesTable) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.keyspaces.table", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsKeyspacesTable) GetPointInTimeRecoveryEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PointInTimeRecoveryEnabled, func() (bool, error) {
+		return c.pointInTimeRecoveryEnabled()
+	})
+}
+
+func (c *mqlAwsKeyspacesTable) GetTtlEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.TtlEnabled, func() (bool, error) {
+		return c.ttlEnabled()
+	})
+}
+
+func (c *mqlAwsKeyspacesTable) GetDefaultTimeToLive() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.DefaultTimeToLive, func() (int64, error) {
+		return c.defaultTimeToLive()
+	})
+}
+
+func (c *mqlAwsKeyspacesTable) GetAutoScalingSettings() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.AutoScalingSettings, func() (any, error) {
+		return c.autoScalingSettings()
+	})
+}
+
+func (c *mqlAwsKeyspacesTable) GetTags() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
 	})
