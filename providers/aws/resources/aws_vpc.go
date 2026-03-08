@@ -977,8 +977,8 @@ func initAwsVpc(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 		}
 	}
 
-	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch aws vpc")
+	if args["arn"] == nil && args["id"] == nil {
+		return nil, nil, errors.New("arn or id required to fetch aws vpc")
 	}
 
 	// load all vpcs
@@ -995,7 +995,12 @@ func initAwsVpc(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 
 	var match func(vpc *mqlAwsVpc) bool
 
-	if args["arn"] != nil {
+	if args["id"] != nil {
+		idVal := args["id"].Value.(string)
+		match = func(vpc *mqlAwsVpc) bool {
+			return vpc.Id.Data == idVal
+		}
+	} else if args["arn"] != nil {
 		arnVal := args["arn"].Value.(string)
 		match = func(vpc *mqlAwsVpc) bool {
 			return vpc.Arn.Data == arnVal

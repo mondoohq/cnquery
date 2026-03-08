@@ -65,6 +65,10 @@ const (
 	ResourceAwsWafIpset                                                         string = "aws.waf.ipset"
 	ResourceAwsWafRegexPatternSet                                               string = "aws.waf.regexPatternSet"
 	ResourceAwsWafAclLoggingConfiguration                                       string = "aws.waf.acl.loggingConfiguration"
+	ResourceAwsNetworkfirewall                                                  string = "aws.networkfirewall"
+	ResourceAwsNetworkfirewallFirewall                                          string = "aws.networkfirewall.firewall"
+	ResourceAwsNetworkfirewallPolicy                                            string = "aws.networkfirewall.policy"
+	ResourceAwsNetworkfirewallRulegroup                                         string = "aws.networkfirewall.rulegroup"
 	ResourceAwsEfs                                                              string = "aws.efs"
 	ResourceAwsEfsFilesystem                                                    string = "aws.efs.filesystem"
 	ResourceAwsEfsMountTarget                                                   string = "aws.efs.mountTarget"
@@ -126,6 +130,10 @@ const (
 	ResourceAwsMacieCustomDataIdentifier                                        string = "aws.macie.customDataIdentifier"
 	ResourceAwsSecurityhub                                                      string = "aws.securityhub"
 	ResourceAwsSecurityhubHub                                                   string = "aws.securityhub.hub"
+	ResourceAwsShield                                                           string = "aws.shield"
+	ResourceAwsShieldSubscription                                               string = "aws.shield.subscription"
+	ResourceAwsShieldProtection                                                 string = "aws.shield.protection"
+	ResourceAwsShieldProtectionGroup                                            string = "aws.shield.protectionGroup"
 	ResourceAwsSecretsmanager                                                   string = "aws.secretsmanager"
 	ResourceAwsSecretsmanagerSecret                                             string = "aws.secretsmanager.secret"
 	ResourceAwsSecretsmanagerSecretRotationRules                                string = "aws.secretsmanager.secret.rotationRules"
@@ -562,6 +570,22 @@ func init() {
 			// to override args, implement: initAwsWafAclLoggingConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsWafAclLoggingConfiguration,
 		},
+		"aws.networkfirewall": {
+			// to override args, implement: initAwsNetworkfirewall(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsNetworkfirewall,
+		},
+		"aws.networkfirewall.firewall": {
+			// to override args, implement: initAwsNetworkfirewallFirewall(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsNetworkfirewallFirewall,
+		},
+		"aws.networkfirewall.policy": {
+			// to override args, implement: initAwsNetworkfirewallPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsNetworkfirewallPolicy,
+		},
+		"aws.networkfirewall.rulegroup": {
+			// to override args, implement: initAwsNetworkfirewallRulegroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsNetworkfirewallRulegroup,
+		},
 		"aws.efs": {
 			// to override args, implement: initAwsEfs(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEfs,
@@ -805,6 +829,22 @@ func init() {
 		"aws.securityhub.hub": {
 			// to override args, implement: initAwsSecurityhubHub(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsSecurityhubHub,
+		},
+		"aws.shield": {
+			// to override args, implement: initAwsShield(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsShield,
+		},
+		"aws.shield.subscription": {
+			// to override args, implement: initAwsShieldSubscription(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsShieldSubscription,
+		},
+		"aws.shield.protection": {
+			// to override args, implement: initAwsShieldProtection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsShieldProtection,
+		},
+		"aws.shield.protectionGroup": {
+			// to override args, implement: initAwsShieldProtectionGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsShieldProtectionGroup,
 		},
 		"aws.secretsmanager": {
 			// to override args, implement: initAwsSecretsmanager(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2723,6 +2763,111 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.waf.acl.loggingConfiguration.redactedFields": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafAclLoggingConfiguration).GetRedactedFields()).ToDataRes(types.Array(types.String))
 	},
+	"aws.networkfirewall.firewalls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewall).GetFirewalls()).ToDataRes(types.Array(types.Resource("aws.networkfirewall.firewall")))
+	},
+	"aws.networkfirewall.policies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewall).GetPolicies()).ToDataRes(types.Array(types.Resource("aws.networkfirewall.policy")))
+	},
+	"aws.networkfirewall.ruleGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewall).GetRuleGroups()).ToDataRes(types.Array(types.Resource("aws.networkfirewall.rulegroup")))
+	},
+	"aws.networkfirewall.firewall.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallFirewall).GetArn()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.firewall.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallFirewall).GetName()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.firewall.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallFirewall).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.firewall.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallFirewall).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.firewall.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallFirewall).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
+	"aws.networkfirewall.firewall.deleteProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallFirewall).GetDeleteProtection()).ToDataRes(types.Bool)
+	},
+	"aws.networkfirewall.firewall.subnetChangeProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallFirewall).GetSubnetChangeProtection()).ToDataRes(types.Bool)
+	},
+	"aws.networkfirewall.firewall.firewallPolicyChangeProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallFirewall).GetFirewallPolicyChangeProtection()).ToDataRes(types.Bool)
+	},
+	"aws.networkfirewall.firewall.firewallPolicyArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallFirewall).GetFirewallPolicyArn()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.firewall.policy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallFirewall).GetPolicy()).ToDataRes(types.Resource("aws.networkfirewall.policy"))
+	},
+	"aws.networkfirewall.firewall.subnetMappings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallFirewall).GetSubnetMappings()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.networkfirewall.firewall.encryptionConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallFirewall).GetEncryptionConfiguration()).ToDataRes(types.Dict)
+	},
+	"aws.networkfirewall.firewall.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallFirewall).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.networkfirewall.policy.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallPolicy).GetArn()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.policy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallPolicy).GetName()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.policy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallPolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.policy.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallPolicy).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.policy.statelessDefaultActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallPolicy).GetStatelessDefaultActions()).ToDataRes(types.Array(types.String))
+	},
+	"aws.networkfirewall.policy.statelessFragmentDefaultActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallPolicy).GetStatelessFragmentDefaultActions()).ToDataRes(types.Array(types.String))
+	},
+	"aws.networkfirewall.policy.statelessRuleGroupReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallPolicy).GetStatelessRuleGroupReferences()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.networkfirewall.policy.statefulDefaultActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallPolicy).GetStatefulDefaultActions()).ToDataRes(types.Array(types.String))
+	},
+	"aws.networkfirewall.policy.statefulRuleGroupReferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallPolicy).GetStatefulRuleGroupReferences()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.networkfirewall.policy.statefulEngineOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallPolicy).GetStatefulEngineOptions()).ToDataRes(types.Dict)
+	},
+	"aws.networkfirewall.policy.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallPolicy).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.networkfirewall.rulegroup.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallRulegroup).GetArn()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.rulegroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallRulegroup).GetName()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.rulegroup.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallRulegroup).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.rulegroup.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallRulegroup).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.rulegroup.capacity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallRulegroup).GetCapacity()).ToDataRes(types.Int)
+	},
+	"aws.networkfirewall.rulegroup.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallRulegroup).GetType()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.rulegroup.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallRulegroup).GetRules()).ToDataRes(types.Dict)
+	},
+	"aws.networkfirewall.rulegroup.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallRulegroup).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"aws.efs.filesystems": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfs).GetFilesystems()).ToDataRes(types.Array(types.Resource("aws.efs.filesystem")))
 	},
@@ -4435,6 +4580,75 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.securityhub.hub.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecurityhubHub).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.shield.subscriptionState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsShield).GetSubscriptionState()).ToDataRes(types.String)
+	},
+	"aws.shield.subscription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsShield).GetSubscription()).ToDataRes(types.Resource("aws.shield.subscription"))
+	},
+	"aws.shield.protections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsShield).GetProtections()).ToDataRes(types.Array(types.Resource("aws.shield.protection")))
+	},
+	"aws.shield.protectionGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsShield).GetProtectionGroups()).ToDataRes(types.Array(types.Resource("aws.shield.protectionGroup")))
+	},
+	"aws.shield.subscription.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsShieldSubscription).GetArn()).ToDataRes(types.String)
+	},
+	"aws.shield.subscription.startTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsShieldSubscription).GetStartTime()).ToDataRes(types.Time)
+	},
+	"aws.shield.subscription.endTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsShieldSubscription).GetEndTime()).ToDataRes(types.Time)
+	},
+	"aws.shield.subscription.timeCommitmentInDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsShieldSubscription).GetTimeCommitmentInDays()).ToDataRes(types.Int)
+	},
+	"aws.shield.subscription.autoRenew": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsShieldSubscription).GetAutoRenew()).ToDataRes(types.String)
+	},
+	"aws.shield.subscription.limits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsShieldSubscription).GetLimits()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.shield.subscription.proactiveEngagementStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsShieldSubscription).GetProactiveEngagementStatus()).ToDataRes(types.String)
+	},
+	"aws.shield.protection.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsShieldProtection).GetId()).ToDataRes(types.String)
+	},
+	"aws.shield.protection.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsShieldProtection).GetArn()).ToDataRes(types.String)
+	},
+	"aws.shield.protection.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsShieldProtection).GetName()).ToDataRes(types.String)
+	},
+	"aws.shield.protection.resourceArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsShieldProtection).GetResourceArn()).ToDataRes(types.String)
+	},
+	"aws.shield.protection.healthCheckIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsShieldProtection).GetHealthCheckIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.shield.protection.applicationLayerAutomaticResponseConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsShieldProtection).GetApplicationLayerAutomaticResponseConfiguration()).ToDataRes(types.Dict)
+	},
+	"aws.shield.protectionGroup.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsShieldProtectionGroup).GetId()).ToDataRes(types.String)
+	},
+	"aws.shield.protectionGroup.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsShieldProtectionGroup).GetArn()).ToDataRes(types.String)
+	},
+	"aws.shield.protectionGroup.aggregation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsShieldProtectionGroup).GetAggregation()).ToDataRes(types.String)
+	},
+	"aws.shield.protectionGroup.pattern": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsShieldProtectionGroup).GetPattern()).ToDataRes(types.String)
+	},
+	"aws.shield.protectionGroup.resourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsShieldProtectionGroup).GetResourceType()).ToDataRes(types.String)
+	},
+	"aws.shield.protectionGroup.members": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsShieldProtectionGroup).GetMembers()).ToDataRes(types.Array(types.String))
 	},
 	"aws.secretsmanager.secrets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecretsmanager).GetSecrets()).ToDataRes(types.Array(types.Resource("aws.secretsmanager.secret")))
@@ -12804,6 +13018,162 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsWafAclLoggingConfiguration).RedactedFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.networkfirewall.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewall).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.networkfirewall.firewalls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewall).Firewalls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewall).Policies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.ruleGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewall).RuleGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.firewall.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallFirewall).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.networkfirewall.firewall.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallFirewall).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.firewall.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallFirewall).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.firewall.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallFirewall).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.firewall.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallFirewall).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.firewall.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallFirewall).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.firewall.deleteProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallFirewall).DeleteProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.firewall.subnetChangeProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallFirewall).SubnetChangeProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.firewall.firewallPolicyChangeProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallFirewall).FirewallPolicyChangeProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.firewall.firewallPolicyArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallFirewall).FirewallPolicyArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.firewall.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallFirewall).Policy, ok = plugin.RawToTValue[*mqlAwsNetworkfirewallPolicy](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.firewall.subnetMappings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallFirewall).SubnetMappings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.firewall.encryptionConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallFirewall).EncryptionConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.firewall.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallFirewall).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.networkfirewall.policy.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallPolicy).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.policy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.policy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.policy.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallPolicy).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.policy.statelessDefaultActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallPolicy).StatelessDefaultActions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.policy.statelessFragmentDefaultActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallPolicy).StatelessFragmentDefaultActions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.policy.statelessRuleGroupReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallPolicy).StatelessRuleGroupReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.policy.statefulDefaultActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallPolicy).StatefulDefaultActions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.policy.statefulRuleGroupReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallPolicy).StatefulRuleGroupReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.policy.statefulEngineOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallPolicy).StatefulEngineOptions, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.policy.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallPolicy).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.rulegroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallRulegroup).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.networkfirewall.rulegroup.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallRulegroup).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.rulegroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallRulegroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.rulegroup.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallRulegroup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.rulegroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallRulegroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.rulegroup.capacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallRulegroup).Capacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.rulegroup.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallRulegroup).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.rulegroup.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallRulegroup).Rules, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.rulegroup.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallRulegroup).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"aws.efs.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEfs).__id, ok = v.Value.(string)
 		return
@@ -15330,6 +15700,114 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.securityhub.hub.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSecurityhubHub).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.shield.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsShield).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.shield.subscriptionState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsShield).SubscriptionState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.shield.subscription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsShield).Subscription, ok = plugin.RawToTValue[*mqlAwsShieldSubscription](v.Value, v.Error)
+		return
+	},
+	"aws.shield.protections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsShield).Protections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.shield.protectionGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsShield).ProtectionGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.shield.subscription.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsShieldSubscription).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.shield.subscription.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsShieldSubscription).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.shield.subscription.startTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsShieldSubscription).StartTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.shield.subscription.endTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsShieldSubscription).EndTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.shield.subscription.timeCommitmentInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsShieldSubscription).TimeCommitmentInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.shield.subscription.autoRenew": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsShieldSubscription).AutoRenew, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.shield.subscription.limits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsShieldSubscription).Limits, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.shield.subscription.proactiveEngagementStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsShieldSubscription).ProactiveEngagementStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.shield.protection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsShieldProtection).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.shield.protection.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsShieldProtection).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.shield.protection.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsShieldProtection).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.shield.protection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsShieldProtection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.shield.protection.resourceArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsShieldProtection).ResourceArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.shield.protection.healthCheckIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsShieldProtection).HealthCheckIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.shield.protection.applicationLayerAutomaticResponseConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsShieldProtection).ApplicationLayerAutomaticResponseConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.shield.protectionGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsShieldProtectionGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.shield.protectionGroup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsShieldProtectionGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.shield.protectionGroup.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsShieldProtectionGroup).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.shield.protectionGroup.aggregation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsShieldProtectionGroup).Aggregation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.shield.protectionGroup.pattern": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsShieldProtectionGroup).Pattern, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.shield.protectionGroup.resourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsShieldProtectionGroup).ResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.shield.protectionGroup.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsShieldProtectionGroup).Members, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.secretsmanager.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -29541,6 +30019,417 @@ func (c *mqlAwsWafAclLoggingConfiguration) GetRedactedFields() *plugin.TValue[[]
 	return &c.RedactedFields
 }
 
+// mqlAwsNetworkfirewall for the aws.networkfirewall resource
+type mqlAwsNetworkfirewall struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsNetworkfirewallInternal it will be used here
+	Firewalls  plugin.TValue[[]any]
+	Policies   plugin.TValue[[]any]
+	RuleGroups plugin.TValue[[]any]
+}
+
+// createAwsNetworkfirewall creates a new instance of this resource
+func createAwsNetworkfirewall(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsNetworkfirewall{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.networkfirewall", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsNetworkfirewall) MqlName() string {
+	return "aws.networkfirewall"
+}
+
+func (c *mqlAwsNetworkfirewall) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsNetworkfirewall) GetFirewalls() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Firewalls, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.networkfirewall", c.__id, "firewalls")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.firewalls()
+	})
+}
+
+func (c *mqlAwsNetworkfirewall) GetPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Policies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.networkfirewall", c.__id, "policies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policies()
+	})
+}
+
+func (c *mqlAwsNetworkfirewall) GetRuleGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RuleGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.networkfirewall", c.__id, "ruleGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ruleGroups()
+	})
+}
+
+// mqlAwsNetworkfirewallFirewall for the aws.networkfirewall.firewall resource
+type mqlAwsNetworkfirewallFirewall struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsNetworkfirewallFirewallInternal
+	Arn                            plugin.TValue[string]
+	Name                           plugin.TValue[string]
+	Description                    plugin.TValue[string]
+	Region                         plugin.TValue[string]
+	Vpc                            plugin.TValue[*mqlAwsVpc]
+	DeleteProtection               plugin.TValue[bool]
+	SubnetChangeProtection         plugin.TValue[bool]
+	FirewallPolicyChangeProtection plugin.TValue[bool]
+	FirewallPolicyArn              plugin.TValue[string]
+	Policy                         plugin.TValue[*mqlAwsNetworkfirewallPolicy]
+	SubnetMappings                 plugin.TValue[[]any]
+	EncryptionConfiguration        plugin.TValue[any]
+	Tags                           plugin.TValue[map[string]any]
+}
+
+// createAwsNetworkfirewallFirewall creates a new instance of this resource
+func createAwsNetworkfirewallFirewall(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsNetworkfirewallFirewall{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.networkfirewall.firewall", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsNetworkfirewallFirewall) MqlName() string {
+	return "aws.networkfirewall.firewall"
+}
+
+func (c *mqlAwsNetworkfirewallFirewall) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsNetworkfirewallFirewall) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsNetworkfirewallFirewall) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsNetworkfirewallFirewall) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsNetworkfirewallFirewall) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsNetworkfirewallFirewall) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.networkfirewall.firewall", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
+func (c *mqlAwsNetworkfirewallFirewall) GetDeleteProtection() *plugin.TValue[bool] {
+	return &c.DeleteProtection
+}
+
+func (c *mqlAwsNetworkfirewallFirewall) GetSubnetChangeProtection() *plugin.TValue[bool] {
+	return &c.SubnetChangeProtection
+}
+
+func (c *mqlAwsNetworkfirewallFirewall) GetFirewallPolicyChangeProtection() *plugin.TValue[bool] {
+	return &c.FirewallPolicyChangeProtection
+}
+
+func (c *mqlAwsNetworkfirewallFirewall) GetFirewallPolicyArn() *plugin.TValue[string] {
+	return &c.FirewallPolicyArn
+}
+
+func (c *mqlAwsNetworkfirewallFirewall) GetPolicy() *plugin.TValue[*mqlAwsNetworkfirewallPolicy] {
+	return plugin.GetOrCompute[*mqlAwsNetworkfirewallPolicy](&c.Policy, func() (*mqlAwsNetworkfirewallPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.networkfirewall.firewall", c.__id, "policy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsNetworkfirewallPolicy), nil
+			}
+		}
+
+		return c.policy()
+	})
+}
+
+func (c *mqlAwsNetworkfirewallFirewall) GetSubnetMappings() *plugin.TValue[[]any] {
+	return &c.SubnetMappings
+}
+
+func (c *mqlAwsNetworkfirewallFirewall) GetEncryptionConfiguration() *plugin.TValue[any] {
+	return &c.EncryptionConfiguration
+}
+
+func (c *mqlAwsNetworkfirewallFirewall) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+// mqlAwsNetworkfirewallPolicy for the aws.networkfirewall.policy resource
+type mqlAwsNetworkfirewallPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsNetworkfirewallPolicyInternal it will be used here
+	Arn                             plugin.TValue[string]
+	Name                            plugin.TValue[string]
+	Description                     plugin.TValue[string]
+	Region                          plugin.TValue[string]
+	StatelessDefaultActions         plugin.TValue[[]any]
+	StatelessFragmentDefaultActions plugin.TValue[[]any]
+	StatelessRuleGroupReferences    plugin.TValue[[]any]
+	StatefulDefaultActions          plugin.TValue[[]any]
+	StatefulRuleGroupReferences     plugin.TValue[[]any]
+	StatefulEngineOptions           plugin.TValue[any]
+	Tags                            plugin.TValue[map[string]any]
+}
+
+// createAwsNetworkfirewallPolicy creates a new instance of this resource
+func createAwsNetworkfirewallPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsNetworkfirewallPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.networkfirewall.policy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsNetworkfirewallPolicy) MqlName() string {
+	return "aws.networkfirewall.policy"
+}
+
+func (c *mqlAwsNetworkfirewallPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsNetworkfirewallPolicy) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsNetworkfirewallPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsNetworkfirewallPolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsNetworkfirewallPolicy) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsNetworkfirewallPolicy) GetStatelessDefaultActions() *plugin.TValue[[]any] {
+	return &c.StatelessDefaultActions
+}
+
+func (c *mqlAwsNetworkfirewallPolicy) GetStatelessFragmentDefaultActions() *plugin.TValue[[]any] {
+	return &c.StatelessFragmentDefaultActions
+}
+
+func (c *mqlAwsNetworkfirewallPolicy) GetStatelessRuleGroupReferences() *plugin.TValue[[]any] {
+	return &c.StatelessRuleGroupReferences
+}
+
+func (c *mqlAwsNetworkfirewallPolicy) GetStatefulDefaultActions() *plugin.TValue[[]any] {
+	return &c.StatefulDefaultActions
+}
+
+func (c *mqlAwsNetworkfirewallPolicy) GetStatefulRuleGroupReferences() *plugin.TValue[[]any] {
+	return &c.StatefulRuleGroupReferences
+}
+
+func (c *mqlAwsNetworkfirewallPolicy) GetStatefulEngineOptions() *plugin.TValue[any] {
+	return &c.StatefulEngineOptions
+}
+
+func (c *mqlAwsNetworkfirewallPolicy) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+// mqlAwsNetworkfirewallRulegroup for the aws.networkfirewall.rulegroup resource
+type mqlAwsNetworkfirewallRulegroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsNetworkfirewallRulegroupInternal it will be used here
+	Arn         plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Description plugin.TValue[string]
+	Region      plugin.TValue[string]
+	Capacity    plugin.TValue[int64]
+	Type        plugin.TValue[string]
+	Rules       plugin.TValue[any]
+	Tags        plugin.TValue[map[string]any]
+}
+
+// createAwsNetworkfirewallRulegroup creates a new instance of this resource
+func createAwsNetworkfirewallRulegroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsNetworkfirewallRulegroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.networkfirewall.rulegroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsNetworkfirewallRulegroup) MqlName() string {
+	return "aws.networkfirewall.rulegroup"
+}
+
+func (c *mqlAwsNetworkfirewallRulegroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsNetworkfirewallRulegroup) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsNetworkfirewallRulegroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsNetworkfirewallRulegroup) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsNetworkfirewallRulegroup) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsNetworkfirewallRulegroup) GetCapacity() *plugin.TValue[int64] {
+	return &c.Capacity
+}
+
+func (c *mqlAwsNetworkfirewallRulegroup) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsNetworkfirewallRulegroup) GetRules() *plugin.TValue[any] {
+	return &c.Rules
+}
+
+func (c *mqlAwsNetworkfirewallRulegroup) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
 // mqlAwsEfs for the aws.efs resource
 type mqlAwsEfs struct {
 	MqlRuntime *plugin.Runtime
@@ -36149,6 +37038,335 @@ func (c *mqlAwsSecurityhubHub) GetSubscribedAt() *plugin.TValue[string] {
 
 func (c *mqlAwsSecurityhubHub) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+// mqlAwsShield for the aws.shield resource
+type mqlAwsShield struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsShieldInternal it will be used here
+	SubscriptionState plugin.TValue[string]
+	Subscription      plugin.TValue[*mqlAwsShieldSubscription]
+	Protections       plugin.TValue[[]any]
+	ProtectionGroups  plugin.TValue[[]any]
+}
+
+// createAwsShield creates a new instance of this resource
+func createAwsShield(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsShield{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.shield", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsShield) MqlName() string {
+	return "aws.shield"
+}
+
+func (c *mqlAwsShield) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsShield) GetSubscriptionState() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SubscriptionState, func() (string, error) {
+		return c.subscriptionState()
+	})
+}
+
+func (c *mqlAwsShield) GetSubscription() *plugin.TValue[*mqlAwsShieldSubscription] {
+	return plugin.GetOrCompute[*mqlAwsShieldSubscription](&c.Subscription, func() (*mqlAwsShieldSubscription, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.shield", c.__id, "subscription")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsShieldSubscription), nil
+			}
+		}
+
+		return c.subscription()
+	})
+}
+
+func (c *mqlAwsShield) GetProtections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Protections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.shield", c.__id, "protections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.protections()
+	})
+}
+
+func (c *mqlAwsShield) GetProtectionGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ProtectionGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.shield", c.__id, "protectionGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.protectionGroups()
+	})
+}
+
+// mqlAwsShieldSubscription for the aws.shield.subscription resource
+type mqlAwsShieldSubscription struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsShieldSubscriptionInternal it will be used here
+	Arn                       plugin.TValue[string]
+	StartTime                 plugin.TValue[*time.Time]
+	EndTime                   plugin.TValue[*time.Time]
+	TimeCommitmentInDays      plugin.TValue[int64]
+	AutoRenew                 plugin.TValue[string]
+	Limits                    plugin.TValue[[]any]
+	ProactiveEngagementStatus plugin.TValue[string]
+}
+
+// createAwsShieldSubscription creates a new instance of this resource
+func createAwsShieldSubscription(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsShieldSubscription{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.shield.subscription", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsShieldSubscription) MqlName() string {
+	return "aws.shield.subscription"
+}
+
+func (c *mqlAwsShieldSubscription) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsShieldSubscription) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsShieldSubscription) GetStartTime() *plugin.TValue[*time.Time] {
+	return &c.StartTime
+}
+
+func (c *mqlAwsShieldSubscription) GetEndTime() *plugin.TValue[*time.Time] {
+	return &c.EndTime
+}
+
+func (c *mqlAwsShieldSubscription) GetTimeCommitmentInDays() *plugin.TValue[int64] {
+	return &c.TimeCommitmentInDays
+}
+
+func (c *mqlAwsShieldSubscription) GetAutoRenew() *plugin.TValue[string] {
+	return &c.AutoRenew
+}
+
+func (c *mqlAwsShieldSubscription) GetLimits() *plugin.TValue[[]any] {
+	return &c.Limits
+}
+
+func (c *mqlAwsShieldSubscription) GetProactiveEngagementStatus() *plugin.TValue[string] {
+	return &c.ProactiveEngagementStatus
+}
+
+// mqlAwsShieldProtection for the aws.shield.protection resource
+type mqlAwsShieldProtection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsShieldProtectionInternal it will be used here
+	Id                                             plugin.TValue[string]
+	Arn                                            plugin.TValue[string]
+	Name                                           plugin.TValue[string]
+	ResourceArn                                    plugin.TValue[string]
+	HealthCheckIds                                 plugin.TValue[[]any]
+	ApplicationLayerAutomaticResponseConfiguration plugin.TValue[any]
+}
+
+// createAwsShieldProtection creates a new instance of this resource
+func createAwsShieldProtection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsShieldProtection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.shield.protection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsShieldProtection) MqlName() string {
+	return "aws.shield.protection"
+}
+
+func (c *mqlAwsShieldProtection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsShieldProtection) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsShieldProtection) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsShieldProtection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsShieldProtection) GetResourceArn() *plugin.TValue[string] {
+	return &c.ResourceArn
+}
+
+func (c *mqlAwsShieldProtection) GetHealthCheckIds() *plugin.TValue[[]any] {
+	return &c.HealthCheckIds
+}
+
+func (c *mqlAwsShieldProtection) GetApplicationLayerAutomaticResponseConfiguration() *plugin.TValue[any] {
+	return &c.ApplicationLayerAutomaticResponseConfiguration
+}
+
+// mqlAwsShieldProtectionGroup for the aws.shield.protectionGroup resource
+type mqlAwsShieldProtectionGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsShieldProtectionGroupInternal it will be used here
+	Id           plugin.TValue[string]
+	Arn          plugin.TValue[string]
+	Aggregation  plugin.TValue[string]
+	Pattern      plugin.TValue[string]
+	ResourceType plugin.TValue[string]
+	Members      plugin.TValue[[]any]
+}
+
+// createAwsShieldProtectionGroup creates a new instance of this resource
+func createAwsShieldProtectionGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsShieldProtectionGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.shield.protectionGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsShieldProtectionGroup) MqlName() string {
+	return "aws.shield.protectionGroup"
+}
+
+func (c *mqlAwsShieldProtectionGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsShieldProtectionGroup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsShieldProtectionGroup) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsShieldProtectionGroup) GetAggregation() *plugin.TValue[string] {
+	return &c.Aggregation
+}
+
+func (c *mqlAwsShieldProtectionGroup) GetPattern() *plugin.TValue[string] {
+	return &c.Pattern
+}
+
+func (c *mqlAwsShieldProtectionGroup) GetResourceType() *plugin.TValue[string] {
+	return &c.ResourceType
+}
+
+func (c *mqlAwsShieldProtectionGroup) GetMembers() *plugin.TValue[[]any] {
+	return &c.Members
 }
 
 // mqlAwsSecretsmanager for the aws.secretsmanager resource

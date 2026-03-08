@@ -796,6 +796,92 @@ private aws.waf.acl.loggingConfiguration @defaults("arn") {
   redactedFields []string
 }
 
+// AWS Network Firewall
+aws.networkfirewall @defaults("firewalls") {
+  // List of Network Firewall firewalls
+  firewalls() []aws.networkfirewall.firewall
+  // List of Network Firewall policies
+  policies() []aws.networkfirewall.policy
+  // List of Network Firewall rule groups
+  ruleGroups() []aws.networkfirewall.rulegroup
+}
+
+// AWS Network Firewall firewall
+private aws.networkfirewall.firewall @defaults("arn name region") {
+  // ARN of the firewall
+  arn string
+  // Name of the firewall
+  name string
+  // Description of the firewall
+  description string
+  // Region of the firewall
+  region string
+  // VPC where the firewall is deployed
+  vpc() aws.vpc
+  // Whether delete protection is enabled
+  deleteProtection bool
+  // Whether subnet change protection is enabled
+  subnetChangeProtection bool
+  // Whether the firewall policy change protection is enabled
+  firewallPolicyChangeProtection bool
+  // ARN of the firewall policy associated with the firewall
+  firewallPolicyArn string
+  // Firewall policy associated with this firewall
+  policy() aws.networkfirewall.policy
+  // Subnet mappings for the firewall
+  subnetMappings []dict
+  // Encryption configuration
+  encryptionConfiguration dict
+  // Tags on the firewall
+  tags map[string]string
+}
+
+// AWS Network Firewall policy
+private aws.networkfirewall.policy @defaults("arn name region") {
+  // ARN of the firewall policy
+  arn string
+  // Name of the firewall policy
+  name string
+  // Description of the firewall policy
+  description string
+  // Region of the firewall policy
+  region string
+  // Stateless default actions for packets
+  statelessDefaultActions []string
+  // Stateless default actions for fragmented packets
+  statelessFragmentDefaultActions []string
+  // Stateless rule group references
+  statelessRuleGroupReferences []dict
+  // Stateful default actions
+  statefulDefaultActions []string
+  // Stateful rule group references
+  statefulRuleGroupReferences []dict
+  // Stateful engine options
+  statefulEngineOptions dict
+  // Tags on the firewall policy
+  tags map[string]string
+}
+
+// AWS Network Firewall rule group
+private aws.networkfirewall.rulegroup @defaults("arn name region") {
+  // ARN of the rule group
+  arn string
+  // Name of the rule group
+  name string
+  // Description of the rule group
+  description string
+  // Region of the rule group
+  region string
+  // Capacity of the rule group
+  capacity int
+  // Type of the rule group (STATELESS or STATEFUL)
+  type string
+  // Rules definition
+  rules dict
+  // Tags on the rule group
+  tags map[string]string
+}
+
 // AWS Elastic File System (EFS) service
 aws.efs @defaults("filesystems") {
   // A list of file systems managed by the service
@@ -2196,6 +2282,68 @@ private aws.securityhub.hub @defaults("arn region") {
   subscribedAt string
   // Region where the Security Hub is enabled
   region string
+}
+
+// AWS Shield Advanced
+aws.shield @defaults("subscriptionState") {
+  // Whether Shield Advanced is active ("ACTIVE", "INACTIVE", or "UNKNOWN" if access is denied)
+  subscriptionState() string
+  // Shield Advanced subscription details
+  subscription() aws.shield.subscription
+  // List of Shield Advanced protections
+  protections() []aws.shield.protection
+  // List of Shield Advanced protection groups
+  protectionGroups() []aws.shield.protectionGroup
+}
+
+// AWS Shield Advanced subscription
+private aws.shield.subscription @defaults("arn startTime") {
+  // ARN of the Shield subscription
+  arn string
+  // Start time of the subscription
+  startTime time
+  // End time of the subscription
+  endTime time
+  // Time period remaining in the subscription in days (truncated from seconds)
+  timeCommitmentInDays int
+  // Whether auto-renew is enabled (ENABLED or DISABLED)
+  autoRenew string
+  // Subscription limits
+  limits []dict
+  // Proactive engagement status (ENABLED, DISABLED, or PENDING)
+  proactiveEngagementStatus string
+}
+
+// AWS Shield Advanced protection
+private aws.shield.protection @defaults("arn name resourceArn") {
+  // ID of the protection
+  id string
+  // ARN of the protection
+  arn string
+  // Name of the protection
+  name string
+  // ARN of the protected resource
+  resourceArn string
+  // Health check IDs associated with the protection
+  healthCheckIds []string
+  // Application layer automatic response configuration
+  applicationLayerAutomaticResponseConfiguration dict
+}
+
+// AWS Shield Advanced protection group
+private aws.shield.protectionGroup @defaults("id aggregation pattern") {
+  // ID of the protection group
+  id string
+  // ARN of the protection group
+  arn string
+  // Aggregation type (SUM, MEAN, or MAX)
+  aggregation string
+  // Pattern used to select members (ALL, ARBITRARY, or BY_RESOURCE_TYPE)
+  pattern string
+  // Resource type criteria for BY_RESOURCE_TYPE pattern
+  resourceType string
+  // List of member resource ARNs (for ARBITRARY pattern)
+  members []string
 }
 
 // AWS Secrets Manager
