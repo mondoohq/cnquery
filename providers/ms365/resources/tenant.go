@@ -86,6 +86,9 @@ var tenantFields = []string{
 	"privacyProfile",
 	"technicalNotificationMails",
 	"preferredLanguage",
+	"countryLetterCode",
+	"securityComplianceNotificationMails",
+	"securityComplianceNotificationPhones",
 }
 
 func initMicrosoftTenant(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -137,18 +140,21 @@ func newMicrosoftTenant(runtime *plugin.Runtime, org models.Organizationable) (*
 
 	mqlResource, err := CreateResource(runtime, "microsoft.tenant",
 		map[string]*llx.RawData{
-			"id":                         llx.StringDataPtr(org.GetId()),
-			"assignedPlans":              llx.DictData(assignedPlans),
-			"createdDateTime":            llx.TimeDataPtr(org.GetCreatedDateTime()), // deprecated
-			"name":                       llx.StringDataPtr(org.GetDisplayName()),
-			"verifiedDomains":            llx.DictData(verifiedDomains),
-			"onPremisesSyncEnabled":      llx.BoolDataPtr(org.GetOnPremisesSyncEnabled()),
-			"createdAt":                  llx.TimeDataPtr(org.GetCreatedDateTime()),
-			"type":                       llx.StringDataPtr(org.GetTenantType()),
-			"provisionedPlans":           llx.DictData(provisionedPlans),
-			"technicalNotificationMails": llx.ArrayData(convert.SliceAnyToInterface(org.GetTechnicalNotificationMails()), types.String),
-			"preferredLanguage":          llx.StringDataPtr(org.GetPreferredLanguage()),
-			"privacyProfile":             llx.DictData(privacyProfileDict),
+			"id":                                   llx.StringDataPtr(org.GetId()),
+			"assignedPlans":                        llx.DictData(assignedPlans),
+			"createdDateTime":                      llx.TimeDataPtr(org.GetCreatedDateTime()), // deprecated
+			"name":                                 llx.StringDataPtr(org.GetDisplayName()),
+			"verifiedDomains":                      llx.DictData(verifiedDomains),
+			"onPremisesSyncEnabled":                llx.BoolDataPtr(org.GetOnPremisesSyncEnabled()),
+			"createdAt":                            llx.TimeDataPtr(org.GetCreatedDateTime()),
+			"type":                                 llx.StringDataPtr(org.GetTenantType()),
+			"provisionedPlans":                     llx.DictData(provisionedPlans),
+			"technicalNotificationMails":           llx.ArrayData(convert.SliceAnyToInterface(org.GetTechnicalNotificationMails()), types.String),
+			"preferredLanguage":                    llx.StringDataPtr(org.GetPreferredLanguage()),
+			"privacyProfile":                       llx.DictData(privacyProfileDict),
+			"countryLetterCode":                    llx.StringDataPtr(org.GetCountryLetterCode()),
+			"securityComplianceNotificationMails":  llx.ArrayData(convert.SliceAnyToInterface(org.GetSecurityComplianceNotificationMails()), types.String),
+			"securityComplianceNotificationPhones": llx.ArrayData(convert.SliceAnyToInterface(org.GetSecurityComplianceNotificationPhones()), types.String),
 		})
 	if err != nil {
 		return nil, err

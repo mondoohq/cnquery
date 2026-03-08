@@ -29,6 +29,9 @@ var userSelectFields = []string{
 	"mobilePhone", "otherMails", "officeLocation", "postalCode", "state", "identities",
 	"streetAddress", "surname", "userPrincipalName", "userType", "creationType",
 	"assignedLicenses", "employeeType", "employeeHireDate",
+	"lastPasswordChangeDateTime", "onPremisesSyncEnabled", "onPremisesLastSyncDateTime",
+	"onPremisesDomainName", "onPremisesSamAccountName", "preferredLanguage",
+	"usageLocation", "externalUserState",
 }
 
 func (a *mqlMicrosoft) users() (*mqlMicrosoftUsers, error) {
@@ -283,33 +286,41 @@ func newMqlMicrosoftUser(runtime *plugin.Runtime, u models.Userable) (*mqlMicros
 
 	graphUser, err := CreateResource(runtime, "microsoft.user",
 		map[string]*llx.RawData{
-			"__id":              llx.StringDataPtr(u.GetId()),
-			"id":                llx.StringDataPtr(u.GetId()),
-			"accountEnabled":    llx.BoolDataPtr(u.GetAccountEnabled()),
-			"city":              llx.StringDataPtr(u.GetCity()),        // deprecated
-			"companyName":       llx.StringDataPtr(u.GetCompanyName()), // deprecated
-			"country":           llx.StringDataPtr(u.GetCountry()),     // deprecated
-			"createdDateTime":   llx.TimeDataPtr(u.GetCreatedDateTime()),
-			"department":        llx.StringDataPtr(u.GetDepartment()),
-			"displayName":       llx.StringDataPtr(u.GetDisplayName()),
-			"employeeId":        llx.StringDataPtr(u.GetEmployeeId()), // deprecated
-			"givenName":         llx.StringDataPtr(u.GetGivenName()),
-			"jobTitle":          llx.StringDataPtr(u.GetJobTitle()), // deprecated
-			"mail":              llx.StringDataPtr(u.GetMail()),
-			"mobilePhone":       llx.StringDataPtr(u.GetMobilePhone()),                        // deprecated
-			"otherMails":        llx.ArrayData(llx.TArr2Raw(u.GetOtherMails()), types.String), // deprecated
-			"officeLocation":    llx.StringDataPtr(u.GetOfficeLocation()),                     // deprecated
-			"postalCode":        llx.StringDataPtr(u.GetPostalCode()),                         // deprecated
-			"state":             llx.StringDataPtr(u.GetState()),                              // deprecated
-			"streetAddress":     llx.StringDataPtr(u.GetStreetAddress()),                      // deprecated
-			"surname":           llx.StringDataPtr(u.GetSurname()),
-			"userPrincipalName": llx.StringDataPtr(u.GetUserPrincipalName()),
-			"userType":          llx.StringDataPtr(u.GetUserType()),
-			"creationType":      llx.StringDataPtr(u.GetCreationType()),
-			"identities":        llx.ArrayData(identities, types.ResourceLike),
-			"assignedLicenses":  llx.ArrayData(mqlAssignedLicensesList, types.ResourceLike),
-			"employeeType":      llx.StringDataPtr(u.GetEmployeeType()),
-			"employeeHireDate":  llx.TimeDataPtr(u.GetEmployeeHireDate()),
+			"__id":                       llx.StringDataPtr(u.GetId()),
+			"id":                         llx.StringDataPtr(u.GetId()),
+			"accountEnabled":             llx.BoolDataPtr(u.GetAccountEnabled()),
+			"city":                       llx.StringDataPtr(u.GetCity()),        // deprecated
+			"companyName":                llx.StringDataPtr(u.GetCompanyName()), // deprecated
+			"country":                    llx.StringDataPtr(u.GetCountry()),     // deprecated
+			"createdDateTime":            llx.TimeDataPtr(u.GetCreatedDateTime()),
+			"department":                 llx.StringDataPtr(u.GetDepartment()),
+			"displayName":                llx.StringDataPtr(u.GetDisplayName()),
+			"employeeId":                 llx.StringDataPtr(u.GetEmployeeId()), // deprecated
+			"givenName":                  llx.StringDataPtr(u.GetGivenName()),
+			"jobTitle":                   llx.StringDataPtr(u.GetJobTitle()), // deprecated
+			"mail":                       llx.StringDataPtr(u.GetMail()),
+			"mobilePhone":                llx.StringDataPtr(u.GetMobilePhone()),                        // deprecated
+			"otherMails":                 llx.ArrayData(llx.TArr2Raw(u.GetOtherMails()), types.String), // deprecated
+			"officeLocation":             llx.StringDataPtr(u.GetOfficeLocation()),                     // deprecated
+			"postalCode":                 llx.StringDataPtr(u.GetPostalCode()),                         // deprecated
+			"state":                      llx.StringDataPtr(u.GetState()),                              // deprecated
+			"streetAddress":              llx.StringDataPtr(u.GetStreetAddress()),                      // deprecated
+			"surname":                    llx.StringDataPtr(u.GetSurname()),
+			"userPrincipalName":          llx.StringDataPtr(u.GetUserPrincipalName()),
+			"userType":                   llx.StringDataPtr(u.GetUserType()),
+			"creationType":               llx.StringDataPtr(u.GetCreationType()),
+			"identities":                 llx.ArrayData(identities, types.ResourceLike),
+			"assignedLicenses":           llx.ArrayData(mqlAssignedLicensesList, types.ResourceLike),
+			"employeeType":               llx.StringDataPtr(u.GetEmployeeType()),
+			"employeeHireDate":           llx.TimeDataPtr(u.GetEmployeeHireDate()),
+			"lastPasswordChangeDateTime": llx.TimeDataPtr(u.GetLastPasswordChangeDateTime()),
+			"onPremisesSyncEnabled":      llx.BoolDataPtr(u.GetOnPremisesSyncEnabled()),
+			"onPremisesLastSyncDateTime": llx.TimeDataPtr(u.GetOnPremisesLastSyncDateTime()),
+			"onPremisesDomainName":       llx.StringDataPtr(u.GetOnPremisesDomainName()),
+			"onPremisesSamAccountName":   llx.StringDataPtr(u.GetOnPremisesSamAccountName()),
+			"preferredLanguage":          llx.StringDataPtr(u.GetPreferredLanguage()),
+			"usageLocation":              llx.StringDataPtr(u.GetUsageLocation()),
+			"externalUserState":          llx.StringDataPtr(u.GetExternalUserState()),
 		})
 	if err != nil {
 		return nil, err

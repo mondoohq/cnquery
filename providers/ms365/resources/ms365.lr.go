@@ -865,6 +865,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.tenant.preferredLanguage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenant).GetPreferredLanguage()).ToDataRes(types.String)
 	},
+	"microsoft.tenant.countryLetterCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenant).GetCountryLetterCode()).ToDataRes(types.String)
+	},
+	"microsoft.tenant.securityComplianceNotificationMails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenant).GetSecurityComplianceNotificationMails()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.tenant.securityComplianceNotificationPhones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftTenant).GetSecurityComplianceNotificationPhones()).ToDataRes(types.Array(types.String))
+	},
 	"microsoft.tenant.realm": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftTenant).GetRealm()).ToDataRes(types.Array(types.Resource("microsoft.tenant.realmInfo")))
 	},
@@ -1432,6 +1441,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.user.employeeHireDate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUser).GetEmployeeHireDate()).ToDataRes(types.Time)
 	},
+	"microsoft.user.lastPasswordChangeDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUser).GetLastPasswordChangeDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.user.onPremisesSyncEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUser).GetOnPremisesSyncEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.user.onPremisesLastSyncDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUser).GetOnPremisesLastSyncDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.user.onPremisesDomainName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUser).GetOnPremisesDomainName()).ToDataRes(types.String)
+	},
+	"microsoft.user.onPremisesSamAccountName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUser).GetOnPremisesSamAccountName()).ToDataRes(types.String)
+	},
+	"microsoft.user.preferredLanguage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUser).GetPreferredLanguage()).ToDataRes(types.String)
+	},
+	"microsoft.user.usageLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUser).GetUsageLocation()).ToDataRes(types.String)
+	},
+	"microsoft.user.externalUserState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUser).GetExternalUserState()).ToDataRes(types.String)
+	},
 	"microsoft.user.authenticationRequirements.perUserMfaState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUserAuthenticationRequirements).GetPerUserMfaState()).ToDataRes(types.String)
 	},
@@ -1648,6 +1681,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.group.proxyAddresses": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftGroup).GetProxyAddresses()).ToDataRes(types.Array(types.String))
 	},
+	"microsoft.group.theme": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftGroup).GetTheme()).ToDataRes(types.String)
+	},
+	"microsoft.group.preferredLanguage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftGroup).GetPreferredLanguage()).ToDataRes(types.String)
+	},
+	"microsoft.group.preferredDataLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftGroup).GetPreferredDataLocation()).ToDataRes(types.String)
+	},
 	"microsoft.group.owner.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftGroupOwner).GetId()).ToDataRes(types.String)
 	},
@@ -1737,6 +1779,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.device.trustType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevice).GetTrustType()).ToDataRes(types.String)
+	},
+	"microsoft.device.accountEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetAccountEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.device.deletedDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetDeletedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.device.onPremisesSyncEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetOnPremisesSyncEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.device.onPremisesLastSyncDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetOnPremisesLastSyncDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.device.profileType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetProfileType()).ToDataRes(types.String)
 	},
 	"microsoft.domain.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDomain).GetId()).ToDataRes(types.String)
@@ -2046,6 +2103,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.serviceprincipal.permissions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftServiceprincipal).GetPermissions()).ToDataRes(types.Array(types.Resource("microsoft.application.permission")))
+	},
+	"microsoft.serviceprincipal.alternativeNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipal).GetAlternativeNames()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.serviceprincipal.appDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipal).GetAppDescription()).ToDataRes(types.String)
+	},
+	"microsoft.serviceprincipal.disabledByMicrosoftStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipal).GetDisabledByMicrosoftStatus()).ToDataRes(types.String)
 	},
 	"microsoft.serviceprincipal.assignment.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftServiceprincipalAssignment).GetId()).ToDataRes(types.String)
@@ -3280,6 +3346,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftTenant).PreferredLanguage, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"microsoft.tenant.countryLetterCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenant).CountryLetterCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.tenant.securityComplianceNotificationMails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenant).SecurityComplianceNotificationMails, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.tenant.securityComplianceNotificationPhones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftTenant).SecurityComplianceNotificationPhones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"microsoft.tenant.realm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftTenant).Realm, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -4188,6 +4266,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftUser).EmployeeHireDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"microsoft.user.lastPasswordChangeDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUser).LastPasswordChangeDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.onPremisesSyncEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUser).OnPremisesSyncEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.onPremisesLastSyncDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUser).OnPremisesLastSyncDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.onPremisesDomainName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUser).OnPremisesDomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.onPremisesSamAccountName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUser).OnPremisesSamAccountName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.preferredLanguage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUser).PreferredLanguage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.usageLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUser).UsageLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.externalUserState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUser).ExternalUserState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"microsoft.user.authenticationRequirements.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftUserAuthenticationRequirements).__id, ok = v.Value.(string)
 		return
@@ -4504,6 +4614,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftGroup).ProxyAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"microsoft.group.theme": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftGroup).Theme, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.group.preferredLanguage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftGroup).PreferredLanguage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.group.preferredDataLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftGroup).PreferredDataLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"microsoft.group.owner.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftGroupOwner).__id, ok = v.Value.(string)
 		return
@@ -4638,6 +4760,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.device.trustType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDevice).TrustType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.accountEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).AccountEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.deletedDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).DeletedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.onPremisesSyncEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).OnPremisesSyncEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.onPremisesLastSyncDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).OnPremisesLastSyncDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.profileType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).ProfileType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.domain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5078,6 +5220,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.serviceprincipal.permissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftServiceprincipal).Permissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.serviceprincipal.alternativeNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipal).AlternativeNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.serviceprincipal.appDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipal).AppDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.serviceprincipal.disabledByMicrosoftStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipal).DisabledByMicrosoftStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.serviceprincipal.assignment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7332,23 +7486,26 @@ type mqlMicrosoftTenant struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlMicrosoftTenantInternal
-	Id                         plugin.TValue[string]
-	AssignedPlans              plugin.TValue[[]any]
-	ProvisionedPlans           plugin.TValue[[]any]
-	CreatedDateTime            plugin.TValue[*time.Time]
-	Name                       plugin.TValue[string]
-	VerifiedDomains            plugin.TValue[[]any]
-	OnPremisesSyncEnabled      plugin.TValue[bool]
-	CreatedAt                  plugin.TValue[*time.Time]
-	Type                       plugin.TValue[string]
-	Subscriptions              plugin.TValue[[]any]
-	Settings                   plugin.TValue[*mqlMicrosoftTenantSettings]
-	FormsSettings              plugin.TValue[*mqlMicrosoftTenantFormsSettings]
-	PrivacyProfile             plugin.TValue[any]
-	TechnicalNotificationMails plugin.TValue[[]any]
-	PreferredLanguage          plugin.TValue[string]
-	Realm                      plugin.TValue[[]any]
-	Branding                   plugin.TValue[[]any]
+	Id                                   plugin.TValue[string]
+	AssignedPlans                        plugin.TValue[[]any]
+	ProvisionedPlans                     plugin.TValue[[]any]
+	CreatedDateTime                      plugin.TValue[*time.Time]
+	Name                                 plugin.TValue[string]
+	VerifiedDomains                      plugin.TValue[[]any]
+	OnPremisesSyncEnabled                plugin.TValue[bool]
+	CreatedAt                            plugin.TValue[*time.Time]
+	Type                                 plugin.TValue[string]
+	Subscriptions                        plugin.TValue[[]any]
+	Settings                             plugin.TValue[*mqlMicrosoftTenantSettings]
+	FormsSettings                        plugin.TValue[*mqlMicrosoftTenantFormsSettings]
+	PrivacyProfile                       plugin.TValue[any]
+	TechnicalNotificationMails           plugin.TValue[[]any]
+	PreferredLanguage                    plugin.TValue[string]
+	CountryLetterCode                    plugin.TValue[string]
+	SecurityComplianceNotificationMails  plugin.TValue[[]any]
+	SecurityComplianceNotificationPhones plugin.TValue[[]any]
+	Realm                                plugin.TValue[[]any]
+	Branding                             plugin.TValue[[]any]
 }
 
 // createMicrosoftTenant creates a new instance of this resource
@@ -7472,6 +7629,18 @@ func (c *mqlMicrosoftTenant) GetTechnicalNotificationMails() *plugin.TValue[[]an
 
 func (c *mqlMicrosoftTenant) GetPreferredLanguage() *plugin.TValue[string] {
 	return &c.PreferredLanguage
+}
+
+func (c *mqlMicrosoftTenant) GetCountryLetterCode() *plugin.TValue[string] {
+	return &c.CountryLetterCode
+}
+
+func (c *mqlMicrosoftTenant) GetSecurityComplianceNotificationMails() *plugin.TValue[[]any] {
+	return &c.SecurityComplianceNotificationMails
+}
+
+func (c *mqlMicrosoftTenant) GetSecurityComplianceNotificationPhones() *plugin.TValue[[]any] {
+	return &c.SecurityComplianceNotificationPhones
 }
 
 func (c *mqlMicrosoftTenant) GetRealm() *plugin.TValue[[]any] {
@@ -9910,6 +10079,14 @@ type mqlMicrosoftUser struct {
 	AuthenticationRequirements plugin.TValue[*mqlMicrosoftUserAuthenticationRequirements]
 	EmployeeType               plugin.TValue[string]
 	EmployeeHireDate           plugin.TValue[*time.Time]
+	LastPasswordChangeDateTime plugin.TValue[*time.Time]
+	OnPremisesSyncEnabled      plugin.TValue[bool]
+	OnPremisesLastSyncDateTime plugin.TValue[*time.Time]
+	OnPremisesDomainName       plugin.TValue[string]
+	OnPremisesSamAccountName   plugin.TValue[string]
+	PreferredLanguage          plugin.TValue[string]
+	UsageLocation              plugin.TValue[string]
+	ExternalUserState          plugin.TValue[string]
 }
 
 // createMicrosoftUser creates a new instance of this resource
@@ -10134,6 +10311,38 @@ func (c *mqlMicrosoftUser) GetEmployeeType() *plugin.TValue[string] {
 
 func (c *mqlMicrosoftUser) GetEmployeeHireDate() *plugin.TValue[*time.Time] {
 	return &c.EmployeeHireDate
+}
+
+func (c *mqlMicrosoftUser) GetLastPasswordChangeDateTime() *plugin.TValue[*time.Time] {
+	return &c.LastPasswordChangeDateTime
+}
+
+func (c *mqlMicrosoftUser) GetOnPremisesSyncEnabled() *plugin.TValue[bool] {
+	return &c.OnPremisesSyncEnabled
+}
+
+func (c *mqlMicrosoftUser) GetOnPremisesLastSyncDateTime() *plugin.TValue[*time.Time] {
+	return &c.OnPremisesLastSyncDateTime
+}
+
+func (c *mqlMicrosoftUser) GetOnPremisesDomainName() *plugin.TValue[string] {
+	return &c.OnPremisesDomainName
+}
+
+func (c *mqlMicrosoftUser) GetOnPremisesSamAccountName() *plugin.TValue[string] {
+	return &c.OnPremisesSamAccountName
+}
+
+func (c *mqlMicrosoftUser) GetPreferredLanguage() *plugin.TValue[string] {
+	return &c.PreferredLanguage
+}
+
+func (c *mqlMicrosoftUser) GetUsageLocation() *plugin.TValue[string] {
+	return &c.UsageLocation
+}
+
+func (c *mqlMicrosoftUser) GetExternalUserState() *plugin.TValue[string] {
+	return &c.ExternalUserState
 }
 
 // mqlMicrosoftUserAuthenticationRequirements for the microsoft.user.authenticationRequirements resource
@@ -10695,6 +10904,9 @@ type mqlMicrosoftGroup struct {
 	Classification                plugin.TValue[string]
 	DeletedDateTime               plugin.TValue[*time.Time]
 	ProxyAddresses                plugin.TValue[[]any]
+	Theme                         plugin.TValue[string]
+	PreferredLanguage             plugin.TValue[string]
+	PreferredDataLocation         plugin.TValue[string]
 }
 
 // createMicrosoftGroup creates a new instance of this resource
@@ -10844,6 +11056,18 @@ func (c *mqlMicrosoftGroup) GetDeletedDateTime() *plugin.TValue[*time.Time] {
 
 func (c *mqlMicrosoftGroup) GetProxyAddresses() *plugin.TValue[[]any] {
 	return &c.ProxyAddresses
+}
+
+func (c *mqlMicrosoftGroup) GetTheme() *plugin.TValue[string] {
+	return &c.Theme
+}
+
+func (c *mqlMicrosoftGroup) GetPreferredLanguage() *plugin.TValue[string] {
+	return &c.PreferredLanguage
+}
+
+func (c *mqlMicrosoftGroup) GetPreferredDataLocation() *plugin.TValue[string] {
+	return &c.PreferredDataLocation
 }
 
 // mqlMicrosoftGroupOwner for the microsoft.group.owner resource
@@ -11064,24 +11288,29 @@ type mqlMicrosoftDevice struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlMicrosoftDeviceInternal it will be used here
-	Id                     plugin.TValue[string]
-	DisplayName            plugin.TValue[string]
-	DeviceId               plugin.TValue[string]
-	DeviceCategory         plugin.TValue[string]
-	EnrollmentProfileName  plugin.TValue[string]
-	EnrollmentType         plugin.TValue[string]
-	IsCompliant            plugin.TValue[bool]
-	IsManaged              plugin.TValue[bool]
-	Manufacturer           plugin.TValue[string]
-	IsRooted               plugin.TValue[bool]
-	MdmAppId               plugin.TValue[string]
-	Model                  plugin.TValue[string]
-	OperatingSystem        plugin.TValue[string]
-	OperatingSystemVersion plugin.TValue[string]
-	PhysicalIds            plugin.TValue[[]any]
-	RegistrationDateTime   plugin.TValue[*time.Time]
-	SystemLabels           plugin.TValue[[]any]
-	TrustType              plugin.TValue[string]
+	Id                         plugin.TValue[string]
+	DisplayName                plugin.TValue[string]
+	DeviceId                   plugin.TValue[string]
+	DeviceCategory             plugin.TValue[string]
+	EnrollmentProfileName      plugin.TValue[string]
+	EnrollmentType             plugin.TValue[string]
+	IsCompliant                plugin.TValue[bool]
+	IsManaged                  plugin.TValue[bool]
+	Manufacturer               plugin.TValue[string]
+	IsRooted                   plugin.TValue[bool]
+	MdmAppId                   plugin.TValue[string]
+	Model                      plugin.TValue[string]
+	OperatingSystem            plugin.TValue[string]
+	OperatingSystemVersion     plugin.TValue[string]
+	PhysicalIds                plugin.TValue[[]any]
+	RegistrationDateTime       plugin.TValue[*time.Time]
+	SystemLabels               plugin.TValue[[]any]
+	TrustType                  plugin.TValue[string]
+	AccountEnabled             plugin.TValue[bool]
+	DeletedDateTime            plugin.TValue[*time.Time]
+	OnPremisesSyncEnabled      plugin.TValue[bool]
+	OnPremisesLastSyncDateTime plugin.TValue[*time.Time]
+	ProfileType                plugin.TValue[string]
 }
 
 // createMicrosoftDevice creates a new instance of this resource
@@ -11186,6 +11415,26 @@ func (c *mqlMicrosoftDevice) GetSystemLabels() *plugin.TValue[[]any] {
 
 func (c *mqlMicrosoftDevice) GetTrustType() *plugin.TValue[string] {
 	return &c.TrustType
+}
+
+func (c *mqlMicrosoftDevice) GetAccountEnabled() *plugin.TValue[bool] {
+	return &c.AccountEnabled
+}
+
+func (c *mqlMicrosoftDevice) GetDeletedDateTime() *plugin.TValue[*time.Time] {
+	return &c.DeletedDateTime
+}
+
+func (c *mqlMicrosoftDevice) GetOnPremisesSyncEnabled() *plugin.TValue[bool] {
+	return &c.OnPremisesSyncEnabled
+}
+
+func (c *mqlMicrosoftDevice) GetOnPremisesLastSyncDateTime() *plugin.TValue[*time.Time] {
+	return &c.OnPremisesLastSyncDateTime
+}
+
+func (c *mqlMicrosoftDevice) GetProfileType() *plugin.TValue[string] {
+	return &c.ProfileType
 }
 
 // mqlMicrosoftDomain for the microsoft.domain resource
@@ -11878,6 +12127,9 @@ type mqlMicrosoftServiceprincipal struct {
 	IsFirstParty               plugin.TValue[bool]
 	AppRoles                   plugin.TValue[[]any]
 	Permissions                plugin.TValue[[]any]
+	AlternativeNames           plugin.TValue[[]any]
+	AppDescription             plugin.TValue[string]
+	DisabledByMicrosoftStatus  plugin.TValue[string]
 }
 
 // createMicrosoftServiceprincipal creates a new instance of this resource
@@ -12041,6 +12293,18 @@ func (c *mqlMicrosoftServiceprincipal) GetPermissions() *plugin.TValue[[]any] {
 
 		return c.permissions()
 	})
+}
+
+func (c *mqlMicrosoftServiceprincipal) GetAlternativeNames() *plugin.TValue[[]any] {
+	return &c.AlternativeNames
+}
+
+func (c *mqlMicrosoftServiceprincipal) GetAppDescription() *plugin.TValue[string] {
+	return &c.AppDescription
+}
+
+func (c *mqlMicrosoftServiceprincipal) GetDisabledByMicrosoftStatus() *plugin.TValue[string] {
+	return &c.DisabledByMicrosoftStatus
 }
 
 // mqlMicrosoftServiceprincipalAssignment for the microsoft.serviceprincipal.assignment resource

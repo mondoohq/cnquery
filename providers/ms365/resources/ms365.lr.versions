@@ -158,6 +158,8 @@ microsoft.conditionalAccess.policy.sessionControls.signInFrequency.value 11.1.10
 microsoft.conditionalAccess.policy.state 11.1.38
 microsoft.conditionalAccess.policy.templateId 11.1.38
 microsoft.device 11.1.21
+microsoft.device.accountEnabled 11.2.1
+microsoft.device.deletedDateTime 11.2.1
 microsoft.device.deviceCategory 11.1.21
 microsoft.device.deviceId 11.1.21
 microsoft.device.displayName 11.1.21
@@ -170,9 +172,12 @@ microsoft.device.isRooted 11.1.21
 microsoft.device.manufacturer 11.1.21
 microsoft.device.mdmAppId 11.1.21
 microsoft.device.model 11.1.21
+microsoft.device.onPremisesLastSyncDateTime 11.2.1
+microsoft.device.onPremisesSyncEnabled 11.2.1
 microsoft.device.operatingSystem 11.1.21
 microsoft.device.operatingSystemVersion 11.1.21
 microsoft.device.physicalIds 11.1.21
+microsoft.device.profileType 11.2.1
 microsoft.device.registrationDateTime 11.1.21
 microsoft.device.systemLabels 11.1.21
 microsoft.device.trustType 11.1.21
@@ -305,9 +310,12 @@ microsoft.group.owner.ownerType 11.1.68
 microsoft.group.owner.servicePrincipal 11.1.68
 microsoft.group.owner.user 11.1.68
 microsoft.group.owners 9.0.0
+microsoft.group.preferredDataLocation 11.2.1
+microsoft.group.preferredLanguage 11.2.1
 microsoft.group.proxyAddresses 11.1.102
 microsoft.group.renewedDateTime 11.1.102
 microsoft.group.securityEnabled 9.0.0
+microsoft.group.theme 11.2.1
 microsoft.group.visibility 9.0.0
 microsoft.groupLifecyclePolicies 9.0.0
 microsoft.groupLifecyclePolicy 11.1.42
@@ -532,6 +540,8 @@ microsoft.security.securityscore.maxScore 9.0.0
 microsoft.security.securityscore.vendorInformation 9.0.0
 microsoft.serviceprincipal 9.0.0
 microsoft.serviceprincipal.accountEnabled 9.0.0
+microsoft.serviceprincipal.alternativeNames 11.2.1
+microsoft.serviceprincipal.appDescription 11.2.1
 microsoft.serviceprincipal.appId 9.0.0
 microsoft.serviceprincipal.appOwnerOrganizationId 9.0.0
 microsoft.serviceprincipal.appRoleAssignmentRequired 9.0.0
@@ -544,6 +554,7 @@ microsoft.serviceprincipal.assignment.type 9.0.9
 microsoft.serviceprincipal.assignmentRequired 9.0.0
 microsoft.serviceprincipal.assignments 9.0.0
 microsoft.serviceprincipal.description 9.0.0
+microsoft.serviceprincipal.disabledByMicrosoftStatus 11.2.1
 microsoft.serviceprincipal.enabled 9.0.0
 microsoft.serviceprincipal.homepageUrl 9.0.0
 microsoft.serviceprincipal.id 9.0.0
@@ -581,6 +592,7 @@ microsoft.tenant.brandingInfo.bannerLogo 11.1.76
 microsoft.tenant.brandingInfo.domainName 11.1.76
 microsoft.tenant.brandingInfo.keepMeSignedInDisabled 11.1.76
 microsoft.tenant.brandingInfo.useTransparentLightbox 11.1.76
+microsoft.tenant.countryLetterCode 11.2.1
 microsoft.tenant.createdAt 11.0.29
 microsoft.tenant.createdDateTime 11.0.29
 microsoft.tenant.formsSettings 11.0.29
@@ -596,6 +608,8 @@ microsoft.tenant.realmInfo.domainName 11.1.76
 microsoft.tenant.realmInfo.federationBrandName 11.1.76
 microsoft.tenant.realmInfo.login 11.1.76
 microsoft.tenant.realmInfo.nameSpaceType 11.1.76
+microsoft.tenant.securityComplianceNotificationMails 11.2.1
+microsoft.tenant.securityComplianceNotificationPhones 11.2.1
 microsoft.tenant.settings 11.0.29
 microsoft.tenant.subscriptions 11.0.29
 microsoft.tenant.technicalNotificationMails 11.0.29
@@ -666,6 +680,7 @@ microsoft.user.displayName 9.0.0
 microsoft.user.employeeHireDate 11.1.102
 microsoft.user.employeeId 9.0.0
 microsoft.user.employeeType 11.1.102
+microsoft.user.externalUserState 11.2.1
 microsoft.user.givenName 9.0.0
 microsoft.user.id 9.0.0
 microsoft.user.identities 9.0.0
@@ -675,6 +690,7 @@ microsoft.user.identity.issuerAssignedId 11.1.0
 microsoft.user.identity.signInType 11.1.0
 microsoft.user.job 9.0.0
 microsoft.user.jobTitle 9.0.0
+microsoft.user.lastPasswordChangeDateTime 11.2.1
 microsoft.user.licenseDetail 11.1.41
 microsoft.user.licenseDetail.id 11.1.41
 microsoft.user.licenseDetail.servicePlanInfo 11.1.41
@@ -690,8 +706,13 @@ microsoft.user.mail 9.0.0
 microsoft.user.mfaEnabled 9.0.0
 microsoft.user.mobilePhone 9.0.0
 microsoft.user.officeLocation 9.0.0
+microsoft.user.onPremisesDomainName 11.2.1
+microsoft.user.onPremisesLastSyncDateTime 11.2.1
+microsoft.user.onPremisesSamAccountName 11.2.1
+microsoft.user.onPremisesSyncEnabled 11.2.1
 microsoft.user.otherMails 9.0.0
 microsoft.user.postalCode 9.0.0
+microsoft.user.preferredLanguage 11.2.1
 microsoft.user.settings 9.0.0
 microsoft.user.signin 11.1.0
 microsoft.user.signin.appDisplayName 11.1.0
@@ -713,6 +734,7 @@ microsoft.user.signin.userId 11.1.0
 microsoft.user.state 9.0.0
 microsoft.user.streetAddress 9.0.0
 microsoft.user.surname 9.0.0
+microsoft.user.usageLocation 11.2.1
 microsoft.user.userPrincipalName 9.0.0
 microsoft.user.userType 9.0.0
 microsoft.users 11.1.15

@@ -186,6 +186,9 @@ var servicePrincipalFields = []string{
 	"verifiedPublisher",
 	"appRoles",
 	"oauth2PermissionScopes",
+	"alternativeNames",
+	"appDescription",
+	"disabledByMicrosoftStatus",
 }
 
 func (m *mqlMicrosoftServiceprincipal) id() (string, error) {
@@ -382,6 +385,9 @@ func newMqlMicrosoftServicePrincipal(runtime *plugin.Runtime, sp models.ServiceP
 		"accountEnabled":             llx.BoolDataPtr(sp.GetAccountEnabled()),
 		"verifiedPublisher":          llx.DictData(verifiedPublisher),
 		"appRoles":                   llx.ArrayData(mqlAppRoleList, types.Resource("microsoft.application.role")),
+		"alternativeNames":           llx.ArrayData(convert.SliceAnyToInterface(sp.GetAlternativeNames()), types.String),
+		"appDescription":             llx.StringDataPtr(sp.GetAppDescription()),
+		"disabledByMicrosoftStatus":  llx.StringDataPtr(sp.GetDisabledByMicrosoftStatus()),
 	}
 	info := sp.GetInfo()
 	if info != nil {
