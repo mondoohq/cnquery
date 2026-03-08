@@ -131,7 +131,9 @@ func getSubnetworkByUrl(subnetUrl string, runtime *plugin.Runtime) (*mqlGcpProje
 	}
 
 	// Format is https://www.googleapis.com/compute/v1/projects/project1/regions/us-central1/subnetworks/subnet-1
+	// or https://compute.googleapis.com/compute/v1/projects/project1/regions/us-central1/subnetworks/subnet-1
 	params := strings.TrimPrefix(subnetUrl, "https://www.googleapis.com/compute/v1/")
+	params = strings.TrimPrefix(params, "https://compute.googleapis.com/compute/v1/")
 	parts := strings.Split(params, "/")
 	resId := resourceId{Project: parts[1], Region: parts[3], Name: parts[5]}
 	// regionUrl is the full URL up to and including the region segment
@@ -154,8 +156,10 @@ func getDiskIdByUrl(diskUrl string) (*resourceId, error) {
 		return nil, errors.New("diskUrl is empty")
 	}
 
-	// Format is https://www.googleapis.com/compute/v1/projects/project1/regions/us-central1/disks/subnet-1
+	// Format is https://www.googleapis.com/compute/v1/projects/project1/regions/us-central1/disks/disk-1
+	// or https://compute.googleapis.com/compute/v1/projects/project1/regions/us-central1/disks/disk-1
 	params := strings.TrimPrefix(diskUrl, "https://www.googleapis.com/compute/v1/")
+	params = strings.TrimPrefix(params, "https://compute.googleapis.com/compute/v1/")
 	parts := strings.Split(params, "/")
 	return &resourceId{Project: parts[1], Region: parts[3], Name: parts[5]}, nil
 }

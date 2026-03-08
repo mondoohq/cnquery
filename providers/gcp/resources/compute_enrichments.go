@@ -326,8 +326,6 @@ func getUrlMapByUrl(urlMapUrl string, runtime *plugin.Runtime) (*mqlGcpProjectCo
 	}
 	// Format: https://www.googleapis.com/compute/v1/projects/{project}/global/urlMaps/{name}
 	// or regional: .../projects/{project}/regions/{region}/urlMaps/{name}
-	name := parseResourceName(urlMapUrl)
-	// Extract project from URL
 	params := trimComputeURL(urlMapUrl)
 	parts := strings.Split(params, "/")
 	if len(parts) < 2 {
@@ -348,7 +346,7 @@ func getUrlMapByUrl(urlMapUrl string, runtime *plugin.Runtime) (*mqlGcpProjectCo
 	}
 	for _, u := range urlMaps.Data {
 		um := u.(*mqlGcpProjectComputeServiceUrlMap)
-		if um.Name.Data == name {
+		if um.SelfLink.Data == urlMapUrl {
 			return um, nil
 		}
 	}
@@ -359,7 +357,6 @@ func getSslPolicyByUrl(sslPolicyUrl string, runtime *plugin.Runtime) (*mqlGcpPro
 	if sslPolicyUrl == "" {
 		return nil, nil
 	}
-	name := parseResourceName(sslPolicyUrl)
 	params := trimComputeURL(sslPolicyUrl)
 	parts := strings.Split(params, "/")
 	if len(parts) < 2 {
@@ -380,7 +377,7 @@ func getSslPolicyByUrl(sslPolicyUrl string, runtime *plugin.Runtime) (*mqlGcpPro
 	}
 	for _, s := range sslPolicies.Data {
 		sp := s.(*mqlGcpProjectComputeServiceSslPolicy)
-		if sp.Name.Data == name {
+		if sp.SelfLink.Data == sslPolicyUrl {
 			return sp, nil
 		}
 	}

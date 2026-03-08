@@ -1308,6 +1308,9 @@ func (g *mqlGcpProjectComputeServiceNetwork) networkPeerings() ([]any, error) {
 	if g.cachePeerings == nil {
 		return []any{}, nil
 	}
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
+	}
 	networkId := g.Id.Data
 	res := make([]any, 0, len(g.cachePeerings))
 	for i, p := range g.cachePeerings {
