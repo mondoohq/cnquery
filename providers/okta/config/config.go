@@ -24,7 +24,7 @@ var Config = plugin.Provider{
 To query an Okta organization, you need the organization's domain and an API token to access that domain. To learn how, read https://mondoo.com/docs/cnquery/saas/okta/.
 
 Examples:
-  cnquery shell okta -organization <okta-domain> -token <api-token>
+  cnspec shell okta -organization <okta-domain> -token <api-token>
 	cnspec scan okta -organization <okta-domain> -token <api-token>
 `,
 			Discovery: []string{},

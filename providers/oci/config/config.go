@@ -22,10 +22,10 @@ var Config = plugin.Provider{
 			Long: `Use the oci provider to query resources in an Oracle Cloud Infrastructure tenancy, including compute instances, networks, storage, and identity resources.
 
 Examples:
-  cnquery shell oci --tenancy <tenancy_ocid> --user <user_ocid> --region <region> --key-path <path_to_private_key> --fingerprint <key_fingerprint>
+  cnspec shell oci --tenancy <tenancy_ocid> --user <user_ocid> --region <region> --key-path <path_to_private_key> --fingerprint <key_fingerprint>
   cnspec scan oci --tenancy <tenancy_ocid> --user <user_ocid> --region <region> --key-path <path_to_private_key> --fingerprint <key_fingerprint>
-  cnquery shell oci --profile MYPROFILE
-  cnquery shell oci --config-file /path/to/config --profile MYPROFILE
+  cnspec shell oci --profile MYPROFILE
+  cnspec shell oci --config-file /path/to/config --profile MYPROFILE
 `,
 			Discovery: []string{},
 			Flags: []plugin.Flag{

@@ -27,7 +27,7 @@ var Config = plugin.Provider{
 			Long: `Use the gcp provider to query resources within Google Cloud Platform (GCP), including databases, services, instances, containers, and more.
 
 Examples without logging into and configuring GCP:
-  cnquery shell gcp org <ORGANIZATION-ID> --credentials-path <PATH-TO-YOUR-SERVICE-ACCT>
+  cnspec shell gcp org <ORGANIZATION-ID> --credentials-path <PATH-TO-YOUR-SERVICE-ACCT>
   cnspec scan gcp project <PROJECT-ID> --credentials-path <PATH-TO-YOUR-SERVICE-ACCT>
 
 Note:
@@ -35,7 +35,7 @@ Note:
 
 Examples with the GCP project configured:
   cnspec scan gcp folder <FOLDER-ID>
-  cnquery shell gcp project
+  cnspec shell gcp project
 `,
 			MaxArgs: 2,
 			Discovery: []string{

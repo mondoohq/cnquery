@@ -21,10 +21,10 @@ var Config = plugin.Provider{
 			Long: `Use the ipinfo provider to query IP address information from ipinfo.io, including the IP address, hostname, and whether the IP address is a bogon.
 
 Examples:
-  cnquery shell ipinfo
-  cnquery run ipinfo -c "ipinfo(ip('8.8.8.8')){*}"
-  cnquery run ipinfo -c "ipinfo(){*}"  # Query your public IP"
-  cnquery run -c "network.interfaces.map(ips.map(_.ip)).flat.map(ipinfo(_){*})"
+  cnspec shell ipinfo
+  cnspec run ipinfo -c "ipinfo(ip('8.8.8.8')){*}"
+  cnspec run ipinfo -c "ipinfo(){*}"  # Query your public IP"
+  cnspec run -c "network.interfaces.map(ips.map(_.ip)).flat.map(ipinfo(_){*})"
 
 Notes:
   - Pass an IP address to query information about that specific IP: ipinfo(ip("1.1.1.1"))

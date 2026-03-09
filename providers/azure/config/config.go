@@ -29,10 +29,10 @@ var Config = plugin.Provider{
 Examples run in your shell:
   cnspec scan azure compute instance <instance-name> --client-id <your-client-id> --tenant-id <your-tenant-id> --client-secret <your-client-secret-value>
   cnspec scan azure compute snapshot <snapshot-name> --client-id <your-client-id> --tenant-id <your-tenant-id> --client-secret <your-client-secret-value>
-  cnquery shell azure <subscription-name> --client-id <your-client-id> --tenant-id <your-tenant-id> --client-secret <your-client-secret-value>
+  cnspec shell azure <subscription-name> --client-id <your-client-id> --tenant-id <your-tenant-id> --client-secret <your-client-secret-value>
 
 Examples run in the Azure CLI:	
-  cnquery shell azure
+  cnspec shell azure
   cnspec scan azure --subscription <specific-subscription-id>
 `,
 			MinArgs: 0,

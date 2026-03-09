@@ -22,8 +22,8 @@ var Config = plugin.Provider{
 			Long: `Use the google-workspace provider to query resources in a Google Workspace domain.
 
 Examples:
-  cnquery shell google-workspace --customer-id <customer-id>
-  cnquery shell google-workspace --credentials-path <credentials-path> --customer-id <customer-id>
+  cnspec shell google-workspace --customer-id <customer-id>
+  cnspec shell google-workspace --credentials-path <credentials-path> --customer-id <customer-id>
   cnspec scan google-workspace --credentials-path <credentials-path> --customer-id <customer-id>
 
 Note:
