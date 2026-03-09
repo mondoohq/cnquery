@@ -4,32 +4,15 @@
 package selfupdate
 
 import (
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCheckAndUpdate_EnvVarBehavior(t *testing.T) {
-	// Save and restore environment variables after test
-	origAutoUpdate := os.Getenv(EnvAutoUpdate)
-	origEngine := os.Getenv(EnvAutoUpdateEngine)
-	defer func() {
-		if origAutoUpdate == "" {
-			os.Unsetenv(EnvAutoUpdate)
-		} else {
-			os.Setenv(EnvAutoUpdate, origAutoUpdate)
-		}
-		if origEngine == "" {
-			os.Unsetenv(EnvAutoUpdateEngine)
-		} else {
-			os.Setenv(EnvAutoUpdateEngine, origEngine)
-		}
-	}()
-
 	t.Run("skips when MONDOO_AUTO_UPDATE is false", func(t *testing.T) {
-		os.Unsetenv(EnvAutoUpdateEngine)
-		os.Setenv(EnvAutoUpdate, "false")
+		t.Setenv(EnvAutoUpdate, "false")
+		t.Setenv(EnvAutoUpdateEngine, "")
 
 		cfg := Config{
 			Enabled:        true,
@@ -42,8 +25,8 @@ func TestCheckAndUpdate_EnvVarBehavior(t *testing.T) {
 	})
 
 	t.Run("skips when MONDOO_AUTO_UPDATE is 0", func(t *testing.T) {
-		os.Unsetenv(EnvAutoUpdateEngine)
-		os.Setenv(EnvAutoUpdate, "0")
+		t.Setenv(EnvAutoUpdate, "0")
+		t.Setenv(EnvAutoUpdateEngine, "")
 
 		cfg := Config{
 			Enabled:        true,
@@ -56,8 +39,8 @@ func TestCheckAndUpdate_EnvVarBehavior(t *testing.T) {
 	})
 
 	t.Run("skips when MONDOO_AUTO_UPDATE_ENGINE is false", func(t *testing.T) {
-		os.Unsetenv(EnvAutoUpdate)
-		os.Setenv(EnvAutoUpdateEngine, "false")
+		t.Setenv(EnvAutoUpdate, "")
+		t.Setenv(EnvAutoUpdateEngine, "false")
 
 		cfg := Config{
 			Enabled:        true,
@@ -70,8 +53,8 @@ func TestCheckAndUpdate_EnvVarBehavior(t *testing.T) {
 	})
 
 	t.Run("skips when MONDOO_AUTO_UPDATE_ENGINE is 0", func(t *testing.T) {
-		os.Unsetenv(EnvAutoUpdate)
-		os.Setenv(EnvAutoUpdateEngine, "0")
+		t.Setenv(EnvAutoUpdate, "")
+		t.Setenv(EnvAutoUpdateEngine, "0")
 
 		cfg := Config{
 			Enabled:        true,
@@ -84,8 +67,8 @@ func TestCheckAndUpdate_EnvVarBehavior(t *testing.T) {
 	})
 
 	t.Run("skips engine when MONDOO_AUTO_UPDATE is on but MONDOO_AUTO_UPDATE_ENGINE is off", func(t *testing.T) {
-		os.Setenv(EnvAutoUpdate, "true")
-		os.Setenv(EnvAutoUpdateEngine, "false")
+		t.Setenv(EnvAutoUpdate, "true")
+		t.Setenv(EnvAutoUpdateEngine, "false")
 
 		cfg := Config{
 			Enabled:        true,
@@ -98,8 +81,8 @@ func TestCheckAndUpdate_EnvVarBehavior(t *testing.T) {
 	})
 
 	t.Run("MONDOO_AUTO_UPDATE off overrides MONDOO_AUTO_UPDATE_ENGINE on", func(t *testing.T) {
-		os.Setenv(EnvAutoUpdate, "false")
-		os.Setenv(EnvAutoUpdateEngine, "true")
+		t.Setenv(EnvAutoUpdate, "false")
+		t.Setenv(EnvAutoUpdateEngine, "true")
 
 		cfg := Config{
 			Enabled:        true,
@@ -112,8 +95,8 @@ func TestCheckAndUpdate_EnvVarBehavior(t *testing.T) {
 	})
 
 	t.Run("does not skip when neither env var is set", func(t *testing.T) {
-		os.Unsetenv(EnvAutoUpdateEngine)
-		os.Unsetenv(EnvAutoUpdate)
+		t.Setenv(EnvAutoUpdate, "")
+		t.Setenv(EnvAutoUpdateEngine, "")
 
 		cfg := Config{
 			Enabled:        true,
@@ -127,8 +110,8 @@ func TestCheckAndUpdate_EnvVarBehavior(t *testing.T) {
 	})
 
 	t.Run("skips when config is disabled", func(t *testing.T) {
-		os.Unsetenv(EnvAutoUpdateEngine)
-		os.Unsetenv(EnvAutoUpdate)
+		t.Setenv(EnvAutoUpdate, "")
+		t.Setenv(EnvAutoUpdateEngine, "")
 
 		cfg := Config{
 			Enabled:        false,
@@ -141,8 +124,8 @@ func TestCheckAndUpdate_EnvVarBehavior(t *testing.T) {
 	})
 
 	t.Run("skips for rolling version", func(t *testing.T) {
-		os.Unsetenv(EnvAutoUpdateEngine)
-		os.Unsetenv(EnvAutoUpdate)
+		t.Setenv(EnvAutoUpdate, "")
+		t.Setenv(EnvAutoUpdateEngine, "")
 
 		cfg := Config{
 			Enabled:        true,
