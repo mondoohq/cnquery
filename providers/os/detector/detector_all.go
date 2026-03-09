@@ -549,6 +549,7 @@ var oracle = &PlatformResolver{
 		// works for oracle 7+
 		if pf.Name == "ol" {
 			pf.Name = "oraclelinux"
+			pf.Metadata["oracle/support-type"] = strings.Join(getActivatedOracleSupportLevels(conn), ",")
 			return true, nil
 		}
 
@@ -568,6 +569,7 @@ var oracle = &PlatformResolver{
 			pf.Name = "oraclelinux"
 		}
 
+		pf.Metadata["oracle/support-type"] = strings.Join(getActivatedOracleSupportLevels(conn), ",")
 		return true, nil
 	},
 }
