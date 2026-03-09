@@ -10,23 +10,23 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetActivatedOracleSupportLevels(t *testing.T) {
+func TestHasOracleELSEnabled(t *testing.T) {
 	tests := []struct {
 		name     string
 		files    map[string]string
-		expected []string
+		expected bool
 	}{
 		{
 			name:     "no repos directory",
 			files:    map[string]string{},
-			expected: []string{},
+			expected: false,
 		},
 		{
 			name: "empty repos directory",
 			files: map[string]string{
 				"/etc/yum.repos.d": "",
 			},
-			expected: []string{},
+			expected: false,
 		},
 		{
 			name: "els repos enabled",
@@ -48,7 +48,7 @@ name=Unbreakable Enterprise Kernel Release 6 for Oracle Linux 7 ELS (x86_64)
 enabled=1
 `,
 			},
-			expected: []string{"els"},
+			expected: true,
 		},
 		{
 			name: "els repos disabled",
@@ -62,7 +62,7 @@ name=Unbreakable Enterprise Kernel Release 6 for Oracle Linux 7 ELS (x86_64)
 enabled=0
 `,
 			},
-			expected: []string{},
+			expected: false,
 		},
 		{
 			name: "no els repos",
@@ -76,7 +76,7 @@ name=Latest Unbreakable Enterprise Kernel Release 6 for Oracle Linux 7Server (x8
 enabled=1
 `,
 			},
-			expected: []string{},
+			expected: false,
 		},
 		{
 			name: "ksplice els repo",
@@ -86,14 +86,14 @@ name=Ksplice for Oracle Linux 7 ELS (x86_64)
 enabled=1
 `,
 			},
-			expected: []string{"els"},
+			expected: true,
 		},
 		{
 			name: "invalid content",
 			files: map[string]string{
 				"/etc/yum.repos.d/oracle-linux-ol7.repo": `invalid content`,
 			},
-			expected: []string{},
+			expected: false,
 		},
 	}
 
@@ -118,7 +118,7 @@ enabled=1
 				fs: fs,
 			}
 
-			result := getActivatedOracleSupportLevels(conn)
+			result := hasOracleELSEnabled(conn)
 
 			assert.Equal(t, tt.expected, result)
 		})
