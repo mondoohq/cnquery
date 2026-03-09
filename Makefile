@@ -724,10 +724,10 @@ test/go/plain-ci: prep/tools test/generate providers/build
 	gotestsum --junitfile report.xml --format pkgname -- -cover $(shell go list ./... | grep -v '/vendor/' | grep -v '/providers/' | grep -v '/test/')
 
 test/integration:
-	go test -cover $(shell go list ./... | grep '/test/')
+	go test -cover -p 1 $(shell go list ./... | grep '/test/')
 
 test/go-cli/plain-ci: prep/tools test/generate providers/build
-	gotestsum --junitfile report.xml --format pkgname -- -cover $(shell go list ./... | grep '/test/')
+	gotestsum --junitfile report.xml --format pkgname -- -cover -p 1 $(shell go list ./... | grep '/test/')
 
 .PHONY: test/lint/staticcheck
 test/lint/staticcheck:

@@ -30,6 +30,8 @@ func setup() {
 	// install local provider
 	providerCmd := exec.Command("bash", "-c", "cd ../.. && make providers/build/os providers/install/os")
 	providerCmd.Env = test.BuildEnv()
+	providerCmd.Stdout = os.Stdout
+	providerCmd.Stderr = os.Stderr
 	if err := providerCmd.Run(); err != nil {
 		log.Fatalf("building os provider: %v", err)
 	}
