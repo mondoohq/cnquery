@@ -549,6 +549,9 @@ var oracle = &PlatformResolver{
 		// works for oracle 7+
 		if pf.Name == "ol" {
 			pf.Name = "oraclelinux"
+			if hasOracleELSEnabled(conn) {
+				pf.Metadata["oracle/support-type"] = "els"
+			}
 			return true, nil
 		}
 
@@ -568,6 +571,9 @@ var oracle = &PlatformResolver{
 			pf.Name = "oraclelinux"
 		}
 
+		if hasOracleELSEnabled(conn) {
+			pf.Metadata["oracle/support-type"] = "els"
+		}
 		return true, nil
 	},
 }
