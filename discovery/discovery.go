@@ -21,6 +21,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory/manager"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream"
+	"google.golang.org/protobuf/proto"
 )
 
 // number of parallel goroutines discovering assets
@@ -37,27 +38,61 @@ type AssetWithError struct {
 }
 
 type DiscoveredAssets struct {
-	platformIds map[string]struct{}
-	Assets      []*AssetWithRuntime
-	Errors      []*AssetWithError
-	assetsLock  sync.Mutex
+	Assets     []*AssetWithRuntime
+	Errors     []*AssetWithError
+	assetsLock sync.Mutex
 }
 
 // Add adds an asset and its runtime to the discovered assets list. It returns true if the
-// asset has been added, false if it is a duplicate
+// asset has been added, false if it is a duplicate.
+//
+// An asset is considered a duplicate if there is an already-added asset whose platform IDs
+// are a superset of (or equal to) the new asset's IDs. This per-asset comparison avoids
+// conflating IDs across unrelated assets and is order-independent for equal ID sets.
+// It also allows assets that share some platform IDs (e.g., SSH host keys in HA clusters)
+// but differ in others (e.g., hostname) to be treated as distinct assets.
+//
+// Assets with no platform IDs are always rejected — they are not discoverable.
+//
+// NOTE: this is an O(n*m) comparison where n is the number of already-added assets and m
+// is the number of platform IDs. This is fine for typical scan sizes. If scans with very
+// large asset counts become common, this could be optimized with a more sophisticated index
+// (e.g., not relying on a simple flat platformIds set or platformIds[0] lookups).
 func (d *DiscoveredAssets) Add(asset *inventory.Asset, runtime *providers.Runtime) bool {
 	d.assetsLock.Lock()
 	defer d.assetsLock.Unlock()
 
-	for _, platformId := range asset.PlatformIds {
-		if _, ok := d.platformIds[platformId]; ok {
-			// duplicate
-			return false
-		}
-		d.platformIds[platformId] = struct{}{}
+	if len(asset.PlatformIds) == 0 {
+		log.Debug().Str("asset", asset.Name).Msg("discovery> skipping asset with no platform IDs")
+		return false
 	}
 
+	for _, existing := range d.Assets {
+		if isSubsetOf(asset.PlatformIds, existing.Asset.PlatformIds) {
+			log.Debug().Str("asset", asset.Name).Strs("platform-ids", asset.PlatformIds).Msg("discovery> skipping duplicate asset")
+			return false
+		}
+	}
+
+	log.Debug().Str("asset", asset.Name).Strs("platform-ids", asset.PlatformIds).Int("total", len(d.Assets)+1).Msg("discovery> added asset")
 	d.Assets = append(d.Assets, &AssetWithRuntime{Asset: asset, Runtime: runtime})
+	return true
+}
+
+// isSubsetOf returns true if every element in sub exists in super.
+func isSubsetOf(sub, super []string) bool {
+	if len(sub) > len(super) {
+		return false
+	}
+	set := make(map[string]struct{}, len(super))
+	for _, id := range super {
+		set[id] = struct{}{}
+	}
+	for _, id := range sub {
+		if _, ok := set[id]; !ok {
+			return false
+		}
+	}
 	return true
 }
 
@@ -101,7 +136,7 @@ func DiscoverAssets(ctx context.Context, inv *inventory.Inventory, upstream *ups
 		runtimeLabels = runtimeEnv.Labels()
 	}
 
-	discoveredAssets := &DiscoveredAssets{platformIds: map[string]struct{}{}}
+	discoveredAssets := &DiscoveredAssets{}
 
 	// we connect and perform discovery for each asset in the job inventory
 	for _, rootAsset := range invAssets {
@@ -198,7 +233,7 @@ func discoverAssets(rootAssetWithRuntime *AssetWithRuntime, resolvedRootAsset *i
 			continue
 		}
 
-		resolvedAsset := assetWithRuntime.Runtime.Provider.Connection.Asset
+		resolvedAsset := assetWithRuntime.Asset
 		if len(resolvedAsset.PlatformIds) > 0 {
 			prepareAsset(resolvedAsset, resolvedRootAsset, runtimeLabels)
 
@@ -245,7 +280,14 @@ func createRuntimeForAsset(asset *inventory.Asset, upstream *upstream.UpstreamCo
 	if err != nil {
 		return nil, err
 	}
-	return &AssetWithRuntime{Asset: runtime.Provider.Connection.Asset, Runtime: runtime}, nil
+
+	// Clone the asset to create an independent snapshot. The runtime's connection
+	// asset may be subject to mutation during subsequent provider connections, so
+	// we ensure each discovered asset has its own copy of the platform metadata.
+	connAsset := runtime.Provider.Connection.Asset
+	clonedAsset := proto.Clone(connAsset).(*inventory.Asset)
+
+	return &AssetWithRuntime{Asset: clonedAsset, Runtime: runtime}, nil
 }
 
 // prepareAsset prepares the asset for further processing by adding mondoo-specific labels and annotations
