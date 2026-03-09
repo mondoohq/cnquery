@@ -31,12 +31,14 @@ import (
 const (
 	// DefaultRefreshInterval is the minimum time between update checks in seconds (1 hour)
 	DefaultRefreshInterval = 3600
-	// EnvAutoUpdate can be set to "false" or "0" to disable auto-update.
+	// EnvAutoUpdate can be set to "false" or "0" to disable all auto-updates
+	// (both engine binary and providers). When off, EnvAutoUpdateEngine is also off.
 	EnvAutoUpdate = "MONDOO_AUTO_UPDATE"
-	// envBinarySelfUpdateSkip is an internal env var set after a binary self-update
-	// to prevent infinite update loops. Unlike EnvAutoUpdate, this only affects
-	// binary self-update and not provider auto-update.
-	envBinarySelfUpdateSkip = "MONDOO_BINARY_SELF_UPDATE_SKIP"
+	// EnvAutoUpdateEngine can be set to "false" or "0" to disable engine binary
+	// auto-update specifically. It is also set to "false" after a binary self-update
+	// to prevent infinite update loops. Provider auto-update (which reads
+	// MONDOO_AUTO_UPDATE via viper) is not affected by this variable.
+	EnvAutoUpdateEngine = "MONDOO_AUTO_UPDATE_ENGINE"
 	// DefaultReleaseURL is the URL to fetch the latest release information
 	DefaultReleaseURL = "https://releases.mondoo.com/mql/latest.json"
 	// markerFilePrefix is the prefix for per-binary marker files that track when the last update check occurred.
@@ -82,15 +84,16 @@ func CheckAndUpdate(cfg Config) (bool, error) {
 		return false, nil
 	}
 
-	// Skip if this is a re-exec'd process after a binary self-update (prevents infinite loops)
-	if os.Getenv(envBinarySelfUpdateSkip) == "1" {
-		log.Debug().Msg("self-update: skipping, already updated in this session")
+	// Skip if auto-update is disabled via environment (disables both engine and providers)
+	if val := os.Getenv(EnvAutoUpdate); val == "false" || val == "0" {
+		log.Debug().Msg("self-update: skipping, disabled via " + EnvAutoUpdate)
 		return false, nil
 	}
 
-	// Skip if auto-update is disabled via environment
-	if val := os.Getenv(EnvAutoUpdate); val == "false" || val == "0" {
-		log.Debug().Msg("self-update: skipping, disabled via environment")
+	// Skip if engine auto-update is specifically disabled (e.g., after a binary self-update
+	// to prevent infinite loops, or when the user only wants provider auto-updates)
+	if val := os.Getenv(EnvAutoUpdateEngine); val == "false" || val == "0" {
+		log.Debug().Msg("self-update: skipping, disabled via " + EnvAutoUpdateEngine)
 		return false, nil
 	}
 
