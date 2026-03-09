@@ -14,8 +14,9 @@ import (
 // On Windows, syscall.Exec is not available, so we spawn a new process,
 // wait for it to complete, and exit with its exit code.
 func ExecUpdatedBinary(binaryPath string, args []string) error {
-	// Disable auto-update for the new process to prevent infinite loops
-	os.Setenv(EnvAutoUpdate, "false")
+	// Disable engine auto-update in the new process to prevent infinite update loops.
+	// Provider auto-update (which reads MONDOO_AUTO_UPDATE via viper) is not affected.
+	os.Setenv(EnvAutoUpdateEngine, "false")
 
 	// On Windows, we spawn the new process and wait for it to complete
 	cmd := exec.Command(binaryPath, args[1:]...)

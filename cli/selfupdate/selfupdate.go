@@ -31,9 +31,14 @@ import (
 const (
 	// DefaultRefreshInterval is the minimum time between update checks in seconds (1 hour)
 	DefaultRefreshInterval = 3600
-	// EnvAutoUpdate can be set to "false" or "0" to disable auto-update.
-	// This is also set to "false" after an update to prevent infinite loops.
+	// EnvAutoUpdate can be set to "false" or "0" to disable all auto-updates
+	// (both engine binary and providers). When off, EnvAutoUpdateEngine is also off.
 	EnvAutoUpdate = "MONDOO_AUTO_UPDATE"
+	// EnvAutoUpdateEngine can be set to "false" or "0" to disable engine binary
+	// auto-update specifically. It is also set to "false" after a binary self-update
+	// to prevent infinite update loops. Provider auto-update (which reads
+	// MONDOO_AUTO_UPDATE via viper) is not affected by this variable.
+	EnvAutoUpdateEngine = "MONDOO_AUTO_UPDATE_ENGINE"
 	// DefaultReleaseURL is the URL to fetch the latest release information
 	DefaultReleaseURL = "https://releases.mondoo.com/mql/latest.json"
 	// markerFilePrefix is the prefix for per-binary marker files that track when the last update check occurred.
@@ -79,9 +84,16 @@ func CheckAndUpdate(cfg Config) (bool, error) {
 		return false, nil
 	}
 
-	// Skip if auto-update is disabled (also prevents infinite loops after an update)
+	// Skip if auto-update is disabled via environment (disables both engine and providers)
 	if val := os.Getenv(EnvAutoUpdate); val == "false" || val == "0" {
-		log.Debug().Msg("self-update: skipping, disabled via environment")
+		log.Debug().Msg("self-update: skipping, disabled via " + EnvAutoUpdate)
+		return false, nil
+	}
+
+	// Skip if engine auto-update is specifically disabled (e.g., after a binary self-update
+	// to prevent infinite loops, or when the user only wants provider auto-updates)
+	if val := os.Getenv(EnvAutoUpdateEngine); val == "false" || val == "0" {
+		log.Debug().Msg("self-update: skipping, disabled via " + EnvAutoUpdateEngine)
 		return false, nil
 	}
 
