@@ -25,7 +25,7 @@ If `go` is not installed or an older version exists, follow instructions on [the
 
    ```bash
    git clone https://github.com/mondoohq/mql.git
-   cd cnquery
+   cd mql
    ```
 
 3. Build and install on Unix-like systems:
@@ -37,11 +37,11 @@ If `go` is not installed or an older version exists, follow instructions on [the
    # Build all providers
    make providers
 
-   # To install cnquery using Go into the $GOBIN directory:
-   make cnquery/install
+   # To install mql using Go into the $GOBIN directory:
+   make mql/install
    ```
 
-## Develop cnquery, providers, or resources
+## Develop mql, providers, or resources
 
 Whenever you change resources, providers, or protos, you must generate files for the compiler. To do this, make sure you
 have the necessary tools installed (such as protobuf):
@@ -53,10 +53,10 @@ make prep
 Then, whenever you make changes, just run:
 
 ```bash
-make cnquery/generate
+make mql/generate
 ```
 
-This generates and updates all required files for the build. At this point you can `make cnquery/install` again as
+This generates and updates all required files for the build. At this point you can `make mql/install` again as
 outlined above.
 
 If you make update to a provider's lr file, you can generate go files for that provider with this command: 
@@ -68,11 +68,11 @@ To quickly install the changed provider plugin run `make providers/build/aws && 
 
 ## Debug providers
 
-`cnquery` uses a plugin mechanism. Each provider has its own go modules. This ensures that dependencies are only used on
+`mql` uses a plugin mechanism. Each provider has its own go modules. This ensures that dependencies are only used on
 the appropriate provider. Since providers are their own binaries, debugging is more complex. To ease debugging, we wrote
 a small tool that configures the provider accordingly so that it is compiled into the main binary.
 
-To debug a provider locally with cnquery:
+To debug a provider locally with mql:
 
 1. Modify the `providers.yaml` in the root folder and add providers you want to test to the `builtin` field. Example:
    ```yaml
@@ -82,11 +82,11 @@ To debug a provider locally with cnquery:
    ```bash
    make providers/config
    ```
-3. You can now use and debug your code. For example `make cnquery/install` or start a debugger.
+3. You can now use and debug your code. For example `make mql/install` or start a debugger.
 4. Once done, please remember to restore `providers.yaml` (or just set back: `builtin: []`) and
    re-run `make providers/config`.
 
-In your favorite IDE use `apps/cnquery/cnquery.go` as main entry point and set the following program
+In your favorite IDE use `apps/mql/mql.go` as main entry point and set the following program
 arguments `run aws -c "aws.ec2.instances"` to run the AWS provider with the `aws.ec2.instances` MQL query.
 
 ### Remote debug providers
@@ -104,7 +104,7 @@ Additionally, you need to set up the debugger on the remote VM:
 6. Run the debugger on the remove VM:
 
   ```
-  dlv debug <path>/apps/cnquery/cnquery.go --headless --listen=:12345 -- run gcp snapshot --project-id xyz-123 suse15 -c "asset{ name ids }" --verbose
+  dlv debug <path>/apps/mql/mql.go --headless --listen=:12345 -- run gcp snapshot --project-id xyz-123 suse15 -c "asset{ name ids }" --verbose
   ```
 
 To learn more, including other possible ways to remote debug, read:
@@ -121,7 +121,7 @@ Here's how to make this process as easy as 🥧 :
 
 **Set up the version utility**
 
-In the cnquery repo you can now find the version utility in `providers-sdk/v1/util/version`.
+In the mql repo you can now find the version utility in `providers-sdk/v1/util/version`.
 
 To make working with this utility easier, let's alias it:
 
@@ -187,40 +187,40 @@ The final line of this message is the blueprint for the pull request.
 
 ## Use Go workspaces
 
-If you want to develop cnquery, cnspec, and providers at the same time, you can use Go workspaces. This allows you
+If you want to develop mql, cnspec, and providers at the same time, you can use Go workspaces. This allows you
 to use the latest updates from the different repos without having to commit and push changes.
 
-Here is a sample config for `go.work` in the root folder of `cnquery` and `cnspec`:
+Here is a sample config for `go.work` in the root folder of `mql` and `cnspec`:
 
 ```go
 go 1.25
 
 use (
-   ./cnquery
-   ./cnquery/providers/ansible
-   ./cnquery/providers/arista
-   ./cnquery/providers/atlassian
-   ./cnquery/providers/aws
-   ./cnquery/providers/azure
-   ./cnquery/providers/cloudformation
-   ./cnquery/providers/equinix
-   ./cnquery/providers/gcp
-   ./cnquery/providers/github
-   ./cnquery/providers/gitlab
-   ./cnquery/providers/google-workspace
-   ./cnquery/providers/ipmi
-   ./cnquery/providers/k8s
-   ./cnquery/providers/ms365
-   ./cnquery/providers/oci
-   ./cnquery/providers/okta
-   ./cnquery/providers/opcua
-   ./cnquery/providers/shodan
-   ./cnquery/providers/snowflake
-   ./cnquery/providers/slack
-   ./cnquery/providers/terraform
-   ./cnquery/providers/tailscale
-   ./cnquery/providers/vcd
-   ./cnquery/providers/vsphere
+   ./mql
+   ./mql/providers/ansible
+   ./mql/providers/arista
+   ./mql/providers/atlassian
+   ./mql/providers/aws
+   ./mql/providers/azure
+   ./mql/providers/cloudformation
+   ./mql/providers/equinix
+   ./mql/providers/gcp
+   ./mql/providers/github
+   ./mql/providers/gitlab
+   ./mql/providers/google-workspace
+   ./mql/providers/ipmi
+   ./mql/providers/k8s
+   ./mql/providers/ms365
+   ./mql/providers/oci
+   ./mql/providers/okta
+   ./mql/providers/opcua
+   ./mql/providers/shodan
+   ./mql/providers/snowflake
+   ./mql/providers/slack
+   ./mql/providers/terraform
+   ./mql/providers/tailscale
+   ./mql/providers/vcd
+   ./mql/providers/vsphere
    ./cnspec
 )
 ```
@@ -349,13 +349,13 @@ func (g *mqlGcpProjectComputeServiceAddress) network() (*mqlGcpProjectComputeSer
 
 ## Metrics (Prometheus + Grafana)
 
-When debugging `cnquery`, you can monitor and profile memory and CPU usage using [Prometheus](https://prometheus.io/) and [Grafana](https://grafana.com/). The setup provides visibility into application performance metrics and allows us to diagnose bottlenecks, memory leaks, and high CPU usage.
+When debugging `mql`, you can monitor and profile memory and CPU usage using [Prometheus](https://prometheus.io/) and [Grafana](https://grafana.com/). The setup provides visibility into application performance metrics and allows us to diagnose bottlenecks, memory leaks, and high CPU usage.
 
 **How it works?**
 
 * Prometheus: Scrapes and stores time series metrics from your application.
 * Grafana: Visualizes the metrics and allows creating dashboards and alerts.
-* `cnquery` in `DEBUG` mode: Exposes basic metrics
+* `mql` in `DEBUG` mode: Exposes basic metrics
 
 ### Setup
 
@@ -365,7 +365,7 @@ When debugging `cnquery`, you can monitor and profile memory and CPU usage using
     1. Open Grafana at <!-- markdown-link-check-disable --> http://localhost:3000 <!-- markdown-link-check-enable -->
     1. Add Prometheus as a data source (URL: `http://host.docker.internal:9009`)
     1. Use an existing Go profiling dashboard from [Grafana](https://grafana.com/grafana/dashboards/) dashboards e.g. [10826](https://grafana.com/grafana/dashboards/10826-go-metrics/)
-1. Run `cnquery` with `DEBUG=1` e.g. `DEBUG=1 cnquery scan local`
+1. Run `mql` with `DEBUG=1` e.g. `DEBUG=1 mql run local -c "asset { name }"`
 
 You should start seeing data in Grafana!
 
