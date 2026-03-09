@@ -1,11 +1,11 @@
 module go.mondoo.com/mql/v13/providers/cloudformation
 
-go 1.25.6
+go 1.26.0
 
 replace go.mondoo.com/mql/v13 => ../..
 
 require (
-	github.com/aws-cloudformation/rain v1.24.2
+	github.com/aws-cloudformation/rain v1.24.3
 	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.11.1
 	go.mondoo.com/mql/v13 v13.0.0-rc7
@@ -104,6 +104,7 @@ require (
 	github.com/hashicorp/yamux v0.1.2 // indirect
 	github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
+	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/kevinburke/ssh_config v1.6.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect

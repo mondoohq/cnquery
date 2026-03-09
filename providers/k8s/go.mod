@@ -270,6 +270,7 @@ require (
 	github.com/vbatts/tar-split v0.12.2 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
+	go.mondoo.com/cnquery/v12 v12.23.1 // indirect
 	go.mondoo.com/mondoo-go v0.0.0-20260308120054-dab5286b4047 // indirect
 	go.mondoo.com/ranger-rpc v0.8.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect

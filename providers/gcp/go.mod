@@ -73,6 +73,7 @@ require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/jstemmer/go-junit-report v1.0.0 // indirect
+	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/knqyf263/go-rpmdb v0.1.1 // indirect
 	github.com/mattn/go-runewidth v0.0.21 // indirect
 	github.com/moby/buildkit v0.19.0 // indirect

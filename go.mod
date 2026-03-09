@@ -73,7 +73,8 @@ require (
 	github.com/muesli/termenv v0.16.0
 	github.com/olekukonko/tablewriter v1.1.3
 	github.com/opencontainers/image-spec v1.1.1
-	github.com/package-url/packageurl-go v0.1.5
+	// pin v0.1.3
+	github.com/package-url/packageurl-go v0.1.3
 	github.com/pandatix/go-cvss v0.6.2
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pierrec/lz4/v4 v4.1.26
@@ -123,7 +124,10 @@ require (
 	sigs.k8s.io/yaml v1.6.0
 )
 
-require github.com/nginxinc/nginx-go-crossplane v0.4.86
+require (
+	github.com/nginxinc/nginx-go-crossplane v0.4.86
+	go.mondoo.com/cnquery/v12 v12.23.1
+)
 
 require (
 	cloud.google.com/go v0.115.1 // indirect
@@ -233,7 +237,6 @@ require (
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/jstemmer/go-junit-report v1.0.0 // indirect
-	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/klauspost/compress v1.18.4 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/kr/fs v0.1.0 // indirect
