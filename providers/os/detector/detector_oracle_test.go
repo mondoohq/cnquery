@@ -18,14 +18,12 @@ func TestHasOracleELSEnabled(t *testing.T) {
 	}{
 		{
 			name:     "no repos directory",
-			files:    map[string]string{},
+			files:    nil,
 			expected: false,
 		},
 		{
-			name: "empty repos directory",
-			files: map[string]string{
-				"/etc/yum.repos.d": "",
-			},
+			name:     "empty repos directory",
+			files:    map[string]string{},
 			expected: false,
 		},
 		{
@@ -101,15 +99,12 @@ enabled=1
 		t.Run(tt.name, func(t *testing.T) {
 			fs := afero.NewMemMapFs()
 
-			if len(tt.files) > 0 {
+			if tt.files != nil {
 				err := fs.MkdirAll("/etc/yum.repos.d", 0o755)
 				assert.NoError(t, err)
 			}
 
 			for path, content := range tt.files {
-				if path == "/etc/yum.repos.d" {
-					continue
-				}
 				err := afero.WriteFile(fs, path, []byte(content), 0o644)
 				assert.NoError(t, err)
 			}

@@ -43,7 +43,7 @@ func hasOracleELSEnabled(conn shared.Connection) bool {
 		}
 
 		for section, fields := range repoIni.Fields {
-			if !strings.HasSuffix(section, "_ELS") && !strings.Contains(section, "_ELS/") {
+			if !strings.HasSuffix(section, "_ELS") {
 				continue
 			}
 			if subFieldsMap, ok := fields.(map[string]interface{}); ok {
