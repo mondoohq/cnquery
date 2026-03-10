@@ -14,7 +14,7 @@
 # your OS (like ~/.mondoo/providers/os).
 #
 # If you want to test a provider that is not part of
-# the cnquery repo, you can add it here as well.
+# the mql repo, you can add it here as well.
 # Example:
 # - name: my-awesome-provider
 #   remote: ~/path/to/my-awesome-provider

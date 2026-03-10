@@ -21,7 +21,7 @@ var once sync.Once
 var testDir string
 
 func setup() {
-	// build cnquery
+	// build mql
 	cmd := exec.Command("go", "build", "../../apps/mql/mql.go")
 	cmd.Env = test.BuildEnv()
 	cmd.Stderr = os.Stderr
