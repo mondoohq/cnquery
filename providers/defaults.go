@@ -245,6 +245,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"junos": {
+		Provider: &plugin.Provider{
+			Name:            "junos",
+			ID:              "go.mondoo.com/cnquery/providers/junos",
+			ConnectionTypes: []string{"junos"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "junos",
+					Use:   "junos",
+					Short: "a remote Junos OS device",
+				},
+			},
+		},
+	},
+
 	"k8s": {
 		Provider: &plugin.Provider{
 			Name:            "k8s",
