@@ -13,7 +13,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "tailscale",
 	ID:              "go.mondoo.com/mql/v13/providers/tailscale",
-	Version:         "13.0.0",
+	Version:         "11.0.80",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{
 		{
