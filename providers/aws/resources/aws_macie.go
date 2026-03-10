@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/macie2"
@@ -341,16 +342,25 @@ func (a *mqlAwsMacieCustomDataIdentifier) id() (string, error) {
 
 // Internal cache structures
 type mqlAwsMacieClassificationJobInternal struct {
-	cacheJob *types.JobSummary
+	cacheJob       *types.JobSummary
+	detailsFetched bool
+	detailsLock    sync.Mutex
 }
 
 type mqlAwsMacieCustomDataIdentifierInternal struct {
 	cacheIdentifier *types.CustomDataIdentifierSummary
+	detailsFetched  bool
+	detailsLock     sync.Mutex
 }
 
 // Populate detailed data for classification job
 func (a *mqlAwsMacieClassificationJob) populateJobDetails() error {
-	if a.cacheJob != nil {
+	if a.detailsFetched {
+		return nil
+	}
+	a.detailsLock.Lock()
+	defer a.detailsLock.Unlock()
+	if a.detailsFetched {
 		return nil
 	}
 
@@ -391,12 +401,18 @@ func (a *mqlAwsMacieClassificationJob) populateJobDetails() error {
 		a.Tags = plugin.TValue[map[string]any]{Data: convert.MapToInterfaceMap(job.Tags), State: plugin.StateIsSet}
 	}
 
+	a.detailsFetched = true
 	return nil
 }
 
 // Populate detailed data for custom data identifier
 func (a *mqlAwsMacieCustomDataIdentifier) populateIdentifierDetails() error {
-	if a.cacheIdentifier == nil {
+	if a.detailsFetched {
+		return nil
+	}
+	a.detailsLock.Lock()
+	defer a.detailsLock.Unlock()
+	if a.detailsFetched {
 		return nil
 	}
 
@@ -433,6 +449,7 @@ func (a *mqlAwsMacieCustomDataIdentifier) populateIdentifierDetails() error {
 		a.Tags = plugin.TValue[map[string]any]{Data: convert.MapToInterfaceMap(identifier.Tags), State: plugin.StateIsSet}
 	}
 
+	a.detailsFetched = true
 	return nil
 }
 

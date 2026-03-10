@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -236,16 +237,11 @@ func (a *mqlAwsIam) users() ([]any, error) {
 }
 
 func iamTagsToMap(tags []iamtypes.Tag) map[string]any {
-	var tagsMap map[string]any
-
-	if len(tags) > 0 {
-		tagsMap := map[string]any{}
-		for i := range tags {
-			tag := tags[i]
-			tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
-		}
+	tagsMap := map[string]any{}
+	for i := range tags {
+		tag := tags[i]
+		tagsMap[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
 	}
-
 	return tagsMap
 }
 
@@ -910,7 +906,10 @@ func (a *mqlAwsIamUser) attachedPolicies() ([]any, error) {
 }
 
 type mqlAwsIamPolicyInternal struct {
-	cachePolicy *iamtypes.Policy
+	cachePolicy     *iamtypes.Policy
+	cachedVersions  []iamtypes.PolicyVersion
+	versionsFetched bool
+	versionsLock    sync.Mutex
 }
 
 func (a *mqlAwsIamPolicy) loadPolicy(arn string) (*iamtypes.Policy, error) {
@@ -1134,21 +1133,43 @@ func (a *mqlAwsIamPolicy) attachedGroups() ([]any, error) {
 	return res, nil
 }
 
-func (a *mqlAwsIamPolicy) defaultVersion() (*mqlAwsIamPolicyversion, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+// fetchPolicyVersions fetches and caches ListPolicyVersions with double-check locking.
+// Shared between defaultVersion() and versions().
+func (a *mqlAwsIamPolicy) fetchPolicyVersions() ([]iamtypes.PolicyVersion, error) {
+	if a.versionsFetched {
+		return a.cachedVersions, nil
+	}
+	a.versionsLock.Lock()
+	defer a.versionsLock.Unlock()
+	if a.versionsFetched {
+		return a.cachedVersions, nil
+	}
 
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.Iam("")
 	ctx := context.Background()
-
 	arn := a.Arn.Data
 
-	policyVersions, err := svc.ListPolicyVersions(ctx, &iam.ListPolicyVersionsInput{PolicyArn: &arn})
+	resp, err := svc.ListPolicyVersions(ctx, &iam.ListPolicyVersionsInput{PolicyArn: &arn})
 	if err != nil {
 		return nil, err
 	}
 
-	for i := range policyVersions.Versions {
-		policyversion := policyVersions.Versions[i]
+	a.cachedVersions = resp.Versions
+	a.versionsFetched = true
+	return a.cachedVersions, nil
+}
+
+func (a *mqlAwsIamPolicy) defaultVersion() (*mqlAwsIamPolicyversion, error) {
+	arn := a.Arn.Data
+
+	versions, err := a.fetchPolicyVersions()
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range versions {
+		policyversion := versions[i]
 		if policyversion.IsDefaultVersion {
 			mqlAwsIamPolicyVersion, err := CreateResource(a.MqlRuntime, ResourceAwsIamPolicyversion,
 				map[string]*llx.RawData{
@@ -1167,21 +1188,16 @@ func (a *mqlAwsIamPolicy) defaultVersion() (*mqlAwsIamPolicyversion, error) {
 }
 
 func (a *mqlAwsIamPolicy) versions() ([]any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
-	svc := conn.Iam("")
-	ctx := context.Background()
-
 	arn := a.Arn.Data
 
-	policyVersions, err := svc.ListPolicyVersions(ctx, &iam.ListPolicyVersionsInput{PolicyArn: &arn})
+	versions, err := a.fetchPolicyVersions()
 	if err != nil {
 		return nil, err
 	}
 
 	res := []any{}
-	for i := range policyVersions.Versions {
-		policyversion := policyVersions.Versions[i]
+	for i := range versions {
+		policyversion := versions[i]
 
 		mqlAwsIamPolicyVersion, err := CreateResource(a.MqlRuntime, ResourceAwsIamPolicyversion,
 			map[string]*llx.RawData{

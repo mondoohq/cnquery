@@ -520,7 +520,7 @@ func (a *mqlAwsEc2Securitygroup) ipPermissions() ([]any, error) {
 		for r := range permission.Ipv6Ranges {
 			iprange := permission.Ipv6Ranges[r]
 			if iprange.CidrIpv6 != nil {
-				ipRanges = append(ipRanges, *iprange.CidrIpv6)
+				ipv6Ranges = append(ipv6Ranges, *iprange.CidrIpv6)
 			}
 		}
 		prefixListIds, err := convert.JsonToDictSlice(permission.PrefixListIds)
@@ -568,7 +568,7 @@ func (a *mqlAwsEc2Securitygroup) ipPermissionsEgress() ([]any, error) {
 		for r := range permission.Ipv6Ranges {
 			iprange := permission.Ipv6Ranges[r]
 			if iprange.CidrIpv6 != nil {
-				ipRanges = append(ipRanges, *iprange.CidrIpv6)
+				ipv6Ranges = append(ipv6Ranges, *iprange.CidrIpv6)
 			}
 		}
 		prefixListIds, err := convert.JsonToDictSlice(permission.PrefixListIds)
