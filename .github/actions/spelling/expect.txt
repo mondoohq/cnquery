@@ -28,6 +28,7 @@ bytematchstatement
 cavium
 cdn
 certificatechains
+ciscocatalyst
 clcerts
 cloudflare
 Clusterwide
@@ -73,6 +74,7 @@ firefox
 firestore
 FLEXGROUP
 FLEXVOL
+fortios
 frontmatter
 ftps
 fumadocs
@@ -106,6 +108,7 @@ ipsetreferencestatement
 istio
 jira
 jsonbody
+junos
 kqueue
 KSK
 labelmatchstatement
@@ -158,6 +161,7 @@ openssl
 openzfs
 orstatement
 ospf
+panos
 parallelquery
 PAYG
 persistentvolume
@@ -245,5 +249,6 @@ workdir
 WORKSPACESUSER
 workspacesweb
 xssmatchstatement
+yara
 zrt
 ZSTD
