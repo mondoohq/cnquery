@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"bytes"
 	"errors"
 	"io"
 	"os"
@@ -79,6 +80,57 @@ func (s *mqlApache2) version() (string, error) {
 }
 
 var reApacheVersion = regexp.MustCompile(`Apache/(\S+)`)
+
+// scanBinaryForTag reads a file in chunks and looks for tag followed by a
+// dot-separated version number (e.g. "Apache/2.4.62"). This avoids loading
+// multi-megabyte binaries entirely into memory.
+func scanBinaryForTag(fs *afero.Afero, path string, tag []byte) string {
+	f, err := fs.Open(path)
+	if err != nil {
+		return ""
+	}
+	defer f.Close()
+
+	const chunkSize = 64 * 1024
+	// Overlap must be at least len(tag) + max version length to avoid
+	// missing a match that spans two chunks.
+	overlap := len(tag) + 20
+	buf := make([]byte, chunkSize+overlap)
+	carry := 0
+
+	for {
+		n, err := f.Read(buf[carry:])
+		if n == 0 && err != nil {
+			break
+		}
+		active := buf[:carry+n]
+
+		idx := bytes.Index(active, tag)
+		if idx >= 0 {
+			start := idx + len(tag)
+			end := start
+			for end < len(active) && (active[end] == '.' || (active[end] >= '0' && active[end] <= '9')) {
+				end++
+			}
+			if end > start {
+				return string(active[start:end])
+			}
+		}
+
+		// Keep the last `overlap` bytes so a tag spanning chunks isn't missed.
+		if len(active) > overlap {
+			copy(buf, active[len(active)-overlap:])
+			carry = overlap
+		} else {
+			carry = 0
+		}
+
+		if err != nil {
+			break
+		}
+	}
+	return ""
+}
 
 type mqlApache2ConfInternal struct {
 	lock       sync.Mutex
