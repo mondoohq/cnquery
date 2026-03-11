@@ -4,34 +4,39 @@
 
 ## Build the provider and bundle it into a single file
 
+set -eo pipefail
+
 REPOROOT=$(git rev-parse --show-toplevel)
-PROVIDER_NAME=$1
+PROVIDER_NAME=${1:-}
 PROVIDER_PATH=$REPOROOT/providers/$PROVIDER_NAME
 PROVIDER_DIST=$PROVIDER_PATH/dist
 BUNDLE_DIST=$REPOROOT/dist
 
+# Maximum number of parallel arch builds (default: all 11 at once)
+MAX_PARALLEL=${MAX_PARALLEL:-11}
+
 cd $REPOROOT
 
-if [ -z $PROVIDER_NAME ]; then
+if [ -z "$PROVIDER_NAME" ]; then
   echo "Please specify a provider name."
   exit 1
 fi
 
 # Check if the provider exists
-if [ ! -d $PROVIDER_PATH ]; then
+if [ ! -d "$PROVIDER_PATH" ]; then
   echo "The ${PROVIDER_NAME} provider does not exist.  Please create it first."
   exit 1
 fi
 
 # Clean up the dist directory
-if [ -d $PROVIDER_DIST ]; then
+if [ -d "$PROVIDER_DIST" ]; then
   echo "Previous build detected.  Cleaning up the ${PROVIDER_NAME} provider (${PROVIDER_PATH})..."
-  rm -rf $PROVIDER_DIST
+  rm -rf "$PROVIDER_DIST"
 fi
 
 # Create the dist directory
-mkdir -p $PROVIDER_DIST
-mkdir -p $BUNDLE_DIST
+mkdir -p "$PROVIDER_DIST"
+mkdir -p "$BUNDLE_DIST"
 
 # Record the starting timestamp
 START_TIME=$(date +%s)
@@ -49,66 +54,105 @@ echo "  - Compile the resources..."
 ${REPOROOT}/lr go ${PROVIDER_PATH}/resources/${PROVIDER_NAME}.lr --dist ${PROVIDER_DIST}
 echo "  - Generate the resource versions..."
 ${REPOROOT}/lr versions ${PROVIDER_PATH}/resources/${PROVIDER_NAME}.lr
-#echo "  - Build the provider binary..."
-#go build -o ${PROVIDER_DIST}/${PROVIDER_NAME} ${PROVIDER_PATH}/main.go
 
 build_bundle(){
-  GOOS=$1
-  GOARCH=$2
-  GOARM=$3
+  local GOOS=$1
+  local GOARCH=$2
+  local GOARM=${3:-}
 
-  echo "Building ${PROVIDER_DIST}/${PROVIDER_NAME} for ${GOOS}/${GOARCH}/${GOARM} ..."
-  # we switch into the path to use the local go.mods
-  PROVIDER_EXECUTABLE="${PROVIDER_NAME}"
+  # Use a per-arch build directory to avoid file conflicts during parallel builds
+  local ARCH_SUFFIX="${GOOS}_${GOARCH}"
+  if [ -n "$GOARM" ]; then
+    ARCH_SUFFIX="${ARCH_SUFFIX}_v${GOARM}"
+  fi
+  local ARCH_DIST="${PROVIDER_DIST}/${ARCH_SUFFIX}"
+  mkdir -p "$ARCH_DIST"
+
+  echo "Building ${PROVIDER_NAME} for ${GOOS}/${GOARCH}${GOARM:+/v$GOARM} ..."
+
+  local PROVIDER_EXECUTABLE="${PROVIDER_NAME}"
   if [[ "${GOOS}" == "windows" ]]; then
     PROVIDER_EXECUTABLE="${PROVIDER_EXECUTABLE}.exe"
   fi
-  cd ${PROVIDER_PATH} && CGO_ENABLED=0 GOOS=${GOOS} GOARCH=${GOARCH} GOARM=${GOARM} go build -tags production -ldflags "-s -w" -o ${PROVIDER_DIST}/${PROVIDER_EXECUTABLE} main.go
+
+  # Build the binary into the arch-specific directory
+  cd ${PROVIDER_PATH} && CGO_ENABLED=0 GOOS=${GOOS} GOARCH=${GOARCH} GOARM=${GOARM} go build -tags production -ldflags "-s -w" -o ${ARCH_DIST}/${PROVIDER_EXECUTABLE} main.go
 
   if [[ "${GOOS}" == "windows" ]]; then
     ### SIGN THE BINARY
-    echo "  - Signing the binary ${PROVIDER_DIST}/${PROVIDER_EXECUTABLE}..."
+    echo "  - Signing the binary ${ARCH_DIST}/${PROVIDER_EXECUTABLE}..."
     jsign --storetype TRUSTEDSIGNING \
           --keystore "${TSIGN_AZURE_ENDPOINT}" \
           --storepass "${TSIGN_ACCESS_TOKEN}" \
-          --alias "${TSIGN_ACCOUNT_NAME}/${TSIGN_CERT_PROFILE_NAME}" "${PROVIDER_DIST}/${PROVIDER_EXECUTABLE}"
+          --alias "${TSIGN_ACCOUNT_NAME}/${TSIGN_CERT_PROFILE_NAME}" "${ARCH_DIST}/${PROVIDER_EXECUTABLE}"
   fi
 
   # set linux flags that do not work on macos
-  TAR_FLAGS=""
+  local TAR_FLAGS=""
   if uname -s | grep -q 'Linux'; then
     TAR_FLAGS="--owner=0 --group=0 --no-same-owner"
   fi
 
+  # Create the archive, pulling the binary from the arch dir and json files from the common dist dir
   tar -cf ${BUNDLE_DIST}/${PROVIDER_NAME}_${PROVIDER_VERSION}_${GOOS}_${GOARCH}.tar.xz \
     ${TAR_FLAGS} --use-compress-program='xz -9v' \
-    -C ${PROVIDER_DIST} \
-    ${PROVIDER_EXECUTABLE} ${PROVIDER_NAME}.json ${PROVIDER_NAME}.resources.json
+    -C ${ARCH_DIST} ${PROVIDER_EXECUTABLE} \
+    -C ${PROVIDER_DIST} ${PROVIDER_NAME}.json ${PROVIDER_NAME}.resources.json
 
   if [ $? -ne 0 ]; then
-    echo "Failed to build the ${PROVIDER_NAME} provider."
-    exit 1
+    echo "Failed to build the ${PROVIDER_NAME} provider for ${GOOS}/${GOARCH}."
+    return 1
   fi
 
-  rm ${PROVIDER_DIST}/${PROVIDER_EXECUTABLE}
+  # Clean up the arch-specific directory
+  rm -rf "$ARCH_DIST"
 }
 
-# Build Darwin Architectures
-build_bundle darwin amd64
-build_bundle darwin arm64
+# Define all build targets
+BUILDS=(
+  "darwin amd64"
+  "darwin arm64"
+  "linux amd64"
+  "linux 386"
+  "linux arm64"
+  "linux arm 6"
+  "linux arm 7"
+  "linux ppc64le"
+  "linux s390x"
+  "windows amd64"
+  "windows arm64"
+)
 
-# Build Linux Architectures
-build_bundle linux amd64
-build_bundle linux 386
-build_bundle linux arm64
-build_bundle linux arm 6
-build_bundle linux arm 7
-build_bundle linux ppc64le
-build_bundle linux s390x
+echo "  - Building ${#BUILDS[@]} architecture targets (max parallel: ${MAX_PARALLEL})..."
 
-# Build Windows Architectures
-build_bundle windows amd64
-build_bundle windows arm64
+# Run builds in parallel with a concurrency limit
+PIDS=()
+FAILED=0
+RUNNING=0
+
+for build in "${BUILDS[@]}"; do
+  # If we've hit the parallelism limit, wait for one to finish before launching the next
+  if [ $RUNNING -ge $MAX_PARALLEL ]; then
+    # Wait for the oldest job
+    wait "${PIDS[0]}" || FAILED=1
+    PIDS=("${PIDS[@]:1}")
+    RUNNING=$((RUNNING - 1))
+  fi
+
+  build_bundle $build &
+  PIDS+=($!)
+  RUNNING=$((RUNNING + 1))
+done
+
+# Wait for all remaining builds
+for pid in "${PIDS[@]}"; do
+  wait "$pid" || FAILED=1
+done
+
+if [ $FAILED -ne 0 ]; then
+  echo "One or more architecture builds failed."
+  exit 1
+fi
 
 # Generate SHA256 checksums
 echo "  - Generating SHA256 checksums..."
