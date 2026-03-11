@@ -105,7 +105,7 @@ Get-ItemProperty (@(
   'HKLM:\\SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*',
   'HKCU:\\SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*'
 ) | Where-Object { Test-Path $_ }) |
-Select-Object -Property DisplayName,DisplayVersion,Publisher,EstimatedSize,InstallSource,UninstallString,InstallLocation | ConvertTo-Json -Compress
+Select-Object -Property DisplayName,DisplayVersion,Publisher,EstimatedSize,InstallSource,UninstallString,InstallLocation,PSPath | ConvertTo-Json -Compress
 `
 
 // We need to fill in the path collected from the registry
@@ -243,12 +243,13 @@ func (w *WinPkgManager) getLocalInstalledApps() ([]Package, error) {
 	}
 	packages := []Package{}
 	for _, r := range pkgs {
+		arch := archForRegistryPath(r, w.platform.Arch)
 		children, err := registry.GetNativeRegistryKeyChildren(r)
 		if err != nil {
 			continue
 		}
 		for _, c := range children {
-			p, err := getPackageFromRegistryKey(c, w.platform)
+			p, err := getPackageFromRegistryKey(c, w.platform, arch)
 			if err != nil {
 				return nil, err
 			}
@@ -413,12 +414,13 @@ func (w *WinPkgManager) getFsInstalledApps() ([]Package, error) {
 	}
 	packages := []Package{}
 	for _, r := range pkgs {
+		arch := archForRegistryPath(r, w.platform.Arch)
 		children, err := rh.GetNativeRegistryKeyChildren(registry.Software, r)
 		if err != nil {
 			continue
 		}
 		for _, c := range children {
-			p, err := getPackageFromRegistryKey(c, w.platform)
+			p, err := getPackageFromRegistryKey(c, w.platform, arch)
 			if err != nil {
 				return nil, err
 			}
@@ -502,16 +504,16 @@ func parseAppxManifest(input []byte) (winAppxPackages, error) {
 	return pkg, nil
 }
 
-func getPackageFromRegistryKey(key registry.RegistryKeyChild, platform *inventory.Platform) (*Package, error) {
+func getPackageFromRegistryKey(key registry.RegistryKeyChild, platform *inventory.Platform, arch string) (*Package, error) {
 	items, err := registry.GetNativeRegistryKeyItems(key.Path + "\\" + key.Name)
 	if err != nil {
 		log.Debug().Err(err).Str("path", key.Path).Msg("could not read registry key children")
 		return nil, err
 	}
-	return getPackageFromRegistryKeyItems(items, platform), nil
+	return getPackageFromRegistryKeyItems(items, platform, arch), nil
 }
 
-func getPackageFromRegistryKeyItems(children []registry.RegistryKeyItem, platform *inventory.Platform) *Package {
+func getPackageFromRegistryKeyItems(children []registry.RegistryKeyItem, platform *inventory.Platform, arch string) *Package {
 	var uninstallString string
 	var displayName string
 	var displayVersion string
@@ -545,9 +547,38 @@ func getPackageFromRegistryKeyItems(children []registry.RegistryKeyItem, platfor
 		return nil
 	}
 
-	pkg := createPackage(displayName, displayVersion, "windows/app", platform.Arch, publisher, installLocation, platform)
+	// For shared registry paths (like HKCU) where WOW64 redirection doesn't apply,
+	// fall back to checking install paths for "Program Files (x86)".
+	if arch == platform.Arch {
+		if detected := archFromInstallPath(installLocation, uninstallString); detected != "" {
+			arch = detected
+		}
+	}
+
+	pkg := createPackage(displayName, displayVersion, "windows/app", arch, publisher, installLocation, platform)
 
 	return pkg
+}
+
+// archForRegistryPath returns "x86" for Wow6432Node registry paths (32-bit apps on 64-bit Windows),
+// or the platform architecture for regular paths.
+func archForRegistryPath(path string, platformArch string) string {
+	if strings.Contains(path, "Wow6432Node") {
+		return "x86"
+	}
+	return platformArch
+}
+
+// archFromInstallPath returns "x86" if any of the given paths contain "Program Files (x86)",
+// indicating a 32-bit application. Returns empty string if architecture cannot be determined.
+// The "Program Files (x86)" directory name is constant across all Windows language editions.
+func archFromInstallPath(paths ...string) string {
+	for _, p := range paths {
+		if strings.Contains(p, "Program Files (x86)") {
+			return "x86"
+		}
+	}
+	return ""
 }
 
 // returns installed appx packages as well as hot fixes
@@ -620,6 +651,7 @@ func ParseWindowsAppPackages(platform *inventory.Platform, input io.Reader) ([]P
 		EstimatedSize   int    `json:"EstimatedSize"`
 		UninstallString string `json:"UninstallString"`
 		InstallLocation string `json:"InstallLocation"`
+		PSPath          string `json:"PSPath"`
 	}
 
 	var entries []powershellUninstallEntry
@@ -641,7 +673,13 @@ func ParseWindowsAppPackages(platform *inventory.Platform, input io.Reader) ([]P
 		if entry.DisplayName == "" {
 			continue
 		}
-		pkg := createPackage(entry.DisplayName, entry.DisplayVersion, "windows/app", platform.Arch, entry.Publisher, entry.InstallLocation, platform)
+		arch := archForRegistryPath(entry.PSPath, platform.Arch)
+		if arch == platform.Arch {
+			if detected := archFromInstallPath(entry.InstallLocation, entry.UninstallString); detected != "" {
+				arch = detected
+			}
+		}
+		pkg := createPackage(entry.DisplayName, entry.DisplayVersion, "windows/app", arch, entry.Publisher, entry.InstallLocation, platform)
 		pkgs = append(pkgs, *pkg)
 	}
 
