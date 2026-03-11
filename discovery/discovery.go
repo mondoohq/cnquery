@@ -15,6 +15,7 @@ import (
 	"go.mondoo.com/mql/v13/cli/execruntime"
 	"go.mondoo.com/mql/v13/internal/workerpool"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/utils/slicesx"
 	"go.mondoo.com/mql/v13/logger"
 	"go.mondoo.com/mql/v13/providers"
 	inventory "go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
@@ -68,7 +69,7 @@ func (d *DiscoveredAssets) Add(asset *inventory.Asset, runtime *providers.Runtim
 	}
 
 	for _, existing := range d.Assets {
-		if isSubsetOf(asset.PlatformIds, existing.Asset.PlatformIds) {
+		if slicesx.IsSubsetOf(asset.PlatformIds, existing.Asset.PlatformIds) {
 			log.Debug().Str("asset", asset.Name).Strs("platform-ids", asset.PlatformIds).Msg("discovery> skipping duplicate asset")
 			return false
 		}
@@ -79,22 +80,6 @@ func (d *DiscoveredAssets) Add(asset *inventory.Asset, runtime *providers.Runtim
 	return true
 }
 
-// isSubsetOf returns true if every element in sub exists in super.
-func isSubsetOf(sub, super []string) bool {
-	if len(sub) > len(super) {
-		return false
-	}
-	set := make(map[string]struct{}, len(super))
-	for _, id := range super {
-		set[id] = struct{}{}
-	}
-	for _, id := range sub {
-		if _, ok := set[id]; !ok {
-			return false
-		}
-	}
-	return true
-}
 
 func (d *DiscoveredAssets) AddError(asset *inventory.Asset, err error) {
 	d.assetsLock.Lock()
