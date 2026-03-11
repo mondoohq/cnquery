@@ -56,6 +56,7 @@ echo "  - Generate the resource versions..."
 ${REPOROOT}/lr versions ${PROVIDER_PATH}/resources/${PROVIDER_NAME}.lr
 
 build_bundle(){
+  set -eo pipefail
   local GOOS=$1
   local GOARCH=$2
   local GOARM=${3:-}
@@ -98,11 +99,6 @@ build_bundle(){
     ${TAR_FLAGS} --use-compress-program='xz -9v' \
     -C ${ARCH_DIST} ${PROVIDER_EXECUTABLE} \
     -C ${PROVIDER_DIST} ${PROVIDER_NAME}.json ${PROVIDER_NAME}.resources.json
-
-  if [ $? -ne 0 ]; then
-    echo "Failed to build the ${PROVIDER_NAME} provider for ${GOOS}/${GOARCH}."
-    return 1
-  fi
 
   # Clean up the arch-specific directory
   rm -rf "$ARCH_DIST"
