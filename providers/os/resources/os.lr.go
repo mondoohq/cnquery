@@ -200,6 +200,10 @@ const (
 	ResourceMdadm                      string = "mdadm"
 	ResourceMdadmArray                 string = "mdadm.array"
 	ResourceMdadmDevice                string = "mdadm.device"
+	ResourceZfs                        string = "zfs"
+	ResourceZfsPool                    string = "zfs.pool"
+	ResourceZfsPoolVdev                string = "zfs.pool.vdev"
+	ResourceZfsDataset                 string = "zfs.dataset"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -937,6 +941,22 @@ func init() {
 		"mdadm.device": {
 			// to override args, implement: initMdadmDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMdadmDevice,
+		},
+		"zfs": {
+			// to override args, implement: initZfs(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createZfs,
+		},
+		"zfs.pool": {
+			Init:   initZfsPool,
+			Create: createZfsPool,
+		},
+		"zfs.pool.vdev": {
+			// to override args, implement: initZfsPoolVdev(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createZfsPoolVdev,
+		},
+		"zfs.dataset": {
+			Init:   initZfsDataset,
+			Create: createZfsDataset,
 		},
 	}
 }
@@ -3804,6 +3824,141 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"mdadm.device.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMdadmDevice).GetState()).ToDataRes(types.String)
+	},
+	"zfs.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfs).GetVersion()).ToDataRes(types.String)
+	},
+	"zfs.pools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfs).GetPools()).ToDataRes(types.Array(types.Resource("zfs.pool")))
+	},
+	"zfs.datasets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfs).GetDatasets()).ToDataRes(types.Array(types.Resource("zfs.dataset")))
+	},
+	"zfs.pool.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsPool).GetName()).ToDataRes(types.String)
+	},
+	"zfs.pool.guid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsPool).GetGuid()).ToDataRes(types.String)
+	},
+	"zfs.pool.health": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsPool).GetHealth()).ToDataRes(types.String)
+	},
+	"zfs.pool.sizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsPool).GetSizeBytes()).ToDataRes(types.Int)
+	},
+	"zfs.pool.allocatedBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsPool).GetAllocatedBytes()).ToDataRes(types.Int)
+	},
+	"zfs.pool.freeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsPool).GetFreeBytes()).ToDataRes(types.Int)
+	},
+	"zfs.pool.fragmentation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsPool).GetFragmentation()).ToDataRes(types.Int)
+	},
+	"zfs.pool.percentUsed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsPool).GetPercentUsed()).ToDataRes(types.Int)
+	},
+	"zfs.pool.dedupratio": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsPool).GetDedupratio()).ToDataRes(types.Float)
+	},
+	"zfs.pool.readonly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsPool).GetReadonly()).ToDataRes(types.Bool)
+	},
+	"zfs.pool.autoexpand": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsPool).GetAutoexpand()).ToDataRes(types.Bool)
+	},
+	"zfs.pool.autoreplace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsPool).GetAutoreplace()).ToDataRes(types.Bool)
+	},
+	"zfs.pool.autotrim": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsPool).GetAutotrim()).ToDataRes(types.Bool)
+	},
+	"zfs.pool.vdevs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsPool).GetVdevs()).ToDataRes(types.Array(types.Resource("zfs.pool.vdev")))
+	},
+	"zfs.pool.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsPool).GetProperties()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"zfs.pool.vdev.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsPoolVdev).GetName()).ToDataRes(types.String)
+	},
+	"zfs.pool.vdev.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsPoolVdev).GetType()).ToDataRes(types.String)
+	},
+	"zfs.pool.vdev.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsPoolVdev).GetState()).ToDataRes(types.String)
+	},
+	"zfs.pool.vdev.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsPoolVdev).GetPath()).ToDataRes(types.String)
+	},
+	"zfs.pool.vdev.readErrors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsPoolVdev).GetReadErrors()).ToDataRes(types.Int)
+	},
+	"zfs.pool.vdev.writeErrors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsPoolVdev).GetWriteErrors()).ToDataRes(types.Int)
+	},
+	"zfs.pool.vdev.checksumErrors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsPoolVdev).GetChecksumErrors()).ToDataRes(types.Int)
+	},
+	"zfs.pool.vdev.slowIos": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsPoolVdev).GetSlowIos()).ToDataRes(types.Int)
+	},
+	"zfs.pool.vdev.numDevices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsPoolVdev).GetNumDevices()).ToDataRes(types.Int)
+	},
+	"zfs.pool.vdev.devices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsPoolVdev).GetDevices()).ToDataRes(types.Array(types.Resource("zfs.pool.vdev")))
+	},
+	"zfs.dataset.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsDataset).GetName()).ToDataRes(types.String)
+	},
+	"zfs.dataset.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsDataset).GetType()).ToDataRes(types.String)
+	},
+	"zfs.dataset.usedBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsDataset).GetUsedBytes()).ToDataRes(types.Int)
+	},
+	"zfs.dataset.availableBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsDataset).GetAvailableBytes()).ToDataRes(types.Int)
+	},
+	"zfs.dataset.referencedBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsDataset).GetReferencedBytes()).ToDataRes(types.Int)
+	},
+	"zfs.dataset.mountpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsDataset).GetMountpoint()).ToDataRes(types.String)
+	},
+	"zfs.dataset.compression": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsDataset).GetCompression()).ToDataRes(types.String)
+	},
+	"zfs.dataset.compressratio": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsDataset).GetCompressratio()).ToDataRes(types.Float)
+	},
+	"zfs.dataset.mounted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsDataset).GetMounted()).ToDataRes(types.Bool)
+	},
+	"zfs.dataset.recordsizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsDataset).GetRecordsizeBytes()).ToDataRes(types.Int)
+	},
+	"zfs.dataset.quotaBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsDataset).GetQuotaBytes()).ToDataRes(types.Int)
+	},
+	"zfs.dataset.reservationBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsDataset).GetReservationBytes()).ToDataRes(types.Int)
+	},
+	"zfs.dataset.origin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsDataset).GetOrigin()).ToDataRes(types.String)
+	},
+	"zfs.dataset.creation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsDataset).GetCreation()).ToDataRes(types.Time)
+	},
+	"zfs.dataset.encryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsDataset).GetEncryption()).ToDataRes(types.String)
+	},
+	"zfs.dataset.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsDataset).GetProperties()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"zfs.dataset.snapshots": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZfsDataset).GetSnapshots()).ToDataRes(types.Array(types.Resource("zfs.dataset")))
 	},
 }
 
@@ -8263,6 +8418,202 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"mdadm.device.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMdadmDevice).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"zfs.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfs).__id, ok = v.Value.(string)
+		return
+	},
+	"zfs.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfs).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"zfs.pools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfs).Pools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"zfs.datasets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfs).Datasets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"zfs.pool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsPool).__id, ok = v.Value.(string)
+		return
+	},
+	"zfs.pool.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsPool).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"zfs.pool.guid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsPool).Guid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"zfs.pool.health": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsPool).Health, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"zfs.pool.sizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsPool).SizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"zfs.pool.allocatedBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsPool).AllocatedBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"zfs.pool.freeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsPool).FreeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"zfs.pool.fragmentation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsPool).Fragmentation, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"zfs.pool.percentUsed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsPool).PercentUsed, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"zfs.pool.dedupratio": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsPool).Dedupratio, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"zfs.pool.readonly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsPool).Readonly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"zfs.pool.autoexpand": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsPool).Autoexpand, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"zfs.pool.autoreplace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsPool).Autoreplace, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"zfs.pool.autotrim": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsPool).Autotrim, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"zfs.pool.vdevs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsPool).Vdevs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"zfs.pool.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsPool).Properties, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"zfs.pool.vdev.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsPoolVdev).__id, ok = v.Value.(string)
+		return
+	},
+	"zfs.pool.vdev.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsPoolVdev).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"zfs.pool.vdev.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsPoolVdev).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"zfs.pool.vdev.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsPoolVdev).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"zfs.pool.vdev.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsPoolVdev).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"zfs.pool.vdev.readErrors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsPoolVdev).ReadErrors, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"zfs.pool.vdev.writeErrors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsPoolVdev).WriteErrors, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"zfs.pool.vdev.checksumErrors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsPoolVdev).ChecksumErrors, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"zfs.pool.vdev.slowIos": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsPoolVdev).SlowIos, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"zfs.pool.vdev.numDevices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsPoolVdev).NumDevices, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"zfs.pool.vdev.devices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsPoolVdev).Devices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"zfs.dataset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsDataset).__id, ok = v.Value.(string)
+		return
+	},
+	"zfs.dataset.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsDataset).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"zfs.dataset.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsDataset).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"zfs.dataset.usedBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsDataset).UsedBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"zfs.dataset.availableBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsDataset).AvailableBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"zfs.dataset.referencedBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsDataset).ReferencedBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"zfs.dataset.mountpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsDataset).Mountpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"zfs.dataset.compression": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsDataset).Compression, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"zfs.dataset.compressratio": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsDataset).Compressratio, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"zfs.dataset.mounted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsDataset).Mounted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"zfs.dataset.recordsizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsDataset).RecordsizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"zfs.dataset.quotaBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsDataset).QuotaBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"zfs.dataset.reservationBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsDataset).ReservationBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"zfs.dataset.origin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsDataset).Origin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"zfs.dataset.creation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsDataset).Creation, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"zfs.dataset.encryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsDataset).Encryption, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"zfs.dataset.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsDataset).Properties, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"zfs.dataset.snapshots": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZfsDataset).Snapshots, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 }
@@ -23097,4 +23448,459 @@ func (c *mqlMdadmDevice) GetRole() *plugin.TValue[int64] {
 
 func (c *mqlMdadmDevice) GetState() *plugin.TValue[string] {
 	return &c.State
+}
+
+// mqlZfs for the zfs resource
+type mqlZfs struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlZfsInternal it will be used here
+	Version  plugin.TValue[string]
+	Pools    plugin.TValue[[]any]
+	Datasets plugin.TValue[[]any]
+}
+
+// createZfs creates a new instance of this resource
+func createZfs(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlZfs{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("zfs", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlZfs) MqlName() string {
+	return "zfs"
+}
+
+func (c *mqlZfs) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlZfs) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlZfs) GetPools() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Pools, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("zfs", c.__id, "pools")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.pools()
+	})
+}
+
+func (c *mqlZfs) GetDatasets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Datasets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("zfs", c.__id, "datasets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.datasets()
+	})
+}
+
+// mqlZfsPool for the zfs.pool resource
+type mqlZfsPool struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlZfsPoolInternal it will be used here
+	Name           plugin.TValue[string]
+	Guid           plugin.TValue[string]
+	Health         plugin.TValue[string]
+	SizeBytes      plugin.TValue[int64]
+	AllocatedBytes plugin.TValue[int64]
+	FreeBytes      plugin.TValue[int64]
+	Fragmentation  plugin.TValue[int64]
+	PercentUsed    plugin.TValue[int64]
+	Dedupratio     plugin.TValue[float64]
+	Readonly       plugin.TValue[bool]
+	Autoexpand     plugin.TValue[bool]
+	Autoreplace    plugin.TValue[bool]
+	Autotrim       plugin.TValue[bool]
+	Vdevs          plugin.TValue[[]any]
+	Properties     plugin.TValue[map[string]any]
+}
+
+// createZfsPool creates a new instance of this resource
+func createZfsPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlZfsPool{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("zfs.pool", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlZfsPool) MqlName() string {
+	return "zfs.pool"
+}
+
+func (c *mqlZfsPool) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlZfsPool) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlZfsPool) GetGuid() *plugin.TValue[string] {
+	return &c.Guid
+}
+
+func (c *mqlZfsPool) GetHealth() *plugin.TValue[string] {
+	return &c.Health
+}
+
+func (c *mqlZfsPool) GetSizeBytes() *plugin.TValue[int64] {
+	return &c.SizeBytes
+}
+
+func (c *mqlZfsPool) GetAllocatedBytes() *plugin.TValue[int64] {
+	return &c.AllocatedBytes
+}
+
+func (c *mqlZfsPool) GetFreeBytes() *plugin.TValue[int64] {
+	return &c.FreeBytes
+}
+
+func (c *mqlZfsPool) GetFragmentation() *plugin.TValue[int64] {
+	return &c.Fragmentation
+}
+
+func (c *mqlZfsPool) GetPercentUsed() *plugin.TValue[int64] {
+	return &c.PercentUsed
+}
+
+func (c *mqlZfsPool) GetDedupratio() *plugin.TValue[float64] {
+	return &c.Dedupratio
+}
+
+func (c *mqlZfsPool) GetReadonly() *plugin.TValue[bool] {
+	return &c.Readonly
+}
+
+func (c *mqlZfsPool) GetAutoexpand() *plugin.TValue[bool] {
+	return &c.Autoexpand
+}
+
+func (c *mqlZfsPool) GetAutoreplace() *plugin.TValue[bool] {
+	return &c.Autoreplace
+}
+
+func (c *mqlZfsPool) GetAutotrim() *plugin.TValue[bool] {
+	return &c.Autotrim
+}
+
+func (c *mqlZfsPool) GetVdevs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Vdevs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("zfs.pool", c.__id, "vdevs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vdevs()
+	})
+}
+
+func (c *mqlZfsPool) GetProperties() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Properties, func() (map[string]any, error) {
+		return c.properties()
+	})
+}
+
+// mqlZfsPoolVdev for the zfs.pool.vdev resource
+type mqlZfsPoolVdev struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlZfsPoolVdevInternal
+	Name           plugin.TValue[string]
+	Type           plugin.TValue[string]
+	State          plugin.TValue[string]
+	Path           plugin.TValue[string]
+	ReadErrors     plugin.TValue[int64]
+	WriteErrors    plugin.TValue[int64]
+	ChecksumErrors plugin.TValue[int64]
+	SlowIos        plugin.TValue[int64]
+	NumDevices     plugin.TValue[int64]
+	Devices        plugin.TValue[[]any]
+}
+
+// createZfsPoolVdev creates a new instance of this resource
+func createZfsPoolVdev(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlZfsPoolVdev{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("zfs.pool.vdev", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlZfsPoolVdev) MqlName() string {
+	return "zfs.pool.vdev"
+}
+
+func (c *mqlZfsPoolVdev) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlZfsPoolVdev) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlZfsPoolVdev) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlZfsPoolVdev) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlZfsPoolVdev) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlZfsPoolVdev) GetReadErrors() *plugin.TValue[int64] {
+	return &c.ReadErrors
+}
+
+func (c *mqlZfsPoolVdev) GetWriteErrors() *plugin.TValue[int64] {
+	return &c.WriteErrors
+}
+
+func (c *mqlZfsPoolVdev) GetChecksumErrors() *plugin.TValue[int64] {
+	return &c.ChecksumErrors
+}
+
+func (c *mqlZfsPoolVdev) GetSlowIos() *plugin.TValue[int64] {
+	return &c.SlowIos
+}
+
+func (c *mqlZfsPoolVdev) GetNumDevices() *plugin.TValue[int64] {
+	return &c.NumDevices
+}
+
+func (c *mqlZfsPoolVdev) GetDevices() *plugin.TValue[[]any] {
+	return &c.Devices
+}
+
+// mqlZfsDataset for the zfs.dataset resource
+type mqlZfsDataset struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlZfsDatasetInternal it will be used here
+	Name             plugin.TValue[string]
+	Type             plugin.TValue[string]
+	UsedBytes        plugin.TValue[int64]
+	AvailableBytes   plugin.TValue[int64]
+	ReferencedBytes  plugin.TValue[int64]
+	Mountpoint       plugin.TValue[string]
+	Compression      plugin.TValue[string]
+	Compressratio    plugin.TValue[float64]
+	Mounted          plugin.TValue[bool]
+	RecordsizeBytes  plugin.TValue[int64]
+	QuotaBytes       plugin.TValue[int64]
+	ReservationBytes plugin.TValue[int64]
+	Origin           plugin.TValue[string]
+	Creation         plugin.TValue[*time.Time]
+	Encryption       plugin.TValue[string]
+	Properties       plugin.TValue[map[string]any]
+	Snapshots        plugin.TValue[[]any]
+}
+
+// createZfsDataset creates a new instance of this resource
+func createZfsDataset(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlZfsDataset{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("zfs.dataset", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlZfsDataset) MqlName() string {
+	return "zfs.dataset"
+}
+
+func (c *mqlZfsDataset) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlZfsDataset) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlZfsDataset) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlZfsDataset) GetUsedBytes() *plugin.TValue[int64] {
+	return &c.UsedBytes
+}
+
+func (c *mqlZfsDataset) GetAvailableBytes() *plugin.TValue[int64] {
+	return &c.AvailableBytes
+}
+
+func (c *mqlZfsDataset) GetReferencedBytes() *plugin.TValue[int64] {
+	return &c.ReferencedBytes
+}
+
+func (c *mqlZfsDataset) GetMountpoint() *plugin.TValue[string] {
+	return &c.Mountpoint
+}
+
+func (c *mqlZfsDataset) GetCompression() *plugin.TValue[string] {
+	return &c.Compression
+}
+
+func (c *mqlZfsDataset) GetCompressratio() *plugin.TValue[float64] {
+	return &c.Compressratio
+}
+
+func (c *mqlZfsDataset) GetMounted() *plugin.TValue[bool] {
+	return &c.Mounted
+}
+
+func (c *mqlZfsDataset) GetRecordsizeBytes() *plugin.TValue[int64] {
+	return &c.RecordsizeBytes
+}
+
+func (c *mqlZfsDataset) GetQuotaBytes() *plugin.TValue[int64] {
+	return &c.QuotaBytes
+}
+
+func (c *mqlZfsDataset) GetReservationBytes() *plugin.TValue[int64] {
+	return &c.ReservationBytes
+}
+
+func (c *mqlZfsDataset) GetOrigin() *plugin.TValue[string] {
+	return &c.Origin
+}
+
+func (c *mqlZfsDataset) GetCreation() *plugin.TValue[*time.Time] {
+	return &c.Creation
+}
+
+func (c *mqlZfsDataset) GetEncryption() *plugin.TValue[string] {
+	return &c.Encryption
+}
+
+func (c *mqlZfsDataset) GetProperties() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Properties, func() (map[string]any, error) {
+		return c.properties()
+	})
+}
+
+func (c *mqlZfsDataset) GetSnapshots() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Snapshots, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("zfs.dataset", c.__id, "snapshots")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.snapshots()
+	})
 }

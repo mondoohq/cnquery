@@ -2645,3 +2645,111 @@ private mdadm.device @defaults("name state") {
   // Device state (e.g., active sync, spare, faulty)
   state string
 }
+
+// ZFS storage pool and dataset management
+zfs @defaults("pools") {
+  // ZFS version string
+  version() string
+  // ZFS storage pools
+  pools() []zfs.pool
+  // All ZFS datasets (filesystems, volumes, snapshots, bookmarks)
+  datasets() []zfs.dataset
+}
+
+// ZFS storage pool
+zfs.pool @defaults("name health sizeBytes") {
+  init(name string)
+  // Pool name
+  name string
+  // Pool GUID
+  guid string
+  // Health status (ONLINE, DEGRADED, FAULTED, OFFLINE, REMOVED, UNAVAIL)
+  health string
+  // Total size in bytes
+  sizeBytes int
+  // Allocated space in bytes
+  allocatedBytes int
+  // Free space in bytes
+  freeBytes int
+  // Fragmentation percentage
+  fragmentation int
+  // Percentage of pool space used (0-100)
+  percentUsed int
+  // Deduplication ratio
+  dedupratio float
+  // Whether the pool is read-only
+  readonly bool
+  // Whether auto-expand is enabled
+  autoexpand bool
+  // Whether auto-replace is enabled
+  autoreplace bool
+  // Whether auto-trim is enabled
+  autotrim bool
+  // Top-level virtual device groups (mirrors, raidz, etc.)
+  vdevs() []zfs.pool.vdev
+  // All pool properties (lazy-loaded via zpool get all)
+  properties() map[string]string
+}
+
+// ZFS virtual device (vdev) in a pool's topology
+zfs.pool.vdev @defaults("name type state numDevices") {
+  // Vdev name (e.g., "raidz2-0", "mirror-0", "sda")
+  name string
+  // Vdev type (mirror, raidz, raidz2, raidz3, disk, file, draid, etc.)
+  type string
+  // Vdev state (ONLINE, DEGRADED, FAULTED, OFFLINE, REMOVED, UNAVAIL)
+  state string
+  // Device path (for leaf vdevs, empty for groups)
+  path string
+  // Read error count
+  readErrors int
+  // Write error count
+  writeErrors int
+  // Checksum error count
+  checksumErrors int
+  // Slow I/O count
+  slowIos int
+  // Number of child devices
+  numDevices int
+  // Child vdevs/devices
+  devices []zfs.pool.vdev
+}
+
+// ZFS dataset (filesystem, volume, snapshot, or bookmark)
+zfs.dataset @defaults("name type usedBytes") {
+  init(name string)
+  // Full dataset name (pool/path or pool/path@snap)
+  name string
+  // Dataset type (filesystem, volume, snapshot, bookmark)
+  type string
+  // Used space in bytes
+  usedBytes int
+  // Available space in bytes
+  availableBytes int
+  // Referenced space in bytes
+  referencedBytes int
+  // Mount point (empty for volumes/snapshots)
+  mountpoint string
+  // Compression algorithm (off, lz4, gzip, zstd, etc.)
+  compression string
+  // Compression ratio
+  compressratio float
+  // Whether the dataset is currently mounted
+  mounted bool
+  // Record size in bytes
+  recordsizeBytes int
+  // Quota in bytes (0 = none)
+  quotaBytes int
+  // Reservation in bytes (0 = none)
+  reservationBytes int
+  // Origin snapshot (for clones, empty otherwise)
+  origin string
+  // Creation time
+  creation time
+  // Encryption algorithm (off, aes-256-gcm, etc.)
+  encryption string
+  // All dataset properties (lazy-loaded via zfs get all)
+  properties() map[string]string
+  // Snapshots of this dataset
+  snapshots() []zfs.dataset
+}
