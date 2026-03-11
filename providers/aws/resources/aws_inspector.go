@@ -203,3 +203,262 @@ func (a *mqlAwsInspectorCoverage) lambda() (*mqlAwsLambdaFunction, error) {
 	a.Lambda.State = plugin.StateIsSet | plugin.StateIsNull
 	return nil, nil
 }
+
+// ============================================================
+// Inspector Findings
+// ============================================================
+
+type mqlAwsInspectorFindingInternal struct {
+	cacheFinding *types.Finding
+}
+
+func (a *mqlAwsInspectorFinding) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsInspector) findings() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getFindings(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsInspector) getFindings(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			svc := conn.Inspector(region)
+			ctx := context.Background()
+			res := []any{}
+
+			paginator := inspector2.NewListFindingsPaginator(svc, &inspector2.ListFindingsInput{})
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for i := range page.Findings {
+					finding := page.Findings[i]
+					if finding.FindingArn == nil {
+						continue
+					}
+
+					var inspectorScore float64
+					if finding.InspectorScore != nil {
+						inspectorScore = *finding.InspectorScore
+					}
+
+					mqlFinding, err := CreateResource(a.MqlRuntime, "aws.inspector.finding",
+						map[string]*llx.RawData{
+							"arn":              llx.StringDataPtr(finding.FindingArn),
+							"accountId":        llx.StringDataPtr(finding.AwsAccountId),
+							"title":            llx.StringDataPtr(finding.Title),
+							"description":      llx.StringDataPtr(finding.Description),
+							"severity":         llx.StringData(string(finding.Severity)),
+							"status":           llx.StringData(string(finding.Status)),
+							"type":             llx.StringData(string(finding.Type)),
+							"firstObservedAt":  llx.TimeDataPtr(finding.FirstObservedAt),
+							"lastObservedAt":   llx.TimeDataPtr(finding.LastObservedAt),
+							"updatedAt":        llx.TimeDataPtr(finding.UpdatedAt),
+							"inspectorScore":   llx.FloatData(inspectorScore),
+							"exploitAvailable": llx.StringData(string(finding.ExploitAvailable)),
+							"fixAvailable":     llx.StringData(string(finding.FixAvailable)),
+							"region":           llx.StringData(region),
+						})
+					if err != nil {
+						return nil, err
+					}
+					mqlFinding.(*mqlAwsInspectorFinding).cacheFinding = &finding
+					res = append(res, mqlFinding)
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (a *mqlAwsInspectorFinding) remediation() (string, error) {
+	if a.cacheFinding != nil && a.cacheFinding.Remediation != nil && a.cacheFinding.Remediation.Recommendation != nil {
+		return convert.ToValue(a.cacheFinding.Remediation.Recommendation.Text), nil
+	}
+	return "", nil
+}
+
+func (a *mqlAwsInspectorFinding) remediationUrl() (string, error) {
+	if a.cacheFinding != nil && a.cacheFinding.Remediation != nil && a.cacheFinding.Remediation.Recommendation != nil {
+		return convert.ToValue(a.cacheFinding.Remediation.Recommendation.Url), nil
+	}
+	return "", nil
+}
+
+func (a *mqlAwsInspectorFinding) packageVulnerability() (*mqlAwsInspectorFindingPackageVulnerability, error) {
+	if a.cacheFinding == nil || a.cacheFinding.PackageVulnerabilityDetails == nil {
+		a.PackageVulnerability.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	pvd := a.cacheFinding.PackageVulnerabilityDetails
+
+	cvssScores := make([]any, 0, len(pvd.Cvss))
+	for _, c := range pvd.Cvss {
+		mqlCvss, err := CreateResource(a.MqlRuntime, "aws.inspector.finding.packageVulnerability.cvssScore",
+			map[string]*llx.RawData{
+				"baseScore":     llx.FloatData(derefFloat64(c.BaseScore)),
+				"scoringVector": llx.StringDataPtr(c.ScoringVector),
+				"source":        llx.StringDataPtr(c.Source),
+				"version":       llx.StringDataPtr(c.Version),
+			})
+		if err != nil {
+			return nil, err
+		}
+		cvssScores = append(cvssScores, mqlCvss)
+	}
+
+	vulnPkgs := make([]any, 0, len(pvd.VulnerablePackages))
+	for i := range pvd.VulnerablePackages {
+		pkg := pvd.VulnerablePackages[i]
+		mqlPkg, err := CreateResource(a.MqlRuntime, "aws.inspector.finding.vulnerablePackage",
+			map[string]*llx.RawData{
+				"name":           llx.StringDataPtr(pkg.Name),
+				"version":        llx.StringDataPtr(pkg.Version),
+				"arch":           llx.StringDataPtr(pkg.Arch),
+				"epoch":          llx.IntData(int64(pkg.Epoch)),
+				"packageManager": llx.StringData(string(pkg.PackageManager)),
+				"filePath":       llx.StringDataPtr(pkg.FilePath),
+				"fixedInVersion": llx.StringDataPtr(pkg.FixedInVersion),
+				"remediation":    llx.StringDataPtr(pkg.Remediation),
+				"release":        llx.StringDataPtr(pkg.Release),
+			})
+		if err != nil {
+			return nil, err
+		}
+		vulnPkgs = append(vulnPkgs, mqlPkg)
+	}
+
+	mqlPvd, err := CreateResource(a.MqlRuntime, "aws.inspector.finding.packageVulnerability",
+		map[string]*llx.RawData{
+			"vulnerabilityId":        llx.StringDataPtr(pvd.VulnerabilityId),
+			"source":                 llx.StringDataPtr(pvd.Source),
+			"sourceUrl":              llx.StringDataPtr(pvd.SourceUrl),
+			"vendorSeverity":         llx.StringDataPtr(pvd.VendorSeverity),
+			"vendorCreatedAt":        llx.TimeDataPtr(pvd.VendorCreatedAt),
+			"vendorUpdatedAt":        llx.TimeDataPtr(pvd.VendorUpdatedAt),
+			"cvssScores":             llx.ArrayData(cvssScores, llxtypes.Resource("aws.inspector.finding.packageVulnerability.cvssScore")),
+			"referenceUrls":          llx.ArrayData(llx.TArr2Raw(pvd.ReferenceUrls), "string"),
+			"relatedVulnerabilities": llx.ArrayData(llx.TArr2Raw(pvd.RelatedVulnerabilities), "string"),
+			"vulnerablePackages":     llx.ArrayData(vulnPkgs, "aws.inspector.finding.vulnerablePackage"),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlPvd.(*mqlAwsInspectorFindingPackageVulnerability), nil
+}
+
+func (a *mqlAwsInspectorFindingPackageVulnerability) id() (string, error) {
+	return a.VulnerabilityId.Data + "/" + a.Source.Data, nil
+}
+
+func (a *mqlAwsInspectorFindingPackageVulnerabilityCvssScore) id() (string, error) {
+	return fmt.Sprintf("%s/%s/%.1f", a.Source.Data, a.Version.Data, a.BaseScore.Data), nil
+}
+
+func derefFloat64(p *float64) float64 {
+	if p == nil {
+		return 0
+	}
+	return *p
+}
+
+func (a *mqlAwsInspectorFindingVulnerablePackage) id() (string, error) {
+	return a.Name.Data + "/" + a.Version.Data + "/" + a.Arch.Data, nil
+}
+
+func (a *mqlAwsInspectorFinding) networkReachability() (*mqlAwsInspectorFindingNetworkReachability, error) {
+	if a.cacheFinding == nil || a.cacheFinding.NetworkReachabilityDetails == nil {
+		a.NetworkReachability.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	nrd := a.cacheFinding.NetworkReachabilityDetails
+
+	var portStart, portEnd int64
+	if nrd.OpenPortRange != nil {
+		portStart = int64(convert.ToValue(nrd.OpenPortRange.Begin))
+		portEnd = int64(convert.ToValue(nrd.OpenPortRange.End))
+	}
+
+	var networkPath []any
+	if nrd.NetworkPath != nil {
+		path, err := convert.JsonToDictSlice(nrd.NetworkPath.Steps)
+		if err != nil {
+			return nil, err
+		}
+		networkPath = path
+	}
+
+	mqlNr, err := CreateResource(a.MqlRuntime, "aws.inspector.finding.networkReachability",
+		map[string]*llx.RawData{
+			"protocol":      llx.StringData(string(nrd.Protocol)),
+			"openPortStart": llx.IntData(portStart),
+			"openPortEnd":   llx.IntData(portEnd),
+			"networkPath":   llx.ArrayData(networkPath, "dict"),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlNr.(*mqlAwsInspectorFindingNetworkReachability), nil
+}
+
+func (a *mqlAwsInspectorFindingNetworkReachability) id() (string, error) {
+	return fmt.Sprintf("%s/%d/%d", a.Protocol.Data, a.OpenPortStart.Data, a.OpenPortEnd.Data), nil
+}
+
+func (a *mqlAwsInspectorFinding) codeVulnerability() (*mqlAwsInspectorFindingCodeVulnerability, error) {
+	if a.cacheFinding == nil || a.cacheFinding.CodeVulnerabilityDetails == nil {
+		a.CodeVulnerability.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	cvd := a.cacheFinding.CodeVulnerabilityDetails
+
+	filePath, err := convert.JsonToDict(cvd.FilePath)
+	if err != nil {
+		return nil, err
+	}
+
+	mqlCv, err := CreateResource(a.MqlRuntime, "aws.inspector.finding.codeVulnerability",
+		map[string]*llx.RawData{
+			"cwes":                 llx.ArrayData(llx.TArr2Raw(cvd.Cwes), "string"),
+			"detectorId":           llx.StringDataPtr(cvd.DetectorId),
+			"detectorName":         llx.StringDataPtr(cvd.DetectorName),
+			"detectorTags":         llx.ArrayData(llx.TArr2Raw(cvd.DetectorTags), "string"),
+			"filePath":             llx.DictData(filePath),
+			"referenceUrls":        llx.ArrayData(llx.TArr2Raw(cvd.ReferenceUrls), "string"),
+			"ruleId":               llx.StringDataPtr(cvd.RuleId),
+			"sourceLambdaLayerArn": llx.StringDataPtr(cvd.SourceLambdaLayerArn),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlCv.(*mqlAwsInspectorFindingCodeVulnerability), nil
+}
+
+func (a *mqlAwsInspectorFindingCodeVulnerability) id() (string, error) {
+	return a.DetectorId.Data + "/" + a.RuleId.Data, nil
+}

@@ -46,6 +46,7 @@ cpe
 cryptokey
 ctx
 customresources
+cwes
 cyclonedx
 dast
 databricks
@@ -94,7 +95,9 @@ gotestsum
 gpu
 groupname
 gvnic
+HADOOP
 headerorder
+hec
 Hns
 horizontalpodautoscaler
 hostedzone
@@ -179,13 +182,13 @@ pipefail
 portgroup
 posix
 postgre
+processingjob
 POWERUSER
 priorityclass
 psc
 PTn
 pushconfig
 Pzi
-pzs
 querypack
 RABBITMQ
 raidz
@@ -219,6 +222,7 @@ Snat
 softdep
 spdx
 sph
+splunk
 spo
 sqli
 sqlimatchstatement
@@ -233,6 +237,7 @@ testutils
 timestream
 toplevel
 tpu
+trainingjob
 transitgateway
 udid
 uefi

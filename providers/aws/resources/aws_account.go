@@ -301,3 +301,97 @@ func (a *mqlAwsAccountAlternateContact) id() (string, error) {
 func initAwsAccountAlternateContact(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	return args, nil, nil
 }
+
+type mqlAwsOrganizationDelegatedAdministratorInternal struct {
+	cacheAccountId string
+}
+
+func (a *mqlAwsOrganization) delegatedAdministrators() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	client := conn.Organizations("")
+	ctx := context.Background()
+
+	res := []any{}
+	paginator := organizations.NewListDelegatedAdministratorsPaginator(client, &organizations.ListDelegatedAdministratorsInput{})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return []any{}, nil
+			}
+			return nil, err
+		}
+		for _, da := range page.DelegatedAdministrators {
+			mqlDA, err := CreateResource(a.MqlRuntime, "aws.organization.delegatedAdministrator",
+				map[string]*llx.RawData{
+					"arn":                   llx.StringDataPtr(da.Arn),
+					"accountId":             llx.StringDataPtr(da.Id),
+					"name":                  llx.StringDataPtr(da.Name),
+					"email":                 llx.StringDataPtr(da.Email),
+					"status":                llx.StringData(string(da.Status)),
+					"joinedMethod":          llx.StringData(string(da.JoinedMethod)),
+					"joinedTimestamp":       llx.TimeDataPtr(da.JoinedTimestamp),
+					"delegationEnabledDate": llx.TimeDataPtr(da.DelegationEnabledDate),
+				})
+			if err != nil {
+				return nil, err
+			}
+			mqlDATyped := mqlDA.(*mqlAwsOrganizationDelegatedAdministrator)
+			mqlDATyped.cacheAccountId = aws.ToString(da.Id)
+			res = append(res, mqlDATyped)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsOrganizationDelegatedAdministrator) id() (string, error) {
+	return a.Arn.Data, a.Arn.Error
+}
+
+func (a *mqlAwsOrganizationDelegatedAdministrator) delegatedServices() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	client := conn.Organizations("")
+	ctx := context.Background()
+
+	accountId := a.cacheAccountId
+	res := []any{}
+	paginator := organizations.NewListDelegatedServicesForAccountPaginator(client, &organizations.ListDelegatedServicesForAccountInput{
+		AccountId: &accountId,
+	})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return []any{}, nil
+			}
+			return nil, err
+		}
+		for _, ds := range page.DelegatedServices {
+			mqlDS, err := CreateResource(a.MqlRuntime, "aws.organization.delegatedService",
+				map[string]*llx.RawData{
+					"servicePrincipal":      llx.StringDataPtr(ds.ServicePrincipal),
+					"delegationEnabledDate": llx.TimeDataPtr(ds.DelegationEnabledDate),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlDS)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsOrganizationDelegatedService) id() (string, error) {
+	return a.ServicePrincipal.Data + "/" + a.DelegationEnabledDate.Data.String(), nil
+}
+
+func (a *mqlAwsOrganizationDelegatedAdministrator) account() (*mqlAwsAccount, error) {
+	mqlAccount, err := NewResource(a.MqlRuntime, "aws.account",
+		map[string]*llx.RawData{
+			"id": llx.StringData(a.cacheAccountId),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlAccount.(*mqlAwsAccount), nil
+}

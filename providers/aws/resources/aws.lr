@@ -79,6 +79,40 @@ aws.organization @defaults("id masterAccountEmail") {
   accounts() []aws.account
   // Organization ID
   id string
+  // List of delegated administrator accounts in the organization
+  delegatedAdministrators() []aws.organization.delegatedAdministrator
+}
+
+// AWS Organization delegated administrator
+private aws.organization.delegatedAdministrator @defaults("name email") {
+  // ARN of the delegated administrator account
+  arn string
+  // Account ID of the delegated administrator
+  accountId string
+  // Friendly name of the account
+  name string
+  // Email address associated with the account
+  email string
+  // Account status: ACTIVE, SUSPENDED, or PENDING_CLOSURE
+  status string
+  // Method the account joined the organization: INVITED or CREATED
+  joinedMethod string
+  // Date the account joined the organization
+  joinedTimestamp time
+  // Date the account was made a delegated administrator
+  delegationEnabledDate time
+  // AWS services for which this account is a delegated administrator
+  delegatedServices() []aws.organization.delegatedService
+  // The account resource
+  account() aws.account
+}
+
+// AWS Organization delegated service
+private aws.organization.delegatedService @defaults("servicePrincipal") {
+  // Service principal name (e.g., "guardduty.amazonaws.com")
+  servicePrincipal string
+  // Date the account became a delegated administrator for this service
+  delegationEnabledDate time
 }
 
 // Amazon Virtual Private Cloud (VPC)
@@ -1450,6 +1484,8 @@ aws.iam.accessAnalyzer @defaults("analyzers") {
   analyzers() []aws.iam.accessanalyzer.analyzer
   // List of all active findings for all analyzers and regions
   findings() []aws.iam.accessanalyzer.finding
+  // List of all archived findings for all analyzers and regions
+  archivedFindings() []aws.iam.accessanalyzer.finding
 }
 
 // AWS IAM Access Analyzer resource (provides an object representing an individual AWS IAM Access Analyzer configuration)
@@ -1508,6 +1544,16 @@ aws.sagemaker {
   endpoints() []aws.sagemaker.endpoint
   // List of SageMaker notebook instances
   notebookInstances() []aws.sagemaker.notebookinstance
+  // List of SageMaker models
+  models() []aws.sagemaker.model
+  // List of SageMaker training jobs
+  trainingJobs() []aws.sagemaker.trainingjob
+  // List of SageMaker processing jobs
+  processingJobs() []aws.sagemaker.processingjob
+  // List of SageMaker pipelines
+  pipelines() []aws.sagemaker.pipeline
+  // List of SageMaker domains
+  domains() []aws.sagemaker.domain
 }
 
 // AWS SageMaker notebook instance
@@ -1566,6 +1612,170 @@ private aws.sagemaker.endpoint @defaults("arn name") {
   lastModifiedAt time
   // Status of the endpoint: OutOfService, Creating, Updating, SystemUpdating, RollingBack, InService, Deleting, or Failed
   status string
+}
+
+// AWS SageMaker model
+private aws.sagemaker.model @defaults("arn name") {
+  // ARN for the model
+  arn string
+  // Name of the model
+  name string
+  // Region where the model exists
+  region string
+  // Time when the model was created
+  createdAt time
+  // Tags for the model
+  tags() map[string]string
+  // Whether network isolation is enabled for the model
+  enableNetworkIsolation() bool
+  // IAM execution role for the model
+  iamRole() aws.iam.role
+  // Primary container definition
+  primaryContainer() dict
+  // VPC configuration
+  vpcConfig() dict
+}
+
+// AWS SageMaker training job
+private aws.sagemaker.trainingjob @defaults("arn name status") {
+  // ARN for the training job
+  arn string
+  // Name of the training job
+  name string
+  // Region where the training job exists
+  region string
+  // Status: InProgress, Completed, Failed, Stopping, Stopped
+  status string
+  // Time when the training job was created
+  createdAt time
+  // Time when the training job was last modified
+  lastModifiedAt time
+  // Time when the training job ended
+  trainingEndTime time
+  // Tags for the training job
+  tags() map[string]string
+  // IAM role for the training job
+  iamRole() aws.iam.role
+  // Algorithm specification
+  algorithmSpecification() dict
+  // Hyperparameters for the training job
+  hyperParameters() map[string]string
+  // Whether network isolation is enabled
+  enableNetworkIsolation() bool
+  // Whether inter-container traffic encryption is enabled
+  enableInterContainerTrafficEncryption() bool
+  // Failure reason if the job failed
+  failureReason() string
+  // Billable time in seconds
+  billableTimeInSeconds() int
+  // VPC configuration
+  vpcConfig() dict
+  // Output data configuration
+  outputDataConfig() dict
+  // Resource configuration (instanceType, instanceCount, volumeSizeInGB)
+  resourceConfig() dict
+  // Stopping condition
+  stoppingCondition() dict
+}
+
+// AWS SageMaker processing job
+private aws.sagemaker.processingjob @defaults("arn name status") {
+  // ARN for the processing job
+  arn string
+  // Name of the processing job
+  name string
+  // Region where the processing job exists
+  region string
+  // Status: InProgress, Completed, Failed, Stopping, Stopped
+  status string
+  // Time when the processing job was created
+  createdAt time
+  // Time when the processing job was last modified
+  lastModifiedAt time
+  // Time when the processing job completed
+  processingEndTime time
+  // Failure reason if the job failed
+  failureReason string
+  // Exit message from the processing container
+  exitMessage string
+  // Tags for the processing job
+  tags() map[string]string
+  // IAM role for the processing job
+  iamRole() aws.iam.role
+  // Whether network isolation is enabled
+  enableNetworkIsolation() bool
+  // Whether inter-container traffic encryption is enabled
+  enableInterContainerTrafficEncryption() bool
+  // VPC configuration
+  vpcConfig() dict
+  // Processing resources configuration
+  processingResources() dict
+  // Environment variables
+  environment() map[string]string
+}
+
+// AWS SageMaker pipeline
+private aws.sagemaker.pipeline @defaults("arn name") {
+  // ARN for the pipeline
+  arn string
+  // Name of the pipeline
+  name string
+  // Display name of the pipeline
+  displayName string
+  // Description of the pipeline
+  description string
+  // Region where the pipeline exists
+  region string
+  // Time when the pipeline was created
+  createdAt time
+  // Time when the pipeline was last modified
+  lastModifiedAt time
+  // Time of the last pipeline execution
+  lastExecutionTime time
+  // Tags for the pipeline
+  tags() map[string]string
+  // IAM role the pipeline uses for execution
+  iamRole() aws.iam.role
+  // Status of the pipeline: Active or Deleting
+  pipelineStatus() string
+  // Pipeline definition (JSON string)
+  definition() string
+  // Maximum parallelism for pipeline steps
+  parallelismConfiguration() dict
+}
+
+// AWS SageMaker domain
+private aws.sagemaker.domain @defaults("arn name status") {
+  // ARN for the domain
+  arn string
+  // Domain ID
+  domainId string
+  // Domain name
+  name string
+  // Region where the domain exists
+  region string
+  // Status: Deleting, Failed, InService, Pending, Updating, Update_Failed, Delete_Failed
+  status string
+  // URL of the domain
+  url string
+  // Time when the domain was created
+  createdAt time
+  // Time when the domain was last modified
+  lastModifiedAt time
+  // Tags for the domain
+  tags() map[string]string
+  // Authentication mode: SSO or IAM
+  authMode() string
+  // App network access type: PublicInternetOnly or VpcOnly
+  appNetworkAccessType() string
+  // VPC the domain uses for communication
+  vpc() aws.vpc
+  // KMS key used to encrypt the EFS volume
+  kmsKey() aws.kms.key
+  // Home EFS file system ID
+  homeEfsFileSystemId() string
+  // Default user settings
+  defaultUserSettings() dict
 }
 
 // AWS Simple Notification Service (SNS)
@@ -2294,6 +2504,10 @@ aws.shield @defaults("subscriptionState") {
   protections() []aws.shield.protection
   // List of Shield Advanced protection groups
   protectionGroups() []aws.shield.protectionGroup
+  // DRT (Shield Response Team) access configuration
+  drtAccess() aws.shield.drtAccess
+  // Emergency contacts for proactive engagement
+  emergencyContacts() []aws.shield.emergencyContact
 }
 
 // AWS Shield Advanced subscription
@@ -2344,6 +2558,24 @@ private aws.shield.protectionGroup @defaults("id aggregation pattern") {
   resourceType string
   // List of member resource ARNs (for ARBITRARY pattern)
   members []string
+}
+
+// AWS Shield Advanced DRT (Shield Response Team) access configuration
+private aws.shield.drtAccess @defaults("iamRole") {
+  // IAM role for the SRT to access the account
+  iamRole() aws.iam.role
+  // S3 log buckets the SRT can access
+  logBucketList []string
+}
+
+// AWS Shield Advanced emergency contact
+private aws.shield.emergencyContact @defaults("emailAddress") {
+  // Email address for the contact
+  emailAddress string
+  // Phone number for the contact
+  phoneNumber string
+  // Additional notes regarding the contact
+  contactNotes string
 }
 
 // AWS Secrets Manager
@@ -2908,8 +3140,10 @@ private aws.eventbridge.rule @defaults("arn name state") {
   eventPattern string
   // Schedule expression (cron or rate)
   scheduleExpression string
-  // ARN of the IAM role associated with the rule
+  // Deprecated: Use iamRole instead
   roleArn string
+  // IAM role associated with the rule
+  iamRole() aws.iam.role
   // Tags for the rule
   tags() map[string]string
   // Targets for this rule
@@ -5534,6 +5768,8 @@ private aws.ec2.volume @defaults("id region volumeType size encrypted state") {
 aws.inspector {
   // List of coverage results for the AWS account
   coverages() []aws.inspector.coverage
+  // List of all findings from Inspector across all regions
+  findings() []aws.inspector.finding
 }
 
 // Amazon Inspector environment coverage
@@ -5594,6 +5830,138 @@ private aws.inspector.coverage.repository {
   scanFrequency string
   // Region where the ECR repo is found
   region string
+}
+
+// Amazon Inspector finding
+private aws.inspector.finding @defaults("arn severity status type title") {
+  // ARN of the finding
+  arn string
+  // AWS account ID associated with the finding
+  accountId string
+  // Title of the finding
+  title string
+  // Description of the finding
+  description string
+  // Severity: INFORMATIONAL, LOW, MEDIUM, HIGH, CRITICAL, UNTRIAGED
+  severity string
+  // Status: ACTIVE, SUPPRESSED, CLOSED
+  status string
+  // Finding type: NETWORK_REACHABILITY, PACKAGE_VULNERABILITY, CODE_VULNERABILITY
+  type string
+  // Date/time the finding was first observed
+  firstObservedAt time
+  // Date/time the finding was last observed
+  lastObservedAt time
+  // Date/time the finding was last updated
+  updatedAt time
+  // Amazon Inspector score (0-10)
+  inspectorScore float
+  // Whether an exploit is available: YES, NO
+  exploitAvailable string
+  // Whether a fix is available: YES, NO, PARTIAL
+  fixAvailable string
+  // Region where the finding was discovered
+  region string
+  // Remediation recommendation text
+  remediation() string
+  // Remediation recommendation URL
+  remediationUrl() string
+  // Package vulnerability details (null if type is not PACKAGE_VULNERABILITY)
+  packageVulnerability() aws.inspector.finding.packageVulnerability
+  // Network reachability details (null if type is not NETWORK_REACHABILITY)
+  networkReachability() aws.inspector.finding.networkReachability
+  // Code vulnerability details (null if type is not CODE_VULNERABILITY)
+  codeVulnerability() aws.inspector.finding.codeVulnerability
+}
+
+// Amazon Inspector finding package vulnerability details
+private aws.inspector.finding.packageVulnerability @defaults("vulnerabilityId source") {
+  // Vulnerability ID (CVE ID, e.g., CVE-2021-44228)
+  vulnerabilityId string
+  // Source of vulnerability info (e.g., NVD, UBUNTU_CVE)
+  source string
+  // URL to the source
+  sourceUrl string
+  // Vendor-assigned severity
+  vendorSeverity string
+  // Date vendor first published the vulnerability
+  vendorCreatedAt time
+  // Date vendor last updated the vulnerability
+  vendorUpdatedAt time
+  // CVSS scores
+  cvssScores []aws.inspector.finding.packageVulnerability.cvssScore
+  // Reference URLs for more information
+  referenceUrls []string
+  // Related vulnerability IDs
+  relatedVulnerabilities []string
+  // Affected packages
+  vulnerablePackages []aws.inspector.finding.vulnerablePackage
+}
+
+// Amazon Inspector CVSS score
+private aws.inspector.finding.packageVulnerability.cvssScore @defaults("baseScore version source") {
+  // Base CVSS score
+  baseScore float
+  // CVSS vector string
+  scoringVector string
+  // Source of the score (e.g., NVD, SNYK)
+  source string
+  // CVSS version (e.g., 2.0, 3.0, 3.1)
+  version string
+}
+
+// Amazon Inspector finding vulnerable package
+private aws.inspector.finding.vulnerablePackage @defaults("name version") {
+  // Package name
+  name string
+  // Installed version
+  version string
+  // Architecture (e.g., x86_64, amd64)
+  arch string
+  // Epoch
+  epoch int
+  // Package manager (e.g., OS, BUNDLER, PIP, NPM)
+  packageManager string
+  // File path of the vulnerable package
+  filePath string
+  // Version containing the fix (empty if no fix)
+  fixedInVersion string
+  // Remediation command
+  remediation string
+  // Release string
+  release string
+}
+
+// Amazon Inspector finding network reachability details
+private aws.inspector.finding.networkReachability @defaults("protocol openPortStart openPortEnd") {
+  // Protocol: TCP, UDP
+  protocol string
+  // Open port range start
+  openPortStart int
+  // Open port range end
+  openPortEnd int
+  // Network path steps
+  networkPath []dict
+}
+
+// Amazon Inspector finding code vulnerability details
+private aws.inspector.finding.codeVulnerability @defaults("detectorName") {
+  // CWE IDs associated with the vulnerability
+  cwes []string
+  // CodeGuru detector ID
+  detectorId string
+  // CodeGuru detector name
+  detectorName string
+  // Detector tags
+  detectorTags []string
+  // File path where the vulnerability was found
+  filePath dict
+  // Reference URLs
+  referenceUrls []string
+  // Rule ID
+  ruleId string
+  // Source Lambda layer ARN (if applicable)
+  sourceLambdaLayerArn string
 }
 
 // Amazon EC2 instance
@@ -5977,8 +6345,10 @@ private aws.config.rule @defaults("name id region state") {
 private aws.config.recorder @defaults("name region") {
   // Name of the recorder
   name string
-  // ARN of the IAM role used to describe the AWS resources associated with the account
+  // Deprecated: Use iamRole instead
   roleArn string
+  // IAM role used to describe the AWS resources associated with the account
+  iamRole() aws.iam.role
   // Whether the recorder records config changes for every supported type of regional resource
   allSupported bool
   // Whether the recorder records all supported types of global resources
@@ -7315,13 +7685,207 @@ private aws.kinesis.firehoseDeliveryStream @defaults("name status region") {
   // Source configuration if the stream reads from a Kinesis data stream
   source dict
   // Destinations for the delivery stream
-  destinations []dict
+  destinations() []aws.kinesis.firehoseDeliveryStream.destination
   // Date and time the delivery stream was created
   createdAt time
   // Region where the delivery stream exists
   region string
   // Tags for the delivery stream
   tags() map[string]string
+}
+
+// Amazon Kinesis Firehose delivery stream destination
+private aws.kinesis.firehoseDeliveryStream.destination @defaults("destinationId type") {
+  // Destination ID
+  destinationId string
+  // Type of destination: s3, redshift, elasticsearch, opensearch, splunk, httpEndpoint
+  type string
+  // Region where the parent delivery stream exists
+  region string
+  // S3 (Extended) destination configuration (null if not S3 type)
+  s3() aws.kinesis.firehoseDeliveryStream.destination.s3
+  // Redshift destination configuration (null if not Redshift type)
+  redshift() aws.kinesis.firehoseDeliveryStream.destination.redshift
+  // Elasticsearch destination configuration (null if not Elasticsearch type)
+  elasticsearch() aws.kinesis.firehoseDeliveryStream.destination.elasticsearch
+  // OpenSearch Service destination configuration (null if not OpenSearch type)
+  opensearch() aws.kinesis.firehoseDeliveryStream.destination.opensearch
+  // Splunk destination configuration (null if not Splunk type)
+  splunk() aws.kinesis.firehoseDeliveryStream.destination.splunk
+  // HTTP endpoint destination configuration (null if not HTTP endpoint type)
+  httpEndpoint() aws.kinesis.firehoseDeliveryStream.destination.httpEndpoint
+}
+
+// Amazon Kinesis Firehose CloudWatch logging options
+private aws.kinesis.firehoseDeliveryStream.cloudWatchLogging @defaults("enabled logGroupName") {
+  // Whether CloudWatch logging is enabled
+  enabled bool
+  // CloudWatch log group name
+  logGroupName string
+  // CloudWatch log stream name
+  logStreamName string
+}
+
+// Amazon Kinesis Firehose S3 (Extended) destination
+private aws.kinesis.firehoseDeliveryStream.destination.s3 @defaults("bucketArn compressionFormat") {
+  // ARN of the S3 bucket
+  bucketArn string
+  // IAM role for delivery
+  iamRole() aws.iam.role
+  // Compression format: UNCOMPRESSED, GZIP, ZIP, Snappy, HADOOP_SNAPPY
+  compressionFormat string
+  // Prefix for delivered S3 objects
+  prefix string
+  // Prefix for failed records
+  errorOutputPrefix string
+  // File extension override
+  fileExtension string
+  // Buffering size in MBs
+  bufferingSizeInMBs int
+  // Buffering interval in seconds
+  bufferingIntervalInSeconds int
+  // S3 backup mode: Disabled or Enabled
+  s3BackupMode string
+  // CloudWatch logging options
+  cloudWatchLogging aws.kinesis.firehoseDeliveryStream.cloudWatchLogging
+  // Data format conversion configuration
+  dataFormatConversion dict
+  // Dynamic partitioning configuration
+  dynamicPartitioning dict
+  // Data processing configuration
+  processingConfiguration dict
+  // Region
+  region string
+}
+
+// Amazon Kinesis Firehose Redshift destination
+private aws.kinesis.firehoseDeliveryStream.destination.redshift @defaults("clusterJdbcUrl") {
+  // Cluster JDBC URL
+  clusterJdbcUrl string
+  // IAM role for delivery
+  iamRole() aws.iam.role
+  // Username
+  username string
+  // COPY command table name
+  copyCommandTableName string
+  // COPY command options
+  copyCommandOptions string
+  // S3 backup mode: Disabled or Enabled
+  s3BackupMode string
+  // CloudWatch logging options
+  cloudWatchLogging aws.kinesis.firehoseDeliveryStream.cloudWatchLogging
+  // Data processing configuration
+  processingConfiguration dict
+  // Retry duration in seconds
+  retryDurationInSeconds int
+  // Region
+  region string
+}
+
+// Amazon Kinesis Firehose Elasticsearch destination
+private aws.kinesis.firehoseDeliveryStream.destination.elasticsearch @defaults("domainArn indexName") {
+  // Domain ARN
+  domainArn string
+  // Cluster endpoint
+  clusterEndpoint string
+  // Index name
+  indexName string
+  // Index rotation period: NoRotation, OneHour, OneDay, OneWeek, OneMonth
+  indexRotationPeriod string
+  // IAM role for delivery
+  iamRole() aws.iam.role
+  // S3 backup mode: FailedDocumentsOnly or AllDocuments
+  s3BackupMode string
+  // Buffering size in MBs
+  bufferingSizeInMBs int
+  // Buffering interval in seconds
+  bufferingIntervalInSeconds int
+  // CloudWatch logging options
+  cloudWatchLogging aws.kinesis.firehoseDeliveryStream.cloudWatchLogging
+  // Data processing configuration
+  processingConfiguration dict
+  // Retry duration in seconds
+  retryDurationInSeconds int
+  // Region
+  region string
+}
+
+// Amazon Kinesis Firehose OpenSearch Service destination
+private aws.kinesis.firehoseDeliveryStream.destination.opensearch @defaults("domainArn indexName") {
+  // Domain ARN
+  domainArn string
+  // Cluster endpoint
+  clusterEndpoint string
+  // Index name
+  indexName string
+  // Index rotation period: NoRotation, OneHour, OneDay, OneWeek, OneMonth
+  indexRotationPeriod string
+  // IAM role for delivery
+  iamRole() aws.iam.role
+  // S3 backup mode: FailedDocumentsOnly or AllDocuments
+  s3BackupMode string
+  // Buffering size in MBs
+  bufferingSizeInMBs int
+  // Buffering interval in seconds
+  bufferingIntervalInSeconds int
+  // CloudWatch logging options
+  cloudWatchLogging aws.kinesis.firehoseDeliveryStream.cloudWatchLogging
+  // Data processing configuration
+  processingConfiguration dict
+  // Retry duration in seconds
+  retryDurationInSeconds int
+  // Region
+  region string
+}
+
+// Amazon Kinesis Firehose Splunk destination
+private aws.kinesis.firehoseDeliveryStream.destination.splunk @defaults("hecEndpoint hecEndpointType") {
+  // HEC endpoint URL
+  hecEndpoint string
+  // HEC endpoint type: Raw or Event
+  hecEndpointType string
+  // HEC acknowledgment timeout in seconds
+  hecAcknowledgmentTimeoutInSeconds int
+  // S3 backup mode: FailedEventsOnly or AllEvents
+  s3BackupMode string
+  // Buffering size in MBs
+  bufferingSizeInMBs int
+  // Buffering interval in seconds
+  bufferingIntervalInSeconds int
+  // CloudWatch logging options
+  cloudWatchLogging aws.kinesis.firehoseDeliveryStream.cloudWatchLogging
+  // Data processing configuration
+  processingConfiguration dict
+  // Retry duration in seconds
+  retryDurationInSeconds int
+  // Region
+  region string
+}
+
+// Amazon Kinesis Firehose HTTP endpoint destination
+private aws.kinesis.firehoseDeliveryStream.destination.httpEndpoint @defaults("endpointUrl endpointName") {
+  // Endpoint URL
+  endpointUrl string
+  // Endpoint name
+  endpointName string
+  // IAM role for delivery
+  iamRole() aws.iam.role
+  // S3 backup mode: FailedDataOnly or AllData
+  s3BackupMode string
+  // Buffering size in MBs
+  bufferingSizeInMBs int
+  // Buffering interval in seconds
+  bufferingIntervalInSeconds int
+  // CloudWatch logging options
+  cloudWatchLogging aws.kinesis.firehoseDeliveryStream.cloudWatchLogging
+  // Data processing configuration
+  processingConfiguration dict
+  // Request configuration
+  requestConfiguration dict
+  // Retry duration in seconds
+  retryDurationInSeconds int
+  // Region
+  region string
 }
 
 // Amazon MemoryDB

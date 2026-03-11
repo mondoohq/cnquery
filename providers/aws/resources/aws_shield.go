@@ -178,3 +178,92 @@ func (a *mqlAwsShieldProtectionGroup) id() (string, error) {
 	}
 	return "aws.shield.protectionGroup/" + a.Id.Data, a.Id.Error
 }
+
+func (a *mqlAwsShield) drtAccess() (*mqlAwsShieldDrtAccess, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Shield("us-east-1")
+	ctx := context.Background()
+
+	resp, err := svc.DescribeDRTAccess(ctx, &shield.DescribeDRTAccessInput{})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			a.DrtAccess.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
+		var notFoundErr *shieldtypes.ResourceNotFoundException
+		if errors.As(err, &notFoundErr) {
+			a.DrtAccess.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	mqlDrt, err := CreateResource(a.MqlRuntime, "aws.shield.drtAccess",
+		map[string]*llx.RawData{
+			"logBucketList": llx.ArrayData(llx.TArr2Raw(resp.LogBucketList), "string"),
+		})
+	if err != nil {
+		return nil, err
+	}
+	mqlDrtAccess := mqlDrt.(*mqlAwsShieldDrtAccess)
+	mqlDrtAccess.cacheRoleArn = resp.RoleArn
+	return mqlDrtAccess, nil
+}
+
+type mqlAwsShieldDrtAccessInternal struct {
+	cacheRoleArn *string
+}
+
+func (a *mqlAwsShieldDrtAccess) iamRole() (*mqlAwsIamRole, error) {
+	if a.cacheRoleArn == nil || *a.cacheRoleArn == "" {
+		a.IamRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.iam.role",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheRoleArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsIamRole), nil
+}
+
+func (a *mqlAwsShieldDrtAccess) id() (string, error) {
+	return "aws.shield.drtAccess", nil
+}
+
+func (a *mqlAwsShield) emergencyContacts() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Shield("us-east-1")
+	ctx := context.Background()
+
+	resp, err := svc.DescribeEmergencyContactSettings(ctx, &shield.DescribeEmergencyContactSettingsInput{})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return []any{}, nil
+		}
+		var notFoundErr *shieldtypes.ResourceNotFoundException
+		if errors.As(err, &notFoundErr) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+
+	res := []any{}
+	for _, ec := range resp.EmergencyContactList {
+		mqlContact, err := CreateResource(a.MqlRuntime, "aws.shield.emergencyContact",
+			map[string]*llx.RawData{
+				"emailAddress": llx.StringDataPtr(ec.EmailAddress),
+				"phoneNumber":  llx.StringDataPtr(ec.PhoneNumber),
+				"contactNotes": llx.StringDataPtr(ec.ContactNotes),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlContact)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsShieldEmergencyContact) id() (string, error) {
+	return "aws.shield.emergencyContact/" + a.EmailAddress.Data, nil
+}
