@@ -52,3 +52,7 @@ func (s *LaunchDServiceManager) List() ([]*Service, error) {
 	}
 	return ParseServiceLaunchD(c.Stdout)
 }
+
+func (s *LaunchDServiceManager) Get(name string) (*Service, error) {
+	return getServiceFromList(name, s.List)
+}

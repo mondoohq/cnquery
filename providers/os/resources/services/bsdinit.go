@@ -44,3 +44,7 @@ func (s *BsdInitServiceManager) List() ([]*Service, error) {
 	}
 	return ParseBsdInit(c.Stdout)
 }
+
+func (s *BsdInitServiceManager) Get(name string) (*Service, error) {
+	return getServiceFromList(name, s.List)
+}

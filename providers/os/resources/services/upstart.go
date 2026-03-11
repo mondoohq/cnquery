@@ -55,6 +55,10 @@ func (s *UpstartServiceManager) List() ([]*Service, error) {
 	return services, nil
 }
 
+func (s *UpstartServiceManager) Get(name string) (*Service, error) {
+	return getServiceFromList(name, s.List)
+}
+
 func (s *UpstartServiceManager) upstartservices() (map[string]*Service, error) {
 	// NOTE: without /sbin prefix this command would fail on Amazon Linux 1
 	c, err := s.conn.RunCommand("/sbin/initctl list")

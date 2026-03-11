@@ -30,6 +30,10 @@ func (s *SolarisSmfServiceManager) List() ([]*Service, error) {
 	return ParseSolarisSmfServices(cmd.Stdout), nil
 }
 
+func (s *SolarisSmfServiceManager) Get(name string) (*Service, error) {
+	return getServiceFromList(name, s.List)
+}
+
 // smfService represents a parsed SMF service entry
 type smfService struct {
 	State string

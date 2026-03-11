@@ -90,6 +90,10 @@ func (s *OpenBsdRcctlServiceManager) List() ([]*Service, error) {
 	return list, nil
 }
 
+func (s *OpenBsdRcctlServiceManager) Get(name string) (*Service, error) {
+	return getServiceFromList(name, s.List)
+}
+
 func ParseOpenBsdServiceList(r io.Reader) map[string]struct{} {
 	res := map[string]struct{}{}
 	scanner := bufio.NewScanner(r)

@@ -4,12 +4,14 @@
 package services
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers/os/connection/mock"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 	"go.mondoo.com/mql/v13/providers/os/mountedfs"
 )
 
@@ -210,4 +212,188 @@ func TestSystemdFS(t *testing.T) {
 		Enabled:     true,
 		Masked:      false,
 	}, servicesMap["sshd"])
+}
+
+type recordingConnection struct {
+	*mock.Connection
+	commands []string
+}
+
+func (c *recordingConnection) RunCommand(command string) (*shared.Command, error) {
+	c.commands = append(c.commands, command)
+	return c.Connection.RunCommand(command)
+}
+
+func TestParseServiceSystemDShow(t *testing.T) {
+	services, err := ParseServiceSystemDShow(strings.NewReader(`Id=ssh.service
+	Description=OpenBSD Secure Shell server
+	LoadState=loaded
+	ActiveState=inactive
+	UnitFileState=disabled
+
+	Id=systemd-journald.service
+	Description=Journal Service
+	LoadState=loaded
+	ActiveState=active
+	UnitFileState=static
+	`))
+	require.NoError(t, err)
+	require.Len(t, services, 2)
+
+	assert.Equal(t, &Service{
+		Name:        "ssh",
+		Description: "OpenBSD Secure Shell server",
+		Installed:   true,
+		Running:     false,
+		Enabled:     false,
+		Masked:      false,
+		Static:      false,
+		Type:        "systemd",
+	}, services["ssh"])
+	assert.Equal(t, &Service{
+		Name:        "systemd-journald",
+		Description: "Journal Service",
+		Installed:   true,
+		Running:     true,
+		Enabled:     false,
+		Masked:      false,
+		Static:      true,
+		Type:        "systemd",
+	}, services["systemd-journald"])
+}
+
+func TestSystemDServiceManagerGetUsesTargetedShow(t *testing.T) {
+	const showCmd = "systemctl show --property=Id,LoadState,ActiveState,UnitFileState,Description dbus.service"
+
+	mockConn, err := mock.New(0, &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:   "ubuntu",
+			Family: []string{"ubuntu", "linux"},
+		},
+	}, mock.WithData(&mock.TomlData{
+		Commands: map[string]*mock.Command{
+			showCmd: {
+				Stdout: strings.Join([]string{
+					"Id=dbus.service",
+					"Description=D-Bus System Message Bus",
+					"LoadState=loaded",
+					"ActiveState=active",
+					"UnitFileState=enabled",
+					"",
+				}, "\n"),
+			},
+		},
+	}))
+	require.NoError(t, err)
+
+	conn := &recordingConnection{Connection: mockConn}
+	mgr := &SystemDServiceManager{conn: conn}
+
+	service, err := mgr.Get("dbus")
+	require.NoError(t, err)
+	assert.Equal(t, &Service{
+		Name:        "dbus",
+		Description: "D-Bus System Message Bus",
+		Installed:   true,
+		Running:     true,
+		Enabled:     true,
+		Masked:      false,
+		Static:      false,
+		Type:        "systemd",
+	}, service)
+	assert.Equal(t, []string{showCmd}, conn.commands)
+}
+
+func TestSystemDServiceManagerGetReturnsNotFound(t *testing.T) {
+	const showCmd = "systemctl show --property=Id,LoadState,ActiveState,UnitFileState,Description missing.service"
+
+	mockConn, err := mock.New(0, &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:   "ubuntu",
+			Family: []string{"ubuntu", "linux"},
+		},
+	}, mock.WithData(&mock.TomlData{
+		Commands: map[string]*mock.Command{
+			showCmd: {
+				Stdout: strings.Join([]string{
+					"Id=missing.service",
+					"Description=missing.service",
+					"LoadState=not-found",
+					"ActiveState=inactive",
+					"UnitFileState=",
+					"",
+				}, "\n"),
+			},
+		},
+	}))
+	require.NoError(t, err)
+
+	conn := &recordingConnection{Connection: mockConn}
+	mgr := &SystemDServiceManager{conn: conn}
+
+	service, err := mgr.Get("missing")
+	require.Nil(t, service)
+	require.ErrorIs(t, err, ErrServiceNotFound)
+	assert.Equal(t, []string{showCmd}, conn.commands)
+}
+
+func TestSystemDServiceManagerListUsesBatchedShow(t *testing.T) {
+	const listCmd = "systemctl list-unit-files --type service --all"
+	const showCmd = "systemctl show --property=Id,LoadState,ActiveState,UnitFileState,Description alpha.service beta.service"
+
+	mockConn, err := mock.New(0, &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:   "ubuntu",
+			Family: []string{"ubuntu", "linux"},
+		},
+	}, mock.WithData(&mock.TomlData{
+		Commands: map[string]*mock.Command{
+			listCmd: {
+				Stdout: strings.Join([]string{
+					"UNIT FILE STATE PRESET",
+					"alpha.service enabled enabled",
+					"beta.service static enabled",
+					"2 unit files listed.",
+					"",
+				}, "\n"),
+			},
+			showCmd: {
+				Stdout: strings.Join([]string{
+					"Id=alpha.service",
+					"Description=Alpha Service",
+					"LoadState=loaded",
+					"ActiveState=active",
+					"UnitFileState=enabled",
+					"",
+					"Id=beta.service",
+					"Description=Beta Service",
+					"LoadState=loaded",
+					"ActiveState=inactive",
+					"UnitFileState=static",
+					"",
+				}, "\n"),
+			},
+		},
+	}))
+	require.NoError(t, err)
+
+	conn := &recordingConnection{Connection: mockConn}
+	mgr := &SystemDServiceManager{conn: conn}
+
+	services, err := mgr.List()
+	require.NoError(t, err)
+	require.Len(t, services, 2)
+	assert.Equal(t, []string{listCmd, showCmd}, conn.commands)
+
+	servicesMap := map[string]*Service{}
+	for _, service := range services {
+		servicesMap[service.Name] = service
+	}
+
+	assert.Equal(t, "Alpha Service", servicesMap["alpha"].Description)
+	assert.True(t, servicesMap["alpha"].Running)
+	assert.True(t, servicesMap["alpha"].Enabled)
+	assert.Equal(t, "Beta Service", servicesMap["beta"].Description)
+	assert.False(t, servicesMap["beta"].Running)
+	assert.True(t, servicesMap["beta"].Static)
 }

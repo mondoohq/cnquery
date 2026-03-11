@@ -81,6 +81,10 @@ func (s *NetBsdServiceManager) List() ([]*Service, error) {
 	return list, nil
 }
 
+func (s *NetBsdServiceManager) Get(name string) (*Service, error) {
+	return getServiceFromList(name, s.List)
+}
+
 // checkServiceStatus checks if a service is currently running by executing service <name> status
 func (s *NetBsdServiceManager) checkServiceStatus(name string) (bool, error) {
 	cmd := "/usr/sbin/service " + name + " status"

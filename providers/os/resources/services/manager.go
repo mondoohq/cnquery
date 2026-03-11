@@ -5,7 +5,9 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"regexp"
+	"strings"
 
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 	"go.mondoo.com/mql/v13/providers/os/detector"
@@ -40,6 +42,28 @@ const (
 type OSServiceManager interface {
 	Name() string
 	List() ([]*Service, error)
+	Get(name string) (*Service, error)
+}
+
+type serviceListLoader func() ([]*Service, error)
+
+var ErrServiceNotFound = errors.New("service not found")
+
+func normalizeServiceLookupName(name string) string {
+	return strings.TrimSuffix(name, ".service")
+}
+
+func serviceNotFound(name string) error {
+	return fmt.Errorf("%w: %s", ErrServiceNotFound, name)
+}
+
+func getServiceFromList(name string, load serviceListLoader) (*Service, error) {
+	services, err := load()
+	if err != nil {
+		return nil, err
+	}
+
+	return FindService(services, normalizeServiceLookupName(name))
 }
 
 type noopOsServiceManager struct{}
@@ -50,6 +74,10 @@ func (n *noopOsServiceManager) Name() string {
 
 func (n *noopOsServiceManager) List() ([]*Service, error) {
 	return nil, nil
+}
+
+func (n *noopOsServiceManager) Get(name string) (*Service, error) {
+	return nil, serviceNotFound(name)
 }
 
 var amazonlinux1version = regexp.MustCompile(`^201\d`)
@@ -174,13 +202,14 @@ func ResolveManager(conn shared.Connection) (OSServiceManager, error) {
 }
 
 func FindService(services []*Service, name string) (*Service, error) {
-	// search for name
+	lookupName := normalizeServiceLookupName(name)
+
 	for i := range services {
 		service := services[i]
-		if service.Name == name {
+		if service.Name == lookupName {
 			return service, nil
 		}
 	}
 
-	return nil, errors.New("service> " + name + " does not exist")
+	return nil, serviceNotFound(name)
 }

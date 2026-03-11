@@ -30,22 +30,60 @@ func initService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 		return nil, nil, errors.New("cannot look for a service with an empty name")
 	}
 
-	raw, err := CreateResource(runtime, "services", nil)
+	lookupName := strings.TrimSuffix(name, ".service")
+
+	if runtime.HasRecording {
+		recordedArgs, err := runtime.ResourceFromRecording("service", lookupName)
+		if err != nil {
+			return nil, nil, err
+		}
+		if recordedArgs != nil {
+			res, err := CreateResource(runtime, "service", recordedArgs)
+			if err != nil {
+				return nil, nil, err
+			}
+			return nil, res, nil
+		}
+	}
+
+
+	conn := runtime.Connection.(shared.Connection)
+	osm, err := services.ResolveManager(conn)
+	if osm == nil || err != nil {
+		log.Debug().Err(err).Msg("mql[service]> could not resolve service manager")
+		return nil, nil, errors.New("cannot find service manager")
+	}
+
+	svc, err := osm.Get(name)
+	if err != nil {
+		if errors.Is(err, services.ErrServiceNotFound) {
+			return nil, missingServiceResource(runtime, lookupName), nil
+		}
+		return nil, nil, err
+	}
+
+	res, err := createServiceResource(runtime, svc)
 	if err != nil {
 		return nil, nil, err
 	}
-	services := raw.(*mqlServices)
 
-	if err := services.refreshCache(nil); err != nil {
-		return nil, nil, err
-	}
+	return nil, res, nil
+}
 
-	cleanServiceName := strings.TrimSuffix(name, ".service")
+func createServiceResource(runtime *plugin.Runtime, service *services.Service) (plugin.Resource, error) {
+	return CreateResource(runtime, "service", map[string]*llx.RawData{
+		"name":        llx.StringData(service.Name),
+		"description": llx.StringData(service.Description),
+		"installed":   llx.BoolData(service.Installed),
+		"enabled":     llx.BoolData(service.Enabled),
+		"masked":      llx.BoolData(service.Masked),
+		"running":     llx.BoolData(service.Running),
+		"type":        llx.StringData(service.Type),
+		"static":      llx.BoolData(service.Static),
+	})
+}
 
-	if srv, ok := services.namedServices[cleanServiceName]; ok {
-		return nil, srv, nil
-	}
-
+func missingServiceResource(runtime *plugin.Runtime, name string) plugin.Resource {
 	res := &mqlService{}
 	res.MqlRuntime = runtime
 	res.Name = plugin.TValue[string]{Data: name, State: plugin.StateIsSet}
@@ -57,8 +95,9 @@ func initService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 	res.Masked = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
 	res.Static = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
 	res.__id, _ = res.id()
-	return nil, res, nil
+	return res
 }
+
 
 func (x *mqlService) id() (string, error) {
 	return x.Name.Data, nil
@@ -97,16 +136,7 @@ func (x *mqlServices) list() ([]any, error) {
 	for i := range services {
 		srv := services[i]
 
-		mqlSrv, err := CreateResource(x.MqlRuntime, "service", map[string]*llx.RawData{
-			"name":        llx.StringData(srv.Name),
-			"description": llx.StringData(srv.Description),
-			"installed":   llx.BoolData(srv.Installed),
-			"enabled":     llx.BoolData(srv.Enabled),
-			"masked":      llx.BoolData(srv.Masked),
-			"running":     llx.BoolData(srv.Running),
-			"type":        llx.StringData(srv.Type),
-			"static":      llx.BoolData(srv.Static),
-		})
+		mqlSrv, err := createServiceResource(x.MqlRuntime, srv)
 		if err != nil {
 			return nil, err
 		}
