@@ -53,6 +53,30 @@ func TestWindowsAppPackagesParser(t *testing.T) {
 	assert.Equal(t, 0, len(pkgs), "detected the right amount of packages")
 }
 
+func TestWindowsAppPackagesParserWithPSPath(t *testing.T) {
+	// Simulate a 64-bit system with packages from both native and Wow6432Node paths
+	jsonData := `[
+		{"DisplayName":"Microsoft .NET Runtime - 8.0.7 (x64)","DisplayVersion":"8.0.7.33813","Publisher":"Microsoft Corporation","EstimatedSize":1234,"InstallSource":null,"UninstallString":"uninstall-x64","InstallLocation":"","PSPath":"Microsoft.PowerShell.Core\\Registry::HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{abc}"},
+		{"DisplayName":"Microsoft .NET Runtime - 8.0.7 (x86)","DisplayVersion":"8.0.7.33813","Publisher":"Microsoft Corporation","EstimatedSize":1234,"InstallSource":null,"UninstallString":"uninstall-x86","InstallLocation":"","PSPath":"Microsoft.PowerShell.Core\\Registry::HKEY_LOCAL_MACHINE\\SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{def}"}
+	]`
+
+	pf := &inventory.Platform{
+		Name:    "windows",
+		Version: "10.0.17763",
+		Arch:    "amd64",
+		Family:  []string{"windows"},
+	}
+	pkgs, err := ParseWindowsAppPackages(pf, strings.NewReader(jsonData))
+	require.NoError(t, err)
+	require.Equal(t, 2, len(pkgs))
+
+	x64Pkg := findPkg(pkgs, "Microsoft .NET Runtime - 8.0.7 (x64)")
+	assert.Equal(t, "amd64", x64Pkg.Arch, "native path package should have platform arch")
+
+	x86Pkg := findPkg(pkgs, "Microsoft .NET Runtime - 8.0.7 (x86)")
+	assert.Equal(t, "x86", x86Pkg.Arch, "Wow6432Node path package should have x86 arch")
+}
+
 func TestWindowsAppxPackagesParser(t *testing.T) {
 	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
@@ -162,7 +186,7 @@ func TestGetPackageFromRegistryKeyItems(t *testing.T) {
 		items := []registry.RegistryKeyItem{}
 		p := getPackageFromRegistryKeyItems(items, &inventory.Platform{
 			Family: []string{"windows"},
-		})
+		}, "amd64")
 		assert.Nil(t, p)
 	})
 	t.Run("get package from registry key items with missing required values", func(t *testing.T) {
@@ -177,7 +201,7 @@ func TestGetPackageFromRegistryKeyItems(t *testing.T) {
 		}
 		p := getPackageFromRegistryKeyItems(items, &inventory.Platform{
 			Family: []string{"windows"},
-		})
+		}, "amd64")
 		assert.Nil(t, p)
 	})
 
@@ -216,7 +240,7 @@ func TestGetPackageFromRegistryKeyItems(t *testing.T) {
 			Name:   "windows",
 			Arch:   "x86",
 			Family: []string{"windows"},
-		})
+		}, "x86")
 		CPEs, err := cpe.NewPackage2Cpe(
 			"Microsoft Corporation",
 			"Microsoft Visual C++ 2015-2019 Redistributable (x86) - 14.28.29913",
@@ -466,6 +490,275 @@ func TestFindAndUpdateMsSqlGDR_de_special_characters(t *testing.T) {
 	require.NotNil(t, pkg, "Not a hotfix package should exist")
 	require.Equal(t, "1.0.0", pkg.Version, "expected non-SQL Server package to remain unchanged")
 	assert.Equal(t, "pkg:windows/windows/Not%20a%20hotfix@1.0.0?arch=x86", pkg.PUrl)
+}
+
+func TestGetPackageFromRegistryKeyItemsWow6432Node(t *testing.T) {
+	items := []registry.RegistryKeyItem{
+		{
+			Key: "DisplayName",
+			Value: registry.RegistryKeyValue{
+				Kind:   registry.SZ,
+				String: "Microsoft .NET Runtime - 8.0.7 (x86)",
+			},
+		},
+		{
+			Key: "UninstallString",
+			Value: registry.RegistryKeyValue{
+				Kind:   registry.SZ,
+				String: "UninstallString",
+			},
+		},
+		{
+			Key: "DisplayVersion",
+			Value: registry.RegistryKeyValue{
+				Kind:   registry.SZ,
+				String: "8.0.7.33813",
+			},
+		},
+		{
+			Key: "Publisher",
+			Value: registry.RegistryKeyValue{
+				Kind:   registry.SZ,
+				String: "Microsoft Corporation",
+			},
+		},
+	}
+
+	pf := &inventory.Platform{
+		Name:   "windows",
+		Arch:   "amd64",
+		Family: []string{"windows"},
+	}
+
+	// Simulate package from Wow6432Node path (32-bit app on 64-bit Windows)
+	p := getPackageFromRegistryKeyItems(items, pf, "x86")
+	require.NotNil(t, p)
+	assert.Equal(t, "x86", p.Arch, "package from Wow6432Node should have x86 arch")
+
+	// Simulate same package from regular path (64-bit app)
+	p = getPackageFromRegistryKeyItems(items, pf, "amd64")
+	require.NotNil(t, p)
+	assert.Equal(t, "amd64", p.Arch, "package from regular path should have platform arch")
+}
+
+func TestArchForRegistryPath(t *testing.T) {
+	tests := []struct {
+		name         string
+		path         string
+		platformArch string
+		expected     string
+	}{
+		{
+			name:         "HKLM native path",
+			path:         "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+			platformArch: "amd64",
+			expected:     "amd64",
+		},
+		{
+			name:         "HKLM Wow6432Node path",
+			path:         "HKLM\\SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+			platformArch: "amd64",
+			expected:     "x86",
+		},
+		{
+			name:         "HKCU Wow6432Node path",
+			path:         "HKCU\\SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+			platformArch: "amd64",
+			expected:     "x86",
+		},
+		{
+			name:         "PowerShell PSPath with Wow6432Node",
+			path:         "Microsoft.PowerShell.Core\\Registry::HKEY_LOCAL_MACHINE\\SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{abc}",
+			platformArch: "amd64",
+			expected:     "x86",
+		},
+		{
+			name:         "PowerShell PSPath without Wow6432Node",
+			path:         "Microsoft.PowerShell.Core\\Registry::HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{abc}",
+			platformArch: "amd64",
+			expected:     "amd64",
+		},
+		{
+			name:         "filesystem relative path with Wow6432Node",
+			path:         "Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+			platformArch: "amd64",
+			expected:     "x86",
+		},
+		{
+			name:         "empty PSPath falls back to platform arch",
+			path:         "",
+			platformArch: "amd64",
+			expected:     "amd64",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := archForRegistryPath(tt.path, tt.platformArch)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestArchFromInstallPath(t *testing.T) {
+	tests := []struct {
+		name     string
+		paths    []string
+		expected string
+	}{
+		{
+			name:     "Program Files (x86) in install location",
+			paths:    []string{"C:\\Program Files (x86)\\Microsoft\\DotNet\\runtime"},
+			expected: "x86",
+		},
+		{
+			name:     "Program Files (x86) in uninstall string",
+			paths:    []string{"", "\"C:\\Program Files (x86)\\Microsoft\\setup.exe\" /uninstall"},
+			expected: "x86",
+		},
+		{
+			name:     "native Program Files",
+			paths:    []string{"C:\\Program Files\\Microsoft\\DotNet\\runtime"},
+			expected: "",
+		},
+		{
+			name:     "empty paths",
+			paths:    []string{"", ""},
+			expected: "",
+		},
+		{
+			name:     "no paths",
+			paths:    nil,
+			expected: "",
+		},
+		{
+			name:     "first match wins",
+			paths:    []string{"C:\\Program Files (x86)\\app", "C:\\Program Files\\app"},
+			expected: "x86",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := archFromInstallPath(tt.paths...)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestRegistryKeyItemsArchFallbackToInstallPath(t *testing.T) {
+	// Simulate a 32-bit app installed per-user (HKCU, shared path — no Wow6432Node).
+	// The caller passes platform.Arch because archForRegistryPath couldn't determine x86.
+	// The function should fall back to detecting "Program Files (x86)" in the install location.
+	items := []registry.RegistryKeyItem{
+		{
+			Key:   "DisplayName",
+			Value: registry.RegistryKeyValue{Kind: registry.SZ, String: "Some 32-bit App"},
+		},
+		{
+			Key:   "UninstallString",
+			Value: registry.RegistryKeyValue{Kind: registry.SZ, String: "MsiExec.exe /X{1234}"},
+		},
+		{
+			Key:   "DisplayVersion",
+			Value: registry.RegistryKeyValue{Kind: registry.SZ, String: "1.0.0"},
+		},
+		{
+			Key:   "InstallLocation",
+			Value: registry.RegistryKeyValue{Kind: registry.SZ, String: "C:\\Program Files (x86)\\SomeApp"},
+		},
+	}
+
+	pf := &inventory.Platform{
+		Name:   "windows",
+		Arch:   "amd64",
+		Family: []string{"windows"},
+	}
+
+	// Caller passes "amd64" because the HKCU path had no Wow6432Node
+	p := getPackageFromRegistryKeyItems(items, pf, "amd64")
+	require.NotNil(t, p)
+	assert.Equal(t, "x86", p.Arch, "should detect x86 from Program Files (x86) install location")
+}
+
+func TestRegistryKeyItemsArchNoFallbackWhenAlreadyX86(t *testing.T) {
+	// When arch is already determined from Wow6432Node, the install path check should not run.
+	items := []registry.RegistryKeyItem{
+		{
+			Key:   "DisplayName",
+			Value: registry.RegistryKeyValue{Kind: registry.SZ, String: "Some App"},
+		},
+		{
+			Key:   "UninstallString",
+			Value: registry.RegistryKeyValue{Kind: registry.SZ, String: "MsiExec.exe /X{1234}"},
+		},
+		{
+			Key:   "DisplayVersion",
+			Value: registry.RegistryKeyValue{Kind: registry.SZ, String: "1.0.0"},
+		},
+		{
+			Key:   "InstallLocation",
+			Value: registry.RegistryKeyValue{Kind: registry.SZ, String: "C:\\Program Files\\NativeApp"},
+		},
+	}
+
+	pf := &inventory.Platform{
+		Name:   "windows",
+		Arch:   "amd64",
+		Family: []string{"windows"},
+	}
+
+	// Caller already determined x86 from Wow6432Node — should not be overridden
+	p := getPackageFromRegistryKeyItems(items, pf, "x86")
+	require.NotNil(t, p)
+	assert.Equal(t, "x86", p.Arch, "Wow6432Node-determined arch must not be overridden by install path")
+}
+
+func TestWindowsAppPackagesParserInstallPathFallback(t *testing.T) {
+	// HKCU entry (no Wow6432Node in PSPath) but installed under Program Files (x86)
+	jsonData := `[
+		{"DisplayName":"Per-User 32-bit App","DisplayVersion":"1.0","Publisher":"Test","EstimatedSize":100,"InstallSource":null,"UninstallString":"uninstall","InstallLocation":"C:\\Program Files (x86)\\PerUserApp","PSPath":"Microsoft.PowerShell.Core\\Registry::HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{abc}"},
+		{"DisplayName":"Per-User 64-bit App","DisplayVersion":"2.0","Publisher":"Test","EstimatedSize":100,"InstallSource":null,"UninstallString":"uninstall","InstallLocation":"C:\\Program Files\\PerUserApp64","PSPath":"Microsoft.PowerShell.Core\\Registry::HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{def}"}
+	]`
+
+	pf := &inventory.Platform{
+		Name:    "windows",
+		Version: "10.0.17763",
+		Arch:    "amd64",
+		Family:  []string{"windows"},
+	}
+
+	pkgs, err := ParseWindowsAppPackages(pf, strings.NewReader(jsonData))
+	require.NoError(t, err)
+	require.Equal(t, 2, len(pkgs))
+
+	pkg32 := findPkg(pkgs, "Per-User 32-bit App")
+	assert.Equal(t, "x86", pkg32.Arch, "HKCU app in Program Files (x86) should be detected as x86")
+
+	pkg64 := findPkg(pkgs, "Per-User 64-bit App")
+	assert.Equal(t, "amd64", pkg64.Arch, "HKCU app in Program Files should keep platform arch")
+}
+
+// TestFsInstalledAppsArchAssignment validates that the exact registry path strings
+// used in getFsInstalledApps produce distinct arch values on a 64-bit system.
+// This is the unit-testable part of getFsInstalledApps; the full function requires
+// Windows with loaded registry hive files.
+func TestFsInstalledAppsArchAssignment(t *testing.T) {
+	// These are the exact paths from getFsInstalledApps
+	fsPaths := []string{
+		"Microsoft\\Windows\\CurrentVersion\\Uninstall",
+		"Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+	}
+	platformArch := "amd64"
+
+	archResults := make([]string, len(fsPaths))
+	for i, p := range fsPaths {
+		archResults[i] = archForRegistryPath(p, platformArch)
+	}
+
+	assert.Equal(t, "amd64", archResults[0], "native path should use platform arch")
+	assert.Equal(t, "x86", archResults[1], "Wow6432Node path should use x86")
+	assert.NotEqual(t, archResults[0], archResults[1], "the two paths must produce different arch values on a 64-bit system")
 }
 
 func TestCreatePackage(t *testing.T) {
