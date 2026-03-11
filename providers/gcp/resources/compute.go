@@ -365,48 +365,7 @@ func initGcpProjectComputeServiceInstance(runtime *plugin.Runtime, args map[stri
 		}
 	}
 
-	// Fallback: fetch directly from the GCP API
-	instanceName := args["name"].Value.(string)
-	zoneName := args["region"].Value.(string)
-	projectId := args["projectId"].Value.(string)
-
-	conn := runtime.Connection.(*connection.GcpConnection)
-	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	ctx := context.Background()
-	gcpComputeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
-	if err != nil {
-		return nil, nil, err
-	}
-
-	zoneData, err := gcpComputeSvc.Zones.Get(projectId, zoneName).Do()
-	if err != nil {
-		return nil, nil, err
-	}
-	mqlZone, err := CreateResource(runtime, "gcp.project.computeService.zone", map[string]*llx.RawData{
-		"id":          llx.StringData(strconv.FormatInt(int64(zoneData.Id), 10)),
-		"name":        llx.StringData(zoneData.Name),
-		"description": llx.StringData(zoneData.Description),
-		"status":      llx.StringData(zoneData.Status),
-		"created":     llx.TimeDataPtr(parseTime(zoneData.CreationTimestamp)),
-	})
-	if err != nil {
-		return nil, nil, err
-	}
-
-	gcpInstance, err := gcpComputeSvc.Instances.Get(projectId, zoneName, instanceName).Do()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	mqlInstance, err := newMqlComputeServiceInstance(projectId, mqlZone.(*mqlGcpProjectComputeServiceZone), runtime, gcpInstance)
-	if err != nil {
-		return nil, nil, err
-	}
-	return args, mqlInstance, nil
+	return nil, nil, errors.New("instance not found")
 }
 
 func (g *mqlGcpProjectComputeServiceInstance) id() (string, error) {
