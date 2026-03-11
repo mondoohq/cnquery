@@ -125,6 +125,18 @@ BUILDS=(
 
 echo "  - Building ${#BUILDS[@]} architecture targets (max parallel: ${MAX_PARALLEL})..."
 
+# Kill all background build processes on interrupt/termination
+cleanup() {
+  echo ""
+  echo "  Interrupted. Killing background builds..."
+  for pid in "${PIDS[@]}"; do
+    kill "$pid" 2>/dev/null || true
+  done
+  wait 2>/dev/null
+  exit 130
+}
+trap cleanup INT TERM
+
 # Run builds in parallel with a concurrency limit
 PIDS=()
 FAILED=0
