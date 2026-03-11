@@ -59,16 +59,16 @@ func TestDiscoveredAssetsAdd(t *testing.T) {
 		assert.Len(t, d.Assets, 1)
 	})
 
-	t.Run("subset rejection is order-independent", func(t *testing.T) {
+	t.Run("subset is evicted when superset arrives", func(t *testing.T) {
 		d := &DiscoveredAssets{}
 		fewer := &inventory.Asset{PlatformIds: []string{"hostname/node1", "ssh/ABC"}}
 		more := &inventory.Asset{PlatformIds: []string{"hostname/node1", "ssh/ABC", "cloud/xyz"}}
 
-		// Even when the subset is added first, the superset is still added
-		// (it has a new ID), and neither is incorrectly rejected.
+		// When the subset is added first, adding the superset evicts the subset.
 		assert.True(t, d.Add(fewer, nil))
 		assert.True(t, d.Add(more, nil))
-		assert.Len(t, d.Assets, 2)
+		assert.Len(t, d.Assets, 1)
+		assert.Equal(t, more.PlatformIds, d.Assets[0].Asset.PlatformIds)
 	})
 
 	t.Run("no cross-asset conflation", func(t *testing.T) {

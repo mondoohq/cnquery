@@ -15,13 +15,13 @@ import (
 	"go.mondoo.com/mql/v13/cli/execruntime"
 	"go.mondoo.com/mql/v13/internal/workerpool"
 	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/utils/slicesx"
 	"go.mondoo.com/mql/v13/logger"
 	"go.mondoo.com/mql/v13/providers"
 	inventory "go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory/manager"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream"
+	"go.mondoo.com/mql/v13/utils/slicesx"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -68,18 +68,29 @@ func (d *DiscoveredAssets) Add(asset *inventory.Asset, runtime *providers.Runtim
 		return false
 	}
 
+	// Evict existing assets whose IDs are a subset of the new asset's IDs.
+	// This ensures deduplication is order-independent.
+	kept := d.Assets[:0]
 	for _, existing := range d.Assets {
 		if slicesx.IsSubsetOf(asset.PlatformIds, existing.Asset.PlatformIds) {
 			log.Debug().Str("asset", asset.Name).Strs("platform-ids", asset.PlatformIds).Msg("discovery> skipping duplicate asset")
 			return false
 		}
+		if slicesx.IsSubsetOf(existing.Asset.PlatformIds, asset.PlatformIds) {
+			log.Debug().Str("asset", existing.Asset.Name).Strs("platform-ids", existing.Asset.PlatformIds).Msg("discovery> evicting asset that is a subset of new asset")
+			if existing.Runtime != nil {
+				existing.Runtime.Close()
+			}
+			continue
+		}
+		kept = append(kept, existing)
 	}
+	d.Assets = kept
 
 	log.Debug().Str("asset", asset.Name).Strs("platform-ids", asset.PlatformIds).Int("total", len(d.Assets)+1).Msg("discovery> added asset")
 	d.Assets = append(d.Assets, &AssetWithRuntime{Asset: asset, Runtime: runtime})
 	return true
 }
-
 
 func (d *DiscoveredAssets) AddError(asset *inventory.Asset, err error) {
 	d.assetsLock.Lock()
