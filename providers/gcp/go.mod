@@ -7,6 +7,7 @@ go 1.25.6
 require (
 	cloud.google.com/go/accessapproval v1.8.8
 	cloud.google.com/go/alloydb v1.21.0
+	cloud.google.com/go/artifactregistry v1.20.0
 	cloud.google.com/go/bigquery v1.74.0
 	cloud.google.com/go/bigtable v1.42.0
 	cloud.google.com/go/cloudtasks v1.13.7
