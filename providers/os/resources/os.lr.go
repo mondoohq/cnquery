@@ -197,6 +197,9 @@ const (
 	ResourceVscodeExtension            string = "vscode.extension"
 	ResourceLogrotate                  string = "logrotate"
 	ResourceLogrotateEntry             string = "logrotate.entry"
+	ResourceMdadm                      string = "mdadm"
+	ResourceMdadmArray                 string = "mdadm.array"
+	ResourceMdadmDevice                string = "mdadm.device"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -922,6 +925,18 @@ func init() {
 		"logrotate.entry": {
 			// to override args, implement: initLogrotateEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createLogrotateEntry,
+		},
+		"mdadm": {
+			// to override args, implement: initMdadm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMdadm,
+		},
+		"mdadm.array": {
+			// to override args, implement: initMdadmArray(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMdadmArray,
+		},
+		"mdadm.device": {
+			// to override args, implement: initMdadmDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMdadmDevice,
 		},
 	}
 }
@@ -3744,6 +3759,51 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"logrotate.entry.config": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlLogrotateEntry).GetConfig()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"mdadm.arrays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMdadm).GetArrays()).ToDataRes(types.Array(types.Resource("mdadm.array")))
+	},
+	"mdadm.array.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMdadmArray).GetName()).ToDataRes(types.String)
+	},
+	"mdadm.array.level": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMdadmArray).GetLevel()).ToDataRes(types.String)
+	},
+	"mdadm.array.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMdadmArray).GetState()).ToDataRes(types.String)
+	},
+	"mdadm.array.activeDevices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMdadmArray).GetActiveDevices()).ToDataRes(types.Int)
+	},
+	"mdadm.array.workingDevices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMdadmArray).GetWorkingDevices()).ToDataRes(types.Int)
+	},
+	"mdadm.array.failedDevices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMdadmArray).GetFailedDevices()).ToDataRes(types.Int)
+	},
+	"mdadm.array.spareDevices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMdadmArray).GetSpareDevices()).ToDataRes(types.Int)
+	},
+	"mdadm.array.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMdadmArray).GetSize()).ToDataRes(types.Int)
+	},
+	"mdadm.array.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMdadmArray).GetUuid()).ToDataRes(types.String)
+	},
+	"mdadm.array.resyncProgress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMdadmArray).GetResyncProgress()).ToDataRes(types.Float)
+	},
+	"mdadm.array.devices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMdadmArray).GetDevices()).ToDataRes(types.Array(types.Resource("mdadm.device")))
+	},
+	"mdadm.device.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMdadmDevice).GetName()).ToDataRes(types.String)
+	},
+	"mdadm.device.role": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMdadmDevice).GetRole()).ToDataRes(types.Int)
+	},
+	"mdadm.device.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMdadmDevice).GetState()).ToDataRes(types.String)
 	},
 }
 
@@ -8131,6 +8191,78 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"logrotate.entry.config": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlLogrotateEntry).Config, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"mdadm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMdadm).__id, ok = v.Value.(string)
+		return
+	},
+	"mdadm.arrays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMdadm).Arrays, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mdadm.array.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMdadmArray).__id, ok = v.Value.(string)
+		return
+	},
+	"mdadm.array.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMdadmArray).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mdadm.array.level": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMdadmArray).Level, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mdadm.array.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMdadmArray).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mdadm.array.activeDevices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMdadmArray).ActiveDevices, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mdadm.array.workingDevices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMdadmArray).WorkingDevices, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mdadm.array.failedDevices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMdadmArray).FailedDevices, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mdadm.array.spareDevices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMdadmArray).SpareDevices, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mdadm.array.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMdadmArray).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mdadm.array.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMdadmArray).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mdadm.array.resyncProgress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMdadmArray).ResyncProgress, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"mdadm.array.devices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMdadmArray).Devices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mdadm.device.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMdadmDevice).__id, ok = v.Value.(string)
+		return
+	},
+	"mdadm.device.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMdadmDevice).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mdadm.device.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMdadmDevice).Role, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mdadm.device.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMdadmDevice).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -22734,4 +22866,235 @@ func (c *mqlLogrotateEntry) GetPath() *plugin.TValue[string] {
 
 func (c *mqlLogrotateEntry) GetConfig() *plugin.TValue[map[string]any] {
 	return &c.Config
+}
+
+// mqlMdadm for the mdadm resource
+type mqlMdadm struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMdadmInternal it will be used here
+	Arrays plugin.TValue[[]any]
+}
+
+// createMdadm creates a new instance of this resource
+func createMdadm(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMdadm{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mdadm", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMdadm) MqlName() string {
+	return "mdadm"
+}
+
+func (c *mqlMdadm) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMdadm) GetArrays() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Arrays, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mdadm", c.__id, "arrays")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.arrays()
+	})
+}
+
+// mqlMdadmArray for the mdadm.array resource
+type mqlMdadmArray struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlMdadmArrayInternal
+	Name           plugin.TValue[string]
+	Level          plugin.TValue[string]
+	State          plugin.TValue[string]
+	ActiveDevices  plugin.TValue[int64]
+	WorkingDevices plugin.TValue[int64]
+	FailedDevices  plugin.TValue[int64]
+	SpareDevices   plugin.TValue[int64]
+	Size           plugin.TValue[int64]
+	Uuid           plugin.TValue[string]
+	ResyncProgress plugin.TValue[float64]
+	Devices        plugin.TValue[[]any]
+}
+
+// createMdadmArray creates a new instance of this resource
+func createMdadmArray(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMdadmArray{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mdadm.array", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMdadmArray) MqlName() string {
+	return "mdadm.array"
+}
+
+func (c *mqlMdadmArray) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMdadmArray) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlMdadmArray) GetLevel() *plugin.TValue[string] {
+	return &c.Level
+}
+
+func (c *mqlMdadmArray) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlMdadmArray) GetActiveDevices() *plugin.TValue[int64] {
+	return &c.ActiveDevices
+}
+
+func (c *mqlMdadmArray) GetWorkingDevices() *plugin.TValue[int64] {
+	return &c.WorkingDevices
+}
+
+func (c *mqlMdadmArray) GetFailedDevices() *plugin.TValue[int64] {
+	return &c.FailedDevices
+}
+
+func (c *mqlMdadmArray) GetSpareDevices() *plugin.TValue[int64] {
+	return &c.SpareDevices
+}
+
+func (c *mqlMdadmArray) GetSize() *plugin.TValue[int64] {
+	return &c.Size
+}
+
+func (c *mqlMdadmArray) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlMdadmArray) GetResyncProgress() *plugin.TValue[float64] {
+	return &c.ResyncProgress
+}
+
+func (c *mqlMdadmArray) GetDevices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Devices, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mdadm.array", c.__id, "devices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.devices()
+	})
+}
+
+// mqlMdadmDevice for the mdadm.device resource
+type mqlMdadmDevice struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlMdadmDeviceInternal
+	Name  plugin.TValue[string]
+	Role  plugin.TValue[int64]
+	State plugin.TValue[string]
+}
+
+// createMdadmDevice creates a new instance of this resource
+func createMdadmDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMdadmDevice{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mdadm.device", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMdadmDevice) MqlName() string {
+	return "mdadm.device"
+}
+
+func (c *mqlMdadmDevice) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMdadmDevice) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlMdadmDevice) GetRole() *plugin.TValue[int64] {
+	return &c.Role
+}
+
+func (c *mqlMdadmDevice) GetState() *plugin.TValue[string] {
+	return &c.State
 }
