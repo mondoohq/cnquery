@@ -62,6 +62,7 @@ func initPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 	}
 
 	res := &mqlPackage{}
+	res.MqlRuntime = runtime
 	res.Name = plugin.TValue[string]{Data: name, State: plugin.StateIsSet}
 	res.Installed = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
 	res.Outdated = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
@@ -76,6 +77,7 @@ func initPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 	res.Origin.State = plugin.StateIsSet | plugin.StateIsNull
 	res.Status.State = plugin.StateIsSet | plugin.StateIsNull
 	res.Files.State = plugin.StateIsSet | plugin.StateIsNull
+	res.__id, _ = res.id()
 	return nil, res, nil
 }
 
