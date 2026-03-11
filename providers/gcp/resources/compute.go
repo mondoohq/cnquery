@@ -332,6 +332,7 @@ func initGcpProjectComputeServiceInstance(runtime *plugin.Runtime, args map[stri
 		}
 	}
 
+	// Try to find the instance in the MQL cache first
 	obj, err := CreateResource(runtime, "gcp.project.computeService", map[string]*llx.RawData{
 		"projectId": args["projectId"],
 	})
@@ -363,6 +364,7 @@ func initGcpProjectComputeServiceInstance(runtime *plugin.Runtime, args map[stri
 			return args, instance, nil
 		}
 	}
+
 	return nil, nil, errors.New("instance not found")
 }
 
@@ -512,14 +514,16 @@ type mqlGcpProjectComputeServiceInstanceInternal struct {
 
 func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeServiceZone, runtime *plugin.Runtime, instance *compute.Instance) (*mqlGcpProjectComputeServiceInstance, error) {
 	metadata := map[string]string{}
-	for m := range instance.Metadata.Items {
-		item := instance.Metadata.Items[m]
+	if instance.Metadata != nil {
+		for m := range instance.Metadata.Items {
+			item := instance.Metadata.Items[m]
 
-		value := ""
-		if item.Value != nil {
-			value = *item.Value
+			value := ""
+			if item.Value != nil {
+				value = *item.Value
+			}
+			metadata[item.Key] = value
 		}
-		metadata[item.Key] = value
 	}
 
 	mqlServiceAccounts := []any{}
@@ -614,6 +618,11 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 		}
 	}
 
+	var tagsItems []string
+	if instance.Tags != nil {
+		tagsItems = instance.Tags.Items
+	}
+
 	entry, err := CreateResource(runtime, "gcp.project.computeService.instance", map[string]*llx.RawData{
 		"id":                         llx.StringData(instanceId),
 		"projectId":                  llx.StringData(projectId),
@@ -649,7 +658,7 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 		"status":                     llx.StringData(instance.Status),
 		"statusMessage":              llx.StringData(instance.StatusMessage),
 		"sourceMachineImage":         llx.StringData(instance.SourceMachineImage),
-		"tags":                       llx.ArrayData(convert.SliceAnyToInterface(instance.Tags.Items), types.String),
+		"tags":                       llx.ArrayData(convert.SliceAnyToInterface(tagsItems), types.String),
 		"totalEgressBandwidthTier":   llx.StringData(totalEgressBandwidthTier),
 		"serviceAccounts":            llx.ArrayData(mqlServiceAccounts, types.Resource("gcp.project.computeService.serviceaccount")),
 		"disks":                      llx.ArrayData(attachedDisks, types.Resource("gcp.project.computeService.attachedDisk")),
@@ -1404,6 +1413,7 @@ func initGcpProjectComputeServiceNetwork(runtime *plugin.Runtime, args map[strin
 		}
 	}
 
+	// Try to find the network in the MQL cache first
 	obj, err := CreateResource(runtime, "gcp.project.computeService", map[string]*llx.RawData{
 		"projectId": args["projectId"],
 	})
@@ -1431,7 +1441,58 @@ func initGcpProjectComputeServiceNetwork(runtime *plugin.Runtime, args map[strin
 			return args, network, nil
 		}
 	}
-	return nil, nil, errors.New("network not found")
+
+	// Fallback: fetch directly from the GCP API
+	networkName := args["name"].Value.(string)
+	projectId := args["projectId"].Value.(string)
+
+	conn := runtime.Connection.(*connection.GcpConnection)
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	ctx := context.Background()
+	gcpComputeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	network, err := gcpComputeSvc.Networks.Get(projectId, networkName).Do()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	peerings, err := convert.JsonToDictSlice(network.Peerings)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var routingMode string
+	if network.RoutingConfig != nil {
+		routingMode = network.RoutingConfig.RoutingMode
+	}
+
+	mqlNetwork, err := CreateResource(runtime, "gcp.project.computeService.network", map[string]*llx.RawData{
+		"id":                                    llx.StringData(strconv.FormatUint(network.Id, 10)),
+		"projectId":                             llx.StringData(projectId),
+		"name":                                  llx.StringData(network.Name),
+		"description":                           llx.StringData(network.Description),
+		"autoCreateSubnetworks":                 llx.BoolData(network.AutoCreateSubnetworks),
+		"enableUlaInternalIpv6":                 llx.BoolData(network.EnableUlaInternalIpv6),
+		"gatewayIPv4":                           llx.StringData(network.GatewayIPv4),
+		"mtu":                                   llx.IntData(network.Mtu),
+		"networkFirewallPolicyEnforcementOrder": llx.StringData(network.NetworkFirewallPolicyEnforcementOrder),
+		"created":                               llx.TimeDataPtr(parseTime(network.CreationTimestamp)),
+		"peerings":                              llx.ArrayData(peerings, types.Dict),
+		"routingMode":                           llx.StringData(routingMode),
+		"mode":                                  llx.StringData(networkMode(network)),
+		"subnetworkUrls":                        llx.ArrayData(convert.SliceAnyToInterface(network.Subnetworks), types.String),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, mqlNetwork.(*mqlGcpProjectComputeServiceNetwork), nil
 }
 
 func (g *mqlGcpProjectComputeService) networks() ([]any, error) {
@@ -1535,6 +1596,7 @@ func initGcpProjectComputeServiceSubnetwork(runtime *plugin.Runtime, args map[st
 		}
 	}
 
+	// Try to find the subnetwork in the MQL cache first
 	obj, err := NewResource(runtime, "gcp.project.computeService", map[string]*llx.RawData{
 		"projectId": llx.StringData(args["projectId"].Value.(string)),
 	})
@@ -1567,7 +1629,37 @@ func initGcpProjectComputeServiceSubnetwork(runtime *plugin.Runtime, args map[st
 			return args, subnetwork, nil
 		}
 	}
-	return nil, nil, errors.New("subnetwork not found")
+
+	// Fallback: fetch directly from the GCP API
+	subnetworkName := args["name"].Value.(string)
+	projectId := args["projectId"].Value.(string)
+
+	conn := runtime.Connection.(*connection.GcpConnection)
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	ctx := context.Background()
+	subnetSvc, err := computev1.NewSubnetworksRESTClient(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	gcpSubnetwork, err := subnetSvc.Get(ctx, &computepb.GetSubnetworkRequest{
+		Project:    projectId,
+		Region:     region,
+		Subnetwork: subnetworkName,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	mqlSubnetwork, err := newMqlSubnetwork(projectId, runtime, gcpSubnetwork, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, mqlSubnetwork.(*mqlGcpProjectComputeServiceSubnetwork), nil
 }
 
 func (g *mqlGcpProjectComputeServiceSubnetworkLogConfig) id() (string, error) {
@@ -2048,15 +2140,21 @@ func (g *mqlGcpProjectComputeService) backendServices() ([]any, error) {
 
 			var mqlConsistentHash any
 			if b.ConsistentHash != nil {
-				mqlConsistentHash = map[string]any{
-					"httpCookie": map[string]any{
-						"name": b.ConsistentHash.HttpCookie.Name,
-						"path": b.ConsistentHash.HttpCookie.Path,
-						"ttl":  llx.TimeData(llx.DurationToTime(b.ConsistentHash.HttpCookie.Ttl.Seconds)),
-					},
+				consistentHashMap := map[string]any{
 					"httpHeaderName":  b.ConsistentHash.HttpHeaderName,
 					"minimumRingSize": b.ConsistentHash.MinimumRingSize,
 				}
+				if b.ConsistentHash.HttpCookie != nil {
+					cookieMap := map[string]any{
+						"name": b.ConsistentHash.HttpCookie.Name,
+						"path": b.ConsistentHash.HttpCookie.Path,
+					}
+					if b.ConsistentHash.HttpCookie.Ttl != nil {
+						cookieMap["ttl"] = llx.TimeData(llx.DurationToTime(b.ConsistentHash.HttpCookie.Ttl.Seconds))
+					}
+					consistentHashMap["httpCookie"] = cookieMap
+				}
+				mqlConsistentHash = consistentHashMap
 			}
 
 			var mqlFailoverPolicy any
@@ -2328,7 +2426,7 @@ func (g *mqlGcpProjectComputeService) forwardingRules() ([]any, error) {
 				})
 			}
 			mqlFwr, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.forwardingRule", map[string]*llx.RawData{
-				"id":                            llx.StringData(fmt.Sprintf("%d", fwr.Id)),
+				"id":                            llx.StringData(fmt.Sprintf("%d", fwr.GetId())),
 				"ipAddress":                     llx.StringData(fwr.GetIPAddress()),
 				"ipProtocol":                    llx.StringData(fwr.GetIPProtocol()),
 				"allPorts":                      llx.BoolData(fwr.GetAllPorts()),
