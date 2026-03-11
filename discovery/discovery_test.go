@@ -71,6 +71,21 @@ func TestDiscoveredAssetsAdd(t *testing.T) {
 		assert.Equal(t, more.PlatformIds, d.Assets[0].Asset.PlatformIds)
 	})
 
+	t.Run("eviction is preserved when new asset is then rejected", func(t *testing.T) {
+		d := &DiscoveredAssets{}
+		small := &inventory.Asset{PlatformIds: []string{"id/1"}}
+		big := &inventory.Asset{PlatformIds: []string{"id/1", "id/2", "id/3"}}
+		mid := &inventory.Asset{PlatformIds: []string{"id/1", "id/2"}}
+
+		assert.True(t, d.Add(small, nil))
+		assert.True(t, d.Add(big, nil))
+		// mid evicts small (subset), but is itself a subset of big → rejected.
+		// small must stay evicted.
+		assert.False(t, d.Add(mid, nil))
+		assert.Len(t, d.Assets, 1)
+		assert.Equal(t, big.PlatformIds, d.Assets[0].Asset.PlatformIds)
+	})
+
 	t.Run("no cross-asset conflation", func(t *testing.T) {
 		d := &DiscoveredAssets{}
 		a := &inventory.Asset{PlatformIds: []string{"hostname/X", "ssh/KEY1"}}

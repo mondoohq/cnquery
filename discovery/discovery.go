@@ -68,14 +68,18 @@ func (d *DiscoveredAssets) Add(asset *inventory.Asset, runtime *providers.Runtim
 		return false
 	}
 
-	// Evict existing assets whose IDs are a subset of the new asset's IDs.
-	// This ensures deduplication is order-independent.
-	kept := d.Assets[:0]
+	// If the new asset is a subset of (or equal to) an existing asset, reject it.
 	for _, existing := range d.Assets {
 		if slicesx.IsSubsetOf(asset.PlatformIds, existing.Asset.PlatformIds) {
 			log.Debug().Str("asset", asset.Name).Strs("platform-ids", asset.PlatformIds).Msg("discovery> skipping duplicate asset")
 			return false
 		}
+	}
+
+	// Evict existing assets whose IDs are a subset of the new asset's IDs.
+	// This ensures deduplication is order-independent.
+	kept := d.Assets[:0]
+	for _, existing := range d.Assets {
 		if slicesx.IsSubsetOf(existing.Asset.PlatformIds, asset.PlatformIds) {
 			log.Debug().Str("asset", existing.Asset.Name).Strs("platform-ids", existing.Asset.PlatformIds).Msg("discovery> evicting asset that is a subset of new asset")
 			if existing.Runtime != nil {
