@@ -2381,16 +2381,16 @@ network {
   routes() networkRoutes
 
   // All IPv4 addresses detected on host interfaces
-  ipv4() []ipAddress
+  ipv4() []ip
 
   // All IPv6 addresses detected on host interfaces
-  ipv6() []ipAddress
+  ipv6() []ip
 
   // Primary IPv4 address determined by the default route
-  primaryIPv4() ipAddress
+  primaryIPv4() ip
 
   // Primary IPv6 address determined by the default route
-  primaryIPv6() ipAddress
+  primaryIPv6() ip
 }
 
 // Detailed information of a network interface

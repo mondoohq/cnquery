@@ -3500,16 +3500,16 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlNetwork).GetRoutes()).ToDataRes(types.Resource("networkRoutes"))
 	},
 	"network.ipv4": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlNetwork).GetIpv4()).ToDataRes(types.Array(types.Resource("ipAddress")))
+		return (r.(*mqlNetwork).GetIpv4()).ToDataRes(types.Array(types.IP))
 	},
 	"network.ipv6": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlNetwork).GetIpv6()).ToDataRes(types.Array(types.Resource("ipAddress")))
+		return (r.(*mqlNetwork).GetIpv6()).ToDataRes(types.Array(types.IP))
 	},
 	"network.primaryIPv4": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlNetwork).GetPrimaryIPv4()).ToDataRes(types.Resource("ipAddress"))
+		return (r.(*mqlNetwork).GetPrimaryIPv4()).ToDataRes(types.IP)
 	},
 	"network.primaryIPv6": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlNetwork).GetPrimaryIPv6()).ToDataRes(types.Resource("ipAddress"))
+		return (r.(*mqlNetwork).GetPrimaryIPv6()).ToDataRes(types.IP)
 	},
 	"networkInterface.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetworkInterface).GetName()).ToDataRes(types.String)
@@ -7766,11 +7766,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"network.primaryIPv4": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlNetwork).PrimaryIPv4, ok = plugin.RawToTValue[*mqlIpAddress](v.Value, v.Error)
+		r.(*mqlNetwork).PrimaryIPv4, ok = plugin.RawToTValue[llx.RawIP](v.Value, v.Error)
 		return
 	},
 	"network.primaryIPv6": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlNetwork).PrimaryIPv6, ok = plugin.RawToTValue[*mqlIpAddress](v.Value, v.Error)
+		r.(*mqlNetwork).PrimaryIPv6, ok = plugin.RawToTValue[llx.RawIP](v.Value, v.Error)
 		return
 	},
 	"networkInterface.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21519,8 +21519,8 @@ type mqlNetwork struct {
 	Routes      plugin.TValue[*mqlNetworkRoutes]
 	Ipv4        plugin.TValue[[]any]
 	Ipv6        plugin.TValue[[]any]
-	PrimaryIPv4 plugin.TValue[*mqlIpAddress]
-	PrimaryIPv6 plugin.TValue[*mqlIpAddress]
+	PrimaryIPv4 plugin.TValue[llx.RawIP]
+	PrimaryIPv6 plugin.TValue[llx.RawIP]
 }
 
 // createNetwork creates a new instance of this resource
@@ -21589,64 +21589,24 @@ func (c *mqlNetwork) GetRoutes() *plugin.TValue[*mqlNetworkRoutes] {
 
 func (c *mqlNetwork) GetIpv4() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Ipv4, func() ([]any, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("network", c.__id, "ipv4")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.([]any), nil
-			}
-		}
-
 		return c.ipv4()
 	})
 }
 
 func (c *mqlNetwork) GetIpv6() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Ipv6, func() ([]any, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("network", c.__id, "ipv6")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.([]any), nil
-			}
-		}
-
 		return c.ipv6()
 	})
 }
 
-func (c *mqlNetwork) GetPrimaryIPv4() *plugin.TValue[*mqlIpAddress] {
-	return plugin.GetOrCompute[*mqlIpAddress](&c.PrimaryIPv4, func() (*mqlIpAddress, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("network", c.__id, "primaryIPv4")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlIpAddress), nil
-			}
-		}
-
+func (c *mqlNetwork) GetPrimaryIPv4() *plugin.TValue[llx.RawIP] {
+	return plugin.GetOrCompute[llx.RawIP](&c.PrimaryIPv4, func() (llx.RawIP, error) {
 		return c.primaryIPv4()
 	})
 }
 
-func (c *mqlNetwork) GetPrimaryIPv6() *plugin.TValue[*mqlIpAddress] {
-	return plugin.GetOrCompute[*mqlIpAddress](&c.PrimaryIPv6, func() (*mqlIpAddress, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("network", c.__id, "primaryIPv6")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlIpAddress), nil
-			}
-		}
-
+func (c *mqlNetwork) GetPrimaryIPv6() *plugin.TValue[llx.RawIP] {
+	return plugin.GetOrCompute[llx.RawIP](&c.PrimaryIPv6, func() (llx.RawIP, error) {
 		return c.primaryIPv6()
 	})
 }

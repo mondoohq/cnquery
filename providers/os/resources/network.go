@@ -72,7 +72,7 @@ func (c *mqlNetwork) interfaces() ([]any, error) {
 	return resources, nil
 }
 
-// ipsByVersion collects all ipAddress resources from all interfaces matching the given IP version (4 or 6).
+// ipsByVersion collects all IP addresses from all interfaces matching the given IP version (4 or 6).
 func (c *mqlNetwork) ipsByVersion(version uint8) ([]any, error) {
 	interfaces := c.GetInterfaces()
 	if interfaces.Error != nil {
@@ -99,7 +99,7 @@ func (c *mqlNetwork) ipsByVersion(version uint8) ([]any, error) {
 				continue
 			}
 			if ip.Data.Version == version {
-				result = append(result, ipRes)
+				result = append(result, ip.Data)
 			}
 		}
 	}
@@ -116,15 +116,15 @@ func (c *mqlNetwork) ipv6() ([]any, error) {
 
 // primaryIPByDefaultRoute finds the first IP of the given version on the interface
 // associated with the default route for that IP version.
-func (c *mqlNetwork) primaryIPByDefaultRoute(version uint8, defaultDests []string) (*mqlIpAddress, error) {
+func (c *mqlNetwork) primaryIPByDefaultRoute(version uint8, defaultDests []string) (llx.RawIP, error) {
 	routes := c.GetRoutes()
 	if routes.Error != nil {
-		return nil, routes.Error
+		return llx.RawIP{}, routes.Error
 	}
 
 	defaults := routes.Data.GetDefaults()
 	if defaults.Error != nil {
-		return nil, defaults.Error
+		return llx.RawIP{}, defaults.Error
 	}
 
 	destSet := make(map[string]bool, len(defaultDests))
@@ -166,31 +166,31 @@ func (c *mqlNetwork) primaryIPByDefaultRoute(version uint8, defaultDests []strin
 				continue
 			}
 			if ip.Data.Version == version {
-				return ipAddr, nil
+				return ip.Data, nil
 			}
 		}
 	}
 
-	return nil, nil
+	return llx.RawIP{}, nil
 }
 
-func (c *mqlNetwork) primaryIPv4() (*mqlIpAddress, error) {
+func (c *mqlNetwork) primaryIPv4() (llx.RawIP, error) {
 	res, err := c.primaryIPByDefaultRoute(4, []string{"0.0.0.0/0", "0.0.0.0", "default"})
 	if err != nil {
-		return nil, err
+		return llx.RawIP{}, err
 	}
-	if res == nil {
+	if res.IP == nil {
 		c.PrimaryIPv4.State = plugin.StateIsNull | plugin.StateIsSet
 	}
 	return res, nil
 }
 
-func (c *mqlNetwork) primaryIPv6() (*mqlIpAddress, error) {
+func (c *mqlNetwork) primaryIPv6() (llx.RawIP, error) {
 	res, err := c.primaryIPByDefaultRoute(6, []string{"::/0", "::"})
 	if err != nil {
-		return nil, err
+		return llx.RawIP{}, err
 	}
-	if res == nil {
+	if res.IP == nil {
 		c.PrimaryIPv6.State = plugin.StateIsNull | plugin.StateIsSet
 	}
 	return res, nil
