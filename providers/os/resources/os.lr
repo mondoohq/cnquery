@@ -2603,3 +2603,45 @@ private logrotate.entry @defaults("path") {
   // All directives in this block as key-value pairs
   config map[string]string
 }
+
+// Linux software RAID arrays (mdadm)
+mdadm @defaults("arrays") {
+  // List of all discovered RAID arrays
+  arrays() []mdadm.array
+}
+
+// Linux software RAID array
+private mdadm.array @defaults("name level state") {
+  // Device name (e.g., /dev/md0)
+  name string
+  // RAID level (e.g., raid0, raid1, raid5, raid6, raid10, linear)
+  level string
+  // Array state (e.g., clean, active, degraded, inactive)
+  state string
+  // Number of active devices in the array
+  activeDevices int
+  // Number of working devices in the array
+  workingDevices int
+  // Number of failed devices in the array
+  failedDevices int
+  // Number of spare devices in the array
+  spareDevices int
+  // Total size of the array in KiB
+  size int
+  // UUID of the array
+  uuid string
+  // Rebuild/resync progress percentage (0-100, -1 if not rebuilding)
+  resyncProgress float
+  // Member devices in the array
+  devices() []mdadm.device
+}
+
+// Member device in a software RAID array
+private mdadm.device @defaults("name state") {
+  // Device path (e.g., /dev/sda1)
+  name string
+  // Role number in the array
+  role int
+  // Device state (e.g., active sync, spare, faulty)
+  state string
+}
