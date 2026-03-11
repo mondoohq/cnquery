@@ -47,6 +47,7 @@ func initService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 	}
 
 	res := &mqlService{}
+	res.MqlRuntime = runtime
 	res.Name = plugin.TValue[string]{Data: name, State: plugin.StateIsSet}
 	res.Description.State = plugin.StateIsSet | plugin.StateIsNull
 	res.Installed = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
@@ -55,6 +56,7 @@ func initService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 	res.Enabled = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
 	res.Masked = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
 	res.Static = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
+	res.__id, _ = res.id()
 	return nil, res, nil
 }
 

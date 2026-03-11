@@ -342,9 +342,11 @@ func initKernelModule(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 	}
 
 	res := &mqlKernelModule{}
+	res.MqlRuntime = runtime
 	res.Name = plugin.TValue[string]{Data: name, State: plugin.StateIsSet}
 	res.Size.State = plugin.StateIsSet | plugin.StateIsNull
 	res.Loaded = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
+	res.__id, _ = res.id()
 	return nil, res, nil
 }
 
