@@ -115,7 +115,8 @@ func GetSection(in io.Reader, section string) string {
 		lastKey = key
 
 		if strings.Join(keyStack, " ") == " "+section {
-			recorded.WriteString(key + "\n")
+			recorded.WriteString(key)
+			recorded.WriteByte('\n')
 		}
 	}
 
