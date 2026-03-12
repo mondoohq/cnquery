@@ -13,6 +13,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"io"
+	"maps"
 	"math/rand"
 	"net"
 	"net/http"
@@ -154,9 +155,7 @@ func (s *Tester) Test(conf ScanConfig) error {
 	for i := range conf.Versions {
 		version := conf.Versions[i]
 
-		workers.Add(1)
-		go func() {
-			defer workers.Done()
+		workers.Go(func() {
 
 			// we don't activate any of the additional tests in the beginning
 			// let's find out if we work on this version of TLS/SSL
@@ -201,7 +200,7 @@ func (s *Tester) Test(conf ScanConfig) error {
 					_, _ = s.testTLS(s.proto, s.target, curConf)
 				}
 			}
-		}()
+		})
 	}
 
 	workers.Wait()
@@ -947,24 +946,12 @@ func init() {
 			len(TLS_CIPHERS))
 
 	// Note: overlapping names will be overwritten
-	for k, v := range SSL2_CIPHERS {
-		ALL_CIPHERS[k] = v
-	}
-	for k, v := range SSL3_CIPHERS {
-		ALL_CIPHERS[k] = v
-	}
-	for k, v := range SSL_FIPS_CIPHERS {
-		ALL_CIPHERS[k] = v
-	}
-	for k, v := range TLS10_CIPHERS {
-		ALL_CIPHERS[k] = v
-	}
-	for k, v := range TLS13_CIPHERS {
-		ALL_CIPHERS[k] = v
-	}
-	for k, v := range TLS_CIPHERS {
-		ALL_CIPHERS[k] = v
-	}
+	maps.Copy(ALL_CIPHERS, SSL2_CIPHERS)
+	maps.Copy(ALL_CIPHERS, SSL3_CIPHERS)
+	maps.Copy(ALL_CIPHERS, SSL_FIPS_CIPHERS)
+	maps.Copy(ALL_CIPHERS, TLS10_CIPHERS)
+	maps.Copy(ALL_CIPHERS, TLS13_CIPHERS)
+	maps.Copy(ALL_CIPHERS, TLS_CIPHERS)
 }
 
 const (
