@@ -253,6 +253,19 @@ func ParseSudo(flags map[string]*llx.Primitive) *inventory.Sudo {
 	}
 }
 
+var shellEscapeRegex = regexp.MustCompile(`[^\w@%+=:,./-]`)
+
+func ShellEscape(s string) string {
+	if len(s) == 0 {
+		return "''"
+	}
+	if shellEscapeRegex.MatchString(s) {
+		return "'" + strings.ReplaceAll(s, "'", "'\"'\"'") + "'"
+	}
+
+	return s
+}
+
 func BuildSudoCommand(sudo *inventory.Sudo, cmd string) string {
 	var sb strings.Builder
 

@@ -21,11 +21,17 @@ type CommandRunner interface {
 func New(cmdRunner CommandRunner) *Fs {
 	return &Fs{
 		commandRunner: cmdRunner,
+		statter:       statutil.New(cmdRunner),
 	}
+}
+
+type statter interface {
+	Stat(name string) (os.FileInfo, error)
 }
 
 type Fs struct {
 	commandRunner CommandRunner
+	statter       statter
 	base64        *bool
 }
 
@@ -54,7 +60,7 @@ func (cat *Fs) base64available() bool {
 }
 
 func (cat *Fs) Open(name string) (afero.File, error) {
-	_, err := statutil.New(cat.commandRunner).Stat(name)
+	_, err := cat.statter.Stat(name)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +71,7 @@ func (cat *Fs) Open(name string) (afero.File, error) {
 var NotImplemented = errors.New("not implemented")
 
 func (cat *Fs) Stat(name string) (os.FileInfo, error) {
-	return statutil.New(cat.commandRunner).Stat(name)
+	return cat.statter.Stat(name)
 }
 
 func (cat *Fs) Create(name string) (afero.File, error) {

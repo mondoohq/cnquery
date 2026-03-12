@@ -4,6 +4,7 @@
 package services
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"io"
@@ -23,6 +24,11 @@ var (
 	SYSTEMD_LIST_UNITS_REGEX = regexp.MustCompile(`(?m)^(?:[^\S\n]{2}|●[^\S\n]|)(\S+)(?:[^\S\n])+(loaded|not-found|masked)(?:[^\S\n])+(\S+)(?:[^\S\n])+(\S+)(?:[^\S\n])+(.+)$`)
 	serviceNameRegex         = regexp.MustCompile(`(.*)\.(service|target|socket)$`)
 	errIgnored               = errors.New("ignored")
+)
+
+const (
+	systemdShowProperties = "Id,LoadState,ActiveState,UnitFileState,Description"
+	systemdShowChunkSize  = 100
 )
 
 func ResolveSystemdServiceManager(conn shared.Connection) OSServiceManager {
@@ -60,21 +66,15 @@ func ParseServiceSystemDUnitFiles(input io.Reader) ([]*Service, error) {
 		}
 
 		if strings.Contains(line, "unit files listed.") {
-			continue // skip the summary line
+			continue
 		}
-
-		name := strings.TrimSuffix(fields[0], ".service")
 
 		service := &Service{
-			Name:    name,
-			Enabled: fields[1] == "enabled",
-			Masked:  fields[1] == "masked",
-			Static:  fields[1] == "static",
-			Type:    "systemd",
+			Name:      normalizeSystemdServiceName(fields[0]),
+			Installed: true,
+			Type:      "systemd",
 		}
-
-		// The installed field simply tells you that we found the service, thus it is always true
-		service.Installed = true
+		applySystemdUnitFileState(service, fields[1])
 
 		services = append(services, service)
 	}
@@ -82,58 +82,166 @@ func ParseServiceSystemDUnitFiles(input io.Reader) ([]*Service, error) {
 	return services, nil
 }
 
-// SystemDExtractDescription gets the description of a service from the systemctl status command
-func SystemDExtractDescription(systemctlOutput string) string {
-	lines := strings.Split(systemctlOutput, "\n")
-	for _, line := range lines {
-		if strings.Contains(line, ".service -") {
-			// Assuming the format is similar to: "● bluetooth.service - Bluetooth service"
-			parts := strings.SplitN(line, " - ", 2)
-			if len(parts) == 2 {
-				return strings.TrimSpace(parts[1])
-			}
-		}
+func applySystemdUnitFileState(service *Service, unitFileState string) {
+	service.Enabled = unitFileState == "enabled" || unitFileState == "enabled-runtime"
+	service.Masked = strings.HasPrefix(unitFileState, "masked")
+	service.Static = unitFileState == "static"
+}
+
+func normalizeSystemdServiceName(unit string) string {
+	return strings.TrimSuffix(unit, ".service")
+}
+
+func ensureSystemdServiceUnit(name string) string {
+	if strings.HasSuffix(name, ".service") {
+		return name
 	}
-	return ""
+
+	return name + ".service"
+}
+
+func buildSystemdShowCommand(units []string) string {
+	args := []string{"systemctl", "show", "--property=" + systemdShowProperties}
+	args = append(args, units...)
+
+	escaped := make([]string, len(args))
+	for i := range args {
+		escaped[i] = shared.ShellEscape(args[i])
+	}
+
+	return strings.Join(escaped, " ")
+}
+
+func ParseServiceSystemDShow(input io.Reader) (map[string]*Service, error) {
+	services := map[string]*Service{}
+	record := map[string]string{}
+
+	flushRecord := func() error {
+		if len(record) == 0 {
+			return nil
+		}
+
+		service, err := parseSystemDShowRecord(record)
+		if err != nil {
+			return err
+		}
+		services[service.Name] = service
+		record = map[string]string{}
+		return nil
+	}
+
+	scanner := bufio.NewScanner(input)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" {
+			if err := flushRecord(); err != nil {
+				return nil, err
+			}
+			continue
+		}
+
+		key, value, ok := strings.Cut(line, "=")
+		if !ok {
+			return nil, fmt.Errorf("unexpected output from systemctl show: %q", line)
+		}
+		record[key] = value
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	if err := flushRecord(); err != nil {
+		return nil, err
+	}
+
+	return services, nil
+}
+
+func parseSystemDShowRecord(record map[string]string) (*Service, error) {
+	id := record["Id"]
+	if id == "" {
+		return nil, errors.New("unexpected output from systemctl show: missing Id")
+	}
+
+	service := &Service{
+		Name:        normalizeSystemdServiceName(id),
+		Description: record["Description"],
+		Installed:   record["LoadState"] != "not-found" && record["LoadState"] != "",
+		Running:     record["ActiveState"] == "active",
+		Type:        "systemd",
+	}
+	applySystemdUnitFileState(service, record["UnitFileState"])
+
+	return service, nil
+}
+
+func (s *SystemDServiceManager) showUnits(units []string) (map[string]*Service, error) {
+	cmd, err := s.conn.RunCommand(buildSystemdShowCommand(units))
+	if err != nil {
+		return nil, err
+	}
+
+	return ParseServiceSystemDShow(cmd.Stdout)
+}
+
+func (s *SystemDServiceManager) Get(name string) (*Service, error) {
+	services, err := s.showUnits([]string{ensureSystemdServiceUnit(name)})
+	if err != nil {
+		return nil, err
+	}
+
+	service, ok := services[NormalizeServiceLookupName(name)]
+	if !ok || !service.Installed {
+		return nil, serviceNotFound(name)
+	}
+
+	return service, nil
 }
 
 // List returns a slice of Service structs representing the state of all services
 func (s *SystemDServiceManager) List() ([]*Service, error) {
-	var services []*Service
 	cmdList, err := s.conn.RunCommand("systemctl list-unit-files --type service --all")
 	if err != nil {
 		return nil, err
 	}
-	services, err = ParseServiceSystemDUnitFiles(cmdList.Stdout)
+
+	services, err := ParseServiceSystemDUnitFiles(cmdList.Stdout)
 	if err != nil {
 		return nil, err
 	}
-	for _, service := range services {
-		// Now check if the service is running
-		cmdIsActive, err := s.conn.RunCommand("systemctl is-active " + service.Name)
+
+	for start := 0; start < len(services); start += systemdShowChunkSize {
+		end := start + systemdShowChunkSize
+		if end > len(services) {
+			end = len(services)
+		}
+
+		units := make([]string, 0, end-start)
+		for _, service := range services[start:end] {
+			units = append(units, ensureSystemdServiceUnit(service.Name))
+		}
+
+		shownServices, err := s.showUnits(units)
 		if err != nil {
 			return nil, err
 		}
 
-		isActiveOut, err := io.ReadAll(cmdIsActive.Stdout)
-		if err != nil {
-			return nil, err
-		}
+		for _, service := range services[start:end] {
+			shownService, ok := shownServices[service.Name]
+			if !ok {
+				continue
+			}
 
-		service.Running = err == nil && strings.TrimSpace(string(isActiveOut)) == "active"
-
-		// Get service description
-		cmdDesc, err := s.conn.RunCommand("systemctl status " + service.Name)
-		if err != nil {
-			return nil, err
+			service.Description = shownService.Description
+			service.Running = shownService.Running
+			if !shownService.Installed {
+				service.Installed = false
+			}
+			service.Enabled = shownService.Enabled
+			service.Masked = shownService.Masked
+			service.Static = shownService.Static
 		}
-
-		descOut, err := io.ReadAll(cmdDesc.Stdout)
-		if err != nil {
-			return nil, err
-		}
-		description := SystemDExtractDescription(string(descOut))
-		service.Description = description
 	}
 
 	return services, nil
@@ -228,6 +336,10 @@ func (s *SystemdFSServiceManager) List() ([]*Service, error) {
 		})
 	}
 	return services, nil
+}
+
+func (s *SystemdFSServiceManager) Get(name string) (*Service, error) {
+	return getServiceFromList(name, s.List)
 }
 
 // traverse traverses the root target and finds units. This implementation is

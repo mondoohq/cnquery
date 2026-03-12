@@ -133,3 +133,7 @@ func (s *WindowsServiceManager) List() ([]*Service, error) {
 	}
 	return ParseWindowsService(c.Stdout)
 }
+
+func (s *WindowsServiceManager) Get(name string) (*Service, error) {
+	return getServiceFromList(name, s.List)
+}

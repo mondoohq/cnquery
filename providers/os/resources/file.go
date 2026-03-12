@@ -27,6 +27,10 @@ func newFile(runtime *plugin.Runtime, path string) (*mqlFile, error) {
 	return file, nil
 }
 
+type mqlFileInternal struct {
+	statInfo *shared.FileInfoDetails
+}
+
 func (s *mqlFile) id() (string, error) {
 	return s.Path.Data, nil
 }
@@ -42,13 +46,7 @@ func (s *mqlFile) content(path string, exists bool) (string, error) {
 	return string(res), err
 }
 
-func (s *mqlFile) stat() error {
-	conn := s.MqlRuntime.Connection.(shared.Connection)
-	stat, err := conn.FileInfo(s.Path.Data)
-	if err != nil {
-		return err
-	}
-
+func (s *mqlFile) cacheStatFields(stat shared.FileInfoDetails) error {
 	mode := stat.Mode.UnixMode()
 	res, err := CreateResource(s.MqlRuntime, "file.permissions", map[string]*llx.RawData{
 		"mode":             llx.IntData(int64(uint32(mode) & 0o7777)),
@@ -72,16 +70,58 @@ func (s *mqlFile) stat() error {
 		return err
 	}
 
+	s.Exists = plugin.TValue[bool]{
+		Data:  true,
+		State: plugin.StateIsSet,
+	}
 	s.Permissions = plugin.TValue[*mqlFilePermissions]{
 		Data:  res.(*mqlFilePermissions),
 		State: plugin.StateIsSet,
 	}
-
 	s.Size = plugin.TValue[int64]{
 		Data:  stat.Size,
 		State: plugin.StateIsSet,
 	}
 
+	statCopy := stat
+	s.statInfo = &statCopy
+
+	return nil
+}
+
+func (s *mqlFile) loadStatFields(path string) (*shared.FileInfoDetails, bool, error) {
+	if s.Exists.IsSet() {
+		if !s.Exists.Data {
+			return nil, false, s.Exists.Error
+		}
+		if s.statInfo != nil {
+			return s.statInfo, true, nil
+		}
+		if s.Permissions.IsSet() && s.Size.IsSet() {
+			return nil, true, nil
+		}
+	}
+
+	conn := s.MqlRuntime.Connection.(shared.Connection)
+	stat, err := conn.FileInfo(path)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			s.Exists = plugin.TValue[bool]{
+				Data:  false,
+				State: plugin.StateIsSet,
+			}
+			return nil, false, nil
+		}
+		return nil, false, err
+	}
+	if err := s.cacheStatFields(stat); err != nil {
+		return nil, false, err
+	}
+
+	return s.statInfo, true, nil
+}
+
+func (s *mqlFile) cacheOwnership(stat shared.FileInfoDetails) error {
 	raw, err := CreateResource(s.MqlRuntime, "users", nil)
 	if err != nil {
 		return errors.New("cannot get users info for file: " + err.Error())
@@ -92,7 +132,6 @@ func (s *mqlFile) stat() error {
 	if err != nil {
 		return err
 	}
-
 	s.User = plugin.TValue[*mqlUser]{
 		Data:  user,
 		State: plugin.StateIsSet,
@@ -108,7 +147,6 @@ func (s *mqlFile) stat() error {
 	if err != nil {
 		return err
 	}
-
 	s.Group = plugin.TValue[*mqlGroup]{
 		Data:  group,
 		State: plugin.StateIsSet,
@@ -117,20 +155,57 @@ func (s *mqlFile) stat() error {
 	return nil
 }
 
+func (s *mqlFile) loadOwnership(path string) error {
+	stat, exists, err := s.loadStatFields(path)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return os.ErrNotExist
+	}
+	if s.User.IsSet() && s.Group.IsSet() {
+		return nil
+	}
+	if stat == nil {
+		conn := s.MqlRuntime.Connection.(shared.Connection)
+		statValue, err := conn.FileInfo(path)
+		if err != nil {
+			return err
+		}
+		stat = &statValue
+	}
+
+	return s.cacheOwnership(*stat)
+}
+
 func (s *mqlFile) size(path string) (int64, error) {
-	return 0, s.stat()
+	_, exists, err := s.loadStatFields(path)
+	if err != nil {
+		return 0, err
+	}
+	if !exists {
+		return 0, os.ErrNotExist
+	}
+	return 0, nil
 }
 
 func (s *mqlFile) permissions(path string) (*mqlFilePermissions, error) {
-	return nil, s.stat()
+	_, exists, err := s.loadStatFields(path)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, os.ErrNotExist
+	}
+	return nil, nil
 }
 
 func (s *mqlFile) user() (*mqlUser, error) {
-	return nil, s.stat()
+	return nil, s.loadOwnership(s.Path.Data)
 }
 
 func (s *mqlFile) group() (*mqlGroup, error) {
-	return nil, s.stat()
+	return nil, s.loadOwnership(s.Path.Data)
 }
 
 func (s *mqlFile) empty(path string) (bool, error) {
@@ -148,9 +223,8 @@ func (s *mqlFile) dirname(fullPath string) (string, error) {
 }
 
 func (s *mqlFile) exists(path string) (bool, error) {
-	conn := s.MqlRuntime.Connection.(shared.Connection)
-	afs := &afero.Afero{Fs: conn.FileSystem()}
-	return afs.Exists(path)
+	_, exists, err := s.loadStatFields(path)
+	return exists, err
 }
 
 func (l *mqlFilePermissions) id() (string, error) {

@@ -84,6 +84,10 @@ func (s *OpenrcServiceManager) List() ([]*Service, error) {
 	return services, nil
 }
 
+func (s *OpenrcServiceManager) Get(name string) (*Service, error) {
+	return getServiceFromList(name, s.List)
+}
+
 var OPENRC_SERVICE_STARTED = regexp.MustCompile(`^\s*([a-zA-Z-\d]+)\s+\[\s*(stopped|started)\s*\]$`)
 
 func ParseOpenRCServiceStatus(input io.Reader) (map[string]bool, error) {

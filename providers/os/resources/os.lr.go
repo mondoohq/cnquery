@@ -10623,7 +10623,7 @@ func (c *mqlPowershell) GetExitcode() *plugin.TValue[int64] {
 type mqlFile struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlFileInternal it will be used here
+	mqlFileInternal
 	Path        plugin.TValue[string]
 	Basename    plugin.TValue[string]
 	Dirname     plugin.TValue[string]

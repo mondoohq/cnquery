@@ -78,6 +78,10 @@ func (s *SysVServiceManager) List() ([]*Service, error) {
 	return res, nil
 }
 
+func (s *SysVServiceManager) Get(name string) (*Service, error) {
+	return getServiceFromList(name, s.List)
+}
+
 func (s *SysVServiceManager) services() ([]string, error) {
 	c, err := s.conn.RunCommand("ls -1 /etc/init.d/")
 	if err != nil {

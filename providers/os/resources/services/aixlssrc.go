@@ -39,6 +39,10 @@ func (s *AixServiceManager) List() ([]*Service, error) {
 	return services, nil
 }
 
+func (s *AixServiceManager) Get(name string) (*Service, error) {
+	return getServiceFromList(name, s.List)
+}
+
 type lssrcEntry struct {
 	Subsystem string
 	Group     string

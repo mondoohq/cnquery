@@ -76,12 +76,50 @@ UsePAM yes
 	assert.True(t, errors.Is(err, os.ErrNotExist))
 }
 
+func TestCatFsReusesStatHelper(t *testing.T) {
+	filepath, _ := filepath.Abs("./testdata/cat.toml")
+	p, err := mock.New(0, &inventory.Asset{}, mock.WithPath(filepath))
+	require.NoError(t, err)
+
+	flags := map[string]*llx.Primitive{
+		"sudo": llx.BoolPrimitive(true),
+	}
+
+	cw := &CommandWrapper{
+		commandRunner: p,
+		sudo:          shared.ParseSudo(flags),
+	}
+
+	catfs := cat.New(cw)
+
+	_, err = catfs.Stat("/etc/ssh/sshd_config")
+	require.NoError(t, err)
+
+	f, err := catfs.Open("/etc/ssh/sshd_config")
+	require.NoError(t, err)
+	require.NoError(t, f.Close())
+
+	assert.Equal(t, 1, countCommands(cw.commands, "sudo uname -s"))
+}
+
+func countCommands(commands []string, target string) int {
+	count := 0
+	for _, command := range commands {
+		if command == target {
+			count++
+		}
+	}
+	return count
+}
+
 type CommandWrapper struct {
 	commandRunner cat.CommandRunner
 	sudo          *inventory.Sudo
+	commands      []string
 }
 
 func (cw *CommandWrapper) RunCommand(command string) (*shared.Command, error) {
 	cmd := shared.BuildSudoCommand(cw.sudo, command)
+	cw.commands = append(cw.commands, cmd)
 	return cw.commandRunner.RunCommand(cmd)
 }
