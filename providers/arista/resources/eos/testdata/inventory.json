@@ -1,0 +1,63 @@
+{
+    "systemInformation": {
+        "name": "DCS-7050TX-48",
+        "description": "48-port 10GbE SFP+ switch",
+        "hardwareRev": "02.01",
+        "serialNum": "JPE12345678",
+        "mfgDate": "2019-05-15",
+        "hwEpoch": ""
+    },
+    "powerSupplySlots": {
+        "1": {
+            "name": "PowerSupply1",
+            "description": "PWR-500AC-R",
+            "hardwareRev": "01.00",
+            "serialNum": "PSU987654",
+            "mfgDate": "2019-03-10"
+        }
+    },
+    "fanTraySlots": {
+        "1": {
+            "name": "FanTray1",
+            "description": "Fan Tray",
+            "hardwareRev": "01.00",
+            "serialNum": "FAN111222",
+            "mfgDate": "2019-03-10"
+        }
+    },
+    "portCount": 52,
+    "internalPortCount": 0,
+    "cpuPortCount": 0,
+    "dataLinkPortCount": 0,
+    "switchedPortCount": 0,
+    "frontPanelFabricPortCount": 0,
+    "fabricPortCount": 0,
+    "switchManagementPortCount": 0,
+    "switchedBootstrapPortCount": 0,
+    "unconnectedPortCount": 0,
+    "switchedFortyGOnlyPortCount": 0,
+    "managementPortCount": 1,
+    "xcvrSlots": {
+        "1": {
+            "name": "Xcvr1",
+            "description": "SFP+ 10GBASE-SR",
+            "hardwareRev": "01.00",
+            "serialNum": "XCV001002",
+            "mfgDate": "2020-01-15"
+        },
+        "2": {
+            "name": "Xcvr2",
+            "description": "SFP+ 10GBASE-LR",
+            "hardwareRev": "02.00",
+            "serialNum": "XCV003004",
+            "mfgDate": "2020-02-20"
+        }
+    },
+    "mgmtXcvrSlots": {},
+    "auxiliaryXcvrSlots": {},
+    "fabricXcvrSlots": {},
+    "cardSlots": {},
+    "storageSerials": {},
+    "subcompSerNums": {},
+    "fpgas": {}
+}

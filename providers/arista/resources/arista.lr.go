@@ -16,28 +16,32 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceAristaEos                     string = "arista.eos"
-	ResourceAristaEosRunningConfig        string = "arista.eos.runningConfig"
-	ResourceAristaEosRunningConfigSection string = "arista.eos.runningConfig.section"
-	ResourceAristaEosUser                 string = "arista.eos.user"
-	ResourceAristaEosRole                 string = "arista.eos.role"
-	ResourceAristaEosSnmpSetting          string = "arista.eos.snmpSetting"
-	ResourceAristaEosNtpSetting           string = "arista.eos.ntpSetting"
-	ResourceAristaEosInterface            string = "arista.eos.interface"
-	ResourceAristaEosIpInterface          string = "arista.eos.ipInterface"
-	ResourceAristaEosStp                  string = "arista.eos.stp"
-	ResourceAristaEosStpMst               string = "arista.eos.stp.mst"
-	ResourceAristaEosSptMstInterface      string = "arista.eos.spt.mstInterface"
-	ResourceAristaEosVlan                 string = "arista.eos.vlan"
-	ResourceAristaEosRoute                string = "arista.eos.route"
-	ResourceAristaEosSwitchport           string = "arista.eos.switchport"
-	ResourceAristaEosBgp                  string = "arista.eos.bgp"
-	ResourceAristaEosBgpVrf               string = "arista.eos.bgp.vrf"
-	ResourceAristaEosBgpPeer              string = "arista.eos.bgp.peer"
-	ResourceAristaEosMlag                 string = "arista.eos.mlag"
-	ResourceAristaEosMlagInterface        string = "arista.eos.mlag.interface"
-	ResourceAristaEosAcl                  string = "arista.eos.acl"
-	ResourceAristaEosAclEntry             string = "arista.eos.acl.entry"
+	ResourceAristaEos                      string = "arista.eos"
+	ResourceAristaEosRunningConfig         string = "arista.eos.runningConfig"
+	ResourceAristaEosRunningConfigSection  string = "arista.eos.runningConfig.section"
+	ResourceAristaEosUser                  string = "arista.eos.user"
+	ResourceAristaEosRole                  string = "arista.eos.role"
+	ResourceAristaEosSnmpSetting           string = "arista.eos.snmpSetting"
+	ResourceAristaEosNtpSetting            string = "arista.eos.ntpSetting"
+	ResourceAristaEosInterface             string = "arista.eos.interface"
+	ResourceAristaEosIpInterface           string = "arista.eos.ipInterface"
+	ResourceAristaEosStp                   string = "arista.eos.stp"
+	ResourceAristaEosStpMst                string = "arista.eos.stp.mst"
+	ResourceAristaEosSptMstInterface       string = "arista.eos.spt.mstInterface"
+	ResourceAristaEosVlan                  string = "arista.eos.vlan"
+	ResourceAristaEosRoute                 string = "arista.eos.route"
+	ResourceAristaEosSwitchport            string = "arista.eos.switchport"
+	ResourceAristaEosBgp                   string = "arista.eos.bgp"
+	ResourceAristaEosBgpVrf                string = "arista.eos.bgp.vrf"
+	ResourceAristaEosBgpPeer               string = "arista.eos.bgp.peer"
+	ResourceAristaEosMlag                  string = "arista.eos.mlag"
+	ResourceAristaEosMlagInterface         string = "arista.eos.mlag.interface"
+	ResourceAristaEosAcl                   string = "arista.eos.acl"
+	ResourceAristaEosAclEntry              string = "arista.eos.acl.entry"
+	ResourceAristaEosHardware              string = "arista.eos.hardware"
+	ResourceAristaEosHardwarePowerSupply   string = "arista.eos.hardware.powerSupply"
+	ResourceAristaEosHardwareFan           string = "arista.eos.hardware.fan"
+	ResourceAristaEosHardwareInventoryItem string = "arista.eos.hardware.inventoryItem"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -131,6 +135,22 @@ func init() {
 		"arista.eos.acl.entry": {
 			// to override args, implement: initAristaEosAclEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAristaEosAclEntry,
+		},
+		"arista.eos.hardware": {
+			// to override args, implement: initAristaEosHardware(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAristaEosHardware,
+		},
+		"arista.eos.hardware.powerSupply": {
+			// to override args, implement: initAristaEosHardwarePowerSupply(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAristaEosHardwarePowerSupply,
+		},
+		"arista.eos.hardware.fan": {
+			// to override args, implement: initAristaEosHardwareFan(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAristaEosHardwareFan,
+		},
+		"arista.eos.hardware.inventoryItem": {
+			// to override args, implement: initAristaEosHardwareInventoryItem(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAristaEosHardwareInventoryItem,
 		},
 	}
 }
@@ -259,6 +279,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"arista.eos.acls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEos).GetAcls()).ToDataRes(types.Array(types.Resource("arista.eos.acl")))
+	},
+	"arista.eos.hardware": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEos).GetHardware()).ToDataRes(types.Resource("arista.eos.hardware"))
 	},
 	"arista.eos.runningConfig.content": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosRunningConfig).GetContent()).ToDataRes(types.String)
@@ -620,6 +643,81 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"arista.eos.acl.entry.log": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosAclEntry).GetLog()).ToDataRes(types.Bool)
 	},
+	"arista.eos.hardware.powerSupplies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosHardware).GetPowerSupplies()).ToDataRes(types.Array(types.Resource("arista.eos.hardware.powerSupply")))
+	},
+	"arista.eos.hardware.fans": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosHardware).GetFans()).ToDataRes(types.Array(types.Resource("arista.eos.hardware.fan")))
+	},
+	"arista.eos.hardware.inventory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosHardware).GetInventory()).ToDataRes(types.Array(types.Resource("arista.eos.hardware.inventoryItem")))
+	},
+	"arista.eos.hardware.powerSupply.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosHardwarePowerSupply).GetName()).ToDataRes(types.String)
+	},
+	"arista.eos.hardware.powerSupply.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosHardwarePowerSupply).GetState()).ToDataRes(types.String)
+	},
+	"arista.eos.hardware.powerSupply.modelName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosHardwarePowerSupply).GetModelName()).ToDataRes(types.String)
+	},
+	"arista.eos.hardware.powerSupply.capacity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosHardwarePowerSupply).GetCapacity()).ToDataRes(types.Int)
+	},
+	"arista.eos.hardware.powerSupply.outputPower": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosHardwarePowerSupply).GetOutputPower()).ToDataRes(types.Float)
+	},
+	"arista.eos.hardware.powerSupply.inputCurrent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosHardwarePowerSupply).GetInputCurrent()).ToDataRes(types.Float)
+	},
+	"arista.eos.hardware.powerSupply.outputCurrent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosHardwarePowerSupply).GetOutputCurrent()).ToDataRes(types.Float)
+	},
+	"arista.eos.hardware.powerSupply.uptime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosHardwarePowerSupply).GetUptime()).ToDataRes(types.Float)
+	},
+	"arista.eos.hardware.powerSupply.managed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosHardwarePowerSupply).GetManaged()).ToDataRes(types.Bool)
+	},
+	"arista.eos.hardware.powerSupply.tempSensors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosHardwarePowerSupply).GetTempSensors()).ToDataRes(types.Array(types.Dict))
+	},
+	"arista.eos.hardware.powerSupply.fans": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosHardwarePowerSupply).GetFans()).ToDataRes(types.Array(types.Dict))
+	},
+	"arista.eos.hardware.fan.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosHardwareFan).GetName()).ToDataRes(types.String)
+	},
+	"arista.eos.hardware.fan.trayLabel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosHardwareFan).GetTrayLabel()).ToDataRes(types.String)
+	},
+	"arista.eos.hardware.fan.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosHardwareFan).GetStatus()).ToDataRes(types.String)
+	},
+	"arista.eos.hardware.fan.speed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosHardwareFan).GetSpeed()).ToDataRes(types.Int)
+	},
+	"arista.eos.hardware.fan.configuredSpeed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosHardwareFan).GetConfiguredSpeed()).ToDataRes(types.Int)
+	},
+	"arista.eos.hardware.inventoryItem.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosHardwareInventoryItem).GetName()).ToDataRes(types.String)
+	},
+	"arista.eos.hardware.inventoryItem.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosHardwareInventoryItem).GetDescription()).ToDataRes(types.String)
+	},
+	"arista.eos.hardware.inventoryItem.serialNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosHardwareInventoryItem).GetSerialNumber()).ToDataRes(types.String)
+	},
+	"arista.eos.hardware.inventoryItem.manufacturerDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosHardwareInventoryItem).GetManufacturerDate()).ToDataRes(types.String)
+	},
+	"arista.eos.hardware.inventoryItem.hardwareRevision": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosHardwareInventoryItem).GetHardwareRevision()).ToDataRes(types.String)
+	},
+	"arista.eos.hardware.inventoryItem.category": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosHardwareInventoryItem).GetCategory()).ToDataRes(types.String)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -698,6 +796,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"arista.eos.acls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEos).Acls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.hardware": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEos).Hardware, ok = plugin.RawToTValue[*mqlAristaEosHardware](v.Value, v.Error)
 		return
 	},
 	"arista.eos.runningConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1264,6 +1366,122 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAristaEosAclEntry).Log, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"arista.eos.hardware.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosHardware).__id, ok = v.Value.(string)
+		return
+	},
+	"arista.eos.hardware.powerSupplies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosHardware).PowerSupplies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.hardware.fans": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosHardware).Fans, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.hardware.inventory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosHardware).Inventory, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.hardware.powerSupply.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosHardwarePowerSupply).__id, ok = v.Value.(string)
+		return
+	},
+	"arista.eos.hardware.powerSupply.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosHardwarePowerSupply).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.hardware.powerSupply.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosHardwarePowerSupply).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.hardware.powerSupply.modelName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosHardwarePowerSupply).ModelName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.hardware.powerSupply.capacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosHardwarePowerSupply).Capacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.hardware.powerSupply.outputPower": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosHardwarePowerSupply).OutputPower, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.hardware.powerSupply.inputCurrent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosHardwarePowerSupply).InputCurrent, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.hardware.powerSupply.outputCurrent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosHardwarePowerSupply).OutputCurrent, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.hardware.powerSupply.uptime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosHardwarePowerSupply).Uptime, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.hardware.powerSupply.managed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosHardwarePowerSupply).Managed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"arista.eos.hardware.powerSupply.tempSensors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosHardwarePowerSupply).TempSensors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.hardware.powerSupply.fans": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosHardwarePowerSupply).Fans, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.hardware.fan.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosHardwareFan).__id, ok = v.Value.(string)
+		return
+	},
+	"arista.eos.hardware.fan.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosHardwareFan).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.hardware.fan.trayLabel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosHardwareFan).TrayLabel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.hardware.fan.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosHardwareFan).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.hardware.fan.speed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosHardwareFan).Speed, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.hardware.fan.configuredSpeed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosHardwareFan).ConfiguredSpeed, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.hardware.inventoryItem.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosHardwareInventoryItem).__id, ok = v.Value.(string)
+		return
+	},
+	"arista.eos.hardware.inventoryItem.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosHardwareInventoryItem).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.hardware.inventoryItem.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosHardwareInventoryItem).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.hardware.inventoryItem.serialNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosHardwareInventoryItem).SerialNumber, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.hardware.inventoryItem.manufacturerDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosHardwareInventoryItem).ManufacturerDate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.hardware.inventoryItem.hardwareRevision": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosHardwareInventoryItem).HardwareRevision, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.hardware.inventoryItem.category": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosHardwareInventoryItem).Category, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -1309,6 +1527,7 @@ type mqlAristaEos struct {
 	Bgp          plugin.TValue[*mqlAristaEosBgp]
 	Mlag         plugin.TValue[*mqlAristaEosMlag]
 	Acls         plugin.TValue[[]any]
+	Hardware     plugin.TValue[*mqlAristaEosHardware]
 }
 
 // createAristaEos creates a new instance of this resource
@@ -1561,6 +1780,22 @@ func (c *mqlAristaEos) GetAcls() *plugin.TValue[[]any] {
 		}
 
 		return c.acls()
+	})
+}
+
+func (c *mqlAristaEos) GetHardware() *plugin.TValue[*mqlAristaEosHardware] {
+	return plugin.GetOrCompute[*mqlAristaEosHardware](&c.Hardware, func() (*mqlAristaEosHardware, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos", c.__id, "hardware")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAristaEosHardware), nil
+			}
+		}
+
+		return c.hardware()
 	})
 }
 
@@ -3174,4 +3409,341 @@ func (c *mqlAristaEosAclEntry) GetSrcPrefixLen() *plugin.TValue[int64] {
 
 func (c *mqlAristaEosAclEntry) GetLog() *plugin.TValue[bool] {
 	return &c.Log
+}
+
+// mqlAristaEosHardware for the arista.eos.hardware resource
+type mqlAristaEosHardware struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAristaEosHardwareInternal it will be used here
+	PowerSupplies plugin.TValue[[]any]
+	Fans          plugin.TValue[[]any]
+	Inventory     plugin.TValue[[]any]
+}
+
+// createAristaEosHardware creates a new instance of this resource
+func createAristaEosHardware(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAristaEosHardware{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("arista.eos.hardware", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAristaEosHardware) MqlName() string {
+	return "arista.eos.hardware"
+}
+
+func (c *mqlAristaEosHardware) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAristaEosHardware) GetPowerSupplies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PowerSupplies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos.hardware", c.__id, "powerSupplies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.powerSupplies()
+	})
+}
+
+func (c *mqlAristaEosHardware) GetFans() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Fans, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos.hardware", c.__id, "fans")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.fans()
+	})
+}
+
+func (c *mqlAristaEosHardware) GetInventory() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Inventory, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos.hardware", c.__id, "inventory")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.inventory()
+	})
+}
+
+// mqlAristaEosHardwarePowerSupply for the arista.eos.hardware.powerSupply resource
+type mqlAristaEosHardwarePowerSupply struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAristaEosHardwarePowerSupplyInternal it will be used here
+	Name          plugin.TValue[string]
+	State         plugin.TValue[string]
+	ModelName     plugin.TValue[string]
+	Capacity      plugin.TValue[int64]
+	OutputPower   plugin.TValue[float64]
+	InputCurrent  plugin.TValue[float64]
+	OutputCurrent plugin.TValue[float64]
+	Uptime        plugin.TValue[float64]
+	Managed       plugin.TValue[bool]
+	TempSensors   plugin.TValue[[]any]
+	Fans          plugin.TValue[[]any]
+}
+
+// createAristaEosHardwarePowerSupply creates a new instance of this resource
+func createAristaEosHardwarePowerSupply(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAristaEosHardwarePowerSupply{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("arista.eos.hardware.powerSupply", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAristaEosHardwarePowerSupply) MqlName() string {
+	return "arista.eos.hardware.powerSupply"
+}
+
+func (c *mqlAristaEosHardwarePowerSupply) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAristaEosHardwarePowerSupply) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAristaEosHardwarePowerSupply) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAristaEosHardwarePowerSupply) GetModelName() *plugin.TValue[string] {
+	return &c.ModelName
+}
+
+func (c *mqlAristaEosHardwarePowerSupply) GetCapacity() *plugin.TValue[int64] {
+	return &c.Capacity
+}
+
+func (c *mqlAristaEosHardwarePowerSupply) GetOutputPower() *plugin.TValue[float64] {
+	return &c.OutputPower
+}
+
+func (c *mqlAristaEosHardwarePowerSupply) GetInputCurrent() *plugin.TValue[float64] {
+	return &c.InputCurrent
+}
+
+func (c *mqlAristaEosHardwarePowerSupply) GetOutputCurrent() *plugin.TValue[float64] {
+	return &c.OutputCurrent
+}
+
+func (c *mqlAristaEosHardwarePowerSupply) GetUptime() *plugin.TValue[float64] {
+	return &c.Uptime
+}
+
+func (c *mqlAristaEosHardwarePowerSupply) GetManaged() *plugin.TValue[bool] {
+	return &c.Managed
+}
+
+func (c *mqlAristaEosHardwarePowerSupply) GetTempSensors() *plugin.TValue[[]any] {
+	return &c.TempSensors
+}
+
+func (c *mqlAristaEosHardwarePowerSupply) GetFans() *plugin.TValue[[]any] {
+	return &c.Fans
+}
+
+// mqlAristaEosHardwareFan for the arista.eos.hardware.fan resource
+type mqlAristaEosHardwareFan struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAristaEosHardwareFanInternal it will be used here
+	Name            plugin.TValue[string]
+	TrayLabel       plugin.TValue[string]
+	Status          plugin.TValue[string]
+	Speed           plugin.TValue[int64]
+	ConfiguredSpeed plugin.TValue[int64]
+}
+
+// createAristaEosHardwareFan creates a new instance of this resource
+func createAristaEosHardwareFan(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAristaEosHardwareFan{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("arista.eos.hardware.fan", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAristaEosHardwareFan) MqlName() string {
+	return "arista.eos.hardware.fan"
+}
+
+func (c *mqlAristaEosHardwareFan) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAristaEosHardwareFan) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAristaEosHardwareFan) GetTrayLabel() *plugin.TValue[string] {
+	return &c.TrayLabel
+}
+
+func (c *mqlAristaEosHardwareFan) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAristaEosHardwareFan) GetSpeed() *plugin.TValue[int64] {
+	return &c.Speed
+}
+
+func (c *mqlAristaEosHardwareFan) GetConfiguredSpeed() *plugin.TValue[int64] {
+	return &c.ConfiguredSpeed
+}
+
+// mqlAristaEosHardwareInventoryItem for the arista.eos.hardware.inventoryItem resource
+type mqlAristaEosHardwareInventoryItem struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAristaEosHardwareInventoryItemInternal it will be used here
+	Name             plugin.TValue[string]
+	Description      plugin.TValue[string]
+	SerialNumber     plugin.TValue[string]
+	ManufacturerDate plugin.TValue[string]
+	HardwareRevision plugin.TValue[string]
+	Category         plugin.TValue[string]
+}
+
+// createAristaEosHardwareInventoryItem creates a new instance of this resource
+func createAristaEosHardwareInventoryItem(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAristaEosHardwareInventoryItem{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("arista.eos.hardware.inventoryItem", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAristaEosHardwareInventoryItem) MqlName() string {
+	return "arista.eos.hardware.inventoryItem"
+}
+
+func (c *mqlAristaEosHardwareInventoryItem) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAristaEosHardwareInventoryItem) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAristaEosHardwareInventoryItem) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAristaEosHardwareInventoryItem) GetSerialNumber() *plugin.TValue[string] {
+	return &c.SerialNumber
+}
+
+func (c *mqlAristaEosHardwareInventoryItem) GetManufacturerDate() *plugin.TValue[string] {
+	return &c.ManufacturerDate
+}
+
+func (c *mqlAristaEosHardwareInventoryItem) GetHardwareRevision() *plugin.TValue[string] {
+	return &c.HardwareRevision
+}
+
+func (c *mqlAristaEosHardwareInventoryItem) GetCategory() *plugin.TValue[string] {
+	return &c.Category
 }

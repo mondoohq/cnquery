@@ -1,0 +1,59 @@
+{
+    "systemStatus": "coolingOk",
+    "fansStatus": "fansOk",
+    "airflowDirection": "frontToBack",
+    "currentZones": 1,
+    "configuredZones": 0,
+    "defaultZones": false,
+    "numCoolingZones": [],
+    "shutdownOnInsufficientFans": true,
+    "overrideFanSpeed": 0,
+    "minFanSpeed": 0,
+    "coolingMode": "automatic",
+    "fanTraySlots": [
+        {
+            "label": "FanTray1",
+            "status": "ok",
+            "fans": [
+                {
+                    "label": "1/1",
+                    "status": "ok",
+                    "speed": 50,
+                    "configuredSpeed": 50
+                },
+                {
+                    "label": "1/2",
+                    "status": "ok",
+                    "speed": 50,
+                    "configuredSpeed": 50
+                }
+            ]
+        },
+        {
+            "label": "FanTray2",
+            "status": "ok",
+            "fans": [
+                {
+                    "label": "2/1",
+                    "status": "ok",
+                    "speed": 45,
+                    "configuredSpeed": 50
+                }
+            ]
+        }
+    ],
+    "powerSupplySlots": [
+        {
+            "label": "PowerSupply1",
+            "status": "ok",
+            "fans": [
+                {
+                    "label": "PS1/1",
+                    "status": "ok",
+                    "speed": 33,
+                    "configuredSpeed": 0
+                }
+            ]
+        }
+    ]
+}
