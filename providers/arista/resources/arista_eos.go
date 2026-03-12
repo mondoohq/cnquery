@@ -5,8 +5,13 @@ package resources
 
 import (
 	"regexp"
+	"sort"
+	"strconv"
 	"strings"
+	"sync"
 
+	"github.com/aristanetworks/goeapi/module"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -100,6 +105,26 @@ func (a *mqlAristaEos) users() ([]any, error) {
 	}
 
 	return mqlUsers, nil
+}
+
+func (a *mqlAristaEosUser) locked() (bool, error) {
+	// A user is considered locked if they have no password and no SSH key
+	if a.Nopassword.Error != nil {
+		return false, a.Nopassword.Error
+	}
+	if a.Secret.Error != nil {
+		return false, a.Secret.Error
+	}
+	if a.Sshkey.Error != nil {
+		return false, a.Sshkey.Error
+	}
+
+	hasNoPassword := a.Nopassword.Data == "nopassword"
+	hasSecret := a.Secret.Data != ""
+	hasSSHKey := a.Sshkey.Data != ""
+
+	// User is locked if they explicitly have nopassword and no SSH key
+	return hasNoPassword && !hasSecret && !hasSSHKey, nil
 }
 
 func (a *mqlAristaEos) roles() ([]any, error) {
@@ -314,6 +339,42 @@ func (a *mqlAristaEosInterface) status() (map[string]any, error) {
 	return convert.JsonToDict(entry)
 }
 
+func (a *mqlAristaEosInterface) enabled() (bool, error) {
+	if a.InterfaceStatus.Error != nil {
+		return false, a.InterfaceStatus.Error
+	}
+	// Interface is enabled if status is not "disabled"
+	return a.InterfaceStatus.Data != "disabled", nil
+}
+
+func (a *mqlAristaEosInterface) duplex() (string, error) {
+	tv := a.GetStatus()
+	if tv.Error != nil {
+		return "", tv.Error
+	}
+	if tv.Data == nil {
+		return "", nil
+	}
+	if duplex, ok := tv.Data.(map[string]any)["duplex"].(string); ok {
+		return duplex, nil
+	}
+	return "", nil
+}
+
+func (a *mqlAristaEosInterface) autoNegotiate() (bool, error) {
+	tv := a.GetStatus()
+	if tv.Error != nil {
+		return false, tv.Error
+	}
+	if tv.Data == nil {
+		return false, nil
+	}
+	if autoNeg, ok := tv.Data.(map[string]any)["autoNegotiateActive"].(bool); ok {
+		return autoNeg, nil
+	}
+	return false, nil
+}
+
 func (a *mqlAristaEosStp) id() (string, error) {
 	return "arista.eos.stp", nil
 }
@@ -460,6 +521,12 @@ func (a *mqlAristaEos) vlans() ([]any, error) {
 	eosClient := aristaClient(a.MqlRuntime)
 	vlans := eosClient.Vlans()
 
+	// Fetch show vlan data for the dynamic field
+	showVlans, err := eosClient.ShowVlans()
+	if err != nil {
+		showVlans = nil
+	}
+
 	res := make([]any, 0, len(vlans))
 	for vid, vlanCfg := range vlans {
 		trunkGroups := vlanCfg.TrunkGroups()
@@ -468,11 +535,19 @@ func (a *mqlAristaEos) vlans() ([]any, error) {
 			trunkGroupsData[i] = tg
 		}
 
+		dynamic := false
+		if showVlans != nil {
+			if sv, ok := showVlans[vid]; ok {
+				dynamic = sv.Dynamic
+			}
+		}
+
 		mqlVlan, err := CreateResource(a.MqlRuntime, "arista.eos.vlan", map[string]*llx.RawData{
 			"id":          llx.StringData(vid),
 			"name":        llx.StringData(vlanCfg.Name()),
 			"state":       llx.StringData(vlanCfg.State()),
 			"trunkGroups": llx.ArrayData(trunkGroupsData, types.String),
+			"dynamic":     llx.BoolData(dynamic),
 		})
 		if err != nil {
 			return nil, err
@@ -481,6 +556,35 @@ func (a *mqlAristaEos) vlans() ([]any, error) {
 	}
 
 	return res, nil
+}
+
+func (a *mqlAristaEosVlan) interfaces() ([]any, error) {
+	eosClient := aristaClient(a.MqlRuntime)
+
+	if a.Id.Error != nil {
+		return nil, a.Id.Error
+	}
+	vlanId := a.Id.Data
+
+	showVlans, err := eosClient.ShowVlans()
+	if err != nil {
+		return nil, err
+	}
+
+	sv, ok := showVlans[vlanId]
+	if !ok {
+		return []any{}, nil
+	}
+
+	interfaces := make([]any, 0, len(sv.Interfaces))
+	for name := range sv.Interfaces {
+		interfaces = append(interfaces, name)
+	}
+	sort.Slice(interfaces, func(i, j int) bool {
+		return interfaces[i].(string) < interfaces[j].(string)
+	})
+
+	return interfaces, nil
 }
 
 func (v *mqlAristaEosRoute) id() (string, error) {
@@ -527,6 +631,19 @@ func (a *mqlAristaEos) routes() ([]any, error) {
 	return res, nil
 }
 
+func (a *mqlAristaEosRoute) active() (bool, error) {
+	// A route is considered active if it's programmed in hardware or kernel
+	if a.HardwareProgrammed.Error != nil {
+		log.Warn().Err(a.HardwareProgrammed.Error).Str("route", a.Destination.Data).Msg("could not determine hardware programming status")
+		return false, nil
+	}
+	if a.KernelProgrammed.Error != nil {
+		log.Warn().Err(a.KernelProgrammed.Error).Str("route", a.Destination.Data).Msg("could not determine kernel programming status")
+		return false, nil
+	}
+	return a.HardwareProgrammed.Data || a.KernelProgrammed.Data, nil
+}
+
 func (v *mqlAristaEosSwitchport) id() (string, error) {
 	return "arista.eos.switchport/" + v.Name.Data, v.Name.Error
 }
@@ -558,4 +675,323 @@ func (a *mqlAristaEos) switchports() ([]any, error) {
 	}
 
 	return res, nil
+}
+
+func (v *mqlAristaEosBgp) id() (string, error) {
+	return "arista.eos.bgp", nil
+}
+
+type mqlAristaEosBgpInternal struct {
+	configFetched bool
+	bgpConfig     *module.BgpConfig
+	lock          sync.Mutex
+}
+
+func (a *mqlAristaEosBgp) fetchConfig() *module.BgpConfig {
+	if a.configFetched {
+		return a.bgpConfig
+	}
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	if a.configFetched {
+		return a.bgpConfig
+	}
+	eosClient := aristaClient(a.MqlRuntime)
+	a.bgpConfig = eosClient.BGPConfig()
+	a.configFetched = true
+	return a.bgpConfig
+}
+
+func (a *mqlAristaEosBgp) enabled() (bool, error) {
+	cfg := a.fetchConfig()
+	if cfg == nil {
+		return false, nil
+	}
+	return cfg.Shutdown() != "true", nil
+}
+
+func (a *mqlAristaEosBgp) asNumber() (string, error) {
+	cfg := a.fetchConfig()
+	if cfg == nil {
+		return "", nil
+	}
+	return cfg.BgpAs(), nil
+}
+
+func (a *mqlAristaEosBgp) routerId() (string, error) {
+	cfg := a.fetchConfig()
+	if cfg == nil {
+		return "", nil
+	}
+	return cfg.RouterID(), nil
+}
+
+func (a *mqlAristaEos) bgp() (*mqlAristaEosBgp, error) {
+	res, err := CreateResource(a.MqlRuntime, "arista.eos.bgp", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAristaEosBgp), nil
+}
+
+func (a *mqlAristaEosBgp) vrfs() ([]any, error) {
+	eosClient := aristaClient(a.MqlRuntime)
+
+	summary, err := eosClient.BGPSummary()
+	if err != nil {
+		return nil, err
+	}
+
+	// Fetch neighbor details once for all VRFs
+	neighbors, err := eosClient.BGPNeighbors()
+	if err != nil {
+		neighbors = nil
+	}
+
+	res := []any{}
+	for vrfName, vrfData := range summary.VRFs {
+		// Build peers for this VRF
+		peers := []any{}
+		for peerAddr, peerData := range vrfData.Peers {
+			var description, inRouteMap, outRouteMap string
+			if neighbors != nil {
+				if vrfNeighbors, ok := neighbors.VRFs[vrfName]; ok {
+					for _, neighbor := range vrfNeighbors.PeerList {
+						if neighbor.PeerAddress == peerAddr {
+							description = neighbor.Description
+							inRouteMap = neighbor.InboundRouteMap
+							outRouteMap = neighbor.OutboundRouteMap
+							break
+						}
+					}
+				}
+			}
+
+			mqlPeer, err := CreateResource(a.MqlRuntime, "arista.eos.bgp.peer", map[string]*llx.RawData{
+				"vrfName":          llx.StringData(vrfName),
+				"peerAddress":      llx.StringData(peerAddr),
+				"remoteAs":         llx.StringData(peerData.ASN),
+				"state":            llx.StringData(peerData.PeerState),
+				"uptime":           llx.IntData(int64(peerData.UpDownTime)), // EOS reports uptime in whole seconds; sub-second precision is not meaningful
+				"prefixesReceived": llx.IntData(peerData.PrefixReceived),
+				"prefixesAccepted": llx.IntData(peerData.PrefixAccepted),
+				"inboundRouteMap":  llx.StringData(inRouteMap),
+				"outboundRouteMap": llx.StringData(outRouteMap),
+				"description":      llx.StringData(description),
+			})
+			if err != nil {
+				return nil, err
+			}
+			peers = append(peers, mqlPeer)
+		}
+
+		mqlVrf, err := CreateResource(a.MqlRuntime, "arista.eos.bgp.vrf", map[string]*llx.RawData{
+			"name":     llx.StringData(vrfName),
+			"routerId": llx.StringData(vrfData.RouterID),
+			"asNumber": llx.StringData(strconv.FormatInt(vrfData.ASN, 10)),
+			"peers":    llx.ArrayData(peers, types.Resource("arista.eos.bgp.peer")),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlVrf)
+	}
+
+	return res, nil
+}
+
+func (v *mqlAristaEosBgpVrf) id() (string, error) {
+	return "arista.eos.bgp.vrf/" + v.Name.Data, v.Name.Error
+}
+
+func (v *mqlAristaEosBgpPeer) id() (string, error) {
+	if v.VrfName.Error != nil {
+		return "", v.VrfName.Error
+	}
+	return "arista.eos.bgp.peer/" + v.VrfName.Data + "/" + v.PeerAddress.Data, v.PeerAddress.Error
+}
+
+// MLAG resource implementations
+
+func (v *mqlAristaEosMlag) id() (string, error) {
+	return "arista.eos.mlag", nil
+}
+
+type mqlAristaEosMlagInternal struct {
+	configFetched bool
+	mlagConfig    *module.MlagConfig
+	lock          sync.Mutex
+}
+
+func (a *mqlAristaEosMlag) fetchConfig() *module.MlagConfig {
+	if a.configFetched {
+		return a.mlagConfig
+	}
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	if a.configFetched {
+		return a.mlagConfig
+	}
+	eosClient := aristaClient(a.MqlRuntime)
+	a.mlagConfig = eosClient.MlagConfig()
+	a.configFetched = true
+	return a.mlagConfig
+}
+
+func (a *mqlAristaEosMlag) domainId() (string, error) {
+	cfg := a.fetchConfig()
+	if cfg == nil {
+		return "", nil
+	}
+	return cfg.DomainID(), nil
+}
+
+func (a *mqlAristaEosMlag) localInterface() (string, error) {
+	cfg := a.fetchConfig()
+	if cfg == nil {
+		return "", nil
+	}
+	return cfg.LocalInterface(), nil
+}
+
+func (a *mqlAristaEosMlag) peerAddress() (string, error) {
+	cfg := a.fetchConfig()
+	if cfg == nil {
+		return "", nil
+	}
+	return cfg.PeerAddress(), nil
+}
+
+func (a *mqlAristaEosMlag) peerLink() (string, error) {
+	cfg := a.fetchConfig()
+	if cfg == nil {
+		return "", nil
+	}
+	return cfg.PeerLink(), nil
+}
+
+func (a *mqlAristaEosMlag) shutdown() (bool, error) {
+	cfg := a.fetchConfig()
+	if cfg == nil {
+		return false, nil
+	}
+	return cfg.Shutdown() == "true", nil
+}
+
+func (a *mqlAristaEos) mlag() (*mqlAristaEosMlag, error) {
+	res, err := CreateResource(a.MqlRuntime, "arista.eos.mlag", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAristaEosMlag), nil
+}
+
+func (a *mqlAristaEosMlag) interfaces() ([]any, error) {
+	eosClient := aristaClient(a.MqlRuntime)
+	mlagConfig := eosClient.MlagConfig()
+
+	if mlagConfig == nil {
+		return []any{}, nil
+	}
+
+	// Get the running config and parse MLAG interface mappings
+	runningConfig := eosClient.RunningConfig()
+	mlagInterfaces := eos.ParseMlagInterfaces(runningConfig)
+
+	res := make([]any, 0, len(mlagInterfaces))
+	for _, intf := range mlagInterfaces {
+		mqlIntf, err := CreateResource(a.MqlRuntime, "arista.eos.mlag.interface", map[string]*llx.RawData{
+			"name":   llx.StringData(intf.Name),
+			"mlagId": llx.StringData(intf.MlagID),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlIntf)
+	}
+
+	return res, nil
+}
+
+func (v *mqlAristaEosMlagInterface) id() (string, error) {
+	return "arista.eos.mlag.interface/" + v.Name.Data, v.Name.Error
+}
+
+// ACL resource implementations
+
+func (v *mqlAristaEosAcl) id() (string, error) {
+	return "arista.eos.acl/" + v.Name.Data, v.Name.Error
+}
+
+func (a *mqlAristaEos) acls() ([]any, error) {
+	eosClient := aristaClient(a.MqlRuntime)
+	aclConfigs := eosClient.AclConfigs()
+
+	res := []any{}
+	for name, aclConfig := range aclConfigs {
+		mqlAcl, err := CreateResource(a.MqlRuntime, "arista.eos.acl", map[string]*llx.RawData{
+			"name": llx.StringData(name),
+			"type": llx.StringData(aclConfig.Type()),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlAcl)
+	}
+
+	return res, nil
+}
+
+func (a *mqlAristaEosAcl) entries() ([]any, error) {
+	eosClient := aristaClient(a.MqlRuntime)
+	aclConfigs := eosClient.AclConfigs()
+
+	if a.Name.Error != nil {
+		return nil, a.Name.Error
+	}
+	aclName := a.Name.Data
+
+	aclConfig, ok := aclConfigs[aclName]
+	if !ok {
+		return []any{}, nil
+	}
+
+	rawEntries := aclConfig.Entries()
+
+	// Parse and sort entries by sequence number
+	parsed := make([]eos.AclEntryParsed, 0, len(rawEntries))
+	for seqNum, entry := range rawEntries {
+		p, err := eos.ParseAclEntry(seqNum, entry.Action(), entry.SrcAddr(), entry.SrcLen(), entry.Log())
+		if err != nil {
+			log.Warn().Err(err).Str("acl", aclName).Msg("skipping invalid ACL entry")
+			continue
+		}
+		parsed = append(parsed, p)
+	}
+	eos.SortAclEntries(parsed)
+
+	res := make([]any, 0, len(parsed))
+	for _, p := range parsed {
+		mqlEntry, err := CreateResource(a.MqlRuntime, "arista.eos.acl.entry", map[string]*llx.RawData{
+			"aclName":        llx.StringData(aclName),
+			"sequenceNumber": llx.IntData(int64(p.SequenceNumber)),
+			"action":         llx.StringData(p.Action),
+			"srcAddress":     llx.StringData(p.SrcAddress),
+			"srcPrefixLen":   llx.IntData(int64(p.SrcPrefixLen)),
+			"log":            llx.BoolData(p.Log),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlEntry)
+	}
+
+	return res, nil
+}
+
+func (v *mqlAristaEosAclEntry) id() (string, error) {
+	if v.AclName.Error != nil {
+		return "", v.AclName.Error
+	}
+	return "arista.eos.acl.entry/" + v.AclName.Data + "/" + strconv.FormatInt(v.SequenceNumber.Data, 10), v.SequenceNumber.Error
 }
