@@ -688,8 +688,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"arista.eos.hardware.fan.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosHardwareFan).GetName()).ToDataRes(types.String)
 	},
-	"arista.eos.hardware.fan.label": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAristaEosHardwareFan).GetLabel()).ToDataRes(types.String)
+	"arista.eos.hardware.fan.trayLabel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosHardwareFan).GetTrayLabel()).ToDataRes(types.String)
 	},
 	"arista.eos.hardware.fan.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosHardwareFan).GetStatus()).ToDataRes(types.String)
@@ -714,6 +714,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"arista.eos.hardware.inventoryItem.hardwareRevision": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosHardwareInventoryItem).GetHardwareRevision()).ToDataRes(types.String)
+	},
+	"arista.eos.hardware.inventoryItem.category": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosHardwareInventoryItem).GetCategory()).ToDataRes(types.String)
 	},
 }
 
@@ -1435,8 +1438,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAristaEosHardwareFan).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"arista.eos.hardware.fan.label": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAristaEosHardwareFan).Label, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"arista.eos.hardware.fan.trayLabel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosHardwareFan).TrayLabel, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"arista.eos.hardware.fan.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1473,6 +1476,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"arista.eos.hardware.inventoryItem.hardwareRevision": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosHardwareInventoryItem).HardwareRevision, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.hardware.inventoryItem.category": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosHardwareInventoryItem).Category, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -3604,7 +3611,7 @@ type mqlAristaEosHardwareFan struct {
 	__id       string
 	// optional: if you define mqlAristaEosHardwareFanInternal it will be used here
 	Name            plugin.TValue[string]
-	Label           plugin.TValue[string]
+	TrayLabel       plugin.TValue[string]
 	Status          plugin.TValue[string]
 	Speed           plugin.TValue[int64]
 	ConfiguredSpeed plugin.TValue[int64]
@@ -3651,8 +3658,8 @@ func (c *mqlAristaEosHardwareFan) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlAristaEosHardwareFan) GetLabel() *plugin.TValue[string] {
-	return &c.Label
+func (c *mqlAristaEosHardwareFan) GetTrayLabel() *plugin.TValue[string] {
+	return &c.TrayLabel
 }
 
 func (c *mqlAristaEosHardwareFan) GetStatus() *plugin.TValue[string] {
@@ -3677,6 +3684,7 @@ type mqlAristaEosHardwareInventoryItem struct {
 	SerialNumber     plugin.TValue[string]
 	ManufacturerDate plugin.TValue[string]
 	HardwareRevision plugin.TValue[string]
+	Category         plugin.TValue[string]
 }
 
 // createAristaEosHardwareInventoryItem creates a new instance of this resource
@@ -3734,4 +3742,8 @@ func (c *mqlAristaEosHardwareInventoryItem) GetManufacturerDate() *plugin.TValue
 
 func (c *mqlAristaEosHardwareInventoryItem) GetHardwareRevision() *plugin.TValue[string] {
 	return &c.HardwareRevision
+}
+
+func (c *mqlAristaEosHardwareInventoryItem) GetCategory() *plugin.TValue[string] {
+	return &c.Category
 }

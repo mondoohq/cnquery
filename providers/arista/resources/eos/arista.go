@@ -412,12 +412,12 @@ func (s *showEnvironmentPower) GetCmd() string {
 
 // PowerSupply represents a single power supply unit
 type PowerSupply struct {
-	OutputPower   float64 `json:"outputPower"`
-	State         string  `json:"state"`
-	ModelName     string  `json:"modelName"`
-	Capacity      int     `json:"capacity"`
-	InputCurrent  float64 `json:"inputCurrent"`
-	TempSensors   map[string]struct {
+	OutputPower  float64 `json:"outputPower"`
+	State        string  `json:"state"`
+	ModelName    string  `json:"modelName"`
+	Capacity     int     `json:"capacity"`
+	InputCurrent float64 `json:"inputCurrent"`
+	TempSensors  map[string]struct {
 		Status      string `json:"status"`
 		Temperature int    `json:"temperature"`
 	} `json:"tempSensors"`
@@ -454,10 +454,10 @@ func (eos *Eos) ShowEnvironmentPower() (*showEnvironmentPower, error) {
 
 // showEnvironmentCooling represents the response from "show system environment cooling"
 type showEnvironmentCooling struct {
-	SystemStatus   string         `json:"systemStatus"`
-	FanTraySlots   []FanTraySlot  `json:"fanTraySlots"`
-	AirflowDirection string       `json:"airflowDirection"`
-	CoolingMode    string         `json:"coolingMode"`
+	SystemStatus     string        `json:"systemStatus"`
+	FanTraySlots     []FanTraySlot `json:"fanTraySlots"`
+	AirflowDirection string        `json:"airflowDirection"`
+	CoolingMode      string        `json:"coolingMode"`
 }
 
 func (s *showEnvironmentCooling) GetCmd() string {

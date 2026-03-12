@@ -39,13 +39,14 @@ arista.eos.fqdn 9.0.0
 arista.eos.hardware 13.0.1
 arista.eos.hardware.fan 13.0.1
 arista.eos.hardware.fan.configuredSpeed 13.0.1
-arista.eos.hardware.fan.label 13.0.1
 arista.eos.hardware.fan.name 13.0.1
 arista.eos.hardware.fan.speed 13.0.1
 arista.eos.hardware.fan.status 13.0.1
+arista.eos.hardware.fan.trayLabel 13.0.1
 arista.eos.hardware.fans 13.0.1
 arista.eos.hardware.inventory 13.0.1
 arista.eos.hardware.inventoryItem 13.0.1
+arista.eos.hardware.inventoryItem.category 13.0.1
 arista.eos.hardware.inventoryItem.description 13.0.1
 arista.eos.hardware.inventoryItem.hardwareRevision 13.0.1
 arista.eos.hardware.inventoryItem.manufacturerDate 13.0.1

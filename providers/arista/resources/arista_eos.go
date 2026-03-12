@@ -1078,8 +1078,8 @@ func (a *mqlAristaEosHardware) fans() ([]any, error) {
 	for _, tray := range cooling.FanTraySlots {
 		for _, fan := range tray.Fans {
 			mqlFan, err := CreateResource(a.MqlRuntime, "arista.eos.hardware.fan", map[string]*llx.RawData{
-				"name":            llx.StringData(fan.Label),
-				"label":           llx.StringData(tray.Label),
+				"name":            llx.StringData(tray.Label + "/" + fan.Label),
+				"trayLabel":       llx.StringData(tray.Label),
 				"status":          llx.StringData(fan.Status),
 				"speed":           llx.IntData(int64(fan.Speed)),
 				"configuredSpeed": llx.IntData(int64(fan.ConfiguredSpeed)),
@@ -1116,6 +1116,7 @@ func (a *mqlAristaEosHardware) inventory() ([]any, error) {
 			"serialNumber":     llx.StringData(inv.SystemInformation.SerialNum),
 			"manufacturerDate": llx.StringData(inv.SystemInformation.MfgDate),
 			"hardwareRevision": llx.StringData(inv.SystemInformation.HardwareRev),
+			"category":         llx.StringData("system"),
 		})
 		if err != nil {
 			return nil, err
@@ -1124,14 +1125,18 @@ func (a *mqlAristaEosHardware) inventory() ([]any, error) {
 	}
 
 	// Add all hardware slots (PSUs, fan trays, transceivers, line cards)
-	slotMaps := []map[string]eos.InventoryEntry{
-		inv.PowerSupplySlots,
-		inv.FanTraySlots,
-		inv.XcvrSlots,
-		inv.CardSlots,
+	type slotCategory struct {
+		slots    map[string]eos.InventoryEntry
+		category string
 	}
-	for _, slots := range slotMaps {
-		for slotName, entry := range slots {
+	slotMaps := []slotCategory{
+		{inv.PowerSupplySlots, "powerSupply"},
+		{inv.FanTraySlots, "fanTray"},
+		{inv.XcvrSlots, "transceiver"},
+		{inv.CardSlots, "card"},
+	}
+	for _, sc := range slotMaps {
+		for slotName, entry := range sc.slots {
 			name := entry.Name
 			if name == "" {
 				name = slotName
@@ -1142,6 +1147,7 @@ func (a *mqlAristaEosHardware) inventory() ([]any, error) {
 				"serialNumber":     llx.StringData(entry.SerialNum),
 				"manufacturerDate": llx.StringData(entry.MfgDate),
 				"hardwareRevision": llx.StringData(entry.HardwareRev),
+				"category":         llx.StringData(sc.category),
 			})
 			if err != nil {
 				return nil, err
@@ -1154,8 +1160,11 @@ func (a *mqlAristaEosHardware) inventory() ([]any, error) {
 }
 
 func (v *mqlAristaEosHardwareInventoryItem) id() (string, error) {
+	if v.Category.Error != nil {
+		return "", v.Category.Error
+	}
 	if v.SerialNumber.Error != nil {
 		return "", v.SerialNumber.Error
 	}
-	return "arista.eos.hardware.inventoryItem/" + v.Name.Data + "/" + v.SerialNumber.Data, v.Name.Error
+	return "arista.eos.hardware.inventoryItem/" + v.Category.Data + "/" + v.Name.Data + "/" + v.SerialNumber.Data, v.Name.Error
 }

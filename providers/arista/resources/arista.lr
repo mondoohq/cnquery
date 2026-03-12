@@ -403,10 +403,10 @@ private arista.eos.hardware.powerSupply @defaults("name state modelName") {
 
 // Arista EOS cooling fan
 private arista.eos.hardware.fan @defaults("name status speed") {
-  // Fan identifier (e.g., "1/1", "2/1")
+  // Tray-qualified fan identifier (e.g., "FanTray1/1/1")
   name string
-  // Fan label
-  label string
+  // Fan tray label (e.g., "FanTray1", "FanTray2")
+  trayLabel string
   // Operational status (ok, down, notInserted, etc.)
   status string
   // Current speed percentage
@@ -427,4 +427,6 @@ private arista.eos.hardware.inventoryItem @defaults("name description serialNumb
   manufacturerDate string
   // Hardware revision
   hardwareRevision string
+  // Inventory category (system, powerSupply, fanTray, transceiver, card)
+  category string
 }
