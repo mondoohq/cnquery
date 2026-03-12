@@ -122,7 +122,7 @@ func newMqlAwsGlueCrawler(runtime *plugin.Runtime, region string, accountID stri
 	return resource.(*mqlAwsGlueCrawler), nil
 }
 
-func (a *mqlAwsGlueCrawler) tags() (map[string]interface{}, error) {
+func (a *mqlAwsGlueCrawler) tags() (map[string]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.Glue(a.Region.Data)
 	ctx := context.Background()
@@ -243,7 +243,7 @@ func newMqlAwsGlueJob(runtime *plugin.Runtime, region string, accountID string, 
 	return resource.(*mqlAwsGlueJob), nil
 }
 
-func (a *mqlAwsGlueJob) tags() (map[string]interface{}, error) {
+func (a *mqlAwsGlueJob) tags() (map[string]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.Glue(a.Region.Data)
 	ctx := context.Background()
@@ -321,7 +321,7 @@ func (a *mqlAwsGlue) getSecurityConfigurations(conn *connection.AwsConnection) [
 func newMqlAwsGlueSecurityConfiguration(runtime *plugin.Runtime, region string, accountID string, secConf glue_types.SecurityConfiguration) (*mqlAwsGlueSecurityConfiguration, error) {
 	id := fmt.Sprintf("arn:aws:glue:%s:%s:security-configuration/%s", region, accountID, convert.ToValue(secConf.Name))
 
-	var s3Enc, cwEnc, jbEnc interface{}
+	var s3Enc, cwEnc, jbEnc any
 	if secConf.EncryptionConfiguration != nil {
 		var err error
 		if len(secConf.EncryptionConfiguration.S3Encryption) > 0 {
@@ -416,7 +416,7 @@ func (a *mqlAwsGlue) getDatabases(conn *connection.AwsConnection) []*jobpool.Job
 func newMqlAwsGlueDatabase(runtime *plugin.Runtime, region string, db glue_types.Database) (*mqlAwsGlueDatabase, error) {
 	id := fmt.Sprintf("glue/database/%s/%s/%s", region, convert.ToValue(db.CatalogId), convert.ToValue(db.Name))
 
-	var params map[string]interface{}
+	var params map[string]any
 	if db.Parameters != nil {
 		params = toInterfaceMap(db.Parameters)
 	}
@@ -476,7 +476,7 @@ func newMqlAwsGlueDatabaseTable(runtime *plugin.Runtime, region string, table gl
 		return nil, err
 	}
 
-	var params map[string]interface{}
+	var params map[string]any
 	if table.Parameters != nil {
 		params = toInterfaceMap(table.Parameters)
 	}
@@ -664,7 +664,7 @@ func newMqlAwsGlueWorkflow(runtime *plugin.Runtime, region string, accountID str
 	return resource.(*mqlAwsGlueWorkflow), nil
 }
 
-func (a *mqlAwsGlueWorkflow) tags() (map[string]interface{}, error) {
+func (a *mqlAwsGlueWorkflow) tags() (map[string]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.Glue(a.Region.Data)
 	ctx := context.Background()

@@ -125,7 +125,7 @@ func (a *mqlAwsDrs) createSourceServerResource(server drstypes.SourceServer, reg
 		return nil, err
 	}
 
-	tags := make(map[string]interface{})
+	tags := make(map[string]any)
 	for k, v := range server.Tags {
 		tags[k] = v
 	}
@@ -168,12 +168,12 @@ func (a *mqlAwsDrsSourceServer) replicationConfiguration() (*mqlAwsDrsReplicatio
 		return nil, err
 	}
 
-	stagingAreaTags := make(map[string]interface{})
+	stagingAreaTags := make(map[string]any)
 	for k, v := range resp.StagingAreaTags {
 		stagingAreaTags[k] = v
 	}
 
-	replicatedDisks := make([]interface{}, 0, len(resp.ReplicatedDisks))
+	replicatedDisks := make([]any, 0, len(resp.ReplicatedDisks))
 	for _, disk := range resp.ReplicatedDisks {
 		diskMap, err := convert.JsonToDict(disk)
 		if err != nil {
@@ -312,7 +312,7 @@ func (a *mqlAwsDrs) getJobs(conn *connection.AwsConnection) []*jobpool.Job {
 }
 
 func (a *mqlAwsDrs) createJobResource(job drstypes.Job, region string) (*mqlAwsDrsJob, error) {
-	participatingServers := make([]interface{}, 0, len(job.ParticipatingServers))
+	participatingServers := make([]any, 0, len(job.ParticipatingServers))
 	for _, server := range job.ParticipatingServers {
 		serverMap, err := convert.JsonToDict(server)
 		if err != nil {

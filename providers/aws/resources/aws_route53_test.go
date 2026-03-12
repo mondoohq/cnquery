@@ -96,7 +96,7 @@ func TestNewMqlAwsRoute53Record(t *testing.T) {
 		assert.Equal(t, "/hostedzone/Z123", record.HostedZoneId.Data)
 		assert.False(t, record.IsAlias.Data)
 		assert.Empty(t, record.AliasTargetDnsName.Data)
-		assert.Equal(t, []interface{}{"192.0.2.1", "192.0.2.2"}, record.resourceRecordsCache)
+		assert.Equal(t, []any{"192.0.2.1", "192.0.2.2"}, record.resourceRecordsCache)
 		assert.Nil(t, record.aliasTargetCache)
 		assert.Nil(t, record.geoLocationCache)
 		assert.Nil(t, record.geoProximityLocationCache)
@@ -121,7 +121,7 @@ func TestNewMqlAwsRoute53Record(t *testing.T) {
 		assert.Equal(t, "d123.cloudfront.net", record.AliasTargetDnsName.Data)
 		assert.Equal(t, "Z2FDTNDATAQYW2", record.AliasTargetHostedZoneId.Data)
 		assert.True(t, record.AliasEvaluateTargetHealth.Data)
-		assert.Equal(t, map[string]interface{}{
+		assert.Equal(t, map[string]any{
 			"dnsName":              "d123.cloudfront.net",
 			"hostedZoneId":         "Z2FDTNDATAQYW2",
 			"evaluateTargetHealth": true,
@@ -165,7 +165,7 @@ func TestNewMqlAwsRoute53Record(t *testing.T) {
 		record, err := newMqlAwsRoute53Record(runtime, "/hostedzone/Z123", rrs)
 		require.NoError(t, err)
 
-		assert.Equal(t, map[string]interface{}{
+		assert.Equal(t, map[string]any{
 			"continentCode":   "EU",
 			"countryCode":     "DE",
 			"subdivisionCode": "",
@@ -213,7 +213,7 @@ func TestNewMqlAwsRoute53Record(t *testing.T) {
 		record, err := newMqlAwsRoute53Record(runtime, "/hostedzone/Z123", rrs)
 		require.NoError(t, err)
 
-		assert.Equal(t, map[string]interface{}{
+		assert.Equal(t, map[string]any{
 			"collectionId": "col-123",
 			"locationName": "us-east-1",
 		}, record.cidrRoutingConfigCache)
@@ -283,7 +283,7 @@ func TestNewMqlAwsRoute53HealthCheck(t *testing.T) {
 				},
 			},
 		}
-		tags := map[string]interface{}{"Name": "test-hc"}
+		tags := map[string]any{"Name": "test-hc"}
 
 		mqlHc, err := newMqlAwsRoute53HealthCheck(runtime, hc, tags)
 		require.NoError(t, err)
@@ -302,7 +302,7 @@ func TestNewMqlAwsRoute53HealthCheck(t *testing.T) {
 		assert.True(t, mqlHc.MeasureLatency.Data)
 		assert.False(t, mqlHc.EnableSNI.Data)
 		assert.Equal(t, "ref-abc", mqlHc.CallerReference.Data)
-		assert.Equal(t, []interface{}{"us-east-1", "eu-west-1"}, mqlHc.regionsCache)
+		assert.Equal(t, []any{"us-east-1", "eu-west-1"}, mqlHc.regionsCache)
 		assert.Empty(t, mqlHc.childHealthChecksCache)
 		assert.Nil(t, mqlHc.cloudWatchAlarmConfigCache)
 	})
@@ -318,13 +318,13 @@ func TestNewMqlAwsRoute53HealthCheck(t *testing.T) {
 			},
 		}
 
-		mqlHc, err := newMqlAwsRoute53HealthCheck(runtime, hc, map[string]interface{}{})
+		mqlHc, err := newMqlAwsRoute53HealthCheck(runtime, hc, map[string]any{})
 		require.NoError(t, err)
 
 		assert.Equal(t, "CALCULATED", mqlHc.Type.Data)
 		assert.Equal(t, "", mqlHc.Protocol.Data)
 		assert.Equal(t, int64(2), mqlHc.HealthThreshold.Data)
-		assert.Equal(t, []interface{}{"hc-child1", "hc-child2", "hc-child3"}, mqlHc.childHealthChecksCache)
+		assert.Equal(t, []any{"hc-child1", "hc-child2", "hc-child3"}, mqlHc.childHealthChecksCache)
 	})
 
 	t.Run("health check with CloudWatch alarm", func(t *testing.T) {
@@ -348,7 +348,7 @@ func TestNewMqlAwsRoute53HealthCheck(t *testing.T) {
 			},
 		}
 
-		mqlHc, err := newMqlAwsRoute53HealthCheck(runtime, hc, map[string]interface{}{})
+		mqlHc, err := newMqlAwsRoute53HealthCheck(runtime, hc, map[string]any{})
 		require.NoError(t, err)
 
 		require.NotNil(t, mqlHc.cloudWatchAlarmConfigCache)
@@ -360,9 +360,9 @@ func TestNewMqlAwsRoute53HealthCheck(t *testing.T) {
 		assert.Equal(t, int64(60), mqlHc.cloudWatchAlarmConfigCache["period"])
 		assert.Equal(t, 0.5, mqlHc.cloudWatchAlarmConfigCache["threshold"])
 
-		dims := mqlHc.cloudWatchAlarmConfigCache["dimensions"].([]interface{})
+		dims := mqlHc.cloudWatchAlarmConfigCache["dimensions"].([]any)
 		require.Len(t, dims, 1)
-		dim := dims[0].(map[string]interface{})
+		dim := dims[0].(map[string]any)
 		assert.Equal(t, "HealthCheckId", dim["name"])
 		assert.Equal(t, "hc-cw", dim["value"])
 	})
@@ -373,7 +373,7 @@ func TestNewMqlAwsRoute53HealthCheck(t *testing.T) {
 			HealthCheckConfig: nil,
 		}
 
-		_, err := newMqlAwsRoute53HealthCheck(runtime, hc, map[string]interface{}{})
+		_, err := newMqlAwsRoute53HealthCheck(runtime, hc, map[string]any{})
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "health check config is nil")
 	})
@@ -387,7 +387,7 @@ func TestNewMqlAwsRoute53HealthCheck(t *testing.T) {
 			},
 		}
 
-		mqlHc, err := newMqlAwsRoute53HealthCheck(runtime, hc, map[string]interface{}{})
+		mqlHc, err := newMqlAwsRoute53HealthCheck(runtime, hc, map[string]any{})
 		require.NoError(t, err)
 
 		assert.Equal(t, int64(0), mqlHc.Port.Data)

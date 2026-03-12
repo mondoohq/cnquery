@@ -716,11 +716,11 @@ func newMqlAwsPendingMaintenanceAction(runtime *plugin.Runtime, resourceArn stri
 	return res.(*mqlAwsRdsPendingMaintenanceAction), nil
 }
 
-func masterUserSecretToDict(secret *rds_types.MasterUserSecret) interface{} {
+func masterUserSecretToDict(secret *rds_types.MasterUserSecret) any {
 	if secret == nil {
 		return nil
 	}
-	result := map[string]interface{}{}
+	result := map[string]any{}
 	if secret.SecretArn != nil {
 		result["secretArn"] = *secret.SecretArn
 	}
@@ -1354,7 +1354,7 @@ func (a *mqlAwsRdsProxy) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func (a *mqlAwsRdsProxy) tags() (map[string]interface{}, error) {
+func (a *mqlAwsRdsProxy) tags() (map[string]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.Rds(a.Region.Data)
 	ctx := context.Background()

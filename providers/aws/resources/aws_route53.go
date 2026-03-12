@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -26,7 +27,7 @@ func (a *mqlAwsRoute53) id() (string, error) {
 	return "aws.route53", nil
 }
 
-func (a *mqlAwsRoute53) hostedZones() ([]interface{}, error) {
+func (a *mqlAwsRoute53) hostedZones() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	ctx := context.Background()
 	svc := conn.Route53("")
@@ -39,7 +40,7 @@ func (a *mqlAwsRoute53) hostedZones() ([]interface{}, error) {
 		if err != nil {
 			if Is400AccessDeniedError(err) {
 				log.Warn().Msg("error accessing Route 53 API")
-				return []interface{}{}, nil
+				return []any{}, nil
 			}
 			return nil, err
 		}
@@ -51,7 +52,7 @@ func (a *mqlAwsRoute53) hostedZones() ([]interface{}, error) {
 		return convert.ToValue(hz.Id)
 	})
 
-	res := []interface{}{}
+	res := []any{}
 	for _, hz := range allZones {
 		tags := tagsByID[convert.ToValue(hz.Id)]
 
@@ -64,7 +65,7 @@ func (a *mqlAwsRoute53) hostedZones() ([]interface{}, error) {
 		zoneType := "PUBLIC"
 		isPrivate := false
 		comment := ""
-		config := make(map[string]interface{})
+		config := make(map[string]any)
 
 		if hz.Config != nil {
 			if hz.Config.PrivateZone {
@@ -104,7 +105,7 @@ func (a *mqlAwsRoute53) hostedZones() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsRoute53) healthChecks() ([]interface{}, error) {
+func (a *mqlAwsRoute53) healthChecks() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	ctx := context.Background()
 	svc := conn.Route53("")
@@ -117,7 +118,7 @@ func (a *mqlAwsRoute53) healthChecks() ([]interface{}, error) {
 		if err != nil {
 			if Is400AccessDeniedError(err) {
 				log.Warn().Msg("error accessing Route 53 health checks")
-				return []interface{}{}, nil
+				return []any{}, nil
 			}
 			return nil, err
 		}
@@ -129,7 +130,7 @@ func (a *mqlAwsRoute53) healthChecks() ([]interface{}, error) {
 		return convert.ToValue(hc.Id)
 	})
 
-	res := []interface{}{}
+	res := []any{}
 	for _, hc := range allChecks {
 		tags := tagsByID[convert.ToValue(hc.Id)]
 
@@ -147,11 +148,11 @@ func (a *mqlAwsRoute53) healthChecks() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsRoute53) queryLoggingConfigs() ([]interface{}, error) {
+func (a *mqlAwsRoute53) queryLoggingConfigs() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	ctx := context.Background()
 	svc := conn.Route53("")
-	res := []interface{}{}
+	res := []any{}
 
 	paginator := route53.NewListQueryLoggingConfigsPaginator(svc, &route53.ListQueryLoggingConfigsInput{})
 	for paginator.HasMorePages() {
@@ -283,7 +284,7 @@ func (a *mqlAwsRoute53HostedZone) getDNSSEC() (*route53.GetDNSSECOutput, error) 
 	return resp, nil
 }
 
-func (a *mqlAwsRoute53HostedZone) vpcs() ([]interface{}, error) {
+func (a *mqlAwsRoute53HostedZone) vpcs() ([]any, error) {
 	resp, err := a.getHostedZone()
 	if err != nil {
 		return nil, err
@@ -292,9 +293,9 @@ func (a *mqlAwsRoute53HostedZone) vpcs() ([]interface{}, error) {
 		return nil, nil
 	}
 
-	vpcs := []interface{}{}
+	vpcs := []any{}
 	for _, vpc := range resp.VPCs {
-		vpcs = append(vpcs, map[string]interface{}{
+		vpcs = append(vpcs, map[string]any{
 			"vpcId":     convert.ToValue(vpc.VPCId),
 			"vpcRegion": string(vpc.VPCRegion),
 		})
@@ -302,7 +303,7 @@ func (a *mqlAwsRoute53HostedZone) vpcs() ([]interface{}, error) {
 	return vpcs, nil
 }
 
-func (a *mqlAwsRoute53HostedZone) nameServers() ([]interface{}, error) {
+func (a *mqlAwsRoute53HostedZone) nameServers() ([]any, error) {
 	resp, err := a.getHostedZone()
 	if err != nil {
 		return nil, err
@@ -311,7 +312,7 @@ func (a *mqlAwsRoute53HostedZone) nameServers() ([]interface{}, error) {
 		return nil, nil
 	}
 
-	nameServers := []interface{}{}
+	nameServers := []any{}
 	if resp.DelegationSet != nil {
 		for _, ns := range resp.DelegationSet.NameServers {
 			nameServers = append(nameServers, ns)
@@ -320,12 +321,12 @@ func (a *mqlAwsRoute53HostedZone) nameServers() ([]interface{}, error) {
 	return nameServers, nil
 }
 
-func (a *mqlAwsRoute53HostedZone) records() ([]interface{}, error) {
+func (a *mqlAwsRoute53HostedZone) records() ([]any, error) {
 	hostedZoneId := a.Id.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	ctx := context.Background()
 	svc := conn.Route53("")
-	res := []interface{}{}
+	res := []any{}
 
 	paginator := route53.NewListResourceRecordSetsPaginator(svc,
 		&route53.ListResourceRecordSetsInput{
@@ -386,10 +387,10 @@ func (a *mqlAwsRoute53HostedZone) queryLoggingConfig() (*mqlAwsRoute53QueryLoggi
 	return nil, nil
 }
 
-func (a *mqlAwsRoute53HostedZone) dnssecStatus() (interface{}, error) {
+func (a *mqlAwsRoute53HostedZone) dnssecStatus() (any, error) {
 	// DNSSEC is not supported on private hosted zones
 	if a.IsPrivate.Data {
-		return map[string]interface{}{"serveSignature": "NOT_SIGNING", "statusMessage": "DNSSEC is not supported for private hosted zones"}, nil
+		return map[string]any{"serveSignature": "NOT_SIGNING", "statusMessage": "DNSSEC is not supported for private hosted zones"}, nil
 	}
 
 	resp, err := a.getDNSSEC()
@@ -400,7 +401,7 @@ func (a *mqlAwsRoute53HostedZone) dnssecStatus() (interface{}, error) {
 		return nil, nil
 	}
 
-	result := map[string]interface{}{}
+	result := map[string]any{}
 	if resp.Status != nil {
 		result["serveSignature"] = convert.ToValue(resp.Status.ServeSignature)
 		result["statusMessage"] = convert.ToValue(resp.Status.StatusMessage)
@@ -408,10 +409,10 @@ func (a *mqlAwsRoute53HostedZone) dnssecStatus() (interface{}, error) {
 	return result, nil
 }
 
-func (a *mqlAwsRoute53HostedZone) keySigningKeys() ([]interface{}, error) {
+func (a *mqlAwsRoute53HostedZone) keySigningKeys() ([]any, error) {
 	// DNSSEC is not supported on private hosted zones
 	if a.IsPrivate.Data {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 
 	resp, err := a.getDNSSEC()
@@ -424,7 +425,7 @@ func (a *mqlAwsRoute53HostedZone) keySigningKeys() ([]interface{}, error) {
 
 	hostedZoneId := a.Id.Data
 
-	res := []interface{}{}
+	res := []any{}
 	for _, ksk := range resp.KeySigningKeys {
 		mqlKsk, err := CreateResource(a.MqlRuntime, "aws.route53.keySigningKey",
 			map[string]*llx.RawData{
@@ -458,43 +459,43 @@ func (a *mqlAwsRoute53HostedZone) keySigningKeys() ([]interface{}, error) {
 // aws.route53.record
 
 type mqlAwsRoute53RecordInternal struct {
-	resourceRecordsCache      []interface{}
-	aliasTargetCache          map[string]interface{}
-	geoLocationCache          map[string]interface{}
-	geoProximityLocationCache map[string]interface{}
-	cidrRoutingConfigCache    map[string]interface{}
+	resourceRecordsCache      []any
+	aliasTargetCache          map[string]any
+	geoLocationCache          map[string]any
+	geoProximityLocationCache map[string]any
+	cidrRoutingConfigCache    map[string]any
 }
 
 func (a *mqlAwsRoute53Record) id() (string, error) {
 	return fmt.Sprintf("%s//%s//%s//%s", a.HostedZoneId.Data, a.Name.Data, a.Type.Data, a.SetIdentifier.Data), nil
 }
 
-func (a *mqlAwsRoute53Record) resourceRecords() ([]interface{}, error) {
+func (a *mqlAwsRoute53Record) resourceRecords() ([]any, error) {
 	return a.resourceRecordsCache, nil
 }
 
-func (a *mqlAwsRoute53Record) aliasTarget() (interface{}, error) {
+func (a *mqlAwsRoute53Record) aliasTarget() (any, error) {
 	if len(a.aliasTargetCache) == 0 {
 		return nil, nil
 	}
 	return a.aliasTargetCache, nil
 }
 
-func (a *mqlAwsRoute53Record) geoLocation() (interface{}, error) {
+func (a *mqlAwsRoute53Record) geoLocation() (any, error) {
 	if len(a.geoLocationCache) == 0 {
 		return nil, nil
 	}
 	return a.geoLocationCache, nil
 }
 
-func (a *mqlAwsRoute53Record) geoProximityLocation() (interface{}, error) {
+func (a *mqlAwsRoute53Record) geoProximityLocation() (any, error) {
 	if len(a.geoProximityLocationCache) == 0 {
 		return nil, nil
 	}
 	return a.geoProximityLocationCache, nil
 }
 
-func (a *mqlAwsRoute53Record) cidrRoutingConfig() (interface{}, error) {
+func (a *mqlAwsRoute53Record) cidrRoutingConfig() (any, error) {
 	if len(a.cidrRoutingConfigCache) == 0 {
 		return nil, nil
 	}
@@ -531,7 +532,7 @@ func (a *mqlAwsRoute53Record) healthCheck() (*mqlAwsRoute53HealthCheck, error) {
 		ResourceType: route53types.TagResourceTypeHealthcheck,
 		ResourceId:   &healthCheckId,
 	})
-	tags := make(map[string]interface{})
+	tags := make(map[string]any)
 	if err == nil && tagsResp.ResourceTagSet != nil {
 		for _, tag := range tagsResp.ResourceTagSet.Tags {
 			tags[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
@@ -548,24 +549,24 @@ func (a *mqlAwsRoute53Record) healthCheck() (*mqlAwsRoute53HealthCheck, error) {
 // aws.route53.healthCheck
 
 type mqlAwsRoute53HealthCheckInternal struct {
-	regionsCache               []interface{}
-	childHealthChecksCache     []interface{}
-	cloudWatchAlarmConfigCache map[string]interface{}
+	regionsCache               []any
+	childHealthChecksCache     []any
+	cloudWatchAlarmConfigCache map[string]any
 }
 
 func (a *mqlAwsRoute53HealthCheck) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAwsRoute53HealthCheck) regions() ([]interface{}, error) {
+func (a *mqlAwsRoute53HealthCheck) regions() ([]any, error) {
 	return a.regionsCache, nil
 }
 
-func (a *mqlAwsRoute53HealthCheck) childHealthChecks() ([]interface{}, error) {
+func (a *mqlAwsRoute53HealthCheck) childHealthChecks() ([]any, error) {
 	return a.childHealthChecksCache, nil
 }
 
-func (a *mqlAwsRoute53HealthCheck) cloudWatchAlarmConfiguration() (interface{}, error) {
+func (a *mqlAwsRoute53HealthCheck) cloudWatchAlarmConfiguration() (any, error) {
 	if len(a.cloudWatchAlarmConfigCache) == 0 {
 		return nil, nil
 	}
@@ -654,12 +655,12 @@ func (a *mqlAwsRoute53KeySigningKey) kmsKey() (*mqlAwsKmsKey, error) {
 
 // Domains (via Route 53 Domains - us-east-1 only)
 
-func (a *mqlAwsRoute53) domains() ([]interface{}, error) {
+func (a *mqlAwsRoute53) domains() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.Route53Domains("us-east-1")
 	ctx := context.Background()
 
-	var res []interface{}
+	var res []any
 	var marker *string
 	for {
 		input := &route53domains.ListDomainsInput{}
@@ -789,24 +790,24 @@ func (a *mqlAwsRoute53Domain) dnssec() (string, error) {
 	return convert.ToValue(detail.DnsSec), nil
 }
 
-func (a *mqlAwsRoute53Domain) statusList() ([]interface{}, error) {
+func (a *mqlAwsRoute53Domain) statusList() ([]any, error) {
 	detail, err := a.getDetail()
 	if err != nil || detail == nil {
 		return nil, err
 	}
-	var statusList []interface{}
+	var statusList []any
 	for _, s := range detail.StatusList {
 		statusList = append(statusList, s)
 	}
 	return statusList, nil
 }
 
-func (a *mqlAwsRoute53Domain) nameservers() ([]interface{}, error) {
+func (a *mqlAwsRoute53Domain) nameservers() ([]any, error) {
 	detail, err := a.getDetail()
 	if err != nil || detail == nil {
 		return nil, err
 	}
-	var nameservers []interface{}
+	var nameservers []any
 	for _, ns := range detail.Nameservers {
 		nsDict, err := convert.JsonToDict(ns)
 		if err != nil {
@@ -836,7 +837,7 @@ func (a *mqlAwsRoute53Domain) abuseContactEmail() (string, error) {
 // Helper functions
 
 func newMqlAwsRoute53Record(runtime *plugin.Runtime, hostedZoneId string, rrs route53types.ResourceRecordSet) (*mqlAwsRoute53Record, error) {
-	resourceRecords := []interface{}{}
+	resourceRecords := []any{}
 	for _, rr := range rrs.ResourceRecords {
 		resourceRecords = append(resourceRecords, convert.ToValue(rr.Value))
 	}
@@ -892,7 +893,7 @@ func newMqlAwsRoute53Record(runtime *plugin.Runtime, hostedZoneId string, rrs ro
 	mqlRecord.resourceRecordsCache = resourceRecords
 
 	if rrs.AliasTarget != nil {
-		mqlRecord.aliasTargetCache = map[string]interface{}{
+		mqlRecord.aliasTargetCache = map[string]any{
 			"dnsName":              convert.ToValue(rrs.AliasTarget.DNSName),
 			"hostedZoneId":         convert.ToValue(rrs.AliasTarget.HostedZoneId),
 			"evaluateTargetHealth": rrs.AliasTarget.EvaluateTargetHealth,
@@ -900,7 +901,7 @@ func newMqlAwsRoute53Record(runtime *plugin.Runtime, hostedZoneId string, rrs ro
 	}
 
 	if rrs.GeoLocation != nil {
-		mqlRecord.geoLocationCache = map[string]interface{}{
+		mqlRecord.geoLocationCache = map[string]any{
 			"continentCode":   convert.ToValue(rrs.GeoLocation.ContinentCode),
 			"countryCode":     convert.ToValue(rrs.GeoLocation.CountryCode),
 			"subdivisionCode": convert.ToValue(rrs.GeoLocation.SubdivisionCode),
@@ -908,7 +909,7 @@ func newMqlAwsRoute53Record(runtime *plugin.Runtime, hostedZoneId string, rrs ro
 	}
 
 	if rrs.GeoProximityLocation != nil {
-		geo := map[string]interface{}{
+		geo := map[string]any{
 			"awsRegion":      convert.ToValue(rrs.GeoProximityLocation.AWSRegion),
 			"localZoneGroup": convert.ToValue(rrs.GeoProximityLocation.LocalZoneGroup),
 		}
@@ -923,7 +924,7 @@ func newMqlAwsRoute53Record(runtime *plugin.Runtime, hostedZoneId string, rrs ro
 	}
 
 	if rrs.CidrRoutingConfig != nil {
-		mqlRecord.cidrRoutingConfigCache = map[string]interface{}{
+		mqlRecord.cidrRoutingConfigCache = map[string]any{
 			"collectionId": convert.ToValue(rrs.CidrRoutingConfig.CollectionId),
 			"locationName": convert.ToValue(rrs.CidrRoutingConfig.LocationName),
 		}
@@ -932,18 +933,18 @@ func newMqlAwsRoute53Record(runtime *plugin.Runtime, hostedZoneId string, rrs ro
 	return mqlRecord, nil
 }
 
-func newMqlAwsRoute53HealthCheck(runtime *plugin.Runtime, hc route53types.HealthCheck, tags map[string]interface{}) (*mqlAwsRoute53HealthCheck, error) {
+func newMqlAwsRoute53HealthCheck(runtime *plugin.Runtime, hc route53types.HealthCheck, tags map[string]any) (*mqlAwsRoute53HealthCheck, error) {
 	config := hc.HealthCheckConfig
 	if config == nil {
 		return nil, errors.New("health check config is nil for id: " + convert.ToValue(hc.Id))
 	}
 
-	regions := []interface{}{}
+	regions := []any{}
 	for _, region := range config.Regions {
 		regions = append(regions, string(region))
 	}
 
-	childHealthChecks := []interface{}{}
+	childHealthChecks := []any{}
 	for _, childId := range config.ChildHealthChecks {
 		childHealthChecks = append(childHealthChecks, childId)
 	}
@@ -1000,7 +1001,7 @@ func newMqlAwsRoute53HealthCheck(runtime *plugin.Runtime, hc route53types.Health
 
 	if hc.CloudWatchAlarmConfiguration != nil {
 		cwac := hc.CloudWatchAlarmConfiguration
-		alarmConfig := map[string]interface{}{
+		alarmConfig := map[string]any{
 			"comparisonOperator": string(cwac.ComparisonOperator),
 			"metricName":         convert.ToValue(cwac.MetricName),
 			"namespace":          convert.ToValue(cwac.Namespace),
@@ -1015,9 +1016,9 @@ func newMqlAwsRoute53HealthCheck(runtime *plugin.Runtime, hc route53types.Health
 		if cwac.Threshold != nil {
 			alarmConfig["threshold"] = *cwac.Threshold
 		}
-		dimensions := []interface{}{}
+		dimensions := []any{}
 		for _, dim := range cwac.Dimensions {
-			dimensions = append(dimensions, map[string]interface{}{
+			dimensions = append(dimensions, map[string]any{
 				"name":  convert.ToValue(dim.Name),
 				"value": convert.ToValue(dim.Value),
 			})
@@ -1032,10 +1033,10 @@ func newMqlAwsRoute53HealthCheck(runtime *plugin.Runtime, hc route53types.Health
 // batchFetchTags fetches tags for Route 53 resources in batches of up to 10
 // using the ListTagsForResources (plural) API, returning a map of resource ID
 // to tags. This reduces API calls by ~10x compared to per-resource fetching.
-func batchFetchTags[T any](ctx context.Context, svc *route53.Client, resourceType route53types.TagResourceType, items []T, getID func(T) string) map[string]map[string]interface{} {
-	tagsByID := make(map[string]map[string]interface{}, len(items))
+func batchFetchTags[T any](ctx context.Context, svc *route53.Client, resourceType route53types.TagResourceType, items []T, getID func(T) string) map[string]map[string]any {
+	tagsByID := make(map[string]map[string]any, len(items))
 	for _, item := range items {
-		tagsByID[getID(item)] = make(map[string]interface{})
+		tagsByID[getID(item)] = make(map[string]any)
 	}
 
 	// Collect all IDs and batch in groups of 10
@@ -1044,13 +1045,7 @@ func batchFetchTags[T any](ctx context.Context, svc *route53.Client, resourceTyp
 		ids = append(ids, getID(item))
 	}
 
-	for i := 0; i < len(ids); i += 10 {
-		end := i + 10
-		if end > len(ids) {
-			end = len(ids)
-		}
-		batch := ids[i:end]
-
+	for batch := range slices.Chunk(ids, 10) {
 		resp, err := svc.ListTagsForResources(ctx, &route53.ListTagsForResourcesInput{
 			ResourceType: resourceType,
 			ResourceIds:  batch,

@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
@@ -282,8 +283,7 @@ func fetchFindings(svc *guardduty.Client, detectorId string, regionVal string, p
 
 	// fetch all findings, we can only fetch 50 at a time
 	fetched := 0
-	for i := 0; i < len(findingIds); i += 50 {
-		findingIdsChunk := findingIds[i:min(i+50, len(findingIds))]
+	for findingIdsChunk := range slices.Chunk(findingIds, 50) {
 		findingDetails, err := svc.GetFindings(ctx, &guardduty.GetFindingsInput{
 			FindingIds: findingIdsChunk,
 			DetectorId: &detectorId,

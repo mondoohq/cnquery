@@ -292,7 +292,7 @@ func (a *mqlAwsKinesis) streamConsumers() ([]any, error) {
 	return res, nil
 }
 
-func (a *mqlAwsKinesisStream) tags() (map[string]interface{}, error) {
+func (a *mqlAwsKinesisStream) tags() (map[string]any, error) {
 	arn := a.Arn.Data
 	region := a.Region.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
@@ -300,7 +300,7 @@ func (a *mqlAwsKinesisStream) tags() (map[string]interface{}, error) {
 	svc := conn.Kinesis(region)
 	ctx := context.Background()
 
-	tags := make(map[string]interface{})
+	tags := make(map[string]any)
 	var exclusiveStartTagKey *string
 	for {
 		input := &kinesis.ListTagsForStreamInput{
@@ -964,7 +964,7 @@ func (a *mqlAwsKinesisFirehoseDeliveryStreamCloudWatchLogging) id() (string, err
 	return a.LogGroupName.Data + "/" + a.LogStreamName.Data, nil
 }
 
-func (a *mqlAwsKinesisFirehoseDeliveryStream) tags() (map[string]interface{}, error) {
+func (a *mqlAwsKinesisFirehoseDeliveryStream) tags() (map[string]any, error) {
 	name := a.Name.Data
 	region := a.Region.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
@@ -972,7 +972,7 @@ func (a *mqlAwsKinesisFirehoseDeliveryStream) tags() (map[string]interface{}, er
 	svc := conn.Firehose(region)
 	ctx := context.Background()
 
-	tags := make(map[string]interface{})
+	tags := make(map[string]any)
 	var exclusiveStartTagKey *string
 	for {
 		input := &firehose.ListTagsForDeliveryStreamInput{

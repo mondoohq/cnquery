@@ -288,7 +288,7 @@ func (a *mqlAwsTimestreamInfluxdbInstance) availabilityZone() (string, error) {
 	return convert.ToValue(detail.AvailabilityZone), nil
 }
 
-func (a *mqlAwsTimestreamInfluxdbInstance) tags() (map[string]interface{}, error) {
+func (a *mqlAwsTimestreamInfluxdbInstance) tags() (map[string]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.TimestreamInfluxDB(a.Region.Data)
 	ctx := context.Background()
@@ -300,7 +300,7 @@ func (a *mqlAwsTimestreamInfluxdbInstance) tags() (map[string]interface{}, error
 	if err != nil {
 		return nil, err
 	}
-	tags := make(map[string]interface{})
+	tags := make(map[string]any)
 	for k, v := range resp.Tags {
 		tags[k] = v
 	}
@@ -420,7 +420,7 @@ func (a *mqlAwsTimestreamInfluxdbCluster) failoverMode() (string, error) {
 	return string(detail.FailoverMode), nil
 }
 
-func (a *mqlAwsTimestreamInfluxdbCluster) tags() (map[string]interface{}, error) {
+func (a *mqlAwsTimestreamInfluxdbCluster) tags() (map[string]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.TimestreamInfluxDB(a.Region.Data)
 	ctx := context.Background()
@@ -432,7 +432,7 @@ func (a *mqlAwsTimestreamInfluxdbCluster) tags() (map[string]interface{}, error)
 	if err != nil {
 		return nil, err
 	}
-	tags := make(map[string]interface{})
+	tags := make(map[string]any)
 	for k, v := range resp.Tags {
 		tags[k] = v
 	}

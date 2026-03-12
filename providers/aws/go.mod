@@ -96,7 +96,6 @@ require (
 	github.com/spf13/afero v1.15.0
 	github.com/stretchr/testify v1.11.1
 	go.mondoo.com/mql/v13 v13.0.1
-	golang.org/x/exp v0.0.0-20260312153236-7ab1446f8b90
 	k8s.io/client-go v0.35.2
 )
 
