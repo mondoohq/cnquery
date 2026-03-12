@@ -167,9 +167,7 @@ func (d *DnsClient) Query(dnsTypes ...string) (map[string]DnsRecord, error) {
 	for i := range dnsTypes {
 		dnsType := dnsTypes[i]
 
-		workers.Add(1)
-		go func() {
-			defer workers.Done()
+		workers.Go(func() {
 
 			records, err := d.queryDnsType(d.fqdn, dnsType)
 			if err != nil {
@@ -184,7 +182,7 @@ func (d *DnsClient) Query(dnsTypes ...string) (map[string]DnsRecord, error) {
 				res[k] = records[k]
 			}
 			d.sync.Unlock()
-		}()
+		})
 	}
 
 	workers.Wait()
