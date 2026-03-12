@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"slices"
 	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/service/athena"
@@ -107,8 +108,8 @@ type mqlAwsAthenaWorkgroupInternal struct {
 	cachedPublish     bool
 	cachedRequester   bool
 	cachedBytesCutoff int64
-	cachedEngineVer   interface{}
-	cachedResultCfg   interface{}
+	cachedEngineVer   any
+	cachedResultCfg   any
 	lock              sync.Mutex
 }
 
@@ -189,14 +190,14 @@ func (a *mqlAwsAthenaWorkgroup) requesterPaysEnabled() (bool, error) {
 	return a.cachedRequester, nil
 }
 
-func (a *mqlAwsAthenaWorkgroup) engineVersion() (interface{}, error) {
+func (a *mqlAwsAthenaWorkgroup) engineVersion() (any, error) {
 	if err := a.fetchConfig(); err != nil {
 		return nil, err
 	}
 	return a.cachedEngineVer, nil
 }
 
-func (a *mqlAwsAthenaWorkgroup) resultConfiguration() (interface{}, error) {
+func (a *mqlAwsAthenaWorkgroup) resultConfiguration() (any, error) {
 	if err := a.fetchConfig(); err != nil {
 		return nil, err
 	}
@@ -282,7 +283,7 @@ func newMqlAwsAthenaDataCatalog(runtime *plugin.Runtime, region string, catalog 
 type mqlAwsAthenaDataCatalogInternal struct {
 	fetchedDetail bool
 	cachedDesc    string
-	cachedParams  map[string]interface{}
+	cachedParams  map[string]any
 	lock          sync.Mutex
 }
 
@@ -309,7 +310,7 @@ func (a *mqlAwsAthenaDataCatalog) fetchDetail() error {
 	if resp.DataCatalog != nil {
 		a.cachedDesc = convert.ToValue(resp.DataCatalog.Description)
 		if resp.DataCatalog.Parameters != nil {
-			params := make(map[string]interface{}, len(resp.DataCatalog.Parameters))
+			params := make(map[string]any, len(resp.DataCatalog.Parameters))
 			for k, v := range resp.DataCatalog.Parameters {
 				params[k] = v
 			}
@@ -327,7 +328,7 @@ func (a *mqlAwsAthenaDataCatalog) description() (string, error) {
 	return a.cachedDesc, nil
 }
 
-func (a *mqlAwsAthenaDataCatalog) parameters() (map[string]interface{}, error) {
+func (a *mqlAwsAthenaDataCatalog) parameters() (map[string]any, error) {
 	if err := a.fetchDetail(); err != nil {
 		return nil, err
 	}
@@ -382,13 +383,9 @@ func (a *mqlAwsAthena) getNamedQueries(conn *connection.AwsConnection) []*jobpoo
 			}
 
 			// Batch get named queries (max 50 per call)
-			for i := 0; i < len(queryIds); i += 50 {
-				end := i + 50
-				if end > len(queryIds) {
-					end = len(queryIds)
-				}
+			for chunk := range slices.Chunk(queryIds, 50) {
 				batch, err := svc.BatchGetNamedQuery(ctx, &athena.BatchGetNamedQueryInput{
-					NamedQueryIds: queryIds[i:end],
+					NamedQueryIds: chunk,
 				})
 				if err != nil {
 					return nil, err
@@ -428,7 +425,7 @@ func newMqlAwsAthenaNamedQuery(runtime *plugin.Runtime, region string, nq athena
 	return resource.(*mqlAwsAthenaNamedQuery), nil
 }
 
-func (a *mqlAwsAthenaWorkgroup) tags() (map[string]interface{}, error) {
+func (a *mqlAwsAthenaWorkgroup) tags() (map[string]any, error) {
 	if a.Arn.Error != nil {
 		return nil, a.Arn.Error
 	}
@@ -442,7 +439,7 @@ func (a *mqlAwsAthenaWorkgroup) tags() (map[string]interface{}, error) {
 	svc := conn.Athena(region)
 	ctx := context.Background()
 
-	tags := make(map[string]interface{})
+	tags := make(map[string]any)
 	var nextToken *string
 	for {
 		resp, err := svc.ListTagsForResource(ctx, &athena.ListTagsForResourceInput{

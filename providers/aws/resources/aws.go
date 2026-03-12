@@ -254,15 +254,6 @@ func mapStringInterfaceToStringString(m map[string]any) map[string]string {
 	return newM
 }
 
-func remove(s []string, r string) []string {
-	for i, v := range s {
-		if v == r {
-			return append(s[:i], s[i+1:]...)
-		}
-	}
-	return s
-}
-
 // securityGroupIdHandler is a helper struct to handle security group ids and convert them to resources
 // This makes it easy to extend the internal representation of a resource and fetch security groups asynchronous
 type securityGroupIdHandler struct {

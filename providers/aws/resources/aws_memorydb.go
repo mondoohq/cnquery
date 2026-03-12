@@ -147,11 +147,11 @@ func (a *mqlAwsMemorydbCluster) securityGroups() ([]any, error) {
 	return a.newSecurityGroupResources(a.MqlRuntime)
 }
 
-func (a *mqlAwsMemorydbCluster) tags() (map[string]interface{}, error) {
+func (a *mqlAwsMemorydbCluster) tags() (map[string]any, error) {
 	return memorydbListTags(a.MqlRuntime, a.Arn.Data, a.Region.Data)
 }
 
-func memorydbListTags(runtime *plugin.Runtime, arn string, region string) (map[string]interface{}, error) {
+func memorydbListTags(runtime *plugin.Runtime, arn string, region string) (map[string]any, error) {
 	conn := runtime.Connection.(*connection.AwsConnection)
 	svc := conn.Memorydb(region)
 	ctx := context.Background()
@@ -163,7 +163,7 @@ func memorydbListTags(runtime *plugin.Runtime, arn string, region string) (map[s
 		return nil, err
 	}
 
-	tags := make(map[string]interface{})
+	tags := make(map[string]any)
 	for _, tag := range resp.TagList {
 		if tag.Key != nil && tag.Value != nil {
 			tags[*tag.Key] = *tag.Value
@@ -252,7 +252,7 @@ func newMqlAwsMemorydbAcl(runtime *plugin.Runtime, region string, acl memorydb_t
 	return resource.(*mqlAwsMemorydbAcl), nil
 }
 
-func (a *mqlAwsMemorydbAcl) tags() (map[string]interface{}, error) {
+func (a *mqlAwsMemorydbAcl) tags() (map[string]any, error) {
 	return memorydbListTags(a.MqlRuntime, a.Arn.Data, a.Region.Data)
 }
 
@@ -342,7 +342,7 @@ func newMqlAwsMemorydbUser(runtime *plugin.Runtime, region string, user memorydb
 	return resource.(*mqlAwsMemorydbUser), nil
 }
 
-func (a *mqlAwsMemorydbUser) tags() (map[string]interface{}, error) {
+func (a *mqlAwsMemorydbUser) tags() (map[string]any, error) {
 	return memorydbListTags(a.MqlRuntime, a.Arn.Data, a.Region.Data)
 }
 
@@ -452,7 +452,7 @@ func (a *mqlAwsMemorydbSnapshot) kmsKey() (*mqlAwsKmsKey, error) {
 	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
-func (a *mqlAwsMemorydbSnapshot) tags() (map[string]interface{}, error) {
+func (a *mqlAwsMemorydbSnapshot) tags() (map[string]any, error) {
 	return memorydbListTags(a.MqlRuntime, a.Arn.Data, a.Region.Data)
 }
 
@@ -579,6 +579,6 @@ func (a *mqlAwsMemorydbSubnetGroup) subnets() ([]any, error) {
 	return res, nil
 }
 
-func (a *mqlAwsMemorydbSubnetGroup) tags() (map[string]interface{}, error) {
+func (a *mqlAwsMemorydbSubnetGroup) tags() (map[string]any, error) {
 	return memorydbListTags(a.MqlRuntime, a.Arn.Data, a.Region.Data)
 }

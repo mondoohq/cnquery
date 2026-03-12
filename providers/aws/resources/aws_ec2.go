@@ -1385,7 +1385,7 @@ func (i *mqlAwsEc2Image) id() (string, error) {
 	return i.Arn.Data, nil
 }
 
-func (i *mqlAwsEc2Image) launchPermissions() ([]interface{}, error) {
+func (i *mqlAwsEc2Image) launchPermissions() ([]any, error) {
 	imageId := i.Id.Data
 	region := i.Region.Data
 	conn := i.MqlRuntime.Connection.(*connection.AwsConnection)
@@ -1402,7 +1402,7 @@ func (i *mqlAwsEc2Image) launchPermissions() ([]interface{}, error) {
 	}
 
 	imageArn := i.Arn.Data
-	permissions := make([]interface{}, 0, len(result.LaunchPermissions))
+	permissions := make([]any, 0, len(result.LaunchPermissions))
 	for _, perm := range result.LaunchPermissions {
 		// Build unique ID based on which field is set
 		var permId string

@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"maps"
 	"testing"
 	"time"
 
@@ -130,9 +131,7 @@ func assertIsolation(t *testing.T, parent, child *inventory.Config) {
 	// Store original parent values
 	origRegions := parent.Discover.Filter["regions"]
 	origOptions := make(map[string]string)
-	for k, v := range parent.Options {
-		origOptions[k] = v
-	}
+	maps.Copy(origOptions, parent.Options)
 
 	// Modify child
 	child.Discover.Filter["regions"] = "modified-region"

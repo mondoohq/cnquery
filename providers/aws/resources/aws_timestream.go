@@ -13,7 +13,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
-	"golang.org/x/exp/slices"
+	"slices"
 )
 
 // AWS TimeStream LiveAnalytics is not available in all regions
