@@ -46,7 +46,6 @@ func (a *mqlAwsNetworkfirewall) getFirewalls(conn *connection.AwsConnection) []*
 	}
 
 	for _, region := range regions {
-		region := region
 		f := func() (jobpool.JobResult, error) {
 			svc := conn.NetworkFirewall(region)
 			ctx := context.Background()
@@ -197,7 +196,6 @@ func (a *mqlAwsNetworkfirewall) getPolicies(conn *connection.AwsConnection) []*j
 	}
 
 	for _, region := range regions {
-		region := region
 		f := func() (jobpool.JobResult, error) {
 			svc := conn.NetworkFirewall(region)
 			ctx := context.Background()
@@ -306,7 +304,6 @@ func (a *mqlAwsNetworkfirewall) getRuleGroups(conn *connection.AwsConnection) []
 	}
 
 	for _, region := range regions {
-		region := region
 		f := func() (jobpool.JobResult, error) {
 			svc := conn.NetworkFirewall(region)
 			ctx := context.Background()
