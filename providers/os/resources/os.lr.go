@@ -3534,6 +3534,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"network.routes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetwork).GetRoutes()).ToDataRes(types.Resource("networkRoutes"))
 	},
+	"network.ipv4": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetwork).GetIpv4()).ToDataRes(types.Array(types.IP))
+	},
+	"network.ipv6": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetwork).GetIpv6()).ToDataRes(types.Array(types.IP))
+	},
+	"network.primaryIPv4": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetwork).GetPrimaryIPv4()).ToDataRes(types.IP)
+	},
+	"network.primaryIPv6": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetwork).GetPrimaryIPv6()).ToDataRes(types.IP)
+	},
 	"networkInterface.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetworkInterface).GetName()).ToDataRes(types.String)
 	},
@@ -7958,6 +7970,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"network.routes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNetwork).Routes, ok = plugin.RawToTValue[*mqlNetworkRoutes](v.Value, v.Error)
+		return
+	},
+	"network.ipv4": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetwork).Ipv4, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"network.ipv6": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetwork).Ipv6, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"network.primaryIPv4": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetwork).PrimaryIPv4, ok = plugin.RawToTValue[llx.RawIP](v.Value, v.Error)
+		return
+	},
+	"network.primaryIPv6": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetwork).PrimaryIPv6, ok = plugin.RawToTValue[llx.RawIP](v.Value, v.Error)
 		return
 	},
 	"networkInterface.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21970,8 +21998,12 @@ type mqlNetwork struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlNetworkInternal it will be used here
-	Interfaces plugin.TValue[[]any]
-	Routes     plugin.TValue[*mqlNetworkRoutes]
+	Interfaces  plugin.TValue[[]any]
+	Routes      plugin.TValue[*mqlNetworkRoutes]
+	Ipv4        plugin.TValue[[]any]
+	Ipv6        plugin.TValue[[]any]
+	PrimaryIPv4 plugin.TValue[llx.RawIP]
+	PrimaryIPv6 plugin.TValue[llx.RawIP]
 }
 
 // createNetwork creates a new instance of this resource
@@ -22035,6 +22067,30 @@ func (c *mqlNetwork) GetRoutes() *plugin.TValue[*mqlNetworkRoutes] {
 		}
 
 		return c.routes()
+	})
+}
+
+func (c *mqlNetwork) GetIpv4() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Ipv4, func() ([]any, error) {
+		return c.ipv4()
+	})
+}
+
+func (c *mqlNetwork) GetIpv6() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Ipv6, func() ([]any, error) {
+		return c.ipv6()
+	})
+}
+
+func (c *mqlNetwork) GetPrimaryIPv4() *plugin.TValue[llx.RawIP] {
+	return plugin.GetOrCompute[llx.RawIP](&c.PrimaryIPv4, func() (llx.RawIP, error) {
+		return c.primaryIPv4()
+	})
+}
+
+func (c *mqlNetwork) GetPrimaryIPv6() *plugin.TValue[llx.RawIP] {
+	return plugin.GetOrCompute[llx.RawIP](&c.PrimaryIPv6, func() (llx.RawIP, error) {
+		return c.primaryIPv6()
 	})
 }
 

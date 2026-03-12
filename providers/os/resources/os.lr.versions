@@ -585,6 +585,10 @@ mount.point.options 9.0.1
 mount.point.path 9.0.1
 network 11.3.42
 network.interfaces 11.3.42
+network.ipv4 13.0.2
+network.ipv6 13.0.2
+network.primaryIPv4 13.0.2
+network.primaryIPv6 13.0.2
 network.routes 11.3.42
 networkInterface 11.3.42
 networkInterface.active 11.3.42
