@@ -1,0 +1,46 @@
+{
+  "vrfs": {
+    "default": {
+      "routerId": "10.0.0.1",
+      "asn": 65001,
+      "peers": {
+        "10.0.0.2": {
+          "peerState": "Established",
+          "inMsgQueue": 0,
+          "outMsgQueue": 0,
+          "upDownTime": 86400.5,
+          "prefixAccepted": 150,
+          "prefixReceived": 200,
+          "asn": "65002",
+          "underMaintenance": false
+        },
+        "10.0.0.3": {
+          "peerState": "Idle",
+          "inMsgQueue": 0,
+          "outMsgQueue": 0,
+          "upDownTime": 0,
+          "prefixAccepted": 0,
+          "prefixReceived": 0,
+          "asn": "65003",
+          "underMaintenance": false
+        }
+      }
+    },
+    "MGMT": {
+      "routerId": "172.16.0.1",
+      "asn": 65001,
+      "peers": {
+        "172.16.0.2": {
+          "peerState": "Established",
+          "inMsgQueue": 0,
+          "outMsgQueue": 0,
+          "upDownTime": 3600.0,
+          "prefixAccepted": 5,
+          "prefixReceived": 5,
+          "asn": "65100",
+          "underMaintenance": true
+        }
+      }
+    }
+  }
+}

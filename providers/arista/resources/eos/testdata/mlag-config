@@ -1,0 +1,49 @@
+! Command: show running-config
+! device: leaf1 (vEOS, EOS-4.27.0F)
+!
+hostname leaf1
+!
+mlag configuration
+   domain-id mlag1
+   local-interface Vlan4094
+   peer-address 10.0.0.2
+   peer-link Port-Channel1000
+!
+interface Port-Channel1
+   description MLAG to Server1
+   switchport mode trunk
+   mlag 1
+!
+interface Port-Channel2
+   description MLAG to Server2
+   switchport access vlan 100
+   mlag 2
+!
+interface Port-Channel10
+   description MLAG to Server10
+   switchport mode trunk
+   switchport trunk allowed vlan 100-200
+   mlag 10
+!
+interface Port-Channel1000
+   description MLAG Peer Link
+   switchport mode trunk
+!
+interface Ethernet1
+   description Uplink
+   no switchport
+   ip address 192.168.1.1/24
+!
+interface Ethernet49
+   description MLAG Peer Link Member
+   channel-group 1000 mode active
+!
+interface Ethernet50
+   description MLAG Peer Link Member
+   channel-group 1000 mode active
+!
+interface Vlan4094
+   description MLAG Peer Communication
+   ip address 10.0.0.1/30
+!
+end

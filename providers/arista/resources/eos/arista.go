@@ -4,6 +4,8 @@
 package eos
 
 import (
+	"regexp"
+
 	"github.com/aristanetworks/goeapi"
 	"github.com/aristanetworks/goeapi/module"
 )
@@ -284,6 +286,52 @@ func (eos *Eos) Vlans() map[string]module.VlanConfig {
 	return vlanModule.GetAll()
 }
 
+// showVlan represents the response from "show vlan"
+type showVlan struct {
+	SourceDetail string              `json:"sourceDetail"`
+	Vlans        map[string]ShowVlan `json:"vlans"`
+}
+
+func (s *showVlan) GetCmd() string {
+	return "show vlan"
+}
+
+// ShowVlan represents a single VLAN from the "show vlan" JSON output
+type ShowVlan struct {
+	Status     string                   `json:"status"`
+	Name       string                   `json:"name"`
+	Interfaces map[string]VlanInterface `json:"interfaces"`
+	Dynamic    bool                     `json:"dynamic"`
+}
+
+// VlanInterface represents an interface associated with a VLAN
+type VlanInterface struct {
+	Annotation      string `json:"annotation"`
+	PrivatePromoted bool   `json:"privatePromoted"`
+}
+
+// ShowVlans returns VLAN information from the "show vlan" JSON command
+func (eos *Eos) ShowVlans() (map[string]ShowVlan, error) {
+	shRsp := &showVlan{}
+
+	handle, err := eos.node.GetHandle("json")
+	if err != nil {
+		return nil, err
+	}
+	err = handle.AddCommand(shRsp)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := handle.Call(); err != nil {
+		return nil, err
+	}
+
+	handle.Close()
+
+	return shRsp.Vlans, nil
+}
+
 // Switchports returns all switchport configurations using the goeapi module
 func (eos *Eos) Switchports() map[string]module.SwitchPortConfig {
 	switchportModule := module.SwitchPort(eos.node)
@@ -339,4 +387,70 @@ func (eos *Eos) ShowIPRoute() (*showIPRoute, error) {
 	handle.Close()
 
 	return shRsp, nil
+}
+
+// MlagConfig returns the MLAG configuration using the goeapi module
+func (eos *Eos) MlagConfig() *module.MlagConfig {
+	mlagModule := module.Mlag(eos.node)
+	return mlagModule.Get()
+}
+
+// AclConfigs returns all standard IP ACLs using the goeapi module
+func (eos *Eos) AclConfigs() map[string]*module.AclConfig {
+	aclModule := module.Acl(eos.node)
+	return aclModule.GetAll()
+}
+
+// MlagInterface represents a Port-Channel interface with an MLAG ID
+type MlagInterface struct {
+	Name   string
+	MlagID string
+}
+
+// ParseMlagInterfaces extracts MLAG interface mappings from running config
+// Returns a slice of MlagInterface structs containing Port-Channel name and MLAG ID
+func ParseMlagInterfaces(runningConfig string) []MlagInterface {
+	// First, find all Port-Channel interface blocks
+	// Interface blocks in EOS config end at the next "!" or "interface" line
+	portChannelRegex := regexp.MustCompile(`(?m)^interface (Port-Channel\d+)\n`)
+	mlagIDRegex := regexp.MustCompile(`(?m)^\s+mlag (\d+)`)
+	blockEndRegex := regexp.MustCompile(`(?m)^!`)
+
+	// Find all Port-Channel interface start positions
+	matches := portChannelRegex.FindAllStringSubmatchIndex(runningConfig, -1)
+
+	result := []MlagInterface{}
+	for i, match := range matches {
+		// match[0]:match[1] is the full match
+		// match[2]:match[3] is the Port-Channel name
+		portChannelName := runningConfig[match[2]:match[3]]
+		blockStart := match[1] // Start after the interface line
+
+		// Find the end of this interface block (next "!" or "interface" at start of line)
+		var blockEnd int
+		if i+1 < len(matches) {
+			// End at next interface
+			blockEnd = matches[i+1][0]
+		} else {
+			blockEnd = len(runningConfig)
+		}
+
+		// Also check for "!" as block terminator
+		if bangMatch := blockEndRegex.FindStringIndex(runningConfig[blockStart:blockEnd]); bangMatch != nil {
+			blockEnd = blockStart + bangMatch[0]
+		}
+
+		// Extract the interface block content
+		blockContent := runningConfig[blockStart:blockEnd]
+
+		// Look for mlag ID within this block
+		if mlagMatch := mlagIDRegex.FindStringSubmatch(blockContent); mlagMatch != nil {
+			result = append(result, MlagInterface{
+				Name:   portChannelName,
+				MlagID: mlagMatch[1],
+			})
+		}
+	}
+
+	return result
 }
