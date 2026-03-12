@@ -151,7 +151,7 @@ jobs:
       # created a discussion on the issue here https://github.com/orgs/goreleaser/discussions/5943
 
       - name: Run GoReleaser and promote latest
-        if: ${{ inputs.skip-publish != true && steps.skip-publish.outputs.skip-publish != 'true' }}
+        if: ${{ steps.skip-publish.outputs.skip-publish != 'true' }}
         uses: goreleaser/goreleaser-action@ec59f474b9834571250b370d4735c50f8e2d1e29 # v7.0.0
         with:
           distribution: goreleaser
@@ -177,7 +177,7 @@ jobs:
           MAKE_LATEST: ${{ inputs.make-latest == false && 'false' || 'true' }}
 
       - name: Run GoReleaser without promoting 'latest'
-        if: ${{ inputs.skip-publish == true || steps.skip-publish.outputs.skip-publish == 'true' }}
+        if: ${{ steps.skip-publish.outputs.skip-publish == 'true' }}
         uses: goreleaser/goreleaser-action@ec59f474b9834571250b370d4735c50f8e2d1e29 # v7.0.0
         with:
           distribution: goreleaser
@@ -228,7 +228,7 @@ jobs:
       # We can now trigger the mql bump in cnspec, which will also trigger the release of cnspec.
       # The docker container is a pre-requisite for cnspec release.
       - name: Trigger mql bump in cnspec
-        if: ${{ inputs.skip-publish != true && inputs.skip-cnspec-bump != true && inputs.make-latest != false }}
+        if: ${{ steps.skip-publish.outputs.skip-publish != 'true' && (github.event_name == 'push' || (inputs.skip-cnspec-bump != true && inputs.make-latest != false)) }}
         uses: peter-evans/repository-dispatch@28959ce8df70de7be546dd1250a005dd32156697 # v4.0.1
         with:
           token: ${{ secrets.RELEASR_ACTION_TOKEN }}
