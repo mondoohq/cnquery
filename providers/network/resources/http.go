@@ -368,7 +368,10 @@ func (x *mqlHttpHeaderContentType) id() (string, error) {
 	if x.Params.Data != nil {
 		keys := sortx.Keys(x.Params.Data)
 		for _, key := range keys {
-			id.WriteString(";" + key + "=" + x.Params.Data[key].(string))
+			id.WriteByte(';')
+			id.WriteString(key)
+			id.WriteByte('=')
+			id.WriteString(x.Params.Data[key].(string))
 		}
 	}
 	return id.String(), nil
