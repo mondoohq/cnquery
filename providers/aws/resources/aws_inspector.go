@@ -317,10 +317,13 @@ func (a *mqlAwsInspectorFinding) packageVulnerability() (*mqlAwsInspectorFinding
 	}
 	pvd := a.cacheFinding.PackageVulnerabilityDetails
 
+	findingArn := a.Arn.Data
+
 	cvssScores := make([]any, 0, len(pvd.Cvss))
 	for _, c := range pvd.Cvss {
 		mqlCvss, err := CreateResource(a.MqlRuntime, "aws.inspector.finding.packageVulnerability.cvssScore",
 			map[string]*llx.RawData{
+				"__id":          llx.StringData(fmt.Sprintf("%s/cvss/%s/%s/%.1f", findingArn, convert.ToValue(c.Source), convert.ToValue(c.Version), derefFloat64(c.BaseScore))),
 				"baseScore":     llx.FloatData(derefFloat64(c.BaseScore)),
 				"scoringVector": llx.StringDataPtr(c.ScoringVector),
 				"source":        llx.StringDataPtr(c.Source),
@@ -337,6 +340,7 @@ func (a *mqlAwsInspectorFinding) packageVulnerability() (*mqlAwsInspectorFinding
 		pkg := pvd.VulnerablePackages[i]
 		mqlPkg, err := CreateResource(a.MqlRuntime, "aws.inspector.finding.vulnerablePackage",
 			map[string]*llx.RawData{
+				"__id":           llx.StringData(fmt.Sprintf("%s/pkg/%s/%s/%s", findingArn, convert.ToValue(pkg.Name), convert.ToValue(pkg.Version), convert.ToValue(pkg.Arch))),
 				"name":           llx.StringDataPtr(pkg.Name),
 				"version":        llx.StringDataPtr(pkg.Version),
 				"arch":           llx.StringDataPtr(pkg.Arch),
@@ -355,6 +359,7 @@ func (a *mqlAwsInspectorFinding) packageVulnerability() (*mqlAwsInspectorFinding
 
 	mqlPvd, err := CreateResource(a.MqlRuntime, "aws.inspector.finding.packageVulnerability",
 		map[string]*llx.RawData{
+			"__id":                   llx.StringData(findingArn + "/packageVulnerability"),
 			"vulnerabilityId":        llx.StringDataPtr(pvd.VulnerabilityId),
 			"source":                 llx.StringDataPtr(pvd.Source),
 			"sourceUrl":              llx.StringDataPtr(pvd.SourceUrl),
@@ -413,8 +418,10 @@ func (a *mqlAwsInspectorFinding) networkReachability() (*mqlAwsInspectorFindingN
 		networkPath = path
 	}
 
+	findingArn := a.Arn.Data
 	mqlNr, err := CreateResource(a.MqlRuntime, "aws.inspector.finding.networkReachability",
 		map[string]*llx.RawData{
+			"__id":          llx.StringData(findingArn + "/networkReachability"),
 			"protocol":      llx.StringData(string(nrd.Protocol)),
 			"openPortStart": llx.IntData(portStart),
 			"openPortEnd":   llx.IntData(portEnd),
@@ -442,8 +449,10 @@ func (a *mqlAwsInspectorFinding) codeVulnerability() (*mqlAwsInspectorFindingCod
 		return nil, err
 	}
 
+	findingArn := a.Arn.Data
 	mqlCv, err := CreateResource(a.MqlRuntime, "aws.inspector.finding.codeVulnerability",
 		map[string]*llx.RawData{
+			"__id":                 llx.StringData(findingArn + "/codeVulnerability"),
 			"cwes":                 llx.ArrayData(llx.TArr2Raw(cvd.Cwes), "string"),
 			"detectorId":           llx.StringDataPtr(cvd.DetectorId),
 			"detectorName":         llx.StringDataPtr(cvd.DetectorName),
