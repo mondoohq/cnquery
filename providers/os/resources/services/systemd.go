@@ -21,14 +21,13 @@ import (
 )
 
 var (
-	SYSTEMD_LIST_UNITS_REGEX = regexp.MustCompile(`(?m)^(?:[^\S\n]{2}|●[^\S\n]|)(\S+)(?:[^\S\n])+(loaded|not-found|masked)(?:[^\S\n])+(\S+)(?:[^\S\n])+(\S+)(?:[^\S\n])+(.+)$`)
+	SYSTEMD_LIST_UNITS_REGEX = regexp.MustCompile(`(?m)^(?:[^\S\n]{2}|●[^\S\n]|)(\S+)(?:[^\S\n])+(\S+)(?:[^\S\n])+(\S+)(?:[^\S\n])+(\S+)(?:[^\S\n])+(.+)$`)
 	serviceNameRegex         = regexp.MustCompile(`(.*)\.(service|target|socket)$`)
 	errIgnored               = errors.New("ignored")
 )
 
 const (
 	systemdShowProperties = "Id,LoadState,ActiveState,UnitFileState,Description"
-	systemdShowChunkSize  = 100
 )
 
 func ResolveSystemdServiceManager(conn shared.Connection) OSServiceManager {
@@ -77,6 +76,36 @@ func ParseServiceSystemDUnitFiles(input io.Reader) ([]*Service, error) {
 		applySystemdUnitFileState(service, fields[1])
 
 		services = append(services, service)
+	}
+
+	return services, nil
+}
+
+// ParseSystemdListUnits parses the output of "systemctl list-units --type service --all"
+// and returns a map of normalized service name to Service. This provides running state
+// directly from systemd without the fragility of batched "systemctl show" calls.
+func ParseSystemdListUnits(input io.Reader) (map[string]*Service, error) {
+	content, err := io.ReadAll(input)
+	if err != nil {
+		return nil, fmt.Errorf("error reading systemctl list-units output: %v", err)
+	}
+
+	services := map[string]*Service{}
+	matches := SYSTEMD_LIST_UNITS_REGEX.FindAllStringSubmatch(string(content), -1)
+	for _, match := range matches {
+		unitName := match[1]
+		if !strings.HasSuffix(unitName, ".service") {
+			continue
+		}
+
+		name := normalizeSystemdServiceName(unitName)
+		services[name] = &Service{
+			Name:        name,
+			Description: strings.TrimSpace(match[5]),
+			Running:     match[3] == "active",
+			Installed:   match[2] != "not-found",
+			Type:        "systemd",
+		}
 	}
 
 	return services, nil
@@ -144,6 +173,16 @@ func ParseServiceSystemDShow(input io.Reader) (map[string]*Service, error) {
 		if !ok {
 			return nil, fmt.Errorf("unexpected output from systemctl show: %q", line)
 		}
+
+		// Defense in depth: if we encounter a new Id= while already building a
+		// record, flush the current one first. This handles cases where systemctl
+		// omits the blank-line separator (e.g., when a template unit fails).
+		if key == "Id" && record["Id"] != "" {
+			if err := flushRecord(); err != nil {
+				return nil, err
+			}
+		}
+
 		record[key] = value
 	}
 
@@ -199,8 +238,13 @@ func (s *SystemDServiceManager) Get(name string) (*Service, error) {
 	return service, nil
 }
 
-// List returns a slice of Service structs representing the state of all services
+// List returns a slice of Service structs representing the state of all services.
+// It uses list-unit-files for the complete set (including unloaded services) and
+// list-units for running state. This avoids batched "systemctl show" which fails
+// on template units (name@.service), causing missing blank-line separators that
+// merge adjacent records and silently lose service data.
 func (s *SystemDServiceManager) List() ([]*Service, error) {
+	// Step 1: Get all service unit files (provides Enabled/Masked/Static/Installed)
 	cmdList, err := s.conn.RunCommand("systemctl list-unit-files --type service --all")
 	if err != nil {
 		return nil, err
@@ -211,36 +255,29 @@ func (s *SystemDServiceManager) List() ([]*Service, error) {
 		return nil, err
 	}
 
-	for start := 0; start < len(services); start += systemdShowChunkSize {
-		end := start + systemdShowChunkSize
-		if end > len(services) {
-			end = len(services)
+	// Step 2: Get running state from list-units (provides Running/Description)
+	cmdUnits, err := s.conn.RunCommand("systemctl list-units --type service --all")
+	if err != nil {
+		return nil, err
+	}
+
+	unitStates, err := ParseSystemdListUnits(cmdUnits.Stdout)
+	if err != nil {
+		return nil, err
+	}
+
+	// Step 3: Merge - update services from step 1 with running state from step 2.
+	// Services in list-unit-files but not in list-units are unloaded/templates;
+	// Running=false is correct for them (already the default).
+	for _, service := range services {
+		unitState, ok := unitStates[service.Name]
+		if !ok {
+			continue
 		}
-
-		units := make([]string, 0, end-start)
-		for _, service := range services[start:end] {
-			units = append(units, ensureSystemdServiceUnit(service.Name))
-		}
-
-		shownServices, err := s.showUnits(units)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, service := range services[start:end] {
-			shownService, ok := shownServices[service.Name]
-			if !ok {
-				continue
-			}
-
-			service.Description = shownService.Description
-			service.Running = shownService.Running
-			if !shownService.Installed {
-				service.Installed = false
-			}
-			service.Enabled = shownService.Enabled
-			service.Masked = shownService.Masked
-			service.Static = shownService.Static
+		service.Description = unitState.Description
+		service.Running = unitState.Running
+		if !unitState.Installed {
+			service.Installed = false
 		}
 	}
 
