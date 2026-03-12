@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -79,13 +80,7 @@ func (a *mqlAwsOpensearch) getDomains(conn *connection.AwsConnection) []*jobpool
 			}
 
 			// Describe domains in batches of 5 (API limit)
-			for i := 0; i < len(domainNames); i += 5 {
-				end := i + 5
-				if end > len(domainNames) {
-					end = len(domainNames)
-				}
-				batch := domainNames[i:end]
-
+			for batch := range slices.Chunk(domainNames, 5) {
 				descResp, err := svc.DescribeDomains(ctx, &opensearch.DescribeDomainsInput{
 					DomainNames: batch,
 				})
@@ -439,10 +434,10 @@ func (a *mqlAwsOpensearchDomain) subnets() ([]any, error) {
 	return res, nil
 }
 
-func (a *mqlAwsOpensearchDomain) tags() (map[string]interface{}, error) {
+func (a *mqlAwsOpensearchDomain) tags() (map[string]any, error) {
 	arnVal := a.Arn.Data
 	if arnVal == "" {
-		return map[string]interface{}{}, nil
+		return map[string]any{}, nil
 	}
 
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
@@ -454,7 +449,7 @@ func (a *mqlAwsOpensearchDomain) tags() (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	tags := make(map[string]interface{})
+	tags := make(map[string]any)
 	for _, t := range resp.TagList {
 		if t.Key != nil && t.Value != nil {
 			tags[*t.Key] = *t.Value

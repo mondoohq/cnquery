@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"slices"
 	"sync"
 	"time"
 
@@ -501,13 +502,7 @@ func fetchMacieFindings(svc *macie2.Client, region string, findingIds []string, 
 	ctx := context.Background()
 
 	// Process findings in chunks of 50 (API limit)
-	for i := 0; i < len(findingIds); i += 50 {
-		end := i + 50
-		if end > len(findingIds) {
-			end = len(findingIds)
-		}
-		chunk := findingIds[i:end]
-
+	for chunk := range slices.Chunk(findingIds, 50) {
 		findingDetails, err := svc.GetFindings(ctx, &macie2.GetFindingsInput{
 			FindingIds: chunk,
 		})

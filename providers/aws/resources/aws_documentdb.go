@@ -136,7 +136,7 @@ func (a *mqlAwsDocumentdbCluster) kmsKey() (*mqlAwsKmsKey, error) {
 	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
-func (a *mqlAwsDocumentdbCluster) tags() (map[string]interface{}, error) {
+func (a *mqlAwsDocumentdbCluster) tags() (map[string]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.DocumentDB(a.Region.Data)
 	ctx := context.Background()
@@ -148,7 +148,7 @@ func (a *mqlAwsDocumentdbCluster) tags() (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	tags := make(map[string]interface{})
+	tags := make(map[string]any)
 	for _, t := range resp.TagList {
 		if t.Key != nil && t.Value != nil {
 			tags[*t.Key] = *t.Value
@@ -421,7 +421,7 @@ func (a *mqlAwsDocumentdbSnapshot) vpc() (*mqlAwsVpc, error) {
 	return mqlVpc.(*mqlAwsVpc), nil
 }
 
-func (a *mqlAwsDocumentdbInstance) tags() (map[string]interface{}, error) {
+func (a *mqlAwsDocumentdbInstance) tags() (map[string]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.DocumentDB(a.Region.Data)
 	ctx := context.Background()
@@ -433,7 +433,7 @@ func (a *mqlAwsDocumentdbInstance) tags() (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	tags := make(map[string]interface{})
+	tags := make(map[string]any)
 	for _, t := range resp.TagList {
 		if t.Key != nil && t.Value != nil {
 			tags[*t.Key] = *t.Value
