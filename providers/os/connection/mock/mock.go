@@ -208,7 +208,7 @@ func (c *Connection) RunCommand(command string) (*shared.Command, error) {
 func (c *Connection) FileInfo(path string) (shared.FileInfoDetails, error) {
 	found, ok := c.data.Files[path]
 	if !ok {
-		return shared.FileInfoDetails{}, errors.New("file not found: " + path)
+		return shared.FileInfoDetails{}, os.ErrNotExist
 	}
 
 	stat := found.StatData

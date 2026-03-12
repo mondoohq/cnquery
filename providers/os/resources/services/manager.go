@@ -49,7 +49,7 @@ type serviceListLoader func() ([]*Service, error)
 
 var ErrServiceNotFound = errors.New("service not found")
 
-func normalizeServiceLookupName(name string) string {
+func NormalizeServiceLookupName(name string) string {
 	return strings.TrimSuffix(name, ".service")
 }
 
@@ -63,7 +63,7 @@ func getServiceFromList(name string, load serviceListLoader) (*Service, error) {
 		return nil, err
 	}
 
-	return FindService(services, normalizeServiceLookupName(name))
+	return FindService(services, name)
 }
 
 type noopOsServiceManager struct{}
@@ -202,7 +202,7 @@ func ResolveManager(conn shared.Connection) (OSServiceManager, error) {
 }
 
 func FindService(services []*Service, name string) (*Service, error) {
-	lookupName := normalizeServiceLookupName(name)
+	lookupName := NormalizeServiceLookupName(name)
 
 	for i := range services {
 		service := services[i]

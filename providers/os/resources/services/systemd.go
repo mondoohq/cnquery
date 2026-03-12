@@ -16,8 +16,8 @@ import (
 	"strings"
 
 	"github.com/coreos/go-systemd/unit"
-	"github.com/kballard/go-shellquote"
 	"github.com/spf13/afero"
+	"go.mondoo.com/mql/v13/providers/os/connection/local/statutil"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 )
 
@@ -83,20 +83,6 @@ func ParseServiceSystemDUnitFiles(input io.Reader) ([]*Service, error) {
 	return services, nil
 }
 
-// SystemDExtractDescription is kept as a compatibility helper for older tests and callers.
-func SystemDExtractDescription(systemctlOutput string) string {
-	lines := strings.Split(systemctlOutput, "\n")
-	for _, line := range lines {
-		if strings.Contains(line, ".service -") {
-			parts := strings.SplitN(line, " - ", 2)
-			if len(parts) == 2 {
-				return strings.TrimSpace(parts[1])
-			}
-		}
-	}
-	return ""
-}
-
 func applySystemdUnitFileState(service *Service, unitFileState string) {
 	service.Enabled = unitFileState == "enabled" || unitFileState == "enabled-runtime"
 	service.Masked = strings.HasPrefix(unitFileState, "masked")
@@ -112,7 +98,19 @@ func ensureSystemdServiceUnit(name string) string {
 		return name
 	}
 
-	return normalizeServiceLookupName(name) + ".service"
+	return name + ".service"
+}
+
+func buildSystemdShowCommand(units []string) string {
+	args := []string{"systemctl", "show", "--property=" + systemdShowProperties}
+	args = append(args, units...)
+
+	escaped := make([]string, len(args))
+	for i := range args {
+		escaped[i] = statutil.ShellEscape(args[i])
+	}
+
+	return strings.Join(escaped, " ")
 }
 
 func ParseServiceSystemDShow(input io.Reader) (map[string]*Service, error) {
@@ -180,10 +178,7 @@ func parseSystemDShowRecord(record map[string]string) (*Service, error) {
 }
 
 func (s *SystemDServiceManager) showUnits(units []string) (map[string]*Service, error) {
-	args := []string{"systemctl", "show", "--property=" + systemdShowProperties}
-	args = append(args, units...)
-
-	cmd, err := s.conn.RunCommand(shellquote.Join(args...))
+	cmd, err := s.conn.RunCommand(buildSystemdShowCommand(units))
 	if err != nil {
 		return nil, err
 	}
@@ -197,7 +192,7 @@ func (s *SystemDServiceManager) Get(name string) (*Service, error) {
 		return nil, err
 	}
 
-	service, ok := services[normalizeServiceLookupName(name)]
+	service, ok := services[NormalizeServiceLookupName(name)]
 	if !ok || !service.Installed {
 		return nil, serviceNotFound(name)
 	}

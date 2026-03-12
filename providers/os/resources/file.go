@@ -7,7 +7,6 @@ import (
 	"errors"
 	"os"
 	"path"
-	"strings"
 
 	"github.com/spf13/afero"
 	"go.mondoo.com/mql/v13/llx"
@@ -26,6 +25,10 @@ func newFile(runtime *plugin.Runtime, path string) (*mqlFile, error) {
 	}
 	file := f.(*mqlFile)
 	return file, nil
+}
+
+type mqlFileInternal struct {
+	statInfo *shared.FileInfoDetails
 }
 
 func (s *mqlFile) id() (string, error) {
@@ -80,26 +83,19 @@ func (s *mqlFile) cacheStatFields(stat shared.FileInfoDetails) error {
 		State: plugin.StateIsSet,
 	}
 
+	statCopy := stat
+	s.statInfo = &statCopy
+
 	return nil
 }
-
-func isFileNotFound(err error) bool {
-	if err == nil {
-		return false
-	}
-	if errors.Is(err, os.ErrNotExist) {
-		return true
-	}
-
-	errText := strings.ToLower(err.Error())
-	return strings.Contains(errText, "file not found") || strings.Contains(errText, "no such file or directory")
-}
-
 
 func (s *mqlFile) loadStatFields(path string) (*shared.FileInfoDetails, bool, error) {
 	if s.Exists.IsSet() {
 		if !s.Exists.Data {
 			return nil, false, s.Exists.Error
+		}
+		if s.statInfo != nil {
+			return s.statInfo, true, nil
 		}
 		if s.Permissions.IsSet() && s.Size.IsSet() {
 			return nil, true, nil
@@ -109,7 +105,7 @@ func (s *mqlFile) loadStatFields(path string) (*shared.FileInfoDetails, bool, er
 	conn := s.MqlRuntime.Connection.(shared.Connection)
 	stat, err := conn.FileInfo(path)
 	if err != nil {
-		if isFileNotFound(err) {
+		if errors.Is(err, os.ErrNotExist) {
 			s.Exists = plugin.TValue[bool]{
 				Data:  false,
 				State: plugin.StateIsSet,
@@ -122,7 +118,7 @@ func (s *mqlFile) loadStatFields(path string) (*shared.FileInfoDetails, bool, er
 		return nil, false, err
 	}
 
-	return &stat, true, nil
+	return s.statInfo, true, nil
 }
 
 func (s *mqlFile) cacheOwnership(stat shared.FileInfoDetails) error {

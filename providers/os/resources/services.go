@@ -5,7 +5,6 @@ package resources
 
 import (
 	"errors"
-	"strings"
 	"sync"
 
 	"github.com/rs/zerolog/log"
@@ -30,7 +29,7 @@ func initService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 		return nil, nil, errors.New("cannot look for a service with an empty name")
 	}
 
-	lookupName := strings.TrimSuffix(name, ".service")
+	lookupName := services.NormalizeServiceLookupName(name)
 
 	if runtime.HasRecording {
 		recordedArgs, err := runtime.ResourceFromRecording("service", lookupName)
@@ -45,8 +44,6 @@ func initService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 			return nil, res, nil
 		}
 	}
-
-
 	conn := runtime.Connection.(shared.Connection)
 	osm, err := services.ResolveManager(conn)
 	if osm == nil || err != nil {
@@ -97,8 +94,6 @@ func missingServiceResource(runtime *plugin.Runtime, name string) plugin.Resourc
 	res.__id, _ = res.id()
 	return res
 }
-
-
 func (x *mqlService) id() (string, error) {
 	return x.Name.Data, nil
 }
