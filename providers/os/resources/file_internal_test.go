@@ -69,13 +69,15 @@ func newSudoCatConnection(t *testing.T) *sudoCatConnection {
 	}
 }
 
-func (c *sudoCatConnection) ID() uint32                                  { return 0 }
-func (c *sudoCatConnection) ParentID() uint32                            { return 0 }
-func (c *sudoCatConnection) Name() string                                { return "sudo-cat-test" }
-func (c *sudoCatConnection) Type() shared.ConnectionType                 { return shared.Type_SSH }
-func (c *sudoCatConnection) Asset() *inventory.Asset                     { return c.asset }
-func (c *sudoCatConnection) UpdateAsset(asset *inventory.Asset)          { c.asset = asset }
-func (c *sudoCatConnection) Capabilities() shared.Capabilities           { return shared.Capability_File | shared.Capability_RunCommand }
+func (c *sudoCatConnection) ID() uint32                         { return 0 }
+func (c *sudoCatConnection) ParentID() uint32                   { return 0 }
+func (c *sudoCatConnection) Name() string                       { return "sudo-cat-test" }
+func (c *sudoCatConnection) Type() shared.ConnectionType        { return shared.Type_SSH }
+func (c *sudoCatConnection) Asset() *inventory.Asset            { return c.asset }
+func (c *sudoCatConnection) UpdateAsset(asset *inventory.Asset) { c.asset = asset }
+func (c *sudoCatConnection) Capabilities() shared.Capabilities {
+	return shared.Capability_File | shared.Capability_RunCommand
+}
 func (c *sudoCatConnection) RunCommand(command string) (*shared.Command, error) {
 	return c.runner.RunCommand(command)
 }

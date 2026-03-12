@@ -178,10 +178,6 @@ func (s *mqlFile) loadOwnership(path string) error {
 	return s.cacheOwnership(*stat)
 }
 
-func (s *mqlFile) stat() error {
-	return s.loadOwnership(s.Path.Data)
-}
-
 func (s *mqlFile) size(path string) (int64, error) {
 	_, exists, err := s.loadStatFields(path)
 	if err != nil {
