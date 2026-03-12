@@ -363,14 +363,18 @@ func (x *mqlHttpHeader) contentType() (*mqlHttpHeaderContentType, error) {
 }
 
 func (x *mqlHttpHeaderContentType) id() (string, error) {
-	id := x.Type.Data
+	var id strings.Builder
+	id.WriteString(x.Type.Data)
 	if x.Params.Data != nil {
 		keys := sortx.Keys(x.Params.Data)
 		for _, key := range keys {
-			id += ";" + key + "=" + x.Params.Data[key].(string)
+			id.WriteByte(';')
+			id.WriteString(key)
+			id.WriteByte('=')
+			id.WriteString(x.Params.Data[key].(string))
 		}
 	}
-	return id, nil
+	return id.String(), nil
 }
 
 func (x *mqlHttpHeader) setCookie() (*mqlHttpHeaderSetCookie, error) {

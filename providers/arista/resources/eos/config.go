@@ -84,7 +84,7 @@ func GetSection(in io.Reader, section string) string {
 
 	lastDepth := 0
 	lastKey := ""
-	recorded := ""
+	var recorded strings.Builder
 	for scanner.Scan() {
 		line := scanner.Text()
 		key := strings.TrimSpace(line)
@@ -115,9 +115,10 @@ func GetSection(in io.Reader, section string) string {
 		lastKey = key
 
 		if strings.Join(keyStack, " ") == " "+section {
-			recorded += key + "\n"
+			recorded.WriteString(key)
+			recorded.WriteByte('\n')
 		}
 	}
 
-	return recorded
+	return recorded.String()
 }
