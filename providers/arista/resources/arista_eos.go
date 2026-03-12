@@ -995,3 +995,167 @@ func (v *mqlAristaEosAclEntry) id() (string, error) {
 	}
 	return "arista.eos.acl.entry/" + v.AclName.Data + "/" + strconv.FormatInt(v.SequenceNumber.Data, 10), v.SequenceNumber.Error
 }
+
+// Hardware resource implementations
+
+func (v *mqlAristaEosHardware) id() (string, error) {
+	return "arista.eos.hardware", nil
+}
+
+func (a *mqlAristaEos) hardware() (*mqlAristaEosHardware, error) {
+	res, err := CreateResource(a.MqlRuntime, "arista.eos.hardware", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAristaEosHardware), nil
+}
+
+func (a *mqlAristaEosHardware) powerSupplies() ([]any, error) {
+	eosClient := aristaClient(a.MqlRuntime)
+
+	envPower, err := eosClient.ShowEnvironmentPower()
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]any, 0, len(envPower.PowerSupplies))
+	for name, ps := range envPower.PowerSupplies {
+		// Build temp sensor dicts
+		tempSensors := make([]any, 0, len(ps.TempSensors))
+		for sensorName, sensor := range ps.TempSensors {
+			tempSensors = append(tempSensors, map[string]any{
+				"name":        sensorName,
+				"status":      sensor.Status,
+				"temperature": sensor.Temperature,
+			})
+		}
+
+		// Build fan dicts
+		fans := make([]any, 0, len(ps.Fans))
+		for fanName, fan := range ps.Fans {
+			fans = append(fans, map[string]any{
+				"name":   fanName,
+				"status": fan.Status,
+				"speed":  fan.Speed,
+			})
+		}
+
+		mqlPSU, err := CreateResource(a.MqlRuntime, "arista.eos.hardware.powerSupply", map[string]*llx.RawData{
+			"name":          llx.StringData(name),
+			"state":         llx.StringData(ps.State),
+			"modelName":     llx.StringData(ps.ModelName),
+			"capacity":      llx.IntData(int64(ps.Capacity)),
+			"outputPower":   llx.FloatData(ps.OutputPower),
+			"inputCurrent":  llx.FloatData(ps.InputCurrent),
+			"outputCurrent": llx.FloatData(ps.OutputCurrent),
+			"uptime":        llx.FloatData(ps.Uptime),
+			"managed":       llx.BoolData(ps.Managed),
+			"tempSensors":   llx.ArrayData(tempSensors, types.Dict),
+			"fans":          llx.ArrayData(fans, types.Dict),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlPSU)
+	}
+
+	return res, nil
+}
+
+func (v *mqlAristaEosHardwarePowerSupply) id() (string, error) {
+	return "arista.eos.hardware.powerSupply/" + v.Name.Data, v.Name.Error
+}
+
+func (a *mqlAristaEosHardware) fans() ([]any, error) {
+	eosClient := aristaClient(a.MqlRuntime)
+
+	cooling, err := eosClient.ShowEnvironmentCooling()
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	for _, tray := range cooling.FanTraySlots {
+		for _, fan := range tray.Fans {
+			mqlFan, err := CreateResource(a.MqlRuntime, "arista.eos.hardware.fan", map[string]*llx.RawData{
+				"name":            llx.StringData(fan.Label),
+				"label":           llx.StringData(tray.Label),
+				"status":          llx.StringData(fan.Status),
+				"speed":           llx.IntData(int64(fan.Speed)),
+				"configuredSpeed": llx.IntData(int64(fan.ConfiguredSpeed)),
+			})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlFan)
+		}
+	}
+
+	return res, nil
+}
+
+func (v *mqlAristaEosHardwareFan) id() (string, error) {
+	return "arista.eos.hardware.fan/" + v.Name.Data, v.Name.Error
+}
+
+func (a *mqlAristaEosHardware) inventory() ([]any, error) {
+	eosClient := aristaClient(a.MqlRuntime)
+
+	inv, err := eosClient.ShowInventory()
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+
+	// Add the system/chassis as an inventory item
+	if inv.SystemInformation.Name != "" || inv.SystemInformation.SerialNum != "" {
+		mqlItem, err := CreateResource(a.MqlRuntime, "arista.eos.hardware.inventoryItem", map[string]*llx.RawData{
+			"name":             llx.StringData(inv.SystemInformation.Name),
+			"description":      llx.StringData(inv.SystemInformation.Description),
+			"serialNumber":     llx.StringData(inv.SystemInformation.SerialNum),
+			"manufacturerDate": llx.StringData(inv.SystemInformation.MfgDate),
+			"hardwareRevision": llx.StringData(inv.SystemInformation.HardwareRev),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlItem)
+	}
+
+	// Add all hardware slots (PSUs, fan trays, transceivers, line cards)
+	slotMaps := []map[string]eos.InventoryEntry{
+		inv.PowerSupplySlots,
+		inv.FanTraySlots,
+		inv.XcvrSlots,
+		inv.CardSlots,
+	}
+	for _, slots := range slotMaps {
+		for slotName, entry := range slots {
+			name := entry.Name
+			if name == "" {
+				name = slotName
+			}
+			mqlItem, err := CreateResource(a.MqlRuntime, "arista.eos.hardware.inventoryItem", map[string]*llx.RawData{
+				"name":             llx.StringData(name),
+				"description":      llx.StringData(entry.Description),
+				"serialNumber":     llx.StringData(entry.SerialNum),
+				"manufacturerDate": llx.StringData(entry.MfgDate),
+				"hardwareRevision": llx.StringData(entry.HardwareRev),
+			})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlItem)
+		}
+	}
+
+	return res, nil
+}
+
+func (v *mqlAristaEosHardwareInventoryItem) id() (string, error) {
+	if v.SerialNumber.Error != nil {
+		return "", v.SerialNumber.Error
+	}
+	return "arista.eos.hardware.inventoryItem/" + v.Name.Data + "/" + v.SerialNumber.Data, v.Name.Error
+}

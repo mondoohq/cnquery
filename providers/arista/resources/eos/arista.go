@@ -401,6 +401,150 @@ func (eos *Eos) AclConfigs() map[string]*module.AclConfig {
 	return aclModule.GetAll()
 }
 
+// showEnvironmentPower represents the response from "show system environment power"
+type showEnvironmentPower struct {
+	PowerSupplies map[string]PowerSupply `json:"powerSupplies"`
+}
+
+func (s *showEnvironmentPower) GetCmd() string {
+	return "show system environment power"
+}
+
+// PowerSupply represents a single power supply unit
+type PowerSupply struct {
+	OutputPower   float64 `json:"outputPower"`
+	State         string  `json:"state"`
+	ModelName     string  `json:"modelName"`
+	Capacity      int     `json:"capacity"`
+	InputCurrent  float64 `json:"inputCurrent"`
+	TempSensors   map[string]struct {
+		Status      string `json:"status"`
+		Temperature int    `json:"temperature"`
+	} `json:"tempSensors"`
+	Fans map[string]struct {
+		Status string `json:"status"`
+		Speed  int    `json:"speed"`
+	} `json:"fans"`
+	OutputCurrent float64 `json:"outputCurrent"`
+	Uptime        float64 `json:"uptime"`
+	Managed       bool    `json:"managed"`
+}
+
+// ShowEnvironmentPower returns power supply status
+func (eos *Eos) ShowEnvironmentPower() (*showEnvironmentPower, error) {
+	shRsp := &showEnvironmentPower{}
+
+	handle, err := eos.node.GetHandle("json")
+	if err != nil {
+		return nil, err
+	}
+	err = handle.AddCommand(shRsp)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := handle.Call(); err != nil {
+		return nil, err
+	}
+
+	handle.Close()
+
+	return shRsp, nil
+}
+
+// showEnvironmentCooling represents the response from "show system environment cooling"
+type showEnvironmentCooling struct {
+	SystemStatus   string         `json:"systemStatus"`
+	FanTraySlots   []FanTraySlot  `json:"fanTraySlots"`
+	AirflowDirection string       `json:"airflowDirection"`
+	CoolingMode    string         `json:"coolingMode"`
+}
+
+func (s *showEnvironmentCooling) GetCmd() string {
+	return "show system environment cooling"
+}
+
+// FanTraySlot represents a fan tray slot from the cooling response
+type FanTraySlot struct {
+	Label  string `json:"label"`
+	Status string `json:"status"`
+	Fans   []Fan  `json:"fans"`
+}
+
+// Fan represents an individual fan within a fan tray
+type Fan struct {
+	Label           string `json:"label"`
+	Status          string `json:"status"`
+	Speed           int    `json:"speed"`
+	ConfiguredSpeed int    `json:"configuredSpeed"`
+}
+
+// ShowEnvironmentCooling returns fan/cooling status
+func (eos *Eos) ShowEnvironmentCooling() (*showEnvironmentCooling, error) {
+	shRsp := &showEnvironmentCooling{}
+
+	handle, err := eos.node.GetHandle("json")
+	if err != nil {
+		return nil, err
+	}
+	err = handle.AddCommand(shRsp)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := handle.Call(); err != nil {
+		return nil, err
+	}
+
+	handle.Close()
+
+	return shRsp, nil
+}
+
+// showInventory represents the response from "show inventory"
+type showInventory struct {
+	SystemInformation InventoryEntry            `json:"systemInformation"`
+	PowerSupplySlots  map[string]InventoryEntry `json:"powerSupplySlots"`
+	FanTraySlots      map[string]InventoryEntry `json:"fanTraySlots"`
+	XcvrSlots         map[string]InventoryEntry `json:"xcvrSlots"`
+	CardSlots         map[string]InventoryEntry `json:"cardSlots"`
+}
+
+func (s *showInventory) GetCmd() string {
+	return "show inventory"
+}
+
+// InventoryEntry represents a hardware component in the inventory
+type InventoryEntry struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	MfgDate     string `json:"mfgDate"`
+	HardwareRev string `json:"hardwareRev"`
+	SerialNum   string `json:"serialNum"`
+}
+
+// ShowInventory returns the hardware inventory
+func (eos *Eos) ShowInventory() (*showInventory, error) {
+	shRsp := &showInventory{}
+
+	handle, err := eos.node.GetHandle("json")
+	if err != nil {
+		return nil, err
+	}
+	err = handle.AddCommand(shRsp)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := handle.Call(); err != nil {
+		return nil, err
+	}
+
+	handle.Close()
+
+	return shRsp, nil
+}
+
 // MlagInterface represents a Port-Channel interface with an MLAG ID
 type MlagInterface struct {
 	Name   string

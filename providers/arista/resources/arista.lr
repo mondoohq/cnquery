@@ -38,6 +38,8 @@ arista.eos {
   mlag() arista.eos.mlag
   // Standard IP access control lists
   acls() []arista.eos.acl
+  // Hardware environment and inventory
+  hardware() arista.eos.hardware
 }
 
 // Arista EOS system's operating configuration
@@ -361,4 +363,68 @@ private arista.eos.acl.entry @defaults("sequenceNumber action") {
   srcPrefixLen int
   // Whether logging is enabled for this rule
   log bool
+}
+
+// Arista EOS hardware environment and inventory
+arista.eos.hardware {
+  // Power supply units
+  powerSupplies() []arista.eos.hardware.powerSupply
+  // Cooling fans
+  fans() []arista.eos.hardware.fan
+  // Hardware inventory (chassis, modules, transceivers)
+  inventory() []arista.eos.hardware.inventoryItem
+}
+
+// Arista EOS power supply unit
+private arista.eos.hardware.powerSupply @defaults("name state modelName") {
+  // Power supply slot name (e.g., "1", "2")
+  name string
+  // Operational state (ok, powerLoss, etc.)
+  state string
+  // Power supply model name
+  modelName string
+  // Maximum output capacity in watts
+  capacity int
+  // Current output power in watts
+  outputPower float
+  // Current input current in amps
+  inputCurrent float
+  // Current output current in amps
+  outputCurrent float
+  // PSU uptime in seconds
+  uptime float
+  // Whether this PSU is managed by the system
+  managed bool
+  // Temperature sensors on this PSU
+  tempSensors []dict
+  // Cooling fans on this PSU
+  fans []dict
+}
+
+// Arista EOS cooling fan
+private arista.eos.hardware.fan @defaults("name status speed") {
+  // Fan identifier (e.g., "1/1", "2/1")
+  name string
+  // Fan label
+  label string
+  // Operational status (ok, down, notInserted, etc.)
+  status string
+  // Current speed percentage
+  speed int
+  // Configured speed percentage
+  configuredSpeed int
+}
+
+// Arista EOS hardware inventory item
+private arista.eos.hardware.inventoryItem @defaults("name description serialNumber") {
+  // Component name (e.g., "Chassis", "Supervisor", "PowerSupply1")
+  name string
+  // Component description
+  description string
+  // Serial number
+  serialNumber string
+  // Manufacturing date
+  manufacturerDate string
+  // Hardware revision
+  hardwareRevision string
 }
