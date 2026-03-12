@@ -8,7 +8,6 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strconv"
 	"strings"
 	"syscall"
@@ -24,19 +23,6 @@ type CommandRunner interface {
 }
 
 type statParser func(name string) (os.FileInfo, error)
-
-var ESCAPEREGEX = regexp.MustCompile(`[^\w@%+=:,./-]`)
-
-func ShellEscape(s string) string {
-	if len(s) == 0 {
-		return "''"
-	}
-	if ESCAPEREGEX.MatchString(s) {
-		return "'" + strings.ReplaceAll(s, "'", "'\"'\"'") + "'"
-	}
-
-	return s
-}
 
 func New(cmdRunner CommandRunner) *statHelper {
 	return &statHelper{
@@ -94,7 +80,7 @@ func (s *statHelper) Stat(name string) (os.FileInfo, error) {
 }
 
 func (s *statHelper) linux(name string) (os.FileInfo, error) {
-	path := ShellEscape(name)
+	path := shared.ShellEscape(name)
 
 	// check if file exists
 	cmd, err := s.commandRunner.RunCommand("test -e " + path)
@@ -182,7 +168,7 @@ func (s *statHelper) linux(name string) (os.FileInfo, error) {
 func (s *statHelper) unix(name string) (os.FileInfo, error) {
 	lstat := "-L"
 	format := "-f"
-	path := ShellEscape(name)
+	path := shared.ShellEscape(name)
 
 	var sb strings.Builder
 	sb.WriteString("stat ")
@@ -249,7 +235,7 @@ func (s *statHelper) unix(name string) (os.FileInfo, error) {
 }
 
 func (s *statHelper) aix(name string) (os.FileInfo, error) {
-	path := ShellEscape(name)
+	path := shared.ShellEscape(name)
 	var sb strings.Builder
 
 	// AIX does not ship with stat, therefore we use perl stat function to retrieve the same information as on linux

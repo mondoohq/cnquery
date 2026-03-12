@@ -17,7 +17,6 @@ import (
 
 	"github.com/coreos/go-systemd/unit"
 	"github.com/spf13/afero"
-	"go.mondoo.com/mql/v13/providers/os/connection/local/statutil"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 )
 
@@ -107,7 +106,7 @@ func buildSystemdShowCommand(units []string) string {
 
 	escaped := make([]string, len(args))
 	for i := range args {
-		escaped[i] = statutil.ShellEscape(args[i])
+		escaped[i] = shared.ShellEscape(args[i])
 	}
 
 	return strings.Join(escaped, " ")
