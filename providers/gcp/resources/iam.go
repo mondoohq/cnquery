@@ -52,6 +52,10 @@ func initGcpProjectIamServiceServiceAccount(runtime *plugin.Runtime, args map[st
 		return args, nil, nil
 	}
 
+	if args["projectId"] == nil || args["email"] == nil {
+		return args, nil, nil
+	}
+
 	obj, err := CreateResource(runtime, "gcp.project.iamService", map[string]*llx.RawData{
 		"projectId": llx.StringData(args["projectId"].Value.(string)),
 	})
