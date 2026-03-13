@@ -120,6 +120,7 @@ type SlowQueryInfo struct {
 	CodeID   string
 	Query    string
 	Duration time.Duration
+	Platform *PlatformInfo
 }
 
 func ReportSlowQuery(product, version, build string, q SlowQueryInfo) {
@@ -158,6 +159,7 @@ func sendSlowQuery(product, version, build string, q SlowQueryInfo) {
 		Error: &ErrorInfo{
 			Message: msg,
 		},
+		Platform: q.Platform,
 	}
 
 	// 3. send error to mondoo platform
