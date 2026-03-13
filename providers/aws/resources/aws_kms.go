@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/google/uuid"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/kms/types"
 	"github.com/rs/zerolog/log"
@@ -37,10 +38,10 @@ func NormalizeKmsKeyRef(s, region, accountId string) (arn.ARN, error) {
 		return parsed, nil
 	}
 
-	// Fallback: check if it's a key ID (UUID format: 36 chars with hyphens)
+	// Fallback: check if it's a key ID (UUID format)
 	// Example: 7a4eb143-c07b-4e24-b0b7-f3abfdbbb2c2
 	// This is an edge case where Secrets Manager returns just the key ID
-	if len(s) == 36 && s[8] == '-' && s[13] == '-' && s[18] == '-' && s[23] == '-' {
+	if _, uuidErr := uuid.Parse(s); uuidErr == nil {
 		if region == "" {
 			return arn.ARN{}, fmt.Errorf("cannot normalize KMS key UUID %q without a region", s)
 		}
@@ -145,13 +146,7 @@ func (a *mqlAwsKmsKey) metadata() (any, error) {
 	if a.isCrossAccountKey() {
 		return nil, nil
 	}
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	key := a.Arn.Data
-
-	svc := conn.Kms(a.Region.Data)
-	ctx := context.Background()
-
-	md, err := svc.DescribeKey(ctx, &kms.DescribeKeyInput{KeyId: &key})
+	md, err := a.getKeyMetadata()
 	if err != nil {
 		return nil, err
 	}
