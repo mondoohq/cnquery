@@ -40,6 +40,9 @@ func NormalizeKmsKeyRef(s, region, accountId string) (arn.ARN, error) {
 	// Example: 7a4eb143-c07b-4e24-b0b7-f3abfdbbb2c2
 	// This is an edge case where Secrets Manager returns just the key ID
 	if len(s) == 36 && s[8] == '-' && s[13] == '-' && s[18] == '-' && s[23] == '-' {
+		if region == "" {
+			return arn.ARN{}, fmt.Errorf("cannot normalize KMS key UUID %q without a region", s)
+		}
 		return arn.ARN{
 			Partition: "aws",
 			Service:   "kms",
@@ -355,7 +358,7 @@ func initAwsKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 	if arnVal.AccountID != conn.AccountId() {
 		// Cross-account key not yet supported
 		// Todo isCrossAccount and accessible check to handle policy limitations in same and another account
-		log.Error().Str("arn", normalizedArn).Str("keyAccount", arnVal.AccountID).Str("currentAccount", conn.AccountId()).Msg("cross-account KMS keys are not supported yet")
+		log.Warn().Str("arn", normalizedArn).Str("keyAccount", arnVal.AccountID).Str("currentAccount", conn.AccountId()).Msg("cross-account KMS keys are not supported yet")
 		return nil, nil, fmt.Errorf("cross-account KMS keys are not supported yet: %s (belongs to account %s)", normalizedArn, arnVal.AccountID)
 	}
 
@@ -370,13 +373,10 @@ func initAwsKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 		return nil, nil, rawResources.Error
 	}
 
-	// Extract key ID from input for cache matching (handles both ARN and UUID inputs)
-	inputKeyId := extractKmsKeyId(a)
-
 	for _, rawResource := range rawResources.Data {
 		key := rawResource.(*mqlAwsKmsKey)
 		// Match by ARN or by key ID (for UUID-only inputs)
-		if key.Arn.Data == normalizedArn || key.Id.Data == inputKeyId {
+		if key.Arn.Data == normalizedArn || key.Id.Data == a {
 			// Use actual values from cache
 			args["arn"] = llx.StringData(key.Arn.Data)
 			args["region"] = llx.StringData(key.Region.Data)
@@ -386,12 +386,4 @@ func initAwsKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 	}
 
 	return nil, nil, errors.New("key not found")
-}
-
-// extractKmsKeyId extracts the key ID from an ARN resource string like "key/uuid"
-func extractKmsKeyId(resource string) string {
-	if len(resource) > 4 && resource[:4] == "key/" {
-		return resource[4:]
-	}
-	return resource
 }
