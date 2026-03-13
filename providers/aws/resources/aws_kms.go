@@ -267,6 +267,9 @@ func (a *mqlAwsKmsKey) getKeyMetadata() (*types.KeyMetadata, error) {
 }
 
 func (a *mqlAwsKmsKey) createdAt() (*time.Time, error) {
+	if a.isCrossAccountKey() {
+		return nil, nil
+	}
 	md, err := a.getKeyMetadata()
 	if err != nil {
 		return nil, err
@@ -275,6 +278,9 @@ func (a *mqlAwsKmsKey) createdAt() (*time.Time, error) {
 }
 
 func (a *mqlAwsKmsKey) deletedAt() (*time.Time, error) {
+	if a.isCrossAccountKey() {
+		return nil, nil
+	}
 	md, err := a.getKeyMetadata()
 	if err != nil {
 		return nil, err
@@ -283,6 +289,9 @@ func (a *mqlAwsKmsKey) deletedAt() (*time.Time, error) {
 }
 
 func (a *mqlAwsKmsKey) enabled() (bool, error) {
+	if a.isCrossAccountKey() {
+		return false, nil
+	}
 	md, err := a.getKeyMetadata()
 	if err != nil {
 		return false, err
@@ -291,6 +300,9 @@ func (a *mqlAwsKmsKey) enabled() (bool, error) {
 }
 
 func (a *mqlAwsKmsKey) description() (string, error) {
+	if a.isCrossAccountKey() {
+		return "", nil
+	}
 	md, err := a.getKeyMetadata()
 	if err != nil {
 		return "", err
@@ -303,6 +315,9 @@ func (a *mqlAwsKmsKey) id() (string, error) {
 }
 
 func (a *mqlAwsKmsKey) grants() ([]any, error) {
+	if a.isCrossAccountKey() {
+		return []any{}, nil
+	}
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	keyArn := a.Arn.Data
 
