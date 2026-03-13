@@ -169,5 +169,13 @@ func (a *mqlAwsAcmCertificate) certificate() (plugin.Resource, error) {
 	if err != nil {
 		return nil, err
 	}
-	return list.Value.([]any)[0].(plugin.Resource), nil
+	items, ok := list.Value.([]any)
+	if !ok || len(items) == 0 {
+		return nil, errors.New("no certificate data returned")
+	}
+	res, ok := items[0].(plugin.Resource)
+	if !ok {
+		return nil, errors.New("unexpected certificate data type")
+	}
+	return res, nil
 }

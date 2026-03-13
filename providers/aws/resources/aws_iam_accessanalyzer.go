@@ -104,6 +104,9 @@ func (a *mqlAwsIamAccessAnalyzer) findings() ([]any, error) {
 
 	// we need to retrieve all the analyzers first and we group them by region to request all findings
 	analyzerList := a.GetAnalyzers()
+	if analyzerList.Error != nil {
+		return nil, analyzerList.Error
+	}
 	for _, analyzer := range analyzerList.Data {
 		analyzerInstance, ok := analyzer.(*mqlAwsIamAccessanalyzerAnalyzer)
 		if !ok {
