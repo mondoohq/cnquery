@@ -308,9 +308,97 @@ func TestSystemDServiceManagerGetReturnsNotFound(t *testing.T) {
 	assert.Equal(t, []string{showCmd}, conn.commands)
 }
 
-func TestSystemDServiceManagerListUsesBatchedShow(t *testing.T) {
-	const listCmd = "systemctl list-unit-files --type service --all"
-	const showCmd = "systemctl show --property=Id,LoadState,ActiveState,UnitFileState,Description alpha.service beta.service"
+func TestParseSystemdListUnits(t *testing.T) {
+	input := strings.NewReader(strings.Join([]string{
+		"  UNIT                               LOAD      ACTIVE   SUB     DESCRIPTION",
+		"  accounts-daemon.service            loaded    active   running Accounts Service",
+		"  acpid.service                      loaded    inactive dead    ACPI Events Daemon",
+		"  apparmor.service                   loaded    active   exited  Load AppArmor profiles",
+		"● auditd.service                     not-found inactive dead    auditd.service",
+		"  cron.service                       loaded    active   running Regular background program processing daemon",
+		"  ssh.service                        loaded    inactive dead    OpenBSD Secure Shell server",
+		"  dbus.target                        loaded    active   active  D-Bus",
+		"",
+		"LOAD   = Reflects whether the unit definition was properly loaded.",
+		"ACTIVE = The high-level unit activation state, i.e. generalization of SUB.",
+		"SUB    = The low-level unit activation state, values depend on unit type.",
+		"",
+		"7 loaded units listed.",
+		"",
+	}, "\n"))
+
+	services, err := ParseSystemdListUnits(input)
+	require.NoError(t, err)
+	// 6 .service units (dbus.target is excluded)
+	require.Len(t, services, 6)
+
+	// Active running service
+	assert.Equal(t, "accounts-daemon", services["accounts-daemon"].Name)
+	assert.True(t, services["accounts-daemon"].Running)
+	assert.True(t, services["accounts-daemon"].Installed)
+	assert.Equal(t, "Accounts Service", services["accounts-daemon"].Description)
+
+	// Inactive (dead) service
+	assert.False(t, services["acpid"].Running)
+	assert.True(t, services["acpid"].Installed)
+
+	// Active but exited (oneshot that ran successfully)
+	assert.True(t, services["apparmor"].Running)
+	assert.Equal(t, "Load AppArmor profiles", services["apparmor"].Description)
+
+	// Not-found unit (preceded by bullet)
+	assert.False(t, services["auditd"].Running)
+	assert.False(t, services["auditd"].Installed)
+
+	// SSH - inactive
+	assert.False(t, services["ssh"].Running)
+	assert.Equal(t, "OpenBSD Secure Shell server", services["ssh"].Description)
+
+	// Non-.service unit should be excluded
+	assert.Nil(t, services["dbus"])
+}
+
+func TestParseServiceSystemDShowMergedRecords(t *testing.T) {
+	// Simulates what happens when systemctl show skips a template unit and
+	// doesn't output a blank-line separator between adjacent records.
+	services, err := ParseServiceSystemDShow(strings.NewReader(strings.Join([]string{
+		"Id=svc-before.service",
+		"Description=Before Template",
+		"LoadState=loaded",
+		"ActiveState=active",
+		"UnitFileState=enabled",
+		// No blank line here — template was skipped by systemctl show
+		"Id=svc-after.service",
+		"Description=After Template",
+		"LoadState=loaded",
+		"ActiveState=inactive",
+		"UnitFileState=disabled",
+		"",
+	}, "\n")))
+	require.NoError(t, err)
+	require.Len(t, services, 2)
+
+	assert.Equal(t, &Service{
+		Name:        "svc-before",
+		Description: "Before Template",
+		Installed:   true,
+		Running:     true,
+		Enabled:     true,
+		Type:        "systemd",
+	}, services["svc-before"])
+	assert.Equal(t, &Service{
+		Name:        "svc-after",
+		Description: "After Template",
+		Installed:   true,
+		Running:     false,
+		Enabled:     false,
+		Type:        "systemd",
+	}, services["svc-after"])
+}
+
+func TestSystemDServiceManagerListUsesListUnits(t *testing.T) {
+	const listFilesCmd = "systemctl list-unit-files --type service --all"
+	const listUnitsCmd = "systemctl list-units --type service --all"
 
 	mockConn, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{
@@ -319,28 +407,28 @@ func TestSystemDServiceManagerListUsesBatchedShow(t *testing.T) {
 		},
 	}, mock.WithData(&mock.TomlData{
 		Commands: map[string]*mock.Command{
-			listCmd: {
+			listFilesCmd: {
 				Stdout: strings.Join([]string{
 					"UNIT FILE STATE PRESET",
 					"alpha.service enabled enabled",
 					"beta.service static enabled",
-					"2 unit files listed.",
+					"gamma.service disabled enabled",
+					"template@.service static enabled",
+					"4 unit files listed.",
 					"",
 				}, "\n"),
 			},
-			showCmd: {
+			listUnitsCmd: {
 				Stdout: strings.Join([]string{
-					"Id=alpha.service",
-					"Description=Alpha Service",
-					"LoadState=loaded",
-					"ActiveState=active",
-					"UnitFileState=enabled",
+					"  UNIT              LOAD   ACTIVE   SUB     DESCRIPTION",
+					"  alpha.service     loaded active   running Alpha Service",
+					"  beta.service      loaded inactive dead    Beta Service",
 					"",
-					"Id=beta.service",
-					"Description=Beta Service",
-					"LoadState=loaded",
-					"ActiveState=inactive",
-					"UnitFileState=static",
+					"LOAD   = ...",
+					"ACTIVE = ...",
+					"SUB    = ...",
+					"",
+					"2 loaded units listed.",
 					"",
 				}, "\n"),
 			},
@@ -353,18 +441,31 @@ func TestSystemDServiceManagerListUsesBatchedShow(t *testing.T) {
 
 	services, err := mgr.List()
 	require.NoError(t, err)
-	require.Len(t, services, 2)
-	assert.Equal(t, []string{listCmd, showCmd}, conn.commands)
+	require.Len(t, services, 4)
+	// Exactly 2 commands: list-unit-files + list-units
+	assert.Equal(t, []string{listFilesCmd, listUnitsCmd}, conn.commands)
 
 	servicesMap := map[string]*Service{}
 	for _, service := range services {
 		servicesMap[service.Name] = service
 	}
 
+	// alpha: in both list-unit-files (enabled) and list-units (active)
 	assert.Equal(t, "Alpha Service", servicesMap["alpha"].Description)
 	assert.True(t, servicesMap["alpha"].Running)
 	assert.True(t, servicesMap["alpha"].Enabled)
+
+	// beta: in both, but inactive
 	assert.Equal(t, "Beta Service", servicesMap["beta"].Description)
 	assert.False(t, servicesMap["beta"].Running)
 	assert.True(t, servicesMap["beta"].Static)
+
+	// gamma: only in list-unit-files (not loaded), Running stays false
+	assert.False(t, servicesMap["gamma"].Running)
+	assert.False(t, servicesMap["gamma"].Enabled)
+	assert.Equal(t, "", servicesMap["gamma"].Description)
+
+	// template@: only in list-unit-files, correctly not running
+	assert.False(t, servicesMap["template@"].Running)
+	assert.True(t, servicesMap["template@"].Static)
 }
