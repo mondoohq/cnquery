@@ -128,8 +128,29 @@ func (a *mqlAwsKms) getKeys(conn *connection.AwsConnection) []*jobpool.Job {
 	return tasks
 }
 
+// isCrossAccountKey returns true if this KMS key belongs to a different AWS account.
+// Cross-account keys cannot be queried for details like metadata, tags, or aliases.
+func (a *mqlAwsKmsKey) isCrossAccountKey() bool {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	keyArn := a.Arn.Data
+	parsed, err := arn.Parse(keyArn)
+	if err != nil {
+		return false
+	}
+	return parsed.AccountID != conn.AccountId()
+}
+
 func (a *mqlAwsKmsKey) metadata() (any, error) {
-	md, err := a.getKeyMetadata()
+	if a.isCrossAccountKey() {
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	key := a.Arn.Data
+
+	svc := conn.Kms(a.Region.Data)
+	ctx := context.Background()
+
+	md, err := svc.DescribeKey(ctx, &kms.DescribeKeyInput{KeyId: &key})
 	if err != nil {
 		return nil, err
 	}
@@ -137,6 +158,9 @@ func (a *mqlAwsKmsKey) metadata() (any, error) {
 }
 
 func (a *mqlAwsKmsKey) keyRotationEnabled() (bool, error) {
+	if a.isCrossAccountKey() {
+		return false, nil
+	}
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	keyId := a.Id.Data
 
@@ -151,6 +175,9 @@ func (a *mqlAwsKmsKey) keyRotationEnabled() (bool, error) {
 }
 
 func (a *mqlAwsKmsKey) tags() (map[string]any, error) {
+	if a.isCrossAccountKey() {
+		return nil, nil
+	}
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	keyArn := a.Arn.Data
 
@@ -174,6 +201,9 @@ func (a *mqlAwsKmsKey) tags() (map[string]any, error) {
 }
 
 func (a *mqlAwsKmsKey) aliases() ([]any, error) {
+	if a.isCrossAccountKey() {
+		return []any{}, nil
+	}
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	keyArn := a.Arn.Data
 
@@ -196,6 +226,9 @@ func (a *mqlAwsKmsKey) aliases() ([]any, error) {
 }
 
 func (a *mqlAwsKmsKey) keyState() (string, error) {
+	if a.isCrossAccountKey() {
+		return "", nil
+	}
 	md, err := a.getKeyMetadata()
 	if err != nil {
 		return "", err
