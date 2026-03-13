@@ -380,41 +380,39 @@ func addConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, 
 	}
 	// if the ssm agent indicates it is online, we assume ssm is an option
 	if isSsmOnline(instance) {
-		{
-			asset.Labels[MondooSsmConnection] = "Online"
-			if len(asset.Connections) > 0 {
-				asset.Connections[0].Credentials = append(asset.Connections[0].Credentials, &vault.Credential{
+		asset.Labels[MondooSsmConnection] = "Online"
+		if len(asset.Connections) > 0 {
+			asset.Connections[0].Credentials = append(asset.Connections[0].Credentials, &vault.Credential{
+				User: probableUsername,
+				Type: vault.CredentialType_aws_ec2_ssm_session,
+			})
+		} else {
+			// if we don't have a connection already, we need to add one
+			creds := []*vault.Credential{
+				{
 					User: probableUsername,
 					Type: vault.CredentialType_aws_ec2_ssm_session,
-				})
-			} else {
-				// if we don't have a connection already, we need to add one
-				creds := []*vault.Credential{
-					{
-						User: probableUsername,
-						Type: vault.CredentialType_aws_ec2_ssm_session,
-					},
-				}
-
-				// try the public ip first, the private ip last.
-				host := instance.InstanceId.Data
-				if instance.PublicIp.Data != "" {
-					host = instance.PublicIp.Data
-				} else if instance.PrivateIp.Data != "" {
-					host = instance.PrivateIp.Data
-				}
-				asset.Connections = []*inventory.Config{{
-					Host:        host,
-					Insecure:    true,
-					Runtime:     "aws_ec2",
-					Credentials: creds,
-					Options: map[string]string{
-						"region":   instance.Region.Data,
-						"profile":  conn.Profile(),
-						"instance": instance.InstanceId.Data,
-					},
-				}}
+				},
 			}
+
+			// try the public ip first, the private ip last.
+			host := instance.InstanceId.Data
+			if instance.PublicIp.Data != "" {
+				host = instance.PublicIp.Data
+			} else if instance.PrivateIp.Data != "" {
+				host = instance.PrivateIp.Data
+			}
+			asset.Connections = []*inventory.Config{{
+				Host:        host,
+				Insecure:    true,
+				Runtime:     "aws_ec2",
+				Credentials: creds,
+				Options: map[string]string{
+					"region":   instance.Region.Data,
+					"profile":  conn.Profile(),
+					"instance": instance.InstanceId.Data,
+				},
+			}}
 		}
 	}
 	return asset
