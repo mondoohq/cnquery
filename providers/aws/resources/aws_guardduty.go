@@ -99,8 +99,16 @@ func (a *mqlAwsGuarddutyDetector) populateData() error {
 	a.CreatedAt = plugin.TValue[*time.Time]{State: plugin.StateIsSet | plugin.StateIsNull}
 	a.UpdatedAt = plugin.TValue[*time.Time]{State: plugin.StateIsSet | plugin.StateIsNull}
 
-	detectorId := a.GetId().Data
-	region := a.GetRegion().Data
+	idVal := a.GetId()
+	if idVal.Error != nil {
+		return idVal.Error
+	}
+	regionVal := a.GetRegion()
+	if regionVal.Error != nil {
+		return regionVal.Error
+	}
+	detectorId := idVal.Data
+	region := regionVal.Data
 
 	svc := conn.Guardduty(region)
 
@@ -180,6 +188,9 @@ func (a *mqlAwsGuardduty) findings() ([]any, error) {
 	// we need to retrieve all the detectors first and we group them by region to request all findings
 	detectorMap := map[string][]string{}
 	detectorList := a.GetDetectors()
+	if detectorList.Error != nil {
+		return nil, detectorList.Error
+	}
 	for _, detector := range detectorList.Data {
 		detectorInstance, ok := detector.(*mqlAwsGuarddutyDetector)
 		if !ok {
