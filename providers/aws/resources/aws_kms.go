@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -356,10 +357,15 @@ func initAwsKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 	args["region"] = llx.StringData(arnVal.Region)
 
 	if arnVal.AccountID != conn.AccountId() {
-		// Cross-account key not yet supported
-		// Todo isCrossAccount and accessible check to handle policy limitations in same and another account
-		log.Warn().Str("arn", normalizedArn).Str("keyAccount", arnVal.AccountID).Str("currentAccount", conn.AccountId()).Msg("cross-account KMS keys are not supported yet")
-		return nil, nil, fmt.Errorf("cross-account KMS keys are not supported yet: %s (belongs to account %s)", normalizedArn, arnVal.AccountID)
+		// Cross-account key: we can't fetch details, but we should still return the ARN
+		// so security tools can see which KMS key is referenced
+		log.Warn().Str("arn", normalizedArn).Str("currentAccount", conn.AccountId()).Str("keyAccount", arnVal.AccountID).Msg("cross-account KMS keys are not supported yet, returning ARN only")
+		// Extract key ID from the ARN resource part (e.g., "key/uuid" -> "uuid")
+		keyId := strings.TrimPrefix(arnVal.Resource, "key/")
+		args["id"] = llx.StringData(keyId)
+		args["arn"] = llx.StringData(normalizedArn)
+		args["region"] = llx.StringData(arnVal.Region)
+		return args, nil, nil
 	}
 
 	obj, err := CreateResource(runtime, ResourceAwsKms, map[string]*llx.RawData{})
