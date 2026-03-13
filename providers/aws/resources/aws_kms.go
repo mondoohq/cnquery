@@ -135,6 +135,7 @@ func (a *mqlAwsKmsKey) isCrossAccountKey() bool {
 	keyArn := a.Arn.Data
 	parsed, err := arn.Parse(keyArn)
 	if err != nil {
+		log.Warn().Err(err).Str("arn", keyArn).Msg("unable to parse KMS key ARN, treating as same-account")
 		return false
 	}
 	return parsed.AccountID != conn.AccountId()
@@ -396,8 +397,6 @@ func initAwsKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 		// Extract key ID from the ARN resource part (e.g., "key/uuid" -> "uuid")
 		keyId := strings.TrimPrefix(arnVal.Resource, "key/")
 		args["id"] = llx.StringData(keyId)
-		args["arn"] = llx.StringData(normalizedArn)
-		args["region"] = llx.StringData(arnVal.Region)
 		return args, nil, nil
 	}
 
