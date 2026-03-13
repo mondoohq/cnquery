@@ -139,6 +139,7 @@ const (
 	ResourceAwsSecretsmanagerSecretRotationRules                                string = "aws.secretsmanager.secret.rotationRules"
 	ResourceAwsEcs                                                              string = "aws.ecs"
 	ResourceAwsEcsCluster                                                       string = "aws.ecs.cluster"
+	ResourceAwsEcsClusterCapacityProviderStrategyItem                           string = "aws.ecs.cluster.capacityProviderStrategyItem"
 	ResourceAwsEcsInstance                                                      string = "aws.ecs.instance"
 	ResourceAwsEcsTask                                                          string = "aws.ecs.task"
 	ResourceAwsEcsContainer                                                     string = "aws.ecs.container"
@@ -865,6 +866,10 @@ func init() {
 		"aws.ecs.cluster": {
 			Init:   initAwsEcsCluster,
 			Create: createAwsEcsCluster,
+		},
+		"aws.ecs.cluster.capacityProviderStrategyItem": {
+			// to override args, implement: initAwsEcsClusterCapacityProviderStrategyItem(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEcsClusterCapacityProviderStrategyItem,
 		},
 		"aws.ecs.instance": {
 			// to override args, implement: initAwsEcsInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4763,6 +4768,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ecs.cluster.fargateEphemeralStorageKmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsCluster).GetFargateEphemeralStorageKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.ecs.cluster.capacityProviders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsCluster).GetCapacityProviders()).ToDataRes(types.Array(types.String))
+	},
+	"aws.ecs.cluster.defaultCapacityProviderStrategy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsCluster).GetDefaultCapacityProviderStrategy()).ToDataRes(types.Array(types.Resource("aws.ecs.cluster.capacityProviderStrategyItem")))
+	},
+	"aws.ecs.cluster.serviceConnectNamespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsCluster).GetServiceConnectNamespace()).ToDataRes(types.String)
+	},
+	"aws.ecs.cluster.statistics": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsCluster).GetStatistics()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.ecs.cluster.capacityProviderStrategyItem.capacityProvider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsClusterCapacityProviderStrategyItem).GetCapacityProvider()).ToDataRes(types.String)
+	},
+	"aws.ecs.cluster.capacityProviderStrategyItem.base": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsClusterCapacityProviderStrategyItem).GetBase()).ToDataRes(types.Int)
+	},
+	"aws.ecs.cluster.capacityProviderStrategyItem.weight": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsClusterCapacityProviderStrategyItem).GetWeight()).ToDataRes(types.Int)
 	},
 	"aws.ecs.instance.agentConnected": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsInstance).GetAgentConnected()).ToDataRes(types.Bool)
@@ -15980,6 +16006,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ecs.cluster.fargateEphemeralStorageKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsCluster).FargateEphemeralStorageKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.cluster.capacityProviders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsCluster).CapacityProviders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.cluster.defaultCapacityProviderStrategy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsCluster).DefaultCapacityProviderStrategy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.cluster.serviceConnectNamespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsCluster).ServiceConnectNamespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.cluster.statistics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsCluster).Statistics, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.cluster.capacityProviderStrategyItem.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsClusterCapacityProviderStrategyItem).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ecs.cluster.capacityProviderStrategyItem.capacityProvider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsClusterCapacityProviderStrategyItem).CapacityProvider, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.cluster.capacityProviderStrategyItem.base": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsClusterCapacityProviderStrategyItem).Base, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.cluster.capacityProviderStrategyItem.weight": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsClusterCapacityProviderStrategyItem).Weight, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -37751,6 +37809,10 @@ type mqlAwsEcsCluster struct {
 	Region                            plugin.TValue[string]
 	ActiveServicesCount               plugin.TValue[int64]
 	FargateEphemeralStorageKmsKey     plugin.TValue[*mqlAwsKmsKey]
+	CapacityProviders                 plugin.TValue[[]any]
+	DefaultCapacityProviderStrategy   plugin.TValue[[]any]
+	ServiceConnectNamespace           plugin.TValue[string]
+	Statistics                        plugin.TValue[map[string]any]
 }
 
 // createAwsEcsCluster creates a new instance of this resource
@@ -37896,6 +37958,88 @@ func (c *mqlAwsEcsCluster) GetFargateEphemeralStorageKmsKey() *plugin.TValue[*mq
 
 		return c.fargateEphemeralStorageKmsKey()
 	})
+}
+
+func (c *mqlAwsEcsCluster) GetCapacityProviders() *plugin.TValue[[]any] {
+	return &c.CapacityProviders
+}
+
+func (c *mqlAwsEcsCluster) GetDefaultCapacityProviderStrategy() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DefaultCapacityProviderStrategy, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.cluster", c.__id, "defaultCapacityProviderStrategy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.defaultCapacityProviderStrategy()
+	})
+}
+
+func (c *mqlAwsEcsCluster) GetServiceConnectNamespace() *plugin.TValue[string] {
+	return &c.ServiceConnectNamespace
+}
+
+func (c *mqlAwsEcsCluster) GetStatistics() *plugin.TValue[map[string]any] {
+	return &c.Statistics
+}
+
+// mqlAwsEcsClusterCapacityProviderStrategyItem for the aws.ecs.cluster.capacityProviderStrategyItem resource
+type mqlAwsEcsClusterCapacityProviderStrategyItem struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEcsClusterCapacityProviderStrategyItemInternal it will be used here
+	CapacityProvider plugin.TValue[string]
+	Base             plugin.TValue[int64]
+	Weight           plugin.TValue[int64]
+}
+
+// createAwsEcsClusterCapacityProviderStrategyItem creates a new instance of this resource
+func createAwsEcsClusterCapacityProviderStrategyItem(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEcsClusterCapacityProviderStrategyItem{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ecs.cluster.capacityProviderStrategyItem", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEcsClusterCapacityProviderStrategyItem) MqlName() string {
+	return "aws.ecs.cluster.capacityProviderStrategyItem"
+}
+
+func (c *mqlAwsEcsClusterCapacityProviderStrategyItem) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEcsClusterCapacityProviderStrategyItem) GetCapacityProvider() *plugin.TValue[string] {
+	return &c.CapacityProvider
+}
+
+func (c *mqlAwsEcsClusterCapacityProviderStrategyItem) GetBase() *plugin.TValue[int64] {
+	return &c.Base
+}
+
+func (c *mqlAwsEcsClusterCapacityProviderStrategyItem) GetWeight() *plugin.TValue[int64] {
+	return &c.Weight
 }
 
 // mqlAwsEcsInstance for the aws.ecs.instance resource

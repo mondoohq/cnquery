@@ -2441,6 +2441,24 @@ private aws.ecs.cluster @defaults("name region status runningTasksCount pendingT
   activeServicesCount int
   // KMS key used to encrypt Fargate ephemeral storage
   fargateEphemeralStorageKmsKey() aws.kms.key
+  // Capacity providers associated with the cluster
+  capacityProviders []string
+  // Default capacity provider strategy for the cluster
+  defaultCapacityProviderStrategy() []aws.ecs.cluster.capacityProviderStrategyItem
+  // Default Service Connect namespace name or ARN for the cluster
+  serviceConnectNamespace string
+  // Statistics for the cluster, broken down by launch type (e.g., runningEC2TasksCount, runningFargateTasksCount)
+  statistics map[string]string
+}
+
+// Capacity provider strategy item for an ECS cluster
+private aws.ecs.cluster.capacityProviderStrategyItem @defaults("capacityProvider base weight") {
+  // Short name of the capacity provider
+  capacityProvider string
+  // Minimum number of tasks to run on this capacity provider
+  base int
+  // Relative percentage of total tasks that should use this capacity provider
+  weight int
 }
 
 // AWS ECS container instance
