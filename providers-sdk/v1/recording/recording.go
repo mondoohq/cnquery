@@ -194,6 +194,9 @@ func connIdKey(id uint32) string {
 func (r *recording) refreshCache() {
 	r.assets = syncx.Map[*Asset]{}
 	for _, asset := range r.Assets {
+		if asset == nil {
+			continue
+		}
 		asset.RefreshCache()
 		r.resyncAsset(asset)
 	}
@@ -319,7 +322,9 @@ func reconnectResource(v any, resource *Resource) (any, error) {
 
 func (r *recording) finalize() {
 	for i := range r.Assets {
-		r.Assets[i].finalize()
+		if r.Assets[i] != nil {
+			r.Assets[i].finalize()
+		}
 	}
 }
 
@@ -514,9 +519,11 @@ func (r *recording) GetAssetRecordings() []*Asset {
 }
 
 func (r *recording) GetAssets() []*inventory.Asset {
-	assets := make([]*inventory.Asset, len(r.Assets))
+	assets := make([]*inventory.Asset, 0, len(r.Assets))
 	for i := range r.Assets {
-		assets[i] = r.Assets[i].Asset
+		if r.Assets[i] != nil {
+			assets = append(assets, r.Assets[i].Asset)
+		}
 	}
 	return assets
 }
