@@ -128,9 +128,13 @@ func initAwsS3BucketPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData
 	if err != nil {
 		return args, nil, err
 	}
+	bucket, ok := s3bucketResource.(*mqlAwsS3Bucket)
+	if !ok {
+		return args, nil, errors.New("unexpected resource type for s3 bucket")
+	}
 	// then use it to get its policy
-	policyResource := s3bucketResource.(*mqlAwsS3Bucket).GetPolicy()
-	if policyResource != nil && policyResource.State == plugin.StateIsSet {
+	policyResource := bucket.GetPolicy()
+	if policyResource != nil && policyResource.State == plugin.StateIsSet && policyResource.Data != nil {
 		return args, policyResource.Data, nil
 	}
 
@@ -141,7 +145,7 @@ func initAwsS3BucketPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData
 	resource.Version.State = plugin.StateIsNull | plugin.StateIsSet
 	resource.Statements.State = plugin.StateIsNull | plugin.StateIsSet
 	resource.BucketName = plugin.TValue[string]{
-		Data: s3bucketResource.(*mqlAwsS3Bucket).GetName().Data, State: plugin.StateIsSet,
+		Data: bucket.GetName().Data, State: plugin.StateIsSet,
 	}
 	return args, resource, nil
 }
@@ -481,7 +485,7 @@ func (a *mqlAwsS3Bucket) public() (bool, error) {
 
 	// If that didn't work, fetch the bucket policy manually and parse it
 	bucketPolicyResource := a.GetPolicy()
-	if bucketPolicyResource.State == plugin.StateIsSet {
+	if bucketPolicyResource.State == plugin.StateIsSet && bucketPolicyResource.Data != nil {
 		bucketPolicy, err := bucketPolicyResource.Data.parsePolicyDocument()
 		if err != nil {
 			return false, err
@@ -877,7 +881,7 @@ func (a *mqlAwsS3Bucket) staticWebsiteHosting() (map[string]any, error) {
 	if website.Error != nil {
 		return nil, website.Error
 	}
-	if website.State != plugin.StateIsSet {
+	if website.State != plugin.StateIsSet || website.Data == nil {
 		a.StaticWebsiteHosting.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
