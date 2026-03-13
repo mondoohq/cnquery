@@ -232,8 +232,8 @@ func initAwsEcsCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 			map[string]*llx.RawData{
 				"__id":             llx.StringData(clusterArn + "/capacityProviderStrategy/" + cpName),
 				"capacityProvider": llx.StringDataPtr(item.CapacityProvider),
-				"base":            llx.IntData(int64(item.Base)),
-				"weight":          llx.IntData(int64(item.Weight)),
+				"base":             llx.IntData(int64(item.Base)),
+				"weight":           llx.IntData(int64(item.Weight)),
 			})
 		if err != nil {
 			return nil, nil, err
@@ -245,7 +245,7 @@ func initAwsEcsCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	if c.ServiceConnectDefaults != nil {
 		args["serviceConnectNamespace"] = llx.StringDataPtr(c.ServiceConnectDefaults.Namespace)
 	} else {
-		args["serviceConnectNamespace"] = llx.StringData("")
+		args["serviceConnectNamespace"] = llx.NilData
 	}
 
 	return args, nil, nil
