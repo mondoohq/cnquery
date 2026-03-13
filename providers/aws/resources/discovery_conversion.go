@@ -304,6 +304,28 @@ func addMondooLabels(instance instanceInfo, asset *inventory.Asset) {
 	}
 }
 
+// isSsmOnline safely checks whether the SSM data for an EC2 instance indicates
+// that the SSM agent is online, using safe type assertions to avoid panics.
+func isSsmOnline(instance *mqlAwsEc2Instance) bool {
+	ssm := instance.GetSsm()
+	if ssm == nil || ssm.Data == nil {
+		return false
+	}
+	ssmMap, ok := ssm.Data.(map[string]any)
+	if !ok {
+		return false
+	}
+	infoList, ok := ssmMap["InstanceInformationList"].([]any)
+	if !ok || len(infoList) == 0 {
+		return false
+	}
+	firstEntry, ok := infoList[0].(map[string]any)
+	if !ok {
+		return false
+	}
+	return firstEntry["PingStatus"] == "Online"
+}
+
 func addConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, conn *connection.AwsConnection) *inventory.Asset {
 	asset := &inventory.Asset{}
 	asset.PlatformIds = []string{awsec2.MondooInstanceID(accountId, instance.Region.Data, instance.InstanceId.Data)}
@@ -357,8 +379,8 @@ func addConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, 
 		}}
 	}
 	// if the ssm agent indicates it is online, we assume ssm is an option
-	if instance.GetSsm() != nil && instance.GetSsm().Data != nil && len(instance.GetSsm().Data.(map[string]any)["InstanceInformationList"].([]any)) > 0 {
-		if instance.GetSsm().Data.(map[string]any)["InstanceInformationList"].([]any)[0].(map[string]any)["PingStatus"] == "Online" {
+	if isSsmOnline(instance) {
+		{
 			asset.Labels[MondooSsmConnection] = "Online"
 			if len(asset.Connections) > 0 {
 				asset.Connections[0].Credentials = append(asset.Connections[0].Credentials, &vault.Credential{
