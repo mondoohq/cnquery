@@ -97,12 +97,8 @@ func (a *mqlAwsIamAccessAnalyzer) getAnalyzers(conn *connection.AwsConnection) [
 	return tasks
 }
 
-func (a *mqlAwsIamAccessAnalyzer) findings() ([]any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
+func (a *mqlAwsIamAccessAnalyzer) getAnalyzerMap() (map[string][]string, error) {
 	analyzerMap := map[string][]string{}
-
-	// we need to retrieve all the analyzers first and we group them by region to request all findings
 	analyzerList := a.GetAnalyzers()
 	if analyzerList.Error != nil {
 		return nil, analyzerList.Error
@@ -112,27 +108,37 @@ func (a *mqlAwsIamAccessAnalyzer) findings() ([]any, error) {
 		if !ok {
 			return nil, errors.New("error casting to analyzer instance")
 		}
-
 		region := analyzerInstance.GetRegion().Data
 		if analyzerMap[region] == nil {
 			analyzerMap[region] = []string{}
 		}
-
 		analyzerMap[region] = append(analyzerMap[region], analyzerInstance.GetArn().Data)
 	}
+	return analyzerMap, nil
+}
 
-	// collect the list of findings
+func (a *mqlAwsIamAccessAnalyzer) findings() ([]any, error) {
+	return a.listFindingsWithStatus("ACTIVE")
+}
+
+func (a *mqlAwsIamAccessAnalyzer) archivedFindings() ([]any, error) {
+	return a.listFindingsWithStatus("ARCHIVED")
+}
+
+func (a *mqlAwsIamAccessAnalyzer) listFindingsWithStatus(status string) ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	analyzerMap, err := a.getAnalyzerMap()
+	if err != nil {
+		return nil, err
+	}
+
 	res := []any{}
-
-	// start ppol and run the jobs
-	poolOfJobs := jobpool.CreatePool(a.listFindings(conn, analyzerMap), 5)
+	poolOfJobs := jobpool.CreatePool(a.listFindings(conn, analyzerMap, status), 5)
 	poolOfJobs.Run()
 
-	// check for errors
 	if poolOfJobs.HasErrors() {
 		return nil, poolOfJobs.GetErrors()
 	}
-
 	for i := range poolOfJobs.Jobs {
 		results := poolOfJobs.Jobs[i].Result.([]any)
 		res = append(res, results...)
@@ -140,7 +146,7 @@ func (a *mqlAwsIamAccessAnalyzer) findings() ([]any, error) {
 	return res, nil
 }
 
-func (a *mqlAwsIamAccessAnalyzer) listFindings(conn *connection.AwsConnection, analyzerMap map[string][]string) []*jobpool.Job {
+func (a *mqlAwsIamAccessAnalyzer) listFindings(conn *connection.AwsConnection, analyzerMap map[string][]string, status string) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := conn.Regions()
 	if err != nil {
@@ -154,14 +160,13 @@ func (a *mqlAwsIamAccessAnalyzer) listFindings(conn *connection.AwsConnection, a
 
 			analyzerList := analyzerMap[region]
 			for _, analyzerArn := range analyzerList {
-
 				ctx := context.Background()
 
 				params := &accessanalyzer.ListFindingsV2Input{
 					AnalyzerArn: aws.String(analyzerArn),
 					Filter: map[string]aatypes.Criterion{
 						"status": {
-							Eq: []string{"ACTIVE"},
+							Eq: []string{status},
 						},
 					},
 				}
@@ -173,11 +178,11 @@ func (a *mqlAwsIamAccessAnalyzer) listFindings(conn *connection.AwsConnection, a
 							log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 							return res, nil
 						}
-						log.Error().Err(err).Str("region", region).Msg("error listing analyzers")
+						log.Error().Err(err).Str("region", region).Msg("error listing findings")
 						return nil, err
 					}
 					for _, finding := range findings.Findings {
-						mqlIamAnalyzserFindings, err := CreateResource(a.MqlRuntime, "aws.iam.accessanalyzer.finding",
+						mqlFinding, err := CreateResource(a.MqlRuntime, "aws.iam.accessanalyzer.finding",
 							map[string]*llx.RawData{
 								"__id":                 llx.StringDataPtr(finding.Id),
 								"id":                   llx.StringDataPtr(finding.Id),
@@ -196,7 +201,7 @@ func (a *mqlAwsIamAccessAnalyzer) listFindings(conn *connection.AwsConnection, a
 						if err != nil {
 							return nil, err
 						}
-						res = append(res, mqlIamAnalyzserFindings)
+						res = append(res, mqlFinding)
 					}
 				}
 			}

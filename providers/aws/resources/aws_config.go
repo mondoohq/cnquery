@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
@@ -90,13 +91,32 @@ func (a *mqlAwsConfig) getRecorders(conn *connection.AwsConnection) []*jobpool.J
 				if err != nil {
 					return nil, err
 				}
-				res = append(res, mqlRecorder)
+				mqlRecorderRes := mqlRecorder.(*mqlAwsConfigRecorder)
+				mqlRecorderRes.cacheRoleArn = r.RoleARN
+				res = append(res, mqlRecorderRes)
 			}
 			return jobpool.JobResult(res), nil
 		}
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+type mqlAwsConfigRecorderInternal struct {
+	cacheRoleArn *string
+}
+
+func (a *mqlAwsConfigRecorder) iamRole() (*mqlAwsIamRole, error) {
+	if a.cacheRoleArn == nil || *a.cacheRoleArn == "" {
+		a.IamRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.iam.role",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheRoleArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsIamRole), nil
 }
 
 func (a *mqlAwsConfig) deliveryChannels() ([]any, error) {

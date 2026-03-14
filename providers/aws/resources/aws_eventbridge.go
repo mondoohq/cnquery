@@ -10,6 +10,7 @@ import (
 	eventbridge_types "github.com/aws/aws-sdk-go-v2/service/eventbridge/types"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
@@ -174,7 +175,9 @@ func (a *mqlAwsEventbridgeEventBus) rules() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
-			res = append(res, mqlRule)
+			mqlRuleRes := mqlRule.(*mqlAwsEventbridgeRule)
+			mqlRuleRes.cacheRoleArn = rule.RoleArn
+			res = append(res, mqlRuleRes)
 		}
 
 		if resp.NextToken == nil {
@@ -183,6 +186,23 @@ func (a *mqlAwsEventbridgeEventBus) rules() ([]any, error) {
 		nextToken = resp.NextToken
 	}
 	return res, nil
+}
+
+type mqlAwsEventbridgeRuleInternal struct {
+	cacheRoleArn *string
+}
+
+func (a *mqlAwsEventbridgeRule) iamRole() (*mqlAwsIamRole, error) {
+	if a.cacheRoleArn == nil || *a.cacheRoleArn == "" {
+		a.IamRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.iam.role",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheRoleArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsIamRole), nil
 }
 
 func (a *mqlAwsEventbridgeRule) tags() (map[string]any, error) {
