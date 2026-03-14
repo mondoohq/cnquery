@@ -1260,7 +1260,6 @@ func (a *mqlAwsSagemaker) getDomains(conn *connection.AwsConnection) []*jobpool.
 						return nil, err
 					}
 					d := mqlDomain.(*mqlAwsSagemakerDomain)
-					d.region = region
 					if eagerTags != nil {
 						d.cacheTags = eagerTags
 						d.tagsFetched = true
@@ -1279,7 +1278,6 @@ type mqlAwsSagemakerDomainInternal struct {
 	sagemakerTagsCache
 	detailsFetched           bool
 	detailsLock              sync.Mutex
-	region                   string
 	cacheAuthMode            *string
 	cacheAppNetworkAccess    *string
 	cacheVpcId               *string
@@ -1308,7 +1306,7 @@ func (a *mqlAwsSagemakerDomain) fetchDetails() error {
 	}
 
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	svc := conn.Sagemaker(a.region)
+	svc := conn.Sagemaker(a.Region.Data)
 	ctx := context.Background()
 	domainId := a.DomainId.Data
 	resp, err := svc.DescribeDomain(ctx, &sagemaker.DescribeDomainInput{DomainId: &domainId})
