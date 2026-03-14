@@ -11,6 +11,15 @@ on:
       - ".github/workflows/pr-test-lint.yml"
       - ".github/workflows/reusable-lint-providers.yml"
       - "**.toml" # run tests when any recording changed
+  pull_request:
+    paths:
+      - "**.go"
+      - "**.mod"
+      - "go.sum"
+      - "Makefile"
+      - ".github/workflows/pr-test-lint.yml"
+      - ".github/workflows/reusable-lint-providers.yml"
+      - "**.toml" # run tests when any recording changed
 
 permissions:
   contents: read
@@ -91,7 +100,7 @@ jobs:
 
       - name: Set provider env
         run: echo "PROVIDERS_PATH=${PWD}/.providers" >> $GITHUB_ENV
-      - name: Display Provider PAth
+      - name: Display Provider Path
         run: echo $PROVIDERS_PATH
 
       - name: Test mql
@@ -128,7 +137,7 @@ jobs:
 
       - name: Set provider env
         run: echo "PROVIDERS_PATH=${PWD}/.providers" >> $GITHUB_ENV
-      - name: Display Provider PAth
+      - name: Display Provider Path
         run: echo $PROVIDERS_PATH
 
       - name: Test mql CLI and Providers

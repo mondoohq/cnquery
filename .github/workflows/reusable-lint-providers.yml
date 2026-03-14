@@ -35,12 +35,13 @@ jobs:
       - name: Run golangci-lint on all providers
         env:
           ONLY_NEW_ISSUES: ${{ inputs.only-new-issues }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           failed=""
           extra_args=""
           if [ "$ONLY_NEW_ISSUES" = "true" ] && [ -n "${BASE_SHA}" ]; then
-            git fetch origin "${BASE_SHA}"
-            extra_args="--new-from-rev=${BASE_SHA}"  
+            git fetch origin "${BASE_SHA}" --depth=1
+            extra_args="--new-from-rev=${BASE_SHA}"
           fi
           for provider in providers/*/; do
             # Skip providers without go.mod (they are part of the main module)
