@@ -18,6 +18,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/athena v1.57.3
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.64.3
 	github.com/aws/aws-sdk-go-v2/service/backup v1.54.9
+	github.com/aws/aws-sdk-go-v2/service/batch v1.61.2
+	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.71.8
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.60.3
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.55.8
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.55.2
@@ -55,6 +57,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.43.3
 	github.com/aws/aws-sdk-go-v2/service/kms v1.50.3
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.88.3
+	github.com/aws/aws-sdk-go-v2/service/lightsail v1.50.14
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.50.12
 	github.com/aws/aws-sdk-go-v2/service/memorydb v1.33.13
 	github.com/aws/aws-sdk-go-v2/service/mq v1.34.18
@@ -62,6 +65,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.59.6
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.60.1
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.50.5
+	github.com/aws/aws-sdk-go-v2/service/pipes v1.23.19
 	github.com/aws/aws-sdk-go-v2/service/rds v1.116.3
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.62.4
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.62.4
@@ -69,6 +73,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.97.1
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.68.3
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.236.1
+	github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.21
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.41.4
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.68.2
 	github.com/aws/aws-sdk-go-v2/service/shield v1.34.20
