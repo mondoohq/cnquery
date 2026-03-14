@@ -5055,7 +5055,7 @@ private aws.apigateway.restapi @defaults("name id") {
   binaryMediaTypes []string
   // Version identifier for the API
   version string
-  // TLS version and cipher suite for the API (TLS_1_0 or TLS_1_2)
+  // TLS version and cipher suite for the API (TLS_1_0, TLS_1_2, SecurityPolicy_TLS13_1_3_2025_09, SecurityPolicy_TLS13_1_3_FIPS_2025_09, SecurityPolicy_TLS13_1_2_PFS_PQ_2025_09, SecurityPolicy_TLS13_1_2_FIPS_PQ_2025_09, SecurityPolicy_TLS13_1_2_FIPS_PFS_PQ_2025_09, SecurityPolicy_TLS13_1_2_PQ_2025_09, SecurityPolicy_TLS13_1_2_2021_06, SecurityPolicy_TLS13_2025_EDGE, SecurityPolicy_TLS12_PFS_2025_EDGE, SecurityPolicy_TLS12_2018_EDGE)
   securityPolicy string
   // Resource policy for the API (JSON string)
   policy string
@@ -7138,7 +7138,7 @@ private aws.appstream.fleet @defaults("name state fleetType region") {
   imageName string
   // ARN of the image used to create the fleet
   imageArn string
-  // Operating system platform: WINDOWS, WINDOWS_SERVER_2016, WINDOWS_SERVER_2019, WINDOWS_SERVER_2022, AMAZON_LINUX2, or RHEL8
+  // Operating system platform: WINDOWS, WINDOWS_SERVER_2016, WINDOWS_SERVER_2019, WINDOWS_SERVER_2022, WINDOWS_SERVER_2025, AMAZON_LINUX2, RHEL8, ROCKY_LINUX8, or UBUNTU_PRO_2404
   platform string
   // Time when the fleet was created
   createdAt time
