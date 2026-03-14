@@ -63,13 +63,13 @@ func TestSecretReplicationToDict_UserManaged(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, result)
 	assert.Equal(t, "USER_MANAGED", result["type"])
-	replicas, ok := result["replicas"].([]interface{})
+	replicas, ok := result["replicas"].([]any)
 	require.True(t, ok)
 	require.Len(t, replicas, 2)
-	r0 := replicas[0].(map[string]interface{})
+	r0 := replicas[0].(map[string]any)
 	assert.Equal(t, "us-east1", r0["location"])
 	assert.Nil(t, r0["customerManagedEncryption"])
-	r1 := replicas[1].(map[string]interface{})
+	r1 := replicas[1].(map[string]any)
 	assert.Equal(t, "europe-west1", r1["location"])
 }
 
@@ -99,13 +99,13 @@ func TestSecretReplicationToDict_UserManagedWithCMEK(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, result)
 	assert.Equal(t, "USER_MANAGED", result["type"])
-	replicas, ok := result["replicas"].([]interface{})
+	replicas, ok := result["replicas"].([]any)
 	require.True(t, ok)
 	require.Len(t, replicas, 2)
-	r0 := replicas[0].(map[string]interface{})
+	r0 := replicas[0].(map[string]any)
 	assert.Equal(t, "us-east1", r0["location"])
 	assert.Equal(t, "projects/p/locations/us-east1/keyRings/kr/cryptoKeys/key-a", r0["customerManagedEncryption"])
-	r1 := replicas[1].(map[string]interface{})
+	r1 := replicas[1].(map[string]any)
 	assert.Equal(t, "eu-west1", r1["location"])
 	assert.Equal(t, "projects/p/locations/eu-west1/keyRings/kr/cryptoKeys/key-b", r1["customerManagedEncryption"])
 }
@@ -126,7 +126,7 @@ func TestExtractCustomerManagedEncryptionKeys(t *testing.T) {
 			},
 		}
 		keys := extractCustomerManagedEncryptionKeys(s)
-		assert.Equal(t, []interface{}{"projects/p/locations/global/keyRings/kr/cryptoKeys/key1"}, keys)
+		assert.Equal(t, []any{"projects/p/locations/global/keyRings/kr/cryptoKeys/key1"}, keys)
 	})
 
 	t.Run("automatic replication CMEK", func(t *testing.T) {
@@ -142,7 +142,7 @@ func TestExtractCustomerManagedEncryptionKeys(t *testing.T) {
 			},
 		}
 		keys := extractCustomerManagedEncryptionKeys(s)
-		assert.Equal(t, []interface{}{"projects/p/locations/global/keyRings/kr/cryptoKeys/key2"}, keys)
+		assert.Equal(t, []any{"projects/p/locations/global/keyRings/kr/cryptoKeys/key2"}, keys)
 	})
 
 	t.Run("user-managed replication with multiple CMEK keys", func(t *testing.T) {
@@ -170,7 +170,7 @@ func TestExtractCustomerManagedEncryptionKeys(t *testing.T) {
 			},
 		}
 		keys := extractCustomerManagedEncryptionKeys(s)
-		assert.Equal(t, []interface{}{
+		assert.Equal(t, []any{
 			"projects/p/locations/us-east1/keyRings/kr/cryptoKeys/key-a",
 			"projects/p/locations/eu-west1/keyRings/kr/cryptoKeys/key-b",
 		}, keys)

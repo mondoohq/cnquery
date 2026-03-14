@@ -99,7 +99,7 @@ func (g *mqlGcpProjectSecretmanagerService) secrets() ([]any, error) {
 			return nil, err
 		}
 
-		var replicationDict map[string]interface{}
+		var replicationDict map[string]any
 		if s.Replication != nil {
 			replicationDict, err = secretReplicationToDict(s.Replication)
 			if err != nil {
@@ -108,12 +108,12 @@ func (g *mqlGcpProjectSecretmanagerService) secrets() ([]any, error) {
 			}
 		}
 
-		topicNames := make([]interface{}, 0, len(s.Topics))
+		topicNames := make([]any, 0, len(s.Topics))
 		for _, t := range s.Topics {
 			topicNames = append(topicNames, t.Name)
 		}
 
-		var rotationDict map[string]interface{}
+		var rotationDict map[string]any
 		if s.Rotation != nil {
 			rotationDict, err = convert.JsonToDict(mqlSecretRotation{
 				NextRotationTime: timestampToString(s.Rotation.NextRotationTime),
@@ -125,7 +125,7 @@ func (g *mqlGcpProjectSecretmanagerService) secrets() ([]any, error) {
 			}
 		}
 
-		versionAliasesMap := make(map[string]interface{})
+		versionAliasesMap := make(map[string]any)
 		for k, v := range s.VersionAliases {
 			versionAliasesMap[k] = int64(v)
 		}
@@ -243,7 +243,7 @@ func (g *mqlGcpProjectSecretmanagerServiceSecret) versions() ([]any, error) {
 			return nil, err
 		}
 
-		var cmeStatusDict map[string]interface{}
+		var cmeStatusDict map[string]any
 		if v.CustomerManagedEncryption != nil {
 			cmeStatusDict, err = convert.JsonToDict(mqlCustomerManagedEncryptionStatus{
 				KmsKeyVersionName: v.CustomerManagedEncryption.KmsKeyVersionName,
@@ -344,8 +344,8 @@ type mqlCustomerManagedEncryptionStatus struct {
 // - Top-level Secret.CustomerManagedEncryption (regionalized secrets)
 // - Replication.Automatic.CustomerManagedEncryption (automatic replication)
 // - Replication.UserManaged.Replicas[].CustomerManagedEncryption (user-managed replication)
-func extractCustomerManagedEncryptionKeys(s *secretmanagerpb.Secret) []interface{} {
-	var keys []interface{}
+func extractCustomerManagedEncryptionKeys(s *secretmanagerpb.Secret) []any {
+	var keys []any
 	if s.CustomerManagedEncryption != nil {
 		keys = append(keys, s.CustomerManagedEncryption.KmsKeyName)
 	}
@@ -364,7 +364,7 @@ func extractCustomerManagedEncryptionKeys(s *secretmanagerpb.Secret) []interface
 	return keys
 }
 
-func secretReplicationToDict(r *secretmanagerpb.Replication) (map[string]interface{}, error) {
+func secretReplicationToDict(r *secretmanagerpb.Replication) (map[string]any, error) {
 	if auto := r.GetAutomatic(); auto != nil {
 		rep := mqlSecretReplication{Type: "AUTOMATIC"}
 		if auto.CustomerManagedEncryption != nil {

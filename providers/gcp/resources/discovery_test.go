@@ -4,7 +4,7 @@
 package resources
 
 import (
-	"sort"
+	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -28,9 +28,9 @@ func TestGetDiscoveryTargets(t *testing.T) {
 	// test auto with other stuff
 	config.Discover.Targets = []string{"auto", "cloud-dns-zones", "compute-images"}
 	res := append(Auto, []string{DiscoverCloudDNSZones, DiscoveryComputeImages}...)
-	sort.Strings(res)
+	slices.Sort(res)
 	targets := getDiscoveryTargets(config)
-	sort.Strings(targets)
+	slices.Sort(targets)
 	require.Equal(t, res, targets)
 
 	// test just auto

@@ -7,7 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sort"
+	"slices"
 	"time"
 
 	artifactregistry "cloud.google.com/go/artifactregistry/apiv1"
@@ -336,7 +336,7 @@ func newCleanupPolicies(runtime *plugin.Runtime, repoPath string, policies map[s
 	for id := range policies {
 		policyIds = append(policyIds, id)
 	}
-	sort.Strings(policyIds)
+	slices.Sort(policyIds)
 
 	var result []any
 	for _, policyId := range policyIds {

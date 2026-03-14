@@ -662,7 +662,7 @@ func subscriptionStateToString(state pubsub.SubscriptionState) string {
 	}
 }
 
-func optionalDurationToTime(d interface{}) time.Time {
+func optionalDurationToTime(d any) time.Time {
 	if d == nil {
 		return llx.DurationToTime(0)
 	}
