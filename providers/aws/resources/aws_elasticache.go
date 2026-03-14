@@ -67,6 +67,10 @@ func (a *mqlAwsElasticache) getCacheClusters(conn *connection.AwsConnection) []*
 						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
+					if IsServiceNotAvailableInRegionError(err) {
+						log.Debug().Str("region", region).Msg("elasticache service not available in region")
+						return res, nil
+					}
 					return nil, err
 				}
 				for _, cluster := range clusters.CacheClusters {
@@ -203,6 +207,10 @@ func (a *mqlAwsElasticache) getServerlessCaches(conn *connection.AwsConnection) 
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					if IsServiceNotAvailableInRegionError(err) {
+						log.Debug().Str("region", region).Msg("elasticache service not available in region")
 						return res, nil
 					}
 					return nil, err
