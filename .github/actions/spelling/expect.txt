@@ -189,6 +189,7 @@ psc
 PTn
 pushconfig
 Pzi
+pzs
 querypack
 RABBITMQ
 raidz
@@ -219,6 +220,7 @@ signin
 singlequeryargument
 sizeconstraintstatement
 Snat
+SNYK
 softdep
 spdx
 sph
