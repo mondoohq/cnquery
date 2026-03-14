@@ -178,7 +178,7 @@ func initAwsEcsCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 
 	svc := conn.Ecs(region)
 	ctx := context.Background()
-	clusterDetails, err := svc.DescribeClusters(ctx, &ecs.DescribeClustersInput{Clusters: []string{a}, Include: []ecstypes.ClusterField{ecstypes.ClusterFieldConfigurations, ecstypes.ClusterFieldSettings, ecstypes.ClusterFieldTags}})
+	clusterDetails, err := svc.DescribeClusters(ctx, &ecs.DescribeClustersInput{Clusters: []string{a}, Include: []ecstypes.ClusterField{ecstypes.ClusterFieldConfigurations, ecstypes.ClusterFieldSettings, ecstypes.ClusterFieldStatistics, ecstypes.ClusterFieldTags}})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -206,7 +206,53 @@ func initAwsEcsCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 		}
 	}
 	args["settings"] = llx.MapData(settingsMap, types.String)
+
+	capacityProviders := make([]any, len(c.CapacityProviders))
+	for i, cp := range c.CapacityProviders {
+		capacityProviders[i] = cp
+	}
+	args["capacityProviders"] = llx.ArrayData(capacityProviders, types.String)
+
+	statisticsMap := make(map[string]any)
+	for _, s := range c.Statistics {
+		if s.Name != nil && s.Value != nil {
+			statisticsMap[*s.Name] = *s.Value
+		}
+	}
+	args["statistics"] = llx.MapData(statisticsMap, types.String)
+
+	clusterArn := a
+	strategyItems := make([]any, 0, len(c.DefaultCapacityProviderStrategy))
+	for _, item := range c.DefaultCapacityProviderStrategy {
+		cpName := ""
+		if item.CapacityProvider != nil {
+			cpName = *item.CapacityProvider
+		}
+		r, err := CreateResource(runtime, "aws.ecs.cluster.capacityProviderStrategyItem",
+			map[string]*llx.RawData{
+				"__id":             llx.StringData(clusterArn + "/capacityProviderStrategy/" + cpName),
+				"capacityProvider": llx.StringDataPtr(item.CapacityProvider),
+				"base":             llx.IntData(int64(item.Base)),
+				"weight":           llx.IntData(int64(item.Weight)),
+			})
+		if err != nil {
+			return nil, nil, err
+		}
+		strategyItems = append(strategyItems, r)
+	}
+	args["defaultCapacityProviderStrategy"] = llx.ArrayData(strategyItems, types.Resource("aws.ecs.cluster.capacityProviderStrategyItem"))
+
+	if c.ServiceConnectDefaults != nil {
+		args["serviceConnectNamespace"] = llx.StringDataPtr(c.ServiceConnectDefaults.Namespace)
+	} else {
+		args["serviceConnectNamespace"] = llx.NilData
+	}
+
 	return args, nil, nil
+}
+
+func (a *mqlAwsEcsCluster) defaultCapacityProviderStrategy() ([]any, error) {
+	return nil, errors.New("defaultCapacityProviderStrategy not set during init")
 }
 
 func (a *mqlAwsEcsCluster) fargateEphemeralStorageKmsKey() (*mqlAwsKmsKey, error) {
