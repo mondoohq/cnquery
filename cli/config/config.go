@@ -277,6 +277,7 @@ type CommonOpts struct {
 	SpaceMrn    string `json:"space_mrn,omitempty" mapstructure:"space_mrn"`
 	PrivateKey  string `json:"private_key,omitempty" mapstructure:"private_key"`
 	Certificate string `json:"certificate,omitempty" mapstructure:"certificate"`
+	Token       string `json:"token,omitempty" mapstructure:"token"`
 	APIEndpoint string `json:"api_endpoint,omitempty" mapstructure:"api_endpoint"`
 
 	// Workload Identity Federation
@@ -389,6 +390,7 @@ func (c *CommonOpts) GetServiceCredential() *upstream.ServiceAccountCredentials 
 		ScopeMrn:    c.GetScopeMrn(),
 		PrivateKey:  c.PrivateKey,
 		Certificate: c.Certificate,
+		Token:       c.Token,
 		ApiEndpoint: c.APIEndpoint,
 	}
 }
