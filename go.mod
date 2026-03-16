@@ -59,7 +59,7 @@ require (
 	github.com/knqyf263/go-apk-version v0.0.0-20200609155635-041fdbb8563f
 	github.com/knqyf263/go-rpmdb v0.1.1
 	github.com/lithammer/fuzzysearch v1.1.8
-	github.com/lucasb-eyer/go-colorful v1.3.0
+	github.com/lucasb-eyer/go-colorful v1.3.0 // indirect
 	github.com/masterzen/winrm v0.0.0-20250927112105-5f8e6c707321
 	github.com/mattn/go-isatty v0.0.20
 	github.com/miekg/dns v1.1.72
@@ -68,7 +68,7 @@ require (
 	// pin v0.19.0
 	github.com/moby/buildkit v0.16.0
 	github.com/moby/sys/mount v0.3.4
-	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6
+	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect
 	github.com/muesli/reflow v0.3.0
 	github.com/muesli/termenv v0.16.0
 	github.com/olekukonko/tablewriter v1.1.4
@@ -161,7 +161,6 @@ require (
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/charmbracelet/colorprofile v0.4.3 // indirect
-	github.com/charmbracelet/harmonica v0.2.0 // indirect
 	github.com/charmbracelet/x/ansi v0.11.6 // indirect
 	github.com/charmbracelet/x/cellbuf v0.0.15 // indirect
 	github.com/charmbracelet/x/term v0.2.2 // indirect
