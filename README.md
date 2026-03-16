@@ -101,7 +101,6 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | Ansible playbooks             | `ansible`                  | `mql shell ansible YOUR_PLAYBOOK.yml`                                                                                                           |
 | Arista network devices        | `arista`                   | `mql shell arista DEVICE_PUBLIC_IP --ask-pass`                                                                                                  |
 | Atlassian organizations       | `atlassian`                | `mql shell atlassian --host YOUR_HOST_URL --admin-token YOUR_TOKEN`                                                                             |
-| F5 BIG-IP load balancers      | `bigip`                    | `mql shell bigip --hostname HOST --user USER --password PASSWORD`                                                                               |
 | AWS accounts                  | `aws`                      | `mql shell aws`                                                                                                                                 |
 | AWS CloudFormation templates  | `cloudformation`           | `mql shell cloudformation cloudformation_file.json`                                                                                             |
 | AWS EC2 EBS snapshot          | `aws ec2 ebs snapshot`     | `mql shell aws ec2 ebs snapshot SNAPSHOTID`                                                                                                     |
@@ -116,6 +115,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | Container registries          | `container registry`       | `mql shell container registry index.docker.io/library/rockylinux:8`                                                                             |
 | Dockerfiles                   | `docker`                   | `mql shell docker file FILENAME`                                                                                                                |
 | DNS records                   | `host`                     | `mql shell host mondoo.com`                                                                                                                     |
+| F5 BIG-IP load balancers      | `bigip`                    | `mql shell bigip --hostname HOST --user USER --password PASSWORD`                                                                               |
 | Fortinet FortiOS devices      | `fortios`                  | `mql shell fortios --hostname HOSTNAME --token TOKEN`                                                                                           |
 | GitHub organizations          | `github org`               | `mql shell github org mondoohq`                                                                                                                 |
 | GitHub repositories           | `github repo`              | `mql shell github repo mondoohq/mql`                                                                                                            |
