@@ -73,16 +73,22 @@ func (a *mqlAwsConfig) getRecorders(conn *connection.AwsConnection) []*jobpool.J
 					recording = val.recording
 					lastStatus = val.lastStatus
 				}
-				resourceTypesInterface := make([]any, len(r.RecordingGroup.ResourceTypes))
-				for i, resourceType := range r.RecordingGroup.ResourceTypes {
-					resourceTypesInterface[i] = string(resourceType)
+				var resourceTypesInterface []any
+				var allSupported, includeGlobalResourceTypes bool
+				if r.RecordingGroup != nil {
+					resourceTypesInterface = make([]any, len(r.RecordingGroup.ResourceTypes))
+					for i, resourceType := range r.RecordingGroup.ResourceTypes {
+						resourceTypesInterface[i] = string(resourceType)
+					}
+					allSupported = r.RecordingGroup.AllSupported
+					includeGlobalResourceTypes = r.RecordingGroup.IncludeGlobalResourceTypes
 				}
 				mqlRecorder, err := CreateResource(a.MqlRuntime, "aws.config.recorder",
 					map[string]*llx.RawData{
 						"name":                       llx.StringDataPtr(r.Name),
 						"roleArn":                    llx.StringDataPtr(r.RoleARN),
-						"allSupported":               llx.BoolData(r.RecordingGroup.AllSupported),
-						"includeGlobalResourceTypes": llx.BoolData(r.RecordingGroup.IncludeGlobalResourceTypes),
+						"allSupported":               llx.BoolData(allSupported),
+						"includeGlobalResourceTypes": llx.BoolData(includeGlobalResourceTypes),
 						"resourceTypes":              llx.ArrayData(resourceTypesInterface, types.String),
 						"recording":                  llx.BoolData(recording),
 						"region":                     llx.StringData(region),

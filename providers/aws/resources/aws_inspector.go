@@ -73,14 +73,19 @@ func (a *mqlAwsInspector) getCoverage(conn *connection.AwsConnection) []*jobpool
 					if coverage.AccountId == nil || coverage.ResourceId == nil {
 						continue
 					}
+					var statusReason, statusCode string
+					if coverage.ScanStatus != nil {
+						statusReason = string(coverage.ScanStatus.Reason)
+						statusCode = string(coverage.ScanStatus.StatusCode)
+					}
 					mqlCoverage, err := CreateResource(a.MqlRuntime, "aws.inspector.coverage",
 						map[string]*llx.RawData{
 							"accountId":     llx.StringDataPtr(coverage.AccountId),
 							"resourceId":    llx.StringDataPtr(coverage.ResourceId),
 							"resourceType":  llx.StringData(string(coverage.ResourceType)),
 							"lastScannedAt": llx.TimeDataPtr(coverage.LastScannedAt),
-							"statusReason":  llx.StringData(string(coverage.ScanStatus.Reason)),
-							"statusCode":    llx.StringData(string(coverage.ScanStatus.StatusCode)),
+							"statusReason":  llx.StringData(statusReason),
+							"statusCode":    llx.StringData(statusCode),
 							"scanType":      llx.StringData(string(coverage.ScanType)),
 							"region":        llx.StringData(region),
 						},
@@ -131,7 +136,9 @@ func (a *mqlAwsInspectorCoverage) ec2Instance() (*mqlAwsInspectorCoverageInstanc
 		}
 		mqlEc2Instance, err := CreateResource(a.MqlRuntime, "aws.inspector.coverage.instance", args)
 		if err == nil {
-			mqlEc2Instance.(*mqlAwsInspectorCoverageInstance).cacheAmiId = *a.cacheCoverage.ResourceMetadata.Ec2.AmiId
+			if a.cacheCoverage.ResourceMetadata.Ec2.AmiId != nil {
+				mqlEc2Instance.(*mqlAwsInspectorCoverageInstance).cacheAmiId = *a.cacheCoverage.ResourceMetadata.Ec2.AmiId
+			}
 			return mqlEc2Instance.(*mqlAwsInspectorCoverageInstance), err
 		}
 	}

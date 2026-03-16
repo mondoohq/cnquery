@@ -1084,6 +1084,9 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Instance, regionVal 
 	for _, instance := range instances {
 		mqlDevices := []any{}
 		for _, device := range instance.BlockDeviceMappings {
+			if device.Ebs == nil {
+				continue
+			}
 			mqlInstanceDevice, err := CreateResource(a.MqlRuntime, ResourceAwsEc2InstanceDevice,
 				map[string]*llx.RawData{
 					"deleteOnTermination": llx.BoolData(convert.ToValue(device.Ebs.DeleteOnTermination)),
@@ -1112,11 +1115,19 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Instance, regionVal 
 				stateTransitionTime = llx.NeverPastTime
 			}
 		}
+		var detailedMonitoring string
+		if instance.Monitoring != nil {
+			detailedMonitoring = string(instance.Monitoring.State)
+		}
+		var stateName string
+		if instance.State != nil {
+			stateName = string(instance.State.Name)
+		}
 		instanceArn := fmt.Sprintf(ec2InstanceArnPattern, regionVal, conn.AccountId(), convert.ToValue(instance.InstanceId))
 		args := map[string]*llx.RawData{
 			"architecture":       llx.StringData(string(instance.Architecture)),
 			"arn":                llx.StringData(instanceArn),
-			"detailedMonitoring": llx.StringData(string(instance.Monitoring.State)),
+			"detailedMonitoring": llx.StringData(detailedMonitoring),
 			"deviceMappings":     llx.ArrayData(mqlDevices, types.Type(ResourceAwsEc2InstanceDevice)),
 			"ebsOptimized":       llx.BoolDataPtr(instance.EbsOptimized),
 			"enaSupported":       llx.BoolDataPtr(instance.EnaSupport),
@@ -1134,7 +1145,7 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Instance, regionVal 
 			"region":             llx.StringData(regionVal),
 			"rootDeviceName":     llx.StringDataPtr(instance.RootDeviceName),
 			"rootDeviceType":     llx.StringData(string(instance.RootDeviceType)),
-			"state":              llx.StringData(string(instance.State.Name)),
+			"state":              llx.StringData(stateName),
 			"stateReason":        llx.MapData(stateReason, types.Any),
 			// "iamInstanceProfile":    llx.MapData(iamInstanceProfile, types.Any),
 			"stateTransitionReason": llx.StringDataPtr(instance.StateTransitionReason),
