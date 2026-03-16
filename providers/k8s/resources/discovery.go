@@ -40,6 +40,9 @@ const (
 	DiscoveryIngresses        = "ingresses"
 	DiscoveryNamespaces       = "namespaces"
 	DiscoveryServices         = "services"
+
+	DiscoveryStageCluster   = "cluster"
+	DiscoveryStageNamespace = "namespace"
 )
 
 type NamespaceFilterOpts struct {
@@ -82,25 +85,35 @@ func (f *NamespaceFilterOpts) skipNamespace(namespace string) bool {
 	return false
 }
 
+// Discover routes to the appropriate discovery stage.
+// TODO(v15): remove the stage routing. The staged discovery (cluster → namespace)
+// should be the only path and OPTION_DISCOVERY_STAGE should no longer be needed.
 func Discover(runtime *plugin.Runtime, features mql.Features) (*inventory.Inventory, error) {
 	conn := runtime.Connection.(shared.Connection)
+	invConfig := conn.InventoryConfig()
 
+	stage := invConfig.Options[shared.OPTION_DISCOVERY_STAGE]
+	switch stage {
+	case DiscoveryStageNamespace:
+		return discoverNamespaceStage(runtime, conn, invConfig, features)
+	default:
+		return discoverClusterStage(runtime, conn, invConfig, features)
+	}
+}
+
+// discoverClusterStage is stage 1: discovers the cluster asset and namespaces.
+// Namespace assets are emitted WITHOUT platform IDs so the framework recurses
+// into them. When the framework Connect()s a namespace, stage 2 returns both
+// the scannable namespace (with platform IDs) and its workloads as inventory.
+func discoverClusterStage(runtime *plugin.Runtime, conn shared.Connection, invConfig *inventory.Config, features mql.Features) (*inventory.Inventory, error) {
 	in := &inventory.Inventory{Spec: &inventory.InventorySpec{
 		Assets: []*inventory.Asset{},
 	}}
 
-	if (conn.InventoryConfig().Discover == nil || len(conn.InventoryConfig().Discover.Targets) == 0) && conn.Asset() != nil {
+	if (invConfig.Discover == nil || len(invConfig.Discover.Targets) == 0) && conn.Asset() != nil {
 		in.Spec.Assets = append(in.Spec.Assets, conn.Asset())
 		return in, nil
 	}
-
-	invConfig := conn.InventoryConfig()
-
-	res, err := runtime.CreateResource(runtime, "k8s", nil)
-	if err != nil {
-		return nil, err
-	}
-	k8s := res.(*mqlK8s)
 
 	nsFilter := setNamespaceFilters(invConfig)
 
@@ -129,30 +142,108 @@ func Discover(runtime *plugin.Runtime, features mql.Features) (*inventory.Invent
 			log.Warn().Err(err).Msg("failed to discover cluster asset")
 		}
 	}
+
+	// Discover namespaces from the API, then emit one asset per namespace for
+	// stage 2. These assets carry no platform IDs so the framework will
+	// Connect() them and recurse into the returned inventory.
 	nss, err := discoverNamespaces(conn, invConfig, "", nil, nsFilter)
 	if err != nil {
 		return nil, err
 	}
 
-	if resFilters.IsEmpty() && stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryNamespaces, DiscoveryAuto, DiscoveryAll) {
-		in.Spec.Assets = append(in.Spec.Assets, nss...)
+	for _, ns := range nss {
+		// Clone without WithParentConnectionId so each namespace gets its own
+		// resource cache. With a shared parent cache, the k8s MQL resource would
+		// be created once (scoped to the first namespace's connection) and reused
+		// by all other namespaces, returning stale data.
+		nsConfig := invConfig.Clone()
+		nsConfig.Options[shared.OPTION_NAMESPACE] = ns.Name
+		nsConfig.Options[shared.OPTION_DISCOVERY_STAGE] = DiscoveryStageNamespace
+
+		in.Spec.Assets = append(in.Spec.Assets, &inventory.Asset{
+			// No PlatformIds: the framework will Connect() this asset and
+			// recurse into the inventory returned by stage 2.
+			Name:        ns.Name,
+			Connections: []*inventory.Config{nsConfig},
+			Category:    conn.Asset().Category,
+		})
 	}
 
-	// Discover the assets for each namespace and use the namespace platform ID as root
-	for _, ns := range nss {
-		nsFilter = NamespaceFilterOpts{include: []string{ns.Name}}
+	return in, nil
+}
 
-		od := NewPlatformIdOwnershipIndex(ns.PlatformIds[0])
+// discoverNamespaceStage is stage 2: discovers workloads within a single namespace.
+// It is triggered when the framework Connect()s a namespace asset emitted by stage 1.
+// The returned inventory includes the scannable namespace asset (with platform IDs)
+// and all workload assets for that namespace.
+func discoverNamespaceStage(runtime *plugin.Runtime, conn shared.Connection, invConfig *inventory.Config, features mql.Features) (*inventory.Inventory, error) {
+	in := &inventory.Inventory{Spec: &inventory.InventorySpec{
+		Assets: []*inventory.Asset{},
+	}}
 
-		// We don't want to discover the namespaces again since we have already done this above
-		assets, err := discoverAssets(runtime, conn, invConfig, ns.PlatformIds[0], k8s, nsFilter, resFilters, od)
+	if invConfig.Discover == nil || len(invConfig.Discover.Targets) == 0 {
+		return in, nil
+	}
+
+	nsName := invConfig.Options[shared.OPTION_NAMESPACE]
+
+	res, err := runtime.CreateResource(runtime, "k8s", nil)
+	if err != nil {
+		return nil, err
+	}
+	k8s := res.(*mqlK8s)
+
+	nsFilter := NamespaceFilterOpts{include: []string{nsName}}
+
+	resFilters, err := resourceFilters(invConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	// Resolve the namespace's platform ID for use as the ownership root
+	basePlatformId, err := conn.BasePlatformId()
+	if err != nil {
+		return nil, err
+	}
+	nsObj, err := conn.Namespace(nsName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get namespace %q: %w", nsName, err)
+	}
+	namespacePlatformId := shared.NewNamespacePlatformId(basePlatformId, nsName, string(nsObj.UID))
+
+	od := NewPlatformIdOwnershipIndex(namespacePlatformId)
+
+	assets, err := discoverAssets(runtime, conn, invConfig, namespacePlatformId, k8s, nsFilter, resFilters, od)
+	if err != nil {
+		return nil, err
+	}
+
+	// Build the scannable namespace asset and include it in the inventory.
+	// Stage 1 emits namespaces without platform IDs (to trigger recursion),
+	// so stage 2 is responsible for emitting the scannable namespace.
+	if resFilters.IsEmpty() && stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryNamespaces, DiscoveryAuto, DiscoveryAll) {
+		labels := map[string]string{}
+		for k, v := range nsObj.Labels {
+			labels[k] = v
+		}
+		addMondooAssetLabels(labels, &nsObj.ObjectMeta, "")
+		platform, err := createPlatformData(nsObj.Kind, conn.Runtime())
 		if err != nil {
 			return nil, err
 		}
-		setRelatedAssets(conn, ns, assets, od, features)
-		in.Spec.Assets = append(in.Spec.Assets, assets...)
+		nsAsset := &inventory.Asset{
+			PlatformIds: []string{namespacePlatformId},
+			Name:        nsName,
+			Platform:    platform,
+			Labels:      labels,
+			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(invConfig.Id))},
+			Category:    conn.Asset().Category,
+		}
+		setRelatedAssets(conn, nsAsset, assets, od, features)
+		in.Spec.Assets = append(in.Spec.Assets, nsAsset)
 	}
 
+	in.Spec.Assets = append(in.Spec.Assets, assets...)
 	return in, nil
 }
 
@@ -932,7 +1023,7 @@ func discoverNamespaces(
 			Name:        ns.Name,
 			Platform:    platform,
 			Labels:      labels,
-			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(invConfig.Id))}, // pass-in the parent connection config
+			Connections: []*inventory.Config{invConfig.Clone(inventory.WithParentConnectionId(invConfig.Id))}, // pass-in the parent connection config
 			Category:    conn.Asset().Category,
 		})
 		if od != nil {
