@@ -38,7 +38,6 @@ func TestLocalConnectionIdDetectors(t *testing.T) {
 	require.Len(t, connectResp.Asset.IdDetector, 2)
 	require.Contains(t, connectResp.Asset.IdDetector, ids.IdDetector_Hostname)
 	require.Contains(t, connectResp.Asset.IdDetector, ids.IdDetector_CloudDetect)
-	require.NotContains(t, connectResp.Asset.IdDetector, ids.IdDetector_SshHostkey)
 
 	require.Len(t, connectResp.Asset.PlatformIds, 1)
 
@@ -58,7 +57,6 @@ func TestLocalConnectionIdDetectors(t *testing.T) {
 	require.Len(t, connectResp.Asset.IdDetector, 2)
 	require.Contains(t, connectResp.Asset.IdDetector, ids.IdDetector_Hostname)
 	require.Contains(t, connectResp.Asset.IdDetector, ids.IdDetector_CloudDetect)
-	require.NotContains(t, connectResp.Asset.IdDetector, ids.IdDetector_SshHostkey)
 	// Now the platformIDs are cleaned up
 	require.Len(t, connectResp.Asset.PlatformIds, 1)
 

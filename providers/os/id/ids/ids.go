@@ -8,7 +8,6 @@ const (
 	IdDetector_MachineID    = "machine-id"
 	IdDetector_SerialNumber = "serialnumber"
 	IdDetector_CloudDetect  = "cloud-detect"
-	IdDetector_SshHostkey   = "ssh-host-key"
 	IdDetector_AwsEcs       = "aws-ecs"
 
 	// IdDetector_PlatformID = "transport-platform-id" // TODO: how does this work?

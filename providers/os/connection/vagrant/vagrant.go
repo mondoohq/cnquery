@@ -116,7 +116,7 @@ func migrateVagrantAssetToSsh(id uint32, sshConfig *VagrantVmSSHConfig, rootTran
 
 	asset.Name = sshConfig.Host
 	asset.Connections = []*inventory.Config{cc}
-	asset.IdDetector = []string{ids.IdDetector_Hostname, ids.IdDetector_SshHostkey}
+	asset.IdDetector = []string{ids.IdDetector_Hostname}
 
 	return nil
 }

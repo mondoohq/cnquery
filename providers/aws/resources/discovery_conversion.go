@@ -329,7 +329,7 @@ func isSsmOnline(instance *mqlAwsEc2Instance) bool {
 func addConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, conn *connection.AwsConnection) *inventory.Asset {
 	asset := &inventory.Asset{}
 	asset.PlatformIds = []string{awsec2.MondooInstanceID(accountId, instance.Region.Data, instance.InstanceId.Data)}
-	asset.IdDetector = []string{ids.IdDetector_Hostname, ids.IdDetector_CloudDetect, ids.IdDetector_SshHostkey}
+	asset.IdDetector = []string{ids.IdDetector_Hostname, ids.IdDetector_CloudDetect}
 	asset.Platform = &inventory.Platform{
 		Kind:    inventory.AssetKindCloudVM,
 		Runtime: "aws-ec2-instance",
@@ -716,7 +716,7 @@ func SSMConnectAsset(args []string, opts map[string]string) (*inventory.Asset, e
 	}
 	asset := &inventory.Asset{}
 	opts["instance"] = id
-	asset.IdDetector = []string{ids.IdDetector_Hostname, ids.IdDetector_CloudDetect, ids.IdDetector_SshHostkey}
+	asset.IdDetector = []string{ids.IdDetector_Hostname, ids.IdDetector_CloudDetect}
 	asset.Connections = []*inventory.Config{{
 		Type:     "ssh",
 		Host:     id,
@@ -744,7 +744,7 @@ func InstanceConnectAsset(args []string, opts map[string]string) (*inventory.Ass
 		}
 	}
 	asset := &inventory.Asset{}
-	asset.IdDetector = []string{ids.IdDetector_Hostname, ids.IdDetector_CloudDetect, ids.IdDetector_SshHostkey}
+	asset.IdDetector = []string{ids.IdDetector_Hostname, ids.IdDetector_CloudDetect}
 	opts["instance"] = id
 	asset.Connections = []*inventory.Config{{
 		Type:     "ssh",

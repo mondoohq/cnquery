@@ -21,7 +21,6 @@ import (
 	"go.mondoo.com/mql/v13/providers/os/id/ids"
 	"go.mondoo.com/mql/v13/providers/os/id/machineid"
 	"go.mondoo.com/mql/v13/providers/os/id/serialnumber"
-	"go.mondoo.com/mql/v13/providers/os/id/sshhostkey"
 )
 
 type PlatformFingerprint struct {
@@ -66,7 +65,7 @@ func IdentifyPlatform(conn shared.Connection, req *plugin.ConnectReq, p *invento
 				idDetectors = append(idDetectors, ids.IdDetector_SerialNumber)
 			}
 		case shared.Type_SSH:
-			idDetectors = []string{ids.IdDetector_CloudDetect, ids.IdDetector_Hostname, ids.IdDetector_SshHostkey}
+			idDetectors = []string{ids.IdDetector_CloudDetect, ids.IdDetector_Hostname}
 		case shared.Type_Tar, shared.Type_FileSystem, shared.Type_DockerSnapshot:
 			idDetectors = []string{ids.IdDetector_Hostname}
 		}
@@ -226,16 +225,6 @@ func gatherPlatformInfo(conn shared.Connection, pf *inventory.Platform, idDetect
 			}, nil
 		}
 		return &platformInfo{}, nil
-	case ids.IdDetector_SshHostkey:
-		identifier, err := sshhostkey.Detect(conn, pf)
-		if err != nil {
-			return nil, err
-		}
-		return &platformInfo{
-			IDs:                identifier,
-			Name:               "",
-			RelatedPlatformIDs: []string{},
-		}, nil
 	default:
 		return nil, fmt.Errorf("the provided id-detector is not supported: %s", idDetector)
 	}

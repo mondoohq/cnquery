@@ -17,7 +17,6 @@ import (
 	"go.mondoo.com/mql/v13/providers/os/id/hostname"
 	"go.mondoo.com/mql/v13/providers/os/id/ids"
 	"go.mondoo.com/mql/v13/providers/os/id/machineid"
-	"go.mondoo.com/mql/v13/providers/os/id/sshhostkey"
 	"go.mondoo.com/mql/v13/providers/os/resources/plist"
 )
 
@@ -25,7 +24,6 @@ import (
 var IdDetectors = []string{
 	ids.IdDetector_Hostname,
 	ids.IdDetector_CloudDetect,
-	ids.IdDetector_SshHostkey,
 }
 
 func hasDetector(detectors map[string]struct{}, any ...string) bool {
@@ -87,16 +85,6 @@ func (s *Service) detect(asset *inventory.Asset, conn shared.Connection) error {
 			}
 			asset.Platform.Kind = cloudPlatformInfo.Kind
 			asset.RelatedAssets = append(asset.RelatedAssets, relatedIds2assets(cloudPlatformInfo.RelatedPlatformIDs)...)
-		}
-	}
-
-	if hasDetector(detectors, ids.IdDetector_SshHostkey) {
-		log.Debug().Msg("run ssh id detector")
-		ids, err := sshhostkey.Detect(conn, asset.Platform)
-		if err != nil {
-			log.Warn().Err(err).Msg("failure in ssh hostkey detector")
-		} else {
-			asset.PlatformIds = append(asset.PlatformIds, ids...)
 		}
 	}
 
