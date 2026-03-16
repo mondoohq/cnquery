@@ -571,6 +571,9 @@ func (g *mqlGcpProjectPubsubServiceTopic) iamPolicy() ([]any, error) {
 		return nil, err
 	}
 
+	if policy.InternalProto == nil {
+		return nil, nil
+	}
 	bindings := policy.InternalProto.Bindings
 	res := make([]any, 0, len(bindings))
 	topicPath := fmt.Sprintf("projects/%s/topics/%s", projectId, name)
@@ -623,6 +626,9 @@ func (g *mqlGcpProjectPubsubServiceSubscription) iamPolicy() ([]any, error) {
 		return nil, err
 	}
 
+	if policy.InternalProto == nil {
+		return nil, nil
+	}
 	bindings := policy.InternalProto.Bindings
 	res := make([]any, 0, len(bindings))
 	subPath := fmt.Sprintf("projects/%s/subscriptions/%s", projectId, name)

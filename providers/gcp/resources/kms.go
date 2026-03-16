@@ -338,8 +338,8 @@ func (g *mqlGcpProjectKmsServiceKeyring) cryptokeys() ([]any, error) {
 			"name":                     llx.StringData(parseResourceName(k.Name)),
 			"primary":                  llx.ResourceData(mqlPrimary, "gcp.project.kmsService.keyring.cryptokey.version"),
 			"purpose":                  llx.StringData(k.Purpose.String()),
-			"created":                  llx.TimeData(k.CreateTime.AsTime()),
-			"nextRotation":             llx.TimeData(k.NextRotationTime.AsTime()),
+			"created":                  llx.TimeDataPtr(timestampAsTimePtr(k.CreateTime)),
+			"nextRotation":             llx.TimeDataPtr(timestampAsTimePtr(k.NextRotationTime)),
 			"rotationPeriod":           llx.TimeDataPtr(mqlRotationPeriod),
 			"versionTemplate":          llx.DictData(versionTemplate),
 			"labels":                   llx.MapData(convert.MapToInterfaceMap(k.Labels), types.String),
@@ -347,6 +347,9 @@ func (g *mqlGcpProjectKmsServiceKeyring) cryptokeys() ([]any, error) {
 			"destroyScheduledDuration": llx.TimeDataPtr(mqlDestroyScheduledDuration),
 			"cryptoKeyBackend":         llx.StringData(k.CryptoKeyBackend),
 		})
+		if err != nil {
+			return nil, err
+		}
 
 		keys = append(keys, mqlKey)
 	}
@@ -390,6 +393,9 @@ func (g *mqlGcpProjectKmsServiceKeyringCryptokey) versions() ([]any, error) {
 		}
 
 		mqlVersion, err := cryptoKeyVersionToMql(g.MqlRuntime, v)
+		if err != nil {
+			return nil, err
+		}
 		versions = append(versions, mqlVersion)
 	}
 	return versions, nil
@@ -438,11 +444,17 @@ func (g *mqlGcpProjectKmsServiceKeyringCryptokey) iamPolicy() ([]any, error) {
 func cryptoKeyVersionToMql(runtime *plugin.Runtime, v *kmspb.CryptoKeyVersion) (plugin.Resource, error) {
 	var mqlAttestation plugin.Resource
 	if v.Attestation != nil {
+		var caviumCerts, googleCardCerts, googlePartitionCerts []any
+		if v.Attestation.CertChains != nil {
+			caviumCerts = convert.SliceAnyToInterface(v.Attestation.CertChains.CaviumCerts)
+			googleCardCerts = convert.SliceAnyToInterface(v.Attestation.CertChains.GoogleCardCerts)
+			googlePartitionCerts = convert.SliceAnyToInterface(v.Attestation.CertChains.GooglePartitionCerts)
+		}
 		mqlAttestationCertChains, err := CreateResource(runtime, "gcp.project.kmsService.keyring.cryptokey.version.attestation.certificatechains", map[string]*llx.RawData{
 			"cryptoKeyVersionName": llx.StringData(v.Name),
-			"caviumCerts":          llx.ArrayData(convert.SliceAnyToInterface(v.Attestation.CertChains.CaviumCerts), types.String),
-			"googleCardCerts":      llx.ArrayData(convert.SliceAnyToInterface(v.Attestation.CertChains.GoogleCardCerts), types.String),
-			"googlePartitionCerts": llx.ArrayData(convert.SliceAnyToInterface(v.Attestation.CertChains.GooglePartitionCerts), types.String),
+			"caviumCerts":          llx.ArrayData(caviumCerts, types.String),
+			"googleCardCerts":      llx.ArrayData(googleCardCerts, types.String),
+			"googlePartitionCerts": llx.ArrayData(googlePartitionCerts, types.String),
 		})
 		if err != nil {
 			return nil, err

@@ -200,6 +200,9 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 			}
 
 			s := instance.Settings
+			if s == nil {
+				s = &sqladmin.Settings{}
+			}
 			dbFlags := make(map[string]string)
 			for _, f := range s.DatabaseFlags {
 				dbFlags[f.Name] = f.Value
@@ -224,10 +227,14 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 					RetainedBackups int64  `json:"retainedBackups"`
 					RetentionUnit   string `json:"retentionUnit"`
 				}
-				mqlRetention, err := convert.JsonToDict(mqlRetentionSettings{
-					RetainedBackups: s.BackupConfiguration.BackupRetentionSettings.RetainedBackups,
-					RetentionUnit:   s.BackupConfiguration.BackupRetentionSettings.RetentionUnit,
-				})
+				var retSettings mqlRetentionSettings
+				if s.BackupConfiguration.BackupRetentionSettings != nil {
+					retSettings = mqlRetentionSettings{
+						RetainedBackups: s.BackupConfiguration.BackupRetentionSettings.RetainedBackups,
+						RetentionUnit:   s.BackupConfiguration.BackupRetentionSettings.RetentionUnit,
+					}
+				}
+				mqlRetention, err := convert.JsonToDict(retSettings)
 				if err != nil {
 					return err
 				}

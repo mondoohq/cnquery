@@ -525,10 +525,16 @@ func (g *mqlGcpProjectDataprocService) clusters() ([]any, error) {
 							SparkHistoryServerConfig mqlSparkHistoryServerConfig `json:"sparkHistoryServerConfig"`
 						}
 
-						mqlAuxServices, err := convert.JsonToDict(mqlAuxiliaryServices{
-							MetastoreConfig:          mqlMetastoreConfig{DataprocMetastoreService: c.VirtualClusterConfig.AuxiliaryServicesConfig.MetastoreConfig.DataprocMetastoreService},
-							SparkHistoryServerConfig: mqlSparkHistoryServerConfig{DataprocCluster: c.VirtualClusterConfig.AuxiliaryServicesConfig.SparkHistoryServerConfig.DataprocCluster},
-						})
+						var auxSvc mqlAuxiliaryServices
+						if c.VirtualClusterConfig.AuxiliaryServicesConfig != nil {
+							if c.VirtualClusterConfig.AuxiliaryServicesConfig.MetastoreConfig != nil {
+								auxSvc.MetastoreConfig = mqlMetastoreConfig{DataprocMetastoreService: c.VirtualClusterConfig.AuxiliaryServicesConfig.MetastoreConfig.DataprocMetastoreService}
+							}
+							if c.VirtualClusterConfig.AuxiliaryServicesConfig.SparkHistoryServerConfig != nil {
+								auxSvc.SparkHistoryServerConfig = mqlSparkHistoryServerConfig{DataprocCluster: c.VirtualClusterConfig.AuxiliaryServicesConfig.SparkHistoryServerConfig.DataprocCluster}
+							}
+						}
+						mqlAuxServices, err := convert.JsonToDict(auxSvc)
 						if err != nil {
 							log.Error().Err(err).Send()
 						}
@@ -552,20 +558,32 @@ func (g *mqlGcpProjectDataprocService) clusters() ([]any, error) {
 							KubernetesNamespace string              `json:"kubernetesNamespace"`
 						}
 
-						npTargets := make([]mqlGkeNodePoolTarget, 0, len(c.VirtualClusterConfig.KubernetesClusterConfig.GkeClusterConfig.NodePoolTarget))
-						for _, npt := range c.VirtualClusterConfig.KubernetesClusterConfig.GkeClusterConfig.NodePoolTarget {
-							npTargets = append(npTargets, nodePoolTargetToMql(npt))
+						var k8sClusterCfg mqlKubernetesClusterConfig
+						if k8sCfg := c.VirtualClusterConfig.KubernetesClusterConfig; k8sCfg != nil {
+							if gkeCfg := k8sCfg.GkeClusterConfig; gkeCfg != nil {
+								npTargets := make([]mqlGkeNodePoolTarget, 0, len(gkeCfg.NodePoolTarget))
+								for _, npt := range gkeCfg.NodePoolTarget {
+									npTargets = append(npTargets, nodePoolTargetToMql(npt))
+								}
+								var nsTarget mqlNamespacedGkeDeploymentTarget
+								if gkeCfg.NamespacedGkeDeploymentTarget != nil {
+									nsTarget = mqlNamespacedGkeDeploymentTarget{
+										ClusterNamespace: gkeCfg.NamespacedGkeDeploymentTarget.ClusterNamespace,
+										TargetGkeCluster: gkeCfg.NamespacedGkeDeploymentTarget.TargetGkeCluster,
+									}
+								}
+								k8sClusterCfg.GkeClusterConfig = mqlGkeClusterConfig{
+									TargetCluster:                 gkeCfg.GkeClusterTarget,
+									NamespacedGkeDeploymentTarget: nsTarget,
+									NodePoolTarget:                npTargets,
+								}
+							}
+							k8sClusterCfg.KubernetesNamespace = k8sCfg.KubernetesNamespace
 						}
 
 						mqlK8sClusterCfg, err := convert.JsonToDict(mqlKubernetesClusterConfig{
-							GkeClusterConfig: mqlGkeClusterConfig{
-								TargetCluster: c.VirtualClusterConfig.KubernetesClusterConfig.GkeClusterConfig.GkeClusterTarget,
-								NamespacedGkeDeploymentTarget: mqlNamespacedGkeDeploymentTarget{
-									ClusterNamespace: c.VirtualClusterConfig.KubernetesClusterConfig.GkeClusterConfig.NamespacedGkeDeploymentTarget.ClusterNamespace,
-									TargetGkeCluster: c.VirtualClusterConfig.KubernetesClusterConfig.GkeClusterConfig.NamespacedGkeDeploymentTarget.TargetGkeCluster,
-								},
-								NodePoolTarget: npTargets,
-							},
+							GkeClusterConfig:    k8sClusterCfg.GkeClusterConfig,
+							KubernetesNamespace: k8sClusterCfg.KubernetesNamespace,
 						})
 						if err != nil {
 							log.Error().Err(err).Send()
@@ -736,35 +754,40 @@ func (g *mqlGcpProjectDataprocServiceClusterConfigInstanceDiskConfig) id() (stri
 }
 
 func nodePoolTargetToMql(npt *dataproc.GkeNodePoolTarget) mqlGkeNodePoolTarget {
-	accs := make([]mqlGkeNodePoolAccelerator, 0, len(npt.NodePoolConfig.Config.Accelerators))
-	for _, acc := range npt.NodePoolConfig.Config.Accelerators {
-		accs = append(accs, mqlGkeNodePoolAccelerator{
-			AcceleratorCount: acc.AcceleratorCount,
-			AcceleratorType:  acc.AcceleratorType,
-			GpuPartitionSize: acc.GpuPartitionSize,
-		})
-	}
-
-	return mqlGkeNodePoolTarget{
+	result := mqlGkeNodePoolTarget{
 		NodePool: npt.NodePool,
-		NodePoolConfig: mqlGkeNodePoolConfig{
-			Autoscaling: mqlGkeNodePoolAutoscalingConfig{
-				MaxNodeCount: npt.NodePoolConfig.Autoscaling.MaxNodeCount,
-				MinNodeCount: npt.NodePoolConfig.Autoscaling.MinNodeCount,
-			},
-			Config: mqlGkeNodeConfig{
-				Accelerators:   accs,
-				BootDiskKmsKey: npt.NodePoolConfig.Config.BootDiskKmsKey,
-				LocalSsdCount:  npt.NodePoolConfig.Config.LocalSsdCount,
-				MachineType:    npt.NodePoolConfig.Config.MachineType,
-				MinCpuPlatform: npt.NodePoolConfig.Config.MinCpuPlatform,
-				Preemptible:    npt.NodePoolConfig.Config.Preemptible,
-				Spot:           npt.NodePoolConfig.Config.Spot,
-			},
-			Locations: npt.NodePoolConfig.Locations,
-		},
-		Roles: npt.Roles,
+		Roles:    npt.Roles,
 	}
+	if npt.NodePoolConfig == nil {
+		return result
+	}
+	result.NodePoolConfig.Locations = npt.NodePoolConfig.Locations
+	if npt.NodePoolConfig.Autoscaling != nil {
+		result.NodePoolConfig.Autoscaling = mqlGkeNodePoolAutoscalingConfig{
+			MaxNodeCount: npt.NodePoolConfig.Autoscaling.MaxNodeCount,
+			MinNodeCount: npt.NodePoolConfig.Autoscaling.MinNodeCount,
+		}
+	}
+	if npt.NodePoolConfig.Config != nil {
+		accs := make([]mqlGkeNodePoolAccelerator, 0, len(npt.NodePoolConfig.Config.Accelerators))
+		for _, acc := range npt.NodePoolConfig.Config.Accelerators {
+			accs = append(accs, mqlGkeNodePoolAccelerator{
+				AcceleratorCount: acc.AcceleratorCount,
+				AcceleratorType:  acc.AcceleratorType,
+				GpuPartitionSize: acc.GpuPartitionSize,
+			})
+		}
+		result.NodePoolConfig.Config = mqlGkeNodeConfig{
+			Accelerators:   accs,
+			BootDiskKmsKey: npt.NodePoolConfig.Config.BootDiskKmsKey,
+			LocalSsdCount:  npt.NodePoolConfig.Config.LocalSsdCount,
+			MachineType:    npt.NodePoolConfig.Config.MachineType,
+			MinCpuPlatform: npt.NodePoolConfig.Config.MinCpuPlatform,
+			Preemptible:    npt.NodePoolConfig.Config.Preemptible,
+			Spot:           npt.NodePoolConfig.Config.Spot,
+		}
+	}
+	return result
 }
 
 func instanceGroupConfigToMql(runtime *plugin.Runtime, igc *dataproc.InstanceGroupConfig, id string) (plugin.Resource, error) {

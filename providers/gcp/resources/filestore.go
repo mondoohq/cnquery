@@ -115,7 +115,7 @@ func (g *mqlGcpProjectFilestoreService) instances() ([]any, error) {
 			"description":               llx.StringData(instance.Description),
 			"tier":                      llx.StringData(instance.Tier.String()),
 			"state":                     llx.StringData(instance.State.String()),
-			"createTime":                llx.TimeData(instance.CreateTime.AsTime()),
+			"createTime":                llx.TimeDataPtr(timestampAsTimePtr(instance.CreateTime)),
 			"labels":                    llx.MapData(convert.MapToInterfaceMap(instance.Labels), types.String),
 			"fileShares":                llx.ArrayData(fileShares, types.Resource("gcp.project.filestoreService.instance.fileShare")),
 			"networks":                  llx.ArrayData(networks, types.Resource("gcp.project.filestoreService.instance.network")),

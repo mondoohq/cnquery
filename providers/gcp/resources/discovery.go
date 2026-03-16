@@ -794,7 +794,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 			return nil, storage.Error
 		}
 		buckets := storage.Data.GetBuckets()
-		if buckets == nil {
+		if buckets.Error != nil {
 			return nil, buckets.Error
 		}
 		for i := range buckets.Data {
@@ -1205,12 +1205,12 @@ func (a *GcrImages) Name() string {
 func (a *GcrImages) ListRepository(repository string, recursive bool) ([]*inventory.Asset, error) {
 	repo, err := name.NewRepository(repository)
 	if err != nil {
-		log.Fatal().Err(err).Str("repository", repository).Msg("could not create repository")
+		return nil, fmt.Errorf("could not create repository %s: %w", repository, err)
 	}
 
 	auth, err := google.Keychain.Resolve(repo.Registry)
 	if err != nil {
-		log.Fatal().Err(err).Str("repository", repository).Msg("failed to get auth for repository")
+		return nil, fmt.Errorf("failed to get auth for repository %s: %w", repository, err)
 	}
 
 	imgs := []*inventory.Asset{}

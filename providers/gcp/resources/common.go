@@ -15,6 +15,7 @@ import (
 
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
@@ -79,6 +80,14 @@ func timestampAsTimePtr(t *timestamppb.Timestamp) *time.Time {
 	return &tm
 }
 
+func durationSecondsToTimePtr(d *durationpb.Duration) *time.Time {
+	if d == nil {
+		return nil
+	}
+	t := llx.DurationToTime(d.Seconds)
+	return &t
+}
+
 func boolValueToPtr(b *wrapperspb.BoolValue) *bool {
 	if b == nil {
 		return nil
@@ -115,6 +124,9 @@ type assetIdentifier struct {
 func getAssetIdentifier(runtime *plugin.Runtime) *assetIdentifier {
 	conn, ok := runtime.Connection.(*connection.GcpConnection)
 	if !ok {
+		return nil
+	}
+	if conn.Asset() == nil || len(conn.Asset().PlatformIds) == 0 {
 		return nil
 	}
 	id := conn.Asset().PlatformIds[0]
@@ -184,6 +196,9 @@ func getNetworkByUrl(networkUrl string, runtime *plugin.Runtime) (*mqlGcpProject
 	params := strings.TrimPrefix(networkUrl, "https://www.googleapis.com/compute/v1/")
 	params = strings.TrimPrefix(params, "https://compute.googleapis.com/compute/v1/")
 	parts := strings.Split(params, "/")
+	if len(parts) < 5 {
+		return nil, errors.New("malformed network URL: " + networkUrl)
+	}
 	resId := resourceId{Project: parts[1], Region: parts[2], Name: parts[4]}
 
 	res, err := CreateResource(runtime, "gcp.project.computeService.network", map[string]*llx.RawData{
@@ -207,6 +222,9 @@ func getSubnetworkByUrl(subnetUrl string, runtime *plugin.Runtime) (*mqlGcpProje
 	params := strings.TrimPrefix(subnetUrl, "https://www.googleapis.com/compute/v1/")
 	params = strings.TrimPrefix(params, "https://compute.googleapis.com/compute/v1/")
 	parts := strings.Split(params, "/")
+	if len(parts) < 6 {
+		return nil, errors.New("malformed subnetwork URL: " + subnetUrl)
+	}
 	resId := resourceId{Project: parts[1], Region: parts[3], Name: parts[5]}
 	// regionUrl is the full URL up to and including the region segment
 	regionUrl := "https://www.googleapis.com/compute/v1/projects/" + resId.Project + "/regions/" + resId.Region
@@ -233,5 +251,8 @@ func getDiskIdByUrl(diskUrl string) (*resourceId, error) {
 	params := strings.TrimPrefix(diskUrl, "https://www.googleapis.com/compute/v1/")
 	params = strings.TrimPrefix(params, "https://compute.googleapis.com/compute/v1/")
 	parts := strings.Split(params, "/")
+	if len(parts) < 6 {
+		return nil, errors.New("malformed disk URL: " + diskUrl)
+	}
 	return &resourceId{Project: parts[1], Region: parts[3], Name: parts[5]}, nil
 }

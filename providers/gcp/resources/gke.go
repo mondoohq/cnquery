@@ -1028,6 +1028,9 @@ func (g *mqlGcpProjectGkeServiceClusterNetworkConfig) network() (*mqlGcpProjectC
 
 	// Format is projects/project-1/global/networks/net-1
 	params := strings.Split(networkPath, "/")
+	if len(params) < 2 {
+		return nil, errors.New("malformed network path: " + networkPath)
+	}
 	res, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.network", map[string]*llx.RawData{
 		"name":      llx.StringData(params[len(params)-1]),
 		"projectId": llx.StringData(params[1]),
@@ -1046,6 +1049,9 @@ func (g *mqlGcpProjectGkeServiceClusterNetworkConfig) subnetwork() (*mqlGcpProje
 
 	// Format is projects/project-1/regions/us-central1/subnetworks/subnet-1
 	params := strings.Split(subnetPath, "/")
+	if len(params) < 6 {
+		return nil, errors.New("malformed subnetwork path: " + subnetPath)
+	}
 	regionUrl := strings.SplitN(subnetPath, "/subnetworks", 2)
 	res, err := NewResource(g.MqlRuntime, "gcp.project.computeService.subnetwork", map[string]*llx.RawData{
 		"name":      llx.StringData(params[len(params)-1]),
