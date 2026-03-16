@@ -492,6 +492,13 @@ func (r *Runtime) handlePluginError(err error, provider *ConnectedProvider) (boo
 	}
 
 	switch st.Code() {
+	case 13:
+		// Error: Internal. Happens when a panic is recovered inside the provider.
+		// The provider is still alive — report the panic details and return the
+		// error so it surfaces in query results.
+		log.Error().Str("provider", provider.Instance.Name).Msg(st.Message())
+		return true, errors.New("the '" + provider.Instance.Name + "' provider panicked: " + st.Message())
+
 	case 14:
 		// Error: Unavailable. Happens when the plugin crashes.
 		// TODO: try to restart the plugin and reset its connections
