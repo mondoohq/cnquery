@@ -326,8 +326,12 @@ func (a *mqlAwsDrs) createJobResource(job drstypes.Job, region string) (*mqlAwsD
 	if job.Arn != nil && *job.Arn != "" {
 		jobArn = *job.Arn
 	} else {
+		jobID := convert.ToValue(job.JobID)
+		if jobID == "" {
+			return nil, errors.New("DRS job has neither ARN nor JobID, cannot construct resource identifier")
+		}
 		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-		jobArn = fmt.Sprintf("arn:aws:drs:%s:%s:job/%s", region, conn.AccountId(), convert.ToValue(job.JobID))
+		jobArn = fmt.Sprintf("arn:aws:drs:%s:%s:job/%s", region, conn.AccountId(), jobID)
 	}
 
 	// Parse time strings
