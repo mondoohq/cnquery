@@ -43,6 +43,12 @@ type TrackedAsset struct {
 	Children []*TrackedAsset // populated when this asset is Connected
 }
 
+// Display implements the SelectableItem interface from cli/components,
+// allowing TrackedAsset to be used directly with components.Select.
+func (t *TrackedAsset) Display() string {
+	return t.Asset.HumanName()
+}
+
 // AssetExplorerConfig holds configuration for creating a new AssetExplorer.
 type AssetExplorerConfig struct {
 	Inventory *inventory.Inventory
