@@ -464,6 +464,9 @@ func (t *mqlAwsEcsTask) containers() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
+	if definition.TaskDefinition == nil {
+		return nil, nil
+	}
 	containerLogDriverMap := make(map[string]string)
 	containerCommandMap := make(map[string][]string)
 

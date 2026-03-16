@@ -148,6 +148,10 @@ func (a *mqlAwsCloudfront) functions() ([]any, error) {
 			return nil, errors.Wrap(err, "could not gather aws cloudfront functions")
 		}
 
+		if functions.FunctionList == nil {
+			break
+		}
+
 		for i := range functions.FunctionList.Items {
 			funct := functions.FunctionList.Items[i]
 			var stage, comment, runtime string
