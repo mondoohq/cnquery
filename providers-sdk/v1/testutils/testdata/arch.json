@@ -1757,6 +1757,11 @@
                   "key": "auid",
                   "op": "!=",
                   "value": "unset"
+                },
+                {
+                  "key": "key",
+                  "op": "=",
+                  "value": "priv_escalation"
                 }
               ]
             },

@@ -72,6 +72,19 @@ func TestResource_AuditdRules(t *testing.T) {
 		})
 	})
 
+	t.Run("-k flag normalized into fields", func(t *testing.T) {
+		// The -k flag is shorthand for -F key=<value>. Verify that the
+		// parser normalizes it into the fields array so queries don't
+		// need to check both representations.
+		x.TestSimple(t, []testutils.SimpleTest{
+			{
+				Code:        `auditd.rules.syscalls.where(keyname == "priv_escalation")[0].fields.where(key == "key" && value == "priv_escalation").length`,
+				ResultIndex: 0,
+				Expectation: int64(1),
+			},
+		})
+	})
+
 	t.Run("auditd comparisons field", func(t *testing.T) {
 		x.TestSimple(t, []testutils.SimpleTest{
 			// Test that rules with -C have populated comparisons
