@@ -14,7 +14,7 @@ import (
 )
 
 func TestSysInfoHeader(t *testing.T) {
-	t.Run("nil sysinfo defaults PN to GOOS", func(t *testing.T) {
+	t.Run("nil sysinfo defaults to mql product", func(t *testing.T) {
 		plugin := sysInfoHeader(mql.Features{}, nil)
 		h := plugin.GetHeader(nil)
 
@@ -26,7 +26,7 @@ func TestSysInfoHeader(t *testing.T) {
 		assert.Equal(t, runtime.GOOS, parsed["PN"])
 	})
 
-	t.Run("populates all sysinfo fields", func(t *testing.T) {
+	t.Run("populates all sysinfo fields with product", func(t *testing.T) {
 		si := &ClientSysInfo{
 			PlatformName:    "ubuntu",
 			PlatformVersion: "22.04",
@@ -51,13 +51,27 @@ func TestSysInfoHeader(t *testing.T) {
 		assert.Equal(t, "amd64", parsed["PA"])
 		assert.Equal(t, "10.0.0.1", parsed["IP"])
 		assert.Equal(t, "myhost", parsed["HN"])
-		assert.Equal(t, mql.Version, parsed["mql"])
 		assert.Equal(t, "9.1.0", parsed["cnspec"])
 		assert.Equal(t, "deadbeef", parsed["build"])
+		_, hasMql := parsed["mql"]
+		assert.False(t, hasMql, "mql key should not be set when product is provided")
 		assert.Equal(t, "platform-123", h.Get("Mondoo-PlatformID"))
 	})
 
-	t.Run("product name without version is ignored", func(t *testing.T) {
+	t.Run("no product defaults to mql version", func(t *testing.T) {
+		si := &ClientSysInfo{
+			PlatformName: "debian",
+		}
+		plugin := sysInfoHeader(mql.Features{}, si)
+		h := plugin.GetHeader(nil)
+
+		parsed, err := scope.ParseXInfoHeader(h.Get("User-Agent"))
+		require.NoError(t, err)
+
+		assert.Equal(t, mql.Version, parsed["mql"], "mql version should be set when no product is provided")
+	})
+
+	t.Run("product name without version falls back to mql", func(t *testing.T) {
 		si := &ClientSysInfo{
 			PlatformName: "debian",
 			Product:      Product{Name: "cnspec"},
@@ -70,10 +84,10 @@ func TestSysInfoHeader(t *testing.T) {
 
 		_, hasProduct := parsed["cnspec"]
 		assert.False(t, hasProduct, "product should not be added when version is empty")
-		assert.Equal(t, mql.Version, parsed["mql"], "mql version should still be present")
+		assert.Equal(t, mql.Version, parsed["mql"], "mql version should be set as fallback")
 	})
 
-	t.Run("product version without name is ignored", func(t *testing.T) {
+	t.Run("product version without name falls back to mql", func(t *testing.T) {
 		si := &ClientSysInfo{
 			PlatformName: "debian",
 			Product:      Product{Version: "9.1.0"},
@@ -86,7 +100,7 @@ func TestSysInfoHeader(t *testing.T) {
 
 		_, hasEmpty := parsed[""]
 		assert.False(t, hasEmpty, "empty product name should not be added as a key")
-		assert.Equal(t, mql.Version, parsed["mql"], "mql version should still be present")
+		assert.Equal(t, mql.Version, parsed["mql"], "mql version should be set as fallback")
 	})
 
 	t.Run("empty platform name defaults to GOOS", func(t *testing.T) {
@@ -98,5 +112,28 @@ func TestSysInfoHeader(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, runtime.GOOS, parsed["PN"])
+	})
+
+	t.Run("features are encoded in header", func(t *testing.T) {
+		features := mql.Features{0x01, 0x02}
+		plugin := sysInfoHeader(features, nil)
+		h := plugin.GetHeader(nil)
+
+		assert.Equal(t, features.Encode(), h.Get("Mondoo-Features"))
+	})
+
+	t.Run("product build overwrites default build", func(t *testing.T) {
+		si := &ClientSysInfo{
+			PlatformName: "centos",
+			Product:      Product{Build: "abc123"},
+		}
+		plugin := sysInfoHeader(mql.Features{}, si)
+		h := plugin.GetHeader(nil)
+
+		parsed, err := scope.ParseXInfoHeader(h.Get("User-Agent"))
+		require.NoError(t, err)
+
+		assert.Equal(t, "abc123", parsed["build"])
+		assert.Equal(t, mql.Version, parsed["mql"], "mql version should be set since product name/version are missing")
 	})
 }

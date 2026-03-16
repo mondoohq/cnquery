@@ -47,11 +47,7 @@ func sysInfoHeader(features mql.Features, si *ClientSysInfo) ranger.ClientPlugin
 	)
 
 	h := http.Header{}
-	info := map[string]string{
-		// these might get overwritten down below if details are provided
-		"mql":   mql.Version,
-		"build": mql.Build,
-	}
+	info := map[string]string{}
 
 	if si != nil {
 		info["PN"] = si.PlatformName
@@ -59,13 +55,21 @@ func sysInfoHeader(features mql.Features, si *ClientSysInfo) ranger.ClientPlugin
 		info["PA"] = si.PlatformArch
 		info["IP"] = si.IP
 		info["HN"] = si.Hostname
-		if si.Product.Name != "" && si.Product.Version != "" {
-			info[si.Product.Name] = si.Product.Version
-		}
-		if si.Product.Build != "" {
-			info["build"] = si.Product.Build
-		}
 		h.Set(HttpHeaderPlatformID, si.PlatformID)
+	}
+
+	// If product information is provided, use it. Otherwise, default to mql product + version
+	if si != nil && si.Product.Name != "" && si.Product.Version != "" {
+		info[si.Product.Name] = si.Product.Version
+	} else {
+		info["mql"] = mql.Version
+	}
+
+	// If product build information is provided, use it. Otherwise, default to mql build
+	if si != nil && si.Product.Build != "" {
+		info["build"] = si.Product.Build
+	} else {
+		info["build"] = mql.Build
 	}
 
 	if info["PN"] == "" {
