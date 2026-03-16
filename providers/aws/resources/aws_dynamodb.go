@@ -51,18 +51,19 @@ func (a *mqlAwsDynamodbExport) id() (string, error) {
 
 type mqlAwsDynamodbExportInternal struct {
 	exportCache *ddtypes.ExportDescription
+	fetched     bool
 	region      string
 	arn         string
 	lock        sync.Mutex
 }
 
 func (a *mqlAwsDynamodbExport) fetchExport() (*ddtypes.ExportDescription, error) {
-	if a.exportCache != nil {
+	if a.fetched {
 		return a.exportCache, nil
 	}
 	a.lock.Lock()
 	defer a.lock.Unlock()
-	if a.exportCache != nil {
+	if a.fetched {
 		return a.exportCache, nil
 	}
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
@@ -73,6 +74,7 @@ func (a *mqlAwsDynamodbExport) fetchExport() (*ddtypes.ExportDescription, error)
 		return nil, err
 	}
 	a.exportCache = desc.ExportDescription
+	a.fetched = true
 	return desc.ExportDescription, nil
 }
 

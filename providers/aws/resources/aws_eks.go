@@ -235,6 +235,7 @@ func (a *mqlAwsEksCluster) nodeGroups() ([]any, error) {
 
 type mqlAwsEksNodegroupInternal struct {
 	details     *ekstypes.Nodegroup
+	fetched     bool
 	region      string
 	lock        sync.Mutex
 	clusterName string
@@ -270,12 +271,12 @@ func (a *mqlAwsEksNodegroup) autoscalingGroups() ([]any, error) {
 }
 
 func (a *mqlAwsEksNodegroup) fetchDetails() (*ekstypes.Nodegroup, error) {
-	if a.details != nil {
+	if a.fetched {
 		return a.details, nil
 	}
 	a.lock.Lock()
 	defer a.lock.Unlock()
-	if a.details != nil {
+	if a.fetched {
 		return a.details, nil
 	}
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
@@ -286,6 +287,7 @@ func (a *mqlAwsEksNodegroup) fetchDetails() (*ekstypes.Nodegroup, error) {
 		return nil, err
 	}
 	a.details = desc.Nodegroup
+	a.fetched = true
 	return desc.Nodegroup, nil
 }
 
@@ -455,18 +457,19 @@ func (a *mqlAwsEksCluster) addons() ([]any, error) {
 
 type mqlAwsEksAddonInternal struct {
 	details     *ekstypes.Addon
+	fetched     bool
 	region      string
 	lock        sync.Mutex
 	clusterName string
 }
 
 func (a *mqlAwsEksAddon) fetchDetails() (*ekstypes.Addon, error) {
-	if a.details != nil {
+	if a.fetched {
 		return a.details, nil
 	}
 	a.lock.Lock()
 	defer a.lock.Unlock()
-	if a.details != nil {
+	if a.fetched {
 		return a.details, nil
 	}
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
@@ -477,6 +480,7 @@ func (a *mqlAwsEksAddon) fetchDetails() (*ekstypes.Addon, error) {
 		return nil, err
 	}
 	a.details = desc.Addon
+	a.fetched = true
 	return desc.Addon, nil
 }
 
