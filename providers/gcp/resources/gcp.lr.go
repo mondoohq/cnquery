@@ -8011,7 +8011,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlGcpProjectVertexaiServiceEndpoint).GetEnablePrivateServiceConnect()).ToDataRes(types.Bool)
 	},
 	"gcp.project.vertexaiService.endpoint.trafficSplit": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectVertexaiServiceEndpoint).GetTrafficSplit()).ToDataRes(types.Dict)
+		return (r.(*mqlGcpProjectVertexaiServiceEndpoint).GetTrafficSplit()).ToDataRes(types.Map(types.String, types.Int))
 	},
 	"gcp.project.vertexaiService.endpoint.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectVertexaiServiceEndpoint).GetLabels()).ToDataRes(types.Map(types.String, types.String))
@@ -18077,7 +18077,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"gcp.project.vertexaiService.endpoint.trafficSplit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectVertexaiServiceEndpoint).TrafficSplit, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		r.(*mqlGcpProjectVertexaiServiceEndpoint).TrafficSplit, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.vertexaiService.endpoint.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -41360,7 +41360,7 @@ func (c *mqlGcpProjectBackupdrServiceBackupPlan) GetUpdatedAt() *plugin.TValue[*
 type mqlGcpProjectVertexaiService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectVertexaiServiceInternal it will be used here
+	mqlGcpProjectVertexaiServiceInternal
 	ProjectId           plugin.TValue[string]
 	Models              plugin.TValue[[]any]
 	Endpoints           plugin.TValue[[]any]
@@ -41636,7 +41636,7 @@ type mqlGcpProjectVertexaiServiceEndpoint struct {
 	EncryptionSpec              plugin.TValue[any]
 	Network                     plugin.TValue[string]
 	EnablePrivateServiceConnect plugin.TValue[bool]
-	TrafficSplit                plugin.TValue[any]
+	TrafficSplit                plugin.TValue[map[string]any]
 	Labels                      plugin.TValue[map[string]any]
 	Etag                        plugin.TValue[string]
 	CreatedAt                   plugin.TValue[*time.Time]
@@ -41708,7 +41708,7 @@ func (c *mqlGcpProjectVertexaiServiceEndpoint) GetEnablePrivateServiceConnect() 
 	return &c.EnablePrivateServiceConnect
 }
 
-func (c *mqlGcpProjectVertexaiServiceEndpoint) GetTrafficSplit() *plugin.TValue[any] {
+func (c *mqlGcpProjectVertexaiServiceEndpoint) GetTrafficSplit() *plugin.TValue[map[string]any] {
 	return &c.TrafficSplit
 }
 

@@ -5465,8 +5465,8 @@ private gcp.project.vertexaiService.endpoint @defaults("name displayName") {
   network string
   // Whether private service connect is enabled
   enablePrivateServiceConnect bool
-  // Traffic split (model ID to percentage)
-  trafficSplit dict
+  // Traffic split (model ID to traffic percentage)
+  trafficSplit map[string]int
   // Labels
   labels map[string]string
   // Etag
