@@ -146,10 +146,20 @@ func getDiskByUrl(diskUrl string, runtime *plugin.Runtime) (*mqlGcpProjectComput
 	}
 
 	// URL format: https://www.googleapis.com/compute/v1/projects/{project}/zones/{zone}/disks/{disk}
-	params := strings.TrimPrefix(diskUrl, "https://www.googleapis.com/compute/v1/")
-	params = strings.TrimPrefix(params, "https://compute.googleapis.com/compute/v1/")
+	//          or https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/disks/{disk}
+	// Also handles regional disks: .../projects/{project}/regions/{region}/disks/{disk}
+	params := diskUrl
+	switch {
+	case strings.HasPrefix(params, "https://www.googleapis.com/compute/v1/"):
+		params = strings.TrimPrefix(params, "https://www.googleapis.com/compute/v1/")
+	case strings.HasPrefix(params, "https://compute.googleapis.com/compute/v1/"):
+		params = strings.TrimPrefix(params, "https://compute.googleapis.com/compute/v1/")
+	default:
+		return nil, errors.New("unrecognized source disk URL prefix: " + diskUrl)
+	}
 	parts := strings.Split(params, "/")
-	if len(parts) < 5 {
+	// Expect at least: projects/{project}/{zones|regions}/{loc}/disks/{disk}
+	if len(parts) < 6 {
 		return nil, errors.New("invalid source disk URL: " + diskUrl)
 	}
 

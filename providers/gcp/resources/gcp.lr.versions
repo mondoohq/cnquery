@@ -322,7 +322,6 @@ gcp.project.bigqueryService.dataset.accessEntry.viewRef 9.0.0
 gcp.project.bigqueryService.dataset.created 9.0.0
 gcp.project.bigqueryService.dataset.defaultCollation 13.1.2
 gcp.project.bigqueryService.dataset.defaultPartitionExpirationMs 13.1.2
-gcp.project.bigqueryService.dataset.defaultRoundingMode 13.1.2
 gcp.project.bigqueryService.dataset.defaultTableExpirationMs 11.6.6
 gcp.project.bigqueryService.dataset.description 9.0.0
 gcp.project.bigqueryService.dataset.id 9.0.0
@@ -336,8 +335,6 @@ gcp.project.bigqueryService.dataset.modified 9.0.0
 gcp.project.bigqueryService.dataset.name 9.0.0
 gcp.project.bigqueryService.dataset.projectId 9.0.0
 gcp.project.bigqueryService.dataset.routines 9.0.0
-gcp.project.bigqueryService.dataset.satisfiesPzi 13.1.2
-gcp.project.bigqueryService.dataset.satisfiesPzs 13.1.2
 gcp.project.bigqueryService.dataset.storageBillingModel 13.1.2
 gcp.project.bigqueryService.dataset.tables 9.0.0
 gcp.project.bigqueryService.dataset.tags 9.0.0
@@ -568,7 +565,6 @@ gcp.project.cloudFunction.name 9.0.0
 gcp.project.cloudFunction.network 9.0.0
 gcp.project.cloudFunction.projectId 9.0.0
 gcp.project.cloudFunction.runtime 9.0.0
-gcp.project.cloudFunction.satisfiesPzs 13.1.2
 gcp.project.cloudFunction.secretEnvVars 9.0.0
 gcp.project.cloudFunction.secretVolumes 9.0.0
 gcp.project.cloudFunction.serviceAccountEmail 9.0.0
@@ -577,7 +573,6 @@ gcp.project.cloudFunction.sourceRepository 9.0.0
 gcp.project.cloudFunction.sourceUploadUrl 9.0.0
 gcp.project.cloudFunction.status 9.0.0
 gcp.project.cloudFunction.timeout 9.0.0
-gcp.project.cloudFunction.uid 13.1.2
 gcp.project.cloudFunction.updated 9.0.0
 gcp.project.cloudFunction.versionId 9.0.0
 gcp.project.cloudFunction.vpcConnector 9.0.0

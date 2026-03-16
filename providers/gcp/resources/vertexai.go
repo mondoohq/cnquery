@@ -62,6 +62,9 @@ var vertexaiRegions = []string{
 	"africa-south1",
 }
 
+// vertexaiMaxConcurrency is the maximum number of regions to query concurrently.
+const vertexaiMaxConcurrency = 10
+
 func vertexaiEndpoint(region string) string {
 	return fmt.Sprintf("%s-aiplatform.googleapis.com:443", region)
 }
@@ -82,31 +85,47 @@ func isVertexAIRegionSkippable(err error) bool {
 }
 
 type mqlGcpProjectVertexaiServiceInternal struct {
-	enabledRegions []string
-	regionsFetched bool
+	// skippedRegions tracks regions where the API is not available.
+	// We track skipped (not enabled) so that each resource type can
+	// independently discover regions — a region enabled for models
+	// but not endpoints won't be lost.
+	skippedRegions map[string]bool
 	lock           sync.Mutex
 }
 
-// getRegions returns the cached list of enabled regions, or all known regions
-// if no discovery has been done yet.
+// getRegions returns the list of candidate regions, excluding any that have
+// been previously marked as skipped.
 func (g *mqlGcpProjectVertexaiService) getRegions() []string {
 	g.lock.Lock()
 	defer g.lock.Unlock()
-	if g.regionsFetched {
-		return g.enabledRegions
+	if len(g.skippedRegions) == 0 {
+		return vertexaiRegions
 	}
-	return vertexaiRegions
+	regions := make([]string, 0, len(vertexaiRegions))
+	for _, r := range vertexaiRegions {
+		if !g.skippedRegions[r] {
+			regions = append(regions, r)
+		}
+	}
+	return regions
 }
 
-// cacheEnabledRegions stores the discovered enabled regions. Only the first
-// caller's results are cached; subsequent calls are no-ops.
-func (g *mqlGcpProjectVertexaiService) cacheEnabledRegions(regions []string) {
+// markRegionSkipped records a region where the API returned a skippable error.
+func (g *mqlGcpProjectVertexaiService) markRegionSkipped(region string) {
 	g.lock.Lock()
 	defer g.lock.Unlock()
-	if !g.regionsFetched {
-		g.enabledRegions = regions
-		g.regionsFetched = true
+	if g.skippedRegions == nil {
+		g.skippedRegions = make(map[string]bool)
 	}
+	g.skippedRegions[region] = true
+}
+
+// vertexaiRegionResult holds the result of listing resources in a single region.
+type vertexaiRegionResult struct {
+	items   []any
+	skipped bool
+	err     error
+	region  string
 }
 
 func (g *mqlGcpProject) vertexai() (*mqlGcpProjectVertexaiService, error) {
@@ -141,6 +160,43 @@ func (g *mqlGcpProjectVertexaiService) id() (string, error) {
 	return fmt.Sprintf("gcp.project/%s/vertexaiService", g.ProjectId.Data), nil
 }
 
+// listAcrossRegions runs fn concurrently across all candidate regions with bounded
+// concurrency. It collects results, marks skipped regions, and returns the aggregated items.
+func (g *mqlGcpProjectVertexaiService) listAcrossRegions(
+	fn func(ctx context.Context, region string) ([]any, bool, error),
+) ([]any, error) {
+	regions := g.getRegions()
+	ctx := context.Background()
+
+	results := make([]vertexaiRegionResult, len(regions))
+	sem := make(chan struct{}, vertexaiMaxConcurrency)
+	var wg sync.WaitGroup
+
+	for i, region := range regions {
+		wg.Add(1)
+		go func(idx int, r string) {
+			defer wg.Done()
+			sem <- struct{}{}
+			defer func() { <-sem }()
+			items, skipped, err := fn(ctx, r)
+			results[idx] = vertexaiRegionResult{items: items, skipped: skipped, err: err, region: r}
+		}(i, region)
+	}
+	wg.Wait()
+
+	var res []any
+	for _, r := range results {
+		if r.err != nil {
+			return nil, r.err
+		}
+		if r.skipped {
+			g.markRegionSkipped(r.region)
+		}
+		res = append(res, r.items...)
+	}
+	return res, nil
+}
+
 func (g *mqlGcpProjectVertexaiService) models() ([]any, error) {
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
@@ -153,92 +209,78 @@ func (g *mqlGcpProjectVertexaiService) models() ([]any, error) {
 		return nil, err
 	}
 
-	ctx := context.Background()
-	var res []any
-	var enabledRegions []string
-	for _, region := range g.getRegions() {
-		items, skipped, err := func() ([]any, bool, error) {
-			client, err := aiplatform.NewModelClient(ctx,
-				option.WithCredentials(creds),
-				option.WithEndpoint(vertexaiEndpoint(region)),
-			)
+	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
+		client, err := aiplatform.NewModelClient(ctx,
+			option.WithCredentials(creds),
+			option.WithEndpoint(vertexaiEndpoint(region)),
+		)
+		if err != nil {
+			return nil, false, err
+		}
+		defer client.Close()
+
+		it := client.ListModels(ctx, &aiplatformpb.ListModelsRequest{
+			Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, region),
+		})
+
+		var items []any
+		for {
+			model, err := it.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				if isVertexAIRegionSkippable(err) {
+					return nil, true, nil
+				}
+				return nil, false, err
+			}
+
+			modelSourceInfo, err := protoToDict(model.ModelSourceInfo)
 			if err != nil {
 				return nil, false, err
 			}
-			defer client.Close()
-
-			it := client.ListModels(ctx, &aiplatformpb.ListModelsRequest{
-				Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, region),
-			})
-
-			var items []any
-			for {
-				model, err := it.Next()
-				if err == iterator.Done {
-					break
-				}
-				if err != nil {
-					if isVertexAIRegionSkippable(err) {
-						return nil, true, nil
-					}
-					return nil, false, err
-				}
-
-				modelSourceInfo, err := protoToDict(model.ModelSourceInfo)
-				if err != nil {
-					return nil, false, err
-				}
-				containerSpec, err := protoToDict(model.ContainerSpec)
-				if err != nil {
-					return nil, false, err
-				}
-				encryptionSpec, err := protoToDict(model.EncryptionSpec)
-				if err != nil {
-					return nil, false, err
-				}
-
-				deploymentTypes := make([]any, 0, len(model.SupportedDeploymentResourcesTypes))
-				for _, dt := range model.SupportedDeploymentResourcesTypes {
-					deploymentTypes = append(deploymentTypes, dt.String())
-				}
-
-				mqlModel, err := CreateResource(g.MqlRuntime, "gcp.project.vertexaiService.model", map[string]*llx.RawData{
-					"name":                              llx.StringData(model.Name),
-					"displayName":                       llx.StringData(model.DisplayName),
-					"description":                       llx.StringData(model.Description),
-					"versionId":                         llx.StringData(model.VersionId),
-					"versionAliases":                    llx.ArrayData(convert.SliceAnyToInterface(model.VersionAliases), types.String),
-					"versionDescription":                llx.StringData(model.VersionDescription),
-					"modelSourceInfo":                   llx.DictData(modelSourceInfo),
-					"containerSpec":                     llx.DictData(containerSpec),
-					"supportedDeploymentResourcesTypes": llx.ArrayData(deploymentTypes, types.String),
-					"supportedInputStorageFormats":      llx.ArrayData(convert.SliceAnyToInterface(model.SupportedInputStorageFormats), types.String),
-					"supportedOutputStorageFormats":     llx.ArrayData(convert.SliceAnyToInterface(model.SupportedOutputStorageFormats), types.String),
-					"trainingPipeline":                  llx.StringData(model.TrainingPipeline),
-					"artifactUri":                       llx.StringData(model.ArtifactUri),
-					"encryptionSpec":                    llx.DictData(encryptionSpec),
-					"labels":                            llx.MapData(convert.MapToInterfaceMap(model.Labels), types.String),
-					"etag":                              llx.StringData(model.Etag),
-					"createdAt":                         llx.TimeDataPtr(timestampAsTimePtr(model.CreateTime)),
-					"updatedAt":                         llx.TimeDataPtr(timestampAsTimePtr(model.UpdateTime)),
-				})
-				if err != nil {
-					return nil, false, err
-				}
-				items = append(items, mqlModel)
+			containerSpec, err := protoToDict(model.ContainerSpec)
+			if err != nil {
+				return nil, false, err
 			}
-			return items, false, nil
-		}()
-		if err != nil {
-			return nil, err
+			encryptionSpec, err := protoToDict(model.EncryptionSpec)
+			if err != nil {
+				return nil, false, err
+			}
+
+			deploymentTypes := make([]any, 0, len(model.SupportedDeploymentResourcesTypes))
+			for _, dt := range model.SupportedDeploymentResourcesTypes {
+				deploymentTypes = append(deploymentTypes, dt.String())
+			}
+
+			mqlModel, err := CreateResource(g.MqlRuntime, "gcp.project.vertexaiService.model", map[string]*llx.RawData{
+				"name":                              llx.StringData(model.Name),
+				"displayName":                       llx.StringData(model.DisplayName),
+				"description":                       llx.StringData(model.Description),
+				"versionId":                         llx.StringData(model.VersionId),
+				"versionAliases":                    llx.ArrayData(convert.SliceAnyToInterface(model.VersionAliases), types.String),
+				"versionDescription":                llx.StringData(model.VersionDescription),
+				"modelSourceInfo":                   llx.DictData(modelSourceInfo),
+				"containerSpec":                     llx.DictData(containerSpec),
+				"supportedDeploymentResourcesTypes": llx.ArrayData(deploymentTypes, types.String),
+				"supportedInputStorageFormats":      llx.ArrayData(convert.SliceAnyToInterface(model.SupportedInputStorageFormats), types.String),
+				"supportedOutputStorageFormats":     llx.ArrayData(convert.SliceAnyToInterface(model.SupportedOutputStorageFormats), types.String),
+				"trainingPipeline":                  llx.StringData(model.TrainingPipeline),
+				"artifactUri":                       llx.StringData(model.ArtifactUri),
+				"encryptionSpec":                    llx.DictData(encryptionSpec),
+				"labels":                            llx.MapData(convert.MapToInterfaceMap(model.Labels), types.String),
+				"etag":                              llx.StringData(model.Etag),
+				"createdAt":                         llx.TimeDataPtr(timestampAsTimePtr(model.CreateTime)),
+				"updatedAt":                         llx.TimeDataPtr(timestampAsTimePtr(model.UpdateTime)),
+			})
+			if err != nil {
+				return nil, false, err
+			}
+			items = append(items, mqlModel)
 		}
-		if !skipped {
-			enabledRegions = append(enabledRegions, region)
-		}
-		res = append(res, items...)
-	}
-	g.cacheEnabledRegions(enabledRegions)
-	return res, nil
+		return items, false, nil
+	})
 }
 
 func (g *mqlGcpProjectVertexaiServiceModel) id() (string, error) {
@@ -257,86 +299,72 @@ func (g *mqlGcpProjectVertexaiService) endpoints() ([]any, error) {
 		return nil, err
 	}
 
-	ctx := context.Background()
-	var res []any
-	var enabledRegions []string
-	for _, region := range g.getRegions() {
-		items, skipped, err := func() ([]any, bool, error) {
-			client, err := aiplatform.NewEndpointClient(ctx,
-				option.WithCredentials(creds),
-				option.WithEndpoint(vertexaiEndpoint(region)),
-			)
+	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
+		client, err := aiplatform.NewEndpointClient(ctx,
+			option.WithCredentials(creds),
+			option.WithEndpoint(vertexaiEndpoint(region)),
+		)
+		if err != nil {
+			return nil, false, err
+		}
+		defer client.Close()
+
+		it := client.ListEndpoints(ctx, &aiplatformpb.ListEndpointsRequest{
+			Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, region),
+		})
+
+		var items []any
+		for {
+			ep, err := it.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				if isVertexAIRegionSkippable(err) {
+					return nil, true, nil
+				}
+				return nil, false, err
+			}
+
+			deployedModels := make([]any, 0, len(ep.DeployedModels))
+			for _, dm := range ep.DeployedModels {
+				d, err := protoToDict(dm)
+				if err != nil {
+					return nil, false, err
+				}
+				deployedModels = append(deployedModels, d)
+			}
+			encryptionSpec, err := protoToDict(ep.EncryptionSpec)
 			if err != nil {
 				return nil, false, err
 			}
-			defer client.Close()
 
-			it := client.ListEndpoints(ctx, &aiplatformpb.ListEndpointsRequest{
-				Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, region),
-			})
-
-			var items []any
-			for {
-				ep, err := it.Next()
-				if err == iterator.Done {
-					break
-				}
-				if err != nil {
-					if isVertexAIRegionSkippable(err) {
-						return nil, true, nil
-					}
-					return nil, false, err
-				}
-
-				deployedModels := make([]any, 0, len(ep.DeployedModels))
-				for _, dm := range ep.DeployedModels {
-					d, err := protoToDict(dm)
-					if err != nil {
-						return nil, false, err
-					}
-					deployedModels = append(deployedModels, d)
-				}
-				encryptionSpec, err := protoToDict(ep.EncryptionSpec)
-				if err != nil {
-					return nil, false, err
-				}
-
-				trafficSplit := make(map[string]any, len(ep.TrafficSplit))
-				for k, v := range ep.TrafficSplit {
-					trafficSplit[k] = int64(v)
-				}
-
-				mqlEndpoint, err := CreateResource(g.MqlRuntime, "gcp.project.vertexaiService.endpoint", map[string]*llx.RawData{
-					"name":                        llx.StringData(ep.Name),
-					"displayName":                 llx.StringData(ep.DisplayName),
-					"description":                 llx.StringData(ep.Description),
-					"deployedModels":              llx.ArrayData(deployedModels, types.Dict),
-					"encryptionSpec":              llx.DictData(encryptionSpec),
-					"network":                     llx.StringData(ep.Network),
-					"enablePrivateServiceConnect": llx.BoolData(ep.EnablePrivateServiceConnect),
-					"trafficSplit":                llx.MapData(trafficSplit, types.Int),
-					"labels":                      llx.MapData(convert.MapToInterfaceMap(ep.Labels), types.String),
-					"etag":                        llx.StringData(ep.Etag),
-					"createdAt":                   llx.TimeDataPtr(timestampAsTimePtr(ep.CreateTime)),
-					"updatedAt":                   llx.TimeDataPtr(timestampAsTimePtr(ep.UpdateTime)),
-				})
-				if err != nil {
-					return nil, false, err
-				}
-				items = append(items, mqlEndpoint)
+			trafficSplit := make(map[string]any, len(ep.TrafficSplit))
+			for k, v := range ep.TrafficSplit {
+				trafficSplit[k] = int64(v)
 			}
-			return items, false, nil
-		}()
-		if err != nil {
-			return nil, err
+
+			mqlEndpoint, err := CreateResource(g.MqlRuntime, "gcp.project.vertexaiService.endpoint", map[string]*llx.RawData{
+				"name":                        llx.StringData(ep.Name),
+				"displayName":                 llx.StringData(ep.DisplayName),
+				"description":                 llx.StringData(ep.Description),
+				"deployedModels":              llx.ArrayData(deployedModels, types.Dict),
+				"encryptionSpec":              llx.DictData(encryptionSpec),
+				"network":                     llx.StringData(ep.Network),
+				"enablePrivateServiceConnect": llx.BoolData(ep.EnablePrivateServiceConnect),
+				"trafficSplit":                llx.MapData(trafficSplit, types.Int),
+				"labels":                      llx.MapData(convert.MapToInterfaceMap(ep.Labels), types.String),
+				"etag":                        llx.StringData(ep.Etag),
+				"createdAt":                   llx.TimeDataPtr(timestampAsTimePtr(ep.CreateTime)),
+				"updatedAt":                   llx.TimeDataPtr(timestampAsTimePtr(ep.UpdateTime)),
+			})
+			if err != nil {
+				return nil, false, err
+			}
+			items = append(items, mqlEndpoint)
 		}
-		if !skipped {
-			enabledRegions = append(enabledRegions, region)
-		}
-		res = append(res, items...)
-	}
-	g.cacheEnabledRegions(enabledRegions)
-	return res, nil
+		return items, false, nil
+	})
 }
 
 func (g *mqlGcpProjectVertexaiServiceEndpoint) id() (string, error) {
@@ -355,88 +383,74 @@ func (g *mqlGcpProjectVertexaiService) pipelineJobs() ([]any, error) {
 		return nil, err
 	}
 
-	ctx := context.Background()
-	var res []any
-	var enabledRegions []string
-	for _, region := range g.getRegions() {
-		items, skipped, err := func() ([]any, bool, error) {
-			client, err := aiplatform.NewPipelineClient(ctx,
-				option.WithCredentials(creds),
-				option.WithEndpoint(vertexaiEndpoint(region)),
-			)
+	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
+		client, err := aiplatform.NewPipelineClient(ctx,
+			option.WithCredentials(creds),
+			option.WithEndpoint(vertexaiEndpoint(region)),
+		)
+		if err != nil {
+			return nil, false, err
+		}
+		defer client.Close()
+
+		it := client.ListPipelineJobs(ctx, &aiplatformpb.ListPipelineJobsRequest{
+			Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, region),
+		})
+
+		var items []any
+		for {
+			job, err := it.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				if isVertexAIRegionSkippable(err) {
+					return nil, true, nil
+				}
+				return nil, false, err
+			}
+
+			pipelineSpec, err := protoToDict(job.PipelineSpec)
 			if err != nil {
 				return nil, false, err
 			}
-			defer client.Close()
-
-			it := client.ListPipelineJobs(ctx, &aiplatformpb.ListPipelineJobsRequest{
-				Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, region),
-			})
-
-			var items []any
-			for {
-				job, err := it.Next()
-				if err == iterator.Done {
-					break
-				}
-				if err != nil {
-					if isVertexAIRegionSkippable(err) {
-						return nil, true, nil
-					}
-					return nil, false, err
-				}
-
-				pipelineSpec, err := protoToDict(job.PipelineSpec)
-				if err != nil {
-					return nil, false, err
-				}
-				runtimeConfig, err := protoToDict(job.RuntimeConfig)
-				if err != nil {
-					return nil, false, err
-				}
-				encryptionSpec, err := protoToDict(job.EncryptionSpec)
-				if err != nil {
-					return nil, false, err
-				}
-				templateMetadata, err := protoToDict(job.TemplateMetadata)
-				if err != nil {
-					return nil, false, err
-				}
-
-				mqlJob, err := CreateResource(g.MqlRuntime, "gcp.project.vertexaiService.pipelineJob", map[string]*llx.RawData{
-					"name":             llx.StringData(job.Name),
-					"displayName":      llx.StringData(job.DisplayName),
-					"state":            llx.StringData(job.State.String()),
-					"pipelineSpec":     llx.DictData(pipelineSpec),
-					"runtimeConfig":    llx.DictData(runtimeConfig),
-					"serviceAccount":   llx.StringData(job.ServiceAccount),
-					"network":          llx.StringData(job.Network),
-					"encryptionSpec":   llx.DictData(encryptionSpec),
-					"templateUri":      llx.StringData(job.TemplateUri),
-					"templateMetadata": llx.DictData(templateMetadata),
-					"labels":           llx.MapData(convert.MapToInterfaceMap(job.Labels), types.String),
-					"createdAt":        llx.TimeDataPtr(timestampAsTimePtr(job.CreateTime)),
-					"updatedAt":        llx.TimeDataPtr(timestampAsTimePtr(job.UpdateTime)),
-					"startTime":        llx.TimeDataPtr(timestampAsTimePtr(job.StartTime)),
-					"endTime":          llx.TimeDataPtr(timestampAsTimePtr(job.EndTime)),
-				})
-				if err != nil {
-					return nil, false, err
-				}
-				items = append(items, mqlJob)
+			runtimeConfig, err := protoToDict(job.RuntimeConfig)
+			if err != nil {
+				return nil, false, err
 			}
-			return items, false, nil
-		}()
-		if err != nil {
-			return nil, err
+			encryptionSpec, err := protoToDict(job.EncryptionSpec)
+			if err != nil {
+				return nil, false, err
+			}
+			templateMetadata, err := protoToDict(job.TemplateMetadata)
+			if err != nil {
+				return nil, false, err
+			}
+
+			mqlJob, err := CreateResource(g.MqlRuntime, "gcp.project.vertexaiService.pipelineJob", map[string]*llx.RawData{
+				"name":             llx.StringData(job.Name),
+				"displayName":      llx.StringData(job.DisplayName),
+				"state":            llx.StringData(job.State.String()),
+				"pipelineSpec":     llx.DictData(pipelineSpec),
+				"runtimeConfig":    llx.DictData(runtimeConfig),
+				"serviceAccount":   llx.StringData(job.ServiceAccount),
+				"network":          llx.StringData(job.Network),
+				"encryptionSpec":   llx.DictData(encryptionSpec),
+				"templateUri":      llx.StringData(job.TemplateUri),
+				"templateMetadata": llx.DictData(templateMetadata),
+				"labels":           llx.MapData(convert.MapToInterfaceMap(job.Labels), types.String),
+				"createdAt":        llx.TimeDataPtr(timestampAsTimePtr(job.CreateTime)),
+				"updatedAt":        llx.TimeDataPtr(timestampAsTimePtr(job.UpdateTime)),
+				"startTime":        llx.TimeDataPtr(timestampAsTimePtr(job.StartTime)),
+				"endTime":          llx.TimeDataPtr(timestampAsTimePtr(job.EndTime)),
+			})
+			if err != nil {
+				return nil, false, err
+			}
+			items = append(items, mqlJob)
 		}
-		if !skipped {
-			enabledRegions = append(enabledRegions, region)
-		}
-		res = append(res, items...)
-	}
-	g.cacheEnabledRegions(enabledRegions)
-	return res, nil
+		return items, false, nil
+	})
 }
 
 func (g *mqlGcpProjectVertexaiServicePipelineJob) id() (string, error) {
@@ -455,77 +469,63 @@ func (g *mqlGcpProjectVertexaiService) datasets() ([]any, error) {
 		return nil, err
 	}
 
-	ctx := context.Background()
-	var res []any
-	var enabledRegions []string
-	for _, region := range g.getRegions() {
-		items, skipped, err := func() ([]any, bool, error) {
-			client, err := aiplatform.NewDatasetClient(ctx,
-				option.WithCredentials(creds),
-				option.WithEndpoint(vertexaiEndpoint(region)),
-			)
+	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
+		client, err := aiplatform.NewDatasetClient(ctx,
+			option.WithCredentials(creds),
+			option.WithEndpoint(vertexaiEndpoint(region)),
+		)
+		if err != nil {
+			return nil, false, err
+		}
+		defer client.Close()
+
+		it := client.ListDatasets(ctx, &aiplatformpb.ListDatasetsRequest{
+			Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, region),
+		})
+
+		var items []any
+		for {
+			ds, err := it.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				if isVertexAIRegionSkippable(err) {
+					return nil, true, nil
+				}
+				return nil, false, err
+			}
+
+			// Dataset.Metadata is a *structpb.Value which can be any JSON type
+			// (struct, list, string, etc.), so use AsInterface() instead of protoToDict.
+			var metadata any
+			if ds.Metadata != nil {
+				metadata = ds.Metadata.AsInterface()
+			}
+			encryptionSpec, err := protoToDict(ds.EncryptionSpec)
 			if err != nil {
 				return nil, false, err
 			}
-			defer client.Close()
 
-			it := client.ListDatasets(ctx, &aiplatformpb.ListDatasetsRequest{
-				Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, region),
+			mqlDs, err := CreateResource(g.MqlRuntime, "gcp.project.vertexaiService.dataset", map[string]*llx.RawData{
+				"name":              llx.StringData(ds.Name),
+				"displayName":       llx.StringData(ds.DisplayName),
+				"description":       llx.StringData(ds.Description),
+				"metadataSchemaUri": llx.StringData(ds.MetadataSchemaUri),
+				"metadata":          llx.DictData(metadata),
+				"encryptionSpec":    llx.DictData(encryptionSpec),
+				"labels":            llx.MapData(convert.MapToInterfaceMap(ds.Labels), types.String),
+				"etag":              llx.StringData(ds.Etag),
+				"createdAt":         llx.TimeDataPtr(timestampAsTimePtr(ds.CreateTime)),
+				"updatedAt":         llx.TimeDataPtr(timestampAsTimePtr(ds.UpdateTime)),
 			})
-
-			var items []any
-			for {
-				ds, err := it.Next()
-				if err == iterator.Done {
-					break
-				}
-				if err != nil {
-					if isVertexAIRegionSkippable(err) {
-						return nil, true, nil
-					}
-					return nil, false, err
-				}
-
-				// Dataset.Metadata is a *structpb.Value which can be any JSON type
-				// (struct, list, string, etc.), so use AsInterface() instead of protoToDict.
-				var metadata any
-				if ds.Metadata != nil {
-					metadata = ds.Metadata.AsInterface()
-				}
-				encryptionSpec, err := protoToDict(ds.EncryptionSpec)
-				if err != nil {
-					return nil, false, err
-				}
-
-				mqlDs, err := CreateResource(g.MqlRuntime, "gcp.project.vertexaiService.dataset", map[string]*llx.RawData{
-					"name":              llx.StringData(ds.Name),
-					"displayName":       llx.StringData(ds.DisplayName),
-					"description":       llx.StringData(ds.Description),
-					"metadataSchemaUri": llx.StringData(ds.MetadataSchemaUri),
-					"metadata":          llx.DictData(metadata),
-					"encryptionSpec":    llx.DictData(encryptionSpec),
-					"labels":            llx.MapData(convert.MapToInterfaceMap(ds.Labels), types.String),
-					"etag":              llx.StringData(ds.Etag),
-					"createdAt":         llx.TimeDataPtr(timestampAsTimePtr(ds.CreateTime)),
-					"updatedAt":         llx.TimeDataPtr(timestampAsTimePtr(ds.UpdateTime)),
-				})
-				if err != nil {
-					return nil, false, err
-				}
-				items = append(items, mqlDs)
+			if err != nil {
+				return nil, false, err
 			}
-			return items, false, nil
-		}()
-		if err != nil {
-			return nil, err
+			items = append(items, mqlDs)
 		}
-		if !skipped {
-			enabledRegions = append(enabledRegions, region)
-		}
-		res = append(res, items...)
-	}
-	g.cacheEnabledRegions(enabledRegions)
-	return res, nil
+		return items, false, nil
+	})
 }
 
 func (g *mqlGcpProjectVertexaiServiceDataset) id() (string, error) {
@@ -544,85 +544,71 @@ func (g *mqlGcpProjectVertexaiService) featureOnlineStores() ([]any, error) {
 		return nil, err
 	}
 
-	ctx := context.Background()
-	var res []any
-	var enabledRegions []string
-	for _, region := range g.getRegions() {
-		items, skipped, err := func() ([]any, bool, error) {
-			client, err := aiplatform.NewFeatureOnlineStoreAdminClient(ctx,
-				option.WithCredentials(creds),
-				option.WithEndpoint(vertexaiEndpoint(region)),
-			)
+	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
+		client, err := aiplatform.NewFeatureOnlineStoreAdminClient(ctx,
+			option.WithCredentials(creds),
+			option.WithEndpoint(vertexaiEndpoint(region)),
+		)
+		if err != nil {
+			return nil, false, err
+		}
+		defer client.Close()
+
+		it := client.ListFeatureOnlineStores(ctx, &aiplatformpb.ListFeatureOnlineStoresRequest{
+			Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, region),
+		})
+
+		var items []any
+		for {
+			store, err := it.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				if isVertexAIRegionSkippable(err) {
+					return nil, true, nil
+				}
+				return nil, false, err
+			}
+
+			bigtable, err := protoToDict(store.GetBigtable())
 			if err != nil {
 				return nil, false, err
 			}
-			defer client.Close()
-
-			it := client.ListFeatureOnlineStores(ctx, &aiplatformpb.ListFeatureOnlineStoresRequest{
-				Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, region),
-			})
-
-			var items []any
-			for {
-				store, err := it.Next()
-				if err == iterator.Done {
-					break
-				}
-				if err != nil {
-					if isVertexAIRegionSkippable(err) {
-						return nil, true, nil
-					}
-					return nil, false, err
-				}
-
-				bigtable, err := protoToDict(store.GetBigtable())
-				if err != nil {
-					return nil, false, err
-				}
-				optimized, err := protoToDict(store.GetOptimized())
-				if err != nil {
-					return nil, false, err
-				}
-				dedicatedServingEndpoint, err := protoToDict(store.DedicatedServingEndpoint)
-				if err != nil {
-					return nil, false, err
-				}
-				encryptionSpec, err := protoToDict(store.EncryptionSpec)
-				if err != nil {
-					return nil, false, err
-				}
-
-				mqlStore, err := CreateResource(g.MqlRuntime, "gcp.project.vertexaiService.featureOnlineStore", map[string]*llx.RawData{
-					"name":                     llx.StringData(store.Name),
-					"state":                    llx.StringData(store.State.String()),
-					"bigtable":                 llx.DictData(bigtable),
-					"optimized":                llx.DictData(optimized),
-					"dedicatedServingEndpoint": llx.DictData(dedicatedServingEndpoint),
-					"encryptionSpec":           llx.DictData(encryptionSpec),
-					"labels":                   llx.MapData(convert.MapToInterfaceMap(store.Labels), types.String),
-					"etag":                     llx.StringData(store.Etag),
-					"satisfiesPzs":             llx.BoolData(store.SatisfiesPzs),
-					"satisfiesPzi":             llx.BoolData(store.SatisfiesPzi),
-					"createdAt":                llx.TimeDataPtr(timestampAsTimePtr(store.CreateTime)),
-					"updatedAt":                llx.TimeDataPtr(timestampAsTimePtr(store.UpdateTime)),
-				})
-				if err != nil {
-					return nil, false, err
-				}
-				items = append(items, mqlStore)
+			optimized, err := protoToDict(store.GetOptimized())
+			if err != nil {
+				return nil, false, err
 			}
-			return items, false, nil
-		}()
-		if err != nil {
-			return nil, err
+			dedicatedServingEndpoint, err := protoToDict(store.DedicatedServingEndpoint)
+			if err != nil {
+				return nil, false, err
+			}
+			encryptionSpec, err := protoToDict(store.EncryptionSpec)
+			if err != nil {
+				return nil, false, err
+			}
+
+			mqlStore, err := CreateResource(g.MqlRuntime, "gcp.project.vertexaiService.featureOnlineStore", map[string]*llx.RawData{
+				"name":                     llx.StringData(store.Name),
+				"state":                    llx.StringData(store.State.String()),
+				"bigtable":                 llx.DictData(bigtable),
+				"optimized":                llx.DictData(optimized),
+				"dedicatedServingEndpoint": llx.DictData(dedicatedServingEndpoint),
+				"encryptionSpec":           llx.DictData(encryptionSpec),
+				"labels":                   llx.MapData(convert.MapToInterfaceMap(store.Labels), types.String),
+				"etag":                     llx.StringData(store.Etag),
+				"satisfiesPzs":             llx.BoolData(store.SatisfiesPzs),
+				"satisfiesPzi":             llx.BoolData(store.SatisfiesPzi),
+				"createdAt":                llx.TimeDataPtr(timestampAsTimePtr(store.CreateTime)),
+				"updatedAt":                llx.TimeDataPtr(timestampAsTimePtr(store.UpdateTime)),
+			})
+			if err != nil {
+				return nil, false, err
+			}
+			items = append(items, mqlStore)
 		}
-		if !skipped {
-			enabledRegions = append(enabledRegions, region)
-		}
-		res = append(res, items...)
-	}
-	g.cacheEnabledRegions(enabledRegions)
-	return res, nil
+		return items, false, nil
+	})
 }
 
 func (g *mqlGcpProjectVertexaiServiceFeatureOnlineStore) id() (string, error) {

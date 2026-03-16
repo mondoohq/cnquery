@@ -3534,17 +3534,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.bigqueryService.dataset.defaultPartitionExpirationMs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBigqueryServiceDataset).GetDefaultPartitionExpirationMs()).ToDataRes(types.Int)
 	},
-	"gcp.project.bigqueryService.dataset.defaultRoundingMode": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectBigqueryServiceDataset).GetDefaultRoundingMode()).ToDataRes(types.String)
-	},
 	"gcp.project.bigqueryService.dataset.isCaseInsensitive": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBigqueryServiceDataset).GetIsCaseInsensitive()).ToDataRes(types.Bool)
-	},
-	"gcp.project.bigqueryService.dataset.satisfiesPzi": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectBigqueryServiceDataset).GetSatisfiesPzi()).ToDataRes(types.Bool)
-	},
-	"gcp.project.bigqueryService.dataset.satisfiesPzs": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectBigqueryServiceDataset).GetSatisfiesPzs()).ToDataRes(types.Bool)
 	},
 	"gcp.project.bigqueryService.dataset.accessEntry.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBigqueryServiceDatasetAccessEntry).GetId()).ToDataRes(types.String)
@@ -4997,12 +4988,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.cloudFunction.dockerRegistry": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudFunction).GetDockerRegistry()).ToDataRes(types.String)
-	},
-	"gcp.project.cloudFunction.uid": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectCloudFunction).GetUid()).ToDataRes(types.String)
-	},
-	"gcp.project.cloudFunction.satisfiesPzs": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectCloudFunction).GetSatisfiesPzs()).ToDataRes(types.Bool)
 	},
 	"gcp.project.dataprocService.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataprocService).GetProjectId()).ToDataRes(types.String)
@@ -11444,20 +11429,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectBigqueryServiceDataset).DefaultPartitionExpirationMs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"gcp.project.bigqueryService.dataset.defaultRoundingMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectBigqueryServiceDataset).DefaultRoundingMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"gcp.project.bigqueryService.dataset.isCaseInsensitive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectBigqueryServiceDataset).IsCaseInsensitive, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"gcp.project.bigqueryService.dataset.satisfiesPzi": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectBigqueryServiceDataset).SatisfiesPzi, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"gcp.project.bigqueryService.dataset.satisfiesPzs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectBigqueryServiceDataset).SatisfiesPzs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.bigqueryService.dataset.accessEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13634,14 +13607,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.cloudFunction.dockerRegistry": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudFunction).DockerRegistry, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"gcp.project.cloudFunction.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectCloudFunction).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"gcp.project.cloudFunction.satisfiesPzs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectCloudFunction).SatisfiesPzs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.dataprocService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25784,10 +25749,7 @@ type mqlGcpProjectBigqueryServiceDataset struct {
 	StorageBillingModel          plugin.TValue[string]
 	DefaultCollation             plugin.TValue[string]
 	DefaultPartitionExpirationMs plugin.TValue[int64]
-	DefaultRoundingMode          plugin.TValue[string]
 	IsCaseInsensitive            plugin.TValue[bool]
-	SatisfiesPzi                 plugin.TValue[bool]
-	SatisfiesPzs                 plugin.TValue[bool]
 }
 
 // createGcpProjectBigqueryServiceDataset creates a new instance of this resource
@@ -25939,26 +25901,8 @@ func (c *mqlGcpProjectBigqueryServiceDataset) GetDefaultPartitionExpirationMs() 
 	return &c.DefaultPartitionExpirationMs
 }
 
-func (c *mqlGcpProjectBigqueryServiceDataset) GetDefaultRoundingMode() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.DefaultRoundingMode, func() (string, error) {
-		return c.defaultRoundingMode()
-	})
-}
-
 func (c *mqlGcpProjectBigqueryServiceDataset) GetIsCaseInsensitive() *plugin.TValue[bool] {
 	return &c.IsCaseInsensitive
-}
-
-func (c *mqlGcpProjectBigqueryServiceDataset) GetSatisfiesPzi() *plugin.TValue[bool] {
-	return plugin.GetOrCompute[bool](&c.SatisfiesPzi, func() (bool, error) {
-		return c.satisfiesPzi()
-	})
-}
-
-func (c *mqlGcpProjectBigqueryServiceDataset) GetSatisfiesPzs() *plugin.TValue[bool] {
-	return plugin.GetOrCompute[bool](&c.SatisfiesPzs, func() (bool, error) {
-		return c.satisfiesPzs()
-	})
 }
 
 // mqlGcpProjectBigqueryServiceDatasetAccessEntry for the gcp.project.bigqueryService.dataset.accessEntry resource
@@ -31179,8 +31123,6 @@ type mqlGcpProjectCloudFunction struct {
 	SecretVolumes       plugin.TValue[[]any]
 	DockerRepository    plugin.TValue[string]
 	DockerRegistry      plugin.TValue[string]
-	Uid                 plugin.TValue[string]
-	SatisfiesPzs        plugin.TValue[bool]
 }
 
 // createGcpProjectCloudFunction creates a new instance of this resource
@@ -31354,18 +31296,6 @@ func (c *mqlGcpProjectCloudFunction) GetDockerRepository() *plugin.TValue[string
 
 func (c *mqlGcpProjectCloudFunction) GetDockerRegistry() *plugin.TValue[string] {
 	return &c.DockerRegistry
-}
-
-func (c *mqlGcpProjectCloudFunction) GetUid() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.Uid, func() (string, error) {
-		return c.uid()
-	})
-}
-
-func (c *mqlGcpProjectCloudFunction) GetSatisfiesPzs() *plugin.TValue[bool] {
-	return plugin.GetOrCompute[bool](&c.SatisfiesPzs, func() (bool, error) {
-		return c.satisfiesPzs()
-	})
 }
 
 // mqlGcpProjectDataprocService for the gcp.project.dataprocService resource

@@ -10,6 +10,7 @@ import (
 
 	backupdr "cloud.google.com/go/backupdr/apiv1"
 	"cloud.google.com/go/backupdr/apiv1/backupdrpb"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -17,7 +18,21 @@ import (
 	"go.mondoo.com/mql/v13/types"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
+
+// isBackupDRSkippable returns true for gRPC errors that indicate the Backup DR API
+// is not enabled or the caller lacks permission.
+func isBackupDRSkippable(err error) bool {
+	if s, ok := status.FromError(err); ok {
+		switch s.Code() {
+		case codes.PermissionDenied, codes.Unimplemented, codes.NotFound:
+			return true
+		}
+	}
+	return false
+}
 
 func (g *mqlGcpProject) backupdr() (*mqlGcpProjectBackupdrService, error) {
 	if g.Id.Error != nil {
@@ -81,6 +96,10 @@ func (g *mqlGcpProjectBackupdrService) managementServers() ([]any, error) {
 			break
 		}
 		if err != nil {
+			if isBackupDRSkippable(err) {
+				log.Warn().Err(err).Msg("could not list Backup DR management servers")
+				return nil, nil
+			}
 			return nil, err
 		}
 
@@ -154,6 +173,10 @@ func (g *mqlGcpProjectBackupdrService) backupVaults() ([]any, error) {
 			break
 		}
 		if err != nil {
+			if isBackupDRSkippable(err) {
+				log.Warn().Err(err).Msg("could not list Backup DR backup vaults")
+				return nil, nil
+			}
 			return nil, err
 		}
 
@@ -216,6 +239,10 @@ func (g *mqlGcpProjectBackupdrServiceBackupVault) dataSources() ([]any, error) {
 			break
 		}
 		if err != nil {
+			if isBackupDRSkippable(err) {
+				log.Warn().Err(err).Msg("could not list Backup DR data sources")
+				return nil, nil
+			}
 			return nil, err
 		}
 
@@ -283,6 +310,10 @@ func (g *mqlGcpProjectBackupdrService) backupPlans() ([]any, error) {
 			break
 		}
 		if err != nil {
+			if isBackupDRSkippable(err) {
+				log.Warn().Err(err).Msg("could not list Backup DR backup plans")
+				return nil, nil
+			}
 			return nil, err
 		}
 

@@ -193,24 +193,6 @@ func (g *mqlGcpProjectBigqueryService) datasets() ([]any, error) {
 	return res, nil
 }
 
-// defaultRoundingMode is not yet exposed by the high-level bigquery.DatasetMetadata struct.
-func (g *mqlGcpProjectBigqueryServiceDataset) defaultRoundingMode() (string, error) {
-	g.DefaultRoundingMode.State = plugin.StateIsNull | plugin.StateIsSet
-	return "", nil
-}
-
-// satisfiesPzi is not yet exposed by the high-level bigquery.DatasetMetadata struct.
-func (g *mqlGcpProjectBigqueryServiceDataset) satisfiesPzi() (bool, error) {
-	g.SatisfiesPzi.State = plugin.StateIsNull | plugin.StateIsSet
-	return false, nil
-}
-
-// satisfiesPzs is not yet exposed by the high-level bigquery.DatasetMetadata struct.
-func (g *mqlGcpProjectBigqueryServiceDataset) satisfiesPzs() (bool, error) {
-	g.SatisfiesPzs.State = plugin.StateIsNull | plugin.StateIsSet
-	return false, nil
-}
-
 type mqlGcpProjectBigqueryServiceDatasetInternal struct {
 	clientOnce sync.Once
 	client     *bigquery.Client
