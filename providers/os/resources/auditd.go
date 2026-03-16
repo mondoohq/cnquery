@@ -303,6 +303,9 @@ func (s *mqlAuditdRules) parse(content string, errors *multierr.Errors) {
 
 			case "-k":
 				args["keyname"] = llx.StringData(v)
+				// -k is shorthand for -F key=; normalize into fields so queries
+				// don't need to check both representations.
+				rawFields = append(rawFields, "key="+v)
 
 			case "-p":
 				args["permissions"] = llx.StringData(v)
