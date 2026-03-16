@@ -104,6 +104,9 @@ func (a *mqlAwsSqsQueue) fetchAttributes() (map[string]string, error) {
 	}
 	a.lock.Lock()
 	defer a.lock.Unlock()
+	if a.fetched {
+		return a.queueAtts, nil
+	}
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	ctx := context.Background()
 	svc := conn.Sqs(a.Region.Data)

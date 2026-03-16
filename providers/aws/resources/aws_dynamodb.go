@@ -62,6 +62,9 @@ func (a *mqlAwsDynamodbExport) fetchExport() (*ddtypes.ExportDescription, error)
 	}
 	a.lock.Lock()
 	defer a.lock.Unlock()
+	if a.exportCache != nil {
+		return a.exportCache, nil
+	}
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	ctx := context.Background()
 	svc := conn.Dynamodb(a.region)

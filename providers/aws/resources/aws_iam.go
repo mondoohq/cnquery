@@ -907,17 +907,23 @@ func (a *mqlAwsIamUser) attachedPolicies() ([]any, error) {
 
 type mqlAwsIamPolicyInternal struct {
 	cachePolicy     *iamtypes.Policy
+	policyFetched   bool
+	policyLock      sync.Mutex
 	cachedVersions  []iamtypes.PolicyVersion
 	versionsFetched bool
 	versionsLock    sync.Mutex
 }
 
 func (a *mqlAwsIamPolicy) loadPolicy(arn string) (*iamtypes.Policy, error) {
-	if a.cachePolicy != nil {
+	if a.policyFetched {
+		return a.cachePolicy, nil
+	}
+	a.policyLock.Lock()
+	defer a.policyLock.Unlock()
+	if a.policyFetched {
 		return a.cachePolicy, nil
 	}
 
-	// if its not in the cache, fetch it
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Iam("")
@@ -929,6 +935,7 @@ func (a *mqlAwsIamPolicy) loadPolicy(arn string) (*iamtypes.Policy, error) {
 	}
 
 	a.cachePolicy = policy.Policy
+	a.policyFetched = true
 	return policy.Policy, nil
 }
 

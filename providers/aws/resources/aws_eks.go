@@ -275,6 +275,9 @@ func (a *mqlAwsEksNodegroup) fetchDetails() (*ekstypes.Nodegroup, error) {
 	}
 	a.lock.Lock()
 	defer a.lock.Unlock()
+	if a.details != nil {
+		return a.details, nil
+	}
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	ctx := context.Background()
 	svc := conn.Eks(a.region)
@@ -463,6 +466,9 @@ func (a *mqlAwsEksAddon) fetchDetails() (*ekstypes.Addon, error) {
 	}
 	a.lock.Lock()
 	defer a.lock.Unlock()
+	if a.details != nil {
+		return a.details, nil
+	}
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	ctx := context.Background()
 	svc := conn.Eks(a.region)
