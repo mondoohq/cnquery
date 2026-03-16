@@ -6,12 +6,12 @@ package resources
 import (
 	"context"
 
-	"github.com/okta/okta-sdk-golang/v2/okta"
 	"github.com/okta/okta-sdk-golang/v2/okta/query"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/okta/connection"
+	"go.mondoo.com/mql/v13/providers/okta/resources/sdk"
 	"go.mondoo.com/mql/v13/types"
 )
 
@@ -20,7 +20,11 @@ func (o *mqlOkta) networks() ([]any, error) {
 	client := conn.Client()
 
 	ctx := context.Background()
-	networkSlice, resp, err := client.NetworkZone.ListNetworkZones(
+	apiSupplement := &sdk.ApiExtension{
+		RequestExecutor: client.CloneRequestExecutor(),
+	}
+
+	zones, err := apiSupplement.ListNetworkZones(
 		ctx,
 		query.NewQueryParams(
 			query.WithLimit(queryLimit),
@@ -30,55 +34,38 @@ func (o *mqlOkta) networks() ([]any, error) {
 		return nil, err
 	}
 
-	if len(networkSlice) == 0 {
+	if len(zones) == 0 {
 		return nil, nil
 	}
 
-	list := []any{}
-	appendEntry := func(datalist []*okta.NetworkZone) error {
-		for i := range datalist {
-			entry := datalist[i]
-
-			r, err := newMqlOktaNetworkZone(o.MqlRuntime, entry)
-			if err != nil {
-				return err
-			}
-			list = append(list, r)
-		}
-		return nil
-	}
-
-	err = appendEntry(networkSlice)
-	if err != nil {
-		return nil, err
-	}
-
-	for resp != nil && resp.HasNextPage() {
-		var networkSlice []*okta.NetworkZone
-		resp, err = resp.Next(ctx, &networkSlice)
+	list := make([]any, 0, len(zones))
+	for _, entry := range zones {
+		r, err := newMqlOktaNetworkZone(o.MqlRuntime, entry)
 		if err != nil {
 			return nil, err
 		}
-		err = appendEntry(networkSlice)
-		if err != nil {
-			return nil, err
-		}
+		list = append(list, r)
 	}
 	return list, nil
 }
 
-func newMqlOktaNetworkZone(runtime *plugin.Runtime, entry *okta.NetworkZone) (any, error) {
-	proxies, err := convert.JsonToDictSlice(entry.Proxies)
+func newMqlOktaNetworkZone(runtime *plugin.Runtime, entry *sdk.NetworkZone) (any, error) {
+	proxies, err := sdk.NormalizeArrayField(entry.Proxies)
 	if err != nil {
 		return nil, err
 	}
 
-	locations, err := convert.JsonToDictSlice(entry.Locations)
+	locations, err := sdk.NormalizeArrayField(entry.Locations)
 	if err != nil {
 		return nil, err
 	}
 
-	gateways, err := convert.JsonToDictSlice(entry.Gateways)
+	gateways, err := sdk.NormalizeArrayField(entry.Gateways)
+	if err != nil {
+		return nil, err
+	}
+
+	asns, err := sdk.NormalizeStringArrayField(entry.Asns)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +83,7 @@ func newMqlOktaNetworkZone(runtime *plugin.Runtime, entry *okta.NetworkZone) (an
 		"lastUpdated": llx.TimeDataPtr(entry.LastUpdated),
 		"status":      llx.StringData(entry.Status),
 		"system":      llx.BoolData(system),
-		"asns":        llx.ArrayData(convert.SliceAnyToInterface(entry.Asns), types.String),
+		"asns":        llx.ArrayData(convert.SliceAnyToInterface(asns), types.String),
 		"usage":       llx.StringData(entry.Usage),
 		"proxyType":   llx.StringData(entry.ProxyType),
 		"proxies":     llx.ArrayData(proxies, types.Dict),

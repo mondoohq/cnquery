@@ -149,9 +149,13 @@ func (o *mqlOktaOrganization) threatInsightSettings() (*mqlOktaThreatsConfigurat
 		return nil, err
 	}
 
+	apiSupplement := &sdk.ApiExtension{
+		RequestExecutor: client.CloneRequestExecutor(),
+	}
+
 	excludesZones := []any{}
 	for i := range config.ExcludeZones {
-		zone, _, err := client.NetworkZone.GetNetworkZone(ctx, config.ExcludeZones[i])
+		zone, _, err := apiSupplement.GetNetworkZone(ctx, config.ExcludeZones[i])
 		if err != nil {
 			return nil, err
 		}
