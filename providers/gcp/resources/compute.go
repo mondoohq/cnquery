@@ -1118,7 +1118,6 @@ func (g *mqlGcpProjectComputeServiceSnapshot) id() (string, error) {
 	return "gcloud.compute.snapshot/" + id, nil
 }
 
-
 func (g *mqlGcpProjectComputeService) snapshots() ([]any, error) {
 	// when the service is not enabled, we return nil
 	if !g.GetEnabled().Data {
