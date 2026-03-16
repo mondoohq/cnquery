@@ -242,30 +242,34 @@ func (a *mqlAzureSubscriptionMonitorServiceActivityLog) alerts() ([]any, error) 
 			actions := []mqlAlertAction{}
 			conditions := []mqlAlertCondition{}
 
-			for _, act := range entry.Properties.Actions.ActionGroups {
-				mqlAction := mqlAlertAction{
-					ActionGroupId:     convert.ToValue(act.ActionGroupID),
-					WebhookProperties: convert.PtrMapStrToStr(act.WebhookProperties),
-				}
-				actions = append(actions, mqlAction)
-			}
-			for _, cond := range entry.Properties.Condition.AllOf {
-				anyOf := []mqlAlertLeafCondition{}
-				for _, leaf := range cond.AnyOf {
-					mqlAnyOfLeaf := mqlAlertLeafCondition{
-						FieldName:   convert.ToValue(leaf.Field),
-						Equals:      convert.ToValue(leaf.Equals),
-						ContainsAny: convert.SliceStrPtrToStr(leaf.ContainsAny),
+			if entry.Properties != nil && entry.Properties.Actions != nil {
+				for _, act := range entry.Properties.Actions.ActionGroups {
+					mqlAction := mqlAlertAction{
+						ActionGroupId:     convert.ToValue(act.ActionGroupID),
+						WebhookProperties: convert.PtrMapStrToStr(act.WebhookProperties),
 					}
-					anyOf = append(anyOf, mqlAnyOfLeaf)
+					actions = append(actions, mqlAction)
 				}
-				mqlCondition := mqlAlertCondition{
-					FieldName:   convert.ToValue(cond.Field),
-					Equals:      convert.ToValue(cond.Equals),
-					ContainsAny: convert.SliceStrPtrToStr(cond.ContainsAny),
-					AnyOf:       anyOf,
+			}
+			if entry.Properties != nil && entry.Properties.Condition != nil {
+				for _, cond := range entry.Properties.Condition.AllOf {
+					anyOf := []mqlAlertLeafCondition{}
+					for _, leaf := range cond.AnyOf {
+						mqlAnyOfLeaf := mqlAlertLeafCondition{
+							FieldName:   convert.ToValue(leaf.Field),
+							Equals:      convert.ToValue(leaf.Equals),
+							ContainsAny: convert.SliceStrPtrToStr(leaf.ContainsAny),
+						}
+						anyOf = append(anyOf, mqlAnyOfLeaf)
+					}
+					mqlCondition := mqlAlertCondition{
+						FieldName:   convert.ToValue(cond.Field),
+						Equals:      convert.ToValue(cond.Equals),
+						ContainsAny: convert.SliceStrPtrToStr(cond.ContainsAny),
+						AnyOf:       anyOf,
+					}
+					conditions = append(conditions, mqlCondition)
 				}
-				conditions = append(conditions, mqlCondition)
 			}
 
 			actionsDict := []any{}

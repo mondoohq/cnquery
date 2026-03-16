@@ -64,20 +64,22 @@ func (a *mqlAzureSubscriptionAdvisorService) recommendations() ([]any, error) {
 				return nil, err
 			}
 			args := map[string]*llx.RawData{
-				"id":                   llx.StringDataPtr(r.ID),
-				"name":                 llx.StringDataPtr(r.Name),
-				"type":                 llx.StringDataPtr(r.Type),
-				"category":             llx.StringDataPtr((*string)(r.Properties.Category)),
-				"impact":               llx.StringDataPtr((*string)(r.Properties.Impact)),
-				"risk":                 llx.StringDataPtr((*string)(r.Properties.Risk)),
-				"properties":           llx.DictData(props),
-				"impactedResourceType": llx.StringDataPtr(r.Properties.ImpactedField),
-				"impactedResource":     llx.StringDataPtr(r.Properties.ImpactedValue),
+				"id":         llx.StringDataPtr(r.ID),
+				"name":       llx.StringDataPtr(r.Name),
+				"type":       llx.StringDataPtr(r.Type),
+				"properties": llx.DictData(props),
 			}
-			if r.Properties.ShortDescription != nil {
-				// the 'Description' field in the API response is always empty, use the short description instead
-				args["description"] = llx.StringDataPtr(r.Properties.ShortDescription.Problem)
-				args["remediation"] = llx.StringDataPtr(r.Properties.ShortDescription.Solution)
+			if r.Properties != nil {
+				args["category"] = llx.StringDataPtr((*string)(r.Properties.Category))
+				args["impact"] = llx.StringDataPtr((*string)(r.Properties.Impact))
+				args["risk"] = llx.StringDataPtr((*string)(r.Properties.Risk))
+				args["impactedResourceType"] = llx.StringDataPtr(r.Properties.ImpactedField)
+				args["impactedResource"] = llx.StringDataPtr(r.Properties.ImpactedValue)
+				if r.Properties.ShortDescription != nil {
+					// the 'Description' field in the API response is always empty, use the short description instead
+					args["description"] = llx.StringDataPtr(r.Properties.ShortDescription.Problem)
+					args["remediation"] = llx.StringDataPtr(r.Properties.ShortDescription.Solution)
+				}
 			}
 			mqlRecomm, err := CreateResource(a.MqlRuntime, "azure.subscription.advisorService.recommendation", args)
 			if err != nil {

@@ -526,9 +526,15 @@ func (a *mqlAzureSubscriptionComputeServiceVm) publicIpAddresses() ([]any, error
 			return nil, err
 		}
 
+		if networkInterface.Interface.Properties == nil {
+			continue
+		}
 		for _, config := range networkInterface.Interface.Properties.IPConfigurations {
+			if config.Properties == nil {
+				continue
+			}
 			ip := config.Properties.PublicIPAddress
-			if ip != nil {
+			if ip != nil && ip.ID != nil {
 				publicIPID := *ip.ID
 				publicIpResource, err := ParseResourceID(publicIPID)
 				if err != nil {

@@ -160,29 +160,33 @@ func (a *mqlAzureSubscriptionSqlServiceServer) databases() ([]any, error) {
 		}
 		for _, entry := range page.Value {
 			args := map[string]*llx.RawData{
-				"id":               llx.StringDataPtr(entry.ID),
-				"name":             llx.StringDataPtr(entry.Name),
-				"type":             llx.StringDataPtr(entry.Type),
-				"collation":        llx.StringDataPtr(entry.Properties.Collation),
-				"creationDate":     llx.TimeDataPtr(entry.Properties.CreationDate),
-				"databaseId":       llx.StringDataPtr(entry.Properties.DatabaseID),
-				"createMode":       llx.StringDataPtr((*string)(entry.Properties.CreateMode)),
-				"sourceDatabaseId": llx.StringDataPtr(entry.Properties.SourceDatabaseID),
-				"recoveryServicesRecoveryPointResourceId": llx.StringDataPtr(entry.Properties.RecoveryServicesRecoveryPointID),
-				"edition":                       llx.StringDataPtr(entry.SKU.Tier),
-				"maxSizeBytes":                  llx.IntDataDefault(entry.Properties.MaxSizeBytes, 0),
-				"requestedServiceObjectiveName": llx.StringDataPtr(entry.Properties.RequestedServiceObjectiveName),
-				"serviceLevelObjective":         llx.StringDataPtr(entry.Properties.CurrentServiceObjectiveName),
-				"status":                        llx.StringDataPtr((*string)(entry.Properties.Status)),
-				"elasticPoolName":               llx.StringDataPtr(entry.Properties.ElasticPoolID),
-				"defaultSecondaryLocation":      llx.StringDataPtr(entry.Properties.DefaultSecondaryLocation),
-				"failoverGroupId":               llx.StringDataPtr(entry.Properties.FailoverGroupID),
-				"readScale":                     llx.StringDataPtr((*string)(entry.Properties.ReadScale)),
-				"sampleName":                    llx.StringDataPtr((*string)(entry.Properties.SampleName)),
-				"zoneRedundant":                 llx.BoolDataPtr(entry.Properties.ZoneRedundant),
-				"earliestRestoreDate":           llx.TimeDataPtr(entry.Properties.EarliestRestoreDate),
-				"sourceDatabaseDeletionDate":    llx.TimeDataPtr(entry.Properties.SourceDatabaseDeletionDate),
-				"restorePointInTime":            llx.TimeDataPtr(entry.Properties.RestorePointInTime),
+				"id":   llx.StringDataPtr(entry.ID),
+				"name": llx.StringDataPtr(entry.Name),
+				"type": llx.StringDataPtr(entry.Type),
+			}
+			if entry.SKU != nil {
+				args["edition"] = llx.StringDataPtr(entry.SKU.Tier)
+			}
+			if entry.Properties != nil {
+				args["collation"] = llx.StringDataPtr(entry.Properties.Collation)
+				args["creationDate"] = llx.TimeDataPtr(entry.Properties.CreationDate)
+				args["databaseId"] = llx.StringDataPtr(entry.Properties.DatabaseID)
+				args["createMode"] = llx.StringDataPtr((*string)(entry.Properties.CreateMode))
+				args["sourceDatabaseId"] = llx.StringDataPtr(entry.Properties.SourceDatabaseID)
+				args["recoveryServicesRecoveryPointResourceId"] = llx.StringDataPtr(entry.Properties.RecoveryServicesRecoveryPointID)
+				args["maxSizeBytes"] = llx.IntDataDefault(entry.Properties.MaxSizeBytes, 0)
+				args["requestedServiceObjectiveName"] = llx.StringDataPtr(entry.Properties.RequestedServiceObjectiveName)
+				args["serviceLevelObjective"] = llx.StringDataPtr(entry.Properties.CurrentServiceObjectiveName)
+				args["status"] = llx.StringDataPtr((*string)(entry.Properties.Status))
+				args["elasticPoolName"] = llx.StringDataPtr(entry.Properties.ElasticPoolID)
+				args["defaultSecondaryLocation"] = llx.StringDataPtr(entry.Properties.DefaultSecondaryLocation)
+				args["failoverGroupId"] = llx.StringDataPtr(entry.Properties.FailoverGroupID)
+				args["readScale"] = llx.StringDataPtr((*string)(entry.Properties.ReadScale))
+				args["sampleName"] = llx.StringDataPtr((*string)(entry.Properties.SampleName))
+				args["zoneRedundant"] = llx.BoolDataPtr(entry.Properties.ZoneRedundant)
+				args["earliestRestoreDate"] = llx.TimeDataPtr(entry.Properties.EarliestRestoreDate)
+				args["sourceDatabaseDeletionDate"] = llx.TimeDataPtr(entry.Properties.SourceDatabaseDeletionDate)
+				args["restorePointInTime"] = llx.TimeDataPtr(entry.Properties.RestorePointInTime)
 			}
 
 			mqlAzureDatabase, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.database", args)
@@ -510,18 +514,22 @@ func (a *mqlAzureSubscriptionSqlServiceServer) vulnerabilityAssessmentSettings()
 	if err != nil {
 		return nil, err
 	}
-	res, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.server.vulnerabilityassessmentsettings",
-		map[string]*llx.RawData{
-			"id":                      llx.StringDataPtr(vaSettings.ID),
-			"name":                    llx.StringDataPtr(vaSettings.Name),
-			"type":                    llx.StringDataPtr(vaSettings.Type),
-			"storageContainerPath":    llx.StringDataPtr(vaSettings.Properties.StorageContainerPath),
-			"storageAccountAccessKey": llx.StringDataPtr(vaSettings.Properties.StorageAccountAccessKey),
-			"storageContainerSasKey":  llx.StringDataPtr(vaSettings.Properties.StorageContainerSasKey),
-			"recurringScanEnabled":    llx.BoolDataPtr(vaSettings.Properties.RecurringScans.IsEnabled),
-			"recurringScanEmails":     llx.ArrayData(llx.TArr2Raw(convert.ToListFromPtrs(vaSettings.Properties.RecurringScans.Emails)), types.String),
-			"mailSubscriptionAdmins":  llx.BoolDataPtr(vaSettings.Properties.RecurringScans.EmailSubscriptionAdmins),
-		})
+	args := map[string]*llx.RawData{
+		"id":   llx.StringDataPtr(vaSettings.ID),
+		"name": llx.StringDataPtr(vaSettings.Name),
+		"type": llx.StringDataPtr(vaSettings.Type),
+	}
+	if vaSettings.Properties != nil {
+		args["storageContainerPath"] = llx.StringDataPtr(vaSettings.Properties.StorageContainerPath)
+		args["storageAccountAccessKey"] = llx.StringDataPtr(vaSettings.Properties.StorageAccountAccessKey)
+		args["storageContainerSasKey"] = llx.StringDataPtr(vaSettings.Properties.StorageContainerSasKey)
+		if vaSettings.Properties.RecurringScans != nil {
+			args["recurringScanEnabled"] = llx.BoolDataPtr(vaSettings.Properties.RecurringScans.IsEnabled)
+			args["recurringScanEmails"] = llx.ArrayData(llx.TArr2Raw(convert.ToListFromPtrs(vaSettings.Properties.RecurringScans.Emails)), types.String)
+			args["mailSubscriptionAdmins"] = llx.BoolDataPtr(vaSettings.Properties.RecurringScans.EmailSubscriptionAdmins)
+		}
+	}
+	res, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.server.vulnerabilityassessmentsettings", args)
 	if err != nil {
 		return nil, err
 	}

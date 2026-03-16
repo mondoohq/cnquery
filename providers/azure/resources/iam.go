@@ -71,28 +71,34 @@ func (a *mqlAzureSubscriptionAuthorizationService) roles() ([]any, error) {
 			return nil, err
 		}
 		for _, roleDef := range page.Value {
-			roleType := convert.ToValue(roleDef.Properties.RoleType)
+			var roleType string
 			scopes := []any{}
-			for _, s := range roleDef.Properties.AssignableScopes {
-				if s != nil {
-					scopes = append(scopes, *s)
-				}
-			}
 			permissions := []any{}
-			for idx, p := range roleDef.Properties.Permissions {
-				id := fmt.Sprintf("%s/azure.subscription.authorizationService.roleDefinition.permission/%d", *roleDef.ID, idx)
-				permission, err := newMqlRolePermission(a.MqlRuntime, id, p)
-				if err != nil {
-					return nil, err
+			var roleName, description *string
+			if roleDef.Properties != nil {
+				roleType = convert.ToValue(roleDef.Properties.RoleType)
+				roleName = roleDef.Properties.RoleName
+				description = roleDef.Properties.Description
+				for _, s := range roleDef.Properties.AssignableScopes {
+					if s != nil {
+						scopes = append(scopes, *s)
+					}
 				}
-				permissions = append(permissions, permission)
+				for idx, p := range roleDef.Properties.Permissions {
+					id := fmt.Sprintf("%s/azure.subscription.authorizationService.roleDefinition.permission/%d", convert.ToValue(roleDef.ID), idx)
+					permission, err := newMqlRolePermission(a.MqlRuntime, id, p)
+					if err != nil {
+						return nil, err
+					}
+					permissions = append(permissions, permission)
+				}
 			}
 			mqlRoleDefinition, err := CreateResource(a.MqlRuntime, "azure.subscription.authorizationService.roleDefinition",
 				map[string]*llx.RawData{
 					"__id":        llx.StringDataPtr(roleDef.ID),
 					"id":          llx.StringDataPtr(roleDef.ID),
-					"name":        llx.StringDataPtr(roleDef.Properties.RoleName),
-					"description": llx.StringDataPtr(roleDef.Properties.Description),
+					"name":        llx.StringDataPtr(roleName),
+					"description": llx.StringDataPtr(description),
 					"type":        llx.StringData(roleType),
 					"scopes":      llx.ArrayData(scopes, types.String),
 					"permissions": llx.ArrayData(permissions, types.ResourceLike),

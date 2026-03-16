@@ -456,8 +456,10 @@ func (a *mqlAzureSubscriptionCloudDefenderService) monitoringAgentAutoProvision(
 	if err != nil {
 		return false, err
 	}
-	autoProvision := *setting.Properties.AutoProvision
-	return autoProvision == security.AutoProvisionOn, nil
+	if setting.Properties == nil || setting.Properties.AutoProvision == nil {
+		return false, nil
+	}
+	return *setting.Properties.AutoProvision == security.AutoProvisionOn, nil
 }
 
 func (a *mqlAzureSubscriptionCloudDefenderService) defenderForContainers() (any, error) {
@@ -522,19 +524,21 @@ func (a *mqlAzureSubscriptionCloudDefenderService) defenderForContainers() (any,
 	}
 
 	enabled := false
-	if containersPricing.Properties.PricingTier != nil {
+	if containersPricing.Properties != nil && containersPricing.Properties.PricingTier != nil {
 		enabled = *containersPricing.Properties.PricingTier == security.PricingTierStandard
 	}
 	extensions := []extension{}
-	for _, ext := range containersPricing.Properties.Extensions {
-		if ext.IsEnabled == nil || ext.Name == nil {
-			continue
+	if containersPricing.Properties != nil {
+		for _, ext := range containersPricing.Properties.Extensions {
+			if ext.IsEnabled == nil || ext.Name == nil {
+				continue
+			}
+			e := false
+			if *ext.IsEnabled == security.IsEnabledTrue {
+				e = true
+			}
+			extensions = append(extensions, extension{Name: *ext.Name, IsEnabled: e})
 		}
-		e := false
-		if *ext.IsEnabled == security.IsEnabledTrue {
-			e = true
-		}
-		extensions = append(extensions, extension{Name: *ext.Name, IsEnabled: e})
 	}
 
 	def := defenderForContainers{

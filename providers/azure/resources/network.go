@@ -297,43 +297,50 @@ func (a *mqlAzureSubscriptionNetworkServiceWatcher) flowLogs() ([]any, error) {
 			WorkspaceRegion     string `json:"workspaceRegion"`
 		}
 		for _, flowLog := range page.Value {
-			retentionPolicy := mqlRetentionPolicy{
-				Enabled:       convert.ToValue(flowLog.Properties.RetentionPolicy.Enabled),
-				RetentionDays: int(convert.ToValue(flowLog.Properties.RetentionPolicy.Days)),
+			retentionPolicy := mqlRetentionPolicy{}
+			if flowLog.Properties != nil && flowLog.Properties.RetentionPolicy != nil {
+				retentionPolicy.Enabled = convert.ToValue(flowLog.Properties.RetentionPolicy.Enabled)
+				retentionPolicy.RetentionDays = int(convert.ToValue(flowLog.Properties.RetentionPolicy.Days))
 			}
 			retentionPolicyDict, err := convert.JsonToDict(retentionPolicy)
 			if err != nil {
 				return nil, err
 			}
-			flowLogAnalytics := mqlFlowLogAnalytics{
-				Enabled:             convert.ToValue(flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration.Enabled),
-				AnalyticsInterval:   int(convert.ToValue(flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration.TrafficAnalyticsInterval)),
-				WorkspaceRegion:     convert.ToValue(flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration.WorkspaceRegion),
-				WorkspaceResourceId: convert.ToValue(flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration.WorkspaceResourceID),
-				WorkspaceId:         convert.ToValue(flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration.WorkspaceID),
+			flowLogAnalytics := mqlFlowLogAnalytics{}
+			if flowLog.Properties != nil && flowLog.Properties.FlowAnalyticsConfiguration != nil && flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration != nil {
+				nwfac := flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration
+				flowLogAnalytics.Enabled = convert.ToValue(nwfac.Enabled)
+				flowLogAnalytics.AnalyticsInterval = int(convert.ToValue(nwfac.TrafficAnalyticsInterval))
+				flowLogAnalytics.WorkspaceRegion = convert.ToValue(nwfac.WorkspaceRegion)
+				flowLogAnalytics.WorkspaceResourceId = convert.ToValue(nwfac.WorkspaceResourceID)
+				flowLogAnalytics.WorkspaceId = convert.ToValue(nwfac.WorkspaceID)
 			}
 			flowLogAnalyticsDict, err := convert.JsonToDict(flowLogAnalytics)
 			if err != nil {
 				return nil, err
 			}
-			mqlFlowLog, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.watcher.flowlog",
-				map[string]*llx.RawData{
-					"id":                 llx.StringDataPtr(flowLog.ID),
-					"name":               llx.StringDataPtr(flowLog.Name),
-					"location":           llx.StringDataPtr(flowLog.Location),
-					"tags":               llx.MapData(convert.PtrMapStrToInterface(flowLog.Tags), types.String),
-					"type":               llx.StringDataPtr(flowLog.Type),
-					"etag":               llx.StringDataPtr(flowLog.Etag),
-					"retentionPolicy":    llx.DictData(retentionPolicyDict),
-					"format":             llx.StringDataPtr((*string)(flowLog.Properties.Format.Type)),
-					"version":            llx.IntDataDefault(flowLog.Properties.Format.Version, 0),
-					"enabled":            llx.BoolDataPtr(flowLog.Properties.Enabled),
-					"storageAccountId":   llx.StringDataPtr(flowLog.Properties.StorageID),
-					"targetResourceId":   llx.StringDataPtr(flowLog.Properties.TargetResourceID),
-					"targetResourceGuid": llx.StringDataPtr(flowLog.Properties.TargetResourceGUID),
-					"provisioningState":  llx.StringDataPtr((*string)(flowLog.Properties.ProvisioningState)),
-					"analytics":          llx.DictData(flowLogAnalyticsDict),
-				})
+			args := map[string]*llx.RawData{
+				"id":              llx.StringDataPtr(flowLog.ID),
+				"name":            llx.StringDataPtr(flowLog.Name),
+				"location":        llx.StringDataPtr(flowLog.Location),
+				"tags":            llx.MapData(convert.PtrMapStrToInterface(flowLog.Tags), types.String),
+				"type":            llx.StringDataPtr(flowLog.Type),
+				"etag":            llx.StringDataPtr(flowLog.Etag),
+				"retentionPolicy": llx.DictData(retentionPolicyDict),
+				"analytics":       llx.DictData(flowLogAnalyticsDict),
+			}
+			if flowLog.Properties != nil {
+				args["enabled"] = llx.BoolDataPtr(flowLog.Properties.Enabled)
+				args["storageAccountId"] = llx.StringDataPtr(flowLog.Properties.StorageID)
+				args["targetResourceId"] = llx.StringDataPtr(flowLog.Properties.TargetResourceID)
+				args["targetResourceGuid"] = llx.StringDataPtr(flowLog.Properties.TargetResourceGUID)
+				args["provisioningState"] = llx.StringDataPtr((*string)(flowLog.Properties.ProvisioningState))
+				if flowLog.Properties.Format != nil {
+					args["format"] = llx.StringDataPtr((*string)(flowLog.Properties.Format.Type))
+					args["version"] = llx.IntDataDefault(flowLog.Properties.Format.Version, 0)
+				}
+			}
+			mqlFlowLog, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.watcher.flowlog", args)
 			if err != nil {
 				return nil, err
 			}
@@ -1087,30 +1094,34 @@ func (a *mqlAzureSubscriptionNetworkService) virtualNetworkGateways() ([]any, er
 					return nil, err
 				}
 				bgpPeeringAddresses := []any{}
-				bgpSettingsId := *vng.ID + "/bgpSettings"
-				for i, bpa := range vng.Properties.BgpSettings.BgpPeeringAddresses {
-					bpaId := fmt.Sprintf("%s/%s/%d", bgpSettingsId, "bgpPeeringAddresses", i)
-					mqlBpa, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.bgpSettings.ipConfigurationBgpPeeringAddress",
-						map[string]*llx.RawData{
-							"id":                    llx.StringData(bpaId),
-							"customBgpIpAddresses":  llx.ArrayData(convert.SliceStrPtrToInterface(bpa.CustomBgpIPAddresses), types.String),
-							"defaultBgpIpAddresses": llx.ArrayData(convert.SliceStrPtrToInterface(bpa.DefaultBgpIPAddresses), types.String),
-							"tunnelIpAddresses":     llx.ArrayData(convert.SliceStrPtrToInterface(bpa.TunnelIPAddresses), types.String),
-							"ipConfigurationId":     llx.StringDataPtr(bpa.IPConfigurationID),
-						})
-					if err != nil {
-						return nil, err
+				bgpSettingsId := convert.ToValue(vng.ID) + "/bgpSettings"
+				if vng.Properties != nil && vng.Properties.BgpSettings != nil {
+					for i, bpa := range vng.Properties.BgpSettings.BgpPeeringAddresses {
+						bpaId := fmt.Sprintf("%s/%s/%d", bgpSettingsId, "bgpPeeringAddresses", i)
+						mqlBpa, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.bgpSettings.ipConfigurationBgpPeeringAddress",
+							map[string]*llx.RawData{
+								"id":                    llx.StringData(bpaId),
+								"customBgpIpAddresses":  llx.ArrayData(convert.SliceStrPtrToInterface(bpa.CustomBgpIPAddresses), types.String),
+								"defaultBgpIpAddresses": llx.ArrayData(convert.SliceStrPtrToInterface(bpa.DefaultBgpIPAddresses), types.String),
+								"tunnelIpAddresses":     llx.ArrayData(convert.SliceStrPtrToInterface(bpa.TunnelIPAddresses), types.String),
+								"ipConfigurationId":     llx.StringDataPtr(bpa.IPConfigurationID),
+							})
+						if err != nil {
+							return nil, err
+						}
+						bgpPeeringAddresses = append(bgpPeeringAddresses, mqlBpa)
 					}
-					bgpPeeringAddresses = append(bgpPeeringAddresses, mqlBpa)
 				}
-				bgpSettings, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.bgpSettings",
-					map[string]*llx.RawData{
-						"id":                        llx.StringData(bgpSettingsId),
-						"asn":                       llx.IntDataPtr(vng.Properties.BgpSettings.Asn),
-						"bgpPeeringAddress":         llx.StringDataPtr(vng.Properties.BgpSettings.BgpPeeringAddress),
-						"peerWeight":                llx.IntDataDefault(vng.Properties.BgpSettings.PeerWeight, 0),
-						"bgpPeeringAddressesConfig": llx.ArrayData(bgpPeeringAddresses, types.ResourceLike),
-					})
+				bgpSettingsArgs := map[string]*llx.RawData{
+					"id":                        llx.StringData(bgpSettingsId),
+					"bgpPeeringAddressesConfig": llx.ArrayData(bgpPeeringAddresses, types.ResourceLike),
+				}
+				if vng.Properties != nil && vng.Properties.BgpSettings != nil {
+					bgpSettingsArgs["asn"] = llx.IntDataPtr(vng.Properties.BgpSettings.Asn)
+					bgpSettingsArgs["bgpPeeringAddress"] = llx.StringDataPtr(vng.Properties.BgpSettings.BgpPeeringAddress)
+					bgpSettingsArgs["peerWeight"] = llx.IntDataDefault(vng.Properties.BgpSettings.PeerWeight, 0)
+				}
+				bgpSettings, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.bgpSettings", bgpSettingsArgs)
 				if err != nil {
 					return nil, err
 				}
@@ -1144,7 +1155,7 @@ func (a *mqlAzureSubscriptionNetworkService) virtualNetworkGateways() ([]any, er
 						"name":             llx.StringDataPtr(ipc.Name),
 						"etag":             llx.StringDataPtr(ipc.Etag),
 						"properties":       llx.DictData(props),
-						"privateIpAddress": llx.StringDataPtr(ipc.Properties.PrivateIPAddress),
+						"privateIpAddress": ipcPrivateIP(ipc.Properties),
 					})
 					if err != nil {
 						return nil, err
@@ -1152,36 +1163,40 @@ func (a *mqlAzureSubscriptionNetworkService) virtualNetworkGateways() ([]any, er
 					ipConfigs = append(ipConfigs, mqlIpc)
 				}
 				args := map[string]*llx.RawData{
-					"id":                              llx.StringDataPtr(vng.ID),
-					"name":                            llx.StringDataPtr(vng.Name),
-					"type":                            llx.StringDataPtr(vng.Type),
-					"location":                        llx.StringDataPtr(vng.Location),
-					"tags":                            llx.MapData(convert.PtrMapStrToInterface(vng.Tags), types.String),
-					"etag":                            llx.StringDataPtr(vng.Etag),
-					"active":                          llx.BoolDataPtr(vng.Properties.Active),
-					"enableBgp":                       llx.BoolDataPtr(vng.Properties.EnableBgp),
-					"enableBgpRouteTranslationForNat": llx.BoolDataPtr(vng.Properties.EnableBgpRouteTranslationForNat),
-					"enableDNSForwarding":             llx.BoolDataPtr(vng.Properties.EnableDNSForwarding),
-					"enablePrivateIPAddress":          llx.BoolDataPtr(vng.Properties.EnablePrivateIPAddress),
-					"disableIPSecReplayProtection":    llx.BoolDataPtr(vng.Properties.DisableIPSecReplayProtection),
-					"inboundDNSForwardingEndpoint":    llx.StringDataPtr(vng.Properties.InboundDNSForwardingEndpoint),
-					"skuName":                         llx.StringDataPtr((*string)(vng.Properties.SKU.Name)),
-					"skuCapacity":                     llx.IntDataDefault(vng.Properties.SKU.Capacity, 0),
-					"provisioningState":               llx.StringDataPtr((*string)(vng.Properties.ProvisioningState)),
-					"properties":                      llx.DictData(props),
-					"vpnType":                         llx.StringDataPtr((*string)(vng.Properties.VPNType)),
-					"vpnGatewayGeneration":            llx.StringDataPtr((*string)(vng.Properties.VPNGatewayGeneration)),
-					"bgpSettings":                     llx.ResourceData(bgpSettings, "bgpSettings"),
-					"ipConfigurations":                llx.ArrayData(ipConfigs, types.ResourceLike),
-					"gatewayType":                     llx.StringDataPtr((*string)(vng.Properties.GatewayType)),
-					"natRules":                        llx.ArrayData(natRules, types.ResourceLike),
+					"id":               llx.StringDataPtr(vng.ID),
+					"name":             llx.StringDataPtr(vng.Name),
+					"type":             llx.StringDataPtr(vng.Type),
+					"location":         llx.StringDataPtr(vng.Location),
+					"tags":             llx.MapData(convert.PtrMapStrToInterface(vng.Tags), types.String),
+					"etag":             llx.StringDataPtr(vng.Etag),
+					"properties":       llx.DictData(props),
+					"bgpSettings":      llx.ResourceData(bgpSettings, "bgpSettings"),
+					"ipConfigurations": llx.ArrayData(ipConfigs, types.ResourceLike),
+					"natRules":         llx.ArrayData(natRules, types.ResourceLike),
 				}
-				if vng.Properties.CustomRoutes != nil {
+				if vng.Properties != nil {
+					args["active"] = llx.BoolDataPtr(vng.Properties.Active)
+					args["enableBgp"] = llx.BoolDataPtr(vng.Properties.EnableBgp)
+					args["enableBgpRouteTranslationForNat"] = llx.BoolDataPtr(vng.Properties.EnableBgpRouteTranslationForNat)
+					args["enableDNSForwarding"] = llx.BoolDataPtr(vng.Properties.EnableDNSForwarding)
+					args["enablePrivateIPAddress"] = llx.BoolDataPtr(vng.Properties.EnablePrivateIPAddress)
+					args["disableIPSecReplayProtection"] = llx.BoolDataPtr(vng.Properties.DisableIPSecReplayProtection)
+					args["inboundDNSForwardingEndpoint"] = llx.StringDataPtr(vng.Properties.InboundDNSForwardingEndpoint)
+					args["provisioningState"] = llx.StringDataPtr((*string)(vng.Properties.ProvisioningState))
+					args["vpnType"] = llx.StringDataPtr((*string)(vng.Properties.VPNType))
+					args["vpnGatewayGeneration"] = llx.StringDataPtr((*string)(vng.Properties.VPNGatewayGeneration))
+					args["gatewayType"] = llx.StringDataPtr((*string)(vng.Properties.GatewayType))
+					if vng.Properties.SKU != nil {
+						args["skuName"] = llx.StringDataPtr((*string)(vng.Properties.SKU.Name))
+						args["skuCapacity"] = llx.IntDataDefault(vng.Properties.SKU.Capacity, 0)
+					}
+				}
+				if vng.Properties != nil && vng.Properties.CustomRoutes != nil {
 					args["addressPrefixes"] = llx.ArrayData(convert.SliceStrPtrToInterface(vng.Properties.CustomRoutes.AddressPrefixes), types.String)
 				} else {
 					args["addressPrefixes"] = llx.ArrayData([]any{}, types.String)
 				}
-				if vng.Properties.VPNClientConfiguration != nil {
+				if vng.Properties != nil && vng.Properties.VPNClientConfiguration != nil {
 					vpnClientDict, err := convert.JsonToDict(vng.Properties.VPNClientConfiguration)
 					if err != nil {
 						return nil, err
@@ -2160,6 +2175,13 @@ func azureAppGatewayToMql(runtime *plugin.Runtime, ag network.ApplicationGateway
 	return mqlAg.(*mqlAzureSubscriptionNetworkServiceApplicationGateway), nil
 }
 
+func ipcPrivateIP(props *network.VirtualNetworkGatewayIPConfigurationPropertiesFormat) *llx.RawData {
+	if props != nil {
+		return llx.StringDataPtr(props.PrivateIPAddress)
+	}
+	return llx.NilData
+}
+
 func azureFirewallToMql(runtime *plugin.Runtime, fw network.AzureFirewall) (*mqlAzureSubscriptionNetworkServiceFirewall, error) {
 	applicationRules := []any{}
 	natRules := []any{}
@@ -2169,74 +2191,82 @@ func azureFirewallToMql(runtime *plugin.Runtime, fw network.AzureFirewall) (*mql
 	if err != nil {
 		return nil, err
 	}
-	for _, ipConfig := range fw.Properties.IPConfigurations {
-		props, err := convert.JsonToDict(ipConfig.Properties)
-		if err != nil {
-			return nil, err
+	if fw.Properties != nil {
+		for _, ipConfig := range fw.Properties.IPConfigurations {
+			ipProps, err := convert.JsonToDict(ipConfig.Properties)
+			if err != nil {
+				return nil, err
+			}
+			var privateIP *llx.RawData = llx.NilData
+			if ipConfig.Properties != nil {
+				privateIP = llx.StringDataPtr(ipConfig.Properties.PrivateIPAddress)
+			}
+			mqlIpConfig, err := CreateResource(runtime, "azure.subscription.networkService.firewall.ipConfig",
+				map[string]*llx.RawData{
+					"id":               llx.StringDataPtr(ipConfig.ID),
+					"name":             llx.StringDataPtr(ipConfig.Name),
+					"etag":             llx.StringDataPtr(ipConfig.Etag),
+					"privateIpAddress": privateIP,
+					"properties":       llx.DictData(ipProps),
+				})
+			if err != nil {
+				return nil, err
+			}
+			ipConfigs = append(ipConfigs, mqlIpConfig)
 		}
-		mqlIpConfig, err := CreateResource(runtime, "azure.subscription.networkService.firewall.ipConfig",
-			map[string]*llx.RawData{
-				"id":               llx.StringDataPtr(ipConfig.ID),
-				"name":             llx.StringDataPtr(ipConfig.Name),
-				"etag":             llx.StringDataPtr(ipConfig.Etag),
-				"privateIpAddress": llx.StringDataPtr(ipConfig.Properties.PrivateIPAddress),
-				"properties":       llx.DictData(props),
-			})
-		if err != nil {
-			return nil, err
-		}
-		ipConfigs = append(ipConfigs, mqlIpConfig)
 	}
-	for _, natRule := range fw.Properties.NatRuleCollections {
-		props, err := convert.JsonToDict(natRule.Properties)
-		if err != nil {
-			return nil, err
+	if fw.Properties != nil {
+		for _, natRule := range fw.Properties.NatRuleCollections {
+			props, err := convert.JsonToDict(natRule.Properties)
+			if err != nil {
+				return nil, err
+			}
+			mqlNatRule, err := CreateResource(runtime, "azure.subscription.networkService.firewall.natRule",
+				map[string]*llx.RawData{
+					"id":         llx.StringDataPtr(natRule.ID),
+					"name":       llx.StringDataPtr(natRule.Name),
+					"etag":       llx.StringDataPtr(natRule.Etag),
+					"properties": llx.DictData(props),
+				})
+			if err != nil {
+				return nil, err
+			}
+			natRules = append(natRules, mqlNatRule)
 		}
-		mqlNatRule, err := CreateResource(runtime, "azure.subscription.networkService.firewall.natRule",
-			map[string]*llx.RawData{
-				"id":         llx.StringDataPtr(natRule.ID),
-				"name":       llx.StringDataPtr(natRule.Name),
-				"etag":       llx.StringDataPtr(natRule.Etag),
-				"properties": llx.DictData(props),
-			})
-		if err != nil {
-			return nil, err
+		for _, networkRule := range fw.Properties.NetworkRuleCollections {
+			props, err := convert.JsonToDict(networkRule.Properties)
+			if err != nil {
+				return nil, err
+			}
+			mqlNetworkRule, err := CreateResource(runtime, "azure.subscription.networkService.firewall.networkRule",
+				map[string]*llx.RawData{
+					"id":         llx.StringDataPtr(networkRule.ID),
+					"name":       llx.StringDataPtr(networkRule.Name),
+					"etag":       llx.StringDataPtr(networkRule.Etag),
+					"properties": llx.DictData(props),
+				})
+			if err != nil {
+				return nil, err
+			}
+			networkRules = append(networkRules, mqlNetworkRule)
 		}
-		natRules = append(natRules, mqlNatRule)
-	}
-	for _, networkRule := range fw.Properties.NetworkRuleCollections {
-		props, err := convert.JsonToDict(networkRule.Properties)
-		if err != nil {
-			return nil, err
+		for _, appRule := range fw.Properties.ApplicationRuleCollections {
+			props, err := convert.JsonToDict(appRule.Properties)
+			if err != nil {
+				return nil, err
+			}
+			mqlAppRule, err := CreateResource(runtime, "azure.subscription.networkService.firewall.applicationRule",
+				map[string]*llx.RawData{
+					"id":         llx.StringDataPtr(appRule.ID),
+					"name":       llx.StringDataPtr(appRule.Name),
+					"etag":       llx.StringDataPtr(appRule.Etag),
+					"properties": llx.DictData(props),
+				})
+			if err != nil {
+				return nil, err
+			}
+			applicationRules = append(applicationRules, mqlAppRule)
 		}
-		mqlNetworkRule, err := CreateResource(runtime, "azure.subscription.networkService.firewall.networkRule",
-			map[string]*llx.RawData{
-				"id":         llx.StringDataPtr(networkRule.ID),
-				"name":       llx.StringDataPtr(networkRule.Name),
-				"etag":       llx.StringDataPtr(networkRule.Etag),
-				"properties": llx.DictData(props),
-			})
-		if err != nil {
-			return nil, err
-		}
-		networkRules = append(networkRules, mqlNetworkRule)
-	}
-	for _, appRule := range fw.Properties.ApplicationRuleCollections {
-		props, err := convert.JsonToDict(appRule.Properties)
-		if err != nil {
-			return nil, err
-		}
-		mqlAppRule, err := CreateResource(runtime, "azure.subscription.networkService.firewall.applicationRule",
-			map[string]*llx.RawData{
-				"id":         llx.StringDataPtr(appRule.ID),
-				"name":       llx.StringDataPtr(appRule.Name),
-				"etag":       llx.StringDataPtr(appRule.Etag),
-				"properties": llx.DictData(props),
-			})
-		if err != nil {
-			return nil, err
-		}
-		applicationRules = append(applicationRules, mqlAppRule)
 	}
 	args := map[string]*llx.RawData{
 		"id":                llx.StringDataPtr(fw.ID),

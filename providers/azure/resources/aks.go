@@ -90,6 +90,13 @@ func (a *mqlAzureSubscriptionAksServiceClusterAutoUpgradeProfile) id() (string, 
 	return a.Id.Data, nil
 }
 
+func aksPowerState(entry *clusters.ManagedCluster) *llx.RawData {
+	if entry.Properties != nil && entry.Properties.PowerState != nil {
+		return llx.StringDataPtr((*string)(entry.Properties.PowerState.Code))
+	}
+	return llx.NilData
+}
+
 func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
@@ -211,7 +218,7 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 				}
 				aadRes, err := CreateResource(a.MqlRuntime, "azure.subscription.aksService.cluster.aadProfile",
 					map[string]*llx.RawData{
-						"id":                  llx.StringData(*entry.ID + "/aadProfile"),
+						"id":                  llx.StringData(convert.ToValue(entry.ID) + "/aadProfile"),
 						"managed":             llx.BoolDataPtr(aadP.Managed),
 						"enableAzureRBAC":     llx.BoolDataPtr(aadP.EnableAzureRBAC),
 						"adminGroupObjectIDs": llx.ArrayData(adminGroupObjectIDs, types.String),
@@ -228,7 +235,7 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 				aup := entry.Properties.AutoUpgradeProfile
 				autoUpgradeRes, err := CreateResource(a.MqlRuntime, "azure.subscription.aksService.cluster.autoUpgradeProfile",
 					map[string]*llx.RawData{
-						"id":                   llx.StringData(*entry.ID + "/autoUpgradeProfile"),
+						"id":                   llx.StringData(convert.ToValue(entry.ID) + "/autoUpgradeProfile"),
 						"upgradeChannel":       llx.StringDataPtr((*string)(aup.UpgradeChannel)),
 						"nodeOSUpgradeChannel": llx.StringDataPtr((*string)(aup.NodeOSUpgradeChannel)),
 					})
@@ -247,7 +254,7 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 					"provisioningState":              llx.StringDataPtr(entry.Properties.ProvisioningState),
 					"createdAt":                      llx.TimeDataPtr(createdAt),
 					"nodeResourceGroup":              llx.StringDataPtr(entry.Properties.NodeResourceGroup),
-					"powerState":                     llx.StringDataPtr((*string)(entry.Properties.PowerState.Code)),
+					"powerState":                     aksPowerState(entry),
 					"tags":                           llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
 					"rbacEnabled":                    llx.BoolDataPtr(entry.Properties.EnableRBAC),
 					"dnsPrefix":                      llx.StringDataPtr(entry.Properties.DNSPrefix),
