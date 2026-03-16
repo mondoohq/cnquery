@@ -12,6 +12,12 @@ import (
 	"go.mondoo.com/ranger-rpc/plugins/scope"
 )
 
+type Product struct {
+	Name    string
+	Version string
+	Build   string
+}
+
 // ClientSysInfo holds system information for upstream request headers.
 // This is a lightweight struct to avoid import cycles with the sysinfo package.
 type ClientSysInfo struct {
@@ -21,6 +27,9 @@ type ClientSysInfo struct {
 	IP              string
 	Hostname        string
 	PlatformID      string
+
+	// Product information to include in the header. If not set, defaults to mql product name and mql version/build
+	Product Product
 }
 
 func DefaultRangerPlugins(features mql.Features, si *ClientSysInfo) []ranger.ClientPlugin {
@@ -39,15 +48,23 @@ func sysInfoHeader(features mql.Features, si *ClientSysInfo) ranger.ClientPlugin
 
 	h := http.Header{}
 	info := map[string]string{
+		// these might get overwritten down below if details are provided
 		"mql":   mql.Version,
 		"build": mql.Build,
 	}
+
 	if si != nil {
 		info["PN"] = si.PlatformName
 		info["PR"] = si.PlatformVersion
 		info["PA"] = si.PlatformArch
 		info["IP"] = si.IP
 		info["HN"] = si.Hostname
+		if si.Product.Name != "" && si.Product.Version != "" {
+			info[si.Product.Name] = si.Product.Version
+		}
+		if si.Product.Build != "" {
+			info["build"] = si.Product.Build
+		}
 		h.Set(HttpHeaderPlatformID, si.PlatformID)
 	}
 
