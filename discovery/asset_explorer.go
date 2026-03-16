@@ -1,0 +1,361 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
+package discovery
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"slices"
+	"sync"
+
+	"github.com/rs/zerolog/log"
+	"go.mondoo.com/mql/v13/cli/execruntime"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers"
+	inventory "go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory/manager"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream"
+	"go.mondoo.com/mql/v13/utils/slicesx"
+)
+
+// AssetState represents the lifecycle state of a tracked asset.
+type AssetState int
+
+const (
+	// AssetDiscovered means the asset is known but has no active connection.
+	AssetDiscovered AssetState = iota
+	// AssetConnected means the asset has a live runtime/connection.
+	AssetConnected
+	// AssetClosed means the asset's connection has been explicitly closed.
+	AssetClosed
+)
+
+// TrackedAsset holds a discovered asset along with its lifecycle state and
+// tree relationships. Callers receive pointers to TrackedAsset and pass them
+// back to AssetExplorer methods.
+type TrackedAsset struct {
+	Asset    *inventory.Asset
+	Runtime  *providers.Runtime // nil when Discovered or Closed
+	State    AssetState
+	Parent   *TrackedAsset   // nil for root assets
+	Children []*TrackedAsset // populated when this asset is Connected
+}
+
+// AssetExplorerConfig holds configuration for creating a new AssetExplorer.
+type AssetExplorerConfig struct {
+	Inventory *inventory.Inventory
+	Upstream  *upstream.UpstreamConfig
+	Recording llx.Recording
+}
+
+// AssetExplorer provides lazy, caller-driven asset discovery. Unlike the
+// DiscoverAssets function which eagerly discovers the entire asset tree,
+// AssetExplorer discovers one level at a time and lets the caller control
+// which assets to connect to and when to release connections.
+type AssetExplorer struct {
+	mu sync.Mutex
+
+	allAssets []*TrackedAsset
+
+	upstream      *upstream.UpstreamConfig
+	recording     llx.Recording
+	runtimeLabels map[string]string
+	rootAssets    []*inventory.Asset // original root assets, for prepareAsset
+	errors        []*AssetWithError
+}
+
+// NewAssetExplorer creates an AssetExplorer, connects to the root asset(s) in
+// the inventory, and discovers their immediate children. It does NOT recurse
+// beyond the first level. Root assets with platform IDs are returned as
+// Connected; their children are added as Discovered.
+func NewAssetExplorer(ctx context.Context, cfg AssetExplorerConfig) (*AssetExplorer, error) {
+	im, err := manager.NewManager(manager.WithInventory(cfg.Inventory, providers.DefaultRuntime()))
+	if err != nil {
+		return nil, errors.New("failed to resolve inventory for connection: " + err.Error())
+	}
+	invAssets := im.GetAssets()
+	if len(invAssets) == 0 {
+		return nil, errors.New("could not find an asset that we can connect to")
+	}
+
+	runtimeEnv := execruntime.Detect()
+	var runtimeLabels map[string]string
+	if runtimeEnv != nil &&
+		runtimeEnv.IsAutomatedEnv() &&
+		cfg.Inventory.Spec.Assets[0].Category == inventory.AssetCategory_CATEGORY_CICD {
+		runtimeLabels = runtimeEnv.Labels()
+	}
+
+	e := &AssetExplorer{
+		upstream:      cfg.Upstream,
+		recording:     cfg.Recording,
+		runtimeLabels: runtimeLabels,
+	}
+
+	for _, rootAsset := range invAssets {
+		resolvedRootAsset, err := im.ResolveAsset(rootAsset)
+		if err != nil {
+			return nil, err
+		}
+
+		awr, err := createRuntimeForAsset(resolvedRootAsset, cfg.Upstream, cfg.Recording)
+		if err != nil {
+			log.Error().Err(err).Str("asset", resolvedRootAsset.Name).Msg("unable to create runtime for asset")
+			e.errors = append(e.errors, &AssetWithError{Asset: resolvedRootAsset, Err: err})
+			continue
+		}
+
+		resolvedRootAsset = awr.Asset
+
+		tracked := &TrackedAsset{
+			Asset:   resolvedRootAsset,
+			Runtime: awr.Runtime,
+			State:   AssetConnected,
+		}
+
+		if len(resolvedRootAsset.PlatformIds) > 0 {
+			prepareAsset(resolvedRootAsset, resolvedRootAsset, runtimeLabels)
+		}
+
+		e.allAssets = append(e.allAssets, tracked)
+		e.rootAssets = append(e.rootAssets, resolvedRootAsset)
+
+		// Discover immediate children from the root's connection inventory
+		e.discoverChildren(tracked, resolvedRootAsset)
+	}
+
+	return e, nil
+}
+
+// Discovered returns all assets in the Discovered state.
+func (e *AssetExplorer) Discovered() []*TrackedAsset {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	var result []*TrackedAsset
+	for _, a := range e.allAssets {
+		if a.State == AssetDiscovered {
+			result = append(result, a)
+		}
+	}
+	return result
+}
+
+// Connected returns all assets with live connections.
+func (e *AssetExplorer) Connected() []*TrackedAsset {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	var result []*TrackedAsset
+	for _, a := range e.allAssets {
+		if a.State == AssetConnected {
+			result = append(result, a)
+		}
+	}
+	return result
+}
+
+// Connect connects to a tracked asset, creating its runtime and discovering
+// its immediate children. Returns the newly discovered children.
+//
+// If the asset is already Connected, this is a no-op returning existing children.
+// If the asset is Closed, it re-connects (creates a fresh runtime). Re-connecting
+// is allowed but discouraged as it re-fetches data from the provider.
+func (e *AssetExplorer) Connect(asset *TrackedAsset) ([]*TrackedAsset, error) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	if !e.isKnown(asset) {
+		return nil, fmt.Errorf("asset %q is not tracked by this explorer", asset.Asset.GetName())
+	}
+
+	if asset.State == AssetConnected {
+		return asset.Children, nil
+	}
+
+	awr, err := createRuntimeForAsset(asset.Asset, e.upstream, e.recording)
+	if err != nil {
+		e.errors = append(e.errors, &AssetWithError{Asset: asset.Asset, Err: err})
+		return nil, err
+	}
+
+	// createRuntimeForAsset returns nil when the coordinator detects a duplicate connection
+	if awr == nil {
+		return nil, nil
+	}
+
+	asset.Asset = awr.Asset
+	asset.Runtime = awr.Runtime
+	asset.State = AssetConnected
+
+	// Run dedup: if this newly connected asset's platform IDs conflict with
+	// an already-connected asset, handle subset/superset logic.
+	if len(asset.Asset.PlatformIds) > 0 {
+		rootAsset := e.findRootAsset(asset)
+		prepareAsset(asset.Asset, rootAsset, e.runtimeLabels)
+		e.dedup(asset)
+	}
+
+	// Discover immediate children
+	rootAsset := e.findRootAsset(asset)
+	asset.Children = nil // reset children in case of re-connect
+	e.discoverChildren(asset, rootAsset)
+
+	return asset.Children, nil
+}
+
+// CloseAsset disposes the connection for a specific asset. The caller is
+// responsible for closing all connections, including gateway assets that
+// were connected just to discover children.
+func (e *AssetExplorer) CloseAsset(asset *TrackedAsset) error {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	if !e.isKnown(asset) {
+		return fmt.Errorf("asset %q is not tracked by this explorer", asset.Asset.GetName())
+	}
+
+	if asset.State != AssetConnected {
+		return fmt.Errorf("asset %q is not connected (state: %d)", asset.Asset.GetName(), asset.State)
+	}
+
+	if asset.Runtime != nil {
+		asset.Runtime.Close()
+	}
+	asset.Runtime = nil
+	asset.State = AssetClosed
+	return nil
+}
+
+// Errors returns all connection/discovery errors encountered so far.
+func (e *AssetExplorer) Errors() []*AssetWithError {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	result := make([]*AssetWithError, len(e.errors))
+	copy(result, e.errors)
+	return result
+}
+
+// Shutdown closes all connected assets and releases all resources.
+// After Shutdown the AssetExplorer should not be used.
+func (e *AssetExplorer) Shutdown() {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	for _, a := range e.allAssets {
+		if a.State == AssetConnected {
+			if a.Runtime != nil {
+				a.Runtime.Close()
+			}
+			a.Runtime = nil
+			a.State = AssetClosed
+		}
+	}
+}
+
+// discoverChildren extracts child assets from a connected asset's inventory
+// and adds them as Discovered. Must be called with e.mu held.
+func (e *AssetExplorer) discoverChildren(parent *TrackedAsset, _ *inventory.Asset) {
+	if parent.Runtime == nil || parent.Runtime.Provider.Connection == nil {
+		return
+	}
+	inv := parent.Runtime.Provider.Connection.Inventory
+	if inv == nil || inv.Spec == nil {
+		return
+	}
+
+	for _, childAsset := range inv.Spec.Assets {
+		// Skip children whose platform IDs are already tracked (simple dedup)
+		if len(childAsset.PlatformIds) > 0 && e.findByPlatformIDs(childAsset.PlatformIds) != nil {
+			continue
+		}
+
+		child := &TrackedAsset{
+			Asset:  childAsset,
+			State:  AssetDiscovered,
+			Parent: parent,
+		}
+		e.allAssets = append(e.allAssets, child)
+		parent.Children = append(parent.Children, child)
+	}
+}
+
+// dedup checks if the given asset's platform IDs conflict with any other
+// connected asset. Applies subset/superset eviction logic.
+// Must be called with e.mu held.
+func (e *AssetExplorer) dedup(asset *TrackedAsset) {
+	if len(asset.Asset.PlatformIds) == 0 {
+		return
+	}
+
+	// Check if the new asset is a subset of an existing asset → evict new
+	for _, existing := range e.allAssets {
+		if existing == asset || existing.State != AssetConnected {
+			continue
+		}
+		if len(existing.Asset.PlatformIds) == 0 {
+			continue
+		}
+		if slicesx.IsSubsetOf(asset.Asset.PlatformIds, existing.Asset.PlatformIds) {
+			log.Debug().Str("asset", asset.Asset.Name).Strs("platform-ids", asset.Asset.PlatformIds).
+				Msg("asset-explorer> closing duplicate asset (subset of existing)")
+			if asset.Runtime != nil {
+				asset.Runtime.Close()
+			}
+			asset.Runtime = nil
+			asset.State = AssetClosed
+			return
+		}
+	}
+
+	// Evict existing connected assets that are subsets of the new asset
+	for _, existing := range e.allAssets {
+		if existing == asset || existing.State != AssetConnected {
+			continue
+		}
+		if len(existing.Asset.PlatformIds) == 0 {
+			continue
+		}
+		if slicesx.IsSubsetOf(existing.Asset.PlatformIds, asset.Asset.PlatformIds) {
+			log.Debug().Str("asset", existing.Asset.Name).Strs("platform-ids", existing.Asset.PlatformIds).
+				Msg("asset-explorer> evicting asset (subset of new asset)")
+			if existing.Runtime != nil {
+				existing.Runtime.Close()
+			}
+			existing.Runtime = nil
+			existing.State = AssetClosed
+		}
+	}
+}
+
+// isKnown returns true if the given TrackedAsset pointer is tracked by this explorer.
+// Must be called with e.mu held.
+func (e *AssetExplorer) isKnown(asset *TrackedAsset) bool {
+	return slices.Contains(e.allAssets, asset)
+}
+
+// findByPlatformIDs returns the first tracked asset that has any of the given
+// platform IDs. Must be called with e.mu held.
+func (e *AssetExplorer) findByPlatformIDs(ids []string) *TrackedAsset {
+	for _, a := range e.allAssets {
+		for _, id := range ids {
+			if slices.Contains(a.Asset.PlatformIds, id) {
+				return a
+			}
+		}
+	}
+	return nil
+}
+
+// findRootAsset walks up the parent chain to find the root asset for
+// prepareAsset labeling. Must be called with e.mu held.
+func (e *AssetExplorer) findRootAsset(asset *TrackedAsset) *inventory.Asset {
+	current := asset
+	for current.Parent != nil {
+		current = current.Parent
+	}
+	return current.Asset
+}
