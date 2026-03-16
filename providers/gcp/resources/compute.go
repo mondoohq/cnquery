@@ -762,27 +762,11 @@ type mqlGcpProjectComputeServiceDiskInternal struct {
 }
 
 func (g *mqlGcpProjectComputeServiceDisk) sourceDisk() (*mqlGcpProjectComputeServiceDisk, error) {
-	url := g.cacheSourceDiskUrl
-	if url == "" {
+	if g.cacheSourceDiskUrl == "" {
 		g.SourceDisk.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	// URL format: https://www.googleapis.com/compute/v1/projects/{project}/zones/{zone}/disks/{disk}
-	const computePrefix = "https://www.googleapis.com/compute/v1/"
-	if !strings.HasPrefix(url, computePrefix) {
-		return nil, errors.New("invalid source disk URL: " + url)
-	}
-	parts := strings.Split(strings.TrimPrefix(url, computePrefix), "/")
-	if len(parts) < 5 {
-		return nil, errors.New("invalid source disk URL: " + url)
-	}
-	res, err := NewResource(g.MqlRuntime, "gcp.project.computeService.disk", map[string]*llx.RawData{
-		"name": llx.StringData(parts[len(parts)-1]),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlGcpProjectComputeServiceDisk), nil
+	return getDiskByUrl(g.cacheSourceDiskUrl, g.MqlRuntime)
 }
 
 func (g *mqlGcpProjectComputeServiceDisk) sourceImage() (*mqlGcpProjectComputeServiceImage, error) {
@@ -1134,33 +1118,6 @@ func (g *mqlGcpProjectComputeServiceSnapshot) id() (string, error) {
 	return "gcloud.compute.snapshot/" + id, nil
 }
 
-type mqlGcpProjectComputeServiceSnapshotInternal struct {
-	cacheSourceDiskUrl string
-}
-
-func (g *mqlGcpProjectComputeServiceSnapshot) sourceDisk() (*mqlGcpProjectComputeServiceDisk, error) {
-	url := g.cacheSourceDiskUrl
-	if url == "" {
-		g.SourceDisk.State = plugin.StateIsNull | plugin.StateIsSet
-		return nil, nil
-	}
-	// URL format: https://www.googleapis.com/compute/v1/projects/{project}/zones/{zone}/disks/{disk}
-	const computePrefix = "https://www.googleapis.com/compute/v1/"
-	if !strings.HasPrefix(url, computePrefix) {
-		return nil, errors.New("invalid source disk URL: " + url)
-	}
-	parts := strings.Split(strings.TrimPrefix(url, computePrefix), "/")
-	if len(parts) < 5 {
-		return nil, errors.New("invalid source disk URL: " + url)
-	}
-	res, err := NewResource(g.MqlRuntime, "gcp.project.computeService.disk", map[string]*llx.RawData{
-		"name": llx.StringData(parts[len(parts)-1]),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlGcpProjectComputeServiceDisk), nil
-}
 
 func (g *mqlGcpProjectComputeService) snapshots() ([]any, error) {
 	// when the service is not enabled, we return nil
@@ -1212,14 +1169,13 @@ func (g *mqlGcpProjectComputeService) snapshots() ([]any, error) {
 				"enableConfidentialCompute":      llx.BoolData(snapshot.EnableConfidentialCompute),
 				"satisfiesPzi":                   llx.BoolData(snapshot.SatisfiesPzi),
 				"satisfiesPzs":                   llx.BoolData(snapshot.SatisfiesPzs),
+				"sourceDisk":                     llx.StringData(snapshot.SourceDisk),
 				"sourceSnapshotSchedulePolicy":   llx.StringData(snapshot.SourceSnapshotSchedulePolicy),
 				"sourceSnapshotSchedulePolicyId": llx.StringData(snapshot.SourceSnapshotSchedulePolicyId),
 			})
 			if err != nil {
 				return err
 			}
-			mqlS := mqlSnapshpt.(*mqlGcpProjectComputeServiceSnapshot)
-			mqlS.cacheSourceDiskUrl = snapshot.SourceDisk
 
 			res = append(res, mqlSnapshpt)
 		}
@@ -1291,27 +1247,11 @@ type mqlGcpProjectComputeServiceImageInternal struct {
 }
 
 func (g *mqlGcpProjectComputeServiceImage) sourceDisk() (*mqlGcpProjectComputeServiceDisk, error) {
-	url := g.cacheSourceDiskUrl
-	if url == "" {
+	if g.cacheSourceDiskUrl == "" {
 		g.SourceDisk.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	// URL format: https://www.googleapis.com/compute/v1/projects/{project}/zones/{zone}/disks/{disk}
-	const computePrefix = "https://www.googleapis.com/compute/v1/"
-	if !strings.HasPrefix(url, computePrefix) {
-		return nil, errors.New("invalid source disk URL: " + url)
-	}
-	parts := strings.Split(strings.TrimPrefix(url, computePrefix), "/")
-	if len(parts) < 5 {
-		return nil, errors.New("invalid source disk URL: " + url)
-	}
-	res, err := NewResource(g.MqlRuntime, "gcp.project.computeService.disk", map[string]*llx.RawData{
-		"name": llx.StringData(parts[len(parts)-1]),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlGcpProjectComputeServiceDisk), nil
+	return getDiskByUrl(g.cacheSourceDiskUrl, g.MqlRuntime)
 }
 
 func (g *mqlGcpProjectComputeServiceImage) sourceImage() (*mqlGcpProjectComputeServiceImage, error) {

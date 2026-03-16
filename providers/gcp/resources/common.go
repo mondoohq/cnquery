@@ -120,6 +120,29 @@ type resourceId struct {
 	Name    string
 }
 
+func getDiskByUrl(diskUrl string, runtime *plugin.Runtime) (*mqlGcpProjectComputeServiceDisk, error) {
+	if diskUrl == "" {
+		return nil, nil
+	}
+
+	// URL format: https://www.googleapis.com/compute/v1/projects/{project}/zones/{zone}/disks/{disk}
+	params := strings.TrimPrefix(diskUrl, "https://www.googleapis.com/compute/v1/")
+	params = strings.TrimPrefix(params, "https://compute.googleapis.com/compute/v1/")
+	parts := strings.Split(params, "/")
+	if len(parts) < 5 {
+		return nil, errors.New("invalid source disk URL: " + diskUrl)
+	}
+
+	res, err := NewResource(runtime, "gcp.project.computeService.disk", map[string]*llx.RawData{
+		"name":      llx.StringData(parts[len(parts)-1]),
+		"projectId": llx.StringData(parts[1]),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectComputeServiceDisk), nil
+}
+
 func getNetworkByUrl(networkUrl string, runtime *plugin.Runtime) (*mqlGcpProjectComputeServiceNetwork, error) {
 	// A reference to a network is not mandatory for this resource
 	if networkUrl == "" {
