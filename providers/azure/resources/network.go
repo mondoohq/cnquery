@@ -2269,40 +2269,50 @@ func azureFirewallToMql(runtime *plugin.Runtime, fw network.AzureFirewall) (*mql
 		}
 	}
 	args := map[string]*llx.RawData{
-		"id":                llx.StringDataPtr(fw.ID),
-		"name":              llx.StringDataPtr(fw.Name),
-		"type":              llx.StringDataPtr(fw.Type),
-		"location":          llx.StringDataPtr(fw.Location),
-		"tags":              llx.MapData(convert.PtrMapStrToInterface(fw.Tags), types.String),
-		"etag":              llx.StringDataPtr(fw.Etag),
-		"properties":        llx.DictData(props),
-		"skuTier":           llx.StringDataPtr((*string)(fw.Properties.SKU.Tier)),
-		"skuName":           llx.StringDataPtr((*string)(fw.Properties.SKU.Name)),
-		"provisioningState": llx.StringDataPtr((*string)(fw.Properties.ProvisioningState)),
-		"threatIntelMode":   llx.StringDataPtr((*string)(fw.Properties.ThreatIntelMode)),
-		"natRules":          llx.ArrayData(natRules, types.ResourceLike),
-		"applicationRules":  llx.ArrayData(applicationRules, types.ResourceLike),
-		"networkRules":      llx.ArrayData(networkRules, types.ResourceLike),
-		"ipConfigurations":  llx.ArrayData(ipConfigs, types.ResourceLike),
+		"id":               llx.StringDataPtr(fw.ID),
+		"name":             llx.StringDataPtr(fw.Name),
+		"type":             llx.StringDataPtr(fw.Type),
+		"location":         llx.StringDataPtr(fw.Location),
+		"tags":             llx.MapData(convert.PtrMapStrToInterface(fw.Tags), types.String),
+		"etag":             llx.StringDataPtr(fw.Etag),
+		"properties":       llx.DictData(props),
+		"natRules":         llx.ArrayData(natRules, types.ResourceLike),
+		"applicationRules": llx.ArrayData(applicationRules, types.ResourceLike),
+		"networkRules":     llx.ArrayData(networkRules, types.ResourceLike),
+		"ipConfigurations": llx.ArrayData(ipConfigs, types.ResourceLike),
 	}
-	if fw.Properties.ManagementIPConfiguration != nil {
-		ipConfig := fw.Properties.ManagementIPConfiguration
-		props, err := convert.JsonToDict(ipConfig.Properties)
-		if err != nil {
-			return nil, err
+	if fw.Properties != nil {
+		args["provisioningState"] = llx.StringDataPtr((*string)(fw.Properties.ProvisioningState))
+		args["threatIntelMode"] = llx.StringDataPtr((*string)(fw.Properties.ThreatIntelMode))
+		if fw.Properties.SKU != nil {
+			args["skuTier"] = llx.StringDataPtr((*string)(fw.Properties.SKU.Tier))
+			args["skuName"] = llx.StringDataPtr((*string)(fw.Properties.SKU.Name))
 		}
-		mqlIpConfig, err := CreateResource(runtime, "azure.subscription.networkService.firewall.ipConfig",
-			map[string]*llx.RawData{
-				"id":               llx.StringDataPtr(ipConfig.ID),
-				"name":             llx.StringDataPtr(ipConfig.Name),
-				"etag":             llx.StringDataPtr(ipConfig.Etag),
-				"privateIpAddress": llx.StringDataPtr(ipConfig.Properties.PrivateIPAddress),
-				"properties":       llx.DictData(props),
-			})
-		if err != nil {
-			return nil, err
+		if fw.Properties.ManagementIPConfiguration != nil {
+			ipConfig := fw.Properties.ManagementIPConfiguration
+			mgmtProps, err := convert.JsonToDict(ipConfig.Properties)
+			if err != nil {
+				return nil, err
+			}
+			var privateIP *llx.RawData = llx.NilData
+			if ipConfig.Properties != nil {
+				privateIP = llx.StringDataPtr(ipConfig.Properties.PrivateIPAddress)
+			}
+			mqlIpConfig, err := CreateResource(runtime, "azure.subscription.networkService.firewall.ipConfig",
+				map[string]*llx.RawData{
+					"id":               llx.StringDataPtr(ipConfig.ID),
+					"name":             llx.StringDataPtr(ipConfig.Name),
+					"etag":             llx.StringDataPtr(ipConfig.Etag),
+					"privateIpAddress": privateIP,
+					"properties":       llx.DictData(mgmtProps),
+				})
+			if err != nil {
+				return nil, err
+			}
+			args["managementIpConfiguration"] = llx.ResourceData(mqlIpConfig, "managementIpConfiguration")
+		} else {
+			args["managementIpConfiguration"] = llx.NilData
 		}
-		args["managementIpConfiguration"] = llx.ResourceData(mqlIpConfig, "managementIpConfiguration")
 	} else {
 		args["managementIpConfiguration"] = llx.NilData
 	}
