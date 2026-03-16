@@ -101,6 +101,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | Ansible playbooks             | `ansible`                  | `mql shell ansible YOUR_PLAYBOOK.yml`                                                                                                           |
 | Arista network devices        | `arista`                   | `mql shell arista DEVICE_PUBLIC_IP --ask-pass`                                                                                                  |
 | Atlassian organizations       | `atlassian`                | `mql shell atlassian --host YOUR_HOST_URL --admin-token YOUR_TOKEN`                                                                             |
+| BIG-IP load balancers         | `bigip`                    | `mql shell bigip --hostname HOST --user USER --password PASSWORD`                                                                               |
 | AWS accounts                  | `aws`                      | `mql shell aws`                                                                                                                                 |
 | AWS CloudFormation templates  | `cloudformation`           | `mql shell cloudformation cloudformation_file.json`                                                                                             |
 | AWS EC2 EBS snapshot          | `aws ec2 ebs snapshot`     | `mql shell aws ec2 ebs snapshot SNAPSHOTID`                                                                                                     |

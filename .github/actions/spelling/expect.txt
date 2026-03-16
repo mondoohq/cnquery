@@ -25,6 +25,7 @@ backupconfiguration
 backupdr
 backupsetting
 backupshorttermretentionpolicy
+bigip
 bigquery
 bigtable
 blackhole
