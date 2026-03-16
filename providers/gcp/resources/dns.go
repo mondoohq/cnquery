@@ -71,6 +71,7 @@ func initGcpProjectDnsServiceManagedzone(runtime *plugin.Runtime, args map[strin
 
 type mqlGcpProjectDnsServiceInternal struct {
 	serviceEnabled bool
+	serviceChecked bool
 }
 
 func (g *mqlGcpProjectDnsService) id() (string, error) {
@@ -101,6 +102,7 @@ func (g *mqlGcpProject) dns() (*mqlGcpProjectDnsService, error) {
 
 	dnsService := res.(*mqlGcpProjectDnsService)
 	dnsService.serviceEnabled = serviceEnabled
+	dnsService.serviceChecked = true
 
 	return dnsService, nil
 }
@@ -135,8 +137,8 @@ func (g *mqlGcpProjectDnsServiceManagedzone) id() (string, error) {
 }
 
 func (g *mqlGcpProjectDnsService) managedZones() ([]any, error) {
-	// when the service is not enabled, we return nil
-	if !g.serviceEnabled {
+	// when the service is known to be disabled, we return nil
+	if g.serviceChecked && !g.serviceEnabled {
 		return nil, nil
 	}
 
@@ -224,8 +226,8 @@ func (g *mqlGcpProjectDnsServicePolicy) id() (string, error) {
 }
 
 func (g *mqlGcpProjectDnsService) policies() ([]any, error) {
-	// when the service is not enabled, we return nil
-	if !g.serviceEnabled {
+	// when the service is known to be disabled, we return nil
+	if g.serviceChecked && !g.serviceEnabled {
 		return nil, nil
 	}
 
