@@ -60,6 +60,17 @@ func RegionNameFromRegionUrl(regionUrl string) string {
 	return regionUrlSegments[len(regionUrlSegments)-1]
 }
 
+// zoneNamesFromUrls extracts the zone name (last path segment) from a list of
+// full zone URLs (e.g. ".../zones/us-central1-a" -> "us-central1-a").
+func zoneNamesFromUrls(urls []string) []any {
+	res := make([]any, 0, len(urls))
+	for _, u := range urls {
+		segments := strings.Split(u, "/")
+		res = append(res, segments[len(segments)-1])
+	}
+	return res
+}
+
 func timestampAsTimePtr(t *timestamppb.Timestamp) *time.Time {
 	if t == nil {
 		return nil

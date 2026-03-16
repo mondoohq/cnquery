@@ -161,7 +161,7 @@ func (g *mqlGcpProjectBackupdrService) backupVaults() ([]any, error) {
 			"name":                                   llx.StringData(vault.Name),
 			"description":                            llx.StringData(vault.GetDescription()),
 			"state":                                  llx.StringData(vault.State.String()),
-			"backupMinimumEnforcedRetentionDuration": llx.StringData(vault.BackupMinimumEnforcedRetentionDuration.String()),
+			"backupMinimumEnforcedRetentionDuration": llx.StringData(vault.GetBackupMinimumEnforcedRetentionDuration().String()),
 			"deletable":                              llx.BoolData(vault.GetDeletable()),
 			"etag":                                   llx.StringData(vault.GetEtag()),
 			"effectiveTime":                          llx.TimeDataPtr(timestampAsTimePtr(vault.EffectiveTime)),

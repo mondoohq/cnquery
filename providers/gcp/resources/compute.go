@@ -920,7 +920,7 @@ func (g *mqlGcpProjectComputeService) disks() ([]any, error) {
 						"physicalBlockSizeBytes":    llx.IntData(disk.PhysicalBlockSizeBytes),
 						"provisionedIops":           llx.IntData(disk.ProvisionedIops),
 						"region":                    llx.StringData(RegionNameFromRegionUrl(disk.Region)),
-						"replicaZones":              llx.ArrayData(convert.SliceAnyToInterface(disk.ReplicaZones), types.String),
+						"replicaZones":              llx.ArrayData(zoneNamesFromUrls(disk.ReplicaZones), types.String),
 						"resourcePolicies":          llx.ArrayData(convert.SliceAnyToInterface(disk.ResourcePolicies), types.String),
 						"satisfiesPzi":              llx.BoolData(disk.SatisfiesPzi),
 						"satisfiesPzs":              llx.BoolData(disk.SatisfiesPzs),
