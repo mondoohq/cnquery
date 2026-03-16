@@ -12,6 +12,7 @@ import (
 	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
@@ -166,17 +167,18 @@ func initAwsS3Bucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	}
 
 	// construct arn of bucket name if misssing
-	var arn string
+	var arnVal string
 	if args["arn"] != nil {
-		arn = args["arn"].Value.(string)
-		if !strings.HasPrefix(arn, "arn:aws:s3:") {
-			return nil, nil, errors.Newf("not a valid bucket ARN '%s'", arn)
+		arnVal = args["arn"].Value.(string)
+		parsed, err := arn.Parse(arnVal)
+		if err != nil || parsed.Service != "s3" {
+			return nil, nil, errors.Newf("not a valid bucket ARN '%s'", arnVal)
 		}
 	} else {
 		nameVal := args["name"].Value.(string)
-		arn = fmt.Sprintf(s3ArnPattern, nameVal)
+		arnVal = fmt.Sprintf(s3ArnPattern, nameVal)
 	}
-	log.Debug().Str("arn", arn).Msg("init s3 bucket with arn")
+	log.Debug().Str("arn", arnVal).Msg("init s3 bucket with arn")
 
 	// load all s3 buckets
 	obj, err := runtime.CreateResource(runtime, "aws.s3", map[string]*llx.RawData{})
@@ -193,21 +195,21 @@ func initAwsS3Bucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	// iterate over security groups and find the one with the arn
 	for _, rawResource := range rawResources.Data {
 		bucket := rawResource.(*mqlAwsS3Bucket)
-		if bucket.Arn.Data == arn {
+		if bucket.Arn.Data == arnVal {
 			return args, bucket, nil
 		}
 	}
 	// it is possible for a resource to reference a non-existent/deleted bucket, so here we
 	// create the object, noting that it no longer exists but is still recorded as part of some resources
-	splitArn := strings.Split(arn, ":::")
+	splitArn := strings.Split(arnVal, ":::")
 	if len(splitArn) != 2 {
 		return args, nil, nil
 	}
 	name := splitArn[1]
-	log.Debug().Msgf("no bucket found for %s", arn)
+	log.Debug().Msgf("no bucket found for %s", arnVal)
 	mqlAwsS3Bucket, err := CreateResource(runtime, "aws.s3.bucket",
 		map[string]*llx.RawData{
-			"arn":    llx.StringData(arn),
+			"arn":    llx.StringData(arnVal),
 			"name":   llx.StringData(name),
 			"exists": llx.BoolData(false),
 		})
