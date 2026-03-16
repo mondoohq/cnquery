@@ -291,6 +291,7 @@ func (a *mqlAwsMacie) getCustomDataIdentifiers(conn *connection.AwsConnection) [
 						return nil, err
 					}
 					mqlIdentifier.(*mqlAwsMacieCustomDataIdentifier).cacheIdentifier = &identifier
+					mqlIdentifier.(*mqlAwsMacieCustomDataIdentifier).cacheRegion = region
 					res = append(res, mqlIdentifier)
 				}
 			}
@@ -349,6 +350,7 @@ type mqlAwsMacieClassificationJobInternal struct {
 
 type mqlAwsMacieCustomDataIdentifierInternal struct {
 	cacheIdentifier *types.CustomDataIdentifierSummary
+	cacheRegion     string
 	detailsFetched  bool
 	detailsLock     sync.Mutex
 }
@@ -419,9 +421,7 @@ func (a *mqlAwsMacieCustomDataIdentifier) populateIdentifierDetails() error {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	identifierId := a.Id.Data
 
-	// Note: We need to determine the region from somewhere - Macie custom data identifiers are global
-	// For now, we'll try us-east-1 as the default region
-	svc := conn.Macie2("us-east-1")
+	svc := conn.Macie2(a.cacheRegion)
 	ctx := context.Background()
 
 	identifier, err := svc.GetCustomDataIdentifier(ctx, &macie2.GetCustomDataIdentifierInput{
