@@ -15,8 +15,10 @@ import (
 )
 
 type mqlDepsdevProjectInternal struct {
-	fetched bool
-	lock    sync.Mutex
+	fetched         bool
+	lock            sync.Mutex
+	archivedFetched bool
+	archivedLock    sync.Mutex
 }
 
 type mqlDepsdevScorecardInternal struct {
@@ -52,15 +54,6 @@ func (r *mqlDepsdevProject) fetchProjectInfo() error {
 
 	conn := r.MqlRuntime.Connection.(*connection.DepsDevConnection)
 
-	// Set defaults
-	r.OpenIssuesCount = plugin.TValue[int64]{Data: 0, State: plugin.StateIsSet | plugin.StateIsNull}
-	r.StarsCount = plugin.TValue[int64]{Data: 0, State: plugin.StateIsSet | plugin.StateIsNull}
-	r.ForksCount = plugin.TValue[int64]{Data: 0, State: plugin.StateIsSet | plugin.StateIsNull}
-	r.License = plugin.TValue[string]{Data: "", State: plugin.StateIsSet | plugin.StateIsNull}
-	r.Description = plugin.TValue[string]{Data: "", State: plugin.StateIsSet | plugin.StateIsNull}
-	r.Homepage = plugin.TValue[string]{Data: "", State: plugin.StateIsSet | plugin.StateIsNull}
-	r.Scorecard = plugin.TValue[*mqlDepsdevScorecard]{Data: nil, State: plugin.StateIsSet | plugin.StateIsNull}
-
 	proj, err := fetchProject(conn.HttpClient, r.Id.Data)
 	if err != nil {
 		return err
@@ -79,6 +72,8 @@ func (r *mqlDepsdevProject) fetchProjectInfo() error {
 			return err
 		}
 		r.Scorecard = plugin.TValue[*mqlDepsdevScorecard]{Data: sc, State: plugin.StateIsSet}
+	} else {
+		r.Scorecard = plugin.TValue[*mqlDepsdevScorecard]{Data: nil, State: plugin.StateIsSet | plugin.StateIsNull}
 	}
 
 	r.fetched = true
@@ -152,15 +147,26 @@ func (r *mqlDepsdevProject) scorecard() (*mqlDepsdevScorecard, error) {
 }
 
 func (r *mqlDepsdevProject) archived() (bool, error) {
+	if r.archivedFetched {
+		return r.Archived.Data, nil
+	}
+	r.archivedLock.Lock()
+	defer r.archivedLock.Unlock()
+	if r.archivedFetched {
+		return r.Archived.Data, nil
+	}
+
 	conn := r.MqlRuntime.Connection.(*connection.DepsDevConnection)
 
 	repo, err := fetchGitHubRepo(conn.HttpClient, r.Id.Data)
 	if err != nil {
 		log.Warn().Str("project", r.Id.Data).Msg("cannot determine archived status for non-GitHub project")
 		r.Archived = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet | plugin.StateIsNull}
+		r.archivedFetched = true
 		return false, nil
 	}
 
+	r.archivedFetched = true
 	return repo.Archived, nil
 }
 

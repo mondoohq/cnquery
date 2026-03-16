@@ -53,11 +53,6 @@ func (r *mqlDepsdevPackage) fetchPackageInfo() error {
 
 	conn := r.MqlRuntime.Connection.(*connection.DepsDevConnection)
 
-	// Set defaults
-	r.Versions = plugin.TValue[[]any]{Data: []any{}, State: plugin.StateIsSet}
-	r.LatestVersion = plugin.TValue[string]{Data: "", State: plugin.StateIsSet | plugin.StateIsNull}
-	r.LatestPublished = plugin.TValue[*time.Time]{Data: nil, State: plugin.StateIsSet | plugin.StateIsNull}
-
 	pkg, err := fetchPackage(conn.HttpClient, r.Name.Data)
 	if err != nil {
 		return err
@@ -90,11 +85,17 @@ func (r *mqlDepsdevPackage) fetchPackageInfo() error {
 		}
 	}
 
+	if versionResources == nil {
+		versionResources = []any{}
+	}
 	r.Versions = plugin.TValue[[]any]{Data: versionResources, State: plugin.StateIsSet}
 
 	if latestVer != "" {
 		r.LatestVersion = plugin.TValue[string]{Data: latestVer, State: plugin.StateIsSet}
 		r.LatestPublished = plugin.TValue[*time.Time]{Data: &latestTime, State: plugin.StateIsSet}
+	} else {
+		r.LatestVersion = plugin.TValue[string]{Data: "", State: plugin.StateIsSet | plugin.StateIsNull}
+		r.LatestPublished = plugin.TValue[*time.Time]{Data: nil, State: plugin.StateIsSet | plugin.StateIsNull}
 	}
 
 	r.fetched = true
