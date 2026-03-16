@@ -5,7 +5,6 @@ package providers
 
 import (
 	"math"
-	"os"
 	"os/exec"
 	"strconv"
 	"sync"
@@ -16,6 +15,7 @@ import (
 	"github.com/muesli/termenv"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/mql/v13/logger"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	pp "go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/recording"
@@ -329,7 +329,7 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 				plugin.ProtocolNetRPC, plugin.ProtocolGRPC,
 			},
 			Logger: pluginLogger,
-			Stderr: os.Stderr,
+			Stderr: logger.LogOutputWriter,
 		})
 
 		// Connect via RPC
