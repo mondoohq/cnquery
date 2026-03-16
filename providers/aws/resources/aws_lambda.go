@@ -268,7 +268,8 @@ func initAwsLambdaFunction(runtime *plugin.Runtime, args map[string]*llx.RawData
 		if region == nil {
 			return nil, nil, errors.New("region required to fetch lambda function")
 		}
-		arnVal = getLambdaArn(name.String(), region.String(), "")
+		conn := runtime.Connection.(*connection.AwsConnection)
+		arnVal = getLambdaArn(name.String(), region.String(), conn.AccountId())
 		if arnVal == "" {
 			return nil, nil, errors.New("arn required to fetch lambda function")
 		}
