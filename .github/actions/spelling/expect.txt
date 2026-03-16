@@ -254,6 +254,7 @@ Utc
 valkey
 vertexai
 VAULTNAME
+Vcpus
 vdcs
 vdev
 VGeneration

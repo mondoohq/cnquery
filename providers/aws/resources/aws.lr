@@ -3106,6 +3106,12 @@ aws.eventbridge @defaults("eventBuses") {
   eventBuses() []aws.eventbridge.eventBus
   // List of EventBridge rules across all event buses
   rules() []aws.eventbridge.rule
+  // List of EventBridge pipes
+  pipes() []aws.eventbridge.pipe
+  // List of EventBridge Scheduler schedules
+  schedules() []aws.eventbridge.schedule
+  // List of EventBridge Scheduler schedule groups
+  scheduleGroups() []aws.eventbridge.scheduleGroup
 }
 
 // Amazon EventBridge event bus
@@ -3148,6 +3154,82 @@ private aws.eventbridge.rule @defaults("arn name state") {
   tags() map[string]string
   // Targets for this rule
   targets() []dict
+}
+
+// Amazon EventBridge pipe
+private aws.eventbridge.pipe @defaults("arn name currentState") {
+  // ARN of the pipe
+  arn string
+  // Name of the pipe
+  name string
+  // Region of the pipe
+  region string
+  // Source resource ARN
+  source string
+  // Target resource ARN
+  target string
+  // Enrichment resource ARN
+  enrichment string
+  // Current state: RUNNING, STOPPED, CREATING, UPDATING, DELETING, STARTING, STOPPING, CREATE_FAILED, UPDATE_FAILED, START_FAILED, STOP_FAILED, DELETE_FAILED, CREATE_ROLLBACK_FAILED, DELETE_ROLLBACK_FAILED, UPDATE_ROLLBACK_FAILED
+  currentState string
+  // Desired state: RUNNING or STOPPED
+  desiredState string
+  // Reason for current state
+  stateReason string
+  // Description of the pipe
+  description() string
+  // IAM role associated with the pipe
+  iamRole() aws.iam.role
+  // Tags for the pipe
+  tags() map[string]string
+  // Date the pipe was created
+  createdAt time
+  // Date the pipe was last modified
+  updatedAt time
+}
+
+// Amazon EventBridge Scheduler schedule
+private aws.eventbridge.schedule @defaults("arn name state") {
+  // ARN of the schedule
+  arn string
+  // Name of the schedule
+  name string
+  // Region of the schedule
+  region string
+  // Schedule group name
+  groupName string
+  // State: ENABLED or DISABLED
+  state string
+  // Schedule expression (cron, rate, or at)
+  scheduleExpression() string
+  // Description of the schedule
+  description() string
+  // Target ARN
+  targetArn() string
+  // IAM role used for the target
+  iamRole() aws.iam.role
+  // KMS key used for encryption
+  kmsKey() aws.kms.key
+  // Date the schedule was created
+  createdAt time
+  // Date the schedule was last modified
+  updatedAt time
+}
+
+// Amazon EventBridge Scheduler schedule group
+private aws.eventbridge.scheduleGroup @defaults("arn name state") {
+  // ARN of the schedule group
+  arn string
+  // Name of the schedule group
+  name string
+  // Region of the schedule group
+  region string
+  // State: ACTIVE or DELETING
+  state string
+  // Date the schedule group was created
+  createdAt time
+  // Date the schedule group was last modified
+  updatedAt time
 }
 
 // Amazon CloudWatch
@@ -8539,5 +8621,331 @@ private aws.mq.broker @defaults("name engineType deploymentMode state region") {
   // Date the broker was created
   createdAt time
   // Tags for the broker
+  tags() map[string]string
+}
+
+// AWS Batch
+aws.batch @defaults("computeEnvironments") {
+  // List of Batch compute environments
+  computeEnvironments() []aws.batch.computeEnvironment
+  // List of Batch job queues
+  jobQueues() []aws.batch.jobQueue
+  // List of Batch job definitions
+  jobDefinitions() []aws.batch.jobDefinition
+}
+
+// AWS Batch compute environment
+private aws.batch.computeEnvironment @defaults("arn name state status") {
+  // ARN of the compute environment
+  arn string
+  // Name of the compute environment
+  name string
+  // Region of the compute environment
+  region string
+  // State: ENABLED or DISABLED
+  state string
+  // Status: CREATING, UPDATING, DELETING, DELETED, VALID, INVALID
+  status string
+  // Status reason
+  statusReason string
+  // Type: MANAGED or UNMANAGED
+  type string
+  // Container orchestration type: ECS or EKS
+  containerOrchestrationType string
+  // ECS cluster associated with the compute environment
+  ecsCluster() aws.ecs.cluster
+  // Maximum vCPUs for compute resources
+  maxVcpus() int
+  // Minimum vCPUs for compute resources
+  minVcpus() int
+  // Desired vCPUs for compute resources
+  desiredVcpus() int
+  // Compute resource type: EC2, SPOT, FARGATE, or FARGATE_SPOT
+  computeResourceType() string
+  // Instance types used by the compute environment
+  instanceTypes() []string
+  // Allocation strategy: BEST_FIT, BEST_FIT_PROGRESSIVE, SPOT_CAPACITY_OPTIMIZED, SPOT_PRICE_CAPACITY_OPTIMIZED
+  allocationStrategy() string
+  // Subnets for the compute resources
+  subnets() []aws.vpc.subnet
+  // Security groups for the compute resources
+  securityGroups() []aws.ec2.securitygroup
+  // IAM role for the compute environment
+  iamRole() aws.iam.role
+  // Tags for the compute environment
+  tags map[string]string
+}
+
+// AWS Batch job queue
+private aws.batch.jobQueue @defaults("arn name state status") {
+  // ARN of the job queue
+  arn string
+  // Name of the job queue
+  name string
+  // Region of the job queue
+  region string
+  // State: ENABLED or DISABLED
+  state string
+  // Status: CREATING, UPDATING, DELETING, DELETED, VALID, INVALID
+  status string
+  // Status reason
+  statusReason string
+  // Priority of the job queue (lower is higher priority)
+  priority int
+  // Compute environments attached to this queue (ordered by priority)
+  computeEnvironmentOrder() []dict
+  // Tags for the job queue
+  tags map[string]string
+}
+
+// AWS Batch job definition
+private aws.batch.jobDefinition @defaults("arn name type status") {
+  // ARN of the job definition
+  arn string
+  // Name of the job definition
+  name string
+  // Region of the job definition
+  region string
+  // Revision number
+  revision int
+  // Type: container, multinode
+  type string
+  // Status: ACTIVE or INACTIVE
+  status string
+  // Container properties
+  containerProperties() dict
+  // Node properties for multi-node jobs
+  nodeProperties() dict
+  // Retry strategy
+  retryStrategy() dict
+  // Timeout configuration
+  timeout() dict
+  // Tags for the job definition
+  tags map[string]string
+}
+
+// Amazon Lightsail
+aws.lightsail @defaults("instances") {
+  // List of Lightsail instances
+  instances() []aws.lightsail.instance
+  // List of Lightsail databases
+  databases() []aws.lightsail.database
+  // List of Lightsail load balancers
+  loadBalancers() []aws.lightsail.loadBalancer
+  // List of Lightsail buckets
+  buckets() []aws.lightsail.bucket
+}
+
+// Amazon Lightsail instance
+private aws.lightsail.instance @defaults("name arn state") {
+  // Name of the instance
+  name string
+  // ARN of the instance
+  arn string
+  // Region of the instance
+  region string
+  // Availability zone
+  availabilityZone string
+  // Blueprint ID (e.g., amazon_linux_2, ubuntu_20_04)
+  blueprintId string
+  // Blueprint name
+  blueprintName string
+  // Bundle ID (e.g., nano_3_0, micro_3_0)
+  bundleId string
+  // Instance state (running, stopped, pending, stopping)
+  state string
+  // Public IP address
+  publicIpAddress string
+  // Private IP address
+  privateIpAddress string
+  // IPv6 addresses
+  ipv6Addresses []string
+  // Whether the instance has a static IP
+  isStaticIp bool
+  // CPU count
+  cpuCount() int
+  // RAM size in GB
+  ramSizeInGb() float
+  // Username for SSH access
+  username string
+  // SSH key name
+  sshKeyName string
+  // Date the instance was created
+  createdAt time
+  // Tags for the instance
+  tags map[string]string
+  // Firewall rules (open ports, CIDRs, protocols)
+  firewallRules() []dict
+}
+
+// Amazon Lightsail relational database
+private aws.lightsail.database @defaults("name arn state") {
+  // Name of the database
+  name string
+  // ARN of the database
+  arn string
+  // Region of the database
+  region string
+  // Availability zone
+  availabilityZone string
+  // Database engine (mysql or postgres)
+  engine string
+  // Database engine version
+  engineVersion string
+  // State of the database
+  state string
+  // Master username
+  masterUsername string
+  // Master database name
+  masterDatabaseName string
+  // Whether backup retention is enabled
+  backupRetentionEnabled bool
+  // Preferred backup window
+  preferredBackupWindow string
+  // Preferred maintenance window
+  preferredMaintenanceWindow string
+  // Whether the database is publicly accessible
+  publiclyAccessible bool
+  // Endpoint address
+  endpointAddress() string
+  // Endpoint port
+  endpointPort() int
+  // CA certificate identifier
+  caCertificateIdentifier string
+  // Whether pending modified values exist
+  hasPendingModifiedValues() bool
+  // Date the database was created
+  createdAt time
+  // Tags for the database
+  tags map[string]string
+}
+
+// Amazon Lightsail load balancer
+private aws.lightsail.loadBalancer @defaults("name arn state") {
+  // Name of the load balancer
+  name string
+  // ARN of the load balancer
+  arn string
+  // Region of the load balancer
+  region string
+  // Availability zones
+  availabilityZones []string
+  // State: active, provisioning, active_impaired, failed, unknown
+  state string
+  // Protocol: HTTP_HTTPS or HTTP
+  protocol string
+  // Public ports
+  publicPorts []int
+  // Health check path
+  healthCheckPath string
+  // Instance port
+  instancePort int
+  // Instance health summary
+  instanceHealthSummary() []dict
+  // TLS certificate summaries
+  tlsCertificateSummaries() []dict
+  // Whether HTTPS redirection is enabled
+  httpsRedirectionEnabled() bool
+  // DNS name
+  dnsName string
+  // Date the load balancer was created
+  createdAt time
+  // Tags for the load balancer
+  tags map[string]string
+}
+
+// Amazon Lightsail bucket
+private aws.lightsail.bucket @defaults("name arn") {
+  // Name of the bucket
+  name string
+  // ARN of the bucket
+  arn string
+  // Region of the bucket
+  region string
+  // Bundle ID (storage plan)
+  bundleId string
+  // State of the bucket
+  state string
+  // Object versioning state: Enabled, Suspended, NeverEnabled
+  objectVersioning string
+  // Whether the bucket's bundle can be updated to a different storage plan
+  ableToUpdateBundle bool
+  // URL of the bucket
+  url string
+  // Access rules for the bucket
+  accessRules() dict
+  // AWS account IDs with read-only access to the bucket
+  readonlyAccessAccounts []string
+  // Lightsail resources that have access to the bucket
+  resourcesReceivingAccess() []dict
+  // Date the bucket was created
+  createdAt time
+  // Tags for the bucket
+  tags map[string]string
+}
+
+// AWS CloudFormation
+aws.cloudformation @defaults("stacks") {
+  // List of CloudFormation stacks
+  stacks() []aws.cloudformation.stack
+  // List of CloudFormation stack sets
+  stackSets() []aws.cloudformation.stackSet
+}
+
+// AWS CloudFormation stack
+private aws.cloudformation.stack @defaults("name status") {
+  // Unique ID of the stack
+  stackId string
+  // Name of the stack
+  name string
+  // Region of the stack
+  region string
+  // Current status of the stack
+  status string
+  // Reason for the current status
+  statusReason string
+  // Description of the stack
+  description string
+  // Whether termination protection is enabled
+  enableTerminationProtection bool
+  // Stack capabilities (e.g., CAPABILITY_IAM, CAPABILITY_NAMED_IAM)
+  capabilities []string
+  // SNS topics for stack notification
+  notificationTopics() []aws.sns.topic
+  // Drift detection status: DRIFTED, IN_SYNC, NOT_CHECKED, UNKNOWN
+  driftStatus string
+  // IAM role used to create/update the stack
+  iamRole() aws.iam.role
+  // Stack parameters
+  parameters() []dict
+  // Stack outputs
+  outputs() []dict
+  // Stack tags
+  tags map[string]string
+  // Date the stack was created
+  createdAt time
+  // Date the stack was last updated
+  updatedAt time
+}
+
+// AWS CloudFormation stack set
+private aws.cloudformation.stackSet @defaults("name status") {
+  // Unique ID of the stack set
+  stackSetId string
+  // Name of the stack set
+  name string
+  // Region of the stack set
+  region string
+  // Status: ACTIVE or DELETED
+  status string
+  // Description of the stack set
+  description string
+  // Permission model: SERVICE_MANAGED or SELF_MANAGED
+  permissionModel string
+  // Drift detection status
+  driftStatus string
+  // Whether auto deployment is enabled
+  autoDeploymentEnabled() bool
+  // Tags for the stack set
   tags() map[string]string
 }
