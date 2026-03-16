@@ -1390,21 +1390,31 @@ func (a *mqlAwsSagemakerDomain) defaultUserSettings() (map[string]any, error) {
 }
 
 func getSagemakerTags(ctx context.Context, svc *sagemaker.Client, arn *string) (map[string]any, error) {
-	resp, err := svc.ListTags(ctx, &sagemaker.ListTagsInput{ResourceArn: arn})
-	var respErr *http.ResponseError
-	if err != nil {
-		if errors.As(err, &respErr) {
-			if respErr.HTTPStatusCode() == 404 {
-				return nil, nil
+	tags := make(map[string]any)
+	var nextToken *string
+	for {
+		resp, err := svc.ListTags(ctx, &sagemaker.ListTagsInput{
+			ResourceArn: arn,
+			NextToken:   nextToken,
+		})
+		var respErr *http.ResponseError
+		if err != nil {
+			if errors.As(err, &respErr) {
+				if respErr.HTTPStatusCode() == 404 {
+					return nil, nil
+				}
+			}
+			return nil, err
+		}
+		for _, t := range resp.Tags {
+			if t.Key != nil && t.Value != nil {
+				tags[*t.Key] = *t.Value
 			}
 		}
-		return nil, err
-	}
-	tags := make(map[string]any)
-	for _, t := range resp.Tags {
-		if t.Key != nil && t.Value != nil {
-			tags[*t.Key] = *t.Value
+		if resp.NextToken == nil {
+			break
 		}
+		nextToken = resp.NextToken
 	}
 	return tags, nil
 }

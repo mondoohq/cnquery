@@ -241,30 +241,36 @@ func (a *mqlAwsConfig) getRules(conn *connection.AwsConnection) []*jobpool.Job {
 			ctx := context.Background()
 			res := []any{}
 
-			params := &configservice.DescribeConfigRulesInput{}
-			rules, err := svc.DescribeConfigRules(ctx, params)
-			if err != nil {
-				return nil, err
-			}
-			for _, r := range rules.ConfigRules {
-				jsonSource, err := convert.JsonToDict(r.Source)
+			var nextToken *string
+			for {
+				rules, err := svc.DescribeConfigRules(ctx, &configservice.DescribeConfigRulesInput{NextToken: nextToken})
 				if err != nil {
 					return nil, err
 				}
-				mqlRule, err := CreateResource(a.MqlRuntime, "aws.config.rule",
-					map[string]*llx.RawData{
-						"arn":         llx.StringDataPtr(r.ConfigRuleArn),
-						"name":        llx.StringDataPtr(r.ConfigRuleName),
-						"description": llx.StringDataPtr(r.Description),
-						"id":          llx.StringDataPtr(r.ConfigRuleId),
-						"source":      llx.MapData(jsonSource, types.Any),
-						"state":       llx.StringData(string(r.ConfigRuleState)),
-						"region":      llx.StringData(region),
-					})
-				if err != nil {
-					return nil, err
+				for _, r := range rules.ConfigRules {
+					jsonSource, err := convert.JsonToDict(r.Source)
+					if err != nil {
+						return nil, err
+					}
+					mqlRule, err := CreateResource(a.MqlRuntime, "aws.config.rule",
+						map[string]*llx.RawData{
+							"arn":         llx.StringDataPtr(r.ConfigRuleArn),
+							"name":        llx.StringDataPtr(r.ConfigRuleName),
+							"description": llx.StringDataPtr(r.Description),
+							"id":          llx.StringDataPtr(r.ConfigRuleId),
+							"source":      llx.MapData(jsonSource, types.Any),
+							"state":       llx.StringData(string(r.ConfigRuleState)),
+							"region":      llx.StringData(region),
+						})
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlRule)
 				}
-				res = append(res, mqlRule)
+				if rules.NextToken == nil {
+					break
+				}
+				nextToken = rules.NextToken
 			}
 			return jobpool.JobResult(res), nil
 		}

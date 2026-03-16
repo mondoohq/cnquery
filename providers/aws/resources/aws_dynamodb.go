@@ -337,11 +337,23 @@ func (a *mqlAwsDynamodbTable) backups() ([]any, error) {
 	svc := conn.Dynamodb(region)
 	ctx := context.Background()
 
-	listBackupsResp, err := svc.ListBackups(ctx, &dynamodb.ListBackupsInput{TableName: &tableName})
-	if err != nil {
-		return nil, errors.Wrap(err, "could not gather aws dynamodb backups")
+	var allBackups []ddtypes.BackupSummary
+	var exclusiveStartBackupArn *string
+	for {
+		listBackupsResp, err := svc.ListBackups(ctx, &dynamodb.ListBackupsInput{
+			TableName:               &tableName,
+			ExclusiveStartBackupArn: exclusiveStartBackupArn,
+		})
+		if err != nil {
+			return nil, errors.Wrap(err, "could not gather aws dynamodb backups")
+		}
+		allBackups = append(allBackups, listBackupsResp.BackupSummaries...)
+		if listBackupsResp.LastEvaluatedBackupArn == nil {
+			break
+		}
+		exclusiveStartBackupArn = listBackupsResp.LastEvaluatedBackupArn
 	}
-	return convert.JsonToDictSlice(listBackupsResp.BackupSummaries)
+	return convert.JsonToDictSlice(allBackups)
 }
 
 func (a *mqlAwsDynamodbTable) tags() (map[string]any, error) {
@@ -425,22 +437,28 @@ func (a *mqlAwsDynamodb) globalTables() ([]any, error) {
 	svc := conn.Dynamodb("")
 	ctx := context.Background()
 
-	// no pagination required
-	listGlobalTablesResp, err := svc.ListGlobalTables(ctx, &dynamodb.ListGlobalTablesInput{})
-	if err != nil {
-		return nil, errors.Wrap(err, "could not gather aws dynamodb global tables")
-	}
 	res := []any{}
-	for _, table := range listGlobalTablesResp.GlobalTables {
-		mqlTable, err := CreateResource(a.MqlRuntime, "aws.dynamodb.globaltable",
-			map[string]*llx.RawData{
-				"arn":  llx.StringData(fmt.Sprintf(dynamoGlobalTableArnPattern, conn.AccountId(), convert.ToValue(table.GlobalTableName))),
-				"name": llx.StringDataPtr(table.GlobalTableName),
-			})
+	var exclusiveStartGlobalTableName *string
+	for {
+		listGlobalTablesResp, err := svc.ListGlobalTables(ctx, &dynamodb.ListGlobalTablesInput{ExclusiveStartGlobalTableName: exclusiveStartGlobalTableName})
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "could not gather aws dynamodb global tables")
 		}
-		res = append(res, mqlTable)
+		for _, table := range listGlobalTablesResp.GlobalTables {
+			mqlTable, err := CreateResource(a.MqlRuntime, "aws.dynamodb.globaltable",
+				map[string]*llx.RawData{
+					"arn":  llx.StringData(fmt.Sprintf(dynamoGlobalTableArnPattern, conn.AccountId(), convert.ToValue(table.GlobalTableName))),
+					"name": llx.StringDataPtr(table.GlobalTableName),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlTable)
+		}
+		if listGlobalTablesResp.LastEvaluatedGlobalTableName == nil {
+			break
+		}
+		exclusiveStartGlobalTableName = listGlobalTablesResp.LastEvaluatedGlobalTableName
 	}
 	return res, nil
 }
@@ -478,56 +496,62 @@ func (a *mqlAwsDynamodb) getTables(conn *connection.AwsConnection) []*jobpool.Jo
 			ctx := context.Background()
 			res := []any{}
 
-			// no pagination required
-			listTablesResp, err := svc.ListTables(ctx, &dynamodb.ListTablesInput{})
-			if err != nil {
-				if Is400AccessDeniedError(err) {
-					log.Warn().Str("region", region).Msg("error accessing region for AWS API")
-					return res, nil
-				}
-				return nil, errors.Wrap(err, "could not gather aws dynamodb tables")
-			}
-			for _, tableName := range listTablesResp.TableNames {
-				// call describe table to get real info/details about the table
-				table, err := svc.DescribeTable(ctx, &dynamodb.DescribeTableInput{TableName: &tableName})
+			var exclusiveStartTableName *string
+			for {
+				listTablesResp, err := svc.ListTables(ctx, &dynamodb.ListTablesInput{ExclusiveStartTableName: exclusiveStartTableName})
 				if err != nil {
-					return nil, errors.Wrap(err, "could not get aws dynamodb table")
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, errors.Wrap(err, "could not gather aws dynamodb tables")
 				}
-				sseDict, err := convert.JsonToDict(table.Table.SSEDescription)
-				if err != nil {
-					return nil, err
-				}
-				throughputDict, err := convert.JsonToDict(table.Table.ProvisionedThroughput)
-				if err != nil {
-					return nil, err
-				}
+				for _, tableName := range listTablesResp.TableNames {
+					// call describe table to get real info/details about the table
+					table, err := svc.DescribeTable(ctx, &dynamodb.DescribeTableInput{TableName: &tableName})
+					if err != nil {
+						return nil, errors.Wrap(err, "could not get aws dynamodb table")
+					}
+					sseDict, err := convert.JsonToDict(table.Table.SSEDescription)
+					if err != nil {
+						return nil, err
+					}
+					throughputDict, err := convert.JsonToDict(table.Table.ProvisionedThroughput)
+					if err != nil {
+						return nil, err
+					}
 
-				mqlTable, err := CreateResource(a.MqlRuntime, "aws.dynamodb.table",
-					map[string]*llx.RawData{
-						"arn":                       llx.StringData(fmt.Sprintf(dynamoTableArnPattern, region, conn.AccountId(), tableName)),
-						"name":                      llx.StringData(tableName),
-						"region":                    llx.StringData(region),
-						"sseDescription":            llx.DictData(sseDict),
-						"provisionedThroughput":     llx.DictData(throughputDict),
-						"createdAt":                 llx.TimeDataPtr(table.Table.CreationDateTime),
-						"deletionProtectionEnabled": llx.BoolDataPtr(table.Table.DeletionProtectionEnabled),
-						"globalTableVersion":        llx.StringDataPtr(table.Table.GlobalTableVersion),
-						"id":                        llx.StringDataPtr(table.Table.TableId),
-						"sizeBytes":                 llx.IntDataPtr(table.Table.TableSizeBytes),
-						"status":                    llx.StringData(string(table.Table.TableStatus)),
-						"items":                     llx.IntDataPtr(table.Table.ItemCount),
-						"latestStreamArn":           llx.StringDataPtr(table.Table.LatestStreamArn),
-						"latestStreamLabel":         llx.StringDataPtr(table.Table.LatestStreamLabel),
-						"tableClass":                llx.StringData(tableClassFromSummary(table.Table.TableClassSummary)),
-						"streamEnabled":             llx.BoolData(streamEnabledFromSpec(table.Table.StreamSpecification)),
-						"streamViewType":            llx.StringData(streamViewTypeFromSpec(table.Table.StreamSpecification)),
-						"billingMode":               llx.StringData(billingModeFromSummary(table.Table.BillingModeSummary)),
-						"replicaRegions":            llx.ArrayData(replicaRegionsFromDescriptions(table.Table.Replicas), types.String),
-					})
-				if err != nil {
-					return nil, err
+					mqlTable, err := CreateResource(a.MqlRuntime, "aws.dynamodb.table",
+						map[string]*llx.RawData{
+							"arn":                       llx.StringData(fmt.Sprintf(dynamoTableArnPattern, region, conn.AccountId(), tableName)),
+							"name":                      llx.StringData(tableName),
+							"region":                    llx.StringData(region),
+							"sseDescription":            llx.DictData(sseDict),
+							"provisionedThroughput":     llx.DictData(throughputDict),
+							"createdAt":                 llx.TimeDataPtr(table.Table.CreationDateTime),
+							"deletionProtectionEnabled": llx.BoolDataPtr(table.Table.DeletionProtectionEnabled),
+							"globalTableVersion":        llx.StringDataPtr(table.Table.GlobalTableVersion),
+							"id":                        llx.StringDataPtr(table.Table.TableId),
+							"sizeBytes":                 llx.IntDataPtr(table.Table.TableSizeBytes),
+							"status":                    llx.StringData(string(table.Table.TableStatus)),
+							"items":                     llx.IntDataPtr(table.Table.ItemCount),
+							"latestStreamArn":           llx.StringDataPtr(table.Table.LatestStreamArn),
+							"latestStreamLabel":         llx.StringDataPtr(table.Table.LatestStreamLabel),
+							"tableClass":                llx.StringData(tableClassFromSummary(table.Table.TableClassSummary)),
+							"streamEnabled":             llx.BoolData(streamEnabledFromSpec(table.Table.StreamSpecification)),
+							"streamViewType":            llx.StringData(streamViewTypeFromSpec(table.Table.StreamSpecification)),
+							"billingMode":               llx.StringData(billingModeFromSummary(table.Table.BillingModeSummary)),
+							"replicaRegions":            llx.ArrayData(replicaRegionsFromDescriptions(table.Table.Replicas), types.String),
+						})
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlTable)
 				}
-				res = append(res, mqlTable)
+				if listTablesResp.LastEvaluatedTableName == nil {
+					break
+				}
+				exclusiveStartTableName = listTablesResp.LastEvaluatedTableName
 			}
 			return jobpool.JobResult(res), nil
 		}

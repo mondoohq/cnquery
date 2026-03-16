@@ -239,11 +239,21 @@ func (a *mqlAwsRedshiftCluster) parameters() ([]any, error) {
 	res := []redshifttypes.Parameter{}
 	for _, name := range clusterGroupNames {
 		stringName := name.(string)
-		params, err := svc.DescribeClusterParameters(ctx, &redshift.DescribeClusterParametersInput{ParameterGroupName: &stringName})
-		if err != nil {
-			return nil, err
+		var marker *string
+		for {
+			params, err := svc.DescribeClusterParameters(ctx, &redshift.DescribeClusterParametersInput{
+				ParameterGroupName: &stringName,
+				Marker:             marker,
+			})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, params.Parameters...)
+			if params.Marker == nil {
+				break
+			}
+			marker = params.Marker
 		}
-		res = append(res, params.Parameters...)
 	}
 	return convert.JsonToDictSlice(res)
 }

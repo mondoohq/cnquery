@@ -296,12 +296,25 @@ func (a *mqlAwsEcsCluster) containerInstances() ([]any, error) {
 	ctx := context.Background()
 	res := []any{}
 
-	params := &ecsservice.ListContainerInstancesInput{Cluster: &clustera}
-	containerInstances, err := svc.ListContainerInstances(ctx, params)
-	if err != nil {
-		log.Error().Err(err).Msg("cannot list container instances") // no fail
-	} else if len(containerInstances.ContainerInstanceArns) > 0 {
-		containerInstancesDetail, err := svc.DescribeContainerInstances(ctx, &ecsservice.DescribeContainerInstancesInput{Cluster: &clustera, ContainerInstances: containerInstances.ContainerInstanceArns})
+	var allContainerInstanceArns []string
+	var nextToken *string
+	for {
+		containerInstances, err := svc.ListContainerInstances(ctx, &ecsservice.ListContainerInstancesInput{
+			Cluster:   &clustera,
+			NextToken: nextToken,
+		})
+		if err != nil {
+			log.Error().Err(err).Msg("cannot list container instances")
+			break
+		}
+		allContainerInstanceArns = append(allContainerInstanceArns, containerInstances.ContainerInstanceArns...)
+		if containerInstances.NextToken == nil {
+			break
+		}
+		nextToken = containerInstances.NextToken
+	}
+	if len(allContainerInstanceArns) > 0 {
+		containerInstancesDetail, err := svc.DescribeContainerInstances(ctx, &ecsservice.DescribeContainerInstancesInput{Cluster: &clustera, ContainerInstances: allContainerInstanceArns})
 		if err == nil {
 			for _, ci := range containerInstancesDetail.ContainerInstances {
 				// container instance assets
