@@ -6,7 +6,6 @@ package plugin
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"runtime/debug"
 	"unicode/utf8"
 
@@ -88,15 +87,15 @@ func (m *GRPCClient) StoreData(req *StoreReq) (*StoreRes, error) {
 	return m.client.StoreData(context.Background(), req)
 }
 
-// recoverPanic converts a panic into a gRPC Internal error with the panic
-// message and stack trace. This prevents the provider subprocess from crashing
-// and sends actionable error information back to the caller.
+// recoverPanic converts a panic into a gRPC Internal error. The full stack
+// trace is logged locally; only a short message is sent over the wire.
+// The message is prefixed with "panic in provider " so the caller can
+// distinguish recovered panics from other Internal errors.
 func recoverPanic(method string, retErr *error) {
 	if r := recover(); r != nil {
 		stack := debug.Stack()
-		msg := fmt.Sprintf("panic in provider %s: %v\n%s", method, r, stack)
 		log.Error().Str("method", method).Interface("panic", r).Str("stack", string(stack)).Msg("recovered panic in provider")
-		*retErr = status.Errorf(codes.Internal, "%s", msg)
+		*retErr = status.Errorf(codes.Internal, "panic in provider %s: %v", method, r)
 	}
 }
 

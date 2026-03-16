@@ -495,17 +495,13 @@ func (r *Runtime) handlePluginError(err error, provider *ConnectedProvider) (boo
 
 	switch st.Code() {
 	case codes.Internal:
-		// Happens when a panic is recovered inside the provider.
-		// The provider is still alive — log the full panic + stack trace
-		// but return a short user-facing error.
-		log.Error().Str("provider", provider.Instance.Name).Msg(st.Message())
-		// Extract just the first line (panic value) for the user-facing error;
-		// the full stack trace is already in the log above.
-		panicLine := st.Message()
-		if idx := strings.Index(panicLine, "\n"); idx > 0 {
-			panicLine = panicLine[:idx]
+		// A recovered panic in the provider sends an Internal error prefixed
+		// with "panic in provider ". Only apply panic-specific handling when
+		// this prefix is present; other Internal errors fall through.
+		if strings.HasPrefix(st.Message(), "panic in provider ") {
+			log.Error().Str("provider", provider.Instance.Name).Msg(st.Message())
+			return true, errors.New("the '" + provider.Instance.Name + "' provider panicked: " + st.Message())
 		}
-		return true, errors.New("the '" + provider.Instance.Name + "' provider panicked: " + panicLine)
 
 	case codes.Unavailable:
 		// Happens when the plugin crashes.

@@ -24,8 +24,8 @@ func TestRecoverPanic(t *testing.T) {
 		st, ok := status.FromError(err)
 		require.True(t, ok)
 		assert.Equal(t, codes.Internal, st.Code())
-		assert.Contains(t, st.Message(), "panic in provider TestMethod: something went wrong")
-		assert.Contains(t, st.Message(), "goroutine") // stack trace present
+		assert.Equal(t, "panic in provider TestMethod: something went wrong", st.Message())
+		assert.NotContains(t, st.Message(), "goroutine") // stack trace stays in log, not on the wire
 	})
 
 	t.Run("recovers nil pointer panic", func(t *testing.T) {
