@@ -2052,6 +2052,10 @@ func (g *mqlGcpProjectComputeService) routers() ([]any, error) {
 	wg.Add(len(regions.Data))
 	mux := &sync.Mutex{}
 
+	var (
+		result error
+		errMux sync.Mutex
+	)
 	for i := range regions.Data {
 		r := regions.Data[i].(*mqlGcpProjectComputeServiceRegion)
 		regionName := r.GetName()
@@ -2075,13 +2079,16 @@ func (g *mqlGcpProjectComputeService) routers() ([]any, error) {
 				return nil
 			}); err != nil {
 				log.Error().Err(err).Send()
+				errMux.Lock()
+				result = err
+				errMux.Unlock()
 			}
 			wg.Done()
 		}(computeSvc, projectId, r, regionName.Data)
 	}
 
 	wg.Wait()
-	return res, nil
+	return res, result
 }
 
 func (g *mqlGcpProjectComputeService) backendServices() ([]any, error) {
