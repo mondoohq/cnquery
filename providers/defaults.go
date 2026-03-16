@@ -80,7 +80,7 @@ var DefaultProviders Providers = map[string]*Provider{
 				{
 					Name:  "bigip",
 					Use:   "bigip",
-					Short: "a BIG-IP load balancer",
+					Short: "an F5 BIG-IP load balancer",
 				},
 			},
 		},
