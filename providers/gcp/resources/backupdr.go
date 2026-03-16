@@ -106,7 +106,7 @@ func (g *mqlGcpProjectBackupdrService) managementServers() ([]any, error) {
 			"networks":       llx.ArrayData(networks, types.Dict),
 			"managementUri":  llx.DictData(managementUri),
 			"oauth2ClientId": llx.StringData(server.Oauth2ClientId),
-			"satisfiesPzs":   llx.BoolData(server.GetSatisfiesPzs().GetValue()),
+			"satisfiesPzs":   llx.BoolDataPtr(boolValueToPtr(server.SatisfiesPzs)),
 			"etag":           llx.StringData(server.Etag),
 			"labels":         llx.MapData(convert.MapToInterfaceMap(server.Labels), types.String),
 			"createdAt":      llx.TimeDataPtr(timestampAsTimePtr(server.CreateTime)),
@@ -300,7 +300,6 @@ func (g *mqlGcpProjectBackupdrService) backupPlans() ([]any, error) {
 			"description":               llx.StringData(plan.Description),
 			"state":                     llx.StringData(plan.State.String()),
 			"resourceType":              llx.StringData(plan.ResourceType),
-			"backupVault":               llx.StringData(plan.BackupVault),
 			"backupVaultServiceAccount": llx.StringData(plan.BackupVaultServiceAccount),
 			"labels":                    llx.MapData(convert.MapToInterfaceMap(plan.Labels), types.String),
 			"backupRules":               llx.ArrayData(backupRules, types.Dict),
@@ -311,11 +310,31 @@ func (g *mqlGcpProjectBackupdrService) backupPlans() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlP := mqlPlan.(*mqlGcpProjectBackupdrServiceBackupPlan)
+		mqlP.cacheBackupVaultName = plan.BackupVault
 		res = append(res, mqlPlan)
 	}
 	return res, nil
 }
 
+type mqlGcpProjectBackupdrServiceBackupPlanInternal struct {
+	cacheBackupVaultName string
+}
+
 func (g *mqlGcpProjectBackupdrServiceBackupPlan) id() (string, error) {
 	return g.Name.Data, g.Name.Error
+}
+
+func (g *mqlGcpProjectBackupdrServiceBackupPlan) backupVault() (*mqlGcpProjectBackupdrServiceBackupVault, error) {
+	if g.cacheBackupVaultName == "" {
+		g.BackupVault.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.backupdrService.backupVault", map[string]*llx.RawData{
+		"name": llx.StringData(g.cacheBackupVaultName),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectBackupdrServiceBackupVault), nil
 }

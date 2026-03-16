@@ -5377,8 +5377,8 @@ private gcp.project.backupdrService.backupPlan @defaults("name state") {
   state string
   // Resource type
   resourceType string
-  // Backup vault resource name
-  backupVault string
+  // Backup vault
+  backupVault() gcp.project.backupdrService.backupVault
   // Backup vault service account
   backupVaultServiceAccount string
   // Labels

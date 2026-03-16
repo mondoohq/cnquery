@@ -16,6 +16,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 // protoToDict converts a protobuf message to a map[string]any suitable for use as a dict field.
@@ -65,6 +66,14 @@ func timestampAsTimePtr(t *timestamppb.Timestamp) *time.Time {
 	}
 	tm := t.AsTime()
 	return &tm
+}
+
+func boolValueToPtr(b *wrapperspb.BoolValue) *bool {
+	if b == nil {
+		return nil
+	}
+	v := b.GetValue()
+	return &v
 }
 
 // parseResourceName returns the name of a resource from either a full path or just the name.

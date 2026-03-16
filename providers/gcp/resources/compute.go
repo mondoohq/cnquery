@@ -785,7 +785,7 @@ func (g *mqlGcpProjectComputeServiceDisk) sourceImage() (*mqlGcpProjectComputeSe
 		return nil, errors.New("invalid source image URL: " + url)
 	}
 	res, err := NewResource(g.MqlRuntime, "gcp.project.computeService.image", map[string]*llx.RawData{
-		"name":      llx.StringData(parts[4]),
+		"name":      llx.StringData(parts[len(parts)-1]),
 		"projectId": llx.StringData(parts[1]),
 	})
 	if err != nil {
@@ -810,7 +810,7 @@ func (g *mqlGcpProjectComputeServiceDisk) sourceSnapshot() (*mqlGcpProjectComput
 		return nil, errors.New("invalid source snapshot URL: " + url)
 	}
 	res, err := NewResource(g.MqlRuntime, "gcp.project.computeService.snapshot", map[string]*llx.RawData{
-		"name": llx.StringData(parts[4]),
+		"name": llx.StringData(parts[len(parts)-1]),
 	})
 	if err != nil {
 		return nil, err
@@ -1270,7 +1270,7 @@ func (g *mqlGcpProjectComputeServiceImage) sourceImage() (*mqlGcpProjectComputeS
 		return nil, errors.New("invalid source image URL: " + url)
 	}
 	res, err := NewResource(g.MqlRuntime, "gcp.project.computeService.image", map[string]*llx.RawData{
-		"name":      llx.StringData(parts[4]),
+		"name":      llx.StringData(parts[len(parts)-1]),
 		"projectId": llx.StringData(parts[1]),
 	})
 	if err != nil {
@@ -1295,7 +1295,7 @@ func (g *mqlGcpProjectComputeServiceImage) sourceSnapshot() (*mqlGcpProjectCompu
 		return nil, errors.New("invalid source snapshot URL: " + url)
 	}
 	res, err := NewResource(g.MqlRuntime, "gcp.project.computeService.snapshot", map[string]*llx.RawData{
-		"name": llx.StringData(parts[4]),
+		"name": llx.StringData(parts[len(parts)-1]),
 	})
 	if err != nil {
 		return nil, err

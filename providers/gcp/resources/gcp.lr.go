@@ -7897,7 +7897,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlGcpProjectBackupdrServiceBackupPlan).GetResourceType()).ToDataRes(types.String)
 	},
 	"gcp.project.backupdrService.backupPlan.backupVault": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectBackupdrServiceBackupPlan).GetBackupVault()).ToDataRes(types.String)
+		return (r.(*mqlGcpProjectBackupdrServiceBackupPlan).GetBackupVault()).ToDataRes(types.Resource("gcp.project.backupdrService.backupVault"))
 	},
 	"gcp.project.backupdrService.backupPlan.backupVaultServiceAccount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBackupdrServiceBackupPlan).GetBackupVaultServiceAccount()).ToDataRes(types.String)
@@ -17913,7 +17913,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"gcp.project.backupdrService.backupPlan.backupVault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectBackupdrServiceBackupPlan).BackupVault, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlGcpProjectBackupdrServiceBackupPlan).BackupVault, ok = plugin.RawToTValue[*mqlGcpProjectBackupdrServiceBackupVault](v.Value, v.Error)
 		return
 	},
 	"gcp.project.backupdrService.backupPlan.backupVaultServiceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -41249,12 +41249,12 @@ func (c *mqlGcpProjectBackupdrServiceDataSource) GetUpdatedAt() *plugin.TValue[*
 type mqlGcpProjectBackupdrServiceBackupPlan struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectBackupdrServiceBackupPlanInternal it will be used here
+	mqlGcpProjectBackupdrServiceBackupPlanInternal
 	Name                      plugin.TValue[string]
 	Description               plugin.TValue[string]
 	State                     plugin.TValue[string]
 	ResourceType              plugin.TValue[string]
-	BackupVault               plugin.TValue[string]
+	BackupVault               plugin.TValue[*mqlGcpProjectBackupdrServiceBackupVault]
 	BackupVaultServiceAccount plugin.TValue[string]
 	Labels                    plugin.TValue[map[string]any]
 	BackupRules               plugin.TValue[[]any]
@@ -41316,8 +41316,20 @@ func (c *mqlGcpProjectBackupdrServiceBackupPlan) GetResourceType() *plugin.TValu
 	return &c.ResourceType
 }
 
-func (c *mqlGcpProjectBackupdrServiceBackupPlan) GetBackupVault() *plugin.TValue[string] {
-	return &c.BackupVault
+func (c *mqlGcpProjectBackupdrServiceBackupPlan) GetBackupVault() *plugin.TValue[*mqlGcpProjectBackupdrServiceBackupVault] {
+	return plugin.GetOrCompute[*mqlGcpProjectBackupdrServiceBackupVault](&c.BackupVault, func() (*mqlGcpProjectBackupdrServiceBackupVault, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.backupdrService.backupPlan", c.__id, "backupVault")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectBackupdrServiceBackupVault), nil
+			}
+		}
+
+		return c.backupVault()
+	})
 }
 
 func (c *mqlGcpProjectBackupdrServiceBackupPlan) GetBackupVaultServiceAccount() *plugin.TValue[string] {
