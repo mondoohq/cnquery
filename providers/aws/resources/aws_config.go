@@ -247,13 +247,13 @@ func (a *mqlAwsConfig) getRules(conn *connection.AwsConnection) []*jobpool.Job {
 			ctx := context.Background()
 			res := []any{}
 
-			var nextToken *string
-			for {
-				rules, err := svc.DescribeConfigRules(ctx, &configservice.DescribeConfigRulesInput{NextToken: nextToken})
+			paginator := configservice.NewDescribeConfigRulesPaginator(svc, &configservice.DescribeConfigRulesInput{})
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
 				if err != nil {
 					return nil, err
 				}
-				for _, r := range rules.ConfigRules {
+				for _, r := range page.ConfigRules {
 					jsonSource, err := convert.JsonToDict(r.Source)
 					if err != nil {
 						return nil, err
@@ -273,10 +273,6 @@ func (a *mqlAwsConfig) getRules(conn *connection.AwsConnection) []*jobpool.Job {
 					}
 					res = append(res, mqlRule)
 				}
-				if rules.NextToken == nil {
-					break
-				}
-				nextToken = rules.NextToken
 			}
 			return jobpool.JobResult(res), nil
 		}

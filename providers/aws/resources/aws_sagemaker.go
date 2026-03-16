@@ -1391,12 +1391,9 @@ func (a *mqlAwsSagemakerDomain) defaultUserSettings() (map[string]any, error) {
 
 func getSagemakerTags(ctx context.Context, svc *sagemaker.Client, arn *string) (map[string]any, error) {
 	tags := make(map[string]any)
-	var nextToken *string
-	for {
-		resp, err := svc.ListTags(ctx, &sagemaker.ListTagsInput{
-			ResourceArn: arn,
-			NextToken:   nextToken,
-		})
+	paginator := sagemaker.NewListTagsPaginator(svc, &sagemaker.ListTagsInput{ResourceArn: arn})
+	for paginator.HasMorePages() {
+		resp, err := paginator.NextPage(ctx)
 		var respErr *http.ResponseError
 		if err != nil {
 			if errors.As(err, &respErr) {
@@ -1411,10 +1408,6 @@ func getSagemakerTags(ctx context.Context, svc *sagemaker.Client, arn *string) (
 				tags[*t.Key] = *t.Value
 			}
 		}
-		if resp.NextToken == nil {
-			break
-		}
-		nextToken = resp.NextToken
 	}
 	return tags, nil
 }
