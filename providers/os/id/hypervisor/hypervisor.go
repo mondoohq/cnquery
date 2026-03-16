@@ -45,7 +45,7 @@ type hyper struct {
 // Hypervisor returns the hypervisor of the system.
 func Hypervisor(conn shared.Connection, pf *inventory.Platform) (hypervisor string, ok bool) {
 	if !pf.IsFamily(inventory.FAMILY_UNIX) && !pf.IsFamily(inventory.FAMILY_WINDOWS) {
-		log.Warn().Msg("your platform is not supported for hypervisor detection")
+		log.Debug().Msg("your platform is not supported for hypervisor detection")
 		return
 	}
 

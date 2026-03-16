@@ -23,7 +23,7 @@ import (
 // On BSD systems (FreeBSD, OpenBSD, NetBSD, DragonFlyBSD) we use `hostname` without the -f flag since BSD doesn't support it.
 func Hostname(conn shared.Connection, pf *inventory.Platform) (string, bool) {
 	if !pf.IsFamily(inventory.FAMILY_UNIX) && !pf.IsFamily(inventory.FAMILY_WINDOWS) {
-		log.Warn().Msg("your platform is not supported for hostname detection")
+		log.Debug().Msg("your platform is not supported for hostname detection")
 		return "", false
 	}
 
