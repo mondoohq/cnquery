@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"sync"
 
 	aiplatform "cloud.google.com/go/aiplatform/apiv1"
@@ -19,6 +18,8 @@ import (
 	"go.mondoo.com/mql/v13/types"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // vertexaiRegions lists the known Vertex AI regions to iterate when listing resources.
@@ -68,10 +69,16 @@ func vertexaiEndpoint(region string) string {
 // isVertexAIRegionSkippable returns true for errors indicating the Vertex AI API
 // is not enabled or the region is not supported for this project.
 func isVertexAIRegionSkippable(err error) bool {
-	msg := err.Error()
-	return strings.Contains(msg, "is not supported") ||
-		strings.Contains(msg, "not enabled") ||
-		strings.Contains(msg, "PERMISSION_DENIED")
+	if s, ok := status.FromError(err); ok {
+		switch s.Code() {
+		case codes.PermissionDenied, codes.Unimplemented:
+			return true
+		case codes.InvalidArgument, codes.NotFound:
+			// "not enabled" and "is not supported" surface as these codes
+			return true
+		}
+	}
+	return false
 }
 
 type mqlGcpProjectVertexaiServiceInternal struct {
@@ -479,9 +486,11 @@ func (g *mqlGcpProjectVertexaiService) datasets() ([]any, error) {
 					return nil, false, err
 				}
 
-				metadata, err := protoToDict(ds.Metadata)
-				if err != nil {
-					return nil, false, err
+				// Dataset.Metadata is a *structpb.Value which can be any JSON type
+				// (struct, list, string, etc.), so use AsInterface() instead of protoToDict.
+				var metadata any
+				if ds.Metadata != nil {
+					metadata = ds.Metadata.AsInterface()
 				}
 				encryptionSpec, err := protoToDict(ds.EncryptionSpec)
 				if err != nil {
