@@ -162,8 +162,8 @@ func checkGoModUpdate(providerPath string, updateStrategy UpdateStrategy, ignore
 		if require.Syntax.Before != nil {
 			for i := range require.Syntax.Before {
 				comment := require.Syntax.Before[i].Token
-				if strings.HasPrefix(comment, "// pin") {
-					version := strings.TrimSpace(strings.TrimPrefix(comment, "// pin"))
+				if after, ok := strings.CutPrefix(comment, "// pin"); ok {
+					version := strings.TrimSpace(after)
 					log.Info().Msgf("Found pin comment for %s: %s", require.Mod.Path, version)
 					modPath = require.Mod.Path + "@" + version
 				}
@@ -558,12 +558,36 @@ func commitChanges(confs updateConfs) error {
 	return nil
 }
 
-func titleOf(msg string) string {
-	i := strings.Index(msg, "\n")
-	if i != -1 {
-		return msg[0:i]
+// findVersionCommitHash uses git blame to find the commit that last changed the
+// Version line in the provider's config file. This is more reliable than
+// searching commit titles, which may not follow any naming convention.
+func findVersionCommitHash(repo *git.Repository, conf *providerConf) plumbing.Hash {
+	headRef, err := repo.Head()
+	if err != nil {
+		log.Warn().Err(err).Msg("failed to get HEAD")
+		return plumbing.ZeroHash
 	}
-	return msg
+
+	headCommit, err := repo.CommitObject(headRef.Hash())
+	if err != nil {
+		log.Warn().Err(err).Msg("failed to get HEAD commit")
+		return plumbing.ZeroHash
+	}
+
+	result, err := git.Blame(headCommit, conf.path)
+	if err != nil {
+		log.Warn().Err(err).Msg("git blame failed, assuming first version commit")
+		return plumbing.ZeroHash
+	}
+
+	// Find the line containing "Version:" and return the commit hash that last touched it.
+	for _, line := range result.Lines {
+		if strings.Contains(line.Text, "Version:") {
+			return line.Hash
+		}
+	}
+
+	return plumbing.ZeroHash
 }
 
 func countChangesSince(conf *providerConf, repoPath string) int {
@@ -571,6 +595,15 @@ func countChangesSince(conf *providerConf, repoPath string) int {
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to open git repo")
 	}
+
+	versionHash := findVersionCommitHash(repo, conf)
+	if versionHash.IsZero() {
+		log.Warn().Msg("could not find version commit via blame => assuming provider needs update")
+		return 1
+	}
+
+	// Walk commits that touched the provider directory from HEAD,
+	// counting how many come before (after in time) the version commit.
 	iter, err := repo.Log(&git.LogOptions{
 		PathFilter: func(p string) bool {
 			return strings.HasPrefix(p, repoPath)
@@ -580,33 +613,15 @@ func countChangesSince(conf *providerConf, repoPath string) int {
 		log.Fatal().Err(err).Msg("failed to iterate git history")
 	}
 
-	if !fastMode {
-		fmt.Print("crawling git history...")
-	}
-
-	var found *object.Commit
 	var count int
 	for c, err := iter.Next(); err == nil; c, err = iter.Next() {
-		if !fastMode {
-			fmt.Print(".")
-		}
-
-		if strings.HasPrefix(c.Message, titlePrefix) && strings.Contains(titleOf(c.Message), " "+conf.title()) {
-			found = c
+		if c.Hash == versionHash {
 			break
 		}
-
 		count++
 		if fastMode {
 			return count
 		}
-	}
-	if !fastMode {
-		fmt.Println()
-	}
-
-	if found == nil {
-		log.Warn().Msg("looks like there is no previous version in your commit history => we assume this is the first version commit")
 	}
 	return count
 }
