@@ -113,6 +113,7 @@ func (a *mqlAzureSubscriptionStorageService) accounts() ([]any, error) {
 func (a *mqlAzureSubscriptionStorageServiceAccount) containers() ([]any, error) {
 	// Data Lake Storage Gen2 (HNS-enabled) accounts don't support the Blob containers API.
 	if a.GetIsHnsEnabled().Data {
+		a.Containers.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
 
