@@ -155,7 +155,11 @@ func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 		connectAsset.Asset = discoveredAsset
 	}
 
-	log.Info().Msgf("connected to %s", connectAsset.Runtime.Provider.Connection.Asset.Platform.Title)
+	if connectAsset.Runtime != nil && connectAsset.Runtime.Provider.Connection != nil &&
+		connectAsset.Runtime.Provider.Connection.Asset != nil &&
+		connectAsset.Runtime.Provider.Connection.Asset.Platform != nil {
+		log.Info().Msgf("connected to %s", connectAsset.Runtime.Provider.Connection.Asset.Platform.Title)
+	}
 
 	onCloseHandler := func() {
 		explorer.Shutdown()
@@ -203,15 +207,17 @@ func selectAsset(explorer *discovery.AssetExplorer, platformID string, isTTY boo
 		asset := candidates[0]
 		// Connect if not already connected
 		if asset.State != discovery.AssetConnected {
-			children, err := explorer.Connect(asset)
+			connected, err := explorer.Connect(asset)
 			if err != nil {
 				return nil, err
 			}
 			// If connecting revealed children, let the user choose
-			if len(children) > 0 {
-				return traverseAsset(explorer, asset, isTTY)
+			if len(connected.Children) > 0 {
+				return traverseAsset(explorer, connected, isTTY)
 			}
-		} else if len(asset.Children) > 0 {
+			return connected, nil
+		}
+		if len(asset.Children) > 0 {
 			return traverseAsset(explorer, asset, isTTY)
 		}
 		return asset, nil
@@ -237,14 +243,14 @@ func selectAsset(explorer *discovery.AssetExplorer, platformID string, isTTY boo
 
 	// Connect if not already connected
 	if asset.State != discovery.AssetConnected {
-		children, err := explorer.Connect(asset)
+		connected, err := explorer.Connect(asset)
 		if err != nil {
 			return nil, err
 		}
-		if len(children) > 0 {
-			return traverseAsset(explorer, asset, isTTY)
+		if len(connected.Children) > 0 {
+			return traverseAsset(explorer, connected, isTTY)
 		}
-		return asset, nil
+		return connected, nil
 	}
 
 	// Already connected — check if it has children to traverse
@@ -293,15 +299,15 @@ func traverseAsset(explorer *discovery.AssetExplorer, current *discovery.Tracked
 		// User picked a child — connect to it and check for grandchildren
 		child := choice.tracked
 		if child.State != discovery.AssetConnected {
-			children, err := explorer.Connect(child)
+			connected, err := explorer.Connect(child)
 			if err != nil {
 				return nil, err
 			}
-			if len(children) > 0 {
-				current = child
+			if len(connected.Children) > 0 {
+				current = connected
 				continue // loop to let user navigate deeper
 			}
-			return child, nil
+			return connected, nil
 		}
 
 		// Already connected

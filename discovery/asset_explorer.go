@@ -20,6 +20,11 @@ import (
 	"go.mondoo.com/mql/v13/utils/slicesx"
 )
 
+// ErrDuplicateAsset is returned by Connect when the asset is a duplicate
+// of an already-connected asset (detected via platform ID dedup or by the
+// coordinator's connection tracking).
+var ErrDuplicateAsset = errors.New("duplicate asset")
+
 // AssetState represents the lifecycle state of a tracked asset.
 type AssetState int
 
@@ -129,7 +134,7 @@ func NewAssetExplorer(ctx context.Context, cfg AssetExplorerConfig) (*AssetExplo
 		e.rootAssets = append(e.rootAssets, resolvedRootAsset)
 
 		// Discover immediate children from the root's connection inventory
-		e.discoverChildren(tracked, resolvedRootAsset)
+		e.discoverChildren(tracked)
 	}
 
 	return e, nil
@@ -164,12 +169,17 @@ func (e *AssetExplorer) Connected() []*TrackedAsset {
 }
 
 // Connect connects to a tracked asset, creating its runtime and discovering
-// its immediate children. Returns the newly discovered children.
+// its immediate children. Returns the connected asset (whose Children field
+// is populated with any newly discovered children).
 //
-// If the asset is already Connected, this is a no-op returning existing children.
+// If the asset is already Connected, this is a no-op returning existing state.
 // If the asset is Closed, it re-connects (creates a fresh runtime). Re-connecting
 // is allowed but discouraged as it re-fetches data from the provider.
-func (e *AssetExplorer) Connect(asset *TrackedAsset) ([]*TrackedAsset, error) {
+//
+// Returns ErrDuplicateAsset if the asset is a duplicate of an already-connected
+// asset (either detected by the coordinator or by platform ID dedup). In this
+// case the asset's runtime is closed and its state is set to AssetClosed.
+func (e *AssetExplorer) Connect(asset *TrackedAsset) (*TrackedAsset, error) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
@@ -178,7 +188,7 @@ func (e *AssetExplorer) Connect(asset *TrackedAsset) ([]*TrackedAsset, error) {
 	}
 
 	if asset.State == AssetConnected {
-		return asset.Children, nil
+		return asset, nil
 	}
 
 	awr, err := createRuntimeForAsset(asset.Asset, e.upstream, e.recording)
@@ -189,7 +199,7 @@ func (e *AssetExplorer) Connect(asset *TrackedAsset) ([]*TrackedAsset, error) {
 
 	// createRuntimeForAsset returns nil when the coordinator detects a duplicate connection
 	if awr == nil {
-		return nil, nil
+		return nil, fmt.Errorf("asset %q: %w", asset.Asset.GetName(), ErrDuplicateAsset)
 	}
 
 	asset.Asset = awr.Asset
@@ -201,15 +211,16 @@ func (e *AssetExplorer) Connect(asset *TrackedAsset) ([]*TrackedAsset, error) {
 	if len(asset.Asset.PlatformIds) > 0 {
 		rootAsset := e.findRootAsset(asset)
 		prepareAsset(asset.Asset, rootAsset, e.runtimeLabels)
-		e.dedup(asset)
+		if e.dedup(asset) {
+			return nil, fmt.Errorf("asset %q: %w", asset.Asset.GetName(), ErrDuplicateAsset)
+		}
 	}
 
 	// Discover immediate children
-	rootAsset := e.findRootAsset(asset)
 	asset.Children = nil // reset children in case of re-connect
-	e.discoverChildren(asset, rootAsset)
+	e.discoverChildren(asset)
 
-	return asset.Children, nil
+	return asset, nil
 }
 
 // CloseAsset disposes the connection for a specific asset. The caller is
@@ -264,7 +275,7 @@ func (e *AssetExplorer) Shutdown() {
 
 // discoverChildren extracts child assets from a connected asset's inventory
 // and adds them as Discovered. Must be called with e.mu held.
-func (e *AssetExplorer) discoverChildren(parent *TrackedAsset, _ *inventory.Asset) {
+func (e *AssetExplorer) discoverChildren(parent *TrackedAsset) {
 	if parent.Runtime == nil || parent.Runtime.Provider.Connection == nil {
 		return
 	}
@@ -291,10 +302,11 @@ func (e *AssetExplorer) discoverChildren(parent *TrackedAsset, _ *inventory.Asse
 
 // dedup checks if the given asset's platform IDs conflict with any other
 // connected asset. Applies subset/superset eviction logic.
+// Returns true if the given asset was evicted (closed as a duplicate).
 // Must be called with e.mu held.
-func (e *AssetExplorer) dedup(asset *TrackedAsset) {
+func (e *AssetExplorer) dedup(asset *TrackedAsset) bool {
 	if len(asset.Asset.PlatformIds) == 0 {
-		return
+		return false
 	}
 
 	// Check if the new asset is a subset of an existing asset → evict new
@@ -313,7 +325,7 @@ func (e *AssetExplorer) dedup(asset *TrackedAsset) {
 			}
 			asset.Runtime = nil
 			asset.State = AssetClosed
-			return
+			return true
 		}
 	}
 
@@ -335,6 +347,7 @@ func (e *AssetExplorer) dedup(asset *TrackedAsset) {
 			existing.State = AssetClosed
 		}
 	}
+	return false
 }
 
 // isKnown returns true if the given TrackedAsset pointer is tracked by this explorer.

@@ -127,10 +127,11 @@ func TestAssetExplorerConnectAlreadyConnected(t *testing.T) {
 	}
 
 	e := newTestExplorer(parent, child1)
-	children, err := e.Connect(parent)
+	connected, err := e.Connect(parent)
 	require.NoError(t, err)
-	assert.Len(t, children, 1)
-	assert.Equal(t, "child1", children[0].Asset.Name)
+	assert.Equal(t, parent, connected)
+	assert.Len(t, connected.Children, 1)
+	assert.Equal(t, "child1", connected.Children[0].Asset.Name)
 }
 
 func TestAssetExplorerConnectUnknownAsset(t *testing.T) {
