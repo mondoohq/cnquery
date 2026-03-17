@@ -1903,7 +1903,7 @@ func initAwsEc2Volume(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 
 	rawResources := awsEc2.GetVolumes()
 	if rawResources.Error != nil {
-		return nil, nil, err
+		return nil, nil, rawResources.Error
 	}
 
 	var match func(secGroup *mqlAwsEc2Volume) bool
