@@ -284,7 +284,10 @@ func (upm *UnixProcessManager) ListSocketInodesByProcess() (map[int64]plugin.TVa
 	// Use -lname to filter for socket symlinks at the kernel level and -printf to
 	// avoid spawning a child process per FD. This is orders of magnitude faster
 	// than the previous `find -exec ls -n {} \;` on systems with many open FDs.
-	// Output format: "<inode> socket:[<inode>] /proc/<pid>/fd"
+	// Note: -lname and -printf are GNU find extensions. This is safe because
+	// UnixProcessManager only calls this on Linux targets (via SSH), which always
+	// have GNU find. On macOS/FreeBSD, /proc doesn't exist so the command is a no-op.
+	// Output format: "<fd> socket:[<inode>] /proc/<pid>/fd"
 	c, err := upm.conn.RunCommand("find /proc/[0-9]*/fd -maxdepth 1 -lname 'socket:*' -printf '%f %l %h\\n' 2>/dev/null")
 	if err != nil {
 		return nil, fmt.Errorf("processes> could not run command: %v", err)

@@ -43,14 +43,15 @@ func (lpm *LinuxProcManager) List() ([]*OSProcess, error) {
 			continue
 		}
 
+		pidPath := filepath.Join("/proc", dirs[i])
+
 		// collect process info
-		proc, err := lpm.processInfo(pid)
+		proc, err := lpm.processInfo(pid, pidPath)
 		if err != nil {
 			log.Warn().Err(err).Int64("pid", pid).Msg("mql[processes]> could not retrieve process information")
 			continue
 		}
 
-		pidPath := filepath.Join("/proc", dirs[i])
 		proc.SocketInodes, proc.SocketInodesError = lpm.procSocketInods(pid, pidPath)
 
 		res = append(res, proc)
@@ -60,9 +61,7 @@ func (lpm *LinuxProcManager) List() ([]*OSProcess, error) {
 }
 
 // processInfo gathers cmdline, status for a process without socket inodes.
-func (lpm *LinuxProcManager) processInfo(pid int64) (*OSProcess, error) {
-	pidPath := filepath.Join("/proc", strconv.FormatInt(pid, 10))
-
+func (lpm *LinuxProcManager) processInfo(pid int64, pidPath string) (*OSProcess, error) {
 	exists, err := lpm.Exists(pid)
 	if err != nil {
 		return nil, err
@@ -122,12 +121,12 @@ func (lpm *LinuxProcManager) Exists(pid int64) (bool, error) {
 }
 
 func (lpm *LinuxProcManager) Process(pid int64) (*OSProcess, error) {
-	proc, err := lpm.processInfo(pid)
+	pidPath := filepath.Join("/proc", strconv.FormatInt(pid, 10))
+	proc, err := lpm.processInfo(pid, pidPath)
 	if err != nil {
 		return nil, err
 	}
 
-	pidPath := filepath.Join("/proc", strconv.FormatInt(pid, 10))
 	proc.SocketInodes, proc.SocketInodesError = lpm.procSocketInods(pid, pidPath)
 
 	return proc, nil

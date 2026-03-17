@@ -12,16 +12,28 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/spf13/afero"
 )
 
-// procSocketInods reads all connected sockets for a process by reading symlinks
-// directly via os.Readlink instead of spawning a command per FD. This is safe
-// because LinuxProcManager is only used for local connections where /proc is
-// directly accessible.
-func (lpm *LinuxProcManager) procSocketInods(pid int64, procPidPath string) ([]int64, error) {
+// ParseSocketInode extracts the inode number from a /proc/*/fd/* symlink target.
+// Returns -1 if the link target is not a socket (e.g. "pipe:[...]", "/dev/null").
+func ParseSocketInode(link string) (int64, error) {
+	if !strings.HasPrefix(link, "socket:[") || !strings.HasSuffix(link, "]") {
+		return -1, nil
+	}
+	inodeStr := link[len("socket:[") : len(link)-1]
+	return strconv.ParseInt(inodeStr, 10, 64)
+}
+
+// procSocketInods reads all connected sockets for a process using the
+// connection's filesystem abstraction. It uses afero.LinkReader (ReadlinkIfPossible)
+// to resolve symlinks instead of spawning a command per FD.
+func (lpm *LinuxProcManager) procSocketInods(_ int64, procPidPath string) ([]int64, error) {
+	connFs := lpm.conn.FileSystem()
 	fdDirPath := filepath.Join(procPidPath, "fd")
 
-	fdDir, err := lpm.conn.FileSystem().Open(fdDirPath)
+	fdDir, err := connFs.Open(fdDirPath)
 	if err != nil {
 		if errors.Is(err, os.ErrPermission) {
 			return nil, fs.ErrPermission
@@ -37,25 +49,22 @@ func (lpm *LinuxProcManager) procSocketInods(pid int64, procPidPath string) ([]i
 		return nil, err
 	}
 
+	lr, ok := connFs.(afero.LinkReader)
+	if !ok {
+		return nil, errors.New("filesystem does not support readlink")
+	}
+
 	var res []int64
 	for i := range fds {
 		fdPath := filepath.Join(fdDirPath, fds[i])
 
-		// Use os.Readlink (a single syscall) instead of Stat + RunCommand("readlink").
-		// This avoids spawning a process per FD, which was the main bottleneck.
-		link, err := os.Readlink(fdPath)
+		link, err := lr.ReadlinkIfPossible(fdPath)
 		if err != nil {
 			continue
 		}
 
-		// Only parse socket symlinks: "socket:[<inode>]"
-		if !strings.HasPrefix(link, "socket:[") || !strings.HasSuffix(link, "]") {
-			continue
-		}
-
-		inodeStr := link[len("socket:[") : len(link)-1]
-		inode, err := strconv.ParseInt(inodeStr, 10, 64)
-		if err != nil {
+		inode, err := ParseSocketInode(link)
+		if err != nil || inode < 0 {
 			continue
 		}
 
