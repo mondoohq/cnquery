@@ -5,6 +5,15 @@ package plugin
 
 import inventory "go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 
+const (
+	// OptionStagedDiscovery is set on an asset's inventory config to opt in
+	// to staged (two-phase) discovery. When present (any truthy value),
+	// providers split discovery into stages (e.g. cluster+namespaces first,
+	// workloads per namespace later). When absent, legacy single-pass
+	// discovery runs unchanged for backward compatibility.
+	OptionStagedDiscovery = "staged-discovery"
+)
+
 type Connection interface {
 	ID() uint32
 
