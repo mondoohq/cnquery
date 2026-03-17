@@ -13,6 +13,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/miekg/dns"
 	"go.mondoo.com/mql/v13/utils/multierr"
+	"golang.org/x/sync/errgroup"
 )
 
 type DnsClient struct {
@@ -160,21 +161,21 @@ func (d *DnsClient) Query(dnsTypes ...string) (map[string]DnsRecord, error) {
 		}
 	}
 
-	workers := sync.WaitGroup{}
+	var workers errgroup.Group
 	var errs multierr.Errors
 
 	res := map[string]DnsRecord{}
 	for i := range dnsTypes {
 		dnsType := dnsTypes[i]
 
-		workers.Go(func() {
+		workers.Go(func() error {
 
 			records, err := d.queryDnsType(d.fqdn, dnsType)
 			if err != nil {
 				d.sync.Lock()
 				errs.Add(err)
 				d.sync.Unlock()
-				return
+				return nil
 			}
 
 			d.sync.Lock()
@@ -182,10 +183,11 @@ func (d *DnsClient) Query(dnsTypes ...string) (map[string]DnsRecord, error) {
 				res[k] = records[k]
 			}
 			d.sync.Unlock()
+			return nil
 		})
 	}
 
-	workers.Wait()
+	_ = workers.Wait()
 	return res, errs.Deduplicate()
 }
 

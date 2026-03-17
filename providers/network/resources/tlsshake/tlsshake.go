@@ -24,6 +24,7 @@ import (
 
 	"go.mondoo.com/mql/v13/utils/multierr"
 	"golang.org/x/crypto/ocsp"
+	"golang.org/x/sync/errgroup"
 )
 
 var TLS_VERSIONS = []string{"ssl3", "tls1.0", "tls1.1", "tls1.2", "tls1.3"}
@@ -132,7 +133,7 @@ func (s *Tester) Test(conf ScanConfig) error {
 		conf.Versions = TLS_VERSIONS
 	}
 
-	workers := sync.WaitGroup{}
+	var workers errgroup.Group
 	var errs multierr.Errors
 
 	remainingCiphers := func(cipher string) bool {
@@ -155,7 +156,7 @@ func (s *Tester) Test(conf ScanConfig) error {
 	for i := range conf.Versions {
 		version := conf.Versions[i]
 
-		workers.Go(func() {
+		workers.Go(func() error {
 
 			// we don't activate any of the additional tests in the beginning
 			// let's find out if we work on this version of TLS/SSL
@@ -170,7 +171,7 @@ func (s *Tester) Test(conf ScanConfig) error {
 					s.sync.Lock()
 					errs.Add(err)
 					s.sync.Unlock()
-					return
+					return nil
 				}
 
 				if remaining <= 0 {
@@ -200,10 +201,11 @@ func (s *Tester) Test(conf ScanConfig) error {
 					_, _ = s.testTLS(s.proto, s.target, curConf)
 				}
 			}
+			return nil
 		})
 	}
 
-	workers.Wait()
+	_ = workers.Wait()
 
 	resErr := errs.Deduplicate()
 
