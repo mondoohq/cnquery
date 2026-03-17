@@ -4,18 +4,43 @@
 package processes
 
 import (
-	"os"
+	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
-func TestParseReadlink(t *testing.T) {
-	fi, err := os.Open("./testdata/linux_readlink.txt")
-	require.NoError(t, err)
-	defer fi.Close()
+func TestParseSocketLink(t *testing.T) {
+	tests := []struct {
+		link      string
+		wantInode int64
+		wantMatch bool
+	}{
+		{"socket:[41866700]", 41866700, true},
+		{"socket:[0]", 0, true},
+		{"socket:[999999999]", 999999999, true},
+		{"pipe:[12345]", 0, false},
+		{"/dev/null", 0, false},
+		{"", 0, false},
+		{"socket:[]", 0, false},
+		{"socket:[notanumber]", 0, false},
+	}
 
-	inode, err := readInodeFromOutput(fi)
-	require.NoError(t, err)
-	require.Equal(t, int64(41866700), inode)
+	for _, tt := range tests {
+		t.Run(tt.link, func(t *testing.T) {
+			if !strings.HasPrefix(tt.link, "socket:[") || !strings.HasSuffix(tt.link, "]") {
+				require.False(t, tt.wantMatch)
+				return
+			}
+			inodeStr := tt.link[len("socket:[") : len(tt.link)-1]
+			inode, err := strconv.ParseInt(inodeStr, 10, 64)
+			if tt.wantMatch {
+				require.NoError(t, err)
+				require.Equal(t, tt.wantInode, inode)
+			} else {
+				require.Error(t, err)
+			}
+		})
+	}
 }

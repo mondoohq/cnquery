@@ -134,12 +134,12 @@ func (p *mqlProcesses) list() ([]any, error) {
 	}
 
 	// retrieve all system processes
-	processes, err := opm.List()
+	procs, err := opm.List()
 	if err != nil {
 		log.Warn().Err(err).Msg("mql[processes]> could not retrieve process list")
 		return nil, fmt.Errorf("could not retrieve process list")
 	}
-	log.Debug().Int("processes", len(processes)).Msg("mql[processes]> running processes")
+	log.Debug().Int("processes", len(procs)).Msg("mql[processes]> running processes")
 
 	processesInodesByPid, err := opm.ListSocketInodesByProcess()
 	if err != nil {
@@ -147,10 +147,10 @@ func (p *mqlProcesses) list() ([]any, error) {
 		return nil, fmt.Errorf("could not retrieve processes socket inodes")
 	}
 
-	procs := make([]any, len(processes))
+	result := make([]any, len(procs))
 
-	for i := range processes {
-		proc := processes[i]
+	for i := range procs {
+		proc := procs[i]
 
 		o, err := CreateResource(p.MqlRuntime, "process", map[string]*llx.RawData{
 			"pid":        llx.IntData(proc.Pid),
@@ -180,10 +180,10 @@ func (p *mqlProcesses) list() ([]any, error) {
 			State: plugin.StateIsSet,
 		}
 
-		procs[i] = o
+		result[i] = o
 	}
 
-	return procs, p.refreshCache(procs)
+	return result, p.refreshCache(result)
 }
 
 func (p *mqlProcesses) refreshCache(all []any) error {

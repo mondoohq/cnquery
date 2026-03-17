@@ -281,7 +281,11 @@ func (upm *UnixProcessManager) List() ([]*OSProcess, error) {
 // ListSocketInodesByProcess returns a map with a pid as key and a list of socket inodes as value
 func (upm *UnixProcessManager) ListSocketInodesByProcess() (map[int64]plugin.TValue[[]int64], error) {
 	startTime := time.Now()
-	c, err := upm.conn.RunCommand("find /proc -maxdepth 4 -path '/proc/*/fd/*' -exec ls -n {} \\;")
+	// Use -lname to filter for socket symlinks at the kernel level and -printf to
+	// avoid spawning a child process per FD. This is orders of magnitude faster
+	// than the previous `find -exec ls -n {} \;` on systems with many open FDs.
+	// Output format: "<inode> socket:[<inode>] /proc/<pid>/fd"
+	c, err := upm.conn.RunCommand("find /proc/[0-9]*/fd -maxdepth 1 -lname 'socket:*' -printf '%f %l %h\\n' 2>/dev/null")
 	if err != nil {
 		return nil, fmt.Errorf("processes> could not run command: %v", err)
 	}
@@ -290,7 +294,7 @@ func (upm *UnixProcessManager) ListSocketInodesByProcess() (map[int64]plugin.TVa
 	scanner := bufio.NewScanner(c.Stdout)
 	for scanner.Scan() {
 		line := scanner.Text()
-		pid, inode, err := ParseLinuxFindLine(line)
+		pid, inode, err := ParseFindSocketLine(line)
 		if err != nil || (pid == 0 && inode == 0) {
 			pluginValue := processesInodesByPid[pid]
 			pluginValue.Error = err
@@ -337,6 +341,37 @@ func (upm *UnixProcessManager) Process(pid int64) (*OSProcess, error) {
 	}
 
 	return nil, nil
+}
+
+// reFindSocketPrintf parses the output of:
+//
+//	find /proc/[0-9]*/fd -maxdepth 1 -lname 'socket:*' -printf '%f %l %h\n'
+//
+// Example line: "3 socket:[41866685] /proc/1/fd"
+var reFindSocketPrintf = regexp.MustCompile(
+	`^\d+\s+socket:\[(\d+)\]\s+/proc/(\d+)/fd$`,
+)
+
+// ParseFindSocketLine parses a single line of the -printf based find output.
+func ParseFindSocketLine(line string) (int64, int64, error) {
+	m := reFindSocketPrintf.FindStringSubmatch(line)
+	if len(m) == 0 {
+		return 0, 0, nil
+	}
+
+	inode, err := strconv.ParseInt(m[1], 10, 64)
+	if err != nil {
+		log.Error().Err(err).Msg("cannot parse socket inode " + m[1])
+		return 0, 0, err
+	}
+
+	pid, err := strconv.ParseInt(m[2], 10, 64)
+	if err != nil {
+		log.Error().Err(err).Msg("cannot parse unix pid " + m[2])
+		return 0, 0, err
+	}
+
+	return pid, inode, nil
 }
 
 func ParseLinuxFindLine(line string) (int64, int64, error) {

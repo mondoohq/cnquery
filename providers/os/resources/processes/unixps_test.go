@@ -137,6 +137,53 @@ func TestAixPSProcessParser(t *testing.T) {
 	assert.Equal(t, int64(0), found.Uid, "process uid detected")
 }
 
+func TestParseFindSocketLine(t *testing.T) {
+	fi, err := os.Open("./testdata/find_printf_nginx_container.txt")
+	require.NoError(t, err)
+	defer fi.Close()
+
+	scanner := bufio.NewScanner(fi)
+
+	// "3 socket:[41866685] /proc/1/fd"
+	scanner.Scan()
+	pid, inode, err := processes.ParseFindSocketLine(scanner.Text())
+	require.NoError(t, err)
+	require.Equal(t, int64(1), pid)
+	require.Equal(t, int64(41866685), inode)
+
+	// "11 socket:[18472] /proc/1/fd"
+	scanner.Scan()
+	pid, inode, err = processes.ParseFindSocketLine(scanner.Text())
+	require.NoError(t, err)
+	require.Equal(t, int64(1), pid)
+	require.Equal(t, int64(18472), inode)
+
+	// "6 socket:[41866700] /proc/29/fd"
+	scanner.Scan()
+	pid, inode, err = processes.ParseFindSocketLine(scanner.Text())
+	require.NoError(t, err)
+	require.Equal(t, int64(29), pid)
+	require.Equal(t, int64(41866700), inode)
+
+	// "7 socket:[41866701] /proc/29/fd"
+	scanner.Scan()
+	pid, inode, err = processes.ParseFindSocketLine(scanner.Text())
+	require.NoError(t, err)
+	require.Equal(t, int64(29), pid)
+	require.Equal(t, int64(41866701), inode)
+
+	// non-matching lines should return 0,0
+	pid, inode, err = processes.ParseFindSocketLine("some random garbage")
+	require.NoError(t, err)
+	require.Equal(t, int64(0), pid)
+	require.Equal(t, int64(0), inode)
+
+	pid, inode, err = processes.ParseFindSocketLine("")
+	require.NoError(t, err)
+	require.Equal(t, int64(0), pid)
+	require.Equal(t, int64(0), inode)
+}
+
 func TestParseLinuxFind(t *testing.T) {
 	fi, err := os.Open("./testdata/find_nginx_container.txt")
 	require.NoError(t, err)

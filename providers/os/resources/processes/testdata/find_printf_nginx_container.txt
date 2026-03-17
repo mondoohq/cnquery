@@ -1,0 +1,4 @@
+3 socket:[41866685] /proc/1/fd
+11 socket:[18472] /proc/1/fd
+6 socket:[41866700] /proc/29/fd
+7 socket:[41866701] /proc/29/fd
