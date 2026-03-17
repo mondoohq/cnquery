@@ -4,12 +4,17 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      providers:
+        description: 'Space-separated provider paths (e.g. "providers/gcp providers/aws")'
+        required: false
+        default: "providers/*/"
 
 permissions:
   contents: read
 
 jobs:
-  update-deps:
+  release-providers:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -41,10 +46,25 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           version: ${{ env.protoc-version }}
 
+      - name: Validate provider paths
+        id: validate
+        env:
+          PROVIDERS_INPUT: ${{ inputs.providers || 'providers/*/' }}
+        run: |
+          # Ensure each entry matches providers/<name> or providers/<name>/
+          for p in $PROVIDERS_INPUT; do
+            if ! [[ "$p" =~ ^providers/[a-zA-Z0-9*_-]+/?$ ]]; then
+              echo "::error::Invalid provider path: '$p'. Must match providers/<name>/"
+              exit 1
+            fi
+          done
+          echo "PROVIDERS=$PROVIDERS_INPUT" >> "$GITHUB_OUTPUT"
+
       - name: Update provider versions
         id: update-providers
         run: |
-          go run providers-sdk/v1/util/version/version.go update providers/*/ \
+          go run providers-sdk/v1/util/version/version.go update \
+            ${{ steps.validate.outputs.PROVIDERS }} \
             --increment=patch --output=.version-output
 
       - name: Prepare title and branch name
