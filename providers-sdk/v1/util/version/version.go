@@ -418,8 +418,10 @@ func updateVersions(providerPaths []string) {
 	updated := []*providerConf{}
 
 	for _, r := range results {
-		if r.err != nil || r.changes == 0 {
-			log.Info().Str("path", r.path).Msg("nothing to update")
+		if r.err != nil {
+			continue // error already logged in analyzeProviders
+		}
+		if r.changes == 0 {
 			continue
 		}
 
@@ -635,36 +637,48 @@ func commitChanges(confs updateConfs) error {
 	return nil
 }
 
-// findVersionCommitHash uses git blame to find the commit that last changed the
-// Version line in the provider's config file. This is more reliable than
-// searching commit titles, which may not follow any naming convention.
+// findVersionCommitHash walks the log of the config file and finds the commit
+// that introduced the current version string. This is much faster than blame
+// because it only reads the config file at each commit (typically 1-3 lookups)
+// instead of attributing every line across the full history.
 func findVersionCommitHash(repo *git.Repository, conf *providerConf) plumbing.Hash {
-	headRef, err := repo.Head()
+	fileName := conf.path
+	iter, err := repo.Log(&git.LogOptions{
+		PathFilter: func(p string) bool {
+			return p == fileName
+		},
+	})
 	if err != nil {
-		log.Warn().Err(err).Msg("failed to get HEAD")
+		log.Warn().Err(err).Msg("failed to walk config file history")
 		return plumbing.ZeroHash
 	}
+	defer iter.Close()
 
-	headCommit, err := repo.CommitObject(headRef.Hash())
-	if err != nil {
-		log.Warn().Err(err).Msg("failed to get HEAD commit")
-		return plumbing.ZeroHash
-	}
-
-	result, err := git.Blame(headCommit, conf.path)
-	if err != nil {
-		log.Warn().Err(err).Msg("git blame failed, assuming first version commit")
-		return plumbing.ZeroHash
-	}
-
-	// Find the line containing "Version:" and return the commit hash that last touched it.
-	for _, line := range result.Lines {
-		if strings.Contains(line.Text, "Version:") {
-			return line.Hash
+	var prev plumbing.Hash
+	for c, err := iter.Next(); err == nil; c, err = iter.Next() {
+		file, err := c.File(fileName)
+		if err != nil {
+			break
 		}
+		contents, err := file.Contents()
+		if err != nil {
+			break
+		}
+		if getVersion(contents) != conf.version {
+			// The version changed at this commit — the previous commit
+			// in our walk (more recent) is the one that bumped it.
+			if !prev.IsZero() {
+				return prev
+			}
+			// If prev is zero, HEAD itself has the version bump but
+			// the file hasn't been committed yet (local change).
+			return plumbing.ZeroHash
+		}
+		prev = c.Hash
 	}
 
-	return plumbing.ZeroHash
+	// Every commit in history has the same version — return the oldest one.
+	return prev
 }
 
 func countChangesSince(repo *git.Repository, conf *providerConf, repoPath string) int {
@@ -684,6 +698,7 @@ func countChangesSince(repo *git.Repository, conf *providerConf, repoPath string
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to iterate git history")
 	}
+	defer iter.Close()
 
 	var count int
 	conf.changelog = nil
