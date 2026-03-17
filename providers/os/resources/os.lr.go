@@ -34,6 +34,7 @@ const (
 	ResourceMachineSystem              string = "machine.system"
 	ResourceMachineBaseboard           string = "machine.baseboard"
 	ResourceMachineChassis             string = "machine.chassis"
+	ResourceMachineCpu                 string = "machine.cpu"
 	ResourceOs                         string = "os"
 	ResourceOsUpdate                   string = "os.update"
 	ResourceOsBase                     string = "os.base"
@@ -277,6 +278,10 @@ func init() {
 		"machine.chassis": {
 			Init:   initMachineChassis,
 			Create: createMachineChassis,
+		},
+		"machine.cpu": {
+			Init:   initMachineCpu,
+			Create: createMachineCpu,
 		},
 		"os": {
 			// to override args, implement: initOs(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1256,6 +1261,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"machine.chassis.assetTag": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMachineChassis).GetAssetTag()).ToDataRes(types.String)
+	},
+	"machine.cpu.manufacturer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMachineCpu).GetManufacturer()).ToDataRes(types.String)
+	},
+	"machine.cpu.model": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMachineCpu).GetModel()).ToDataRes(types.String)
+	},
+	"machine.cpu.processorCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMachineCpu).GetProcessorCount()).ToDataRes(types.Int)
+	},
+	"machine.cpu.cores": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMachineCpu).GetCores()).ToDataRes(types.Int)
 	},
 	"os.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOs).GetName()).ToDataRes(types.String)
@@ -4342,6 +4359,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"machine.chassis.assetTag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMachineChassis).AssetTag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"machine.cpu.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMachineCpu).__id, ok = v.Value.(string)
+		return
+	},
+	"machine.cpu.manufacturer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMachineCpu).Manufacturer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"machine.cpu.model": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMachineCpu).Model, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"machine.cpu.processorCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMachineCpu).ProcessorCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"machine.cpu.cores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMachineCpu).Cores, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"os.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9844,6 +9881,65 @@ func (c *mqlMachineChassis) GetSerial() *plugin.TValue[string] {
 
 func (c *mqlMachineChassis) GetAssetTag() *plugin.TValue[string] {
 	return &c.AssetTag
+}
+
+// mqlMachineCpu for the machine.cpu resource
+type mqlMachineCpu struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMachineCpuInternal it will be used here
+	Manufacturer   plugin.TValue[string]
+	Model          plugin.TValue[string]
+	ProcessorCount plugin.TValue[int64]
+	Cores          plugin.TValue[int64]
+}
+
+// createMachineCpu creates a new instance of this resource
+func createMachineCpu(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMachineCpu{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("machine.cpu", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMachineCpu) MqlName() string {
+	return "machine.cpu"
+}
+
+func (c *mqlMachineCpu) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMachineCpu) GetManufacturer() *plugin.TValue[string] {
+	return &c.Manufacturer
+}
+
+func (c *mqlMachineCpu) GetModel() *plugin.TValue[string] {
+	return &c.Model
+}
+
+func (c *mqlMachineCpu) GetProcessorCount() *plugin.TValue[int64] {
+	return &c.ProcessorCount
+}
+
+func (c *mqlMachineCpu) GetCores() *plugin.TValue[int64] {
+	return &c.Cores
 }
 
 // mqlOs for the os resource

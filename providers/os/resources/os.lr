@@ -225,6 +225,18 @@ machine.chassis {
   assetTag string
 }
 
+// CPU information
+machine.cpu @defaults("manufacturer model processorCount cores") {
+  // CPU manufacturer
+  manufacturer string
+  // CPU model name
+  model string
+  // Number of physical CPU packages (sockets)
+  processorCount int
+  // Total number of physical CPU cores
+  cores int
+}
+
 // Operating system information
 os {
   // Pretty hostname on macOS/Linux or device name on Windows

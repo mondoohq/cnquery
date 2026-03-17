@@ -441,6 +441,11 @@ machine.chassis.assetTag 9.0.0
 machine.chassis.manufacturer 9.0.0
 machine.chassis.serial 9.0.0
 machine.chassis.version 9.0.0
+machine.cpu 13.2.3
+machine.cpu.cores 13.2.3
+machine.cpu.manufacturer 13.2.3
+machine.cpu.model 13.2.3
+machine.cpu.processorCount 13.2.3
 machine.system 9.0.0
 machine.system.family 9.0.0
 machine.system.manufacturer 9.0.0
