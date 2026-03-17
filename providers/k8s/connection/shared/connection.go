@@ -26,7 +26,6 @@ const (
 	OPTION_OBJECT_KIND       = "object-kind"
 	OPTION_CONTEXT           = "context"
 	OPTION_KUBELOGIN         = "kubelogin"
-	OPTION_DISCOVERY_STAGE   = "discovery-stage"
 	IdPrefix                 = "//platformid.api.mondoo.app/runtime/k8s/uid/"
 )
 

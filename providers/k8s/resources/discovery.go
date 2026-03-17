@@ -40,9 +40,6 @@ const (
 	DiscoveryIngresses        = "ingresses"
 	DiscoveryNamespaces       = "namespaces"
 	DiscoveryServices         = "services"
-
-	DiscoveryStageCluster   = "cluster"
-	DiscoveryStageNamespace = "namespace"
 )
 
 type NamespaceFilterOpts struct {
@@ -85,26 +82,108 @@ func (f *NamespaceFilterOpts) skipNamespace(namespace string) bool {
 	return false
 }
 
-// Discover routes to the appropriate discovery stage.
-// TODO(v15): remove the stage routing. The staged discovery (cluster → namespace)
-// should be the only path and OPTION_DISCOVERY_STAGE should no longer be needed.
+// Discover routes to the appropriate discovery path based on whether the client
+// has opted in to staged discovery via OPTION_STAGED_DISCOVERY.
+// TODO(v15): remove discoverLegacy and OPTION_STAGED_DISCOVERY toggle. Staged
+// discovery should be the only path.
 func Discover(runtime *plugin.Runtime, features mql.Features) (*inventory.Inventory, error) {
 	conn := runtime.Connection.(shared.Connection)
 	invConfig := conn.InventoryConfig()
 
-	stage := invConfig.Options[shared.OPTION_DISCOVERY_STAGE]
-	switch stage {
-	case DiscoveryStageNamespace:
-		return discoverNamespaceStage(runtime, conn, invConfig, features)
-	default:
+	// Check for staged discovery toggle
+	if _, ok := invConfig.Options[plugin.OptionStagedDiscovery]; ok {
+		// If a namespace is already set, we're in stage 2 (workload discovery
+		// for that namespace). Otherwise it's stage 1 (cluster + namespaces).
+		if invConfig.Options[shared.OPTION_NAMESPACE] != "" {
+			return discoverNamespaceStage(runtime, conn, invConfig, features)
+		}
 		return discoverClusterStage(runtime, conn, invConfig, features)
 	}
+
+	// Legacy single-pass discovery (no toggle = old client)
+	return discoverLegacy(runtime, conn, invConfig, features)
 }
 
-// discoverClusterStage is stage 1: discovers the cluster asset and namespaces.
-// Namespace assets are emitted WITHOUT platform IDs so the framework recurses
-// into them. When the framework Connect()s a namespace, stage 2 returns both
-// the scannable namespace (with platform IDs) and its workloads as inventory.
+// discoverLegacy is the original single-pass discovery that discovers the cluster,
+// namespaces, and all workloads in a single call. This is the default path for
+// clients that do not set OPTION_STAGED_DISCOVERY.
+// TODO(v15): remove this function once all clients use staged discovery.
+func discoverLegacy(runtime *plugin.Runtime, conn shared.Connection, invConfig *inventory.Config, features mql.Features) (*inventory.Inventory, error) {
+	in := &inventory.Inventory{Spec: &inventory.InventorySpec{
+		Assets: []*inventory.Asset{},
+	}}
+
+	if (invConfig.Discover == nil || len(invConfig.Discover.Targets) == 0) && conn.Asset() != nil {
+		in.Spec.Assets = append(in.Spec.Assets, conn.Asset())
+		return in, nil
+	}
+
+	res, err := runtime.CreateResource(runtime, "k8s", nil)
+	if err != nil {
+		return nil, err
+	}
+	k8s := res.(*mqlK8s)
+
+	nsFilter := setNamespaceFilters(invConfig)
+
+	resFilters, err := resourceFilters(invConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	// If we can discover the cluster asset, then we use that as root and build all
+	// platform IDs for the assets based on it. If we cannot discover the cluster, we
+	// discover the individual namespaces according to the ns filter and then build
+	// the platform IDs for the assets based on the namespace.
+	if len(nsFilter.include) == 0 && len(nsFilter.exclude) == 0 {
+		assetId, err := conn.AssetId()
+		if err == nil {
+			root := &inventory.Asset{
+				PlatformIds: []string{assetId},
+				Name:        conn.Name(),
+				Platform:    conn.Platform(),
+				Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
+			}
+			if stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryAuto, DiscoveryAll, DiscoveryClusters) && resFilters.IsEmpty() {
+				in.Spec.Assets = append(in.Spec.Assets, root)
+			}
+		} else {
+			log.Warn().Err(err).Msg("failed to discover cluster asset")
+		}
+	}
+	nss, err := discoverNamespaces(conn, invConfig, "", nil, nsFilter)
+	if err != nil {
+		return nil, err
+	}
+
+	if resFilters.IsEmpty() && stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryNamespaces, DiscoveryAuto, DiscoveryAll) {
+		in.Spec.Assets = append(in.Spec.Assets, nss...)
+	}
+
+	// Discover the assets for each namespace and use the namespace platform ID as root
+	for _, ns := range nss {
+		nsFilter = NamespaceFilterOpts{include: []string{ns.Name}}
+
+		od := NewPlatformIdOwnershipIndex(ns.PlatformIds[0])
+
+		// We don't want to discover the namespaces again since we have already done this above
+		assets, err := discoverAssets(runtime, conn, invConfig, ns.PlatformIds[0], k8s, nsFilter, resFilters, od)
+		if err != nil {
+			return nil, err
+		}
+		setRelatedAssets(conn, ns, assets, od, features)
+		in.Spec.Assets = append(in.Spec.Assets, assets...)
+	}
+
+	return in, nil
+}
+
+// discoverClusterStage is stage 1 of staged discovery: discovers the cluster
+// asset and namespaces. Namespace assets are emitted WITH platform IDs (they
+// are scannable) and WITH discovery targets. Each namespace's connection config
+// is overridden with OPTION_NAMESPACE set, which causes stage 2 to run when
+// the client connects to it. No WithParentConnectionId so each namespace gets
+// its own resource cache.
 func discoverClusterStage(runtime *plugin.Runtime, conn shared.Connection, invConfig *inventory.Config, features mql.Features) (*inventory.Inventory, error) {
 	in := &inventory.Inventory{Spec: &inventory.InventorySpec{
 		Assets: []*inventory.Asset{},
@@ -143,9 +222,9 @@ func discoverClusterStage(runtime *plugin.Runtime, conn shared.Connection, invCo
 		}
 	}
 
-	// Discover namespaces from the API, then emit one asset per namespace for
-	// stage 2. These assets carry no platform IDs so the framework will
-	// Connect() them and recurse into the returned inventory.
+	// Discover namespaces and emit them as scannable assets with platform IDs
+	// and discovery targets. Override each namespace's connection config to
+	// route to stage 2 when the client connects to it later.
 	nss, err := discoverNamespaces(conn, invConfig, "", nil, nsFilter)
 	if err != nil {
 		return nil, err
@@ -156,26 +235,24 @@ func discoverClusterStage(runtime *plugin.Runtime, conn shared.Connection, invCo
 		// resource cache. With a shared parent cache, the k8s MQL resource would
 		// be created once (scoped to the first namespace's connection) and reused
 		// by all other namespaces, returning stale data.
-		nsConfig := invConfig.Clone()
+		nsConfig := invConfig.Clone() // Clone() copies Options, propagating OPTION_STAGED_DISCOVERY
 		nsConfig.Options[shared.OPTION_NAMESPACE] = ns.Name
-		nsConfig.Options[shared.OPTION_DISCOVERY_STAGE] = DiscoveryStageNamespace
 
-		in.Spec.Assets = append(in.Spec.Assets, &inventory.Asset{
-			// No PlatformIds: the framework will Connect() this asset and
-			// recurse into the inventory returned by stage 2.
-			Name:        ns.Name,
-			Connections: []*inventory.Config{nsConfig},
-			Category:    conn.Asset().Category,
-		})
+		// Override the connection config to route to stage 2, but keep the
+		// namespace's platform IDs, platform, and labels from discoverNamespaces().
+		ns.Connections = []*inventory.Config{nsConfig}
+		in.Spec.Assets = append(in.Spec.Assets, ns)
 	}
 
 	return in, nil
 }
 
-// discoverNamespaceStage is stage 2: discovers workloads within a single namespace.
-// It is triggered when the framework Connect()s a namespace asset emitted by stage 1.
-// The returned inventory includes the scannable namespace asset (with platform IDs)
-// and all workload assets for that namespace.
+// discoverNamespaceStage is stage 2 of staged discovery: discovers workloads
+// within a single namespace. It is triggered when the client connects to a
+// namespace asset emitted by stage 1.
+//
+// Only workloads are returned here — the namespace asset itself was already
+// emitted by stage 1 with platform IDs and is already known to the client.
 func discoverNamespaceStage(runtime *plugin.Runtime, conn shared.Connection, invConfig *inventory.Config, features mql.Features) (*inventory.Inventory, error) {
 	in := &inventory.Inventory{Spec: &inventory.InventorySpec{
 		Assets: []*inventory.Asset{},
@@ -216,31 +293,6 @@ func discoverNamespaceStage(runtime *plugin.Runtime, conn shared.Connection, inv
 	assets, err := discoverAssets(runtime, conn, invConfig, namespacePlatformId, k8s, nsFilter, resFilters, od)
 	if err != nil {
 		return nil, err
-	}
-
-	// Build the scannable namespace asset and include it in the inventory.
-	// Stage 1 emits namespaces without platform IDs (to trigger recursion),
-	// so stage 2 is responsible for emitting the scannable namespace.
-	if resFilters.IsEmpty() && stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryNamespaces, DiscoveryAuto, DiscoveryAll) {
-		labels := map[string]string{}
-		for k, v := range nsObj.Labels {
-			labels[k] = v
-		}
-		addMondooAssetLabels(labels, &nsObj.ObjectMeta, "")
-		platform, err := createPlatformData(nsObj.Kind, conn.Runtime())
-		if err != nil {
-			return nil, err
-		}
-		nsAsset := &inventory.Asset{
-			PlatformIds: []string{namespacePlatformId},
-			Name:        nsName,
-			Platform:    platform,
-			Labels:      labels,
-			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(invConfig.Id))},
-			Category:    conn.Asset().Category,
-		}
-		setRelatedAssets(conn, nsAsset, assets, od, features)
-		in.Spec.Assets = append(in.Spec.Assets, nsAsset)
 	}
 
 	in.Spec.Assets = append(in.Spec.Assets, assets...)
@@ -1023,7 +1075,7 @@ func discoverNamespaces(
 			Name:        ns.Name,
 			Platform:    platform,
 			Labels:      labels,
-			Connections: []*inventory.Config{invConfig.Clone(inventory.WithParentConnectionId(invConfig.Id))}, // pass-in the parent connection config
+			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(invConfig.Id))}, // pass-in the parent connection config
 			Category:    conn.Asset().Category,
 		})
 		if od != nil {
