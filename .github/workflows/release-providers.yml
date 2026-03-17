@@ -83,7 +83,7 @@ jobs:
           go run providers-sdk/v1/util/version/version.go update \
             $PROVIDERS --increment=patch --output=.version-output
 
-      - name: Prepare title and branch name
+      - name: Prepare title, body, and branch name
         id: branch
         run: |
           if [ -f .version-output/title.txt ]; then
@@ -93,9 +93,23 @@ jobs:
             echo "SKIP=true" >> $GITHUB_OUTPUT
             exit 0
           fi
+
+          # Read body and export via GITHUB_OUTPUT (using a random delimiter to avoid collisions)
+          BODY=$(cat .version-output/body.md)
+          DELIM="BODY_EOF_$(openssl rand -hex 8)"
+          {
+            echo "BODY<<$DELIM"
+            echo "$BODY"
+            echo "$DELIM"
+          } >> "$GITHUB_OUTPUT"
+
           BRANCH_NAME="version/providers_update_$(date +%Y%m%d_%H%M)"
           echo "COMMIT_TITLE=${COMMIT_TITLE}" >> $GITHUB_OUTPUT
           echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_OUTPUT
+
+      - name: Clean up generated output files
+        if: ${{ steps.branch.outputs.SKIP != 'true' }}
+        run: rm -rf .version-output
 
       # We have to use this extension, because `gh pr create` does not support the ssh key case
       - name: Create pull request
@@ -110,7 +124,7 @@ jobs:
           commit-message: ${{ steps.branch.outputs.COMMIT_TITLE }}
           title: ${{ steps.branch.outputs.COMMIT_TITLE }}
           branch: ${{ steps.branch.outputs.BRANCH_NAME }}
-          body-path: .version-output/body.md
+          body: ${{ steps.branch.outputs.BODY }}
 
       - name: PR infos
         if: ${{ steps.branch.outputs.SKIP != 'true' && steps.cpr.outputs.pull-request-number }}
