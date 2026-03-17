@@ -2286,7 +2286,7 @@ func (a *mqlAwsEc2) getInternetGateways(conn *connection.AwsConnection) []*jobpo
 					}
 					mqlInternetGw, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Internetgateway,
 						map[string]*llx.RawData{
-							"arn":         llx.StringData(fmt.Sprintf(internetGwArnPattern, region, convert.ToValue(gateway.OwnerId), convert.ToValue(gateway.InternetGatewayId))),
+							"arn":         llx.StringData(fmt.Sprintf(internetGwArnPattern, region, conn.AccountId(), convert.ToValue(gateway.InternetGatewayId))),
 							"id":          llx.StringData(convert.ToValue(gateway.InternetGatewayId)),
 							"region":      llx.StringData(region),
 							"attachments": llx.ArrayData(jsonAttachments, types.Any),
