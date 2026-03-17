@@ -2828,7 +2828,7 @@ private aws.ecs.service @defaults("arn name clusterArn status") {
   runningCount int
   // ARN of the task definition used by the service
   taskDefinition string
-  // Launch type for the service (EC2, FARGATE, EXTERNAL)
+  // Launch type for the service (EC2, FARGATE, EXTERNAL, MANAGED_INSTANCES)
   launchType string
   // Deployment configuration for the service
   deploymentConfiguration() aws.ecs.service.deploymentConfiguration
@@ -2870,7 +2870,7 @@ private aws.ecs.taskSet @defaults("arn status taskDefinition launchType") {
   status string
   // ARN of the task definition used by the task set
   taskDefinition string
-  // Launch type for the task set (EC2, FARGATE, EXTERNAL)
+  // Launch type for the task set (EC2, FARGATE, EXTERNAL, MANAGED_INSTANCES)
   launchType string
   // Fargate platform version for the task set
   platformVersion string
@@ -3578,7 +3578,7 @@ private aws.s3.bucket.corsrule @defaults("name") {
 private aws.s3.bucket.encryptionRule @defaults("sseAlgorithm bucketKeyEnabled") {
   // Unique ID for this rule (bucket ARN + index)
   id string
-  // Server-side encryption algorithm (AES256, aws:kms, aws:kms:dsse)
+  // Server-side encryption algorithm (AES256, aws:kms, aws:kms:dsse, aws:fsx)
   sseAlgorithm string
   // KMS master key ID for SSE-KMS encryption
   kmsMasterKeyId string
@@ -5017,7 +5017,7 @@ private aws.ecr.repository @defaults("uri region") {
   imageScanOnPush bool
   // Whether image tags are immutable (MUTABLE or IMMUTABLE); immutable tags prevent image overwrites
   imageTagMutability string
-  // Encryption type for images at rest (AES256 or KMS)
+  // Encryption type for images at rest (AES256, KMS, or KMS_DSSE)
   encryptionType string
   // When the repository was created
   createdAt time
