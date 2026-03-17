@@ -572,6 +572,15 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 		if cliRes.Asset == nil {
 			log.Warn().Err(err).Msg("failed to discover assets after processing CLI arguments")
 		} else {
+			// Enable staged discovery for all provider connections so that
+			// providers that support it can split discovery into phases.
+			for _, conf := range cliRes.Asset.Connections {
+				if conf.Options == nil {
+					conf.Options = map[string]string{}
+				}
+				conf.Options[plugin.OptionStagedDiscovery] = ""
+			}
+
 			// if we have an asset, we check if the path requires piped content
 			for _, conf := range cliRes.Asset.Connections {
 				if conf.Path != "-" {
