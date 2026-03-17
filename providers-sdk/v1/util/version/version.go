@@ -318,8 +318,10 @@ func (confs updateConfs) commitTitle() string {
 	return "🎉 " + strings.Join(confs.titles(), ", ")
 }
 
-func (confs updateConfs) changelogBody() string {
+func (confs updateConfs) commitBody() string {
 	var b strings.Builder
+	b.WriteString("This release was created by mql's provider versioning bot.\n\n")
+	b.WriteString("You can find me under: `providers-sdk/v1/util/version`.\n")
 	for _, conf := range confs {
 		if len(conf.changelog) == 0 {
 			continue
@@ -390,11 +392,42 @@ func updateVersions(providerPaths []string) {
 		updated = append(updated, conf)
 	}
 
+	confs := updateConfs(updated)
+
+	if outputDir != "" {
+		if err := writeOutputFiles(confs); err != nil {
+			log.Error().Err(err).Msg("failed to write output files")
+		}
+	}
+
 	if doCommit {
-		if err := commitChanges(updated); err != nil {
+		if err := commitChanges(confs); err != nil {
 			log.Error().Err(err).Msg("failed to commit changes")
 		}
 	}
+}
+
+// writeOutputFiles writes the commit title to <outputDir>/title.txt
+// and the PR body (with changelog) to <outputDir>/body.md.
+func writeOutputFiles(confs updateConfs) error {
+	if len(confs) == 0 {
+		return nil
+	}
+
+	if err := os.MkdirAll(outputDir, 0o755); err != nil {
+		return fmt.Errorf("failed to create output dir: %w", err)
+	}
+
+	if err := os.WriteFile(filepath.Join(outputDir, "title.txt"), []byte(confs.commitTitle()), 0o644); err != nil {
+		return fmt.Errorf("failed to write title: %w", err)
+	}
+
+	if err := os.WriteFile(filepath.Join(outputDir, "body.md"), []byte(confs.commitBody()), 0o644); err != nil {
+		return fmt.Errorf("failed to write body: %w", err)
+	}
+
+	log.Info().Str("dir", outputDir).Msg("wrote PR title and body")
+	return nil
 }
 
 func tryUpdate(providerPath string) (*providerConf, error) {
@@ -534,11 +567,7 @@ func commitChanges(confs updateConfs) error {
 	}
 	fmt.Println(" done")
 
-	body := "\n\nThis release was created by mql's provider versioning bot.\n\n" +
-		"You can find me under: `providers-sdk/v1/util/version`.\n" +
-		confs.changelogBody()
-
-	commit, err := worktree.Commit(confs.commitTitle()+body, &git.CommitOptions{
+	commit, err := worktree.Commit(confs.commitTitle()+"\n\n"+confs.commitBody(), &git.CommitOptions{
 		Author: &object.Signature{
 			Name:  "Mondoo",
 			Email: "hello@mondoo.com",
@@ -695,6 +724,7 @@ var (
 	fastMode           bool
 	doCommit           bool
 	increment          string
+	outputDir          string
 	latestVersion      bool
 	latestPatchVersion bool
 )
@@ -703,6 +733,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&fastMode, "fast", false, "perform fast checking of git repo (not counting changes)")
 	rootCmd.PersistentFlags().BoolVar(&doCommit, "commit", false, "commit the change to git if there is a version bump")
 	rootCmd.PersistentFlags().StringVar(&increment, "increment", "", "automatically bump either patch, minor, or major version")
+	rootCmd.PersistentFlags().StringVar(&outputDir, "output", "", "write PR title and body files to this directory")
 
 	modUpdateCmd.PersistentFlags().BoolVar(&latestVersion, "latest", false, "update versions to latest")
 	modUpdateCmd.PersistentFlags().BoolVar(&latestPatchVersion, "patch", false, "update versions to latest patch")
