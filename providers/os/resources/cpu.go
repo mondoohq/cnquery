@@ -42,6 +42,12 @@ func initMachineCpu(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 		info, err = getCpuInfoMacos(conn)
 	case pf.IsFamily("windows"):
 		info, err = getCpuInfoWindows(conn)
+	case pf.Name == "freebsd":
+		info, err = getCpuInfoFreeBSD(conn)
+	case pf.Name == "aix":
+		info, err = getCpuInfoAIX(conn)
+	case pf.Name == "solaris":
+		info, err = getCpuInfoSolaris(conn)
 	case pf.IsFamily(inventory.FAMILY_UNIX):
 		info, err = getCpuInfoLinux(conn)
 	default:
@@ -94,13 +100,8 @@ func getCpuInfoLinux(conn shared.Connection) (*cpuInfo, error) {
 		seenSockets[p.PhysicalID] = struct{}{}
 	}
 
-	manufacturer := parsed.Processors[0].VendorID
-	if manufacturer == "GenuineIntel" {
-		manufacturer = "Intel"
-	}
-
 	info := &cpuInfo{
-		Manufacturer: manufacturer,
+		Manufacturer: normalizeManufacturer(parsed.Processors[0].VendorID),
 		Model:        parsed.Processors[0].ModelName,
 	}
 
@@ -142,11 +143,8 @@ func getCpuInfoMacos(conn shared.Connection) (*cpuInfo, error) {
 		return nil, fmt.Errorf("failed to parse hw.physicalcpu: %w", err)
 	}
 
-	// Strip "Apple " prefix from brand string (e.g. "Apple M4 Pro" -> "M4 Pro")
-	model := strings.TrimPrefix(brandString, "Apple ")
-
 	info := &cpuInfo{
-		Model:          model,
+		Model:          brandString,
 		Cores:          physicalCPU,
 		ProcessorCount: 1, // Macs always have a single CPU package
 	}
@@ -202,8 +200,197 @@ func getCpuInfoWindows(conn shared.Connection) (*cpuInfo, error) {
 
 	return &cpuInfo{
 		Model:          strings.TrimSpace(result.Name),
-		Manufacturer:   strings.TrimSpace(result.Manufacturer),
+		Manufacturer:   normalizeManufacturer(strings.TrimSpace(result.Manufacturer)),
 		Cores:          result.NumberOfCores,
 		ProcessorCount: result.ProcessorCount,
 	}, nil
+}
+
+func getCpuInfoFreeBSD(conn shared.Connection) (*cpuInfo, error) {
+	cmd, err := conn.RunCommand("sysctl -n hw.model kern.smp.cores")
+	if err != nil {
+		return nil, err
+	}
+	if cmd.ExitStatus != 0 {
+		stderr, _ := io.ReadAll(cmd.Stderr)
+		return nil, fmt.Errorf("sysctl failed: %s", string(stderr))
+	}
+
+	data, err := io.ReadAll(cmd.Stdout)
+	if err != nil {
+		return nil, err
+	}
+
+	lines := strings.Split(strings.TrimSpace(string(data)), "\n")
+	if len(lines) < 2 {
+		return nil, fmt.Errorf("unexpected sysctl output: %s", string(data))
+	}
+
+	model := strings.TrimSpace(lines[0])
+	cores, err := strconv.ParseInt(strings.TrimSpace(lines[1]), 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse kern.smp.cores: %w", err)
+	}
+
+	// FreeBSD doesn't expose socket/package count directly; default to 1
+	info := &cpuInfo{
+		Model:          model,
+		Cores:          cores,
+		ProcessorCount: 1,
+	}
+
+	// Extract manufacturer from model string
+	if strings.Contains(model, "Intel") {
+		info.Manufacturer = "Intel"
+	} else if strings.Contains(model, "AMD") {
+		info.Manufacturer = "AMD"
+	}
+
+	return info, nil
+}
+
+func getCpuInfoAIX(conn shared.Connection) (*cpuInfo, error) {
+	// Use prtconf for processor type
+	cmd, err := conn.RunCommand("prtconf")
+	if err != nil {
+		return nil, err
+	}
+	if cmd.ExitStatus != 0 {
+		stderr, _ := io.ReadAll(cmd.Stderr)
+		return nil, fmt.Errorf("prtconf failed: %s", string(stderr))
+	}
+
+	data, err := io.ReadAll(cmd.Stdout)
+	if err != nil {
+		return nil, err
+	}
+
+	info := &cpuInfo{
+		Manufacturer:   "IBM",
+		ProcessorCount: 1,
+	}
+
+	for _, line := range strings.Split(string(data), "\n") {
+		line = strings.TrimSpace(line)
+		if k, v, ok := strings.Cut(line, ":"); ok {
+			k = strings.TrimSpace(k)
+			v = strings.TrimSpace(v)
+			switch k {
+			case "Processor Type":
+				info.Model = v
+			}
+		}
+	}
+
+	// Use lsdev to count physical processor devices (proc0, proc1, ...).
+	// prtconf's "Number Of Processors" can report virtual/logical processors
+	// on SMT-enabled POWER systems, so lsdev is more reliable for core count.
+	cmd, err = conn.RunCommand("lsdev -Cc processor")
+	if err != nil {
+		return nil, err
+	}
+	if cmd.ExitStatus != 0 {
+		stderr, _ := io.ReadAll(cmd.Stderr)
+		return nil, fmt.Errorf("lsdev failed: %s", string(stderr))
+	}
+
+	lsdevData, err := io.ReadAll(cmd.Stdout)
+	if err != nil {
+		return nil, err
+	}
+
+	var cores int64
+	for _, line := range strings.Split(strings.TrimSpace(string(lsdevData)), "\n") {
+		if strings.HasPrefix(line, "proc") {
+			cores++
+		}
+	}
+	if cores > 0 {
+		info.Cores = cores
+	}
+
+	return info, nil
+}
+
+func getCpuInfoSolaris(conn shared.Connection) (*cpuInfo, error) {
+	// psrinfo -pv gives per-physical-processor details including model.
+	// Example output:
+	//   The physical processor has 4 cores and 8 virtual processors (0-7)
+	//     x86 (GenuineIntel 206D7 family 6 model 45 step 7 clock 2600 MHz)
+	//       Intel(r) Xeon(r) CPU E5-2670 0 @ 2.60GHz
+	cmd, err := conn.RunCommand("psrinfo -pv")
+	if err != nil {
+		return nil, err
+	}
+	if cmd.ExitStatus != 0 {
+		stderr, _ := io.ReadAll(cmd.Stderr)
+		return nil, fmt.Errorf("psrinfo failed: %s", string(stderr))
+	}
+
+	data, err := io.ReadAll(cmd.Stdout)
+	if err != nil {
+		return nil, err
+	}
+
+	info := &cpuInfo{}
+	var totalCores int64
+	var sockets int64
+
+	for _, line := range strings.Split(string(data), "\n") {
+		trimmed := strings.TrimSpace(line)
+
+		// "The physical processor has N cores and M virtual processors (...)"
+		if strings.HasPrefix(trimmed, "The physical processor has") {
+			sockets++
+			// Extract core count
+			if idx := strings.Index(trimmed, " cores"); idx > 0 {
+				// Find the number before " cores"
+				prefix := trimmed[:idx]
+				parts := strings.Fields(prefix)
+				if len(parts) > 0 {
+					if n, err := strconv.ParseInt(parts[len(parts)-1], 10, 64); err == nil {
+						totalCores += n
+					}
+				}
+			}
+		}
+
+		// The indented model line (deepest indent, no parens) e.g.:
+		//       Intel(r) Xeon(r) CPU E5-2670 0 @ 2.60GHz
+		if info.Model == "" && !strings.HasPrefix(trimmed, "The ") &&
+			!strings.HasPrefix(trimmed, "x86 ") && !strings.HasPrefix(trimmed, "sparc ") &&
+			trimmed != "" && !strings.HasPrefix(trimmed, "(") {
+			info.Model = trimmed
+		}
+	}
+
+	if sockets > 0 {
+		info.ProcessorCount = sockets
+	} else {
+		info.ProcessorCount = 1
+	}
+	info.Cores = totalCores
+
+	// Extract manufacturer from model string
+	if strings.Contains(info.Model, "Intel") {
+		info.Manufacturer = "Intel"
+	} else if strings.Contains(info.Model, "AMD") {
+		info.Manufacturer = "AMD"
+	} else if strings.Contains(info.Model, "SPARC") || strings.Contains(info.Model, "sparc") {
+		info.Manufacturer = "Oracle"
+	}
+
+	return info, nil
+}
+
+// normalizeManufacturer maps CPUID vendor strings to human-readable names.
+func normalizeManufacturer(vendor string) string {
+	switch vendor {
+	case "GenuineIntel":
+		return "Intel"
+	case "AuthenticAMD":
+		return "AMD"
+	default:
+		return vendor
+	}
 }
