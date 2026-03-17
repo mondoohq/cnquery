@@ -208,7 +208,7 @@ func (a *mqlAwsNeptune) getDbInstances(conn *connection.AwsConnection) []*jobpoo
 }
 
 func newMqlAwsNeptuneInstance(runtime *plugin.Runtime, region string, instance neptune_types.DBInstance) (*mqlAwsNeptuneInstance, error) {
-	endpoint, _ := convert.JsonToDictSlice(instance.Endpoint)
+	endpoint, _ := convert.JsonToDict(instance.Endpoint)
 
 	resource, err := CreateResource(runtime, "aws.neptune.instance",
 		map[string]*llx.RawData{
