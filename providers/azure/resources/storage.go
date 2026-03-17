@@ -111,6 +111,11 @@ func (a *mqlAzureSubscriptionStorageService) accounts() ([]any, error) {
 }
 
 func (a *mqlAzureSubscriptionStorageServiceAccount) containers() ([]any, error) {
+	// Data Lake Storage Gen2 (HNS-enabled) accounts don't support the Blob containers API.
+	if a.GetIsHnsEnabled().Data {
+		return nil, nil
+	}
+
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -236,6 +241,12 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) tableProperties() (*mqlAzure
 }
 
 func (a *mqlAzureSubscriptionStorageServiceAccount) blobProperties() (*mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties, error) {
+	// Data Lake Storage Gen2 (HNS-enabled) accounts don't support the Blob services API.
+	if a.GetIsHnsEnabled().Data {
+		a.BlobProperties.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -271,6 +282,12 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) blobProperties() (*mqlAzureS
 }
 
 func (a *mqlAzureSubscriptionStorageServiceAccount) dataProtection() (*mqlAzureSubscriptionStorageServiceAccountDataProtection, error) {
+	// Data Lake Storage Gen2 (HNS-enabled) accounts don't support the Blob services API.
+	if a.GetIsHnsEnabled().Data {
+		a.DataProtection.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
