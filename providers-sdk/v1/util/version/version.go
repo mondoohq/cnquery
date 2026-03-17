@@ -14,6 +14,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"go.mondoo.com/mql/v13/utils/stringx"
@@ -73,8 +74,13 @@ var checkCmd = &cobra.Command{
 	Short: "checks if providers need updates",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		for i := range args {
-			checkUpdate(args[i])
+		results := analyzeProviders(args)
+		for _, r := range results {
+			if r.err != nil {
+				log.Error().Err(r.err).Str("path", r.path).Msg("failed to process version")
+				continue
+			}
+			logChanges(r.changes, r.conf)
 		}
 	},
 }
@@ -258,15 +264,50 @@ var defaultsCmd = &cobra.Command{
 	},
 }
 
-func checkUpdate(providerPath string) {
-	conf, err := getConfig(providerPath)
-	if err != nil {
-		log.Error().Err(err).Str("path", providerPath).Msg("failed to process version")
-		return
+// maxParallel is the number of concurrent provider analyses.
+const maxParallel = 4
+
+// providerAnalysis holds the result of analyzing a single provider.
+type providerAnalysis struct {
+	conf    *providerConf
+	path    string
+	changes int
+	err     error
+}
+
+// analyzeProviders runs countChangesSince for each provider path in parallel (up to maxParallel).
+// Each goroutine opens its own git.Repository to avoid concurrent map access in go-git's storage.
+func analyzeProviders(providerPaths []string) []providerAnalysis {
+	results := make([]providerAnalysis, len(providerPaths))
+	sem := make(chan struct{}, maxParallel)
+	var wg sync.WaitGroup
+
+	for i, p := range providerPaths {
+		results[i].path = p
+		wg.Add(1)
+		go func(idx int, path string) {
+			defer wg.Done()
+			sem <- struct{}{}
+			defer func() { <-sem }()
+
+			repo, err := git.PlainOpen(".")
+			if err != nil {
+				results[idx].err = fmt.Errorf("failed to open git repo: %w", err)
+				return
+			}
+
+			conf, err := getConfig(path)
+			if err != nil {
+				results[idx].err = err
+				return
+			}
+			results[idx].conf = conf
+			results[idx].changes = countChangesSince(repo, conf, path)
+		}(i, p)
 	}
 
-	changes := countChangesSince(conf, providerPath)
-	logChanges(changes, conf)
+	wg.Wait()
+	return results
 }
 
 func logChanges(changes int, conf *providerConf) {
@@ -377,16 +418,27 @@ func getConfig(providerPath string) (*providerConf, error) {
 }
 
 func updateVersions(providerPaths []string) {
+	results := analyzeProviders(providerPaths)
 	updated := []*providerConf{}
 
-	for _, path := range providerPaths {
-		conf, err := tryUpdate(path)
+	for _, r := range results {
+		if r.err != nil {
+			log.Error().Err(r.err).Str("path", r.path).Msg("failed to process version")
+			continue
+		}
+
+		logChanges(r.changes, r.conf)
+		if r.changes == 0 {
+			log.Info().Str("path", r.path).Msg("nothing to update")
+			continue
+		}
+
+		conf, err := applyVersionBump(r.conf)
 		if err != nil {
-			log.Error().Err(err).Str("path", path).Msg("failed to process version")
+			log.Error().Err(err).Str("path", r.path).Msg("failed to bump version")
 			continue
 		}
 		if conf == nil {
-			log.Info().Str("path", path).Msg("nothing to update")
 			continue
 		}
 		updated = append(updated, conf)
@@ -430,19 +482,9 @@ func writeOutputFiles(confs updateConfs) error {
 	return nil
 }
 
-func tryUpdate(providerPath string) (*providerConf, error) {
-	conf, err := getConfig(providerPath)
-	if err != nil {
-		return nil, err
-	}
-
-	changes := countChangesSince(conf, providerPath)
-	logChanges(changes, conf)
-
-	if changes == 0 {
-		return nil, nil
-	}
-
+// applyVersionBump bumps the version in the config file on disk.
+// The caller must have already verified that the provider has changes.
+func applyVersionBump(conf *providerConf) (*providerConf, error) {
 	version, err := bumpVersion(conf.version)
 	if err != nil || version == "" {
 		return nil, err
@@ -635,12 +677,7 @@ func findVersionCommitHash(repo *git.Repository, conf *providerConf) plumbing.Ha
 	return plumbing.ZeroHash
 }
 
-func countChangesSince(conf *providerConf, repoPath string) int {
-	repo, err := git.PlainOpen(".")
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to open git repo")
-	}
-
+func countChangesSince(repo *git.Repository, conf *providerConf, repoPath string) int {
 	versionHash := findVersionCommitHash(repo, conf)
 	if versionHash.IsZero() {
 		log.Warn().Msg("could not find version commit via blame => assuming provider needs update")
