@@ -1725,6 +1725,12 @@ mount.point @defaults("device path fstype") {
   options map[string]string
   // Whether the mount point is mounted
   mounted bool
+  // Total size in bytes
+  size() int
+  // Used space in bytes
+  used() int
+  // Available space in bytes
+  available() int
 }
 
 // Shadowed password file

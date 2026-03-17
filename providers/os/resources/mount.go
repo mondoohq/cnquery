@@ -4,7 +4,10 @@
 package resources
 
 import (
+	"errors"
 	"fmt"
+	"strings"
+	"sync"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
@@ -103,4 +106,73 @@ func initMountPoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 		"options": llx.MapData(nil, types.String),
 		"mounted": llx.BoolFalse,
 	}, nil, nil
+}
+
+type mqlMountPointInternal struct {
+	dfFetched bool
+	dfEntry   *mount.DfEntry
+	lock      sync.Mutex
+}
+
+func (m *mqlMountPoint) fetchDf() (*mount.DfEntry, error) {
+	if m.dfFetched {
+		return m.dfEntry, nil
+	}
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	if m.dfFetched {
+		return m.dfEntry, nil
+	}
+
+	o, err := CreateResource(m.MqlRuntime, "command", map[string]*llx.RawData{
+		"command": llx.StringData("df -P -k"),
+	})
+	if err != nil {
+		return nil, err
+	}
+	cmd := o.(*mqlCommand)
+	if exit := cmd.GetExitcode(); exit.Data != 0 {
+		return nil, errors.New("could not retrieve disk usage: " + cmd.Stderr.Data)
+	}
+
+	entries := mount.ParseDf(strings.NewReader(cmd.Stdout.Data))
+	m.dfEntry = entries[m.Path.Data]
+	m.dfFetched = true
+	return m.dfEntry, nil
+}
+
+func (m *mqlMountPoint) size() (int64, error) {
+	entry, err := m.fetchDf()
+	if err != nil {
+		return 0, err
+	}
+	if entry == nil {
+		m.Size.State = plugin.StateIsNull | plugin.StateIsSet
+		return 0, nil
+	}
+	return entry.Size, nil
+}
+
+func (m *mqlMountPoint) used() (int64, error) {
+	entry, err := m.fetchDf()
+	if err != nil {
+		return 0, err
+	}
+	if entry == nil {
+		m.Used.State = plugin.StateIsNull | plugin.StateIsSet
+		return 0, nil
+	}
+	return entry.Used, nil
+}
+
+func (m *mqlMountPoint) available() (int64, error) {
+	entry, err := m.fetchDf()
+	if err != nil {
+		return 0, err
+	}
+	if entry == nil {
+		m.Available.State = plugin.StateIsNull | plugin.StateIsSet
+		return 0, nil
+	}
+	return entry.Available, nil
 }

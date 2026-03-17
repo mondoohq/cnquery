@@ -2824,6 +2824,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"mount.point.mounted": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMountPoint).GetMounted()).ToDataRes(types.Bool)
 	},
+	"mount.point.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMountPoint).GetSize()).ToDataRes(types.Int)
+	},
+	"mount.point.used": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMountPoint).GetUsed()).ToDataRes(types.Int)
+	},
+	"mount.point.available": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMountPoint).GetAvailable()).ToDataRes(types.Int)
+	},
 	"shadow.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlShadow).GetList()).ToDataRes(types.Array(types.Resource("shadow.entry")))
 	},
@@ -6966,6 +6975,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"mount.point.mounted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMountPoint).Mounted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mount.point.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMountPoint).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mount.point.used": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMountPoint).Used, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mount.point.available": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMountPoint).Available, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"shadow.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19242,12 +19263,15 @@ func (c *mqlMount) GetList() *plugin.TValue[[]any] {
 type mqlMountPoint struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMountPointInternal it will be used here
-	Device  plugin.TValue[string]
-	Path    plugin.TValue[string]
-	Fstype  plugin.TValue[string]
-	Options plugin.TValue[map[string]any]
-	Mounted plugin.TValue[bool]
+	mqlMountPointInternal
+	Device    plugin.TValue[string]
+	Path      plugin.TValue[string]
+	Fstype    plugin.TValue[string]
+	Options   plugin.TValue[map[string]any]
+	Mounted   plugin.TValue[bool]
+	Size      plugin.TValue[int64]
+	Used      plugin.TValue[int64]
+	Available plugin.TValue[int64]
 }
 
 // createMountPoint creates a new instance of this resource
@@ -19305,6 +19329,24 @@ func (c *mqlMountPoint) GetOptions() *plugin.TValue[map[string]any] {
 
 func (c *mqlMountPoint) GetMounted() *plugin.TValue[bool] {
 	return &c.Mounted
+}
+
+func (c *mqlMountPoint) GetSize() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Size, func() (int64, error) {
+		return c.size()
+	})
+}
+
+func (c *mqlMountPoint) GetUsed() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Used, func() (int64, error) {
+		return c.used()
+	})
+}
+
+func (c *mqlMountPoint) GetAvailable() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Available, func() (int64, error) {
+		return c.available()
+	})
 }
 
 // mqlShadow for the shadow resource

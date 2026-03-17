@@ -38,4 +38,34 @@ func TestResource_Mount(t *testing.T) {
 		assert.NotEmpty(t, res)
 		assert.Equal(t, false, res[0].Data.Value)
 	})
+
+	t.Run("mount point size from df", func(t *testing.T) {
+		res := x.TestQuery(t, "mount.point(\"/\").size")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		// 51340776 KB * 1024
+		assert.Equal(t, int64(51340776*1024), res[0].Data.Value)
+	})
+
+	t.Run("mount point used from df", func(t *testing.T) {
+		res := x.TestQuery(t, "mount.point(\"/\").used")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		// 12165612 KB * 1024
+		assert.Equal(t, int64(12165612*1024), res[0].Data.Value)
+	})
+
+	t.Run("mount point available from df", func(t *testing.T) {
+		res := x.TestQuery(t, "mount.point(\"/\").available")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		// 36537668 KB * 1024
+		assert.Equal(t, int64(36537668*1024), res[0].Data.Value)
+	})
+
+	t.Run("mount point size is null for unmounted path", func(t *testing.T) {
+		res := x.TestQuery(t, "mount.point(\"/notthere\").size")
+		assert.NotEmpty(t, res)
+		assert.Nil(t, res[0].Data.Value)
+	})
 }
