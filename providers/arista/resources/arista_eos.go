@@ -45,9 +45,29 @@ func (v *mqlAristaEosRunningConfig) id() (string, error) {
 	return "arista.eos.runningConfig", nil
 }
 
+type mqlAristaEosRunningConfigInternal struct {
+	contentFetched bool
+	contentCache   string
+	lock           sync.Mutex
+}
+
+func (a *mqlAristaEosRunningConfig) fetchContent() string {
+	if a.contentFetched {
+		return a.contentCache
+	}
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	if a.contentFetched {
+		return a.contentCache
+	}
+	eosClient := aristaClient(a.MqlRuntime)
+	a.contentCache = eosClient.RunningConfig()
+	a.contentFetched = true
+	return a.contentCache
+}
+
 func (a *mqlAristaEosRunningConfig) content() (string, error) {
-	eos := aristaClient(a.MqlRuntime)
-	return eos.RunningConfig(), nil
+	return a.fetchContent(), nil
 }
 
 func (a *mqlAristaEosRunningConfigSection) id() (string, error) {
@@ -57,16 +77,22 @@ func (a *mqlAristaEosRunningConfigSection) id() (string, error) {
 	return "arista.eos.runningConfig.section " + a.Name.Data, nil
 }
 
-func (a *mqlAristaEosRunningConfigSection) content() (string, error) {
-	eosClient := aristaClient(a.MqlRuntime)
+type mqlAristaEosRunningConfigSectionInternal struct {
+	runningConfig string
+}
 
+func (a *mqlAristaEosRunningConfigSection) content() (string, error) {
 	if a.Name.Error != nil {
 		return "", a.Name.Error
 	}
 	name := a.Name.Data
 
-	// todo: use content from arista.eos.runningconfig
-	content := eosClient.RunningConfig()
+	// Use cached running config passed from parent, or fetch directly
+	content := a.runningConfig
+	if content == "" {
+		eosClient := aristaClient(a.MqlRuntime)
+		content = eosClient.RunningConfig()
+	}
 
 	return eos.GetSection(strings.NewReader(content), name), nil
 }
@@ -260,9 +286,19 @@ func (a *mqlAristaEos) fqdn() (string, error) {
 	return hostname.Fqdn, nil
 }
 
+type mqlAristaEosInterfaceInternal struct {
+	cachedStatus map[string]any
+}
+
 func (a *mqlAristaEos) interfaces() ([]any, error) {
-	eos := aristaClient(a.MqlRuntime)
-	ifaces := eos.ShowInterface()
+	eosClient := aristaClient(a.MqlRuntime)
+	ifaces := eosClient.ShowInterface()
+
+	// Fetch interface status once for all interfaces
+	allStatus, err := eosClient.ShowInterfacesStatus()
+	if err != nil {
+		allStatus = nil
+	}
 
 	mqlIfaces := []any{}
 	for k := range ifaces.Interfaces {
@@ -308,6 +344,17 @@ func (a *mqlAristaEos) interfaces() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		// Cache the pre-fetched status for this interface
+		if allStatus != nil {
+			if entry, ok := allStatus[iface.Name]; ok {
+				statusDict, err := convert.JsonToDict(entry)
+				if err == nil {
+					mqlIface.(*mqlAristaEosInterface).cachedStatus = statusDict
+				}
+			}
+		}
+
 		mqlIfaces = append(mqlIfaces, mqlIface)
 
 	}
@@ -319,14 +366,20 @@ func (a *mqlAristaEosInterface) id() (string, error) {
 }
 
 func (a *mqlAristaEosInterface) status() (map[string]any, error) {
-	eos := aristaClient(a.MqlRuntime)
+	// Return cached status if available (pre-fetched in interfaces())
+	if a.cachedStatus != nil {
+		return a.cachedStatus, nil
+	}
+
+	// Fallback for standalone interface lookups
+	eosClient := aristaClient(a.MqlRuntime)
 
 	if a.Name.Error != nil {
 		return nil, a.Name.Error
 	}
 	ifaceName := a.Name.Data
 
-	status, err := eos.ShowInterfacesStatus()
+	status, err := eosClient.ShowInterfacesStatus()
 	if err != nil {
 		return nil, err
 	}
@@ -382,11 +435,32 @@ func (a *mqlAristaEosStp) id() (string, error) {
 var aristaMstInstanceID = regexp.MustCompile(`(\d+)$`)
 
 func (a *mqlAristaEosStp) mstInstances() ([]any, error) {
-	eos := aristaClient(a.MqlRuntime)
+	eosClient := aristaClient(a.MqlRuntime)
 
-	mstInstances, err := eos.Stp()
+	mstInstances, err := eosClient.Stp()
 	if err != nil {
 		return nil, err
+	}
+
+	// Pre-fetch all STP interface details to avoid N+1 API calls.
+	// StpInterfaceDetails is called per-interface for counters() and features();
+	// by fetching once per (instance, interface) pair here, we cache the results.
+	type stpDetailKey struct {
+		instanceID string
+		ifaceName  string
+	}
+	stpDetails := map[stpDetailKey]*eos.SptMestInterfaceDetail{}
+	for mstk := range mstInstances {
+		m := aristaMstInstanceID.FindStringSubmatch(mstk)
+		if m == nil {
+			continue
+		}
+		for ifacek := range mstInstances[mstk].Interfaces {
+			detail, err := eosClient.StpInterfaceDetails(m[1], ifacek)
+			if err == nil {
+				stpDetails[stpDetailKey{m[1], ifacek}] = &detail
+			}
+		}
 	}
 
 	res := []any{}
@@ -443,6 +517,18 @@ func (a *mqlAristaEosStp) mstInstances() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+
+			// Cache pre-fetched counters and features on the interface resource
+			if d, ok := stpDetails[stpDetailKey{m[1], ifacek}]; ok {
+				mqlIface := mqlArista.(*mqlAristaEosSptMstInterface)
+				if counters, err := convert.JsonToDict(d.Counters); err == nil {
+					mqlIface.cachedCounters = counters
+				}
+				if features, err := convert.JsonToDict(d.Features); err == nil {
+					mqlIface.cachedFeatures = features
+				}
+			}
+
 			sptmstInterfaces = append(sptmstInterfaces, mqlArista)
 		}
 
@@ -471,8 +557,19 @@ func (a *mqlAristaEosSptMstInterface) id() (string, error) {
 	return a.Id.Data, a.Id.Error
 }
 
+type mqlAristaEosSptMstInterfaceInternal struct {
+	cachedCounters map[string]any
+	cachedFeatures map[string]any
+}
+
 func (a *mqlAristaEosSptMstInterface) counters() (map[string]any, error) {
-	eos := aristaClient(a.MqlRuntime)
+	// Return cached counters if available (pre-fetched in mstInstances())
+	if a.cachedCounters != nil {
+		return a.cachedCounters, nil
+	}
+
+	// Fallback for standalone lookups
+	eosClient := aristaClient(a.MqlRuntime)
 
 	if a.MstInstanceId.Error != nil {
 		return nil, a.MstInstanceId.Error
@@ -484,7 +581,7 @@ func (a *mqlAristaEosSptMstInterface) counters() (map[string]any, error) {
 	}
 	name := a.Name.Data
 
-	mstInstanceDetails, err := eos.StpInterfaceDetails(mstInstanceId, name)
+	mstInstanceDetails, err := eosClient.StpInterfaceDetails(mstInstanceId, name)
 	if err != nil {
 		return nil, err
 	}
@@ -493,7 +590,13 @@ func (a *mqlAristaEosSptMstInterface) counters() (map[string]any, error) {
 }
 
 func (a *mqlAristaEosSptMstInterface) features() (map[string]any, error) {
-	eos := aristaClient(a.MqlRuntime)
+	// Return cached features if available (pre-fetched in mstInstances())
+	if a.cachedFeatures != nil {
+		return a.cachedFeatures, nil
+	}
+
+	// Fallback for standalone lookups
+	eosClient := aristaClient(a.MqlRuntime)
 
 	if a.MstInstanceId.Error != nil {
 		return nil, a.MstInstanceId.Error
@@ -505,12 +608,16 @@ func (a *mqlAristaEosSptMstInterface) features() (map[string]any, error) {
 	}
 	name := a.Name.Data
 
-	mstInstanceDetails, err := eos.StpInterfaceDetails(mstInstanceId, name)
+	mstInstanceDetails, err := eosClient.StpInterfaceDetails(mstInstanceId, name)
 	if err != nil {
 		return nil, err
 	}
 
 	return convert.JsonToDict(mstInstanceDetails.Features)
+}
+
+type mqlAristaEosVlanInternal struct {
+	cachedInterfaces map[string]eos.VlanInterface
 }
 
 func (v *mqlAristaEosVlan) id() (string, error) {
@@ -521,7 +628,7 @@ func (a *mqlAristaEos) vlans() ([]any, error) {
 	eosClient := aristaClient(a.MqlRuntime)
 	vlans := eosClient.Vlans()
 
-	// Fetch show vlan data for the dynamic field
+	// Fetch show vlan data once for dynamic field and interfaces
 	showVlans, err := eosClient.ShowVlans()
 	if err != nil {
 		showVlans = nil
@@ -552,6 +659,14 @@ func (a *mqlAristaEos) vlans() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		// Cache the show vlan interfaces for this VLAN to avoid re-fetching
+		if showVlans != nil {
+			if sv, ok := showVlans[vid]; ok {
+				mqlVlan.(*mqlAristaEosVlan).cachedInterfaces = sv.Interfaces
+			}
+		}
+
 		res = append(res, mqlVlan)
 	}
 
@@ -559,6 +674,19 @@ func (a *mqlAristaEos) vlans() ([]any, error) {
 }
 
 func (a *mqlAristaEosVlan) interfaces() ([]any, error) {
+	// Use cached interfaces if available (pre-fetched in vlans())
+	if a.cachedInterfaces != nil {
+		interfaces := make([]any, 0, len(a.cachedInterfaces))
+		for name := range a.cachedInterfaces {
+			interfaces = append(interfaces, name)
+		}
+		sort.Slice(interfaces, func(i, j int) bool {
+			return interfaces[i].(string) < interfaces[j].(string)
+		})
+		return interfaces, nil
+	}
+
+	// Fallback for standalone VLAN lookups
 	eosClient := aristaClient(a.MqlRuntime)
 
 	if a.Id.Error != nil {
@@ -748,22 +876,39 @@ func (a *mqlAristaEosBgp) vrfs() ([]any, error) {
 		neighbors = nil
 	}
 
+	// Pre-build neighbor lookup maps to avoid O(n²) linear searches
+	type neighborInfo struct {
+		Description      string
+		InboundRouteMap  string
+		OutboundRouteMap string
+	}
+	// neighborsByVrf maps vrfName -> peerAddress -> neighborInfo
+	neighborsByVrf := map[string]map[string]neighborInfo{}
+	if neighbors != nil {
+		for vrfName, vrfNeighbors := range neighbors.VRFs {
+			peerMap := make(map[string]neighborInfo, len(vrfNeighbors.PeerList))
+			for _, neighbor := range vrfNeighbors.PeerList {
+				peerMap[neighbor.PeerAddress] = neighborInfo{
+					Description:      neighbor.Description,
+					InboundRouteMap:  neighbor.InboundRouteMap,
+					OutboundRouteMap: neighbor.OutboundRouteMap,
+				}
+			}
+			neighborsByVrf[vrfName] = peerMap
+		}
+	}
+
 	res := []any{}
 	for vrfName, vrfData := range summary.VRFs {
 		// Build peers for this VRF
 		peers := []any{}
 		for peerAddr, peerData := range vrfData.Peers {
 			var description, inRouteMap, outRouteMap string
-			if neighbors != nil {
-				if vrfNeighbors, ok := neighbors.VRFs[vrfName]; ok {
-					for _, neighbor := range vrfNeighbors.PeerList {
-						if neighbor.PeerAddress == peerAddr {
-							description = neighbor.Description
-							inRouteMap = neighbor.InboundRouteMap
-							outRouteMap = neighbor.OutboundRouteMap
-							break
-						}
-					}
+			if peerMap, ok := neighborsByVrf[vrfName]; ok {
+				if info, ok := peerMap[peerAddr]; ok {
+					description = info.Description
+					inRouteMap = info.InboundRouteMap
+					outRouteMap = info.OutboundRouteMap
 				}
 			}
 
@@ -894,8 +1039,15 @@ func (a *mqlAristaEosMlag) interfaces() ([]any, error) {
 		return []any{}, nil
 	}
 
-	// Get the running config and parse MLAG interface mappings
-	runningConfig := eosClient.RunningConfig()
+	// Use the cached running config from the runningConfig resource if available,
+	// otherwise fetch directly
+	var runningConfig string
+	rcRes, err := CreateResource(a.MqlRuntime, "arista.eos.runningConfig", map[string]*llx.RawData{})
+	if err == nil {
+		runningConfig = rcRes.(*mqlAristaEosRunningConfig).fetchContent()
+	} else {
+		runningConfig = eosClient.RunningConfig()
+	}
 	mlagInterfaces := eos.ParseMlagInterfaces(runningConfig)
 
 	res := make([]any, 0, len(mlagInterfaces))
@@ -923,6 +1075,10 @@ func (v *mqlAristaEosAcl) id() (string, error) {
 	return "arista.eos.acl/" + v.Name.Data, v.Name.Error
 }
 
+type mqlAristaEosAclInternal struct {
+	cachedEntries module.AclEntryMap
+}
+
 func (a *mqlAristaEos) acls() ([]any, error) {
 	eosClient := aristaClient(a.MqlRuntime)
 	aclConfigs := eosClient.AclConfigs()
@@ -936,6 +1092,10 @@ func (a *mqlAristaEos) acls() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		// Cache the entries to avoid re-fetching all ACLs in entries()
+		mqlAcl.(*mqlAristaEosAcl).cachedEntries = aclConfig.Entries()
+
 		res = append(res, mqlAcl)
 	}
 
@@ -943,20 +1103,24 @@ func (a *mqlAristaEos) acls() ([]any, error) {
 }
 
 func (a *mqlAristaEosAcl) entries() ([]any, error) {
-	eosClient := aristaClient(a.MqlRuntime)
-	aclConfigs := eosClient.AclConfigs()
-
 	if a.Name.Error != nil {
 		return nil, a.Name.Error
 	}
 	aclName := a.Name.Data
 
-	aclConfig, ok := aclConfigs[aclName]
-	if !ok {
-		return []any{}, nil
-	}
+	// Use cached entries if available (pre-fetched in acls())
+	rawEntries := a.cachedEntries
+	if rawEntries == nil {
+		// Fallback for standalone ACL lookups
+		eosClient := aristaClient(a.MqlRuntime)
+		aclConfigs := eosClient.AclConfigs()
 
-	rawEntries := aclConfig.Entries()
+		aclConfig, ok := aclConfigs[aclName]
+		if !ok {
+			return []any{}, nil
+		}
+		rawEntries = aclConfig.Entries()
+	}
 
 	// Parse and sort entries by sequence number
 	parsed := make([]eos.AclEntryParsed, 0, len(rawEntries))

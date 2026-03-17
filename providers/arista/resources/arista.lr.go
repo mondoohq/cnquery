@@ -1803,7 +1803,7 @@ func (c *mqlAristaEos) GetHardware() *plugin.TValue[*mqlAristaEosHardware] {
 type mqlAristaEosRunningConfig struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAristaEosRunningConfigInternal it will be used here
+	mqlAristaEosRunningConfigInternal
 	Content plugin.TValue[string]
 }
 
@@ -1854,7 +1854,7 @@ func (c *mqlAristaEosRunningConfig) GetContent() *plugin.TValue[string] {
 type mqlAristaEosRunningConfigSection struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAristaEosRunningConfigSectionInternal it will be used here
+	mqlAristaEosRunningConfigSectionInternal
 	Name    plugin.TValue[string]
 	Content plugin.TValue[string]
 }
@@ -2160,7 +2160,7 @@ func (c *mqlAristaEosNtpSetting) GetStatus() *plugin.TValue[string] {
 type mqlAristaEosInterface struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAristaEosInterfaceInternal it will be used here
+	mqlAristaEosInterfaceInternal
 	Name                      plugin.TValue[string]
 	Bandwidth                 plugin.TValue[int64]
 	BurnedInAddress           plugin.TValue[string]
@@ -2511,7 +2511,7 @@ func (c *mqlAristaEosStpMst) GetInterfaces() *plugin.TValue[[]any] {
 type mqlAristaEosSptMstInterface struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAristaEosSptMstInterfaceInternal it will be used here
+	mqlAristaEosSptMstInterfaceInternal
 	Id                   plugin.TValue[string]
 	MstInstanceId        plugin.TValue[string]
 	Name                 plugin.TValue[string]
@@ -2634,7 +2634,7 @@ func (c *mqlAristaEosSptMstInterface) GetFeatures() *plugin.TValue[any] {
 type mqlAristaEosVlan struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAristaEosVlanInternal it will be used here
+	mqlAristaEosVlanInternal
 	Id          plugin.TValue[string]
 	Name        plugin.TValue[string]
 	State       plugin.TValue[string]
@@ -3270,7 +3270,7 @@ func (c *mqlAristaEosMlagInterface) GetMlagId() *plugin.TValue[string] {
 type mqlAristaEosAcl struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAristaEosAclInternal it will be used here
+	mqlAristaEosAclInternal
 	Name    plugin.TValue[string]
 	Type    plugin.TValue[string]
 	Entries plugin.TValue[[]any]
