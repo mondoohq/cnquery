@@ -34,6 +34,7 @@ const (
 	// AssetConnected means the asset has a live runtime/connection.
 	AssetConnected
 	// AssetClosed means the asset's connection has been explicitly closed.
+	// This is a terminal state — closed assets cannot be reconnected.
 	AssetClosed
 )
 
@@ -173,8 +174,7 @@ func (e *AssetExplorer) Connected() []*TrackedAsset {
 // is populated with any newly discovered children).
 //
 // If the asset is already Connected, this is a no-op returning existing state.
-// If the asset is Closed, it re-connects (creates a fresh runtime). Re-connecting
-// is allowed but discouraged as it re-fetches data from the provider.
+// Closed assets cannot be reconnected — Connect returns an error.
 //
 // Returns ErrDuplicateAsset if the asset is a duplicate of an already-connected
 // asset (either detected by the coordinator or by platform ID dedup). In this
@@ -189,6 +189,10 @@ func (e *AssetExplorer) Connect(asset *TrackedAsset) (*TrackedAsset, error) {
 
 	if asset.State == AssetConnected {
 		return asset, nil
+	}
+
+	if asset.State == AssetClosed {
+		return nil, fmt.Errorf("asset %q has been closed and cannot be reconnected", asset.Asset.GetName())
 	}
 
 	awr, err := createRuntimeForAsset(asset.Asset, e.upstream, e.recording)
@@ -216,8 +220,6 @@ func (e *AssetExplorer) Connect(asset *TrackedAsset) (*TrackedAsset, error) {
 		}
 	}
 
-	// Discover immediate children
-	asset.Children = nil // reset children in case of re-connect
 	e.discoverChildren(asset)
 
 	return asset, nil

@@ -134,6 +134,18 @@ func TestAssetExplorerConnectAlreadyConnected(t *testing.T) {
 	assert.Equal(t, "child1", connected.Children[0].Asset.Name)
 }
 
+func TestAssetExplorerConnectClosedAsset(t *testing.T) {
+	asset := &TrackedAsset{
+		Asset: &inventory.Asset{Name: "closed"},
+		State: AssetClosed,
+	}
+	e := newTestExplorer(asset)
+
+	_, err := e.Connect(asset)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "closed")
+}
+
 func TestAssetExplorerConnectUnknownAsset(t *testing.T) {
 	e := newTestExplorer()
 	unknown := &TrackedAsset{
