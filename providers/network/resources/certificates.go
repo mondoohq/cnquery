@@ -4,6 +4,9 @@
 package resources
 
 import (
+	"crypto/ecdsa"
+	"crypto/ed25519"
+	"crypto/rsa"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
@@ -175,6 +178,31 @@ func (r *mqlCertificate) id() (string, error) {
 	return "certificate:" + x.(string), nil
 }
 
+// oidSCTList is the OID for the Certificate Transparency SCT List extension (1.3.6.1.4.1.11129.2.4.2)
+var oidSCTList = asn1.ObjectIdentifier{1, 3, 6, 1, 4, 1, 11129, 2, 4, 2}
+
+func certificateHasSCTs(cert *x509.Certificate) bool {
+	for _, ext := range cert.Extensions {
+		if ext.Id.Equal(oidSCTList) {
+			return true
+		}
+	}
+	return false
+}
+
+func publicKeyBitSize(cert *x509.Certificate) int64 {
+	switch key := cert.PublicKey.(type) {
+	case *rsa.PublicKey:
+		return int64(key.N.BitLen())
+	case *ecdsa.PublicKey:
+		return int64(key.Curve.Params().BitSize)
+	case ed25519.PublicKey:
+		return 256
+	default:
+		return 0
+	}
+}
+
 type mqlCertificateInternal struct {
 	cert             plugin.TValue[*x509.Certificate]
 	allCertFieldsSet bool
@@ -233,6 +261,15 @@ func (s *mqlCertificate) getGoCert() error {
 		s.CrlDistributionPoints = plugin.TValue[[]any]{Data: llx.TArr2Raw(cert.CRLDistributionPoints), State: plugin.StateIsSet}
 		s.OcspServer = plugin.TValue[[]any]{Data: llx.TArr2Raw(cert.OCSPServer), State: plugin.StateIsSet}
 		s.IssuingCertificateUrl = plugin.TValue[[]any]{Data: llx.TArr2Raw(cert.IssuingCertificateURL), State: plugin.StateIsSet}
+		s.PublicKeyAlgorithm = plugin.TValue[string]{Data: cert.PublicKeyAlgorithm.String(), State: plugin.StateIsSet}
+		s.PublicKeyBits = plugin.TValue[int64]{Data: publicKeyBitSize(cert), State: plugin.StateIsSet}
+		s.IsExpired = plugin.TValue[bool]{Data: time.Now().After(cert.NotAfter), State: plugin.StateIsSet}
+		s.HasSCTs = plugin.TValue[bool]{Data: certificateHasSCTs(cert), State: plugin.StateIsSet}
+		if cert.MaxPathLen > 0 || cert.MaxPathLenZero {
+			s.MaxPathLen = plugin.TValue[int64]{Data: int64(cert.MaxPathLen), State: plugin.StateIsSet}
+		} else {
+			s.MaxPathLen = plugin.TValue[int64]{State: plugin.StateIsSet | plugin.StateIsNull}
+		}
 	}
 
 	// in case the cert was already set, use the cached error state
@@ -474,6 +511,26 @@ func (s *mqlCertificate) revokedAt() (*time.Time, error) {
 
 func (s *mqlCertificate) isVerified() (bool, error) {
 	return false, nil
+}
+
+func (s *mqlCertificate) publicKeyAlgorithm() (string, error) {
+	return "", s.getGoCert()
+}
+
+func (s *mqlCertificate) publicKeyBits() (int64, error) {
+	return 0, s.getGoCert()
+}
+
+func (s *mqlCertificate) isExpired() (bool, error) {
+	return false, s.getGoCert()
+}
+
+func (s *mqlCertificate) hasSCTs() (bool, error) {
+	return false, s.getGoCert()
+}
+
+func (s *mqlCertificate) maxPathLen() (int64, error) {
+	return 0, s.getGoCert()
 }
 
 func (r *mqlPkixName) id() (string, error) {

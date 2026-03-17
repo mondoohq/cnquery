@@ -121,6 +121,10 @@ type mqlTlsInternal struct {
 	tester *tlsshake.Tester
 	// during TLS detection, if we find any issue, we record it here
 	Error error
+	// cached stdlib TLS connection state for negotiated* fields
+	connState     *tls.ConnectionState
+	connStateErr  error
+	connStateDone bool
 }
 
 func (s *mqlTls) id() (string, error) {
@@ -234,6 +238,10 @@ func (s *mqlTls) params(socket *mqlSocket, domainName string) (map[string]any, e
 			v[k] = vv
 		}
 		res[field] = v
+	}
+
+	if findings.NegotiatedGroup != "" {
+		res["negotiatedGroup"] = findings.NegotiatedGroup
 	}
 
 	return res, nil
@@ -386,6 +394,9 @@ func (s *mqlTls) unsafeTLSTest(socket *mqlSocket, domainName string) error {
 			s.Params.State = plugin.StateIsSet | plugin.StateIsNull
 			s.Certificates.State = plugin.StateIsSet | plugin.StateIsNull
 			s.NonSniCertificates.State = plugin.StateIsSet | plugin.StateIsNull
+			s.NegotiatedGroup.State = plugin.StateIsSet | plugin.StateIsNull
+			s.NegotiatedVersion.State = plugin.StateIsSet | plugin.StateIsNull
+			s.NegotiatedCipher.State = plugin.StateIsSet | plugin.StateIsNull
 			return nil
 		}
 
@@ -468,4 +479,94 @@ func (s *mqlTls) certificates(socket *mqlSocket, domainName string) ([]any, erro
 
 func (s *mqlTls) nonSniCertificates(socket *mqlSocket, domainName string) ([]any, error) {
 	return nil, s.populateCertificates(socket, domainName)
+}
+
+// getConnectionState performs a single Go stdlib TLS connection and caches the result.
+// All three negotiated* fields share this connection — only one dial is made.
+func (s *mqlTls) getConnectionState(socket *mqlSocket, domainName string) (*tls.ConnectionState, error) {
+	s.lock.Lock()
+	if s.connStateDone {
+		cs, err := s.connState, s.connStateErr
+		s.lock.Unlock()
+		return cs, err
+	}
+	s.lock.Unlock()
+
+	host := socket.Address.Data
+	port := socket.Port.Data
+	proto := socket.Protocol.Data
+	addr := net.JoinHostPort(host, strconv.FormatInt(port, 10))
+
+	conn, err := tls.DialWithDialer(
+		&net.Dialer{Timeout: DefaultDialerTimeout},
+		proto, addr,
+		&tls.Config{InsecureSkipVerify: true, ServerName: domainName},
+	)
+
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	if s.connStateDone {
+		return s.connState, s.connStateErr
+	}
+	s.connStateDone = true
+	if err != nil {
+		s.connStateErr = err
+		return nil, err
+	}
+	defer conn.Close()
+	cs := conn.ConnectionState()
+	s.connState = &cs
+	return s.connState, nil
+}
+
+func (s *mqlTls) negotiatedGroup(socket *mqlSocket, domainName string) (string, error) {
+	enabled, err := s.TLSEnabled(socket, domainName)
+	if err != nil {
+		return "", err
+	}
+	if !enabled {
+		s.NegotiatedGroup.State = plugin.StateIsSet | plugin.StateIsNull
+		return "", nil
+	}
+	cs, err := s.getConnectionState(socket, domainName)
+	if err != nil {
+		return "", err
+	}
+	if cs.CurveID == 0 {
+		s.NegotiatedGroup.State = plugin.StateIsSet | plugin.StateIsNull
+		return "", nil
+	}
+	return cs.CurveID.String(), nil
+}
+
+func (s *mqlTls) negotiatedVersion(socket *mqlSocket, domainName string) (string, error) {
+	enabled, err := s.TLSEnabled(socket, domainName)
+	if err != nil {
+		return "", err
+	}
+	if !enabled {
+		s.NegotiatedVersion.State = plugin.StateIsSet | plugin.StateIsNull
+		return "", nil
+	}
+	cs, err := s.getConnectionState(socket, domainName)
+	if err != nil {
+		return "", err
+	}
+	return tls.VersionName(cs.Version), nil
+}
+
+func (s *mqlTls) negotiatedCipher(socket *mqlSocket, domainName string) (string, error) {
+	enabled, err := s.TLSEnabled(socket, domainName)
+	if err != nil {
+		return "", err
+	}
+	if !enabled {
+		s.NegotiatedCipher.State = plugin.StateIsSet | plugin.StateIsNull
+		return "", nil
+	}
+	cs, err := s.getConnectionState(socket, domainName)
+	if err != nil {
+		return "", err
+	}
+	return tls.CipherSuiteName(cs.CipherSuite), nil
 }

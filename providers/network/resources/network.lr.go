@@ -363,6 +363,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"tls.extensions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTls).GetExtensions()).ToDataRes(types.Array(types.String))
 	},
+	"tls.negotiatedGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTls).GetNegotiatedGroup()).ToDataRes(types.String)
+	},
+	"tls.negotiatedVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTls).GetNegotiatedVersion()).ToDataRes(types.String)
+	},
+	"tls.negotiatedCipher": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTls).GetNegotiatedCipher()).ToDataRes(types.String)
+	},
 	"tls.certificates": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTls).GetCertificates()).ToDataRes(types.Array(types.Resource("certificate")))
 	},
@@ -449,6 +458,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"certificate.sanExtension": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCertificate).GetSanExtension()).ToDataRes(types.Resource("pkix.sanExtension"))
+	},
+	"certificate.publicKeyAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCertificate).GetPublicKeyAlgorithm()).ToDataRes(types.String)
+	},
+	"certificate.publicKeyBits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCertificate).GetPublicKeyBits()).ToDataRes(types.Int)
+	},
+	"certificate.isExpired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCertificate).GetIsExpired()).ToDataRes(types.Bool)
+	},
+	"certificate.hasSCTs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCertificate).GetHasSCTs()).ToDataRes(types.Bool)
+	},
+	"certificate.maxPathLen": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCertificate).GetMaxPathLen()).ToDataRes(types.Int)
 	},
 	"pkix.name.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPkixName).GetId()).ToDataRes(types.String)
@@ -913,6 +937,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlTls).Extensions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"tls.negotiatedGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTls).NegotiatedGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tls.negotiatedVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTls).NegotiatedVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"tls.negotiatedCipher": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTls).NegotiatedCipher, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"tls.certificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTls).Certificates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -1035,6 +1071,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"certificate.sanExtension": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCertificate).SanExtension, ok = plugin.RawToTValue[*mqlPkixSanExtension](v.Value, v.Error)
+		return
+	},
+	"certificate.publicKeyAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCertificate).PublicKeyAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"certificate.publicKeyBits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCertificate).PublicKeyBits, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"certificate.isExpired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCertificate).IsExpired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"certificate.hasSCTs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCertificate).HasSCTs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"certificate.maxPathLen": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCertificate).MaxPathLen, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"pkix.name.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2094,6 +2150,9 @@ type mqlTls struct {
 	Versions           plugin.TValue[[]any]
 	Ciphers            plugin.TValue[[]any]
 	Extensions         plugin.TValue[[]any]
+	NegotiatedGroup    plugin.TValue[string]
+	NegotiatedVersion  plugin.TValue[string]
+	NegotiatedCipher   plugin.TValue[string]
 	Certificates       plugin.TValue[[]any]
 	NonSniCertificates plugin.TValue[[]any]
 }
@@ -2189,6 +2248,54 @@ func (c *mqlTls) GetExtensions() *plugin.TValue[[]any] {
 		}
 
 		return c.extensions(vargParams.Data)
+	})
+}
+
+func (c *mqlTls) GetNegotiatedGroup() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.NegotiatedGroup, func() (string, error) {
+		vargSocket := c.GetSocket()
+		if vargSocket.Error != nil {
+			return "", vargSocket.Error
+		}
+
+		vargDomainName := c.GetDomainName()
+		if vargDomainName.Error != nil {
+			return "", vargDomainName.Error
+		}
+
+		return c.negotiatedGroup(vargSocket.Data, vargDomainName.Data)
+	})
+}
+
+func (c *mqlTls) GetNegotiatedVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.NegotiatedVersion, func() (string, error) {
+		vargSocket := c.GetSocket()
+		if vargSocket.Error != nil {
+			return "", vargSocket.Error
+		}
+
+		vargDomainName := c.GetDomainName()
+		if vargDomainName.Error != nil {
+			return "", vargDomainName.Error
+		}
+
+		return c.negotiatedVersion(vargSocket.Data, vargDomainName.Data)
+	})
+}
+
+func (c *mqlTls) GetNegotiatedCipher() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.NegotiatedCipher, func() (string, error) {
+		vargSocket := c.GetSocket()
+		if vargSocket.Error != nil {
+			return "", vargSocket.Error
+		}
+
+		vargDomainName := c.GetDomainName()
+		if vargDomainName.Error != nil {
+			return "", vargDomainName.Error
+		}
+
+		return c.negotiatedCipher(vargSocket.Data, vargDomainName.Data)
 	})
 }
 
@@ -2340,6 +2447,11 @@ type mqlCertificate struct {
 	RevokedAt             plugin.TValue[*time.Time]
 	IsVerified            plugin.TValue[bool]
 	SanExtension          plugin.TValue[*mqlPkixSanExtension]
+	PublicKeyAlgorithm    plugin.TValue[string]
+	PublicKeyBits         plugin.TValue[int64]
+	IsExpired             plugin.TValue[bool]
+	HasSCTs               plugin.TValue[bool]
+	MaxPathLen            plugin.TValue[int64]
 }
 
 // createCertificate creates a new instance of this resource
@@ -2564,6 +2676,36 @@ func (c *mqlCertificate) GetSanExtension() *plugin.TValue[*mqlPkixSanExtension] 
 		}
 
 		return c.sanExtension()
+	})
+}
+
+func (c *mqlCertificate) GetPublicKeyAlgorithm() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PublicKeyAlgorithm, func() (string, error) {
+		return c.publicKeyAlgorithm()
+	})
+}
+
+func (c *mqlCertificate) GetPublicKeyBits() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.PublicKeyBits, func() (int64, error) {
+		return c.publicKeyBits()
+	})
+}
+
+func (c *mqlCertificate) GetIsExpired() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsExpired, func() (bool, error) {
+		return c.isExpired()
+	})
+}
+
+func (c *mqlCertificate) GetHasSCTs() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasSCTs, func() (bool, error) {
+		return c.hasSCTs()
+	})
+}
+
+func (c *mqlCertificate) GetMaxPathLen() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MaxPathLen, func() (int64, error) {
+		return c.maxPathLen()
 	})
 }
 

@@ -81,6 +81,7 @@ type Findings struct {
 	Certificates       []*x509.Certificate
 	NonSNIcertificates []*x509.Certificate
 	Revocations        map[string]*Revocation
+	NegotiatedGroup    string
 }
 
 type Revocation struct {
@@ -413,6 +414,15 @@ func (s *Tester) parseServerHello(data []byte, version string, conf *ScanConfig)
 		// The server wants us to retry. However, we hardcode a bunch of inputs
 		// so we can't really retry.
 		return errors.New("unexpected HelloRetryRequest")
+	}
+
+	// Store the negotiated key exchange group if we recognized it
+	if len(serverKeyShareGroup) > 0 {
+		if groupName, ok := NAMED_GROUPS[string(serverKeyShareGroup)]; ok {
+			s.sync.Lock()
+			s.Findings.NegotiatedGroup = groupName
+			s.sync.Unlock()
+		}
 	}
 
 	// we have to wait for any changes to the detected version (in the extensions)
@@ -991,6 +1001,24 @@ const (
 	EXTENSION_RenegotiationInfo string = "\xff\x01"
 	EXTENSION_KeyShare          string = "\x00\x33"
 )
+
+// NAMED_GROUPS maps TLS named group IDs to their human-readable names.
+// https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml#tls-parameters-8
+var NAMED_GROUPS = map[string]string{
+	"\x00\x17": "secp256r1",
+	"\x00\x18": "secp384r1",
+	"\x00\x19": "secp521r1",
+	"\x00\x1d": "x25519",
+	"\x00\x1e": "x448",
+	"\x01\x00": "ffdhe2048",
+	"\x01\x01": "ffdhe3072",
+	"\x01\x02": "ffdhe4096",
+	"\x01\x03": "ffdhe6144",
+	"\x01\x04": "ffdhe8192",
+	"\x11\xeb": "SecP256r1MLKEM768",
+	"\x11\xec": "X25519MLKEM768",
+	"\x11\xed": "SecP384r1MLKEM1024",
+}
 
 // https://datatracker.ietf.org/doc/html/rfc5246#appendix-A.3
 // https://datatracker.ietf.org/doc/html/rfc8446#appendix-B.2
