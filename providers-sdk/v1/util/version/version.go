@@ -74,14 +74,7 @@ var checkCmd = &cobra.Command{
 	Short: "checks if providers need updates",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		results := analyzeProviders(args)
-		for _, r := range results {
-			if r.err != nil {
-				log.Error().Err(r.err).Str("path", r.path).Msg("failed to process version")
-				continue
-			}
-			logChanges(r.changes, r.conf)
-		}
+		analyzeProviders(args)
 	},
 }
 
@@ -293,16 +286,19 @@ func analyzeProviders(providerPaths []string) []providerAnalysis {
 			repo, err := git.PlainOpen(".")
 			if err != nil {
 				results[idx].err = fmt.Errorf("failed to open git repo: %w", err)
+				log.Error().Err(results[idx].err).Str("path", path).Msg("failed to process version")
 				return
 			}
 
 			conf, err := getConfig(path)
 			if err != nil {
 				results[idx].err = err
+				log.Error().Err(err).Str("path", path).Msg("failed to process version")
 				return
 			}
 			results[idx].conf = conf
 			results[idx].changes = countChangesSince(repo, conf, path)
+			logChanges(results[idx].changes, conf)
 		}(i, p)
 	}
 
@@ -422,13 +418,7 @@ func updateVersions(providerPaths []string) {
 	updated := []*providerConf{}
 
 	for _, r := range results {
-		if r.err != nil {
-			log.Error().Err(r.err).Str("path", r.path).Msg("failed to process version")
-			continue
-		}
-
-		logChanges(r.changes, r.conf)
-		if r.changes == 0 {
+		if r.err != nil || r.changes == 0 {
 			log.Info().Str("path", r.path).Msg("nothing to update")
 			continue
 		}
