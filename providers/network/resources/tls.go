@@ -506,6 +506,10 @@ func (s *mqlTls) getConnectionState(socket *mqlSocket, domainName string) (*tls.
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	if s.connStateDone {
+		// Another goroutine won the race — close our redundant connection
+		if conn != nil {
+			conn.Close()
+		}
 		return s.connState, s.connStateErr
 	}
 	s.connStateDone = true
@@ -513,8 +517,8 @@ func (s *mqlTls) getConnectionState(socket *mqlSocket, domainName string) (*tls.
 		s.connStateErr = err
 		return nil, err
 	}
-	defer conn.Close()
 	cs := conn.ConnectionState()
+	conn.Close()
 	s.connState = &cs
 	return s.connState, nil
 }
