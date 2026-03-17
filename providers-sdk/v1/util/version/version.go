@@ -289,10 +289,11 @@ const (
 )
 
 type providerConf struct {
-	path    string
-	content string
-	version string
-	name    string
+	path      string
+	content   string
+	version   string
+	name      string
+	changelog []string // commit summaries since last version bump
 }
 
 func (conf *providerConf) title() string {
@@ -315,6 +316,20 @@ func (confs updateConfs) titles() []string {
 
 func (confs updateConfs) commitTitle() string {
 	return "🎉 " + strings.Join(confs.titles(), ", ")
+}
+
+func (confs updateConfs) changelogBody() string {
+	var b strings.Builder
+	for _, conf := range confs {
+		if len(conf.changelog) == 0 {
+			continue
+		}
+		fmt.Fprintf(&b, "\n### %s (%s)\n", conf.name, conf.version)
+		for _, msg := range conf.changelog {
+			fmt.Fprintf(&b, "- %s\n", msg)
+		}
+	}
+	return b.String()
 }
 
 func (confs updateConfs) branchName() string {
@@ -520,7 +535,8 @@ func commitChanges(confs updateConfs) error {
 	fmt.Println(" done")
 
 	body := "\n\nThis release was created by mql's provider versioning bot.\n\n" +
-		"You can find me under: `providers-sdk/v1/util/version`.\n"
+		"You can find me under: `providers-sdk/v1/util/version`.\n" +
+		confs.changelogBody()
 
 	commit, err := worktree.Commit(confs.commitTitle()+body, &git.CommitOptions{
 		Author: &object.Signature{
@@ -614,11 +630,18 @@ func countChangesSince(conf *providerConf, repoPath string) int {
 	}
 
 	var count int
+	conf.changelog = nil
 	for c, err := iter.Next(); err == nil; c, err = iter.Next() {
 		if c.Hash == versionHash {
 			break
 		}
 		count++
+		// Collect the first line of the commit message as a changelog entry.
+		msg := strings.TrimSpace(c.Message)
+		if idx := strings.IndexByte(msg, '\n'); idx != -1 {
+			msg = msg[:idx]
+		}
+		conf.changelog = append(conf.changelog, msg)
 		if fastMode {
 			return count
 		}
