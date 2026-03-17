@@ -18,6 +18,7 @@ message SendErrorReq {
   string agent_mrn = 2;
   ProductInfo product = 3;
   ErrorInfo error = 4;
+  map<string, string> tags = 5;
 }
 
 message ProductInfo {

@@ -17,6 +17,34 @@ import (
 
 //go:generate protoc --plugin=protoc-gen-go=../../../../scripts/protoc/protoc-gen-go --plugin=protoc-gen-rangerrpc=../../../../scripts/protoc/protoc-gen-rangerrpc --plugin=protoc-gen-go-vtproto=../../../../scripts/protoc/protoc-gen-go-vtproto --proto_path=. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. --go-vtproto_out=. --go-vtproto_opt=paths=source_relative --go-vtproto_opt=features=marshal+unmarshal+size errors.proto
 
+// ReportOption configures optional fields on error reports.
+type ReportOption func(*reportOptions)
+
+type reportOptions struct {
+	tags map[string]string
+}
+
+// WithTags attaches arbitrary key-value tags to the error report.
+// These are forwarded to the platform and surfaced as Sentry tags.
+func WithTags(tags map[string]string) ReportOption {
+	return func(o *reportOptions) {
+		if o.tags == nil {
+			o.tags = make(map[string]string, len(tags))
+		}
+		for k, v := range tags {
+			o.tags[k] = v
+		}
+	}
+}
+
+func applyOptions(opts []ReportOption) reportOptions {
+	var o reportOptions
+	for _, opt := range opts {
+		opt(&o)
+	}
+	return o
+}
+
 type PanicReportFn func(product, version, build string, r any, stacktrace []byte)
 
 func ReportPanic(product, version, build string, reporters ...PanicReportFn) {
@@ -75,14 +103,14 @@ func sendPanic(product, version, build string, r any, stacktrace []byte) {
 	log.Info().Msg("reported panic to Mondoo Platform")
 }
 
-func ReportError(product, version, build, err string) {
-	reportError(product, version, build, err)
+func ReportError(product, version, build, err string, opts ...ReportOption) {
+	reportError(product, version, build, err, applyOptions(opts))
 }
 
 // reportError sends an error to the mondoo platform for further analysis if the
 // service account is configured.
 // This function does not return an error as it is not critical to send the error to the platform.
-func reportError(product, version, build string, errMsg string) {
+func reportError(product, version, build string, errMsg string, ro reportOptions) {
 	// 1. read config
 	opts, err := config.Read()
 	if err != nil {
@@ -108,6 +136,7 @@ func reportError(product, version, build string, errMsg string) {
 		Error: &ErrorInfo{
 			Message: errMsg,
 		},
+		Tags: ro.tags,
 	}
 
 	// 3. send error to mondoo platform
@@ -122,13 +151,13 @@ type SlowQueryInfo struct {
 	Duration time.Duration
 }
 
-func ReportSlowQuery(product, version, build string, q SlowQueryInfo) {
-	sendSlowQuery(product, version, build, q)
+func ReportSlowQuery(product, version, build string, q SlowQueryInfo, opts ...ReportOption) {
+	sendSlowQuery(product, version, build, q, applyOptions(opts))
 }
 
 // sendSlowQuery sends queries that have been deemed excessively slow to
 // the platform for further analysis.
-func sendSlowQuery(product, version, build string, q SlowQueryInfo) {
+func sendSlowQuery(product, version, build string, q SlowQueryInfo, ro reportOptions) {
 	// 1. read config
 	opts, err := config.Read()
 	if err != nil {
@@ -158,6 +187,7 @@ func sendSlowQuery(product, version, build string, q SlowQueryInfo) {
 		Error: &ErrorInfo{
 			Message: msg,
 		},
+		Tags: ro.tags,
 	}
 
 	// 3. send error to mondoo platform
