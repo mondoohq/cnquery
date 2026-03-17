@@ -58,14 +58,30 @@ jobs:
               exit 1
             fi
           done
-          echo "PROVIDERS=$PROVIDERS_INPUT" >> "$GITHUB_OUTPUT"
+
+          # Resolve globs and verify at least one directory exists
+          RESOLVED=""
+          for p in $PROVIDERS_INPUT; do
+            for d in $p; do
+              if [ -d "$d" ]; then
+                RESOLVED="$RESOLVED $d"
+              fi
+            done
+          done
+          RESOLVED=$(echo "$RESOLVED" | xargs)
+          if [ -z "$RESOLVED" ]; then
+            echo "::error::No matching provider directories found for: $PROVIDERS_INPUT"
+            exit 1
+          fi
+          echo "PROVIDERS=$RESOLVED" >> "$GITHUB_OUTPUT"
 
       - name: Update provider versions
         id: update-providers
+        env:
+          PROVIDERS: ${{ steps.validate.outputs.PROVIDERS }}
         run: |
           go run providers-sdk/v1/util/version/version.go update \
-            ${{ steps.validate.outputs.PROVIDERS }} \
-            --increment=patch --output=.version-output
+            $PROVIDERS --increment=patch --output=.version-output
 
       - name: Prepare title and branch name
         id: branch
