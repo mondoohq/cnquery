@@ -157,7 +157,79 @@ func TestGetCpuInfoSolaris(t *testing.T) {
 	assert.Equal(t, int64(8), info.Cores)
 }
 
-func TestGetCpuInfoLinuxArm(t *testing.T) {
+func TestGetCpuInfoLinuxArmWithLscpu(t *testing.T) {
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithData(&mock.TomlData{
+		Files: map[string]*mock.MockFileData{
+			"/proc/cpuinfo": {
+				Content: "processor\t: 0\n" +
+					"BogoMIPS\t: 108.00\n" +
+					"Features\t: fp asimd evtstrm\n" +
+					"CPU implementer\t: 0x41\n" +
+					"CPU architecture: 8\n" +
+					"CPU variant\t: 0x0\n" +
+					"CPU part\t: 0xd08\n" +
+					"CPU revision\t: 3\n" +
+					"\n" +
+					"processor\t: 1\n" +
+					"BogoMIPS\t: 108.00\n" +
+					"Features\t: fp asimd evtstrm\n" +
+					"CPU implementer\t: 0x41\n" +
+					"CPU architecture: 8\n" +
+					"CPU variant\t: 0x0\n" +
+					"CPU part\t: 0xd08\n" +
+					"CPU revision\t: 3\n" +
+					"\n" +
+					"processor\t: 2\n" +
+					"BogoMIPS\t: 108.00\n" +
+					"Features\t: fp asimd evtstrm\n" +
+					"CPU implementer\t: 0x41\n" +
+					"CPU architecture: 8\n" +
+					"CPU variant\t: 0x0\n" +
+					"CPU part\t: 0xd08\n" +
+					"CPU revision\t: 3\n" +
+					"\n" +
+					"processor\t: 3\n" +
+					"BogoMIPS\t: 108.00\n" +
+					"Features\t: fp asimd evtstrm\n" +
+					"CPU implementer\t: 0x41\n" +
+					"CPU architecture: 8\n" +
+					"CPU variant\t: 0x0\n" +
+					"CPU part\t: 0xd08\n" +
+					"CPU revision\t: 3\n",
+			},
+		},
+		Commands: map[string]*mock.Command{
+			"lscpu": {
+				Stdout: "Architecture:                            aarch64\n" +
+					"Byte Order:                              Little Endian\n" +
+					"CPU(s):                                  4\n" +
+					"On-line CPU(s) list:                     0-3\n" +
+					"Thread(s) per core:                      1\n" +
+					"Core(s) per socket:                      4\n" +
+					"Socket(s):                               1\n" +
+					"Vendor ID:                               ARM\n" +
+					"Model:                                   3\n" +
+					"Model name:                              Cortex-A72\n" +
+					"Stepping:                                r0p3\n" +
+					"CPU max MHz:                             1500.0000\n" +
+					"CPU min MHz:                             600.0000\n" +
+					"BogoMIPS:                                108.00\n",
+			},
+		},
+	}))
+	require.NoError(t, err)
+
+	info, err := getCpuInfoLinux(conn)
+	require.NoError(t, err)
+
+	assert.Equal(t, "ARM", info.Manufacturer)
+	assert.Equal(t, "Cortex-A72", info.Model)
+	assert.Equal(t, int64(1), info.ProcessorCount)
+	assert.Equal(t, int64(4), info.Cores)
+}
+
+func TestGetCpuInfoLinuxArmNoLscpu(t *testing.T) {
+	// ARM system where lscpu is not available — manufacturer/model stay empty
 	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./procfs/testdata/cpu-info-aarch64.toml"))
 	require.NoError(t, err)
 

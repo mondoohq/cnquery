@@ -114,6 +114,19 @@ func getCpuInfoLinux(conn shared.Connection) (*cpuInfo, error) {
 		info.ProcessorCount = 1
 	}
 
+	// On some ARM systems (e.g. Raspberry Pi), /proc/cpuinfo doesn't include
+	// vendor or model name. Fall back to lscpu which typically has this info.
+	if (info.Manufacturer == "" || info.Model == "") && conn.Capabilities().Has(shared.Capability_RunCommand) {
+		if lscpuInfo, err := parseLscpuOutput(conn); err == nil {
+			if info.Manufacturer == "" && lscpuInfo.Manufacturer != "" {
+				info.Manufacturer = lscpuInfo.Manufacturer
+			}
+			if info.Model == "" && lscpuInfo.Model != "" {
+				info.Model = lscpuInfo.Model
+			}
+		}
+	}
+
 	return info, nil
 }
 
@@ -378,6 +391,40 @@ func getCpuInfoSolaris(conn shared.Connection) (*cpuInfo, error) {
 		info.Manufacturer = "AMD"
 	} else if strings.Contains(info.Model, "SPARC") || strings.Contains(info.Model, "sparc") {
 		info.Manufacturer = "Oracle"
+	}
+
+	return info, nil
+}
+
+// parseLscpuOutput runs lscpu and extracts manufacturer and model name.
+// This is used as a fallback when /proc/cpuinfo lacks these fields (common on ARM).
+func parseLscpuOutput(conn shared.Connection) (*cpuInfo, error) {
+	cmd, err := conn.RunCommand("lscpu")
+	if err != nil {
+		return nil, err
+	}
+	if cmd.ExitStatus != 0 {
+		stderr, _ := io.ReadAll(cmd.Stderr)
+		return nil, fmt.Errorf("lscpu failed: %s", string(stderr))
+	}
+
+	data, err := io.ReadAll(cmd.Stdout)
+	if err != nil {
+		return nil, err
+	}
+
+	info := &cpuInfo{}
+	for _, line := range strings.Split(string(data), "\n") {
+		if k, v, ok := strings.Cut(line, ":"); ok {
+			k = strings.TrimSpace(k)
+			v = strings.TrimSpace(v)
+			switch k {
+			case "Vendor ID":
+				info.Manufacturer = normalizeManufacturer(v)
+			case "Model name":
+				info.Model = v
+			}
+		}
 	}
 
 	return info, nil
