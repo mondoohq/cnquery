@@ -118,7 +118,7 @@ func main() {
 	data = append(data, '\n')
 
 	if outputPath == "" {
-		outputPath = filepath.Join(providerPath, "dist", providerName+".permissions.json")
+		outputPath = filepath.Join(providerPath, "resources", providerName+".permissions.json")
 	}
 
 	if err := os.MkdirAll(filepath.Dir(outputPath), 0o755); err != nil {

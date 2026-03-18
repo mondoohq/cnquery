@@ -1,0 +1,2677 @@
+{
+  "provider": "aws",
+  "version": "13.2.4",
+  "generated_at": "2026-03-18T12:00:35-06:00",
+  "permissions": [
+    "access-analyzer:ListAnalyzers",
+    "access-analyzer:ListFindingsV2",
+    "account:GetAlternateContact",
+    "account:GetContactInformation",
+    "acm:DescribeCertificate",
+    "acm:GetCertificate",
+    "acm:ListCertificates",
+    "acm:ListTagsForCertificate",
+    "apigateway:GetRestApis",
+    "apigateway:GetStages",
+    "application-autoscaling:DescribeScalableTargets",
+    "application-autoscaling:DescribeScalingPolicies",
+    "application-autoscaling:DescribeScheduledActions",
+    "appstream:DescribeFleets",
+    "appstream:DescribeImageBuilders",
+    "appstream:DescribeStacks",
+    "appstream:ListTagsForResource",
+    "athena:BatchGetNamedQuery",
+    "athena:GetDataCatalog",
+    "athena:GetWorkGroup",
+    "athena:ListDataCatalogs",
+    "athena:ListNamedQueries",
+    "athena:ListTagsForResource",
+    "athena:ListWorkGroups",
+    "autoscaling:DescribeAutoScalingGroups",
+    "backup:GetBackupPlan",
+    "backup:ListBackupPlans",
+    "backup:ListBackupVaults",
+    "backup:ListRecoveryPointsByBackupVault",
+    "batch:DescribeComputeEnvironments",
+    "batch:DescribeJobDefinitions",
+    "batch:DescribeJobQueues",
+    "cloudformation:DescribeStackSet",
+    "cloudformation:DescribeStacks",
+    "cloudformation:ListStackSets",
+    "cloudfront:ListDistributions",
+    "cloudfront:ListFunctions",
+    "cloudtrail:DescribeTrails",
+    "cloudtrail:GetEventSelectors",
+    "cloudtrail:GetTrailStatus",
+    "cloudwatch:DescribeAlarms",
+    "cloudwatch:DescribeAlarmsForMetric",
+    "cloudwatch:GetMetricStatistics",
+    "cloudwatch:ListMetrics",
+    "codebuild:BatchGetProjects",
+    "codebuild:ListProjects",
+    "codedeploy:BatchGetApplications",
+    "codedeploy:BatchGetDeploymentGroups",
+    "codedeploy:BatchGetDeployments",
+    "codedeploy:GetDeployment",
+    "codedeploy:ListApplications",
+    "codedeploy:ListDeploymentGroups",
+    "codedeploy:ListDeployments",
+    "codedeploy:ListTagsForResource",
+    "cognito-identity:DescribeIdentityPool",
+    "cognito-identity:ListIdentityPools",
+    "cognito-idp:DescribeUserPool",
+    "cognito-idp:GetUserPoolMfaConfig",
+    "cognito-idp:ListUserPools",
+    "config:DescribeConfigRules",
+    "config:DescribeConfigurationRecorders",
+    "config:DescribeDeliveryChannels",
+    "dms:DescribeReplicationInstances",
+    "drs:DescribeJobs",
+    "drs:DescribeSourceServers",
+    "drs:GetLaunchConfiguration",
+    "drs:GetReplicationConfiguration",
+    "ds:DescribeDirectories",
+    "ds:ListTagsForResource",
+    "dynamodb:DescribeContinuousBackups",
+    "dynamodb:DescribeExport",
+    "dynamodb:DescribeGlobalTableSettings",
+    "dynamodb:DescribeLimits",
+    "dynamodb:DescribeTable",
+    "dynamodb:ListBackups",
+    "dynamodb:ListExports",
+    "dynamodb:ListGlobalTables",
+    "dynamodb:ListTables",
+    "dynamodb:ListTagsOfResource",
+    "ec2:DescribeAddresses",
+    "ec2:DescribeFlowLogs",
+    "ec2:DescribeImageAttribute",
+    "ec2:DescribeImages",
+    "ec2:DescribeInstanceAttribute",
+    "ec2:DescribeInstanceStatus",
+    "ec2:DescribeInstances",
+    "ec2:DescribeInternetGateways",
+    "ec2:DescribeKeyPairs",
+    "ec2:DescribeNatGateways",
+    "ec2:DescribeNetworkAcls",
+    "ec2:DescribeNetworkInterfaces",
+    "ec2:DescribeRouteTables",
+    "ec2:DescribeSecurityGroups",
+    "ec2:DescribeSnapshotAttribute",
+    "ec2:DescribeSnapshots",
+    "ec2:DescribeSubnets",
+    "ec2:DescribeTags",
+    "ec2:DescribeTransitGateways",
+    "ec2:DescribeVolumes",
+    "ec2:DescribeVpcEndpoints",
+    "ec2:DescribeVpcPeeringConnections",
+    "ec2:DescribeVpcs",
+    "ec2:DescribeVpnConnections",
+    "ec2:DescribeVpnGateways",
+    "ec2:GetEbsEncryptionByDefault",
+    "ecr:BatchGetRepositoryScanningConfiguration",
+    "ecr:DescribeImages",
+    "ecr:DescribeRepositories",
+    "ecr:GetLifecyclePolicy",
+    "ecrpublic:DescribeImages",
+    "ecrpublic:DescribeRepositories",
+    "ecrpublic:GetRepositoryCatalogData",
+    "ecs:DescribeClusters",
+    "ecs:DescribeContainerInstances",
+    "ecs:DescribeServices",
+    "ecs:DescribeTaskDefinition",
+    "ecs:DescribeTaskSets",
+    "ecs:DescribeTasks",
+    "ecs:ListClusters",
+    "ecs:ListContainerInstances",
+    "ecs:ListServices",
+    "ecs:ListTagsForResource",
+    "ecs:ListTaskDefinitions",
+    "ecs:ListTasks",
+    "efs:DescribeAccessPoints",
+    "efs:DescribeBackupPolicy",
+    "efs:DescribeFileSystemPolicy",
+    "efs:DescribeFileSystems",
+    "efs:DescribeMountTargetSecurityGroups",
+    "efs:DescribeMountTargets",
+    "eks:DescribeAddon",
+    "eks:DescribeCluster",
+    "eks:DescribeNodegroup",
+    "eks:ListAddons",
+    "eks:ListClusters",
+    "eks:ListNodegroups",
+    "elasticache:DescribeCacheClusters",
+    "elasticache:DescribeServerlessCaches",
+    "elasticbeanstalk:DescribeApplications",
+    "elasticbeanstalk:DescribeEnvironments",
+    "elasticbeanstalk:ListTagsForResource",
+    "elasticloadbalancing:DescribeListeners",
+    "elasticloadbalancing:DescribeLoadBalancerAttributes",
+    "elasticloadbalancing:DescribeLoadBalancers",
+    "elasticloadbalancing:DescribeTags",
+    "elasticloadbalancing:DescribeTargetGroupAttributes",
+    "elasticloadbalancing:DescribeTargetGroups",
+    "emr:ListClusters",
+    "emr:ListInstances",
+    "es:DescribeDomains",
+    "es:DescribeElasticsearchDomain",
+    "es:ListDomainNames",
+    "es:ListTags",
+    "eventbridge:ListEventBuses",
+    "eventbridge:ListRules",
+    "eventbridge:ListTagsForResource",
+    "eventbridge:ListTargetsByRule",
+    "firehose:DescribeDeliveryStream",
+    "firehose:ListDeliveryStreams",
+    "firehose:ListTagsForDeliveryStream",
+    "fsx:DescribeBackups",
+    "fsx:DescribeFileCaches",
+    "fsx:DescribeFileSystems",
+    "fsx:DescribeVolumes",
+    "glue:BatchGetWorkflows",
+    "glue:GetCrawlers",
+    "glue:GetDataCatalogEncryptionSettings",
+    "glue:GetDatabases",
+    "glue:GetJobs",
+    "glue:GetSecurityConfigurations",
+    "glue:GetTables",
+    "glue:GetTags",
+    "glue:ListWorkflows",
+    "guardduty:GetDetector",
+    "guardduty:ListDetectors",
+    "guardduty:ListFindings",
+    "iam:GenerateCredentialReport",
+    "iam:GetAccountPasswordPolicy",
+    "iam:GetAccountSummary",
+    "iam:GetCredentialReport",
+    "iam:GetGroup",
+    "iam:GetInstanceProfile",
+    "iam:GetLoginProfile",
+    "iam:GetOpenIDConnectProvider",
+    "iam:GetPolicy",
+    "iam:GetPolicyVersion",
+    "iam:GetRole",
+    "iam:GetSAMLProvider",
+    "iam:GetUser",
+    "iam:ListAccessKeys",
+    "iam:ListAccountAliases",
+    "iam:ListAttachedUserPolicies",
+    "iam:ListEntitiesForPolicy",
+    "iam:ListGroupPolicies",
+    "iam:ListGroups",
+    "iam:ListGroupsForUser",
+    "iam:ListInstanceProfiles",
+    "iam:ListOpenIDConnectProviders",
+    "iam:ListPolicies",
+    "iam:ListPolicyVersions",
+    "iam:ListRoles",
+    "iam:ListSAMLProviders",
+    "iam:ListServerCertificates",
+    "iam:ListUserPolicies",
+    "iam:ListUsers",
+    "iam:ListVirtualMFADevices",
+    "inspector2:ListCoverage",
+    "inspector2:ListFindings",
+    "kafka:ListClustersV2",
+    "kinesis:DescribeStreamSummary",
+    "kinesis:ListStreamConsumers",
+    "kinesis:ListStreams",
+    "kinesis:ListTagsForStream",
+    "kms:DescribeKey",
+    "kms:GetKeyRotationStatus",
+    "kms:ListAliases",
+    "kms:ListGrants",
+    "kms:ListKeys",
+    "kms:ListResourceTags",
+    "lambda:GetCodeSigningConfig",
+    "lambda:GetFunctionCodeSigningConfig",
+    "lambda:GetFunctionConcurrency",
+    "lambda:GetFunctionUrlConfig",
+    "lambda:GetPolicy",
+    "lambda:ListAliases",
+    "lambda:ListEventSourceMappings",
+    "lambda:ListFunctions",
+    "lambda:ListLayers",
+    "lambda:ListProvisionedConcurrencyConfigs",
+    "lambda:ListTags",
+    "lightsail:GetBuckets",
+    "lightsail:GetInstances",
+    "lightsail:GetLoadBalancers",
+    "lightsail:GetRelationalDatabases",
+    "logs:DescribeLogGroups",
+    "logs:DescribeMetricFilters",
+    "logs:ListTagsForResource",
+    "macie2:DescribeClassificationJob",
+    "macie2:GetBucketStatistics",
+    "macie2:GetCustomDataIdentifier",
+    "macie2:GetMacieSession",
+    "macie2:ListClassificationJobs",
+    "macie2:ListCustomDataIdentifiers",
+    "macie2:ListFindings",
+    "memorydb:DescribeACLs",
+    "memorydb:DescribeClusters",
+    "memorydb:DescribeSnapshots",
+    "memorydb:DescribeSubnetGroups",
+    "memorydb:DescribeUsers",
+    "memorydb:ListTags",
+    "mq:DescribeBroker",
+    "mq:ListBrokers",
+    "network-firewall:DescribeFirewall",
+    "network-firewall:DescribeFirewallPolicy",
+    "network-firewall:DescribeRuleGroup",
+    "network-firewall:ListFirewallPolicies",
+    "network-firewall:ListFirewalls",
+    "network-firewall:ListRuleGroups",
+    "organizations:DescribeOrganization",
+    "organizations:ListAccounts",
+    "organizations:ListDelegatedAdministrators",
+    "organizations:ListDelegatedServicesForAccount",
+    "organizations:ListTagsForResource",
+    "pipes:DescribePipe",
+    "pipes:ListPipes",
+    "rds:DescribeDBClusterAutomatedBackups",
+    "rds:DescribeDBClusterParameterGroups",
+    "rds:DescribeDBClusterParameters",
+    "rds:DescribeDBClusterSnapshotAttributes",
+    "rds:DescribeDBClusterSnapshots",
+    "rds:DescribeDBClusters",
+    "rds:DescribeDBInstanceAutomatedBackups",
+    "rds:DescribeDBInstances",
+    "rds:DescribeDBParameterGroups",
+    "rds:DescribeDBParameters",
+    "rds:DescribeDBProxies",
+    "rds:DescribeDBSnapshotAttributes",
+    "rds:DescribeDBSnapshots",
+    "rds:DescribePendingMaintenanceActions",
+    "rds:ListTagsForResource",
+    "redshift:DescribeClusterParameters",
+    "redshift:DescribeClusterSnapshots",
+    "redshift:DescribeClusters",
+    "redshift:DescribeLoggingStatus",
+    "route53:GetDNSSEC",
+    "route53:GetHealthCheck",
+    "route53:GetHealthCheckStatus",
+    "route53:GetHostedZone",
+    "route53:ListHealthChecks",
+    "route53:ListHostedZones",
+    "route53:ListQueryLoggingConfigs",
+    "route53:ListResourceRecordSets",
+    "route53:ListTagsForResource",
+    "route53domains:GetDomainDetail",
+    "route53domains:ListDomains",
+    "s3:GetBucketAcl",
+    "s3:GetBucketCors",
+    "s3:GetBucketEncryption",
+    "s3:GetBucketLocation",
+    "s3:GetBucketLogging",
+    "s3:GetBucketPolicy",
+    "s3:GetBucketReplication",
+    "s3:GetBucketTagging",
+    "s3:GetBucketVersioning",
+    "s3:GetBucketWebsite",
+    "s3:GetObjectLockConfiguration",
+    "s3:GetPublicAccessBlock",
+    "s3:ListBuckets",
+    "sagemaker:DescribeDomain",
+    "sagemaker:DescribeEndpointConfig",
+    "sagemaker:DescribeModel",
+    "sagemaker:DescribeNotebookInstance",
+    "sagemaker:DescribePipeline",
+    "sagemaker:DescribeProcessingJob",
+    "sagemaker:DescribeTrainingJob",
+    "sagemaker:ListDomains",
+    "sagemaker:ListEndpoints",
+    "sagemaker:ListModels",
+    "sagemaker:ListNotebookInstances",
+    "sagemaker:ListPipelines",
+    "sagemaker:ListProcessingJobs",
+    "sagemaker:ListTags",
+    "sagemaker:ListTrainingJobs",
+    "scheduler:GetSchedule",
+    "scheduler:ListScheduleGroups",
+    "scheduler:ListSchedules",
+    "secretsmanager:ListSecrets",
+    "securityhub:DescribeHub",
+    "shield:DescribeDRTAccess",
+    "shield:DescribeEmergencyContactSettings",
+    "shield:DescribeSubscription",
+    "shield:GetSubscriptionState",
+    "shield:ListProtectionGroups",
+    "shield:ListProtections",
+    "sns:GetSubscriptionAttributes",
+    "sns:GetTopicAttributes",
+    "sns:ListSubscriptionsByTopic",
+    "sns:ListTopics",
+    "sqs:GetQueueAttributes",
+    "sqs:ListQueues",
+    "ssm:DescribeInstanceInformation",
+    "ssm:DescribeInstancePatchStates",
+    "ssm:DescribeParameters",
+    "timestream-influxdb:GetDbCluster",
+    "timestream-influxdb:GetDbInstance",
+    "timestream-influxdb:ListDbClusters",
+    "timestream-influxdb:ListDbInstances",
+    "timestream-influxdb:ListTagsForResource",
+    "timestream:ListDatabases",
+    "timestream:ListTables",
+    "wafv2:GetIPSet",
+    "wafv2:GetLoggingConfiguration",
+    "wafv2:GetRegexPatternSet",
+    "wafv2:GetRuleGroup",
+    "wafv2:GetWebACL",
+    "wafv2:ListIPSets",
+    "wafv2:ListRegexPatternSets",
+    "wafv2:ListResourcesForWebACL",
+    "wafv2:ListRuleGroups",
+    "wafv2:ListWebACLs",
+    "workdocs:DescribeUsers",
+    "workspaces-web:ListPortals",
+    "workspaces-web:ListUserAccessLoggingSettings",
+    "workspaces:DescribeIpGroups",
+    "workspaces:DescribeTags",
+    "workspaces:DescribeWorkspaceBundles",
+    "workspaces:DescribeWorkspaceDirectories",
+    "workspaces:DescribeWorkspaceImages",
+    "workspaces:DescribeWorkspaces",
+    "workspaces:DescribeWorkspacesConnectionStatus"
+  ],
+  "details": [
+    {
+      "permission": "access-analyzer:ListAnalyzers",
+      "service": "access-analyzer",
+      "action": "ListAnalyzers",
+      "source_file": "aws_iam_accessanalyzer.go"
+    },
+    {
+      "permission": "access-analyzer:ListFindingsV2",
+      "service": "access-analyzer",
+      "action": "ListFindingsV2",
+      "source_file": "aws_iam_accessanalyzer.go"
+    },
+    {
+      "permission": "account:GetAlternateContact",
+      "service": "account",
+      "action": "GetAlternateContact",
+      "source_file": "aws_account.go"
+    },
+    {
+      "permission": "account:GetContactInformation",
+      "service": "account",
+      "action": "GetContactInformation",
+      "source_file": "aws_account.go"
+    },
+    {
+      "permission": "acm:DescribeCertificate",
+      "service": "acm",
+      "action": "DescribeCertificate",
+      "source_file": "aws_acm.go"
+    },
+    {
+      "permission": "acm:GetCertificate",
+      "service": "acm",
+      "action": "GetCertificate",
+      "source_file": "aws_acm.go"
+    },
+    {
+      "permission": "acm:ListCertificates",
+      "service": "acm",
+      "action": "ListCertificates",
+      "source_file": "aws_acm.go"
+    },
+    {
+      "permission": "acm:ListTagsForCertificate",
+      "service": "acm",
+      "action": "ListTagsForCertificate",
+      "source_file": "aws_acm.go"
+    },
+    {
+      "permission": "apigateway:GetRestApis",
+      "service": "apigateway",
+      "action": "GetRestApis",
+      "source_file": "aws_apigateway.go"
+    },
+    {
+      "permission": "apigateway:GetStages",
+      "service": "apigateway",
+      "action": "GetStages",
+      "source_file": "aws_apigateway.go"
+    },
+    {
+      "permission": "application-autoscaling:DescribeScalableTargets",
+      "service": "application-autoscaling",
+      "action": "DescribeScalableTargets",
+      "source_file": "aws_applicationautoscaling.go"
+    },
+    {
+      "permission": "application-autoscaling:DescribeScalingPolicies",
+      "service": "application-autoscaling",
+      "action": "DescribeScalingPolicies",
+      "source_file": "aws_applicationautoscaling.go"
+    },
+    {
+      "permission": "application-autoscaling:DescribeScheduledActions",
+      "service": "application-autoscaling",
+      "action": "DescribeScheduledActions",
+      "source_file": "aws_applicationautoscaling.go"
+    },
+    {
+      "permission": "appstream:DescribeFleets",
+      "service": "appstream",
+      "action": "DescribeFleets",
+      "source_file": "aws_appstream.go"
+    },
+    {
+      "permission": "appstream:DescribeImageBuilders",
+      "service": "appstream",
+      "action": "DescribeImageBuilders",
+      "source_file": "aws_appstream.go"
+    },
+    {
+      "permission": "appstream:DescribeStacks",
+      "service": "appstream",
+      "action": "DescribeStacks",
+      "source_file": "aws_appstream.go"
+    },
+    {
+      "permission": "appstream:ListTagsForResource",
+      "service": "appstream",
+      "action": "ListTagsForResource",
+      "source_file": "aws_appstream.go"
+    },
+    {
+      "permission": "athena:BatchGetNamedQuery",
+      "service": "athena",
+      "action": "BatchGetNamedQuery",
+      "source_file": "aws_athena.go"
+    },
+    {
+      "permission": "athena:GetDataCatalog",
+      "service": "athena",
+      "action": "GetDataCatalog",
+      "source_file": "aws_athena.go"
+    },
+    {
+      "permission": "athena:GetWorkGroup",
+      "service": "athena",
+      "action": "GetWorkGroup",
+      "source_file": "aws_athena.go"
+    },
+    {
+      "permission": "athena:ListDataCatalogs",
+      "service": "athena",
+      "action": "ListDataCatalogs",
+      "source_file": "aws_athena.go"
+    },
+    {
+      "permission": "athena:ListNamedQueries",
+      "service": "athena",
+      "action": "ListNamedQueries",
+      "source_file": "aws_athena.go"
+    },
+    {
+      "permission": "athena:ListTagsForResource",
+      "service": "athena",
+      "action": "ListTagsForResource",
+      "source_file": "aws_athena.go"
+    },
+    {
+      "permission": "athena:ListWorkGroups",
+      "service": "athena",
+      "action": "ListWorkGroups",
+      "source_file": "aws_athena.go"
+    },
+    {
+      "permission": "autoscaling:DescribeAutoScalingGroups",
+      "service": "autoscaling",
+      "action": "DescribeAutoScalingGroups",
+      "source_file": "aws_autoscaling.go"
+    },
+    {
+      "permission": "backup:GetBackupPlan",
+      "service": "backup",
+      "action": "GetBackupPlan",
+      "source_file": "aws_backups.go"
+    },
+    {
+      "permission": "backup:ListBackupPlans",
+      "service": "backup",
+      "action": "ListBackupPlans",
+      "source_file": "aws_backups.go"
+    },
+    {
+      "permission": "backup:ListBackupVaults",
+      "service": "backup",
+      "action": "ListBackupVaults",
+      "source_file": "aws_backups.go"
+    },
+    {
+      "permission": "backup:ListRecoveryPointsByBackupVault",
+      "service": "backup",
+      "action": "ListRecoveryPointsByBackupVault",
+      "source_file": "aws_backups.go"
+    },
+    {
+      "permission": "batch:DescribeComputeEnvironments",
+      "service": "batch",
+      "action": "DescribeComputeEnvironments",
+      "source_file": "aws_batch.go"
+    },
+    {
+      "permission": "batch:DescribeJobDefinitions",
+      "service": "batch",
+      "action": "DescribeJobDefinitions",
+      "source_file": "aws_batch.go"
+    },
+    {
+      "permission": "batch:DescribeJobQueues",
+      "service": "batch",
+      "action": "DescribeJobQueues",
+      "source_file": "aws_batch.go"
+    },
+    {
+      "permission": "cloudformation:DescribeStackSet",
+      "service": "cloudformation",
+      "action": "DescribeStackSet",
+      "source_file": "aws_cloudformation.go"
+    },
+    {
+      "permission": "cloudformation:DescribeStacks",
+      "service": "cloudformation",
+      "action": "DescribeStacks",
+      "source_file": "aws_cloudformation.go"
+    },
+    {
+      "permission": "cloudformation:ListStackSets",
+      "service": "cloudformation",
+      "action": "ListStackSets",
+      "source_file": "aws_cloudformation.go"
+    },
+    {
+      "permission": "cloudfront:ListDistributions",
+      "service": "cloudfront",
+      "action": "ListDistributions",
+      "source_file": "aws_cloudfront.go"
+    },
+    {
+      "permission": "cloudfront:ListFunctions",
+      "service": "cloudfront",
+      "action": "ListFunctions",
+      "source_file": "aws_cloudfront.go"
+    },
+    {
+      "permission": "cloudtrail:DescribeTrails",
+      "service": "cloudtrail",
+      "action": "DescribeTrails",
+      "source_file": "aws_cloudtrail.go"
+    },
+    {
+      "permission": "cloudtrail:GetEventSelectors",
+      "service": "cloudtrail",
+      "action": "GetEventSelectors",
+      "source_file": "aws_cloudtrail.go"
+    },
+    {
+      "permission": "cloudtrail:GetTrailStatus",
+      "service": "cloudtrail",
+      "action": "GetTrailStatus",
+      "source_file": "aws_cloudtrail.go"
+    },
+    {
+      "permission": "cloudwatch:DescribeAlarms",
+      "service": "cloudwatch",
+      "action": "DescribeAlarms",
+      "source_file": "aws_cloudwatch.go"
+    },
+    {
+      "permission": "cloudwatch:DescribeAlarmsForMetric",
+      "service": "cloudwatch",
+      "action": "DescribeAlarmsForMetric",
+      "source_file": "aws_cloudwatch.go"
+    },
+    {
+      "permission": "cloudwatch:GetMetricStatistics",
+      "service": "cloudwatch",
+      "action": "GetMetricStatistics",
+      "source_file": "aws_cloudwatch.go"
+    },
+    {
+      "permission": "cloudwatch:ListMetrics",
+      "service": "cloudwatch",
+      "action": "ListMetrics",
+      "source_file": "aws_cloudwatch.go"
+    },
+    {
+      "permission": "codebuild:BatchGetProjects",
+      "service": "codebuild",
+      "action": "BatchGetProjects",
+      "source_file": "aws_codebuild.go"
+    },
+    {
+      "permission": "codebuild:ListProjects",
+      "service": "codebuild",
+      "action": "ListProjects",
+      "source_file": "aws_codebuild.go"
+    },
+    {
+      "permission": "codedeploy:BatchGetApplications",
+      "service": "codedeploy",
+      "action": "BatchGetApplications",
+      "source_file": "aws_codedeploy.go"
+    },
+    {
+      "permission": "codedeploy:BatchGetDeploymentGroups",
+      "service": "codedeploy",
+      "action": "BatchGetDeploymentGroups",
+      "source_file": "aws_codedeploy.go"
+    },
+    {
+      "permission": "codedeploy:BatchGetDeployments",
+      "service": "codedeploy",
+      "action": "BatchGetDeployments",
+      "source_file": "aws_codedeploy.go"
+    },
+    {
+      "permission": "codedeploy:GetDeployment",
+      "service": "codedeploy",
+      "action": "GetDeployment",
+      "source_file": "aws_codedeploy.go"
+    },
+    {
+      "permission": "codedeploy:ListApplications",
+      "service": "codedeploy",
+      "action": "ListApplications",
+      "source_file": "aws_codedeploy.go"
+    },
+    {
+      "permission": "codedeploy:ListDeploymentGroups",
+      "service": "codedeploy",
+      "action": "ListDeploymentGroups",
+      "source_file": "aws_codedeploy.go"
+    },
+    {
+      "permission": "codedeploy:ListDeployments",
+      "service": "codedeploy",
+      "action": "ListDeployments",
+      "source_file": "aws_codedeploy.go"
+    },
+    {
+      "permission": "codedeploy:ListTagsForResource",
+      "service": "codedeploy",
+      "action": "ListTagsForResource",
+      "source_file": "aws_codedeploy.go"
+    },
+    {
+      "permission": "cognito-identity:DescribeIdentityPool",
+      "service": "cognito-identity",
+      "action": "DescribeIdentityPool",
+      "source_file": "aws_cognito.go"
+    },
+    {
+      "permission": "cognito-identity:ListIdentityPools",
+      "service": "cognito-identity",
+      "action": "ListIdentityPools",
+      "source_file": "aws_cognito.go"
+    },
+    {
+      "permission": "cognito-idp:DescribeUserPool",
+      "service": "cognito-idp",
+      "action": "DescribeUserPool",
+      "source_file": "aws_cognito.go"
+    },
+    {
+      "permission": "cognito-idp:GetUserPoolMfaConfig",
+      "service": "cognito-idp",
+      "action": "GetUserPoolMfaConfig",
+      "source_file": "aws_cognito.go"
+    },
+    {
+      "permission": "cognito-idp:ListUserPools",
+      "service": "cognito-idp",
+      "action": "ListUserPools",
+      "source_file": "aws_cognito.go"
+    },
+    {
+      "permission": "config:DescribeConfigRules",
+      "service": "config",
+      "action": "DescribeConfigRules",
+      "source_file": "aws_config.go"
+    },
+    {
+      "permission": "config:DescribeConfigurationRecorders",
+      "service": "config",
+      "action": "DescribeConfigurationRecorders",
+      "source_file": "aws_config.go"
+    },
+    {
+      "permission": "config:DescribeDeliveryChannels",
+      "service": "config",
+      "action": "DescribeDeliveryChannels",
+      "source_file": "aws_config.go"
+    },
+    {
+      "permission": "dms:DescribeReplicationInstances",
+      "service": "dms",
+      "action": "DescribeReplicationInstances",
+      "source_file": "aws_dms.go"
+    },
+    {
+      "permission": "drs:DescribeJobs",
+      "service": "drs",
+      "action": "DescribeJobs",
+      "source_file": "aws_drs.go"
+    },
+    {
+      "permission": "drs:DescribeSourceServers",
+      "service": "drs",
+      "action": "DescribeSourceServers",
+      "source_file": "aws_drs.go"
+    },
+    {
+      "permission": "drs:GetLaunchConfiguration",
+      "service": "drs",
+      "action": "GetLaunchConfiguration",
+      "source_file": "aws_drs.go"
+    },
+    {
+      "permission": "drs:GetReplicationConfiguration",
+      "service": "drs",
+      "action": "GetReplicationConfiguration",
+      "source_file": "aws_drs.go"
+    },
+    {
+      "permission": "ds:DescribeDirectories",
+      "service": "ds",
+      "action": "DescribeDirectories",
+      "source_file": "aws_directoryservice.go"
+    },
+    {
+      "permission": "ds:ListTagsForResource",
+      "service": "ds",
+      "action": "ListTagsForResource",
+      "source_file": "aws_directoryservice.go"
+    },
+    {
+      "permission": "dynamodb:DescribeContinuousBackups",
+      "service": "dynamodb",
+      "action": "DescribeContinuousBackups",
+      "source_file": "aws_dynamodb.go"
+    },
+    {
+      "permission": "dynamodb:DescribeExport",
+      "service": "dynamodb",
+      "action": "DescribeExport",
+      "source_file": "aws_dynamodb.go"
+    },
+    {
+      "permission": "dynamodb:DescribeGlobalTableSettings",
+      "service": "dynamodb",
+      "action": "DescribeGlobalTableSettings",
+      "source_file": "aws_dynamodb.go"
+    },
+    {
+      "permission": "dynamodb:DescribeLimits",
+      "service": "dynamodb",
+      "action": "DescribeLimits",
+      "source_file": "aws_dynamodb.go"
+    },
+    {
+      "permission": "dynamodb:DescribeTable",
+      "service": "dynamodb",
+      "action": "DescribeTable",
+      "source_file": "aws_dynamodb.go"
+    },
+    {
+      "permission": "dynamodb:ListBackups",
+      "service": "dynamodb",
+      "action": "ListBackups",
+      "source_file": "aws_dynamodb.go"
+    },
+    {
+      "permission": "dynamodb:ListExports",
+      "service": "dynamodb",
+      "action": "ListExports",
+      "source_file": "aws_dynamodb.go"
+    },
+    {
+      "permission": "dynamodb:ListGlobalTables",
+      "service": "dynamodb",
+      "action": "ListGlobalTables",
+      "source_file": "aws_dynamodb.go"
+    },
+    {
+      "permission": "dynamodb:ListTables",
+      "service": "dynamodb",
+      "action": "ListTables",
+      "source_file": "aws_dynamodb.go"
+    },
+    {
+      "permission": "dynamodb:ListTagsOfResource",
+      "service": "dynamodb",
+      "action": "ListTagsOfResource",
+      "source_file": "aws_dynamodb.go"
+    },
+    {
+      "permission": "ec2:DescribeAddresses",
+      "service": "ec2",
+      "action": "DescribeAddresses",
+      "source_file": "aws_ec2.go"
+    },
+    {
+      "permission": "ec2:DescribeFlowLogs",
+      "service": "ec2",
+      "action": "DescribeFlowLogs",
+      "source_file": "aws_vpc.go"
+    },
+    {
+      "permission": "ec2:DescribeImageAttribute",
+      "service": "ec2",
+      "action": "DescribeImageAttribute",
+      "source_file": "aws_ec2.go"
+    },
+    {
+      "permission": "ec2:DescribeImages",
+      "service": "ec2",
+      "action": "DescribeImages",
+      "source_file": "aws_ec2.go"
+    },
+    {
+      "permission": "ec2:DescribeInstanceAttribute",
+      "service": "ec2",
+      "action": "DescribeInstanceAttribute",
+      "source_file": "aws_ec2.go"
+    },
+    {
+      "permission": "ec2:DescribeInstanceStatus",
+      "service": "ec2",
+      "action": "DescribeInstanceStatus",
+      "source_file": "aws_ec2.go"
+    },
+    {
+      "permission": "ec2:DescribeInstances",
+      "service": "ec2",
+      "action": "DescribeInstances",
+      "source_file": "aws_ec2.go"
+    },
+    {
+      "permission": "ec2:DescribeInternetGateways",
+      "service": "ec2",
+      "action": "DescribeInternetGateways",
+      "source_file": "aws_ec2.go"
+    },
+    {
+      "permission": "ec2:DescribeInternetGateways",
+      "service": "ec2",
+      "action": "DescribeInternetGateways",
+      "source_file": "aws_vpc.go"
+    },
+    {
+      "permission": "ec2:DescribeKeyPairs",
+      "service": "ec2",
+      "action": "DescribeKeyPairs",
+      "source_file": "aws_ec2.go"
+    },
+    {
+      "permission": "ec2:DescribeNatGateways",
+      "service": "ec2",
+      "action": "DescribeNatGateways",
+      "source_file": "aws_vpc.go"
+    },
+    {
+      "permission": "ec2:DescribeNetworkAcls",
+      "service": "ec2",
+      "action": "DescribeNetworkAcls",
+      "source_file": "aws_ec2.go"
+    },
+    {
+      "permission": "ec2:DescribeNetworkAcls",
+      "service": "ec2",
+      "action": "DescribeNetworkAcls",
+      "source_file": "aws_vpc.go"
+    },
+    {
+      "permission": "ec2:DescribeNetworkInterfaces",
+      "service": "ec2",
+      "action": "DescribeNetworkInterfaces",
+      "source_file": "aws_ec2.go"
+    },
+    {
+      "permission": "ec2:DescribeNetworkInterfaces",
+      "service": "ec2",
+      "action": "DescribeNetworkInterfaces",
+      "source_file": "aws_ecs.go"
+    },
+    {
+      "permission": "ec2:DescribeNetworkInterfaces",
+      "service": "ec2",
+      "action": "DescribeNetworkInterfaces",
+      "source_file": "aws_workspaces.go"
+    },
+    {
+      "permission": "ec2:DescribeRouteTables",
+      "service": "ec2",
+      "action": "DescribeRouteTables",
+      "source_file": "aws_vpc.go"
+    },
+    {
+      "permission": "ec2:DescribeSecurityGroups",
+      "service": "ec2",
+      "action": "DescribeSecurityGroups",
+      "source_file": "aws_ec2.go"
+    },
+    {
+      "permission": "ec2:DescribeSecurityGroups",
+      "service": "ec2",
+      "action": "DescribeSecurityGroups",
+      "source_file": "aws_vpc.go"
+    },
+    {
+      "permission": "ec2:DescribeSnapshotAttribute",
+      "service": "ec2",
+      "action": "DescribeSnapshotAttribute",
+      "source_file": "aws_ec2.go"
+    },
+    {
+      "permission": "ec2:DescribeSnapshots",
+      "service": "ec2",
+      "action": "DescribeSnapshots",
+      "source_file": "aws_ec2.go"
+    },
+    {
+      "permission": "ec2:DescribeSubnets",
+      "service": "ec2",
+      "action": "DescribeSubnets",
+      "source_file": "aws_vpc.go"
+    },
+    {
+      "permission": "ec2:DescribeTags",
+      "service": "ec2",
+      "action": "DescribeTags",
+      "source_file": "aws_ssm.go"
+    },
+    {
+      "permission": "ec2:DescribeTransitGateways",
+      "service": "ec2",
+      "action": "DescribeTransitGateways",
+      "source_file": "aws_ec2.go"
+    },
+    {
+      "permission": "ec2:DescribeVolumes",
+      "service": "ec2",
+      "action": "DescribeVolumes",
+      "source_file": "aws_ec2.go"
+    },
+    {
+      "permission": "ec2:DescribeVpcEndpoints",
+      "service": "ec2",
+      "action": "DescribeVpcEndpoints",
+      "source_file": "aws_vpc.go"
+    },
+    {
+      "permission": "ec2:DescribeVpcPeeringConnections",
+      "service": "ec2",
+      "action": "DescribeVpcPeeringConnections",
+      "source_file": "aws_vpc.go"
+    },
+    {
+      "permission": "ec2:DescribeVpcs",
+      "service": "ec2",
+      "action": "DescribeVpcs",
+      "source_file": "aws_vpc.go"
+    },
+    {
+      "permission": "ec2:DescribeVpnConnections",
+      "service": "ec2",
+      "action": "DescribeVpnConnections",
+      "source_file": "aws_ec2.go"
+    },
+    {
+      "permission": "ec2:DescribeVpnGateways",
+      "service": "ec2",
+      "action": "DescribeVpnGateways",
+      "source_file": "aws_vpc.go"
+    },
+    {
+      "permission": "ec2:GetEbsEncryptionByDefault",
+      "service": "ec2",
+      "action": "GetEbsEncryptionByDefault",
+      "source_file": "aws_ec2.go"
+    },
+    {
+      "permission": "ecr:BatchGetRepositoryScanningConfiguration",
+      "service": "ecr",
+      "action": "BatchGetRepositoryScanningConfiguration",
+      "source_file": "aws_ecr.go"
+    },
+    {
+      "permission": "ecr:DescribeImages",
+      "service": "ecr",
+      "action": "DescribeImages",
+      "source_file": "aws_ecr.go"
+    },
+    {
+      "permission": "ecr:DescribeRepositories",
+      "service": "ecr",
+      "action": "DescribeRepositories",
+      "source_file": "aws_ecr.go"
+    },
+    {
+      "permission": "ecr:GetLifecyclePolicy",
+      "service": "ecr",
+      "action": "GetLifecyclePolicy",
+      "source_file": "aws_ecr.go"
+    },
+    {
+      "permission": "ecrpublic:DescribeImages",
+      "service": "ecrpublic",
+      "action": "DescribeImages",
+      "source_file": "aws_ecr.go"
+    },
+    {
+      "permission": "ecrpublic:DescribeRepositories",
+      "service": "ecrpublic",
+      "action": "DescribeRepositories",
+      "source_file": "aws_ecr.go"
+    },
+    {
+      "permission": "ecrpublic:GetRepositoryCatalogData",
+      "service": "ecrpublic",
+      "action": "GetRepositoryCatalogData",
+      "source_file": "aws_ecr.go"
+    },
+    {
+      "permission": "ecs:DescribeClusters",
+      "service": "ecs",
+      "action": "DescribeClusters",
+      "source_file": "aws_ecs.go"
+    },
+    {
+      "permission": "ecs:DescribeContainerInstances",
+      "service": "ecs",
+      "action": "DescribeContainerInstances",
+      "source_file": "aws_ecs.go"
+    },
+    {
+      "permission": "ecs:DescribeServices",
+      "service": "ecs",
+      "action": "DescribeServices",
+      "source_file": "aws_ecs.go"
+    },
+    {
+      "permission": "ecs:DescribeTaskDefinition",
+      "service": "ecs",
+      "action": "DescribeTaskDefinition",
+      "source_file": "aws_ecs.go"
+    },
+    {
+      "permission": "ecs:DescribeTaskSets",
+      "service": "ecs",
+      "action": "DescribeTaskSets",
+      "source_file": "aws_ecs.go"
+    },
+    {
+      "permission": "ecs:DescribeTasks",
+      "service": "ecs",
+      "action": "DescribeTasks",
+      "source_file": "aws_ecs.go"
+    },
+    {
+      "permission": "ecs:ListClusters",
+      "service": "ecs",
+      "action": "ListClusters",
+      "source_file": "aws_ecs.go"
+    },
+    {
+      "permission": "ecs:ListContainerInstances",
+      "service": "ecs",
+      "action": "ListContainerInstances",
+      "source_file": "aws_ecs.go"
+    },
+    {
+      "permission": "ecs:ListServices",
+      "service": "ecs",
+      "action": "ListServices",
+      "source_file": "aws_ecs.go"
+    },
+    {
+      "permission": "ecs:ListTagsForResource",
+      "service": "ecs",
+      "action": "ListTagsForResource",
+      "source_file": "aws_ecs.go"
+    },
+    {
+      "permission": "ecs:ListTaskDefinitions",
+      "service": "ecs",
+      "action": "ListTaskDefinitions",
+      "source_file": "aws_ecs.go"
+    },
+    {
+      "permission": "ecs:ListTasks",
+      "service": "ecs",
+      "action": "ListTasks",
+      "source_file": "aws_ecs.go"
+    },
+    {
+      "permission": "efs:DescribeAccessPoints",
+      "service": "efs",
+      "action": "DescribeAccessPoints",
+      "source_file": "aws_efs.go"
+    },
+    {
+      "permission": "efs:DescribeBackupPolicy",
+      "service": "efs",
+      "action": "DescribeBackupPolicy",
+      "source_file": "aws_efs.go"
+    },
+    {
+      "permission": "efs:DescribeFileSystemPolicy",
+      "service": "efs",
+      "action": "DescribeFileSystemPolicy",
+      "source_file": "aws_efs.go"
+    },
+    {
+      "permission": "efs:DescribeFileSystems",
+      "service": "efs",
+      "action": "DescribeFileSystems",
+      "source_file": "aws_efs.go"
+    },
+    {
+      "permission": "efs:DescribeMountTargetSecurityGroups",
+      "service": "efs",
+      "action": "DescribeMountTargetSecurityGroups",
+      "source_file": "aws_efs.go"
+    },
+    {
+      "permission": "efs:DescribeMountTargets",
+      "service": "efs",
+      "action": "DescribeMountTargets",
+      "source_file": "aws_efs.go"
+    },
+    {
+      "permission": "eks:DescribeAddon",
+      "service": "eks",
+      "action": "DescribeAddon",
+      "source_file": "aws_eks.go"
+    },
+    {
+      "permission": "eks:DescribeCluster",
+      "service": "eks",
+      "action": "DescribeCluster",
+      "source_file": "aws_eks.go"
+    },
+    {
+      "permission": "eks:DescribeNodegroup",
+      "service": "eks",
+      "action": "DescribeNodegroup",
+      "source_file": "aws_eks.go"
+    },
+    {
+      "permission": "eks:ListAddons",
+      "service": "eks",
+      "action": "ListAddons",
+      "source_file": "aws_eks.go"
+    },
+    {
+      "permission": "eks:ListClusters",
+      "service": "eks",
+      "action": "ListClusters",
+      "source_file": "aws_eks.go"
+    },
+    {
+      "permission": "eks:ListNodegroups",
+      "service": "eks",
+      "action": "ListNodegroups",
+      "source_file": "aws_eks.go"
+    },
+    {
+      "permission": "elasticache:DescribeCacheClusters",
+      "service": "elasticache",
+      "action": "DescribeCacheClusters",
+      "source_file": "aws_elasticache.go"
+    },
+    {
+      "permission": "elasticache:DescribeServerlessCaches",
+      "service": "elasticache",
+      "action": "DescribeServerlessCaches",
+      "source_file": "aws_elasticache.go"
+    },
+    {
+      "permission": "elasticbeanstalk:DescribeApplications",
+      "service": "elasticbeanstalk",
+      "action": "DescribeApplications",
+      "source_file": "aws_elasticbeanstalk.go"
+    },
+    {
+      "permission": "elasticbeanstalk:DescribeEnvironments",
+      "service": "elasticbeanstalk",
+      "action": "DescribeEnvironments",
+      "source_file": "aws_elasticbeanstalk.go"
+    },
+    {
+      "permission": "elasticbeanstalk:ListTagsForResource",
+      "service": "elasticbeanstalk",
+      "action": "ListTagsForResource",
+      "source_file": "aws_elasticbeanstalk.go"
+    },
+    {
+      "permission": "elasticloadbalancing:DescribeListeners",
+      "service": "elasticloadbalancing",
+      "action": "DescribeListeners",
+      "source_file": "aws_elb.go"
+    },
+    {
+      "permission": "elasticloadbalancing:DescribeLoadBalancerAttributes",
+      "service": "elasticloadbalancing",
+      "action": "DescribeLoadBalancerAttributes",
+      "source_file": "aws_elb.go"
+    },
+    {
+      "permission": "elasticloadbalancing:DescribeLoadBalancers",
+      "service": "elasticloadbalancing",
+      "action": "DescribeLoadBalancers",
+      "source_file": "aws_elb.go"
+    },
+    {
+      "permission": "elasticloadbalancing:DescribeTags",
+      "service": "elasticloadbalancing",
+      "action": "DescribeTags",
+      "source_file": "aws_elb.go"
+    },
+    {
+      "permission": "elasticloadbalancing:DescribeTargetGroupAttributes",
+      "service": "elasticloadbalancing",
+      "action": "DescribeTargetGroupAttributes",
+      "source_file": "aws_elb.go"
+    },
+    {
+      "permission": "elasticloadbalancing:DescribeTargetGroups",
+      "service": "elasticloadbalancing",
+      "action": "DescribeTargetGroups",
+      "source_file": "aws_elb.go"
+    },
+    {
+      "permission": "emr:ListClusters",
+      "service": "emr",
+      "action": "ListClusters",
+      "source_file": "aws_emr.go"
+    },
+    {
+      "permission": "emr:ListInstances",
+      "service": "emr",
+      "action": "ListInstances",
+      "source_file": "aws_emr.go"
+    },
+    {
+      "permission": "es:DescribeDomains",
+      "service": "es",
+      "action": "DescribeDomains",
+      "source_file": "aws_opensearch.go"
+    },
+    {
+      "permission": "es:DescribeElasticsearchDomain",
+      "service": "es",
+      "action": "DescribeElasticsearchDomain",
+      "source_file": "aws_es.go"
+    },
+    {
+      "permission": "es:ListDomainNames",
+      "service": "es",
+      "action": "ListDomainNames",
+      "source_file": "aws_es.go"
+    },
+    {
+      "permission": "es:ListDomainNames",
+      "service": "es",
+      "action": "ListDomainNames",
+      "source_file": "aws_opensearch.go"
+    },
+    {
+      "permission": "es:ListTags",
+      "service": "es",
+      "action": "ListTags",
+      "source_file": "aws_opensearch.go"
+    },
+    {
+      "permission": "eventbridge:ListEventBuses",
+      "service": "eventbridge",
+      "action": "ListEventBuses",
+      "source_file": "aws_eventbridge.go"
+    },
+    {
+      "permission": "eventbridge:ListRules",
+      "service": "eventbridge",
+      "action": "ListRules",
+      "source_file": "aws_eventbridge.go"
+    },
+    {
+      "permission": "eventbridge:ListTagsForResource",
+      "service": "eventbridge",
+      "action": "ListTagsForResource",
+      "source_file": "aws_eventbridge.go"
+    },
+    {
+      "permission": "eventbridge:ListTargetsByRule",
+      "service": "eventbridge",
+      "action": "ListTargetsByRule",
+      "source_file": "aws_eventbridge.go"
+    },
+    {
+      "permission": "firehose:DescribeDeliveryStream",
+      "service": "firehose",
+      "action": "DescribeDeliveryStream",
+      "source_file": "aws_kinesis.go"
+    },
+    {
+      "permission": "firehose:ListDeliveryStreams",
+      "service": "firehose",
+      "action": "ListDeliveryStreams",
+      "source_file": "aws_kinesis.go"
+    },
+    {
+      "permission": "firehose:ListTagsForDeliveryStream",
+      "service": "firehose",
+      "action": "ListTagsForDeliveryStream",
+      "source_file": "aws_kinesis.go"
+    },
+    {
+      "permission": "fsx:DescribeBackups",
+      "service": "fsx",
+      "action": "DescribeBackups",
+      "source_file": "aws_fsx.go"
+    },
+    {
+      "permission": "fsx:DescribeFileCaches",
+      "service": "fsx",
+      "action": "DescribeFileCaches",
+      "source_file": "aws_fsx.go"
+    },
+    {
+      "permission": "fsx:DescribeFileSystems",
+      "service": "fsx",
+      "action": "DescribeFileSystems",
+      "source_file": "aws_fsx.go"
+    },
+    {
+      "permission": "fsx:DescribeVolumes",
+      "service": "fsx",
+      "action": "DescribeVolumes",
+      "source_file": "aws_fsx.go"
+    },
+    {
+      "permission": "glue:BatchGetWorkflows",
+      "service": "glue",
+      "action": "BatchGetWorkflows",
+      "source_file": "aws_glue.go"
+    },
+    {
+      "permission": "glue:GetCrawlers",
+      "service": "glue",
+      "action": "GetCrawlers",
+      "source_file": "aws_glue.go"
+    },
+    {
+      "permission": "glue:GetDataCatalogEncryptionSettings",
+      "service": "glue",
+      "action": "GetDataCatalogEncryptionSettings",
+      "source_file": "aws_glue.go"
+    },
+    {
+      "permission": "glue:GetDatabases",
+      "service": "glue",
+      "action": "GetDatabases",
+      "source_file": "aws_glue.go"
+    },
+    {
+      "permission": "glue:GetJobs",
+      "service": "glue",
+      "action": "GetJobs",
+      "source_file": "aws_glue.go"
+    },
+    {
+      "permission": "glue:GetSecurityConfigurations",
+      "service": "glue",
+      "action": "GetSecurityConfigurations",
+      "source_file": "aws_glue.go"
+    },
+    {
+      "permission": "glue:GetTables",
+      "service": "glue",
+      "action": "GetTables",
+      "source_file": "aws_glue.go"
+    },
+    {
+      "permission": "glue:GetTags",
+      "service": "glue",
+      "action": "GetTags",
+      "source_file": "aws_glue.go"
+    },
+    {
+      "permission": "glue:ListWorkflows",
+      "service": "glue",
+      "action": "ListWorkflows",
+      "source_file": "aws_glue.go"
+    },
+    {
+      "permission": "guardduty:GetDetector",
+      "service": "guardduty",
+      "action": "GetDetector",
+      "source_file": "aws_guardduty.go"
+    },
+    {
+      "permission": "guardduty:ListDetectors",
+      "service": "guardduty",
+      "action": "ListDetectors",
+      "source_file": "aws_guardduty.go"
+    },
+    {
+      "permission": "guardduty:ListFindings",
+      "service": "guardduty",
+      "action": "ListFindings",
+      "source_file": "aws_guardduty.go"
+    },
+    {
+      "permission": "iam:GenerateCredentialReport",
+      "service": "iam",
+      "action": "GenerateCredentialReport",
+      "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:GetAccountPasswordPolicy",
+      "service": "iam",
+      "action": "GetAccountPasswordPolicy",
+      "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:GetAccountSummary",
+      "service": "iam",
+      "action": "GetAccountSummary",
+      "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:GetCredentialReport",
+      "service": "iam",
+      "action": "GetCredentialReport",
+      "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:GetGroup",
+      "service": "iam",
+      "action": "GetGroup",
+      "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:GetInstanceProfile",
+      "service": "iam",
+      "action": "GetInstanceProfile",
+      "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:GetLoginProfile",
+      "service": "iam",
+      "action": "GetLoginProfile",
+      "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:GetOpenIDConnectProvider",
+      "service": "iam",
+      "action": "GetOpenIDConnectProvider",
+      "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:GetPolicy",
+      "service": "iam",
+      "action": "GetPolicy",
+      "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:GetPolicyVersion",
+      "service": "iam",
+      "action": "GetPolicyVersion",
+      "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:GetRole",
+      "service": "iam",
+      "action": "GetRole",
+      "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:GetSAMLProvider",
+      "service": "iam",
+      "action": "GetSAMLProvider",
+      "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:GetUser",
+      "service": "iam",
+      "action": "GetUser",
+      "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:ListAccessKeys",
+      "service": "iam",
+      "action": "ListAccessKeys",
+      "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:ListAccountAliases",
+      "service": "iam",
+      "action": "ListAccountAliases",
+      "source_file": "aws_account.go"
+    },
+    {
+      "permission": "iam:ListAttachedUserPolicies",
+      "service": "iam",
+      "action": "ListAttachedUserPolicies",
+      "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:ListEntitiesForPolicy",
+      "service": "iam",
+      "action": "ListEntitiesForPolicy",
+      "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:ListGroupPolicies",
+      "service": "iam",
+      "action": "ListGroupPolicies",
+      "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:ListGroups",
+      "service": "iam",
+      "action": "ListGroups",
+      "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:ListGroupsForUser",
+      "service": "iam",
+      "action": "ListGroupsForUser",
+      "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:ListInstanceProfiles",
+      "service": "iam",
+      "action": "ListInstanceProfiles",
+      "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:ListOpenIDConnectProviders",
+      "service": "iam",
+      "action": "ListOpenIDConnectProviders",
+      "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:ListPolicies",
+      "service": "iam",
+      "action": "ListPolicies",
+      "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:ListPolicyVersions",
+      "service": "iam",
+      "action": "ListPolicyVersions",
+      "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:ListRoles",
+      "service": "iam",
+      "action": "ListRoles",
+      "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:ListSAMLProviders",
+      "service": "iam",
+      "action": "ListSAMLProviders",
+      "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:ListServerCertificates",
+      "service": "iam",
+      "action": "ListServerCertificates",
+      "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:ListUserPolicies",
+      "service": "iam",
+      "action": "ListUserPolicies",
+      "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:ListUsers",
+      "service": "iam",
+      "action": "ListUsers",
+      "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:ListVirtualMFADevices",
+      "service": "iam",
+      "action": "ListVirtualMFADevices",
+      "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "inspector2:ListCoverage",
+      "service": "inspector2",
+      "action": "ListCoverage",
+      "source_file": "aws_inspector.go"
+    },
+    {
+      "permission": "inspector2:ListFindings",
+      "service": "inspector2",
+      "action": "ListFindings",
+      "source_file": "aws_inspector.go"
+    },
+    {
+      "permission": "kafka:ListClustersV2",
+      "service": "kafka",
+      "action": "ListClustersV2",
+      "source_file": "aws_msk.go"
+    },
+    {
+      "permission": "kinesis:DescribeStreamSummary",
+      "service": "kinesis",
+      "action": "DescribeStreamSummary",
+      "source_file": "aws_kinesis.go"
+    },
+    {
+      "permission": "kinesis:ListStreamConsumers",
+      "service": "kinesis",
+      "action": "ListStreamConsumers",
+      "source_file": "aws_kinesis.go"
+    },
+    {
+      "permission": "kinesis:ListStreams",
+      "service": "kinesis",
+      "action": "ListStreams",
+      "source_file": "aws_kinesis.go"
+    },
+    {
+      "permission": "kinesis:ListTagsForStream",
+      "service": "kinesis",
+      "action": "ListTagsForStream",
+      "source_file": "aws_kinesis.go"
+    },
+    {
+      "permission": "kms:DescribeKey",
+      "service": "kms",
+      "action": "DescribeKey",
+      "source_file": "aws_kms.go"
+    },
+    {
+      "permission": "kms:GetKeyRotationStatus",
+      "service": "kms",
+      "action": "GetKeyRotationStatus",
+      "source_file": "aws_kms.go"
+    },
+    {
+      "permission": "kms:ListAliases",
+      "service": "kms",
+      "action": "ListAliases",
+      "source_file": "aws_kms.go"
+    },
+    {
+      "permission": "kms:ListGrants",
+      "service": "kms",
+      "action": "ListGrants",
+      "source_file": "aws_kms.go"
+    },
+    {
+      "permission": "kms:ListKeys",
+      "service": "kms",
+      "action": "ListKeys",
+      "source_file": "aws_kms.go"
+    },
+    {
+      "permission": "kms:ListResourceTags",
+      "service": "kms",
+      "action": "ListResourceTags",
+      "source_file": "aws_kms.go"
+    },
+    {
+      "permission": "lambda:GetCodeSigningConfig",
+      "service": "lambda",
+      "action": "GetCodeSigningConfig",
+      "source_file": "aws_lambda.go"
+    },
+    {
+      "permission": "lambda:GetFunctionCodeSigningConfig",
+      "service": "lambda",
+      "action": "GetFunctionCodeSigningConfig",
+      "source_file": "aws_lambda.go"
+    },
+    {
+      "permission": "lambda:GetFunctionConcurrency",
+      "service": "lambda",
+      "action": "GetFunctionConcurrency",
+      "source_file": "aws_lambda.go"
+    },
+    {
+      "permission": "lambda:GetFunctionUrlConfig",
+      "service": "lambda",
+      "action": "GetFunctionUrlConfig",
+      "source_file": "aws_lambda.go"
+    },
+    {
+      "permission": "lambda:GetPolicy",
+      "service": "lambda",
+      "action": "GetPolicy",
+      "source_file": "aws_lambda.go"
+    },
+    {
+      "permission": "lambda:ListAliases",
+      "service": "lambda",
+      "action": "ListAliases",
+      "source_file": "aws_lambda.go"
+    },
+    {
+      "permission": "lambda:ListEventSourceMappings",
+      "service": "lambda",
+      "action": "ListEventSourceMappings",
+      "source_file": "aws_lambda.go"
+    },
+    {
+      "permission": "lambda:ListFunctions",
+      "service": "lambda",
+      "action": "ListFunctions",
+      "source_file": "aws_lambda.go"
+    },
+    {
+      "permission": "lambda:ListLayers",
+      "service": "lambda",
+      "action": "ListLayers",
+      "source_file": "aws_lambda.go"
+    },
+    {
+      "permission": "lambda:ListProvisionedConcurrencyConfigs",
+      "service": "lambda",
+      "action": "ListProvisionedConcurrencyConfigs",
+      "source_file": "aws_lambda.go"
+    },
+    {
+      "permission": "lambda:ListTags",
+      "service": "lambda",
+      "action": "ListTags",
+      "source_file": "aws_lambda.go"
+    },
+    {
+      "permission": "lightsail:GetBuckets",
+      "service": "lightsail",
+      "action": "GetBuckets",
+      "source_file": "aws_lightsail.go"
+    },
+    {
+      "permission": "lightsail:GetInstances",
+      "service": "lightsail",
+      "action": "GetInstances",
+      "source_file": "aws_lightsail.go"
+    },
+    {
+      "permission": "lightsail:GetLoadBalancers",
+      "service": "lightsail",
+      "action": "GetLoadBalancers",
+      "source_file": "aws_lightsail.go"
+    },
+    {
+      "permission": "lightsail:GetRelationalDatabases",
+      "service": "lightsail",
+      "action": "GetRelationalDatabases",
+      "source_file": "aws_lightsail.go"
+    },
+    {
+      "permission": "logs:DescribeLogGroups",
+      "service": "logs",
+      "action": "DescribeLogGroups",
+      "source_file": "aws_cloudwatch.go"
+    },
+    {
+      "permission": "logs:DescribeMetricFilters",
+      "service": "logs",
+      "action": "DescribeMetricFilters",
+      "source_file": "aws_cloudwatch.go"
+    },
+    {
+      "permission": "logs:ListTagsForResource",
+      "service": "logs",
+      "action": "ListTagsForResource",
+      "source_file": "aws_cloudwatch.go"
+    },
+    {
+      "permission": "macie2:DescribeClassificationJob",
+      "service": "macie2",
+      "action": "DescribeClassificationJob",
+      "source_file": "aws_macie.go"
+    },
+    {
+      "permission": "macie2:GetBucketStatistics",
+      "service": "macie2",
+      "action": "GetBucketStatistics",
+      "source_file": "aws_macie.go"
+    },
+    {
+      "permission": "macie2:GetCustomDataIdentifier",
+      "service": "macie2",
+      "action": "GetCustomDataIdentifier",
+      "source_file": "aws_macie.go"
+    },
+    {
+      "permission": "macie2:GetMacieSession",
+      "service": "macie2",
+      "action": "GetMacieSession",
+      "source_file": "aws_macie.go"
+    },
+    {
+      "permission": "macie2:ListClassificationJobs",
+      "service": "macie2",
+      "action": "ListClassificationJobs",
+      "source_file": "aws_macie.go"
+    },
+    {
+      "permission": "macie2:ListCustomDataIdentifiers",
+      "service": "macie2",
+      "action": "ListCustomDataIdentifiers",
+      "source_file": "aws_macie.go"
+    },
+    {
+      "permission": "macie2:ListFindings",
+      "service": "macie2",
+      "action": "ListFindings",
+      "source_file": "aws_macie.go"
+    },
+    {
+      "permission": "memorydb:DescribeACLs",
+      "service": "memorydb",
+      "action": "DescribeACLs",
+      "source_file": "aws_memorydb.go"
+    },
+    {
+      "permission": "memorydb:DescribeClusters",
+      "service": "memorydb",
+      "action": "DescribeClusters",
+      "source_file": "aws_memorydb.go"
+    },
+    {
+      "permission": "memorydb:DescribeSnapshots",
+      "service": "memorydb",
+      "action": "DescribeSnapshots",
+      "source_file": "aws_memorydb.go"
+    },
+    {
+      "permission": "memorydb:DescribeSubnetGroups",
+      "service": "memorydb",
+      "action": "DescribeSubnetGroups",
+      "source_file": "aws_memorydb.go"
+    },
+    {
+      "permission": "memorydb:DescribeUsers",
+      "service": "memorydb",
+      "action": "DescribeUsers",
+      "source_file": "aws_memorydb.go"
+    },
+    {
+      "permission": "memorydb:ListTags",
+      "service": "memorydb",
+      "action": "ListTags",
+      "source_file": "aws_memorydb.go"
+    },
+    {
+      "permission": "mq:DescribeBroker",
+      "service": "mq",
+      "action": "DescribeBroker",
+      "source_file": "aws_mq.go"
+    },
+    {
+      "permission": "mq:ListBrokers",
+      "service": "mq",
+      "action": "ListBrokers",
+      "source_file": "aws_mq.go"
+    },
+    {
+      "permission": "network-firewall:DescribeFirewall",
+      "service": "network-firewall",
+      "action": "DescribeFirewall",
+      "source_file": "aws_networkfirewall.go"
+    },
+    {
+      "permission": "network-firewall:DescribeFirewallPolicy",
+      "service": "network-firewall",
+      "action": "DescribeFirewallPolicy",
+      "source_file": "aws_networkfirewall.go"
+    },
+    {
+      "permission": "network-firewall:DescribeRuleGroup",
+      "service": "network-firewall",
+      "action": "DescribeRuleGroup",
+      "source_file": "aws_networkfirewall.go"
+    },
+    {
+      "permission": "network-firewall:ListFirewallPolicies",
+      "service": "network-firewall",
+      "action": "ListFirewallPolicies",
+      "source_file": "aws_networkfirewall.go"
+    },
+    {
+      "permission": "network-firewall:ListFirewalls",
+      "service": "network-firewall",
+      "action": "ListFirewalls",
+      "source_file": "aws_networkfirewall.go"
+    },
+    {
+      "permission": "network-firewall:ListRuleGroups",
+      "service": "network-firewall",
+      "action": "ListRuleGroups",
+      "source_file": "aws_networkfirewall.go"
+    },
+    {
+      "permission": "organizations:DescribeOrganization",
+      "service": "organizations",
+      "action": "DescribeOrganization",
+      "source_file": "aws_account.go"
+    },
+    {
+      "permission": "organizations:ListAccounts",
+      "service": "organizations",
+      "action": "ListAccounts",
+      "source_file": "aws_account.go"
+    },
+    {
+      "permission": "organizations:ListDelegatedAdministrators",
+      "service": "organizations",
+      "action": "ListDelegatedAdministrators",
+      "source_file": "aws_account.go"
+    },
+    {
+      "permission": "organizations:ListDelegatedServicesForAccount",
+      "service": "organizations",
+      "action": "ListDelegatedServicesForAccount",
+      "source_file": "aws_account.go"
+    },
+    {
+      "permission": "organizations:ListTagsForResource",
+      "service": "organizations",
+      "action": "ListTagsForResource",
+      "source_file": "aws_account.go"
+    },
+    {
+      "permission": "pipes:DescribePipe",
+      "service": "pipes",
+      "action": "DescribePipe",
+      "source_file": "aws_eventbridge_pipes.go"
+    },
+    {
+      "permission": "pipes:ListPipes",
+      "service": "pipes",
+      "action": "ListPipes",
+      "source_file": "aws_eventbridge_pipes.go"
+    },
+    {
+      "permission": "rds:DescribeDBClusterAutomatedBackups",
+      "service": "rds",
+      "action": "DescribeDBClusterAutomatedBackups",
+      "source_file": "aws_rds.go"
+    },
+    {
+      "permission": "rds:DescribeDBClusterParameterGroups",
+      "service": "rds",
+      "action": "DescribeDBClusterParameterGroups",
+      "source_file": "aws_rds.go"
+    },
+    {
+      "permission": "rds:DescribeDBClusterParameters",
+      "service": "rds",
+      "action": "DescribeDBClusterParameters",
+      "source_file": "aws_rds.go"
+    },
+    {
+      "permission": "rds:DescribeDBClusterSnapshotAttributes",
+      "service": "rds",
+      "action": "DescribeDBClusterSnapshotAttributes",
+      "source_file": "aws_rds.go"
+    },
+    {
+      "permission": "rds:DescribeDBClusterSnapshots",
+      "service": "rds",
+      "action": "DescribeDBClusterSnapshots",
+      "source_file": "aws_documentdb.go"
+    },
+    {
+      "permission": "rds:DescribeDBClusterSnapshots",
+      "service": "rds",
+      "action": "DescribeDBClusterSnapshots",
+      "source_file": "aws_neptune.go"
+    },
+    {
+      "permission": "rds:DescribeDBClusterSnapshots",
+      "service": "rds",
+      "action": "DescribeDBClusterSnapshots",
+      "source_file": "aws_rds.go"
+    },
+    {
+      "permission": "rds:DescribeDBClusters",
+      "service": "rds",
+      "action": "DescribeDBClusters",
+      "source_file": "aws_documentdb.go"
+    },
+    {
+      "permission": "rds:DescribeDBClusters",
+      "service": "rds",
+      "action": "DescribeDBClusters",
+      "source_file": "aws_neptune.go"
+    },
+    {
+      "permission": "rds:DescribeDBClusters",
+      "service": "rds",
+      "action": "DescribeDBClusters",
+      "source_file": "aws_rds.go"
+    },
+    {
+      "permission": "rds:DescribeDBInstanceAutomatedBackups",
+      "service": "rds",
+      "action": "DescribeDBInstanceAutomatedBackups",
+      "source_file": "aws_rds.go"
+    },
+    {
+      "permission": "rds:DescribeDBInstances",
+      "service": "rds",
+      "action": "DescribeDBInstances",
+      "source_file": "aws_documentdb.go"
+    },
+    {
+      "permission": "rds:DescribeDBInstances",
+      "service": "rds",
+      "action": "DescribeDBInstances",
+      "source_file": "aws_neptune.go"
+    },
+    {
+      "permission": "rds:DescribeDBInstances",
+      "service": "rds",
+      "action": "DescribeDBInstances",
+      "source_file": "aws_rds.go"
+    },
+    {
+      "permission": "rds:DescribeDBParameterGroups",
+      "service": "rds",
+      "action": "DescribeDBParameterGroups",
+      "source_file": "aws_rds.go"
+    },
+    {
+      "permission": "rds:DescribeDBParameters",
+      "service": "rds",
+      "action": "DescribeDBParameters",
+      "source_file": "aws_rds.go"
+    },
+    {
+      "permission": "rds:DescribeDBProxies",
+      "service": "rds",
+      "action": "DescribeDBProxies",
+      "source_file": "aws_rds.go"
+    },
+    {
+      "permission": "rds:DescribeDBSnapshotAttributes",
+      "service": "rds",
+      "action": "DescribeDBSnapshotAttributes",
+      "source_file": "aws_rds.go"
+    },
+    {
+      "permission": "rds:DescribeDBSnapshots",
+      "service": "rds",
+      "action": "DescribeDBSnapshots",
+      "source_file": "aws_rds.go"
+    },
+    {
+      "permission": "rds:DescribePendingMaintenanceActions",
+      "service": "rds",
+      "action": "DescribePendingMaintenanceActions",
+      "source_file": "aws_rds.go"
+    },
+    {
+      "permission": "rds:ListTagsForResource",
+      "service": "rds",
+      "action": "ListTagsForResource",
+      "source_file": "aws_rds.go"
+    },
+    {
+      "permission": "redshift:DescribeClusterParameters",
+      "service": "redshift",
+      "action": "DescribeClusterParameters",
+      "source_file": "aws_redshift.go"
+    },
+    {
+      "permission": "redshift:DescribeClusterSnapshots",
+      "service": "redshift",
+      "action": "DescribeClusterSnapshots",
+      "source_file": "aws_redshift.go"
+    },
+    {
+      "permission": "redshift:DescribeClusters",
+      "service": "redshift",
+      "action": "DescribeClusters",
+      "source_file": "aws_redshift.go"
+    },
+    {
+      "permission": "redshift:DescribeLoggingStatus",
+      "service": "redshift",
+      "action": "DescribeLoggingStatus",
+      "source_file": "aws_redshift.go"
+    },
+    {
+      "permission": "route53:GetDNSSEC",
+      "service": "route53",
+      "action": "GetDNSSEC",
+      "source_file": "aws_route53.go"
+    },
+    {
+      "permission": "route53:GetHealthCheck",
+      "service": "route53",
+      "action": "GetHealthCheck",
+      "source_file": "aws_route53.go"
+    },
+    {
+      "permission": "route53:GetHealthCheckStatus",
+      "service": "route53",
+      "action": "GetHealthCheckStatus",
+      "source_file": "aws_route53.go"
+    },
+    {
+      "permission": "route53:GetHostedZone",
+      "service": "route53",
+      "action": "GetHostedZone",
+      "source_file": "aws_route53.go"
+    },
+    {
+      "permission": "route53:ListHealthChecks",
+      "service": "route53",
+      "action": "ListHealthChecks",
+      "source_file": "aws_route53.go"
+    },
+    {
+      "permission": "route53:ListHostedZones",
+      "service": "route53",
+      "action": "ListHostedZones",
+      "source_file": "aws_route53.go"
+    },
+    {
+      "permission": "route53:ListQueryLoggingConfigs",
+      "service": "route53",
+      "action": "ListQueryLoggingConfigs",
+      "source_file": "aws_route53.go"
+    },
+    {
+      "permission": "route53:ListResourceRecordSets",
+      "service": "route53",
+      "action": "ListResourceRecordSets",
+      "source_file": "aws_route53.go"
+    },
+    {
+      "permission": "route53:ListTagsForResource",
+      "service": "route53",
+      "action": "ListTagsForResource",
+      "source_file": "aws_route53.go"
+    },
+    {
+      "permission": "route53domains:GetDomainDetail",
+      "service": "route53domains",
+      "action": "GetDomainDetail",
+      "source_file": "aws_route53.go"
+    },
+    {
+      "permission": "route53domains:ListDomains",
+      "service": "route53domains",
+      "action": "ListDomains",
+      "source_file": "aws_route53.go"
+    },
+    {
+      "permission": "s3:GetBucketAcl",
+      "service": "s3",
+      "action": "GetBucketAcl",
+      "source_file": "aws_s3.go"
+    },
+    {
+      "permission": "s3:GetBucketCors",
+      "service": "s3",
+      "action": "GetBucketCors",
+      "source_file": "aws_s3.go"
+    },
+    {
+      "permission": "s3:GetBucketEncryption",
+      "service": "s3",
+      "action": "GetBucketEncryption",
+      "source_file": "aws_s3.go"
+    },
+    {
+      "permission": "s3:GetBucketLocation",
+      "service": "s3",
+      "action": "GetBucketLocation",
+      "source_file": "aws_s3.go"
+    },
+    {
+      "permission": "s3:GetBucketLogging",
+      "service": "s3",
+      "action": "GetBucketLogging",
+      "source_file": "aws_s3.go"
+    },
+    {
+      "permission": "s3:GetBucketPolicy",
+      "service": "s3",
+      "action": "GetBucketPolicy",
+      "source_file": "aws_s3.go"
+    },
+    {
+      "permission": "s3:GetBucketReplication",
+      "service": "s3",
+      "action": "GetBucketReplication",
+      "source_file": "aws_s3.go"
+    },
+    {
+      "permission": "s3:GetBucketTagging",
+      "service": "s3",
+      "action": "GetBucketTagging",
+      "source_file": "aws_s3.go"
+    },
+    {
+      "permission": "s3:GetBucketVersioning",
+      "service": "s3",
+      "action": "GetBucketVersioning",
+      "source_file": "aws_s3.go"
+    },
+    {
+      "permission": "s3:GetBucketWebsite",
+      "service": "s3",
+      "action": "GetBucketWebsite",
+      "source_file": "aws_s3.go"
+    },
+    {
+      "permission": "s3:GetObjectLockConfiguration",
+      "service": "s3",
+      "action": "GetObjectLockConfiguration",
+      "source_file": "aws_s3.go"
+    },
+    {
+      "permission": "s3:GetPublicAccessBlock",
+      "service": "s3",
+      "action": "GetPublicAccessBlock",
+      "source_file": "aws_s3.go"
+    },
+    {
+      "permission": "s3:ListBuckets",
+      "service": "s3",
+      "action": "ListBuckets",
+      "source_file": "aws_s3.go"
+    },
+    {
+      "permission": "sagemaker:DescribeDomain",
+      "service": "sagemaker",
+      "action": "DescribeDomain",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:DescribeEndpointConfig",
+      "service": "sagemaker",
+      "action": "DescribeEndpointConfig",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:DescribeModel",
+      "service": "sagemaker",
+      "action": "DescribeModel",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:DescribeNotebookInstance",
+      "service": "sagemaker",
+      "action": "DescribeNotebookInstance",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:DescribePipeline",
+      "service": "sagemaker",
+      "action": "DescribePipeline",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:DescribeProcessingJob",
+      "service": "sagemaker",
+      "action": "DescribeProcessingJob",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:DescribeTrainingJob",
+      "service": "sagemaker",
+      "action": "DescribeTrainingJob",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:ListDomains",
+      "service": "sagemaker",
+      "action": "ListDomains",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:ListEndpoints",
+      "service": "sagemaker",
+      "action": "ListEndpoints",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:ListModels",
+      "service": "sagemaker",
+      "action": "ListModels",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:ListNotebookInstances",
+      "service": "sagemaker",
+      "action": "ListNotebookInstances",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:ListPipelines",
+      "service": "sagemaker",
+      "action": "ListPipelines",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:ListProcessingJobs",
+      "service": "sagemaker",
+      "action": "ListProcessingJobs",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:ListTags",
+      "service": "sagemaker",
+      "action": "ListTags",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:ListTrainingJobs",
+      "service": "sagemaker",
+      "action": "ListTrainingJobs",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "scheduler:GetSchedule",
+      "service": "scheduler",
+      "action": "GetSchedule",
+      "source_file": "aws_eventbridge_scheduler.go"
+    },
+    {
+      "permission": "scheduler:ListScheduleGroups",
+      "service": "scheduler",
+      "action": "ListScheduleGroups",
+      "source_file": "aws_eventbridge_scheduler.go"
+    },
+    {
+      "permission": "scheduler:ListSchedules",
+      "service": "scheduler",
+      "action": "ListSchedules",
+      "source_file": "aws_eventbridge_scheduler.go"
+    },
+    {
+      "permission": "secretsmanager:ListSecrets",
+      "service": "secretsmanager",
+      "action": "ListSecrets",
+      "source_file": "aws_secretsmanager.go"
+    },
+    {
+      "permission": "securityhub:DescribeHub",
+      "service": "securityhub",
+      "action": "DescribeHub",
+      "source_file": "aws_securityhub.go"
+    },
+    {
+      "permission": "shield:DescribeDRTAccess",
+      "service": "shield",
+      "action": "DescribeDRTAccess",
+      "source_file": "aws_shield.go"
+    },
+    {
+      "permission": "shield:DescribeEmergencyContactSettings",
+      "service": "shield",
+      "action": "DescribeEmergencyContactSettings",
+      "source_file": "aws_shield.go"
+    },
+    {
+      "permission": "shield:DescribeSubscription",
+      "service": "shield",
+      "action": "DescribeSubscription",
+      "source_file": "aws_shield.go"
+    },
+    {
+      "permission": "shield:GetSubscriptionState",
+      "service": "shield",
+      "action": "GetSubscriptionState",
+      "source_file": "aws_shield.go"
+    },
+    {
+      "permission": "shield:ListProtectionGroups",
+      "service": "shield",
+      "action": "ListProtectionGroups",
+      "source_file": "aws_shield.go"
+    },
+    {
+      "permission": "shield:ListProtections",
+      "service": "shield",
+      "action": "ListProtections",
+      "source_file": "aws_shield.go"
+    },
+    {
+      "permission": "sns:GetSubscriptionAttributes",
+      "service": "sns",
+      "action": "GetSubscriptionAttributes",
+      "source_file": "aws_sns.go"
+    },
+    {
+      "permission": "sns:GetTopicAttributes",
+      "service": "sns",
+      "action": "GetTopicAttributes",
+      "source_file": "aws_sns.go"
+    },
+    {
+      "permission": "sns:ListSubscriptionsByTopic",
+      "service": "sns",
+      "action": "ListSubscriptionsByTopic",
+      "source_file": "aws_sns.go"
+    },
+    {
+      "permission": "sns:ListTopics",
+      "service": "sns",
+      "action": "ListTopics",
+      "source_file": "aws_sns.go"
+    },
+    {
+      "permission": "sqs:GetQueueAttributes",
+      "service": "sqs",
+      "action": "GetQueueAttributes",
+      "source_file": "aws_sqs.go"
+    },
+    {
+      "permission": "sqs:ListQueues",
+      "service": "sqs",
+      "action": "ListQueues",
+      "source_file": "aws_sqs.go"
+    },
+    {
+      "permission": "ssm:DescribeInstanceInformation",
+      "service": "ssm",
+      "action": "DescribeInstanceInformation",
+      "source_file": "aws_ec2.go"
+    },
+    {
+      "permission": "ssm:DescribeInstanceInformation",
+      "service": "ssm",
+      "action": "DescribeInstanceInformation",
+      "source_file": "aws_ssm.go"
+    },
+    {
+      "permission": "ssm:DescribeInstancePatchStates",
+      "service": "ssm",
+      "action": "DescribeInstancePatchStates",
+      "source_file": "aws_ec2.go"
+    },
+    {
+      "permission": "ssm:DescribeParameters",
+      "service": "ssm",
+      "action": "DescribeParameters",
+      "source_file": "aws_ssm.go"
+    },
+    {
+      "permission": "timestream-influxdb:GetDbCluster",
+      "service": "timestream-influxdb",
+      "action": "GetDbCluster",
+      "source_file": "aws_timestream_influxdb.go"
+    },
+    {
+      "permission": "timestream-influxdb:GetDbInstance",
+      "service": "timestream-influxdb",
+      "action": "GetDbInstance",
+      "source_file": "aws_timestream_influxdb.go"
+    },
+    {
+      "permission": "timestream-influxdb:ListDbClusters",
+      "service": "timestream-influxdb",
+      "action": "ListDbClusters",
+      "source_file": "aws_timestream_influxdb.go"
+    },
+    {
+      "permission": "timestream-influxdb:ListDbInstances",
+      "service": "timestream-influxdb",
+      "action": "ListDbInstances",
+      "source_file": "aws_timestream_influxdb.go"
+    },
+    {
+      "permission": "timestream-influxdb:ListTagsForResource",
+      "service": "timestream-influxdb",
+      "action": "ListTagsForResource",
+      "source_file": "aws_timestream_influxdb.go"
+    },
+    {
+      "permission": "timestream:ListDatabases",
+      "service": "timestream",
+      "action": "ListDatabases",
+      "source_file": "aws_timestream.go"
+    },
+    {
+      "permission": "timestream:ListTables",
+      "service": "timestream",
+      "action": "ListTables",
+      "source_file": "aws_timestream.go"
+    },
+    {
+      "permission": "wafv2:GetIPSet",
+      "service": "wafv2",
+      "action": "GetIPSet",
+      "source_file": "aws_waf.go"
+    },
+    {
+      "permission": "wafv2:GetLoggingConfiguration",
+      "service": "wafv2",
+      "action": "GetLoggingConfiguration",
+      "source_file": "aws_waf.go"
+    },
+    {
+      "permission": "wafv2:GetRegexPatternSet",
+      "service": "wafv2",
+      "action": "GetRegexPatternSet",
+      "source_file": "aws_waf.go"
+    },
+    {
+      "permission": "wafv2:GetRuleGroup",
+      "service": "wafv2",
+      "action": "GetRuleGroup",
+      "source_file": "aws_waf.go"
+    },
+    {
+      "permission": "wafv2:GetWebACL",
+      "service": "wafv2",
+      "action": "GetWebACL",
+      "source_file": "aws_waf.go"
+    },
+    {
+      "permission": "wafv2:ListIPSets",
+      "service": "wafv2",
+      "action": "ListIPSets",
+      "source_file": "aws_waf.go"
+    },
+    {
+      "permission": "wafv2:ListRegexPatternSets",
+      "service": "wafv2",
+      "action": "ListRegexPatternSets",
+      "source_file": "aws_waf.go"
+    },
+    {
+      "permission": "wafv2:ListResourcesForWebACL",
+      "service": "wafv2",
+      "action": "ListResourcesForWebACL",
+      "source_file": "aws_waf.go"
+    },
+    {
+      "permission": "wafv2:ListRuleGroups",
+      "service": "wafv2",
+      "action": "ListRuleGroups",
+      "source_file": "aws_waf.go"
+    },
+    {
+      "permission": "wafv2:ListWebACLs",
+      "service": "wafv2",
+      "action": "ListWebACLs",
+      "source_file": "aws_waf.go"
+    },
+    {
+      "permission": "workdocs:DescribeUsers",
+      "service": "workdocs",
+      "action": "DescribeUsers",
+      "source_file": "aws_workdocs.go"
+    },
+    {
+      "permission": "workspaces-web:ListPortals",
+      "service": "workspaces-web",
+      "action": "ListPortals",
+      "source_file": "aws_workspacesweb.go"
+    },
+    {
+      "permission": "workspaces-web:ListUserAccessLoggingSettings",
+      "service": "workspaces-web",
+      "action": "ListUserAccessLoggingSettings",
+      "source_file": "aws_workspacesweb.go"
+    },
+    {
+      "permission": "workspaces:DescribeIpGroups",
+      "service": "workspaces",
+      "action": "DescribeIpGroups",
+      "source_file": "aws_workspaces.go"
+    },
+    {
+      "permission": "workspaces:DescribeTags",
+      "service": "workspaces",
+      "action": "DescribeTags",
+      "source_file": "aws_workspaces.go"
+    },
+    {
+      "permission": "workspaces:DescribeWorkspaceBundles",
+      "service": "workspaces",
+      "action": "DescribeWorkspaceBundles",
+      "source_file": "aws_workspaces.go"
+    },
+    {
+      "permission": "workspaces:DescribeWorkspaceDirectories",
+      "service": "workspaces",
+      "action": "DescribeWorkspaceDirectories",
+      "source_file": "aws_workspaces.go"
+    },
+    {
+      "permission": "workspaces:DescribeWorkspaceImages",
+      "service": "workspaces",
+      "action": "DescribeWorkspaceImages",
+      "source_file": "aws_workspaces.go"
+    },
+    {
+      "permission": "workspaces:DescribeWorkspaces",
+      "service": "workspaces",
+      "action": "DescribeWorkspaces",
+      "source_file": "aws_workspaces.go"
+    },
+    {
+      "permission": "workspaces:DescribeWorkspacesConnectionStatus",
+      "service": "workspaces",
+      "action": "DescribeWorkspacesConnectionStatus",
+      "source_file": "aws_workspaces.go"
+    }
+  ]
+}

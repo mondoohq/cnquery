@@ -1,0 +1,803 @@
+{
+  "provider": "gcp",
+  "version": "13.2.0",
+  "generated_at": "2026-03-18T12:00:35-06:00",
+  "permissions": [
+    "accessapproval.accessApprovalSettings.get",
+    "aiplatform.datasets.list",
+    "aiplatform.endpoints.list",
+    "aiplatform.featureOnlineStores.list",
+    "aiplatform.models.list",
+    "aiplatform.pipelineJobs.list",
+    "alloydb.backups.list",
+    "alloydb.clusters.list",
+    "alloydb.instances.list",
+    "apikeys.keys.list",
+    "artifactregistry.iamPolicy.get",
+    "artifactregistry.repositories.list",
+    "backupdr.backupPlans.list",
+    "backupdr.backupVaults.list",
+    "backupdr.dataSources.list",
+    "backupdr.managementServers.list",
+    "bigtable.appProfiles.list",
+    "binaryauthorization.systemPolicy.get",
+    "clouddeploy.deliveryPipelines.list",
+    "clouddeploy.targets.list",
+    "cloudfunctions.functions.list",
+    "cloudkms.cryptoKeyVersions.list",
+    "cloudkms.cryptoKeys.list",
+    "cloudkms.iamPolicy.get",
+    "cloudkms.keyRings.list",
+    "cloudkms.locations.list",
+    "cloudresourcemanager.folders.get",
+    "cloudresourcemanager.folders.list",
+    "cloudresourcemanager.folders.search",
+    "cloudresourcemanager.organizations.get",
+    "cloudresourcemanager.organizations.getIamPolicy",
+    "cloudresourcemanager.projects.get",
+    "cloudresourcemanager.projects.getIamPolicy",
+    "cloudresourcemanager.projects.list",
+    "cloudresourcemanager.projects.search",
+    "cloudscheduler.jobs.list",
+    "cloudtasks.queues.list",
+    "compute.addresses.list",
+    "compute.backendServices.list",
+    "compute.compute.get",
+    "compute.disks.list",
+    "compute.firewalls.list",
+    "compute.healthChecks.list",
+    "compute.images.list",
+    "compute.instanceGroupManagers.list",
+    "compute.instanceGroups.list",
+    "compute.instances.list",
+    "compute.machineTypes.get",
+    "compute.machineTypes.list",
+    "compute.networkFirewallPolicies.get",
+    "compute.networkFirewallPolicies.list",
+    "compute.networks.get",
+    "compute.networks.list",
+    "compute.projects.get",
+    "compute.regions.list",
+    "compute.routers.list",
+    "compute.securityPolicies.get",
+    "compute.securityPolicies.list",
+    "compute.snapshots.list",
+    "compute.sslCertificates.list",
+    "compute.sslPolicies.list",
+    "compute.storagePools.list",
+    "compute.targetHttpProxies.list",
+    "compute.targetHttpsProxies.list",
+    "compute.urlMaps.list",
+    "compute.vpnGateways.list",
+    "compute.vpnTunnels.list",
+    "compute.zones.get",
+    "compute.zones.list",
+    "container.clusters.list",
+    "dataflow.jobs.aggregated",
+    "dataproc.clusters.list",
+    "datastore.databases.list",
+    "dns.managedZones.list",
+    "dns.policies.list",
+    "dns.resourceRecordSets.list",
+    "essentialcontacts.contacts.list",
+    "file.instances.list",
+    "iam.rolesIter.list",
+    "iam.serviceAccountKeys.list",
+    "iam.serviceAccounts.list",
+    "logging.buckets.list",
+    "monitoring.alertPolicies.list",
+    "monitoring.conditionAbsent.get",
+    "monitoring.conditionMatchedLog.get",
+    "monitoring.conditionMonitoringQueryLanguage.get",
+    "monitoring.conditionThreshold.get",
+    "orgpolicy.policies.list",
+    "recommender.recommendations.list",
+    "redis.backups.list",
+    "redis.clusters.list",
+    "redis.instances.list",
+    "run.jobs.list",
+    "run.operations.list",
+    "run.services.list",
+    "secretmanager.iamPolicy.get",
+    "secretmanager.secretVersions.list",
+    "secretmanager.secrets.list",
+    "security.caPools.list",
+    "security.certificateAuthorities.list",
+    "security.certificates.list",
+    "serviceusage.service.get",
+    "serviceusage.services.list",
+    "spanner.backups.list",
+    "spanner.databases.list",
+    "spanner.instances.list",
+    "sqladmin.databases.list",
+    "sqladmin.instances.list",
+    "storage.buckets.getIamPolicy",
+    "storage.buckets.list"
+  ],
+  "details": [
+    {
+      "permission": "accessapproval.accessApprovalSettings.get",
+      "service": "accessapproval",
+      "action": "GetAccessApprovalSettings",
+      "source_file": "access_approval.go"
+    },
+    {
+      "permission": "aiplatform.datasets.list",
+      "service": "aiplatform",
+      "action": "ListDatasets",
+      "source_file": "vertexai.go"
+    },
+    {
+      "permission": "aiplatform.endpoints.list",
+      "service": "aiplatform",
+      "action": "ListEndpoints",
+      "source_file": "vertexai.go"
+    },
+    {
+      "permission": "aiplatform.featureOnlineStores.list",
+      "service": "aiplatform",
+      "action": "ListFeatureOnlineStores",
+      "source_file": "vertexai.go"
+    },
+    {
+      "permission": "aiplatform.models.list",
+      "service": "aiplatform",
+      "action": "ListModels",
+      "source_file": "vertexai.go"
+    },
+    {
+      "permission": "aiplatform.pipelineJobs.list",
+      "service": "aiplatform",
+      "action": "ListPipelineJobs",
+      "source_file": "vertexai.go"
+    },
+    {
+      "permission": "alloydb.backups.list",
+      "service": "alloydb",
+      "action": "ListBackups",
+      "source_file": "alloydb.go"
+    },
+    {
+      "permission": "alloydb.clusters.list",
+      "service": "alloydb",
+      "action": "ListClusters",
+      "source_file": "alloydb.go"
+    },
+    {
+      "permission": "alloydb.instances.list",
+      "service": "alloydb",
+      "action": "ListInstances",
+      "source_file": "alloydb.go"
+    },
+    {
+      "permission": "apikeys.keys.list",
+      "service": "apikeys",
+      "action": "Keys.List",
+      "source_file": "apikeys.go"
+    },
+    {
+      "permission": "artifactregistry.iamPolicy.get",
+      "service": "artifactregistry",
+      "action": "GetIamPolicy",
+      "source_file": "artifactregistry.go"
+    },
+    {
+      "permission": "artifactregistry.repositories.list",
+      "service": "artifactregistry",
+      "action": "ListRepositories",
+      "source_file": "artifactregistry.go"
+    },
+    {
+      "permission": "backupdr.backupPlans.list",
+      "service": "backupdr",
+      "action": "ListBackupPlans",
+      "source_file": "backupdr.go"
+    },
+    {
+      "permission": "backupdr.backupVaults.list",
+      "service": "backupdr",
+      "action": "ListBackupVaults",
+      "source_file": "backupdr.go"
+    },
+    {
+      "permission": "backupdr.dataSources.list",
+      "service": "backupdr",
+      "action": "ListDataSources",
+      "source_file": "backupdr.go"
+    },
+    {
+      "permission": "backupdr.managementServers.list",
+      "service": "backupdr",
+      "action": "ListManagementServers",
+      "source_file": "backupdr.go"
+    },
+    {
+      "permission": "bigtable.appProfiles.list",
+      "service": "bigtable",
+      "action": "ListAppProfiles",
+      "source_file": "bigtable.go"
+    },
+    {
+      "permission": "binaryauthorization.systemPolicy.get",
+      "service": "binaryauthorization",
+      "action": "GetSystemPolicy",
+      "source_file": "binary_authorization.go"
+    },
+    {
+      "permission": "clouddeploy.deliveryPipelines.list",
+      "service": "clouddeploy",
+      "action": "ListDeliveryPipelines",
+      "source_file": "clouddeploy.go"
+    },
+    {
+      "permission": "clouddeploy.targets.list",
+      "service": "clouddeploy",
+      "action": "ListTargets",
+      "source_file": "clouddeploy.go"
+    },
+    {
+      "permission": "cloudfunctions.functions.list",
+      "service": "cloudfunctions",
+      "action": "ListFunctions",
+      "source_file": "cloud_functions.go"
+    },
+    {
+      "permission": "cloudkms.cryptoKeyVersions.list",
+      "service": "cloudkms",
+      "action": "ListCryptoKeyVersions",
+      "source_file": "kms.go"
+    },
+    {
+      "permission": "cloudkms.cryptoKeys.list",
+      "service": "cloudkms",
+      "action": "ListCryptoKeys",
+      "source_file": "kms.go"
+    },
+    {
+      "permission": "cloudkms.iamPolicy.get",
+      "service": "cloudkms",
+      "action": "GetIamPolicy",
+      "source_file": "kms.go"
+    },
+    {
+      "permission": "cloudkms.keyRings.list",
+      "service": "cloudkms",
+      "action": "ListKeyRings",
+      "source_file": "kms.go"
+    },
+    {
+      "permission": "cloudkms.locations.list",
+      "service": "cloudkms",
+      "action": "ListLocations",
+      "source_file": "kms.go"
+    },
+    {
+      "permission": "cloudresourcemanager.folders.get",
+      "service": "cloudresourcemanager",
+      "action": "Folders.Get",
+      "source_file": "folder.go"
+    },
+    {
+      "permission": "cloudresourcemanager.folders.list",
+      "service": "cloudresourcemanager",
+      "action": "Folders.List",
+      "source_file": "folder.go"
+    },
+    {
+      "permission": "cloudresourcemanager.folders.search",
+      "service": "cloudresourcemanager",
+      "action": "Folders.Search",
+      "source_file": "folder.go"
+    },
+    {
+      "permission": "cloudresourcemanager.organizations.get",
+      "service": "cloudresourcemanager",
+      "action": "Organizations.Get",
+      "source_file": "organization.go"
+    },
+    {
+      "permission": "cloudresourcemanager.organizations.getIamPolicy",
+      "service": "cloudresourcemanager",
+      "action": "Organizations.GetIamPolicy",
+      "source_file": "organization.go"
+    },
+    {
+      "permission": "cloudresourcemanager.projects.get",
+      "service": "cloudresourcemanager",
+      "action": "Projects.Get",
+      "source_file": "project.go"
+    },
+    {
+      "permission": "cloudresourcemanager.projects.getIamPolicy",
+      "service": "cloudresourcemanager",
+      "action": "Projects.GetIamPolicy",
+      "source_file": "project.go"
+    },
+    {
+      "permission": "cloudresourcemanager.projects.list",
+      "service": "cloudresourcemanager",
+      "action": "Projects.List",
+      "source_file": "discovery.go"
+    },
+    {
+      "permission": "cloudresourcemanager.projects.list",
+      "service": "cloudresourcemanager",
+      "action": "Projects.List",
+      "source_file": "project.go"
+    },
+    {
+      "permission": "cloudresourcemanager.projects.search",
+      "service": "cloudresourcemanager",
+      "action": "Projects.Search",
+      "source_file": "project.go"
+    },
+    {
+      "permission": "cloudscheduler.jobs.list",
+      "service": "cloudscheduler",
+      "action": "ListJobs",
+      "source_file": "cloudscheduler.go"
+    },
+    {
+      "permission": "cloudtasks.queues.list",
+      "service": "cloudtasks",
+      "action": "ListQueues",
+      "source_file": "cloudtasks.go"
+    },
+    {
+      "permission": "compute.addresses.list",
+      "service": "compute",
+      "action": "Addresses.AggregatedList",
+      "source_file": "compute.go"
+    },
+    {
+      "permission": "compute.backendServices.list",
+      "service": "compute",
+      "action": "BackendServices.AggregatedList",
+      "source_file": "compute.go"
+    },
+    {
+      "permission": "compute.compute.get",
+      "service": "compute",
+      "action": "Get",
+      "source_file": "compute.go"
+    },
+    {
+      "permission": "compute.disks.list",
+      "service": "compute",
+      "action": "Disks.List",
+      "source_file": "compute.go"
+    },
+    {
+      "permission": "compute.firewalls.list",
+      "service": "compute",
+      "action": "Firewalls.List",
+      "source_file": "compute.go"
+    },
+    {
+      "permission": "compute.healthChecks.list",
+      "service": "compute",
+      "action": "HealthChecks.AggregatedList",
+      "source_file": "compute_enrichments.go"
+    },
+    {
+      "permission": "compute.images.list",
+      "service": "compute",
+      "action": "Images.List",
+      "source_file": "compute.go"
+    },
+    {
+      "permission": "compute.instanceGroupManagers.list",
+      "service": "compute",
+      "action": "InstanceGroupManagers.AggregatedList",
+      "source_file": "compute_instance_groups_firewall_policies.go"
+    },
+    {
+      "permission": "compute.instanceGroups.list",
+      "service": "compute",
+      "action": "InstanceGroups.AggregatedList",
+      "source_file": "compute_instance_groups_firewall_policies.go"
+    },
+    {
+      "permission": "compute.instances.list",
+      "service": "compute",
+      "action": "Instances.List",
+      "source_file": "compute.go"
+    },
+    {
+      "permission": "compute.machineTypes.get",
+      "service": "compute",
+      "action": "MachineTypes.Get",
+      "source_file": "compute.go"
+    },
+    {
+      "permission": "compute.machineTypes.list",
+      "service": "compute",
+      "action": "MachineTypes.List",
+      "source_file": "compute.go"
+    },
+    {
+      "permission": "compute.networkFirewallPolicies.get",
+      "service": "compute",
+      "action": "NetworkFirewallPolicies.Get",
+      "source_file": "compute_instance_groups_firewall_policies.go"
+    },
+    {
+      "permission": "compute.networkFirewallPolicies.list",
+      "service": "compute",
+      "action": "NetworkFirewallPolicies.List",
+      "source_file": "compute_instance_groups_firewall_policies.go"
+    },
+    {
+      "permission": "compute.networks.get",
+      "service": "compute",
+      "action": "Networks.Get",
+      "source_file": "compute.go"
+    },
+    {
+      "permission": "compute.networks.list",
+      "service": "compute",
+      "action": "Networks.List",
+      "source_file": "compute.go"
+    },
+    {
+      "permission": "compute.projects.get",
+      "service": "compute",
+      "action": "Projects.Get",
+      "source_file": "project.go"
+    },
+    {
+      "permission": "compute.regions.list",
+      "service": "compute",
+      "action": "Regions.List",
+      "source_file": "cloudrun.go"
+    },
+    {
+      "permission": "compute.regions.list",
+      "service": "compute",
+      "action": "Regions.List",
+      "source_file": "compute.go"
+    },
+    {
+      "permission": "compute.regions.list",
+      "service": "compute",
+      "action": "Regions.List",
+      "source_file": "dataproc.go"
+    },
+    {
+      "permission": "compute.routers.list",
+      "service": "compute",
+      "action": "Routers.List",
+      "source_file": "compute.go"
+    },
+    {
+      "permission": "compute.securityPolicies.get",
+      "service": "compute",
+      "action": "SecurityPolicies.Get",
+      "source_file": "compute.go"
+    },
+    {
+      "permission": "compute.securityPolicies.list",
+      "service": "compute",
+      "action": "SecurityPolicies.AggregatedList",
+      "source_file": "compute.go"
+    },
+    {
+      "permission": "compute.snapshots.list",
+      "service": "compute",
+      "action": "Snapshots.List",
+      "source_file": "compute.go"
+    },
+    {
+      "permission": "compute.sslCertificates.list",
+      "service": "compute",
+      "action": "SslCertificates.AggregatedList",
+      "source_file": "compute.go"
+    },
+    {
+      "permission": "compute.sslPolicies.list",
+      "service": "compute",
+      "action": "SslPolicies.AggregatedList",
+      "source_file": "compute.go"
+    },
+    {
+      "permission": "compute.storagePools.list",
+      "service": "compute",
+      "action": "StoragePools.AggregatedList",
+      "source_file": "compute.go"
+    },
+    {
+      "permission": "compute.targetHttpProxies.list",
+      "service": "compute",
+      "action": "TargetHttpProxies.AggregatedList",
+      "source_file": "compute_enrichments.go"
+    },
+    {
+      "permission": "compute.targetHttpsProxies.list",
+      "service": "compute",
+      "action": "TargetHttpsProxies.AggregatedList",
+      "source_file": "compute_enrichments.go"
+    },
+    {
+      "permission": "compute.urlMaps.list",
+      "service": "compute",
+      "action": "UrlMaps.AggregatedList",
+      "source_file": "compute_enrichments.go"
+    },
+    {
+      "permission": "compute.vpnGateways.list",
+      "service": "compute",
+      "action": "VpnGateways.AggregatedList",
+      "source_file": "compute.go"
+    },
+    {
+      "permission": "compute.vpnTunnels.list",
+      "service": "compute",
+      "action": "VpnTunnels.AggregatedList",
+      "source_file": "compute.go"
+    },
+    {
+      "permission": "compute.zones.get",
+      "service": "compute",
+      "action": "Zones.Get",
+      "source_file": "sql.go"
+    },
+    {
+      "permission": "compute.zones.list",
+      "service": "compute",
+      "action": "Zones.List",
+      "source_file": "compute.go"
+    },
+    {
+      "permission": "compute.zones.list",
+      "service": "compute",
+      "action": "Zones.List",
+      "source_file": "recommendations.go"
+    },
+    {
+      "permission": "container.clusters.list",
+      "service": "container",
+      "action": "ListClusters",
+      "source_file": "gke.go"
+    },
+    {
+      "permission": "dataflow.jobs.aggregated",
+      "service": "dataflow",
+      "action": "Jobs.Aggregated",
+      "source_file": "dataflow.go"
+    },
+    {
+      "permission": "dataproc.clusters.list",
+      "service": "dataproc",
+      "action": "Clusters.List",
+      "source_file": "dataproc.go"
+    },
+    {
+      "permission": "datastore.databases.list",
+      "service": "datastore",
+      "action": "ListDatabases",
+      "source_file": "firestore.go"
+    },
+    {
+      "permission": "dns.managedZones.list",
+      "service": "dns",
+      "action": "ManagedZones.List",
+      "source_file": "dns.go"
+    },
+    {
+      "permission": "dns.policies.list",
+      "service": "dns",
+      "action": "Policies.List",
+      "source_file": "dns.go"
+    },
+    {
+      "permission": "dns.resourceRecordSets.list",
+      "service": "dns",
+      "action": "ResourceRecordSets.List",
+      "source_file": "dns.go"
+    },
+    {
+      "permission": "essentialcontacts.contacts.list",
+      "service": "essentialcontacts",
+      "action": "Contacts.List",
+      "source_file": "essential_contacts.go"
+    },
+    {
+      "permission": "file.instances.list",
+      "service": "file",
+      "action": "ListInstances",
+      "source_file": "filestore.go"
+    },
+    {
+      "permission": "iam.rolesIter.list",
+      "service": "iam",
+      "action": "ListRolesIter",
+      "source_file": "iam_roles.go"
+    },
+    {
+      "permission": "iam.serviceAccountKeys.list",
+      "service": "iam",
+      "action": "ListServiceAccountKeys",
+      "source_file": "iam.go"
+    },
+    {
+      "permission": "iam.serviceAccounts.list",
+      "service": "iam",
+      "action": "ListServiceAccounts",
+      "source_file": "iam.go"
+    },
+    {
+      "permission": "logging.buckets.list",
+      "service": "logging",
+      "action": "Buckets.List",
+      "source_file": "logging.go"
+    },
+    {
+      "permission": "monitoring.alertPolicies.list",
+      "service": "monitoring",
+      "action": "ListAlertPolicies",
+      "source_file": "monitoring.go"
+    },
+    {
+      "permission": "monitoring.conditionAbsent.get",
+      "service": "monitoring",
+      "action": "GetConditionAbsent",
+      "source_file": "monitoring.go"
+    },
+    {
+      "permission": "monitoring.conditionMatchedLog.get",
+      "service": "monitoring",
+      "action": "GetConditionMatchedLog",
+      "source_file": "monitoring.go"
+    },
+    {
+      "permission": "monitoring.conditionMonitoringQueryLanguage.get",
+      "service": "monitoring",
+      "action": "GetConditionMonitoringQueryLanguage",
+      "source_file": "monitoring.go"
+    },
+    {
+      "permission": "monitoring.conditionThreshold.get",
+      "service": "monitoring",
+      "action": "GetConditionThreshold",
+      "source_file": "monitoring.go"
+    },
+    {
+      "permission": "orgpolicy.policies.list",
+      "service": "orgpolicy",
+      "action": "ListPolicies",
+      "source_file": "orgpolicy.go"
+    },
+    {
+      "permission": "recommender.recommendations.list",
+      "service": "recommender",
+      "action": "ListRecommendations",
+      "source_file": "recommendations.go"
+    },
+    {
+      "permission": "redis.backups.list",
+      "service": "redis",
+      "action": "ListBackups",
+      "source_file": "redis.go"
+    },
+    {
+      "permission": "redis.clusters.list",
+      "service": "redis",
+      "action": "ListClusters",
+      "source_file": "redis.go"
+    },
+    {
+      "permission": "redis.instances.list",
+      "service": "redis",
+      "action": "ListInstances",
+      "source_file": "redis.go"
+    },
+    {
+      "permission": "run.jobs.list",
+      "service": "run",
+      "action": "ListJobs",
+      "source_file": "cloudrun.go"
+    },
+    {
+      "permission": "run.operations.list",
+      "service": "run",
+      "action": "ListOperations",
+      "source_file": "cloudrun.go"
+    },
+    {
+      "permission": "run.services.list",
+      "service": "run",
+      "action": "ListServices",
+      "source_file": "cloudrun.go"
+    },
+    {
+      "permission": "secretmanager.iamPolicy.get",
+      "service": "secretmanager",
+      "action": "GetIamPolicy",
+      "source_file": "secretmanager.go"
+    },
+    {
+      "permission": "secretmanager.secretVersions.list",
+      "service": "secretmanager",
+      "action": "ListSecretVersions",
+      "source_file": "secretmanager.go"
+    },
+    {
+      "permission": "secretmanager.secrets.list",
+      "service": "secretmanager",
+      "action": "ListSecrets",
+      "source_file": "secretmanager.go"
+    },
+    {
+      "permission": "security.caPools.list",
+      "service": "security",
+      "action": "ListCaPools",
+      "source_file": "privateca.go"
+    },
+    {
+      "permission": "security.certificateAuthorities.list",
+      "service": "security",
+      "action": "ListCertificateAuthorities",
+      "source_file": "privateca.go"
+    },
+    {
+      "permission": "security.certificates.list",
+      "service": "security",
+      "action": "ListCertificates",
+      "source_file": "privateca.go"
+    },
+    {
+      "permission": "serviceusage.service.get",
+      "service": "serviceusage",
+      "action": "GetService",
+      "source_file": "services.go"
+    },
+    {
+      "permission": "serviceusage.services.list",
+      "service": "serviceusage",
+      "action": "ListServices",
+      "source_file": "services.go"
+    },
+    {
+      "permission": "spanner.backups.list",
+      "service": "spanner",
+      "action": "ListBackups",
+      "source_file": "spanner.go"
+    },
+    {
+      "permission": "spanner.databases.list",
+      "service": "spanner",
+      "action": "ListDatabases",
+      "source_file": "spanner.go"
+    },
+    {
+      "permission": "spanner.instances.list",
+      "service": "spanner",
+      "action": "ListInstances",
+      "source_file": "spanner.go"
+    },
+    {
+      "permission": "sqladmin.databases.list",
+      "service": "sqladmin",
+      "action": "Databases.List",
+      "source_file": "sql.go"
+    },
+    {
+      "permission": "sqladmin.instances.list",
+      "service": "sqladmin",
+      "action": "Instances.List",
+      "source_file": "sql.go"
+    },
+    {
+      "permission": "storage.buckets.getIamPolicy",
+      "service": "storage",
+      "action": "Buckets.GetIamPolicy",
+      "source_file": "storage.go"
+    },
+    {
+      "permission": "storage.buckets.list",
+      "service": "storage",
+      "action": "Buckets.List",
+      "source_file": "storage.go"
+    }
+  ]
+}
