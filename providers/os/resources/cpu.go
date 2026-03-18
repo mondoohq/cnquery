@@ -58,7 +58,7 @@ func initMachineCpu(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	}
 
 	return map[string]*llx.RawData{
-		"cores":          llx.IntData(info.Cores),
+		"coreCount":      llx.IntData(info.Cores),
 		"manufacturer":   llx.StringData(info.Manufacturer),
 		"model":          llx.StringData(info.Model),
 		"processorCount": llx.IntData(info.ProcessorCount),

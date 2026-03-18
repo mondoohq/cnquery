@@ -1271,8 +1271,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"machine.cpu.processorCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMachineCpu).GetProcessorCount()).ToDataRes(types.Int)
 	},
-	"machine.cpu.cores": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMachineCpu).GetCores()).ToDataRes(types.Int)
+	"machine.cpu.coreCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMachineCpu).GetCoreCount()).ToDataRes(types.Int)
 	},
 	"os.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOs).GetName()).ToDataRes(types.String)
@@ -4377,8 +4377,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMachineCpu).ProcessorCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"machine.cpu.cores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMachineCpu).Cores, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"machine.cpu.coreCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMachineCpu).CoreCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"os.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9891,7 +9891,7 @@ type mqlMachineCpu struct {
 	Manufacturer   plugin.TValue[string]
 	Model          plugin.TValue[string]
 	ProcessorCount plugin.TValue[int64]
-	Cores          plugin.TValue[int64]
+	CoreCount      plugin.TValue[int64]
 }
 
 // createMachineCpu creates a new instance of this resource
@@ -9938,8 +9938,8 @@ func (c *mqlMachineCpu) GetProcessorCount() *plugin.TValue[int64] {
 	return &c.ProcessorCount
 }
 
-func (c *mqlMachineCpu) GetCores() *plugin.TValue[int64] {
-	return &c.Cores
+func (c *mqlMachineCpu) GetCoreCount() *plugin.TValue[int64] {
+	return &c.CoreCount
 }
 
 // mqlOs for the os resource
