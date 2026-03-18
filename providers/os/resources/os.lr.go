@@ -133,6 +133,9 @@ const (
 	ResourceSudoersAlias               string = "sudoers.alias"
 	ResourceLsblk                      string = "lsblk"
 	ResourceLsblkEntry                 string = "lsblk.entry"
+	ResourceApparmor                   string = "apparmor"
+	ResourceApparmorProfile            string = "apparmor.profile"
+	ResourceApparmorProcess            string = "apparmor.process"
 	ResourceModprobe                   string = "modprobe"
 	ResourceModprobeInstall            string = "modprobe.install"
 	ResourceModprobeRemove             string = "modprobe.remove"
@@ -673,6 +676,18 @@ func init() {
 		"lsblk.entry": {
 			// to override args, implement: initLsblkEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createLsblkEntry,
+		},
+		"apparmor": {
+			// to override args, implement: initApparmor(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createApparmor,
+		},
+		"apparmor.profile": {
+			// to override args, implement: initApparmorProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createApparmorProfile,
+		},
+		"apparmor.process": {
+			// to override args, implement: initApparmorProcess(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createApparmorProcess,
 		},
 		"modprobe": {
 			Init:   initModprobe,
@@ -1346,6 +1361,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"os.linux.fstab": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOsLinux).GetFstab()).ToDataRes(types.Resource("fstab"))
+	},
+	"os.linux.apparmor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsLinux).GetApparmor()).ToDataRes(types.Resource("apparmor"))
 	},
 	"os.rootCertificates.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOsRootCertificates).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
@@ -2585,6 +2603,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"lsblk.entry.mountpoints": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlLsblkEntry).GetMountpoints()).ToDataRes(types.Array(types.String))
+	},
+	"apparmor.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApparmor).GetVersion()).ToDataRes(types.String)
+	},
+	"apparmor.profiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApparmor).GetProfiles()).ToDataRes(types.Array(types.Resource("apparmor.profile")))
+	},
+	"apparmor.processes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApparmor).GetProcesses()).ToDataRes(types.Array(types.Resource("apparmor.process")))
+	},
+	"apparmor.profile.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApparmorProfile).GetName()).ToDataRes(types.String)
+	},
+	"apparmor.profile.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApparmorProfile).GetMode()).ToDataRes(types.String)
+	},
+	"apparmor.process.executable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApparmorProcess).GetExecutable()).ToDataRes(types.String)
+	},
+	"apparmor.process.profile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApparmorProcess).GetProfile()).ToDataRes(types.String)
+	},
+	"apparmor.process.pid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApparmorProcess).GetPid()).ToDataRes(types.Int)
+	},
+	"apparmor.process.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlApparmorProcess).GetStatus()).ToDataRes(types.String)
 	},
 	"modprobe.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlModprobe).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
@@ -4482,6 +4527,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"os.linux.fstab": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOsLinux).Fstab, ok = plugin.RawToTValue[*mqlFstab](v.Value, v.Error)
+		return
+	},
+	"os.linux.apparmor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsLinux).Apparmor, ok = plugin.RawToTValue[*mqlApparmor](v.Value, v.Error)
 		return
 	},
 	"os.rootCertificates.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6510,6 +6559,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"lsblk.entry.mountpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlLsblkEntry).Mountpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"apparmor.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApparmor).__id, ok = v.Value.(string)
+		return
+	},
+	"apparmor.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApparmor).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apparmor.profiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApparmor).Profiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"apparmor.processes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApparmor).Processes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"apparmor.profile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApparmorProfile).__id, ok = v.Value.(string)
+		return
+	},
+	"apparmor.profile.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApparmorProfile).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apparmor.profile.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApparmorProfile).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apparmor.process.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApparmorProcess).__id, ok = v.Value.(string)
+		return
+	},
+	"apparmor.process.executable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApparmorProcess).Executable, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apparmor.process.profile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApparmorProcess).Profile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"apparmor.process.pid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApparmorProcess).Pid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"apparmor.process.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlApparmorProcess).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"modprobe.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10262,6 +10359,7 @@ type mqlOsLinux struct {
 	Ip6tables plugin.TValue[*mqlIp6tables]
 	Nftables  plugin.TValue[*mqlNftables]
 	Fstab     plugin.TValue[*mqlFstab]
+	Apparmor  plugin.TValue[*mqlApparmor]
 }
 
 // createOsLinux creates a new instance of this resource
@@ -10378,6 +10476,22 @@ func (c *mqlOsLinux) GetFstab() *plugin.TValue[*mqlFstab] {
 		}
 
 		return c.fstab()
+	})
+}
+
+func (c *mqlOsLinux) GetApparmor() *plugin.TValue[*mqlApparmor] {
+	return plugin.GetOrCompute[*mqlApparmor](&c.Apparmor, func() (*mqlApparmor, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("os.linux", c.__id, "apparmor")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlApparmor), nil
+			}
+		}
+
+		return c.apparmor()
 	})
 }
 
@@ -17750,6 +17864,207 @@ func (c *mqlLsblkEntry) GetUuid() *plugin.TValue[string] {
 
 func (c *mqlLsblkEntry) GetMountpoints() *plugin.TValue[[]any] {
 	return &c.Mountpoints
+}
+
+// mqlApparmor for the apparmor resource
+type mqlApparmor struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlApparmorInternal
+	Version   plugin.TValue[string]
+	Profiles  plugin.TValue[[]any]
+	Processes plugin.TValue[[]any]
+}
+
+// createApparmor creates a new instance of this resource
+func createApparmor(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlApparmor{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("apparmor", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlApparmor) MqlName() string {
+	return "apparmor"
+}
+
+func (c *mqlApparmor) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlApparmor) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlApparmor) GetProfiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Profiles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("apparmor", c.__id, "profiles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.profiles()
+	})
+}
+
+func (c *mqlApparmor) GetProcesses() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Processes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("apparmor", c.__id, "processes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.processes()
+	})
+}
+
+// mqlApparmorProfile for the apparmor.profile resource
+type mqlApparmorProfile struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlApparmorProfileInternal it will be used here
+	Name plugin.TValue[string]
+	Mode plugin.TValue[string]
+}
+
+// createApparmorProfile creates a new instance of this resource
+func createApparmorProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlApparmorProfile{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("apparmor.profile", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlApparmorProfile) MqlName() string {
+	return "apparmor.profile"
+}
+
+func (c *mqlApparmorProfile) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlApparmorProfile) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlApparmorProfile) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+// mqlApparmorProcess for the apparmor.process resource
+type mqlApparmorProcess struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlApparmorProcessInternal it will be used here
+	Executable plugin.TValue[string]
+	Profile    plugin.TValue[string]
+	Pid        plugin.TValue[int64]
+	Status     plugin.TValue[string]
+}
+
+// createApparmorProcess creates a new instance of this resource
+func createApparmorProcess(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlApparmorProcess{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("apparmor.process", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlApparmorProcess) MqlName() string {
+	return "apparmor.process"
+}
+
+func (c *mqlApparmorProcess) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlApparmorProcess) GetExecutable() *plugin.TValue[string] {
+	return &c.Executable
+}
+
+func (c *mqlApparmorProcess) GetProfile() *plugin.TValue[string] {
+	return &c.Profile
+}
+
+func (c *mqlApparmorProcess) GetPid() *plugin.TValue[int64] {
+	return &c.Pid
+}
+
+func (c *mqlApparmorProcess) GetStatus() *plugin.TValue[string] {
+	return &c.Status
 }
 
 // mqlModprobe for the modprobe resource

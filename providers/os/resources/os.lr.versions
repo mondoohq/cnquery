@@ -25,6 +25,18 @@ apache2.conf.virtualHost.serverName 11.8.14
 apache2.conf.virtualHost.ssl 11.8.14
 apache2.conf.virtualHosts 11.8.14
 apache2.version 11.8.14
+apparmor 13.2.4
+apparmor.process 13.2.4
+apparmor.process.executable 13.2.4
+apparmor.process.pid 13.2.4
+apparmor.process.profile 13.2.4
+apparmor.process.status 13.2.4
+apparmor.processes 13.2.4
+apparmor.profile 13.2.4
+apparmor.profile.mode 13.2.4
+apparmor.profile.name 13.2.4
+apparmor.profiles 13.2.4
+apparmor.version 13.2.4
 asset 9.0.1
 asset.cpes 9.0.1
 asset.eol 9.0.1
@@ -688,6 +700,7 @@ os.env 9.0.0
 os.hostname 9.0.0
 os.hypervisor 11.3.35
 os.linux 9.0.0
+os.linux.apparmor 13.2.4
 os.linux.fstab 11.3.5
 os.linux.ip6tables 9.0.0
 os.linux.iptables 9.0.0

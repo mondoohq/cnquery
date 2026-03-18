@@ -299,6 +299,8 @@ os.linux {
   nftables() nftables
   // /etc/fstab entries
   fstab() fstab
+  // AppArmor mandatory access control
+  apparmor() apparmor
 }
 
 // Operating system root certificates
@@ -1520,6 +1522,36 @@ lsblk.entry {
   uuid string
   // Mount points for the device
   mountpoints  []string
+}
+
+// AppArmor mandatory access control status
+apparmor @defaults("profiles") {
+  // AppArmor status output version
+  version string
+  // Loaded AppArmor profiles
+  profiles() []apparmor.profile
+  // Processes with AppArmor confinement
+  processes() []apparmor.process
+}
+
+// AppArmor profile
+private apparmor.profile @defaults("name mode") {
+  // Profile name
+  name string
+  // Profile mode: enforce, complain, or unconfined
+  mode string
+}
+
+// AppArmor confined process
+private apparmor.process @defaults("pid profile status") {
+  // Process executable path
+  executable string
+  // Profile applied to this process
+  profile string
+  // Process ID
+  pid int
+  // Confinement status (e.g., enforce)
+  status string
 }
 
 // Kernel module configuration from modprobe.d

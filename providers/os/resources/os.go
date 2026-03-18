@@ -687,3 +687,11 @@ func (s *mqlOsLinux) fstab() (*mqlFstab, error) {
 	}
 	return res.(*mqlFstab), nil
 }
+
+func (s *mqlOsLinux) apparmor() (*mqlApparmor, error) {
+	res, err := CreateResource(s.MqlRuntime, "apparmor", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlApparmor), nil
+}
