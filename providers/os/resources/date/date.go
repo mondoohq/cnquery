@@ -12,7 +12,7 @@ import (
 )
 
 type Result struct {
-	Time     time.Time
+	Time     *time.Time
 	Timezone string
 }
 

@@ -59,13 +59,14 @@ func (w *Windows) parse(r io.Reader) (*Result, error) {
 	if err != nil {
 		// Fall back to returning UTC time with the Windows timezone ID
 		return &Result{
-			Time:     t,
+			Time:     &t,
 			Timezone: res.Timezone,
 		}, nil
 	}
 
+	locT := t.In(loc)
 	return &Result{
-		Time:     t.In(loc),
+		Time:     &locT,
 		Timezone: res.Timezone,
 	}, nil
 }

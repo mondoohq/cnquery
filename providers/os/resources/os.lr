@@ -262,7 +262,7 @@ os {
 }
 
 // Operating system date and timezone information
-os.date {
+os.date @defaults("time timezone") {
   // Current system time
   time() time
   // System timezone (e.g., "America/New_York", "UTC")

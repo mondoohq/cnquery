@@ -61,7 +61,7 @@ func (d *mqlOsDate) time() (*time.Time, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &res.Time, nil
+	return res.Time, nil
 }
 
 func (d *mqlOsDate) timezone() (string, error) {
