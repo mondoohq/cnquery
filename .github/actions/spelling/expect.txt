@@ -5,6 +5,7 @@ advancedthreatprotection
 alloydb
 alpn
 antispam
+apparmor
 appslot
 arp
 artifactregistry
