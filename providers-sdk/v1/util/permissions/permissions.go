@@ -10,11 +10,11 @@ import (
 	"go/parser"
 	"go/token"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
-	"time"
 )
 
 // PermissionManifest is the JSON output for a provider's permissions.
@@ -103,7 +103,7 @@ func main() {
 	manifest := PermissionManifest{
 		Provider:    providerName,
 		Version:     version,
-		GeneratedAt: time.Now().UTC().Format(time.RFC3339),
+		GeneratedAt: deterministicTimestamp(),
 		Permissions: permissions,
 		Details:     details,
 	}
@@ -146,23 +146,47 @@ func readProviderVersion(configPath string) string {
 	return string(m[1])
 }
 
-// listGoFiles returns all non-test, non-generated .go files in a directory.
-func listGoFiles(dir string) []string {
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return nil
+// deterministicTimestamp returns a reproducible timestamp for the manifest.
+// It checks SOURCE_DATE_EPOCH first (standard reproducible-builds env var),
+// then falls back to the latest git commit timestamp.
+func deterministicTimestamp() string {
+	// Check SOURCE_DATE_EPOCH (Unix timestamp)
+	if epoch := os.Getenv("SOURCE_DATE_EPOCH"); epoch != "" {
+		return epoch
 	}
+
+	// Fall back to git commit timestamp
+	out, err := exec.Command("git", "log", "-1", "--format=%cI").Output()
+	if err == nil {
+		ts := strings.TrimSpace(string(out))
+		if ts != "" {
+			return ts
+		}
+	}
+
+	return "unknown"
+}
+
+// listGoFiles returns all non-test, non-generated .go files in a directory tree.
+func listGoFiles(dir string) []string {
 	var files []string
-	for _, e := range entries {
-		name := e.Name()
+	filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return nil
+		}
+		if d.IsDir() {
+			return nil
+		}
+		name := d.Name()
 		if !strings.HasSuffix(name, ".go") {
-			continue
+			return nil
 		}
 		if strings.HasSuffix(name, "_test.go") || strings.HasSuffix(name, ".lr.go") {
-			continue
+			return nil
 		}
-		files = append(files, filepath.Join(dir, name))
-	}
+		files = append(files, path)
+		return nil
+	})
 	return files
 }
 
@@ -837,7 +861,10 @@ func gcpMethodToPermission(service, method string) string {
 	verb := ""
 	resource := ""
 
-	if strings.HasPrefix(method, "List") {
+	if strings.HasPrefix(method, "AggregatedList") {
+		verb = "list"
+		resource = strings.TrimPrefix(method, "AggregatedList")
+	} else if strings.HasPrefix(method, "List") {
 		verb = "list"
 		resource = strings.TrimPrefix(method, "List")
 	} else if strings.HasPrefix(method, "Get") {
@@ -864,9 +891,6 @@ func gcpMethodToPermission(service, method string) string {
 	} else if strings.HasPrefix(method, "Search") {
 		verb = "list"
 		resource = strings.TrimPrefix(method, "Search")
-	} else if strings.HasPrefix(method, "AggregatedList") {
-		verb = "list"
-		resource = strings.TrimPrefix(method, "AggregatedList")
 	} else {
 		return ""
 	}
@@ -883,6 +907,9 @@ func gcpMethodToPermission(service, method string) string {
 
 // gcpRESTToPermission maps a REST-style call to a GCP IAM permission.
 func gcpRESTToPermission(service, resource, method string) string {
+	if resource == "" {
+		return ""
+	}
 	verb := ""
 	switch method {
 	case "List", "AggregatedList", "Pages":
@@ -1133,6 +1160,9 @@ var azureServiceToARMMap = map[string]string{
 }
 
 func azureServiceToARM(service string) string {
+	if service == "" {
+		return "Microsoft.Unknown"
+	}
 	if arm, ok := azureServiceToARMMap[service]; ok {
 		return arm
 	}
