@@ -234,22 +234,27 @@ func (a *mqlAzureSubscriptionNetworkService) bastionHosts() ([]any, error) {
 func (a *mqlAzureSubscriptionNetworkServiceInterface) vm() (*mqlAzureSubscriptionComputeServiceVm, error) {
 	props := a.Properties.Data
 	if props == nil {
+		a.Vm.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	propsMap, ok := props.(map[string]any)
 	if !ok {
+		a.Vm.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	vmRef, ok := propsMap["virtualMachine"]
 	if !ok || vmRef == nil {
+		a.Vm.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	vmMap, ok := vmRef.(map[string]any)
 	if !ok {
+		a.Vm.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	vmID, ok := vmMap["id"].(string)
 	if !ok || vmID == "" {
+		a.Vm.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	res, err := NewResource(a.MqlRuntime, "azure.subscription.computeService.vm", map[string]*llx.RawData{

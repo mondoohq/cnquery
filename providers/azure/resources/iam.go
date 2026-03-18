@@ -223,6 +223,7 @@ func extractSubscriptionID(roleDefinitionID string) (string, error) {
 
 func (a *mqlAzureSubscriptionAuthorizationServiceRoleAssignment) role() (*mqlAzureSubscriptionAuthorizationServiceRoleDefinition, error) {
 	if a.roleDefinitionId == "" {
+		a.Role.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 

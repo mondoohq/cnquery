@@ -1285,6 +1285,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceCertificate) policy() (*mqlAzureSubs
 
 func (a *mqlAzureSubscriptionKeyVaultServiceCertificatePolicy) x509CertificateProperties() (*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyX509CertificateProperties, error) {
 	if !a.X509CertificateProperties.IsSet() {
+		a.X509CertificateProperties.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	if a.X509CertificateProperties.Error != nil {
@@ -1295,6 +1296,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceCertificatePolicy) x509CertificatePr
 
 func (a *mqlAzureSubscriptionKeyVaultServiceCertificatePolicy) keyProperties() (*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties, error) {
 	if !a.KeyProperties.IsSet() {
+		a.KeyProperties.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	if a.KeyProperties.Error != nil {
@@ -1305,6 +1307,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceCertificatePolicy) keyProperties() (
 
 func (a *mqlAzureSubscriptionKeyVaultServiceCertificatePolicy) issuerParameters() (*mqlAzureSubscriptionKeyVaultServiceCertificatePolicyIssuerParameters, error) {
 	if !a.IssuerParameters.IsSet() {
+		a.IssuerParameters.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	if a.IssuerParameters.Error != nil {
