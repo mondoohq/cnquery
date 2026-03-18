@@ -17,6 +17,7 @@ import (
 	"go.mondoo.com/mql/v13/providers/azure/connection"
 	"go.mondoo.com/mql/v13/types"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	table "github.com/Azure/azure-sdk-for-go/sdk/data/aztables"
 	storage "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v3"
@@ -142,10 +143,12 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) containers() ([]any, error) 
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			if isFeatureNotSupportedForAccountError(err) {
+				return nil, nil
+			}
 			return nil, err
 		}
 		for _, container := range page.Value {
-
 			properties, err := convert.JsonToDict(container.Properties)
 			if err != nil {
 				return nil, err
@@ -271,11 +274,19 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) blobProperties() (*mqlAzureS
 
 	blobProps, err := client.GetServiceProperties(ctx, resourceID.ResourceGroup, account, &storage.BlobServicesClientGetServicePropertiesOptions{})
 	if err != nil {
+		if isFeatureNotSupportedForAccountError(err) {
+			a.BlobProperties.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
 		return nil, err
 	}
 
 	props, err := a.getServiceStorageProperties("blob")
 	if err != nil {
+		if isFeatureNotSupportedForAccountError(err) {
+			a.BlobProperties.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -311,6 +322,10 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) dataProtection() (*mqlAzureS
 
 	properties, err := client.GetServiceProperties(ctx, resourceID.ResourceGroup, account, &storage.BlobServicesClientGetServicePropertiesOptions{})
 	if err != nil {
+		if isFeatureNotSupportedForAccountError(err) {
+			a.DataProtection.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -622,6 +637,13 @@ func toMqlBlobServiceStorageProperties(runtime *plugin.Runtime, props table.Serv
 		return nil, err
 	}
 	return settings.(*mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties), nil
+}
+
+// isFeatureNotSupportedForAccountError checks if the error is an Azure ResponseError
+// with the error code "FeatureNotSupportedForAccount".
+func isFeatureNotSupportedForAccountError(err error) bool {
+	var respErr *azcore.ResponseError
+	return errors.As(err, &respErr) && respErr.ErrorCode == "FeatureNotSupportedForAccount"
 }
 
 func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mqlAzureSubscriptionStorageServiceAccount, error) {
