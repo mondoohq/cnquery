@@ -36,6 +36,7 @@ const (
 	ResourceMachineChassis             string = "machine.chassis"
 	ResourceMachineCpu                 string = "machine.cpu"
 	ResourceOs                         string = "os"
+	ResourceOsDate                     string = "os.date"
 	ResourceOsUpdate                   string = "os.update"
 	ResourceOsBase                     string = "os.base"
 	ResourceOsUnix                     string = "os.unix"
@@ -289,6 +290,10 @@ func init() {
 		"os": {
 			// to override args, implement: initOs(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOs,
+		},
+		"os.date": {
+			// to override args, implement: initOsDate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOsDate,
 		},
 		"os.update": {
 			// to override args, implement: initOsUpdate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1315,6 +1320,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"os.machineid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOs).GetMachineid()).ToDataRes(types.String)
+	},
+	"os.date": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOs).GetDate()).ToDataRes(types.Resource("os.date"))
+	},
+	"os.date.time": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsDate).GetTime()).ToDataRes(types.Time)
+	},
+	"os.date.timezone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsDate).GetTimezone()).ToDataRes(types.String)
 	},
 	"os.update.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOsUpdate).GetName()).ToDataRes(types.String)
@@ -4464,6 +4478,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"os.machineid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOs).Machineid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"os.date": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOs).Date, ok = plugin.RawToTValue[*mqlOsDate](v.Value, v.Error)
+		return
+	},
+	"os.date.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsDate).__id, ok = v.Value.(string)
+		return
+	},
+	"os.date.time": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsDate).Time, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"os.date.timezone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsDate).Timezone, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"os.update.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10053,6 +10083,7 @@ type mqlOs struct {
 	Hostname      plugin.TValue[string]
 	Hypervisor    plugin.TValue[string]
 	Machineid     plugin.TValue[string]
+	Date          plugin.TValue[*mqlOsDate]
 }
 
 // createOs creates a new instance of this resource
@@ -10153,6 +10184,80 @@ func (c *mqlOs) GetHypervisor() *plugin.TValue[string] {
 func (c *mqlOs) GetMachineid() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Machineid, func() (string, error) {
 		return c.machineid()
+	})
+}
+
+func (c *mqlOs) GetDate() *plugin.TValue[*mqlOsDate] {
+	return plugin.GetOrCompute[*mqlOsDate](&c.Date, func() (*mqlOsDate, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("os", c.__id, "date")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOsDate), nil
+			}
+		}
+
+		return c.date()
+	})
+}
+
+// mqlOsDate for the os.date resource
+type mqlOsDate struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOsDateInternal
+	Time     plugin.TValue[*time.Time]
+	Timezone plugin.TValue[string]
+}
+
+// createOsDate creates a new instance of this resource
+func createOsDate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOsDate{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("os.date", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOsDate) MqlName() string {
+	return "os.date"
+}
+
+func (c *mqlOsDate) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOsDate) GetTime() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.Time, func() (*time.Time, error) {
+		return c.time()
+	})
+}
+
+func (c *mqlOsDate) GetTimezone() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Timezone, func() (string, error) {
+		return c.timezone()
 	})
 }
 

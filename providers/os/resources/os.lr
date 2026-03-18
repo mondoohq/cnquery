@@ -257,6 +257,16 @@ os {
   hypervisor() string
   // Machine ID for this OS
   machineid() string
+  // Current date and timezone of the system
+  date() os.date
+}
+
+// Operating system date and timezone information
+os.date {
+  // Current system time
+  time() time
+  // System timezone (e.g., "America/New_York", "UTC")
+  timezone() string
 }
 
 // Operating system update information
