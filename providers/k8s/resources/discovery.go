@@ -969,6 +969,9 @@ func discoverContainerImages(conn shared.Connection, runtime *plugin.Runtime, in
 	if proxy, ok := invConfig.Options["container-proxy"]; ok && len(proxy) > 0 {
 		options["container-proxy"] = proxy
 	}
+	if disableCache, ok := invConfig.Options["disable-cache"]; ok && len(disableCache) > 0 {
+		options["disable-cache"] = disableCache
+	}
 
 	assetList := make([]*inventory.Asset, 0, len(runningImages))
 	for _, i := range runningImages {

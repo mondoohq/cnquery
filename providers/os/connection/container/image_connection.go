@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/go-containerregistry/pkg/name"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
+	"github.com/google/go-containerregistry/pkg/v1/cache"
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	"github.com/rs/zerolog/log"
@@ -30,8 +31,9 @@ const (
 	INCLUDE_OCI_TAR_OPT_KEY = "include-oci-tar"
 )
 
-// NewImageConnection uses a container image reference as input and creates a tar connection
-func NewImageConnection(id uint32, conf *inventory.Config, asset *inventory.Asset, img v1.Image, ref name.Reference) (*tar.Connection, error) {
+// NewImageConnection uses a container image reference as input and creates a tar connection.
+// Optional cleanupDirs are removed when the connection is closed.
+func NewImageConnection(id uint32, conf *inventory.Config, asset *inventory.Asset, img v1.Image, ref name.Reference, cleanupDirs ...string) (*tar.Connection, error) {
 	// FIXME: DEPRECATED, remove in v12.0 vv
 	// The DelayDiscovery flag should always be set from v12
 	if conf.Options == nil || conf.Options[plugin.DISABLE_DELAYED_DISCOVERY_OPTION] == "" {
@@ -74,6 +76,15 @@ func NewImageConnection(id uint32, conf *inventory.Config, asset *inventory.Asse
 			_ = os.Remove(extractedFsTar.Name())
 			if ociTar != nil {
 				_ = os.Remove(ociTar.Name())
+			}
+			for _, dir := range cleanupDirs {
+				if dir == "" {
+					continue
+				}
+				log.Debug().Str("dir", dir).Msg("tar> remove temporary cache directory on connection close")
+				if err := os.RemoveAll(dir); err != nil {
+					log.Warn().Err(err).Str("dir", dir).Msg("tar> failed to remove temporary cache directory")
+				}
 			}
 		}),
 	)
@@ -118,8 +129,26 @@ func NewRegistryImage(id uint32, conf *inventory.Config, asset *inventory.Asset)
 		conf.Options = map[string]string{}
 	}
 
-	conn, err := NewImageConnection(id, conf, asset, img, ref)
+	// Wrap the image with a filesystem cache so that compressed layer data
+	// is written to disk instead of being held in memory. This prevents OOM
+	// kills when scanning large container images.
+	var cleanupDirs []string
+	if conf.Options["disable-cache"] != "true" {
+		cacheDir, err := tmp.Dir()
+		if err != nil {
+			return nil, err
+		}
+		img = cache.Image(img, cache.NewFilesystemCache(cacheDir))
+		cleanupDirs = append(cleanupDirs, cacheDir)
+	}
+
+	conn, err := NewImageConnection(id, conf, asset, img, ref, cleanupDirs...)
 	if err != nil {
+		for _, dir := range cleanupDirs {
+			if err := os.RemoveAll(dir); err != nil {
+				log.Warn().Err(err).Str("dir", dir).Msg("tar> failed to remove cache directory after connection error")
+			}
+		}
 		return nil, err
 	}
 

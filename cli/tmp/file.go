@@ -26,3 +26,18 @@ func File() (*os.File, error) {
 	}
 	return os.CreateTemp(tmpDir, "mondoo.tmp")
 }
+
+// Dir creates a new temporary directory.
+//
+// By default `Dir()` uses the default directory to create a new temporary directory,
+// to change the temporary directory use the environment variable `MONDOO_TMP_DIR`
+func Dir() (string, error) {
+	tmpDir := ""
+	if os.Getenv("MONDOO_TMP_DIR") != "" {
+		tmpDir = os.Getenv("MONDOO_TMP_DIR")
+		log.Debug().
+			Str("custom_tmp_dir", tmpDir).
+			Msg("creating temp directory in custom temp directory")
+	}
+	return os.MkdirTemp(tmpDir, "mondoo.tmp")
+}
