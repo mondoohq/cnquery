@@ -85,6 +85,10 @@ define buildProvider
 	./lr versions ${$@_HOME}/resources/${$@_NAME}.lr
 	echo "--> [${$@_NAME}] generate CLI json"
 	cd ${$@_HOME} && go run ./gen/main.go .
+	@if echo "aws gcp azure" | grep -qw "${$@_NAME}"; then \
+		echo "--> [${$@_NAME}] extract permissions"; \
+		go run providers-sdk/v1/util/permissions/permissions.go ${$@_HOME}; \
+	fi
 	@if [ "$(SKIP_COMPILE)" = "yes" ]; then \
 		echo "--> [${$@_NAME}] skipping compile"; \
 	else \
@@ -104,6 +108,10 @@ define buildProviderDist
 	./lr versions ${$@_HOME}/resources/${$@_NAME}.lr
 	echo "--> [${$@_NAME}] generate CLI json"
 	cd ${$@_HOME} && go run ./gen/main.go .
+	@if echo "aws gcp azure" | grep -qw "${$@_NAME}"; then \
+		echo "--> [${$@_NAME}] extract permissions"; \
+		go run providers-sdk/v1/util/permissions/permissions.go ${$@_HOME}; \
+	fi
 	echo "--> [${$@_NAME}] creating ${$@_BIN}"
 	cd ${$@_HOME} && CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build ${LDFLAGSDIST} -o ${$@_DIST_BIN}${BIN_SUFFIX} ./main.go
 endef
@@ -216,6 +224,11 @@ providers/dist/%:
 providers/bundle: $(addprefix providers/bundle/,$(PROVIDERS))
 providers/bundle/%:
 	@$(call bundleProvider, providers/$*)
+
+providers/permissions:
+	@go run providers-sdk/v1/util/permissions/permissions.go providers/aws
+	@go run providers-sdk/v1/util/permissions/permissions.go providers/gcp
+	@go run providers-sdk/v1/util/permissions/permissions.go providers/azure
 
 providers/test:
 	@$(call testProvider, providers/core)
