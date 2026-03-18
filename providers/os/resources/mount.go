@@ -4,7 +4,6 @@
 package resources
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -108,41 +107,62 @@ func initMountPoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	}, nil, nil
 }
 
-type mqlMountPointInternal struct {
+type mqlMountInternal struct {
 	dfFetched bool
-	dfEntry   *mount.DfEntry
+	dfEntries map[string]*mount.DfEntry
 	lock      sync.Mutex
 }
 
-func (m *mqlMountPoint) fetchDf() (*mount.DfEntry, error) {
+// fetchDfEntries runs "df -P -k" once and caches the result for all mount points.
+func (m *mqlMount) fetchDfEntries() (map[string]*mount.DfEntry, error) {
 	if m.dfFetched {
-		return m.dfEntry, nil
+		return m.dfEntries, nil
 	}
 	m.lock.Lock()
 	defer m.lock.Unlock()
 	if m.dfFetched {
-		return m.dfEntry, nil
+		return m.dfEntries, nil
 	}
 
 	o, err := CreateResource(m.MqlRuntime, "command", map[string]*llx.RawData{
 		"command": llx.StringData("df -P -k"),
 	})
 	if err != nil {
-		return nil, err
+		// df may not exist on this system (e.g., minimal containers)
+		log.Debug().Err(err).Msg("mql[mount]> df command not available")
+		m.dfEntries = map[string]*mount.DfEntry{}
+		m.dfFetched = true
+		return m.dfEntries, nil
 	}
 	cmd := o.(*mqlCommand)
 	if exit := cmd.GetExitcode(); exit.Data != 0 {
-		return nil, errors.New("could not retrieve disk usage: " + cmd.Stderr.Data)
+		// df failed (not installed, no permission, etc.) — return empty, not error
+		log.Debug().Str("stderr", cmd.Stderr.Data).Msg("mql[mount]> df command failed")
+		m.dfEntries = map[string]*mount.DfEntry{}
+		m.dfFetched = true
+		return m.dfEntries, nil
 	}
 
-	entries := mount.ParseDf(strings.NewReader(cmd.Stdout.Data))
-	m.dfEntry = entries[m.Path.Data]
+	m.dfEntries = mount.ParseDf(strings.NewReader(cmd.Stdout.Data))
 	m.dfFetched = true
-	return m.dfEntry, nil
+	return m.dfEntries, nil
+}
+
+func (m *mqlMountPoint) fetchDfEntry() (*mount.DfEntry, error) {
+	obj, err := CreateResource(m.MqlRuntime, "mount", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	mnt := obj.(*mqlMount)
+	entries, err := mnt.fetchDfEntries()
+	if err != nil {
+		return nil, err
+	}
+	return entries[m.Path.Data], nil
 }
 
 func (m *mqlMountPoint) size() (int64, error) {
-	entry, err := m.fetchDf()
+	entry, err := m.fetchDfEntry()
 	if err != nil {
 		return 0, err
 	}
@@ -154,7 +174,7 @@ func (m *mqlMountPoint) size() (int64, error) {
 }
 
 func (m *mqlMountPoint) used() (int64, error) {
-	entry, err := m.fetchDf()
+	entry, err := m.fetchDfEntry()
 	if err != nil {
 		return 0, err
 	}
@@ -166,7 +186,7 @@ func (m *mqlMountPoint) used() (int64, error) {
 }
 
 func (m *mqlMountPoint) available() (int64, error) {
-	entry, err := m.fetchDf()
+	entry, err := m.fetchDfEntry()
 	if err != nil {
 		return 0, err
 	}

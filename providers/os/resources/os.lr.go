@@ -19202,7 +19202,7 @@ func (c *mqlModprobeSoftdep) GetPost() *plugin.TValue[[]any] {
 type mqlMount struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMountInternal it will be used here
+	mqlMountInternal
 	List plugin.TValue[[]any]
 }
 
@@ -19263,7 +19263,7 @@ func (c *mqlMount) GetList() *plugin.TValue[[]any] {
 type mqlMountPoint struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlMountPointInternal
+	// optional: if you define mqlMountPointInternal it will be used here
 	Device    plugin.TValue[string]
 	Path      plugin.TValue[string]
 	Fstype    plugin.TValue[string]
