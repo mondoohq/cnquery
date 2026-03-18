@@ -14,7 +14,9 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
+	"time"
 )
 
 // PermissionManifest is the JSON output for a provider's permissions.
@@ -150,9 +152,12 @@ func readProviderVersion(configPath string) string {
 // It checks SOURCE_DATE_EPOCH first (standard reproducible-builds env var),
 // then falls back to the latest git commit timestamp.
 func deterministicTimestamp() string {
-	// Check SOURCE_DATE_EPOCH (Unix timestamp)
+	// Check SOURCE_DATE_EPOCH (Unix timestamp) and format as RFC 3339
 	if epoch := os.Getenv("SOURCE_DATE_EPOCH"); epoch != "" {
-		return epoch
+		secs, err := strconv.ParseInt(epoch, 10, 64)
+		if err == nil {
+			return time.Unix(secs, 0).UTC().Format(time.RFC3339)
+		}
 	}
 
 	// Fall back to git commit timestamp
