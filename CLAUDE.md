@@ -142,6 +142,25 @@ Multiple computed methods can share the same fetch function to batch-load relate
   ```
   **Why?** The `command` resource ensures proper execution context, authentication, connection handling, and works seamlessly across different connection types (local, SSH, container, etc.). See [lsblk.go](providers/os/resources/lsblk.go) for a complete example.
 
+- **Never `return nil, nil` from a singular resource accessor without setting `StateIsNull` first.** When an accessor returns a single resource pointer (e.g., `(*mqlAwsSomeResource, error)`) and the value is legitimately null, you **must** set the field's state before returning. Otherwise the runtime doesn't know the field was resolved and may panic or re-fetch indefinitely.
+  ```go
+  // WRONG: causes panic — runtime doesn't know the field is null
+  func (a *mqlAwsRoute53Record) healthCheck() (*mqlAwsRoute53HealthCheck, error) {
+      if healthCheckId == "" {
+          return nil, nil
+      }
+  }
+
+  // CORRECT: mark field as set + null, then return nil
+  func (a *mqlAwsRoute53Record) healthCheck() (*mqlAwsRoute53HealthCheck, error) {
+      if healthCheckId == "" {
+          a.HealthCheck.State = plugin.StateIsSet | plugin.StateIsNull
+          return nil, nil
+      }
+  }
+  ```
+  This applies to all `return nil, nil` paths: empty/missing IDs, access-denied fallbacks, nil API responses, and unset optional fields (e.g., `!a.Field.IsSet()`). Functions returning slices, maps, or basic types are **not** affected — only singular resource pointer returns.
+
 ### Step 4: Verification (Interactive)
 Automated tests are rare for MQL resources (thin wrappers). **Interactive testing is standard.**
 
