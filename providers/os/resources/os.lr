@@ -1174,6 +1174,7 @@ ip6tables {
   output() []iptables.entry
 }
 
+// Individual iptables entry
 iptables.entry {
   // Line number of statistic, which is used to create the ID
   lineNumber int
@@ -1263,13 +1264,16 @@ private nftables.rule @defaults("family table chain handle") {
   comment string
 }
 
+// fstab file and entries
 fstab @defaults("path") {
   init(path? string)
   path string
 
+  // fstab entries defined in this fstab file
   entries() []fstab.entry
 }
 
+// fstab entry for a device and its mount point
 private fstab.entry @defaults("device mountpoint") {
   // Device referenced in the fstab, e.g., LABEL=rootfs
   device string
@@ -2268,6 +2272,7 @@ windows.firewall.rule {
 
 // Windows BitLocker
 windows.bitlocker {
+  // Windows BitLocker volumes
   volumes() []windows.bitlocker.volume
 }
 
@@ -2296,6 +2301,7 @@ windows.bitlocker.volume {
   version dict
 }
 
+// Windows security products (antivirus, anti-spyware, firewall, etc.)
 windows.security {
   products() []windows.security.product
 }
