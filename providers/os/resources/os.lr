@@ -1527,7 +1527,7 @@ lsblk.entry {
 // AppArmor mandatory access control status
 apparmor @defaults("profiles") {
   // AppArmor status output version
-  version string
+  version() string
   // Loaded AppArmor profiles
   profiles() []apparmor.profile
   // Processes with AppArmor confinement

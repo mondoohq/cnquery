@@ -17914,7 +17914,9 @@ func (c *mqlApparmor) MqlID() string {
 }
 
 func (c *mqlApparmor) GetVersion() *plugin.TValue[string] {
-	return &c.Version
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
 }
 
 func (c *mqlApparmor) GetProfiles() *plugin.TValue[[]any] {
