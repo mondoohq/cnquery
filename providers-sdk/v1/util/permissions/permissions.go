@@ -175,7 +175,7 @@ func deterministicTimestamp() string {
 // listGoFiles returns all non-test, non-generated .go files in a directory tree.
 func listGoFiles(dir string) []string {
 	var files []string
-	filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
+	_ = filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
 			return nil
 		}
