@@ -1251,6 +1251,7 @@ func (a *mqlAwsEcsTaskDefinition) volumes() ([]any, error) {
 
 func (a *mqlAwsEcsTaskDefinition) ephemeralStorage() (*mqlAwsEcsTaskDefinitionEphemeralStorage, error) {
 	if !a.EphemeralStorage.IsSet() {
+		a.EphemeralStorage.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	if a.EphemeralStorage.Error != nil {
@@ -1286,6 +1287,7 @@ func (a *mqlAwsEcsTaskDefinitionContainerDefinition) secrets() ([]any, error) {
 
 func (a *mqlAwsEcsTaskDefinitionContainerDefinition) logConfiguration() (*mqlAwsEcsTaskDefinitionContainerDefinitionLogConfiguration, error) {
 	if !a.LogConfiguration.IsSet() {
+		a.LogConfiguration.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	if a.LogConfiguration.Error != nil {
@@ -1310,6 +1312,7 @@ func (a *mqlAwsEcsTaskDefinitionContainerDefinition) id() (string, error) {
 
 func (a *mqlAwsEcsTaskDefinitionVolume) efsVolumeConfiguration() (*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration, error) {
 	if !a.EfsVolumeConfiguration.IsSet() {
+		a.EfsVolumeConfiguration.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	if a.EfsVolumeConfiguration.Error != nil {
@@ -1320,6 +1323,7 @@ func (a *mqlAwsEcsTaskDefinitionVolume) efsVolumeConfiguration() (*mqlAwsEcsTask
 
 func (a *mqlAwsEcsTaskDefinitionVolume) host() (*mqlAwsEcsTaskDefinitionVolumeHost, error) {
 	if !a.Host.IsSet() {
+		a.Host.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	if a.Host.Error != nil {
@@ -1330,6 +1334,7 @@ func (a *mqlAwsEcsTaskDefinitionVolume) host() (*mqlAwsEcsTaskDefinitionVolumeHo
 
 func (a *mqlAwsEcsTaskDefinitionVolume) dockerVolumeConfiguration() (*mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration, error) {
 	if !a.DockerVolumeConfiguration.IsSet() {
+		a.DockerVolumeConfiguration.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	if a.DockerVolumeConfiguration.Error != nil {
@@ -1364,6 +1369,7 @@ func (a *mqlAwsEcsTaskDefinitionContainerDefinitionPortMapping) id() (string, er
 
 func (a *mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration) authorizationConfig() (*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfigurationAuthorizationConfig, error) {
 	if !a.AuthorizationConfig.IsSet() {
+		a.AuthorizationConfig.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	if a.AuthorizationConfig.Error != nil {

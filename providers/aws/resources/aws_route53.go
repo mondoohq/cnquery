@@ -364,6 +364,7 @@ func (a *mqlAwsRoute53HostedZone) queryLoggingConfig() (*mqlAwsRoute53QueryLoggi
 	})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
+			a.QueryLoggingConfig.State = plugin.StateIsSet | plugin.StateIsNull
 			return nil, nil
 		}
 		return nil, err
@@ -384,6 +385,7 @@ func (a *mqlAwsRoute53HostedZone) queryLoggingConfig() (*mqlAwsRoute53QueryLoggi
 		return mqlQlc.(*mqlAwsRoute53QueryLoggingConfig), nil
 	}
 
+	a.QueryLoggingConfig.State = plugin.StateIsSet | plugin.StateIsNull
 	return nil, nil
 }
 
@@ -505,6 +507,7 @@ func (a *mqlAwsRoute53Record) cidrRoutingConfig() (any, error) {
 func (a *mqlAwsRoute53Record) healthCheck() (*mqlAwsRoute53HealthCheck, error) {
 	healthCheckId := a.HealthCheckId.Data
 	if healthCheckId == "" {
+		a.HealthCheck.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 
@@ -517,11 +520,13 @@ func (a *mqlAwsRoute53Record) healthCheck() (*mqlAwsRoute53HealthCheck, error) {
 	})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
+			a.HealthCheck.State = plugin.StateIsSet | plugin.StateIsNull
 			return nil, nil
 		}
 		return nil, err
 	}
 	if resp == nil || resp.HealthCheck == nil {
+		a.HealthCheck.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 
@@ -640,6 +645,7 @@ func (a *mqlAwsRoute53KeySigningKey) hostedZone() (*mqlAwsRoute53HostedZone, err
 func (a *mqlAwsRoute53KeySigningKey) kmsKey() (*mqlAwsKmsKey, error) {
 	kmsArn := a.KmsArn.Data
 	if kmsArn == "" {
+		a.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 
