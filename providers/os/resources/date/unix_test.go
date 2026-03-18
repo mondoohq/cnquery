@@ -104,9 +104,14 @@ func TestExtractTZFromPath(t *testing.T) {
 			want: "Europe/London",
 		},
 		{
-			name: "posix subdirectory path returns full relative",
+			name: "posix subdirectory path stripped",
 			path: "/usr/share/zoneinfo/posix/Asia/Tokyo",
-			want: "posix/Asia/Tokyo",
+			want: "Asia/Tokyo",
+		},
+		{
+			name: "right subdirectory path stripped",
+			path: "/usr/share/zoneinfo/right/Europe/Berlin",
+			want: "Europe/Berlin",
 		},
 		{
 			name: "no zoneinfo marker",

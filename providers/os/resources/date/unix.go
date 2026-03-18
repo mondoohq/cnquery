@@ -134,9 +134,17 @@ func extractTZFromPath(path string) string {
 	const marker = "zoneinfo/"
 	if idx := strings.LastIndex(path, marker); idx >= 0 {
 		tz := path[idx+len(marker):]
-		if tz != "" && tz != "localtime" {
-			return tz
+		if tz == "" || tz == "localtime" {
+			return ""
 		}
+		// Strip posix/ and right/ prefixes — these are alternate
+		// representations of the same zones, not valid IANA names.
+		tz = strings.TrimPrefix(tz, "posix/")
+		tz = strings.TrimPrefix(tz, "right/")
+		if tz == "" {
+			return ""
+		}
+		return tz
 	}
 	return ""
 }
@@ -224,32 +232,32 @@ func tzFromTZifFooter(data []byte) (string, error) {
 // POSIX string. This is a best-effort fast path — the walk fallback will
 // find the exact match if the footer mapping is wrong for a given system.
 var posixToIANA = map[string]string{
-	"EST5EDT,M3.2.0,M11.1.0":   "America/New_York",
-	"CST6CDT,M3.2.0,M11.1.0":   "America/Chicago",
-	"MST7MDT,M3.2.0,M11.1.0":   "America/Denver",
-	"PST8PDT,M3.2.0,M11.1.0":   "America/Los_Angeles",
-	"MST7":                      "America/Phoenix",
-	"HST10":                     "Pacific/Honolulu",
-	"AKST9AKDT,M3.2.0,M11.1.0": "America/Anchorage",
-	"GMT0BST,M3.5.0/1,M10.5.0": "Europe/London",
-	"CET-1CEST,M3.5.0,M10.5.0/3":  "Europe/Berlin",
+	"EST5EDT,M3.2.0,M11.1.0":       "America/New_York",
+	"CST6CDT,M3.2.0,M11.1.0":       "America/Chicago",
+	"MST7MDT,M3.2.0,M11.1.0":       "America/Denver",
+	"PST8PDT,M3.2.0,M11.1.0":       "America/Los_Angeles",
+	"MST7":                         "America/Phoenix",
+	"HST10":                        "Pacific/Honolulu",
+	"AKST9AKDT,M3.2.0,M11.1.0":     "America/Anchorage",
+	"GMT0BST,M3.5.0/1,M10.5.0":     "Europe/London",
+	"CET-1CEST,M3.5.0,M10.5.0/3":   "Europe/Berlin",
 	"EET-2EEST,M3.5.0/3,M10.5.0/4": "Europe/Helsinki",
-	"IST-5:30":                      "Asia/Kolkata",
-	"JST-9":                         "Asia/Tokyo",
-	"CST-8":                         "Asia/Shanghai",
-	"KST-9":                         "Asia/Seoul",
+	"IST-5:30":                     "Asia/Kolkata",
+	"JST-9":                        "Asia/Tokyo",
+	"CST-8":                        "Asia/Shanghai",
+	"KST-9":                        "Asia/Seoul",
 	"AEST-10AEDT,M10.1.0,M4.1.0/3": "Australia/Sydney",
 	"NZST-12NZDT,M9.5.0,M4.1.0/3":  "Pacific/Auckland",
-	"<-03>3":                         "America/Sao_Paulo",
-	"WET0WEST,M3.5.0/1,M10.5.0":     "Europe/Lisbon",
-	"<+07>-7":                        "Asia/Bangkok",
-	"<+05>-5":                        "Asia/Tashkent",
-	"<+04>-4":                        "Asia/Dubai",
-	"<+03>-3":                        "Europe/Moscow",
-	"<+02>-2":                        "Africa/Cairo",
-	"<+01>-1":                        "Africa/Lagos",
-	"<-05>5":                         "America/Bogota",
-	"<-06>6":                         "America/Mexico_City",
+	"<-03>3":                       "America/Sao_Paulo",
+	"WET0WEST,M3.5.0/1,M10.5.0":    "Europe/Lisbon",
+	"<+07>-7":                      "Asia/Bangkok",
+	"<+05>-5":                      "Asia/Tashkent",
+	"<+04>-4":                      "Asia/Dubai",
+	"<+03>-3":                      "Europe/Moscow",
+	"<+02>-2":                      "Africa/Cairo",
+	"<+01>-1":                      "Africa/Lagos",
+	"<-05>5":                       "America/Bogota",
+	"<-06>6":                       "America/Mexico_City",
 }
 
 // commonTimezones is a list of frequently-used IANA timezone names, tried

@@ -30,6 +30,10 @@ func (w *Windows) Name() string {
 }
 
 func (w *Windows) Get() (*Result, error) {
+	if !w.conn.Capabilities().Has(shared.Capability_RunCommand) {
+		return &Result{Timezone: "UTC"}, nil
+	}
+
 	cmd, err := w.conn.RunCommand(powershell.Wrap(windowsDateCmd))
 	if err != nil {
 		return nil, fmt.Errorf("failed to get system date: %w", err)
