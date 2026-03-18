@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 	"go.mondoo.com/mql/v13/providers/os/resources/date"
 )
@@ -60,6 +61,10 @@ func (d *mqlOsDate) time() (*time.Time, error) {
 	res, err := d.fetch()
 	if err != nil {
 		return nil, err
+	}
+	if res.Time == nil {
+		d.Time.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
 	}
 	return res.Time, nil
 }
