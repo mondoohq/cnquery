@@ -49,12 +49,15 @@ func (a *mqlAwsRoute53) hostedZones() ([]any, error) {
 
 	// Batch-fetch tags (up to 10 per API call)
 	tagsByID := batchFetchTags(ctx, svc, route53types.TagResourceTypeHostedzone, allZones, func(hz route53types.HostedZone) string {
-		return convert.ToValue(hz.Id)
+		id := strings.Split(convert.ToValue(hz.Id), "/")
+		// get the last part of the hosted zone ID, which is the actual ID used in tagging
+		return id[len(id)-1]
 	})
 
 	res := []any{}
 	for _, hz := range allZones {
-		tags := tagsByID[convert.ToValue(hz.Id)]
+		id := strings.Split(convert.ToValue(hz.Id), "/")
+		tags := tagsByID[id[len(id)-1]]
 
 		// Filter by tags
 		if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(tags)) {
