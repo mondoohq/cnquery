@@ -5,6 +5,7 @@ package date
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -218,6 +219,10 @@ func tzFromTZifFooter(data []byte) (string, error) {
 
 // posixToIANA maps common POSIX TZ strings (from TZif footers) to IANA names.
 // This covers the most common timezones; the walk fallback handles the rest.
+// Note: some mappings are ambiguous (e.g., "CST-8" matches Asia/Shanghai,
+// Asia/Taipei, and Asia/Hong_Kong). We pick a representative zone for each
+// POSIX string. This is a best-effort fast path — the walk fallback will
+// find the exact match if the footer mapping is wrong for a given system.
 var posixToIANA = map[string]string{
 	"EST5EDT,M3.2.0,M11.1.0":   "America/New_York",
 	"CST6CDT,M3.2.0,M11.1.0":   "America/Chicago",
@@ -276,7 +281,7 @@ func matchLocaltimeByCommonPaths(fs afero.Fs, localtime []byte) (string, error) 
 			if err != nil {
 				continue
 			}
-			if len(candidate) == len(localtime) && string(candidate) == string(localtime) {
+			if bytes.Equal(candidate, localtime) {
 				return tz, nil
 			}
 		}
@@ -284,9 +289,9 @@ func matchLocaltimeByCommonPaths(fs afero.Fs, localtime []byte) (string, error) 
 	return "", fmt.Errorf("no common timezone matched")
 }
 
-// errMatchFound is a sentinel error used to stop walking the zoneinfo tree
-// once a matching timezone file has been found.
-var errMatchFound = errors.New("match found")
+// errWalkDone is a sentinel error used to stop walking the zoneinfo tree
+// early, either because a match was found or the file count limit was reached.
+var errWalkDone = errors.New("walk done")
 
 // maxZoneinfoFiles limits the number of files compared during a full zoneinfo
 // tree walk. This prevents pathological performance on tar-backed filesystems
@@ -318,24 +323,24 @@ func findMatchingZoneinfo(fs afero.Fs, base string, localtime []byte) (string, e
 
 		filesChecked++
 		if filesChecked > maxZoneinfoFiles {
-			return errMatchFound // bail out, we've checked enough
+			return errWalkDone // bail out, we've checked enough
 		}
 
 		candidate, err := afero.ReadFile(fs, path)
 		if err != nil {
 			return nil // skip unreadable files
 		}
-		if len(candidate) == len(localtime) && string(candidate) == string(localtime) {
+		if bytes.Equal(candidate, localtime) {
 			rel := strings.TrimPrefix(path, base+"/")
 			// Validate it looks like an IANA name (contains a slash, e.g. "America/New_York")
 			if strings.Contains(rel, "/") {
 				match = rel
-				return errMatchFound
+				return errWalkDone
 			}
 		}
 		return nil
 	})
-	if err != nil && !errors.Is(err, errMatchFound) {
+	if err != nil && !errors.Is(err, errWalkDone) {
 		return "", err
 	}
 	if match == "" {
