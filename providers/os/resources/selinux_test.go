@@ -5,6 +5,7 @@ package resources
 import (
 	"testing"
 
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 )
 
@@ -121,5 +122,39 @@ apache
 	t.Run("empty output", func(t *testing.T) {
 		modules := ParseSemodule("")
 		require.Nil(t, modules)
+	})
+}
+
+func TestReadSelinuxBooleansFromFS(t *testing.T) {
+	t.Run("reads booleans from sysfs", func(t *testing.T) {
+		fs := afero.NewMemMapFs()
+		_ = fs.MkdirAll("/sys/fs/selinux/booleans", 0o755)
+		_ = afero.WriteFile(fs, "/sys/fs/selinux/booleans/httpd_can_network_connect", []byte("1"), 0o444)
+		_ = afero.WriteFile(fs, "/sys/fs/selinux/booleans/httpd_enable_cgi", []byte("0"), 0o444)
+		_ = afero.WriteFile(fs, "/sys/fs/selinux/booleans/virt_sandbox_use_all_caps", []byte("0\n"), 0o444)
+
+		bools := readSelinuxBooleansFromFS(fs)
+		require.Len(t, bools, 3)
+
+		// afero.ReadDir returns sorted entries
+		require.Equal(t, "httpd_can_network_connect", bools[0].Name)
+		require.True(t, bools[0].Value)
+		require.Equal(t, "httpd_enable_cgi", bools[1].Name)
+		require.False(t, bools[1].Value)
+		require.Equal(t, "virt_sandbox_use_all_caps", bools[2].Name)
+		require.False(t, bools[2].Value)
+	})
+
+	t.Run("missing directory returns nil", func(t *testing.T) {
+		fs := afero.NewMemMapFs()
+		bools := readSelinuxBooleansFromFS(fs)
+		require.Nil(t, bools)
+	})
+
+	t.Run("empty directory returns nil", func(t *testing.T) {
+		fs := afero.NewMemMapFs()
+		_ = fs.MkdirAll("/sys/fs/selinux/booleans", 0o755)
+		bools := readSelinuxBooleansFromFS(fs)
+		require.Nil(t, bools)
 	})
 }

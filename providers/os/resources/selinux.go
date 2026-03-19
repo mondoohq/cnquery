@@ -5,10 +5,12 @@ package resources
 
 import (
 	"bufio"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
 
+	"github.com/spf13/afero"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 )
@@ -97,10 +99,27 @@ func (s *mqlSelinux) mode() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if !avail {
-		return "", nil
+	if avail {
+		return mode, nil
 	}
-	return mode, nil
+	// Fall back to /sys/fs/selinux/enforce (available on live systems without
+	// getenforce in $PATH): contains "1" for enforcing, "0" for permissive.
+	if conn, ok := s.MqlRuntime.Connection.(shared.Connection); ok {
+		data, err := afero.ReadFile(conn.FileSystem(), "/sys/fs/selinux/enforce")
+		if err == nil {
+			switch strings.TrimSpace(string(data)) {
+			case "1":
+				return "enforcing", nil
+			case "0":
+				return "permissive", nil
+			}
+		}
+	}
+	// Fall back to configured mode from /etc/selinux/config (disk scans)
+	if err := s.parseConfig(); err != nil {
+		return "", err
+	}
+	return s.cfgMode, nil
 }
 
 // parseConfig reads /etc/selinux/config and extracts SELINUX= and SELINUXTYPE= values.
@@ -216,18 +235,34 @@ func ParseGetsebool(output string) []SELinuxBool {
 }
 
 func (s *mqlSelinux) booleans() ([]any, error) {
-	o, err := CreateResource(s.MqlRuntime, "command", map[string]*llx.RawData{
-		"command": llx.StringData("getsebool -a"),
-	})
-	if err != nil {
-		return nil, err
-	}
-	cmd := o.(*mqlCommand)
-	if exit := cmd.GetExitcode(); exit.Data != 0 {
+	conn, ok := s.MqlRuntime.Connection.(shared.Connection)
+	if !ok {
 		return nil, nil
 	}
 
-	parsed := ParseGetsebool(cmd.Stdout.Data)
+	var parsed []SELinuxBool
+	if conn.Capabilities().Has(shared.Capability_RunCommand) {
+		o, err := CreateResource(s.MqlRuntime, "command", map[string]*llx.RawData{
+			"command": llx.StringData("getsebool -a"),
+		})
+		if err == nil {
+			cmd := o.(*mqlCommand)
+			if exit := cmd.GetExitcode(); exit.Data == 0 {
+				parsed = ParseGetsebool(cmd.Stdout.Data)
+			}
+		}
+	}
+
+	// Fall back to /sys/fs/selinux/booleans/ directory (each file contains
+	// "1" or "0" for the boolean's current value)
+	if parsed == nil {
+		parsed = readSelinuxBooleansFromFS(conn.FileSystem())
+	}
+
+	if parsed == nil {
+		return nil, nil
+	}
+
 	res := make([]any, 0, len(parsed))
 	for _, b := range parsed {
 		r, err := CreateResource(s.MqlRuntime, "selinux.boolean", map[string]*llx.RawData{
@@ -240,6 +275,32 @@ func (s *mqlSelinux) booleans() ([]any, error) {
 		res = append(res, r)
 	}
 	return res, nil
+}
+
+// readSelinuxBooleansFromFS reads boolean values from /sys/fs/selinux/booleans/.
+// Each file in that directory contains "1" (on) or "0" (off).
+func readSelinuxBooleansFromFS(fs afero.Fs) []SELinuxBool {
+	const dir = "/sys/fs/selinux/booleans"
+	entries, err := afero.ReadDir(fs, dir)
+	if err != nil {
+		return nil
+	}
+	var bools []SELinuxBool
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		data, err := afero.ReadFile(fs, filepath.Join(dir, entry.Name()))
+		if err != nil {
+			continue
+		}
+		val := strings.TrimSpace(string(data))
+		bools = append(bools, SELinuxBool{
+			Name:  entry.Name(),
+			Value: val == "1",
+		})
+	}
+	return bools
 }
 
 // SELinuxModule represents a parsed semodule entry.
