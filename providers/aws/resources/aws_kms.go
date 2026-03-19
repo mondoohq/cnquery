@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -301,6 +302,9 @@ func initAwsKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 		return nil, nil, errors.New("invalid arn")
 	}
 	arnVal, err := arn.Parse(a)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid ARN %q: %w", a, err)
+	}
 	if arnVal.AccountID != runtime.Connection.(*connection.AwsConnection).AccountId() {
 		// Cross-account key: we can't fetch details, but we should still return the ARN
 		// so security tools can see which KMS key is referenced
