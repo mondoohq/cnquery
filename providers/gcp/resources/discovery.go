@@ -23,8 +23,9 @@ import (
 
 const (
 	// Discovery flags
-	DiscoveryAuto = "auto"
-	DiscoveryAll  = "all"
+	DiscoveryAuto    = "auto"
+	DiscoveryAll     = "all"
+	DiscoveryMinimal = "minimal" // projects only, for interactive shell
 
 	// top-level assets
 	DiscoveryFolders      = "folders"
@@ -59,6 +60,10 @@ const (
 	DiscoverApiKeys                 = "apikeys"
 	DiscoverIamServiceAccounts      = "iam-service-accounts"
 )
+
+var Minimal = []string{
+	DiscoveryProjects,
+}
 
 // All includes every discovery target: Auto covers all of them for GCP.
 var All = slices.Clone(Auto)
@@ -137,6 +142,9 @@ func getDiscoveryTargets(config *inventory.Config) []string {
 	if stringx.ContainsAnyOf(targets, DiscoveryAll) {
 		// return all discovery targets
 		return All
+	}
+	if stringx.ContainsAnyOf(targets, DiscoveryMinimal) {
+		return Minimal
 	}
 	if stringx.ContainsAnyOf(targets, DiscoveryAuto) {
 		for i, target := range targets {

@@ -22,8 +22,9 @@ const (
 	DiscoveryECR          = "ecr"
 	DiscoveryECS          = "ecs"
 
-	DiscoveryAll  = "all"  // all discovery targets
-	DiscoveryAuto = "auto" // account + resources
+	DiscoveryAll     = "all"  // all discovery targets
+	DiscoveryAuto    = "auto" // account + resources
+	DiscoveryMinimal = "minimal" // accounts only, for interactive shell
 
 	// API scan
 	DiscoveryAccounts                   = "accounts"
@@ -60,6 +61,11 @@ const (
 	DiscoveryElasticacheClusters        = "elasticache-clusters"
 	DiscoveryCloudfrontDistributions    = "cloudfront-distributions"
 )
+
+var Minimal = []string{
+	DiscoveryAccounts,
+}
+
 
 var Auto = []string{
 	DiscoveryAccounts,
@@ -171,6 +177,8 @@ func getDiscoveryTargets(config *inventory.Config) []string {
 	res := []string{}
 	for _, target := range targets {
 		switch target {
+		case DiscoveryMinimal:
+			res = append(res, Minimal...)
 		case DiscoveryAuto:
 			res = append(res, Auto...)
 		case DiscoveryResources:

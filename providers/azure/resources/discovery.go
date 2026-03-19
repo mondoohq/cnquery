@@ -27,6 +27,7 @@ const (
 
 	DiscoveryAuto          = "auto"
 	DiscoveryAll           = "all"
+	DiscoveryMinimal       = "minimal" // subscriptions only, for interactive shell
 	DiscoverySubscriptions = "subscriptions"
 	DiscoveryInstances     = "instances"
 	// TODO: this probably needs some more work on the linking to its OS counterpart side
@@ -47,6 +48,10 @@ const (
 	DiscoveryCosmosDb                = "cosmosdb"
 	DiscoveryVirtualNetworks         = "virtual-networks"
 )
+
+var Minimal = []string{
+	DiscoverySubscriptions,
+}
 
 // Auto includes all API resources except storage containers (which require
 // additional permissions and can be very numerous). Defined in terms of
@@ -122,6 +127,9 @@ func getDiscoveryTargets(config *inventory.Config) []string {
 	if stringx.ContainsAnyOf(targets, DiscoveryAll) {
 		// return all discovery targets
 		return All
+	}
+	if stringx.ContainsAnyOf(targets, DiscoveryMinimal) {
+		return Minimal
 	}
 	if stringx.ContainsAnyOf(targets, DiscoveryAuto) {
 		for i, target := range targets {

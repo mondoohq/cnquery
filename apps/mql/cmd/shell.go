@@ -46,6 +46,18 @@ var shellCmd = &cobra.Command{
 }
 
 var shellRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plugin.ParseCLIRes) {
+	// Use minimal discovery for interactive shell when --discover is not explicitly set
+	// and no -c command is provided. This avoids expensive full discovery when the user
+	// just wants to drop into an interactive shell.
+	command, _ := cmd.Flags().GetString("command")
+	if !cmd.Flags().Changed("discover") && command == "" && cliRes.Asset != nil {
+		for _, conn := range cliRes.Asset.Connections {
+			if conn.Discover != nil {
+				conn.Discover.Targets = []string{"minimal"}
+			}
+		}
+	}
+
 	shellConf := ParseShellConfig(cmd, cliRes)
 	if err := StartShell(runtime, shellConf); err != nil {
 		log.Fatal().Err(err).Msg("failed to run query")

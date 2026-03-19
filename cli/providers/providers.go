@@ -239,7 +239,7 @@ func attachConnectorCmd(provider *plugin.Provider, connector *plugin.Connector, 
 }
 
 func genBuiltinFlags(discoveries ...string) []plugin.Flag {
-	supportedDiscoveries := append([]string{"all", "auto"}, discoveries...)
+	supportedDiscoveries := append([]string{"all", "auto", "minimal"}, discoveries...)
 	slices.Sort(supportedDiscoveries)
 
 	return []plugin.Flag{
