@@ -138,6 +138,9 @@ const (
 	ResourceApparmor                   string = "apparmor"
 	ResourceApparmorProfile            string = "apparmor.profile"
 	ResourceApparmorProcess            string = "apparmor.process"
+	ResourceSelinux                    string = "selinux"
+	ResourceSelinuxBoolean             string = "selinux.boolean"
+	ResourceSelinuxModule              string = "selinux.module"
 	ResourceModprobe                   string = "modprobe"
 	ResourceModprobeInstall            string = "modprobe.install"
 	ResourceModprobeRemove             string = "modprobe.remove"
@@ -698,6 +701,18 @@ func init() {
 		"apparmor.process": {
 			// to override args, implement: initApparmorProcess(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createApparmorProcess,
+		},
+		"selinux": {
+			// to override args, implement: initSelinux(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSelinux,
+		},
+		"selinux.boolean": {
+			// to override args, implement: initSelinuxBoolean(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSelinuxBoolean,
+		},
+		"selinux.module": {
+			// to override args, implement: initSelinuxModule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSelinuxModule,
 		},
 		"modprobe": {
 			Init:   initModprobe,
@@ -2661,6 +2676,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"apparmor.process.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlApparmorProcess).GetStatus()).ToDataRes(types.String)
+	},
+	"selinux.installed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSelinux).GetInstalled()).ToDataRes(types.Bool)
+	},
+	"selinux.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSelinux).GetMode()).ToDataRes(types.String)
+	},
+	"selinux.configMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSelinux).GetConfigMode()).ToDataRes(types.String)
+	},
+	"selinux.policyType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSelinux).GetPolicyType()).ToDataRes(types.String)
+	},
+	"selinux.booleans": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSelinux).GetBooleans()).ToDataRes(types.Array(types.Resource("selinux.boolean")))
+	},
+	"selinux.modules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSelinux).GetModules()).ToDataRes(types.Array(types.Resource("selinux.module")))
+	},
+	"selinux.boolean.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSelinuxBoolean).GetName()).ToDataRes(types.String)
+	},
+	"selinux.boolean.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSelinuxBoolean).GetValue()).ToDataRes(types.Bool)
+	},
+	"selinux.boolean.defaultValue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSelinuxBoolean).GetDefaultValue()).ToDataRes(types.Bool)
+	},
+	"selinux.module.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSelinuxModule).GetName()).ToDataRes(types.String)
+	},
+	"selinux.module.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSelinuxModule).GetStatus()).ToDataRes(types.String)
+	},
+	"selinux.module.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSelinuxModule).GetPriority()).ToDataRes(types.Int)
 	},
 	"modprobe.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlModprobe).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
@@ -6674,6 +6725,66 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"apparmor.process.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlApparmorProcess).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"selinux.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSelinux).__id, ok = v.Value.(string)
+		return
+	},
+	"selinux.installed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSelinux).Installed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"selinux.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSelinux).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"selinux.configMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSelinux).ConfigMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"selinux.policyType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSelinux).PolicyType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"selinux.booleans": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSelinux).Booleans, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"selinux.modules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSelinux).Modules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"selinux.boolean.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSelinuxBoolean).__id, ok = v.Value.(string)
+		return
+	},
+	"selinux.boolean.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSelinuxBoolean).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"selinux.boolean.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSelinuxBoolean).Value, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"selinux.boolean.defaultValue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSelinuxBoolean).DefaultValue, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"selinux.module.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSelinuxModule).__id, ok = v.Value.(string)
+		return
+	},
+	"selinux.module.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSelinuxModule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"selinux.module.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSelinuxModule).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"selinux.module.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSelinuxModule).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"modprobe.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -18268,6 +18379,230 @@ func (c *mqlApparmorProcess) GetPid() *plugin.TValue[int64] {
 
 func (c *mqlApparmorProcess) GetStatus() *plugin.TValue[string] {
 	return &c.Status
+}
+
+// mqlSelinux for the selinux resource
+type mqlSelinux struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlSelinuxInternal
+	Installed  plugin.TValue[bool]
+	Mode       plugin.TValue[string]
+	ConfigMode plugin.TValue[string]
+	PolicyType plugin.TValue[string]
+	Booleans   plugin.TValue[[]any]
+	Modules    plugin.TValue[[]any]
+}
+
+// createSelinux creates a new instance of this resource
+func createSelinux(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSelinux{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("selinux", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSelinux) MqlName() string {
+	return "selinux"
+}
+
+func (c *mqlSelinux) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSelinux) GetInstalled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Installed, func() (bool, error) {
+		return c.installed()
+	})
+}
+
+func (c *mqlSelinux) GetMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Mode, func() (string, error) {
+		return c.mode()
+	})
+}
+
+func (c *mqlSelinux) GetConfigMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ConfigMode, func() (string, error) {
+		return c.configMode()
+	})
+}
+
+func (c *mqlSelinux) GetPolicyType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PolicyType, func() (string, error) {
+		return c.policyType()
+	})
+}
+
+func (c *mqlSelinux) GetBooleans() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Booleans, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("selinux", c.__id, "booleans")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.booleans()
+	})
+}
+
+func (c *mqlSelinux) GetModules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Modules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("selinux", c.__id, "modules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.modules()
+	})
+}
+
+// mqlSelinuxBoolean for the selinux.boolean resource
+type mqlSelinuxBoolean struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSelinuxBooleanInternal it will be used here
+	Name         plugin.TValue[string]
+	Value        plugin.TValue[bool]
+	DefaultValue plugin.TValue[bool]
+}
+
+// createSelinuxBoolean creates a new instance of this resource
+func createSelinuxBoolean(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSelinuxBoolean{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("selinux.boolean", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSelinuxBoolean) MqlName() string {
+	return "selinux.boolean"
+}
+
+func (c *mqlSelinuxBoolean) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSelinuxBoolean) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlSelinuxBoolean) GetValue() *plugin.TValue[bool] {
+	return &c.Value
+}
+
+func (c *mqlSelinuxBoolean) GetDefaultValue() *plugin.TValue[bool] {
+	return &c.DefaultValue
+}
+
+// mqlSelinuxModule for the selinux.module resource
+type mqlSelinuxModule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSelinuxModuleInternal it will be used here
+	Name     plugin.TValue[string]
+	Status   plugin.TValue[string]
+	Priority plugin.TValue[int64]
+}
+
+// createSelinuxModule creates a new instance of this resource
+func createSelinuxModule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSelinuxModule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("selinux.module", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSelinuxModule) MqlName() string {
+	return "selinux.module"
+}
+
+func (c *mqlSelinuxModule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSelinuxModule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlSelinuxModule) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlSelinuxModule) GetPriority() *plugin.TValue[int64] {
+	return &c.Priority
 }
 
 // mqlModprobe for the modprobe resource

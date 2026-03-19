@@ -1580,6 +1580,42 @@ private apparmor.process @defaults("pid profile status") {
   status string
 }
 
+// SELinux mandatory access control status
+selinux @defaults("mode") {
+  // Whether SELinux is installed on the system
+  installed() bool
+  // Current enforcement mode: enforcing, permissive, or disabled
+  mode() string
+  // Configured mode from /etc/selinux/config (persists across reboot)
+  configMode() string
+  // Active policy type (e.g., targeted, mls, minimum)
+  policyType() string
+  // Loaded SELinux booleans
+  booleans() []selinux.boolean
+  // Installed SELinux policy modules
+  modules() []selinux.module
+}
+
+// SELinux boolean setting
+private selinux.boolean @defaults("name value") {
+  // Boolean name (e.g., httpd_can_network_connect)
+  name string
+  // Current runtime value
+  value bool
+  // Persistent (default) value
+  defaultValue bool
+}
+
+// SELinux policy module
+private selinux.module @defaults("name status") {
+  // Module name
+  name string
+  // Module status (e.g., enabled, disabled)
+  status string
+  // Module priority
+  priority int
+}
+
 // Kernel module configuration from modprobe.d
 modprobe @defaults("blacklists installs") {
   init(path? string)
