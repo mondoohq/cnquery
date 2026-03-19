@@ -134,10 +134,6 @@ var All = append(
 	DiscoveryECS,
 )
 
-func allDiscovery() []string {
-	return All
-}
-
 func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 	conn := runtime.Connection.(*connection.AwsConnection)
 	in := &inventory.Inventory{Spec: &inventory.InventorySpec{
@@ -168,7 +164,7 @@ func getDiscoveryTargets(config *inventory.Config) []string {
 
 	if stringx.Contains(targets, DiscoveryAll) {
 		// return the All list + All Api Resources list
-		return allDiscovery()
+		return All
 	}
 
 	// the targets we return.

@@ -66,10 +66,6 @@ var All = append(
 	DiscoveryStorageContainers,
 )
 
-func allDiscovery() []string {
-	return All
-}
-
 var AllAPIResources = []string{
 	DiscoveryInstancesApi,
 	DiscoverySqlServers,
@@ -125,7 +121,7 @@ func getDiscoveryTargets(config *inventory.Config) []string {
 	}
 	if stringx.ContainsAnyOf(targets, DiscoveryAll) {
 		// return the All list + All Api Resources list
-		return allDiscovery()
+		return All
 	}
 	if stringx.ContainsAnyOf(targets, DiscoveryAuto) {
 		for i, target := range targets {

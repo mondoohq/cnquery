@@ -348,7 +348,7 @@ func TestDiscoveryAndFilterPropagation(t *testing.T) {
 		}{
 			{"empty returns empty (ParseCLI sets default)", []string{}, []string{}},
 			{"auto keyword", []string{"auto"}, Auto},
-			{"all keyword", []string{"all"}, allDiscovery()},
+			{"all keyword", []string{"all"}, All},
 			{"resources keyword", []string{"resources"}, AllAPIResources},
 			{"explicit single", []string{"s3-buckets"}, []string{DiscoveryS3Buckets}},
 			{
@@ -357,7 +357,7 @@ func TestDiscoveryAndFilterPropagation(t *testing.T) {
 				[]string{DiscoveryS3Buckets, DiscoveryInstances, DiscoveryIAMUsers},
 			},
 			{"auto takes precedence", []string{"auto", "s3-buckets"}, Auto},
-			{"all takes precedence", []string{"all", "s3-buckets"}, allDiscovery()},
+			{"all takes precedence", []string{"all", "s3-buckets"}, All},
 		}
 
 		for _, tc := range cases {
@@ -462,7 +462,7 @@ func TestGetDiscoveryTargets(t *testing.T) {
 		{
 			name:    "all",
 			targets: []string{"all"},
-			want:    allDiscovery(),
+			want:    All,
 		},
 		{
 			name:    "auto",
@@ -482,12 +482,12 @@ func TestGetDiscoveryTargets(t *testing.T) {
 		{
 			name:    "all and resources",
 			targets: []string{"all", "resources"},
-			want:    allDiscovery(),
+			want:    All,
 		},
 		{
 			name:    "all, auto and resources",
 			targets: []string{"all", "resources"},
-			want:    allDiscovery(),
+			want:    All,
 		},
 		{
 			name:    "random",

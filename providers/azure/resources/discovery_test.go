@@ -71,12 +71,12 @@ func TestGetDiscoveryTargets(t *testing.T) {
 		{
 			name:    "all",
 			targets: []string{"all"},
-			want:    allDiscovery(),
+			want:    All,
 		},
 		{
 			name:    "all with extras",
 			targets: []string{"all", "projects", "instances"},
-			want:    allDiscovery(),
+			want:    All,
 		},
 		{
 			name:    "auto",
