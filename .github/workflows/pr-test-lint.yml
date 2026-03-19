@@ -11,15 +11,6 @@ on:
       - ".github/workflows/pr-test-lint.yml"
       - ".github/workflows/reusable-lint-providers.yml"
       - "**.toml" # run tests when any recording changed
-  pull_request:
-    paths:
-      - "**.go"
-      - "**.mod"
-      - "go.sum"
-      - "Makefile"
-      - ".github/workflows/pr-test-lint.yml"
-      - ".github/workflows/reusable-lint-providers.yml"
-      - "**.toml" # run tests when any recording changed
 
 permissions:
   contents: read
