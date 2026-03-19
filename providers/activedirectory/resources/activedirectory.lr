@@ -378,30 +378,92 @@ activedirectory.trust @defaults("targetDomain trustType trustDirection") {
   trustAttributes int
 }
 
-// Active Directory Certificate Services template (Phase 4)
+// Active Directory Certificate Services template
 activedirectory.certificateTemplate @defaults("name") {
-  // Template name
+  // Template common name
   name string
-  // Distinguished name
+  // Template display name
+  displayName string
+  // Distinguished name in CN=Certificate Templates
   distinguishedName string
+  // Template OID
+  oid string
+  // Schema version (1, 2, 3, or 4)
+  schemaVersion int
+  // Whether enrollee can supply the Subject Alternative Name (ESC1 indicator)
+  enrolleeSuppliesSubject bool
+  // Extended Key Usages (OIDs)
+  extendedKeyUsages []string
+  // Whether template has authentication EKU
+  hasAuthenticationEku bool
+  // Whether template has "Any Purpose" EKU (2.5.29.37.0)
+  hasAnyPurposeEku bool
+  // Whether template has no EKU (subordinate CA risk - ESC2)
+  hasNoEku bool
+  // Whether manager approval is required
+  managerApprovalRequired bool
+  // Number of authorized signatures required
+  authorizedSignaturesRequired int
+  // Enrollment flags raw value
+  enrollmentFlags int
+  // Certificate name flags raw value
+  certificateNameFlags int
+  // Validity period
+  validityPeriod string
+  // Renewal period
+  renewalPeriod string
+  // Whether the template is published on at least one Enterprise CA
+  isPublished bool
+  // Whether the template is vulnerable to ESC1
+  isVulnerableESC1 bool
+  // Whether the template is vulnerable to ESC2
+  isVulnerableESC2 bool
+  // Whether the template is vulnerable to ESC3 (Certificate Request Agent EKU abuse)
+  isVulnerableESC3 bool
+  // Whether the template is vulnerable to ESC4 (overly permissive template ACL)
+  isVulnerableESC4 bool
+  // Principals that can enroll
+  enrollmentPermissions []string
+  // Whether low-privileged users can enroll
+  lowPrivilegedEnrollment bool
+  // Creation timestamp
+  whenCreated time
+  // Last modified timestamp
+  whenChanged time
 }
 
-// Active Directory Certificate Authority (Phase 4)
+// Active Directory Certificate Authority (Enrollment Service)
 activedirectory.certificateAuthority @defaults("name") {
   // CA name
   name string
   // Distinguished name
   distinguishedName string
+  // DNS hostname of the CA server
+  dnsHostname string
+  // CA type (Enterprise Root, Enterprise Subordinate, etc.)
+  caType string
+  // Certificate template CN names published on this CA
+  certificateTemplates []string
+  // CA certificate expiration
+  certificateExpiration time
 }
 
-// Active Directory PKI object (Phase 4)
+// Active Directory PKI object under CN=Public Key Services for ESC5 analysis
 activedirectory.pkiObject @defaults("name objectClass") {
-  // Object name
+  // Relative name of the PKI object
   name string
   // Distinguished name
   distinguishedName string
-  // Object class
+  // Primary object class
   objectClass string
+  // Creation timestamp
+  whenCreated time
+  // Last modified timestamp
+  whenChanged time
+  // Whether the object is vulnerable to ESC5 (dangerous write-equivalent ACLs)
+  isVulnerableESC5 bool
+  // Principals with dangerous write-equivalent rights
+  dangerousAclPrincipals []string
 }
 
 // Active Directory-integrated DNS zone

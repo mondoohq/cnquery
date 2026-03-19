@@ -675,14 +675,95 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"activedirectory.certificateTemplate.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryCertificateTemplate).GetName()).ToDataRes(types.String)
 	},
+	"activedirectory.certificateTemplate.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryCertificateTemplate).GetDisplayName()).ToDataRes(types.String)
+	},
 	"activedirectory.certificateTemplate.distinguishedName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryCertificateTemplate).GetDistinguishedName()).ToDataRes(types.String)
+	},
+	"activedirectory.certificateTemplate.oid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryCertificateTemplate).GetOid()).ToDataRes(types.String)
+	},
+	"activedirectory.certificateTemplate.schemaVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryCertificateTemplate).GetSchemaVersion()).ToDataRes(types.Int)
+	},
+	"activedirectory.certificateTemplate.enrolleeSuppliesSubject": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryCertificateTemplate).GetEnrolleeSuppliesSubject()).ToDataRes(types.Bool)
+	},
+	"activedirectory.certificateTemplate.extendedKeyUsages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryCertificateTemplate).GetExtendedKeyUsages()).ToDataRes(types.Array(types.String))
+	},
+	"activedirectory.certificateTemplate.hasAuthenticationEku": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryCertificateTemplate).GetHasAuthenticationEku()).ToDataRes(types.Bool)
+	},
+	"activedirectory.certificateTemplate.hasAnyPurposeEku": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryCertificateTemplate).GetHasAnyPurposeEku()).ToDataRes(types.Bool)
+	},
+	"activedirectory.certificateTemplate.hasNoEku": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryCertificateTemplate).GetHasNoEku()).ToDataRes(types.Bool)
+	},
+	"activedirectory.certificateTemplate.managerApprovalRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryCertificateTemplate).GetManagerApprovalRequired()).ToDataRes(types.Bool)
+	},
+	"activedirectory.certificateTemplate.authorizedSignaturesRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryCertificateTemplate).GetAuthorizedSignaturesRequired()).ToDataRes(types.Int)
+	},
+	"activedirectory.certificateTemplate.enrollmentFlags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryCertificateTemplate).GetEnrollmentFlags()).ToDataRes(types.Int)
+	},
+	"activedirectory.certificateTemplate.certificateNameFlags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryCertificateTemplate).GetCertificateNameFlags()).ToDataRes(types.Int)
+	},
+	"activedirectory.certificateTemplate.validityPeriod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryCertificateTemplate).GetValidityPeriod()).ToDataRes(types.String)
+	},
+	"activedirectory.certificateTemplate.renewalPeriod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryCertificateTemplate).GetRenewalPeriod()).ToDataRes(types.String)
+	},
+	"activedirectory.certificateTemplate.isPublished": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryCertificateTemplate).GetIsPublished()).ToDataRes(types.Bool)
+	},
+	"activedirectory.certificateTemplate.isVulnerableESC1": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryCertificateTemplate).GetIsVulnerableESC1()).ToDataRes(types.Bool)
+	},
+	"activedirectory.certificateTemplate.isVulnerableESC2": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryCertificateTemplate).GetIsVulnerableESC2()).ToDataRes(types.Bool)
+	},
+	"activedirectory.certificateTemplate.isVulnerableESC3": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryCertificateTemplate).GetIsVulnerableESC3()).ToDataRes(types.Bool)
+	},
+	"activedirectory.certificateTemplate.isVulnerableESC4": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryCertificateTemplate).GetIsVulnerableESC4()).ToDataRes(types.Bool)
+	},
+	"activedirectory.certificateTemplate.enrollmentPermissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryCertificateTemplate).GetEnrollmentPermissions()).ToDataRes(types.Array(types.String))
+	},
+	"activedirectory.certificateTemplate.lowPrivilegedEnrollment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryCertificateTemplate).GetLowPrivilegedEnrollment()).ToDataRes(types.Bool)
+	},
+	"activedirectory.certificateTemplate.whenCreated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryCertificateTemplate).GetWhenCreated()).ToDataRes(types.Time)
+	},
+	"activedirectory.certificateTemplate.whenChanged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryCertificateTemplate).GetWhenChanged()).ToDataRes(types.Time)
 	},
 	"activedirectory.certificateAuthority.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryCertificateAuthority).GetName()).ToDataRes(types.String)
 	},
 	"activedirectory.certificateAuthority.distinguishedName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryCertificateAuthority).GetDistinguishedName()).ToDataRes(types.String)
+	},
+	"activedirectory.certificateAuthority.dnsHostname": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryCertificateAuthority).GetDnsHostname()).ToDataRes(types.String)
+	},
+	"activedirectory.certificateAuthority.caType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryCertificateAuthority).GetCaType()).ToDataRes(types.String)
+	},
+	"activedirectory.certificateAuthority.certificateTemplates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryCertificateAuthority).GetCertificateTemplates()).ToDataRes(types.Array(types.String))
+	},
+	"activedirectory.certificateAuthority.certificateExpiration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryCertificateAuthority).GetCertificateExpiration()).ToDataRes(types.Time)
 	},
 	"activedirectory.pkiObject.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryPkiObject).GetName()).ToDataRes(types.String)
@@ -692,6 +773,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"activedirectory.pkiObject.objectClass": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryPkiObject).GetObjectClass()).ToDataRes(types.String)
+	},
+	"activedirectory.pkiObject.whenCreated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryPkiObject).GetWhenCreated()).ToDataRes(types.Time)
+	},
+	"activedirectory.pkiObject.whenChanged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryPkiObject).GetWhenChanged()).ToDataRes(types.Time)
+	},
+	"activedirectory.pkiObject.isVulnerableESC5": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryPkiObject).GetIsVulnerableESC5()).ToDataRes(types.Bool)
+	},
+	"activedirectory.pkiObject.dangerousAclPrincipals": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryPkiObject).GetDangerousAclPrincipals()).ToDataRes(types.Array(types.String))
 	},
 	"activedirectory.dnsZone.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryDnsZone).GetName()).ToDataRes(types.String)
@@ -1428,8 +1521,100 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlActivedirectoryCertificateTemplate).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"activedirectory.certificateTemplate.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryCertificateTemplate).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"activedirectory.certificateTemplate.distinguishedName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlActivedirectoryCertificateTemplate).DistinguishedName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.certificateTemplate.oid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryCertificateTemplate).Oid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.certificateTemplate.schemaVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryCertificateTemplate).SchemaVersion, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"activedirectory.certificateTemplate.enrolleeSuppliesSubject": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryCertificateTemplate).EnrolleeSuppliesSubject, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.certificateTemplate.extendedKeyUsages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryCertificateTemplate).ExtendedKeyUsages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"activedirectory.certificateTemplate.hasAuthenticationEku": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryCertificateTemplate).HasAuthenticationEku, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.certificateTemplate.hasAnyPurposeEku": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryCertificateTemplate).HasAnyPurposeEku, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.certificateTemplate.hasNoEku": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryCertificateTemplate).HasNoEku, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.certificateTemplate.managerApprovalRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryCertificateTemplate).ManagerApprovalRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.certificateTemplate.authorizedSignaturesRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryCertificateTemplate).AuthorizedSignaturesRequired, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"activedirectory.certificateTemplate.enrollmentFlags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryCertificateTemplate).EnrollmentFlags, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"activedirectory.certificateTemplate.certificateNameFlags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryCertificateTemplate).CertificateNameFlags, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"activedirectory.certificateTemplate.validityPeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryCertificateTemplate).ValidityPeriod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.certificateTemplate.renewalPeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryCertificateTemplate).RenewalPeriod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.certificateTemplate.isPublished": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryCertificateTemplate).IsPublished, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.certificateTemplate.isVulnerableESC1": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryCertificateTemplate).IsVulnerableESC1, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.certificateTemplate.isVulnerableESC2": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryCertificateTemplate).IsVulnerableESC2, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.certificateTemplate.isVulnerableESC3": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryCertificateTemplate).IsVulnerableESC3, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.certificateTemplate.isVulnerableESC4": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryCertificateTemplate).IsVulnerableESC4, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.certificateTemplate.enrollmentPermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryCertificateTemplate).EnrollmentPermissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"activedirectory.certificateTemplate.lowPrivilegedEnrollment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryCertificateTemplate).LowPrivilegedEnrollment, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.certificateTemplate.whenCreated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryCertificateTemplate).WhenCreated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"activedirectory.certificateTemplate.whenChanged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryCertificateTemplate).WhenChanged, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"activedirectory.certificateAuthority.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1442,6 +1627,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"activedirectory.certificateAuthority.distinguishedName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlActivedirectoryCertificateAuthority).DistinguishedName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.certificateAuthority.dnsHostname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryCertificateAuthority).DnsHostname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.certificateAuthority.caType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryCertificateAuthority).CaType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.certificateAuthority.certificateTemplates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryCertificateAuthority).CertificateTemplates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"activedirectory.certificateAuthority.certificateExpiration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryCertificateAuthority).CertificateExpiration, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"activedirectory.pkiObject.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1458,6 +1659,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"activedirectory.pkiObject.objectClass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlActivedirectoryPkiObject).ObjectClass, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.pkiObject.whenCreated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryPkiObject).WhenCreated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"activedirectory.pkiObject.whenChanged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryPkiObject).WhenChanged, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"activedirectory.pkiObject.isVulnerableESC5": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryPkiObject).IsVulnerableESC5, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.pkiObject.dangerousAclPrincipals": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryPkiObject).DangerousAclPrincipals, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"activedirectory.dnsZone.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3054,8 +3271,31 @@ type mqlActivedirectoryCertificateTemplate struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlActivedirectoryCertificateTemplateInternal it will be used here
-	Name              plugin.TValue[string]
-	DistinguishedName plugin.TValue[string]
+	Name                         plugin.TValue[string]
+	DisplayName                  plugin.TValue[string]
+	DistinguishedName            plugin.TValue[string]
+	Oid                          plugin.TValue[string]
+	SchemaVersion                plugin.TValue[int64]
+	EnrolleeSuppliesSubject      plugin.TValue[bool]
+	ExtendedKeyUsages            plugin.TValue[[]any]
+	HasAuthenticationEku         plugin.TValue[bool]
+	HasAnyPurposeEku             plugin.TValue[bool]
+	HasNoEku                     plugin.TValue[bool]
+	ManagerApprovalRequired      plugin.TValue[bool]
+	AuthorizedSignaturesRequired plugin.TValue[int64]
+	EnrollmentFlags              plugin.TValue[int64]
+	CertificateNameFlags         plugin.TValue[int64]
+	ValidityPeriod               plugin.TValue[string]
+	RenewalPeriod                plugin.TValue[string]
+	IsPublished                  plugin.TValue[bool]
+	IsVulnerableESC1             plugin.TValue[bool]
+	IsVulnerableESC2             plugin.TValue[bool]
+	IsVulnerableESC3             plugin.TValue[bool]
+	IsVulnerableESC4             plugin.TValue[bool]
+	EnrollmentPermissions        plugin.TValue[[]any]
+	LowPrivilegedEnrollment      plugin.TValue[bool]
+	WhenCreated                  plugin.TValue[*time.Time]
+	WhenChanged                  plugin.TValue[*time.Time]
 }
 
 // createActivedirectoryCertificateTemplate creates a new instance of this resource
@@ -3099,8 +3339,100 @@ func (c *mqlActivedirectoryCertificateTemplate) GetName() *plugin.TValue[string]
 	return &c.Name
 }
 
+func (c *mqlActivedirectoryCertificateTemplate) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
 func (c *mqlActivedirectoryCertificateTemplate) GetDistinguishedName() *plugin.TValue[string] {
 	return &c.DistinguishedName
+}
+
+func (c *mqlActivedirectoryCertificateTemplate) GetOid() *plugin.TValue[string] {
+	return &c.Oid
+}
+
+func (c *mqlActivedirectoryCertificateTemplate) GetSchemaVersion() *plugin.TValue[int64] {
+	return &c.SchemaVersion
+}
+
+func (c *mqlActivedirectoryCertificateTemplate) GetEnrolleeSuppliesSubject() *plugin.TValue[bool] {
+	return &c.EnrolleeSuppliesSubject
+}
+
+func (c *mqlActivedirectoryCertificateTemplate) GetExtendedKeyUsages() *plugin.TValue[[]any] {
+	return &c.ExtendedKeyUsages
+}
+
+func (c *mqlActivedirectoryCertificateTemplate) GetHasAuthenticationEku() *plugin.TValue[bool] {
+	return &c.HasAuthenticationEku
+}
+
+func (c *mqlActivedirectoryCertificateTemplate) GetHasAnyPurposeEku() *plugin.TValue[bool] {
+	return &c.HasAnyPurposeEku
+}
+
+func (c *mqlActivedirectoryCertificateTemplate) GetHasNoEku() *plugin.TValue[bool] {
+	return &c.HasNoEku
+}
+
+func (c *mqlActivedirectoryCertificateTemplate) GetManagerApprovalRequired() *plugin.TValue[bool] {
+	return &c.ManagerApprovalRequired
+}
+
+func (c *mqlActivedirectoryCertificateTemplate) GetAuthorizedSignaturesRequired() *plugin.TValue[int64] {
+	return &c.AuthorizedSignaturesRequired
+}
+
+func (c *mqlActivedirectoryCertificateTemplate) GetEnrollmentFlags() *plugin.TValue[int64] {
+	return &c.EnrollmentFlags
+}
+
+func (c *mqlActivedirectoryCertificateTemplate) GetCertificateNameFlags() *plugin.TValue[int64] {
+	return &c.CertificateNameFlags
+}
+
+func (c *mqlActivedirectoryCertificateTemplate) GetValidityPeriod() *plugin.TValue[string] {
+	return &c.ValidityPeriod
+}
+
+func (c *mqlActivedirectoryCertificateTemplate) GetRenewalPeriod() *plugin.TValue[string] {
+	return &c.RenewalPeriod
+}
+
+func (c *mqlActivedirectoryCertificateTemplate) GetIsPublished() *plugin.TValue[bool] {
+	return &c.IsPublished
+}
+
+func (c *mqlActivedirectoryCertificateTemplate) GetIsVulnerableESC1() *plugin.TValue[bool] {
+	return &c.IsVulnerableESC1
+}
+
+func (c *mqlActivedirectoryCertificateTemplate) GetIsVulnerableESC2() *plugin.TValue[bool] {
+	return &c.IsVulnerableESC2
+}
+
+func (c *mqlActivedirectoryCertificateTemplate) GetIsVulnerableESC3() *plugin.TValue[bool] {
+	return &c.IsVulnerableESC3
+}
+
+func (c *mqlActivedirectoryCertificateTemplate) GetIsVulnerableESC4() *plugin.TValue[bool] {
+	return &c.IsVulnerableESC4
+}
+
+func (c *mqlActivedirectoryCertificateTemplate) GetEnrollmentPermissions() *plugin.TValue[[]any] {
+	return &c.EnrollmentPermissions
+}
+
+func (c *mqlActivedirectoryCertificateTemplate) GetLowPrivilegedEnrollment() *plugin.TValue[bool] {
+	return &c.LowPrivilegedEnrollment
+}
+
+func (c *mqlActivedirectoryCertificateTemplate) GetWhenCreated() *plugin.TValue[*time.Time] {
+	return &c.WhenCreated
+}
+
+func (c *mqlActivedirectoryCertificateTemplate) GetWhenChanged() *plugin.TValue[*time.Time] {
+	return &c.WhenChanged
 }
 
 // mqlActivedirectoryCertificateAuthority for the activedirectory.certificateAuthority resource
@@ -3108,8 +3440,12 @@ type mqlActivedirectoryCertificateAuthority struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlActivedirectoryCertificateAuthorityInternal it will be used here
-	Name              plugin.TValue[string]
-	DistinguishedName plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	DistinguishedName     plugin.TValue[string]
+	DnsHostname           plugin.TValue[string]
+	CaType                plugin.TValue[string]
+	CertificateTemplates  plugin.TValue[[]any]
+	CertificateExpiration plugin.TValue[*time.Time]
 }
 
 // createActivedirectoryCertificateAuthority creates a new instance of this resource
@@ -3157,14 +3493,34 @@ func (c *mqlActivedirectoryCertificateAuthority) GetDistinguishedName() *plugin.
 	return &c.DistinguishedName
 }
 
+func (c *mqlActivedirectoryCertificateAuthority) GetDnsHostname() *plugin.TValue[string] {
+	return &c.DnsHostname
+}
+
+func (c *mqlActivedirectoryCertificateAuthority) GetCaType() *plugin.TValue[string] {
+	return &c.CaType
+}
+
+func (c *mqlActivedirectoryCertificateAuthority) GetCertificateTemplates() *plugin.TValue[[]any] {
+	return &c.CertificateTemplates
+}
+
+func (c *mqlActivedirectoryCertificateAuthority) GetCertificateExpiration() *plugin.TValue[*time.Time] {
+	return &c.CertificateExpiration
+}
+
 // mqlActivedirectoryPkiObject for the activedirectory.pkiObject resource
 type mqlActivedirectoryPkiObject struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlActivedirectoryPkiObjectInternal it will be used here
-	Name              plugin.TValue[string]
-	DistinguishedName plugin.TValue[string]
-	ObjectClass       plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	DistinguishedName      plugin.TValue[string]
+	ObjectClass            plugin.TValue[string]
+	WhenCreated            plugin.TValue[*time.Time]
+	WhenChanged            plugin.TValue[*time.Time]
+	IsVulnerableESC5       plugin.TValue[bool]
+	DangerousAclPrincipals plugin.TValue[[]any]
 }
 
 // createActivedirectoryPkiObject creates a new instance of this resource
@@ -3214,6 +3570,22 @@ func (c *mqlActivedirectoryPkiObject) GetDistinguishedName() *plugin.TValue[stri
 
 func (c *mqlActivedirectoryPkiObject) GetObjectClass() *plugin.TValue[string] {
 	return &c.ObjectClass
+}
+
+func (c *mqlActivedirectoryPkiObject) GetWhenCreated() *plugin.TValue[*time.Time] {
+	return &c.WhenCreated
+}
+
+func (c *mqlActivedirectoryPkiObject) GetWhenChanged() *plugin.TValue[*time.Time] {
+	return &c.WhenChanged
+}
+
+func (c *mqlActivedirectoryPkiObject) GetIsVulnerableESC5() *plugin.TValue[bool] {
+	return &c.IsVulnerableESC5
+}
+
+func (c *mqlActivedirectoryPkiObject) GetDangerousAclPrincipals() *plugin.TValue[[]any] {
+	return &c.DangerousAclPrincipals
 }
 
 // mqlActivedirectoryDnsZone for the activedirectory.dnsZone resource

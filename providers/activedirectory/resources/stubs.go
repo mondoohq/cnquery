@@ -5,20 +5,6 @@ package resources
 
 import "fmt"
 
-// Phase 4: ADCS — stubs until implementation
-
-func (a *mqlActivedirectory) certificateTemplates() ([]interface{}, error) {
-	return nil, nil
-}
-
-func (a *mqlActivedirectory) certificateAuthorities() ([]interface{}, error) {
-	return nil, nil
-}
-
-func (a *mqlActivedirectory) pkiObjects() ([]interface{}, error) {
-	return nil, nil
-}
-
 // id() methods for Phase 3 resources
 
 func (a *mqlActivedirectoryOu) id() (string, error) {
