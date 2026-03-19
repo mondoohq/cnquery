@@ -69,9 +69,9 @@ virt_sandbox_use_all_caps --> off
 		bools := ParseGetsebool(output)
 		require.Len(t, bools, 5)
 
-		require.Equal(t, SELinuxBool{Name: "abrt_anon_write", Value: false, DefaultValue: false}, bools[0])
-		require.Equal(t, SELinuxBool{Name: "httpd_can_network_connect", Value: true, DefaultValue: true}, bools[2])
-		require.Equal(t, SELinuxBool{Name: "httpd_enable_cgi", Value: true, DefaultValue: true}, bools[3])
+		require.Equal(t, SELinuxBool{Name: "abrt_anon_write", Value: false}, bools[0])
+		require.Equal(t, SELinuxBool{Name: "httpd_can_network_connect", Value: true}, bools[2])
+		require.Equal(t, SELinuxBool{Name: "httpd_enable_cgi", Value: true}, bools[3])
 	})
 
 	t.Run("empty output", func(t *testing.T) {

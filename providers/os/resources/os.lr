@@ -1602,8 +1602,6 @@ private selinux.boolean @defaults("name value") {
   name string
   // Current runtime value
   value bool
-  // Persistent (default) value
-  defaultValue bool
 }
 
 // SELinux policy module

@@ -889,7 +889,6 @@ secpol.registryvalues 9.0.1
 secpol.systemaccess 9.0.1
 selinux 13.2.6
 selinux.boolean 13.2.6
-selinux.boolean.defaultValue 13.2.6
 selinux.boolean.name 13.2.6
 selinux.boolean.value 13.2.6
 selinux.booleans 13.2.6

@@ -14,10 +14,13 @@ import (
 )
 
 type mqlSelinuxInternal struct {
-	configParsed bool
-	cfgMode      string
-	cfgType      string
-	lock         sync.Mutex
+	configParsed    bool
+	cfgMode         string
+	cfgType         string
+	getenforced     bool
+	getenforceMode  string
+	getenforceAvail bool
+	lock            sync.Mutex
 }
 
 func (s *mqlSelinux) id() (string, error) {
@@ -32,34 +35,57 @@ func (s *mqlSelinuxModule) id() (string, error) {
 	return "selinux.module:" + s.Name.Data, nil
 }
 
-func (s *mqlSelinux) installed() (bool, error) {
+// fetchGetenforce runs getenforce once and caches the result.
+func (s *mqlSelinux) fetchGetenforce() (available bool, mode string, err error) {
+	if s.getenforced {
+		return s.getenforceAvail, s.getenforceMode, nil
+	}
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	if s.getenforced {
+		return s.getenforceAvail, s.getenforceMode, nil
+	}
+
 	conn, ok := s.MqlRuntime.Connection.(shared.Connection)
 	if !ok || !conn.Capabilities().Has(shared.Capability_RunCommand) {
-		return false, nil
+		s.getenforced = true
+		return false, "", nil
 	}
 
 	o, err := CreateResource(s.MqlRuntime, "command", map[string]*llx.RawData{
 		"command": llx.StringData("getenforce"),
 	})
 	if err != nil {
-		return false, nil
-	}
-	cmd := o.(*mqlCommand)
-	return cmd.GetExitcode().Data == 0, nil
-}
-
-func (s *mqlSelinux) mode() (string, error) {
-	o, err := CreateResource(s.MqlRuntime, "command", map[string]*llx.RawData{
-		"command": llx.StringData("getenforce"),
-	})
-	if err != nil {
-		return "", err
+		s.getenforced = true
+		return false, "", err
 	}
 	cmd := o.(*mqlCommand)
 	if exit := cmd.GetExitcode(); exit.Data != 0 {
-		return "unknown", nil
+		s.getenforced = true
+		s.getenforceAvail = false
+		return false, "", nil
 	}
-	return strings.ToLower(strings.TrimSpace(cmd.Stdout.Data)), nil
+
+	s.getenforceAvail = true
+	s.getenforceMode = strings.ToLower(strings.TrimSpace(cmd.Stdout.Data))
+	s.getenforced = true
+	return s.getenforceAvail, s.getenforceMode, nil
+}
+
+func (s *mqlSelinux) installed() (bool, error) {
+	avail, _, err := s.fetchGetenforce()
+	return avail, err
+}
+
+func (s *mqlSelinux) mode() (string, error) {
+	avail, mode, err := s.fetchGetenforce()
+	if err != nil {
+		return "", err
+	}
+	if !avail {
+		return "", nil
+	}
+	return mode, nil
 }
 
 // parseConfig reads /etc/selinux/config and extracts SELINUX= and SELINUXTYPE= values
@@ -143,9 +169,8 @@ func (s *mqlSelinux) policyType() (string, error) {
 
 // SELinuxBool represents a parsed getsebool entry.
 type SELinuxBool struct {
-	Name         string
-	Value        bool
-	DefaultValue bool
+	Name  string
+	Value bool
 }
 
 // ParseGetsebool parses the output of "getsebool -a" (format: "name --> on/off").
@@ -167,9 +192,8 @@ func ParseGetsebool(output string) []SELinuxBool {
 		name := strings.TrimSpace(parts[0])
 		val := strings.TrimSpace(parts[1])
 		bools = append(bools, SELinuxBool{
-			Name:         name,
-			Value:        val == "on",
-			DefaultValue: val == "on",
+			Name:  name,
+			Value: val == "on",
 		})
 	}
 	return bools
@@ -191,9 +215,8 @@ func (s *mqlSelinux) booleans() ([]any, error) {
 	res := make([]any, 0, len(parsed))
 	for _, b := range parsed {
 		r, err := CreateResource(s.MqlRuntime, "selinux.boolean", map[string]*llx.RawData{
-			"name":         llx.StringData(b.Name),
-			"value":        llx.BoolData(b.Value),
-			"defaultValue": llx.BoolData(b.DefaultValue),
+			"name":  llx.StringData(b.Name),
+			"value": llx.BoolData(b.Value),
 		})
 		if err != nil {
 			return nil, err

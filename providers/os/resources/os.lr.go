@@ -2701,9 +2701,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"selinux.boolean.value": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSelinuxBoolean).GetValue()).ToDataRes(types.Bool)
 	},
-	"selinux.boolean.defaultValue": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlSelinuxBoolean).GetDefaultValue()).ToDataRes(types.Bool)
-	},
 	"selinux.module.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSelinuxModule).GetName()).ToDataRes(types.String)
 	},
@@ -6765,10 +6762,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"selinux.boolean.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSelinuxBoolean).Value, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"selinux.boolean.defaultValue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSelinuxBoolean).DefaultValue, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"selinux.module.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -18492,9 +18485,8 @@ type mqlSelinuxBoolean struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlSelinuxBooleanInternal it will be used here
-	Name         plugin.TValue[string]
-	Value        plugin.TValue[bool]
-	DefaultValue plugin.TValue[bool]
+	Name  plugin.TValue[string]
+	Value plugin.TValue[bool]
 }
 
 // createSelinuxBoolean creates a new instance of this resource
@@ -18540,10 +18532,6 @@ func (c *mqlSelinuxBoolean) GetName() *plugin.TValue[string] {
 
 func (c *mqlSelinuxBoolean) GetValue() *plugin.TValue[bool] {
 	return &c.Value
-}
-
-func (c *mqlSelinuxBoolean) GetDefaultValue() *plugin.TValue[bool] {
-	return &c.DefaultValue
 }
 
 // mqlSelinuxModule for the selinux.module resource
