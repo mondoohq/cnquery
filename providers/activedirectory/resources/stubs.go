@@ -6,21 +6,6 @@ package resources
 // Stub implementations for computed resource fields defined in the .lr file
 // but not yet implemented. These will be replaced in future phases.
 
-// Phase 2: Users, Groups, Computers
-
-func (a *mqlActivedirectory) users() ([]interface{}, error) {
-	return nil, nil
-}
-
-func (a *mqlActivedirectory) groups() ([]interface{}, error) {
-	return nil, nil
-}
-
-func (a *mqlActivedirectory) computers() ([]interface{}, error) {
-	return nil, nil
-}
-
-// Phase 3: OUs, GPOs, Trusts, DNS Zones
 
 func (a *mqlActivedirectory) organizationalUnits() ([]interface{}, error) {
 	return nil, nil
@@ -52,19 +37,7 @@ func (a *mqlActivedirectory) pkiObjects() ([]interface{}, error) {
 	return nil, nil
 }
 
-// Stub id() methods for stub resources
-
-func (a *mqlActivedirectoryUser) id() (string, error) {
-	return a.DistinguishedName.Data, nil
-}
-
-func (a *mqlActivedirectoryGroup) id() (string, error) {
-	return a.DistinguishedName.Data, nil
-}
-
-func (a *mqlActivedirectoryComputer) id() (string, error) {
-	return a.DistinguishedName.Data, nil
-}
+// Stub id() methods for resources not yet implemented
 
 func (a *mqlActivedirectoryOu) id() (string, error) {
 	return a.DistinguishedName.Data, nil

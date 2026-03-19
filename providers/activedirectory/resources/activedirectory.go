@@ -14,6 +14,29 @@ import (
 )
 
 func initActivedirectory(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	conn := runtime.Connection.(*connection.ActiveDirectoryConnection)
+	// Populate fields that are directly available from the connection (no extra LDAP queries).
+	if args == nil {
+		args = make(map[string]*llx.RawData)
+	}
+	if _, ok := args["domain"]; !ok {
+		args["domain"] = llx.StringData(dnToDomain(conn.BaseDN()))
+	}
+	if _, ok := args["distinguishedName"]; !ok {
+		args["distinguishedName"] = llx.StringData(conn.BaseDN())
+	}
+	if _, ok := args["domainSid"]; !ok {
+		args["domainSid"] = llx.StringData(conn.DomainSID())
+	}
+	if _, ok := args["functionalLevel"]; !ok {
+		args["functionalLevel"] = llx.StringData(conn.DomainFunctionalLevel())
+	}
+	if _, ok := args["forestFunctionalLevel"]; !ok {
+		args["forestFunctionalLevel"] = llx.StringData(conn.ForestFunctionalLevel())
+	}
+	if _, ok := args["forestName"]; !ok {
+		args["forestName"] = llx.StringData(dnToDomain(conn.RootDomainDN()))
+	}
 	return args, nil, nil
 }
 
@@ -35,35 +58,9 @@ func dnToDomain(dn string) string {
 	return strings.Join(labels, ".")
 }
 
-func (a *mqlActivedirectory) domain() (string, error) {
-	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
-	return dnToDomain(conn.BaseDN()), nil
-}
-
-func (a *mqlActivedirectory) distinguishedName() (string, error) {
-	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
-	return conn.BaseDN(), nil
-}
-
-func (a *mqlActivedirectory) domainSid() (string, error) {
-	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
-	return conn.DomainSID(), nil
-}
-
-func (a *mqlActivedirectory) functionalLevel() (string, error) {
-	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
-	return conn.DomainFunctionalLevel(), nil
-}
-
-func (a *mqlActivedirectory) forestFunctionalLevel() (string, error) {
-	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
-	return conn.ForestFunctionalLevel(), nil
-}
-
-func (a *mqlActivedirectory) forestName() (string, error) {
-	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
-	return dnToDomain(conn.RootDomainDN()), nil
-}
+// The following methods are now computed fields (defined with () in .lr):
+// netbiosName, lapsEnabled, schemaVersion. The plain fields (domain, distinguishedName,
+// domainSid, functionalLevel, forestFunctionalLevel, forestName) are set in init above.
 
 func (a *mqlActivedirectory) netbiosName() (string, error) {
 	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)

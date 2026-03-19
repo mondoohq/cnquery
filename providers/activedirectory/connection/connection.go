@@ -15,6 +15,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
 )
 
 const (
@@ -69,12 +70,18 @@ func NewActiveDirectoryConnection(id uint32, asset *inventory.Asset, conf *inven
 		return nil, errors.New("active directory provider requires option 'dc' (domain controller hostname)")
 	}
 
-	user := conf.Options[OptionUser]
+	// Read credentials: prefer Credentials slice (set by ParseCLI), fall back to Options.
+	var user, password string
+	if len(conf.Credentials) > 0 && conf.Credentials[0].Type == vault.CredentialType_password {
+		user = conf.Credentials[0].User
+		password = string(conf.Credentials[0].Secret)
+	} else {
+		user = conf.Options[OptionUser]
+		password = conf.Options[OptionPassword]
+	}
 	if user == "" {
 		return nil, errors.New("active directory provider requires option 'user'")
 	}
-
-	password := conf.Options[OptionPassword]
 	if password == "" {
 		return nil, errors.New("active directory provider requires option 'password'")
 	}

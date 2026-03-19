@@ -43,12 +43,6 @@ func extractSiteFromServerRef(dn string) string {
 	return ""
 }
 
-const (
-	// uacServerTrustAccount identifies domain controller computer accounts.
-	uacServerTrustAccount = 0x2000 // 8192
-	// uacPartialSecretsAccount identifies Read-Only Domain Controllers (RODCs).
-	uacPartialSecretsAccount = 0x04000000
-)
 
 func (a *mqlActivedirectoryDomainController) id() (string, error) {
 	return a.DistinguishedName.Data, nil
@@ -58,7 +52,7 @@ func (a *mqlActivedirectory) domainControllers() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
 	baseDN := conn.BaseDN()
 
-	filter := fmt.Sprintf("(userAccountControl:1.2.840.113556.1.4.803:=%d)", uacServerTrustAccount)
+	filter := fmt.Sprintf("(userAccountControl:1.2.840.113556.1.4.803:=%d)", UACServerTrustAccount)
 	attrs := []string{
 		"dNSHostName",
 		"distinguishedName",
@@ -96,7 +90,7 @@ func (a *mqlActivedirectory) domainControllers() ([]interface{}, error) {
 		serverRef := entry.GetAttributeValue("serverReferenceBL")
 		site := extractSiteFromServerRef(serverRef)
 
-		isRODC := (uac & uacPartialSecretsAccount) != 0
+		isRODC := uacHasFlag(uac, UACPartialSecretsAccount)
 
 		// Global Catalog detection requires querying the DC's NTDS Settings object
 		// for the options attribute, which is a separate subtree query per DC.

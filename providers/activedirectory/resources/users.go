@@ -1,0 +1,232 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
+package resources
+
+import (
+	"fmt"
+	"strings"
+	"time"
+
+	"github.com/go-ldap/ldap/v3"
+	"github.com/rs/zerolog/log"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers/activedirectory/connection"
+	"go.mondoo.com/mql/v13/types"
+)
+
+
+// extractOU returns the OU path from a DN by removing the object's own RDN.
+func extractOU(dn string) string {
+	idx := strings.Index(dn, ",")
+	if idx < 0 || idx >= len(dn)-1 {
+		return ""
+	}
+	return dn[idx+1:]
+}
+
+func (a *mqlActivedirectoryUser) id() (string, error) {
+	return a.DistinguishedName.Data, nil
+}
+
+func (a *mqlActivedirectory) users() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
+	baseDN := conn.BaseDN()
+
+	filter := "(&(objectCategory=person)(objectClass=user))"
+	attrs := []string{
+		"sAMAccountName",
+		"userPrincipalName",
+		"displayName",
+		"distinguishedName",
+		"objectSid",
+		"userAccountControl",
+		"adminCount",
+		"servicePrincipalName",
+		"pwdLastSet",
+		"lastLogonTimestamp",
+		"whenCreated",
+		"description",
+		"mail",
+		"memberOf",
+		"sIDHistory",
+		"msDS-AllowedToDelegateTo",
+	}
+
+	entries, err := connection.PagedSearch(conn.LDAPConn(), ldap.NewSearchRequest(
+		baseDN,
+		ldap.ScopeWholeSubtree,
+		ldap.NeverDerefAliases, 0, 0, false,
+		filter,
+		attrs,
+		nil,
+	))
+	if err != nil {
+		return nil, fmt.Errorf("failed to query users: %w", err)
+	}
+
+	privMemberships, err := buildPrivilegedMembershipSets(conn)
+	if err != nil {
+		log.Warn().Err(err).Msg("failed to resolve privileged group memberships, continuing with empty sets")
+		privMemberships = &privilegedMemberships{
+			DomainAdmins:     make(map[string]bool),
+			EnterpriseAdmins: make(map[string]bool),
+			SchemaAdmins:     make(map[string]bool),
+			ProtectedUsers:   make(map[string]bool),
+			AllPrivileged:    make(map[string]bool),
+		}
+	}
+
+	res := make([]interface{}, 0, len(entries))
+	for _, entry := range entries {
+		samAccountName := connection.GetStringAttr(entry, "sAMAccountName")
+		dn := connection.GetStringAttr(entry, "distinguishedName")
+		upn := connection.GetStringAttr(entry, "userPrincipalName")
+		displayName := connection.GetStringAttr(entry, "displayName")
+
+		sid, err := connection.DecodeSID(connection.GetBinaryAttr(entry, "objectSid"))
+		if err != nil {
+			log.Warn().Err(err).Str("user", dn).Msg("failed to decode user SID")
+			sid = ""
+		}
+
+		// UAC flags
+		uac := parseInt64Attr(entry.GetAttributeValue("userAccountControl"))
+		enabled := !uacHasFlag(uac, UACAccountDisable)
+		passwordNeverExpires := uacHasFlag(uac, UACDontExpirePassword)
+		passwordNotRequired := uacHasFlag(uac, UACPasswordNotRequired)
+		kerberosPreAuthNotRequired := uacHasFlag(uac, UACDontRequirePreauth)
+		sensitiveAndCannotBeDelegated := uacHasFlag(uac, UACNotDelegated)
+		useDesKeyOnly := uacHasFlag(uac, UACUseDesKeyOnly)
+		reversibleEncryption := uacHasFlag(uac, UACEncryptedTextPwdAllowed)
+
+		adminCount := entry.GetAttributeValue("adminCount") == "1"
+
+		// SPNs and kerberoastable check
+		spns := connection.GetStringSliceAttr(entry, "servicePrincipalName")
+		kerberoastable := len(spns) > 0 &&
+			samAccountName != "krbtgt" &&
+			!strings.HasSuffix(samAccountName, "$")
+
+		// Timestamps
+		pwdLastSet := fileTimeToTime(parseInt64Attr(entry.GetAttributeValue("pwdLastSet")))
+		lastLogon := fileTimeToTime(parseInt64Attr(entry.GetAttributeValue("lastLogonTimestamp")))
+		whenCreated := parseADGeneralizedTime(entry.GetAttributeValue("whenCreated"))
+
+		// Computed age fields
+		var passwordAgeDays int64
+		if !pwdLastSet.IsZero() {
+			passwordAgeDays = int64(time.Since(pwdLastSet).Hours() / 24)
+		}
+
+		var daysSinceLastLogon int64 = -1
+		if !lastLogon.IsZero() {
+			daysSinceLastLogon = int64(time.Since(lastLogon).Hours() / 24)
+		}
+
+		isStale := daysSinceLastLogon >= 0 && daysSinceLastLogon > 90
+
+		// Group memberships as []interface{} for llx
+		memberOfSlice := connection.GetStringSliceAttr(entry, "memberOf")
+		memberOfIface := make([]interface{}, len(memberOfSlice))
+		for i, m := range memberOfSlice {
+			memberOfIface[i] = m
+		}
+
+		// Privileged group lookups
+		isDomainAdmin := privMemberships.DomainAdmins[dn]
+		isEnterpriseAdmin := privMemberships.EnterpriseAdmins[dn]
+		isSchemaAdmin := privMemberships.SchemaAdmins[dn]
+		protectedUser := privMemberships.ProtectedUsers[dn]
+		isPrivileged := privMemberships.AllPrivileged[dn]
+
+		email := entry.GetAttributeValue("mail")
+		description := entry.GetAttributeValue("description")
+		ouPath := extractOU(dn)
+
+		// SID History — binary multi-value attribute, decode each raw value.
+		sidHistory := decodeSIDHistory(entry)
+
+		// Constrained delegation targets
+		constrainedTargets := connection.GetStringSliceAttr(entry, "msDS-AllowedToDelegateTo")
+
+		// Convert string slices to []interface{} for llx array data
+		spnIface := make([]interface{}, len(spns))
+		for i, s := range spns {
+			spnIface[i] = s
+		}
+		sidHistIface := make([]interface{}, len(sidHistory))
+		for i, s := range sidHistory {
+			sidHistIface[i] = s
+		}
+		constrainedIface := make([]interface{}, len(constrainedTargets))
+		for i, s := range constrainedTargets {
+			constrainedIface[i] = s
+		}
+
+		resource, err := CreateResource(a.MqlRuntime, "activedirectory.user",
+			map[string]*llx.RawData{
+				"sAMAccountName":               llx.StringData(samAccountName),
+				"userPrincipalName":             llx.StringData(upn),
+				"displayName":                   llx.StringData(displayName),
+				"distinguishedName":             llx.StringData(dn),
+				"sid":                            llx.StringData(sid),
+				"enabled":                        llx.BoolData(enabled),
+				"passwordNeverExpires":           llx.BoolData(passwordNeverExpires),
+				"passwordNotRequired":            llx.BoolData(passwordNotRequired),
+				"kerberosPreAuthNotRequired":     llx.BoolData(kerberosPreAuthNotRequired),
+				"sensitiveAndCannotBeDelegated":  llx.BoolData(sensitiveAndCannotBeDelegated),
+				"protectedUser":                  llx.BoolData(protectedUser),
+				"useDesKeyOnly":                  llx.BoolData(useDesKeyOnly),
+				"reversibleEncryption":           llx.BoolData(reversibleEncryption),
+				"userAccountControl":             llx.IntData(uac),
+				"adminCount":                     llx.BoolData(adminCount),
+				"servicePrincipalNames":          llx.ArrayData(spnIface, types.String),
+				"kerberoastable":                 llx.BoolData(kerberoastable),
+				"pwdLastSet":                     llx.TimeData(pwdLastSet),
+				"lastLogonTimestamp":             llx.TimeData(lastLogon),
+				"whenCreated":                    llx.TimeData(whenCreated),
+				"passwordAgeDays":                llx.IntData(passwordAgeDays),
+				"daysSinceLastLogon":             llx.IntData(daysSinceLastLogon),
+				"isStale":                        llx.BoolData(isStale),
+				"memberOf":                       llx.ArrayData(memberOfIface, types.String),
+				"isDomainAdmin":                  llx.BoolData(isDomainAdmin),
+				"isEnterpriseAdmin":              llx.BoolData(isEnterpriseAdmin),
+				"isSchemaAdmin":                  llx.BoolData(isSchemaAdmin),
+				"isPrivileged":                   llx.BoolData(isPrivileged),
+				"description":                    llx.StringData(description),
+				"email":                          llx.StringData(email),
+				"ouPath":                         llx.StringData(ouPath),
+				"sidHistory":                     llx.ArrayData(sidHistIface, types.String),
+				"constrainedDelegationTargets":   llx.ArrayData(constrainedIface, types.String),
+			})
+		if err != nil {
+			return nil, err
+		}
+
+		res = append(res, resource)
+	}
+
+	return res, nil
+}
+
+// decodeSIDHistory extracts and decodes the multi-value binary sIDHistory
+// attribute from an LDAP entry. Each raw value is a binary SID.
+func decodeSIDHistory(entry *ldap.Entry) []string {
+	for _, attr := range entry.Attributes {
+		if !strings.EqualFold(attr.Name, "sIDHistory") {
+			continue
+		}
+		var sids []string
+		for _, raw := range attr.ByteValues {
+			sid, err := connection.DecodeSID(raw)
+			if err != nil {
+				log.Warn().Err(err).Msg("failed to decode sIDHistory value")
+				continue
+			}
+			sids = append(sids, sid)
+		}
+		return sids
+	}
+	return nil
+}

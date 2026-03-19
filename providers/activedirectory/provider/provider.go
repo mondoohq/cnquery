@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"strconv"
+	"strings"
 
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -57,12 +58,12 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	if len(ldaps.Value) > 0 {
 		opts[connection.OptionLDAPS] = string(ldaps.Value)
 	}
-	if len(port.Value) > 0 {
-		// Validate port is a valid integer before storing it.
-		if _, err := strconv.Atoi(string(port.Value)); err != nil {
+	portStr := strings.TrimRight(string(port.Value), "\x00")
+	if portStr != "" && portStr != "0" {
+		if _, err := strconv.Atoi(portStr); err != nil {
 			return nil, errors.New("port flag must be a valid integer: " + err.Error())
 		}
-		opts[connection.OptionPort] = string(port.Value)
+		opts[connection.OptionPort] = portStr
 	}
 	if len(insecure.Value) > 0 {
 		opts[connection.OptionInsecure] = string(insecure.Value)

@@ -8,8 +8,8 @@ option go_package = "go.mondoo.com/mql/v13/providers/activedirectory/resources"
 activedirectory @defaults("domain functionalLevel") {
   // Domain DNS name (e.g., corp.example.com)
   domain string
-  // Domain NetBIOS name
-  netbiosName string
+  // Domain NetBIOS name (requires additional LDAP query against CN=Partitions)
+  netbiosName() string
   // Domain distinguished name (e.g., DC=corp,DC=example,DC=com)
   distinguishedName string
   // Domain SID
@@ -47,9 +47,9 @@ activedirectory @defaults("domain functionalLevel") {
   // DNS zones
   dnsZones() []activedirectory.dnsZone
   // Whether LAPS schema extension is present
-  lapsEnabled bool
+  lapsEnabled() bool
   // Schema version
-  schemaVersion int
+  schemaVersion() int
 }
 
 // Active Directory Domain Controller
@@ -124,40 +124,174 @@ activedirectory.fineGrainedPasswordPolicy @defaults("name precedence minPassword
   appliesTo []string
 }
 
-// Active Directory user account (Phase 2)
+// Active Directory user account
 activedirectory.user @defaults("sAMAccountName displayName enabled") {
-  // sAMAccountName
+  // sAMAccountName (pre-Windows 2000 logon name)
   sAMAccountName string
+  // User Principal Name (user@domain.com)
+  userPrincipalName string
   // Display name
   displayName string
   // Distinguished name
   distinguishedName string
+  // Object SID
+  sid string
   // Whether the account is enabled
   enabled bool
+  // Whether password never expires
+  passwordNeverExpires bool
+  // Whether password is not required
+  passwordNotRequired bool
+  // Whether Kerberos pre-authentication is disabled (AS-REP roastable)
+  kerberosPreAuthNotRequired bool
+  // Whether account is sensitive and cannot be delegated
+  sensitiveAndCannotBeDelegated bool
+  // Whether account is a member of Protected Users group
+  protectedUser bool
+  // Whether account uses DES-only Kerberos encryption
+  useDesKeyOnly bool
+  // Whether reversible password encryption is allowed for the account
+  reversibleEncryption bool
+  // userAccountControl raw flags
+  userAccountControl int
+  // Admin count flag (indicates adminSDHolder protection)
+  adminCount bool
+  // Service Principal Names
+  servicePrincipalNames []string
+  // Whether the account is Kerberoastable (has SPN and is not krbtgt/computer)
+  kerberoastable bool
+  // Last password set timestamp
+  pwdLastSet time
+  // Last logon timestamp (from lastLogonTimestamp)
+  lastLogonTimestamp time
+  // Account creation timestamp
+  whenCreated time
+  // Password age in days
+  passwordAgeDays int
+  // Days since last logon
+  daysSinceLastLogon int
+  // Whether the account is stale (>90 days since last logon)
+  isStale bool
+  // Group memberships (direct)
+  memberOf []string
+  // Whether user is member of Domain Admins
+  isDomainAdmin bool
+  // Whether user is member of Enterprise Admins
+  isEnterpriseAdmin bool
+  // Whether user is member of Schema Admins
+  isSchemaAdmin bool
+  // Whether user is member of any privileged group
+  isPrivileged bool
+  // Description (may contain credentials in misconfigured environments)
+  description string
+  // Email address
+  email string
+  // Organizational Unit path
+  ouPath string
+  // SID history (for migration tracking / potential abuse)
+  sidHistory []string
+  // Constrained delegation targets (msDS-AllowedToDelegateTo)
+  constrainedDelegationTargets []string
 }
 
-// Active Directory group (Phase 2)
+// Active Directory group
 activedirectory.group @defaults("sAMAccountName groupType") {
   // sAMAccountName
   sAMAccountName string
   // Distinguished name
   distinguishedName string
-  // Group type
+  // Display name
+  displayName string
+  // Object SID
+  sid string
+  // Group type description (Security/Distribution, Global/Universal/DomainLocal)
   groupType string
+  // Raw groupType flags
+  groupTypeRaw int
+  // Description
+  description string
+  // Admin count flag
+  adminCount bool
+  // Direct members
+  members() []activedirectory.groupMember
+  // Member count
+  memberCount int
+  // Whether this is a built-in privileged group
+  isPrivileged bool
+  // Whether group is empty (no members)
+  isEmpty bool
+  // Creation timestamp
+  whenCreated time
+  // Organizational Unit path
+  ouPath string
 }
 
-// Active Directory computer account (Phase 2)
+// Active Directory group member (can be user, group, or computer)
+activedirectory.groupMember @defaults("name type") {
+  // sAMAccountName or name
+  name string
+  // Distinguished name
+  distinguishedName string
+  // Object SID
+  sid string
+  // Member type (user, group, computer)
+  type string
+}
+
+// Active Directory computer account
 activedirectory.computer @defaults("name operatingSystem enabled") {
-  // sAMAccountName
+  // sAMAccountName (includes trailing $)
   sAMAccountName string
   // DNS hostname
   name string
   // Distinguished name
   distinguishedName string
-  // Operating system
-  operatingSystem string
+  // Object SID
+  sid string
   // Whether the account is enabled
   enabled bool
+  // Operating system name
+  operatingSystem string
+  // Operating system version
+  operatingSystemVersion string
+  // Operating system service pack
+  operatingSystemServicePack string
+  // Whether the OS is obsolete (unsupported)
+  isObsoleteOS bool
+  // Last password set timestamp
+  pwdLastSet time
+  // Last logon timestamp (from lastLogonTimestamp)
+  lastLogonTimestamp time
+  // Creation timestamp
+  whenCreated time
+  // Password age in days
+  passwordAgeDays int
+  // Days since last logon
+  daysSinceLastLogon int
+  // Whether the account is stale (>90 days)
+  isStale bool
+  // userAccountControl flags
+  userAccountControl int
+  // Whether unconstrained delegation is enabled
+  unconstrainedDelegation bool
+  // Whether constrained delegation is configured
+  constrainedDelegation bool
+  // Constrained delegation targets
+  constrainedDelegationTargets []string
+  // Resource-based constrained delegation configured
+  rbcd bool
+  // Service Principal Names
+  servicePrincipalNames []string
+  // Whether LAPS is deployed on this computer
+  lapsEnabled bool
+  // LAPS password expiration time
+  lapsExpirationTime time
+  // Description
+  description string
+  // Organizational Unit path
+  ouPath string
+  // Whether the computer is a domain controller
+  isDomainController bool
 }
 
 // Active Directory Organizational Unit (Phase 3)

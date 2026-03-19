@@ -23,6 +23,7 @@ const (
 	ResourceActivedirectoryFineGrainedPasswordPolicy string = "activedirectory.fineGrainedPasswordPolicy"
 	ResourceActivedirectoryUser                      string = "activedirectory.user"
 	ResourceActivedirectoryGroup                     string = "activedirectory.group"
+	ResourceActivedirectoryGroupMember               string = "activedirectory.groupMember"
 	ResourceActivedirectoryComputer                  string = "activedirectory.computer"
 	ResourceActivedirectoryOu                        string = "activedirectory.ou"
 	ResourceActivedirectoryGpo                       string = "activedirectory.gpo"
@@ -60,6 +61,10 @@ func init() {
 		"activedirectory.group": {
 			// to override args, implement: initActivedirectoryGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createActivedirectoryGroup,
+		},
+		"activedirectory.groupMember": {
+			// to override args, implement: initActivedirectoryGroupMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createActivedirectoryGroupMember,
 		},
 		"activedirectory.computer": {
 			// to override args, implement: initActivedirectoryComputer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -332,14 +337,101 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"activedirectory.user.sAMAccountName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryUser).GetSAMAccountName()).ToDataRes(types.String)
 	},
+	"activedirectory.user.userPrincipalName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryUser).GetUserPrincipalName()).ToDataRes(types.String)
+	},
 	"activedirectory.user.displayName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryUser).GetDisplayName()).ToDataRes(types.String)
 	},
 	"activedirectory.user.distinguishedName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryUser).GetDistinguishedName()).ToDataRes(types.String)
 	},
+	"activedirectory.user.sid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryUser).GetSid()).ToDataRes(types.String)
+	},
 	"activedirectory.user.enabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryUser).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"activedirectory.user.passwordNeverExpires": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryUser).GetPasswordNeverExpires()).ToDataRes(types.Bool)
+	},
+	"activedirectory.user.passwordNotRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryUser).GetPasswordNotRequired()).ToDataRes(types.Bool)
+	},
+	"activedirectory.user.kerberosPreAuthNotRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryUser).GetKerberosPreAuthNotRequired()).ToDataRes(types.Bool)
+	},
+	"activedirectory.user.sensitiveAndCannotBeDelegated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryUser).GetSensitiveAndCannotBeDelegated()).ToDataRes(types.Bool)
+	},
+	"activedirectory.user.protectedUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryUser).GetProtectedUser()).ToDataRes(types.Bool)
+	},
+	"activedirectory.user.useDesKeyOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryUser).GetUseDesKeyOnly()).ToDataRes(types.Bool)
+	},
+	"activedirectory.user.reversibleEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryUser).GetReversibleEncryption()).ToDataRes(types.Bool)
+	},
+	"activedirectory.user.userAccountControl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryUser).GetUserAccountControl()).ToDataRes(types.Int)
+	},
+	"activedirectory.user.adminCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryUser).GetAdminCount()).ToDataRes(types.Bool)
+	},
+	"activedirectory.user.servicePrincipalNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryUser).GetServicePrincipalNames()).ToDataRes(types.Array(types.String))
+	},
+	"activedirectory.user.kerberoastable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryUser).GetKerberoastable()).ToDataRes(types.Bool)
+	},
+	"activedirectory.user.pwdLastSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryUser).GetPwdLastSet()).ToDataRes(types.Time)
+	},
+	"activedirectory.user.lastLogonTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryUser).GetLastLogonTimestamp()).ToDataRes(types.Time)
+	},
+	"activedirectory.user.whenCreated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryUser).GetWhenCreated()).ToDataRes(types.Time)
+	},
+	"activedirectory.user.passwordAgeDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryUser).GetPasswordAgeDays()).ToDataRes(types.Int)
+	},
+	"activedirectory.user.daysSinceLastLogon": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryUser).GetDaysSinceLastLogon()).ToDataRes(types.Int)
+	},
+	"activedirectory.user.isStale": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryUser).GetIsStale()).ToDataRes(types.Bool)
+	},
+	"activedirectory.user.memberOf": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryUser).GetMemberOf()).ToDataRes(types.Array(types.String))
+	},
+	"activedirectory.user.isDomainAdmin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryUser).GetIsDomainAdmin()).ToDataRes(types.Bool)
+	},
+	"activedirectory.user.isEnterpriseAdmin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryUser).GetIsEnterpriseAdmin()).ToDataRes(types.Bool)
+	},
+	"activedirectory.user.isSchemaAdmin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryUser).GetIsSchemaAdmin()).ToDataRes(types.Bool)
+	},
+	"activedirectory.user.isPrivileged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryUser).GetIsPrivileged()).ToDataRes(types.Bool)
+	},
+	"activedirectory.user.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryUser).GetDescription()).ToDataRes(types.String)
+	},
+	"activedirectory.user.email": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryUser).GetEmail()).ToDataRes(types.String)
+	},
+	"activedirectory.user.ouPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryUser).GetOuPath()).ToDataRes(types.String)
+	},
+	"activedirectory.user.sidHistory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryUser).GetSidHistory()).ToDataRes(types.Array(types.String))
+	},
+	"activedirectory.user.constrainedDelegationTargets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryUser).GetConstrainedDelegationTargets()).ToDataRes(types.Array(types.String))
 	},
 	"activedirectory.group.sAMAccountName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryGroup).GetSAMAccountName()).ToDataRes(types.String)
@@ -347,8 +439,53 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"activedirectory.group.distinguishedName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryGroup).GetDistinguishedName()).ToDataRes(types.String)
 	},
+	"activedirectory.group.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryGroup).GetDisplayName()).ToDataRes(types.String)
+	},
+	"activedirectory.group.sid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryGroup).GetSid()).ToDataRes(types.String)
+	},
 	"activedirectory.group.groupType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryGroup).GetGroupType()).ToDataRes(types.String)
+	},
+	"activedirectory.group.groupTypeRaw": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryGroup).GetGroupTypeRaw()).ToDataRes(types.Int)
+	},
+	"activedirectory.group.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryGroup).GetDescription()).ToDataRes(types.String)
+	},
+	"activedirectory.group.adminCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryGroup).GetAdminCount()).ToDataRes(types.Bool)
+	},
+	"activedirectory.group.members": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryGroup).GetMembers()).ToDataRes(types.Array(types.Resource("activedirectory.groupMember")))
+	},
+	"activedirectory.group.memberCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryGroup).GetMemberCount()).ToDataRes(types.Int)
+	},
+	"activedirectory.group.isPrivileged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryGroup).GetIsPrivileged()).ToDataRes(types.Bool)
+	},
+	"activedirectory.group.isEmpty": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryGroup).GetIsEmpty()).ToDataRes(types.Bool)
+	},
+	"activedirectory.group.whenCreated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryGroup).GetWhenCreated()).ToDataRes(types.Time)
+	},
+	"activedirectory.group.ouPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryGroup).GetOuPath()).ToDataRes(types.String)
+	},
+	"activedirectory.groupMember.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryGroupMember).GetName()).ToDataRes(types.String)
+	},
+	"activedirectory.groupMember.distinguishedName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryGroupMember).GetDistinguishedName()).ToDataRes(types.String)
+	},
+	"activedirectory.groupMember.sid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryGroupMember).GetSid()).ToDataRes(types.String)
+	},
+	"activedirectory.groupMember.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryGroupMember).GetType()).ToDataRes(types.String)
 	},
 	"activedirectory.computer.sAMAccountName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryComputer).GetSAMAccountName()).ToDataRes(types.String)
@@ -359,11 +496,74 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"activedirectory.computer.distinguishedName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryComputer).GetDistinguishedName()).ToDataRes(types.String)
 	},
-	"activedirectory.computer.operatingSystem": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlActivedirectoryComputer).GetOperatingSystem()).ToDataRes(types.String)
+	"activedirectory.computer.sid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryComputer).GetSid()).ToDataRes(types.String)
 	},
 	"activedirectory.computer.enabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryComputer).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"activedirectory.computer.operatingSystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryComputer).GetOperatingSystem()).ToDataRes(types.String)
+	},
+	"activedirectory.computer.operatingSystemVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryComputer).GetOperatingSystemVersion()).ToDataRes(types.String)
+	},
+	"activedirectory.computer.operatingSystemServicePack": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryComputer).GetOperatingSystemServicePack()).ToDataRes(types.String)
+	},
+	"activedirectory.computer.isObsoleteOS": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryComputer).GetIsObsoleteOS()).ToDataRes(types.Bool)
+	},
+	"activedirectory.computer.pwdLastSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryComputer).GetPwdLastSet()).ToDataRes(types.Time)
+	},
+	"activedirectory.computer.lastLogonTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryComputer).GetLastLogonTimestamp()).ToDataRes(types.Time)
+	},
+	"activedirectory.computer.whenCreated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryComputer).GetWhenCreated()).ToDataRes(types.Time)
+	},
+	"activedirectory.computer.passwordAgeDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryComputer).GetPasswordAgeDays()).ToDataRes(types.Int)
+	},
+	"activedirectory.computer.daysSinceLastLogon": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryComputer).GetDaysSinceLastLogon()).ToDataRes(types.Int)
+	},
+	"activedirectory.computer.isStale": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryComputer).GetIsStale()).ToDataRes(types.Bool)
+	},
+	"activedirectory.computer.userAccountControl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryComputer).GetUserAccountControl()).ToDataRes(types.Int)
+	},
+	"activedirectory.computer.unconstrainedDelegation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryComputer).GetUnconstrainedDelegation()).ToDataRes(types.Bool)
+	},
+	"activedirectory.computer.constrainedDelegation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryComputer).GetConstrainedDelegation()).ToDataRes(types.Bool)
+	},
+	"activedirectory.computer.constrainedDelegationTargets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryComputer).GetConstrainedDelegationTargets()).ToDataRes(types.Array(types.String))
+	},
+	"activedirectory.computer.rbcd": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryComputer).GetRbcd()).ToDataRes(types.Bool)
+	},
+	"activedirectory.computer.servicePrincipalNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryComputer).GetServicePrincipalNames()).ToDataRes(types.Array(types.String))
+	},
+	"activedirectory.computer.lapsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryComputer).GetLapsEnabled()).ToDataRes(types.Bool)
+	},
+	"activedirectory.computer.lapsExpirationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryComputer).GetLapsExpirationTime()).ToDataRes(types.Time)
+	},
+	"activedirectory.computer.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryComputer).GetDescription()).ToDataRes(types.String)
+	},
+	"activedirectory.computer.ouPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryComputer).GetOuPath()).ToDataRes(types.String)
+	},
+	"activedirectory.computer.isDomainController": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryComputer).GetIsDomainController()).ToDataRes(types.Bool)
 	},
 	"activedirectory.ou.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryOu).GetName()).ToDataRes(types.String)
@@ -657,6 +857,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlActivedirectoryUser).SAMAccountName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"activedirectory.user.userPrincipalName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryUser).UserPrincipalName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"activedirectory.user.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlActivedirectoryUser).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -665,8 +869,120 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlActivedirectoryUser).DistinguishedName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"activedirectory.user.sid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryUser).Sid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"activedirectory.user.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlActivedirectoryUser).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.user.passwordNeverExpires": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryUser).PasswordNeverExpires, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.user.passwordNotRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryUser).PasswordNotRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.user.kerberosPreAuthNotRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryUser).KerberosPreAuthNotRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.user.sensitiveAndCannotBeDelegated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryUser).SensitiveAndCannotBeDelegated, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.user.protectedUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryUser).ProtectedUser, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.user.useDesKeyOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryUser).UseDesKeyOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.user.reversibleEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryUser).ReversibleEncryption, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.user.userAccountControl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryUser).UserAccountControl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"activedirectory.user.adminCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryUser).AdminCount, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.user.servicePrincipalNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryUser).ServicePrincipalNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"activedirectory.user.kerberoastable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryUser).Kerberoastable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.user.pwdLastSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryUser).PwdLastSet, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"activedirectory.user.lastLogonTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryUser).LastLogonTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"activedirectory.user.whenCreated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryUser).WhenCreated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"activedirectory.user.passwordAgeDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryUser).PasswordAgeDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"activedirectory.user.daysSinceLastLogon": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryUser).DaysSinceLastLogon, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"activedirectory.user.isStale": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryUser).IsStale, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.user.memberOf": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryUser).MemberOf, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"activedirectory.user.isDomainAdmin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryUser).IsDomainAdmin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.user.isEnterpriseAdmin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryUser).IsEnterpriseAdmin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.user.isSchemaAdmin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryUser).IsSchemaAdmin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.user.isPrivileged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryUser).IsPrivileged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.user.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryUser).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.user.email": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryUser).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.user.ouPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryUser).OuPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.user.sidHistory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryUser).SidHistory, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"activedirectory.user.constrainedDelegationTargets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryUser).ConstrainedDelegationTargets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"activedirectory.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -681,8 +997,72 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlActivedirectoryGroup).DistinguishedName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"activedirectory.group.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryGroup).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.group.sid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryGroup).Sid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"activedirectory.group.groupType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlActivedirectoryGroup).GroupType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.group.groupTypeRaw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryGroup).GroupTypeRaw, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"activedirectory.group.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryGroup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.group.adminCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryGroup).AdminCount, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.group.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryGroup).Members, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"activedirectory.group.memberCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryGroup).MemberCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"activedirectory.group.isPrivileged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryGroup).IsPrivileged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.group.isEmpty": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryGroup).IsEmpty, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.group.whenCreated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryGroup).WhenCreated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"activedirectory.group.ouPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryGroup).OuPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.groupMember.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryGroupMember).__id, ok = v.Value.(string)
+		return
+	},
+	"activedirectory.groupMember.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryGroupMember).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.groupMember.distinguishedName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryGroupMember).DistinguishedName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.groupMember.sid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryGroupMember).Sid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.groupMember.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryGroupMember).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"activedirectory.computer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -701,12 +1081,96 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlActivedirectoryComputer).DistinguishedName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"activedirectory.computer.operatingSystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlActivedirectoryComputer).OperatingSystem, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"activedirectory.computer.sid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryComputer).Sid, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"activedirectory.computer.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlActivedirectoryComputer).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.computer.operatingSystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryComputer).OperatingSystem, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.computer.operatingSystemVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryComputer).OperatingSystemVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.computer.operatingSystemServicePack": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryComputer).OperatingSystemServicePack, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.computer.isObsoleteOS": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryComputer).IsObsoleteOS, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.computer.pwdLastSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryComputer).PwdLastSet, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"activedirectory.computer.lastLogonTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryComputer).LastLogonTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"activedirectory.computer.whenCreated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryComputer).WhenCreated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"activedirectory.computer.passwordAgeDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryComputer).PasswordAgeDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"activedirectory.computer.daysSinceLastLogon": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryComputer).DaysSinceLastLogon, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"activedirectory.computer.isStale": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryComputer).IsStale, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.computer.userAccountControl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryComputer).UserAccountControl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"activedirectory.computer.unconstrainedDelegation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryComputer).UnconstrainedDelegation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.computer.constrainedDelegation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryComputer).ConstrainedDelegation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.computer.constrainedDelegationTargets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryComputer).ConstrainedDelegationTargets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"activedirectory.computer.rbcd": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryComputer).Rbcd, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.computer.servicePrincipalNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryComputer).ServicePrincipalNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"activedirectory.computer.lapsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryComputer).LapsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.computer.lapsExpirationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryComputer).LapsExpirationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"activedirectory.computer.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryComputer).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.computer.ouPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryComputer).OuPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.computer.isDomainController": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryComputer).IsDomainController, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"activedirectory.ou.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -896,7 +1360,9 @@ func (c *mqlActivedirectory) GetDomain() *plugin.TValue[string] {
 }
 
 func (c *mqlActivedirectory) GetNetbiosName() *plugin.TValue[string] {
-	return &c.NetbiosName
+	return plugin.GetOrCompute[string](&c.NetbiosName, func() (string, error) {
+		return c.netbiosName()
+	})
 }
 
 func (c *mqlActivedirectory) GetDistinguishedName() *plugin.TValue[string] {
@@ -1128,11 +1594,15 @@ func (c *mqlActivedirectory) GetDnsZones() *plugin.TValue[[]any] {
 }
 
 func (c *mqlActivedirectory) GetLapsEnabled() *plugin.TValue[bool] {
-	return &c.LapsEnabled
+	return plugin.GetOrCompute[bool](&c.LapsEnabled, func() (bool, error) {
+		return c.lapsEnabled()
+	})
 }
 
 func (c *mqlActivedirectory) GetSchemaVersion() *plugin.TValue[int64] {
-	return &c.SchemaVersion
+	return plugin.GetOrCompute[int64](&c.SchemaVersion, func() (int64, error) {
+		return c.schemaVersion()
+	})
 }
 
 // mqlActivedirectoryDomainController for the activedirectory.domainController resource
@@ -1422,10 +1892,39 @@ type mqlActivedirectoryUser struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlActivedirectoryUserInternal it will be used here
-	SAMAccountName    plugin.TValue[string]
-	DisplayName       plugin.TValue[string]
-	DistinguishedName plugin.TValue[string]
-	Enabled           plugin.TValue[bool]
+	SAMAccountName                plugin.TValue[string]
+	UserPrincipalName             plugin.TValue[string]
+	DisplayName                   plugin.TValue[string]
+	DistinguishedName             plugin.TValue[string]
+	Sid                           plugin.TValue[string]
+	Enabled                       plugin.TValue[bool]
+	PasswordNeverExpires          plugin.TValue[bool]
+	PasswordNotRequired           plugin.TValue[bool]
+	KerberosPreAuthNotRequired    plugin.TValue[bool]
+	SensitiveAndCannotBeDelegated plugin.TValue[bool]
+	ProtectedUser                 plugin.TValue[bool]
+	UseDesKeyOnly                 plugin.TValue[bool]
+	ReversibleEncryption          plugin.TValue[bool]
+	UserAccountControl            plugin.TValue[int64]
+	AdminCount                    plugin.TValue[bool]
+	ServicePrincipalNames         plugin.TValue[[]any]
+	Kerberoastable                plugin.TValue[bool]
+	PwdLastSet                    plugin.TValue[*time.Time]
+	LastLogonTimestamp            plugin.TValue[*time.Time]
+	WhenCreated                   plugin.TValue[*time.Time]
+	PasswordAgeDays               plugin.TValue[int64]
+	DaysSinceLastLogon            plugin.TValue[int64]
+	IsStale                       plugin.TValue[bool]
+	MemberOf                      plugin.TValue[[]any]
+	IsDomainAdmin                 plugin.TValue[bool]
+	IsEnterpriseAdmin             plugin.TValue[bool]
+	IsSchemaAdmin                 plugin.TValue[bool]
+	IsPrivileged                  plugin.TValue[bool]
+	Description                   plugin.TValue[string]
+	Email                         plugin.TValue[string]
+	OuPath                        plugin.TValue[string]
+	SidHistory                    plugin.TValue[[]any]
+	ConstrainedDelegationTargets  plugin.TValue[[]any]
 }
 
 // createActivedirectoryUser creates a new instance of this resource
@@ -1469,6 +1968,10 @@ func (c *mqlActivedirectoryUser) GetSAMAccountName() *plugin.TValue[string] {
 	return &c.SAMAccountName
 }
 
+func (c *mqlActivedirectoryUser) GetUserPrincipalName() *plugin.TValue[string] {
+	return &c.UserPrincipalName
+}
+
 func (c *mqlActivedirectoryUser) GetDisplayName() *plugin.TValue[string] {
 	return &c.DisplayName
 }
@@ -1477,8 +1980,120 @@ func (c *mqlActivedirectoryUser) GetDistinguishedName() *plugin.TValue[string] {
 	return &c.DistinguishedName
 }
 
+func (c *mqlActivedirectoryUser) GetSid() *plugin.TValue[string] {
+	return &c.Sid
+}
+
 func (c *mqlActivedirectoryUser) GetEnabled() *plugin.TValue[bool] {
 	return &c.Enabled
+}
+
+func (c *mqlActivedirectoryUser) GetPasswordNeverExpires() *plugin.TValue[bool] {
+	return &c.PasswordNeverExpires
+}
+
+func (c *mqlActivedirectoryUser) GetPasswordNotRequired() *plugin.TValue[bool] {
+	return &c.PasswordNotRequired
+}
+
+func (c *mqlActivedirectoryUser) GetKerberosPreAuthNotRequired() *plugin.TValue[bool] {
+	return &c.KerberosPreAuthNotRequired
+}
+
+func (c *mqlActivedirectoryUser) GetSensitiveAndCannotBeDelegated() *plugin.TValue[bool] {
+	return &c.SensitiveAndCannotBeDelegated
+}
+
+func (c *mqlActivedirectoryUser) GetProtectedUser() *plugin.TValue[bool] {
+	return &c.ProtectedUser
+}
+
+func (c *mqlActivedirectoryUser) GetUseDesKeyOnly() *plugin.TValue[bool] {
+	return &c.UseDesKeyOnly
+}
+
+func (c *mqlActivedirectoryUser) GetReversibleEncryption() *plugin.TValue[bool] {
+	return &c.ReversibleEncryption
+}
+
+func (c *mqlActivedirectoryUser) GetUserAccountControl() *plugin.TValue[int64] {
+	return &c.UserAccountControl
+}
+
+func (c *mqlActivedirectoryUser) GetAdminCount() *plugin.TValue[bool] {
+	return &c.AdminCount
+}
+
+func (c *mqlActivedirectoryUser) GetServicePrincipalNames() *plugin.TValue[[]any] {
+	return &c.ServicePrincipalNames
+}
+
+func (c *mqlActivedirectoryUser) GetKerberoastable() *plugin.TValue[bool] {
+	return &c.Kerberoastable
+}
+
+func (c *mqlActivedirectoryUser) GetPwdLastSet() *plugin.TValue[*time.Time] {
+	return &c.PwdLastSet
+}
+
+func (c *mqlActivedirectoryUser) GetLastLogonTimestamp() *plugin.TValue[*time.Time] {
+	return &c.LastLogonTimestamp
+}
+
+func (c *mqlActivedirectoryUser) GetWhenCreated() *plugin.TValue[*time.Time] {
+	return &c.WhenCreated
+}
+
+func (c *mqlActivedirectoryUser) GetPasswordAgeDays() *plugin.TValue[int64] {
+	return &c.PasswordAgeDays
+}
+
+func (c *mqlActivedirectoryUser) GetDaysSinceLastLogon() *plugin.TValue[int64] {
+	return &c.DaysSinceLastLogon
+}
+
+func (c *mqlActivedirectoryUser) GetIsStale() *plugin.TValue[bool] {
+	return &c.IsStale
+}
+
+func (c *mqlActivedirectoryUser) GetMemberOf() *plugin.TValue[[]any] {
+	return &c.MemberOf
+}
+
+func (c *mqlActivedirectoryUser) GetIsDomainAdmin() *plugin.TValue[bool] {
+	return &c.IsDomainAdmin
+}
+
+func (c *mqlActivedirectoryUser) GetIsEnterpriseAdmin() *plugin.TValue[bool] {
+	return &c.IsEnterpriseAdmin
+}
+
+func (c *mqlActivedirectoryUser) GetIsSchemaAdmin() *plugin.TValue[bool] {
+	return &c.IsSchemaAdmin
+}
+
+func (c *mqlActivedirectoryUser) GetIsPrivileged() *plugin.TValue[bool] {
+	return &c.IsPrivileged
+}
+
+func (c *mqlActivedirectoryUser) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlActivedirectoryUser) GetEmail() *plugin.TValue[string] {
+	return &c.Email
+}
+
+func (c *mqlActivedirectoryUser) GetOuPath() *plugin.TValue[string] {
+	return &c.OuPath
+}
+
+func (c *mqlActivedirectoryUser) GetSidHistory() *plugin.TValue[[]any] {
+	return &c.SidHistory
+}
+
+func (c *mqlActivedirectoryUser) GetConstrainedDelegationTargets() *plugin.TValue[[]any] {
+	return &c.ConstrainedDelegationTargets
 }
 
 // mqlActivedirectoryGroup for the activedirectory.group resource
@@ -1488,7 +2103,18 @@ type mqlActivedirectoryGroup struct {
 	// optional: if you define mqlActivedirectoryGroupInternal it will be used here
 	SAMAccountName    plugin.TValue[string]
 	DistinguishedName plugin.TValue[string]
+	DisplayName       plugin.TValue[string]
+	Sid               plugin.TValue[string]
 	GroupType         plugin.TValue[string]
+	GroupTypeRaw      plugin.TValue[int64]
+	Description       plugin.TValue[string]
+	AdminCount        plugin.TValue[bool]
+	Members           plugin.TValue[[]any]
+	MemberCount       plugin.TValue[int64]
+	IsPrivileged      plugin.TValue[bool]
+	IsEmpty           plugin.TValue[bool]
+	WhenCreated       plugin.TValue[*time.Time]
+	OuPath            plugin.TValue[string]
 }
 
 // createActivedirectoryGroup creates a new instance of this resource
@@ -1536,8 +2162,128 @@ func (c *mqlActivedirectoryGroup) GetDistinguishedName() *plugin.TValue[string] 
 	return &c.DistinguishedName
 }
 
+func (c *mqlActivedirectoryGroup) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlActivedirectoryGroup) GetSid() *plugin.TValue[string] {
+	return &c.Sid
+}
+
 func (c *mqlActivedirectoryGroup) GetGroupType() *plugin.TValue[string] {
 	return &c.GroupType
+}
+
+func (c *mqlActivedirectoryGroup) GetGroupTypeRaw() *plugin.TValue[int64] {
+	return &c.GroupTypeRaw
+}
+
+func (c *mqlActivedirectoryGroup) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlActivedirectoryGroup) GetAdminCount() *plugin.TValue[bool] {
+	return &c.AdminCount
+}
+
+func (c *mqlActivedirectoryGroup) GetMembers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Members, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("activedirectory.group", c.__id, "members")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.members()
+	})
+}
+
+func (c *mqlActivedirectoryGroup) GetMemberCount() *plugin.TValue[int64] {
+	return &c.MemberCount
+}
+
+func (c *mqlActivedirectoryGroup) GetIsPrivileged() *plugin.TValue[bool] {
+	return &c.IsPrivileged
+}
+
+func (c *mqlActivedirectoryGroup) GetIsEmpty() *plugin.TValue[bool] {
+	return &c.IsEmpty
+}
+
+func (c *mqlActivedirectoryGroup) GetWhenCreated() *plugin.TValue[*time.Time] {
+	return &c.WhenCreated
+}
+
+func (c *mqlActivedirectoryGroup) GetOuPath() *plugin.TValue[string] {
+	return &c.OuPath
+}
+
+// mqlActivedirectoryGroupMember for the activedirectory.groupMember resource
+type mqlActivedirectoryGroupMember struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlActivedirectoryGroupMemberInternal it will be used here
+	Name              plugin.TValue[string]
+	DistinguishedName plugin.TValue[string]
+	Sid               plugin.TValue[string]
+	Type              plugin.TValue[string]
+}
+
+// createActivedirectoryGroupMember creates a new instance of this resource
+func createActivedirectoryGroupMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlActivedirectoryGroupMember{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("activedirectory.groupMember", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlActivedirectoryGroupMember) MqlName() string {
+	return "activedirectory.groupMember"
+}
+
+func (c *mqlActivedirectoryGroupMember) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlActivedirectoryGroupMember) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlActivedirectoryGroupMember) GetDistinguishedName() *plugin.TValue[string] {
+	return &c.DistinguishedName
+}
+
+func (c *mqlActivedirectoryGroupMember) GetSid() *plugin.TValue[string] {
+	return &c.Sid
+}
+
+func (c *mqlActivedirectoryGroupMember) GetType() *plugin.TValue[string] {
+	return &c.Type
 }
 
 // mqlActivedirectoryComputer for the activedirectory.computer resource
@@ -1545,11 +2291,32 @@ type mqlActivedirectoryComputer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlActivedirectoryComputerInternal it will be used here
-	SAMAccountName    plugin.TValue[string]
-	Name              plugin.TValue[string]
-	DistinguishedName plugin.TValue[string]
-	OperatingSystem   plugin.TValue[string]
-	Enabled           plugin.TValue[bool]
+	SAMAccountName               plugin.TValue[string]
+	Name                         plugin.TValue[string]
+	DistinguishedName            plugin.TValue[string]
+	Sid                          plugin.TValue[string]
+	Enabled                      plugin.TValue[bool]
+	OperatingSystem              plugin.TValue[string]
+	OperatingSystemVersion       plugin.TValue[string]
+	OperatingSystemServicePack   plugin.TValue[string]
+	IsObsoleteOS                 plugin.TValue[bool]
+	PwdLastSet                   plugin.TValue[*time.Time]
+	LastLogonTimestamp           plugin.TValue[*time.Time]
+	WhenCreated                  plugin.TValue[*time.Time]
+	PasswordAgeDays              plugin.TValue[int64]
+	DaysSinceLastLogon           plugin.TValue[int64]
+	IsStale                      plugin.TValue[bool]
+	UserAccountControl           plugin.TValue[int64]
+	UnconstrainedDelegation      plugin.TValue[bool]
+	ConstrainedDelegation        plugin.TValue[bool]
+	ConstrainedDelegationTargets plugin.TValue[[]any]
+	Rbcd                         plugin.TValue[bool]
+	ServicePrincipalNames        plugin.TValue[[]any]
+	LapsEnabled                  plugin.TValue[bool]
+	LapsExpirationTime           plugin.TValue[*time.Time]
+	Description                  plugin.TValue[string]
+	OuPath                       plugin.TValue[string]
+	IsDomainController           plugin.TValue[bool]
 }
 
 // createActivedirectoryComputer creates a new instance of this resource
@@ -1601,12 +2368,96 @@ func (c *mqlActivedirectoryComputer) GetDistinguishedName() *plugin.TValue[strin
 	return &c.DistinguishedName
 }
 
-func (c *mqlActivedirectoryComputer) GetOperatingSystem() *plugin.TValue[string] {
-	return &c.OperatingSystem
+func (c *mqlActivedirectoryComputer) GetSid() *plugin.TValue[string] {
+	return &c.Sid
 }
 
 func (c *mqlActivedirectoryComputer) GetEnabled() *plugin.TValue[bool] {
 	return &c.Enabled
+}
+
+func (c *mqlActivedirectoryComputer) GetOperatingSystem() *plugin.TValue[string] {
+	return &c.OperatingSystem
+}
+
+func (c *mqlActivedirectoryComputer) GetOperatingSystemVersion() *plugin.TValue[string] {
+	return &c.OperatingSystemVersion
+}
+
+func (c *mqlActivedirectoryComputer) GetOperatingSystemServicePack() *plugin.TValue[string] {
+	return &c.OperatingSystemServicePack
+}
+
+func (c *mqlActivedirectoryComputer) GetIsObsoleteOS() *plugin.TValue[bool] {
+	return &c.IsObsoleteOS
+}
+
+func (c *mqlActivedirectoryComputer) GetPwdLastSet() *plugin.TValue[*time.Time] {
+	return &c.PwdLastSet
+}
+
+func (c *mqlActivedirectoryComputer) GetLastLogonTimestamp() *plugin.TValue[*time.Time] {
+	return &c.LastLogonTimestamp
+}
+
+func (c *mqlActivedirectoryComputer) GetWhenCreated() *plugin.TValue[*time.Time] {
+	return &c.WhenCreated
+}
+
+func (c *mqlActivedirectoryComputer) GetPasswordAgeDays() *plugin.TValue[int64] {
+	return &c.PasswordAgeDays
+}
+
+func (c *mqlActivedirectoryComputer) GetDaysSinceLastLogon() *plugin.TValue[int64] {
+	return &c.DaysSinceLastLogon
+}
+
+func (c *mqlActivedirectoryComputer) GetIsStale() *plugin.TValue[bool] {
+	return &c.IsStale
+}
+
+func (c *mqlActivedirectoryComputer) GetUserAccountControl() *plugin.TValue[int64] {
+	return &c.UserAccountControl
+}
+
+func (c *mqlActivedirectoryComputer) GetUnconstrainedDelegation() *plugin.TValue[bool] {
+	return &c.UnconstrainedDelegation
+}
+
+func (c *mqlActivedirectoryComputer) GetConstrainedDelegation() *plugin.TValue[bool] {
+	return &c.ConstrainedDelegation
+}
+
+func (c *mqlActivedirectoryComputer) GetConstrainedDelegationTargets() *plugin.TValue[[]any] {
+	return &c.ConstrainedDelegationTargets
+}
+
+func (c *mqlActivedirectoryComputer) GetRbcd() *plugin.TValue[bool] {
+	return &c.Rbcd
+}
+
+func (c *mqlActivedirectoryComputer) GetServicePrincipalNames() *plugin.TValue[[]any] {
+	return &c.ServicePrincipalNames
+}
+
+func (c *mqlActivedirectoryComputer) GetLapsEnabled() *plugin.TValue[bool] {
+	return &c.LapsEnabled
+}
+
+func (c *mqlActivedirectoryComputer) GetLapsExpirationTime() *plugin.TValue[*time.Time] {
+	return &c.LapsExpirationTime
+}
+
+func (c *mqlActivedirectoryComputer) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlActivedirectoryComputer) GetOuPath() *plugin.TValue[string] {
+	return &c.OuPath
+}
+
+func (c *mqlActivedirectoryComputer) GetIsDomainController() *plugin.TValue[bool] {
+	return &c.IsDomainController
 }
 
 // mqlActivedirectoryOu for the activedirectory.ou resource
