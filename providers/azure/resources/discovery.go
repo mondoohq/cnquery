@@ -53,7 +53,24 @@ var All = []string{
 	DiscoveryInstances,
 }
 
-var Auto = []string{DiscoverySubscriptions}
+var Auto = []string{
+	DiscoverySubscriptions,
+	DiscoveryInstancesApi,
+	DiscoverySqlServers,
+	DiscoveryPostgresServers,
+	DiscoveryPostgresFlexibleServers,
+	DiscoveryMySqlServers,
+	DiscoveryMySqlFlexibleServers,
+	DiscoveryAksClusters,
+	DiscoveryAppServiceApps,
+	DiscoveryCacheRedis,
+	DiscoveryBatchAccounts,
+	DiscoveryStorageAccounts,
+	DiscoveryKeyVaults,
+	DiscoverySecurityGroups,
+	DiscoveryCosmosDb,
+	DiscoveryVirtualNetworks,
+}
 
 func allDiscovery() []string {
 	return append(All, AllAPIResources...)

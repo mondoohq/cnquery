@@ -6,7 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
-	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -302,8 +302,18 @@ func initAwsKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 	}
 	arnVal, err := arn.Parse(a)
 	if arnVal.AccountID != runtime.Connection.(*connection.AwsConnection).AccountId() {
-		// sometimes there are references to keys in other accounts, like the master account of an org
-		return nil, nil, fmt.Errorf("cannot access key from different AWS account %q", arnVal.AccountID)
+		// Cross-account key: we can't fetch details, but we should still return the ARN
+		// so security tools can see which KMS key is referenced
+		log.Warn().Str("arn", a).Str("currentAccount", runtime.Connection.(*connection.AwsConnection).AccountId()).Str("keyAccount", arnVal.AccountID).Msg("cross-account KMS keys are not supported yet, returning ARN only")
+		// Extract key ID from the ARN resource part (e.g., "key/uuid" -> "uuid")
+		keyId := arnVal.Resource
+		if strings.HasPrefix(keyId, "key/") {
+			keyId = keyId[4:]
+		}
+		args["id"] = llx.StringData(keyId)
+		args["arn"] = llx.StringData(a)
+		args["region"] = llx.StringData(arnVal.Region)
+		return args, nil, nil
 	}
 
 	obj, err := CreateResource(runtime, ResourceAwsKms, map[string]*llx.RawData{})
