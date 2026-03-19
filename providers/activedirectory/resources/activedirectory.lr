@@ -1,0 +1,221 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/cnquery/v9/providers/activedirectory"
+option go_package = "go.mondoo.com/mql/v13/providers/activedirectory/resources"
+
+// Active Directory Domain Services
+activedirectory @defaults("domain functionalLevel") {
+  // Domain DNS name (e.g., corp.example.com)
+  domain string
+  // Domain NetBIOS name
+  netbiosName string
+  // Domain distinguished name (e.g., DC=corp,DC=example,DC=com)
+  distinguishedName string
+  // Domain SID
+  domainSid string
+  // Domain functional level (e.g., "2016")
+  functionalLevel string
+  // Forest functional level
+  forestFunctionalLevel string
+  // Forest DNS name
+  forestName string
+  // Domain controllers
+  domainControllers() []activedirectory.domainController
+  // All user accounts
+  users() []activedirectory.user
+  // All groups
+  groups() []activedirectory.group
+  // All computer accounts
+  computers() []activedirectory.computer
+  // Organizational Units
+  organizationalUnits() []activedirectory.ou
+  // Group Policy Objects
+  gpos() []activedirectory.gpo
+  // Domain trusts
+  trusts() []activedirectory.trust
+  // Password policy (default domain policy)
+  passwordPolicy() activedirectory.passwordPolicy
+  // Fine-Grained Password Policies
+  fineGrainedPasswordPolicies() []activedirectory.fineGrainedPasswordPolicy
+  // Certificate templates (ADCS)
+  certificateTemplates() []activedirectory.certificateTemplate
+  // Certificate authorities
+  certificateAuthorities() []activedirectory.certificateAuthority
+  // PKI objects for ESC5 analysis
+  pkiObjects() []activedirectory.pkiObject
+  // DNS zones
+  dnsZones() []activedirectory.dnsZone
+  // Whether LAPS schema extension is present
+  lapsEnabled bool
+  // Schema version
+  schemaVersion int
+}
+
+// Active Directory Domain Controller
+activedirectory.domainController @defaults("name operatingSystem") {
+  // DNS hostname
+  name string
+  // Distinguished name
+  distinguishedName string
+  // Operating system
+  operatingSystem string
+  // Operating system version
+  operatingSystemVersion string
+  // Is Global Catalog
+  isGlobalCatalog bool
+  // Is Read-Only Domain Controller
+  isRODC bool
+  // Last password set timestamp
+  pwdLastSet time
+  // Last logon timestamp
+  lastLogonTimestamp time
+  // Site name
+  site string
+}
+
+// Active Directory default domain password policy
+activedirectory.passwordPolicy @defaults("minPasswordLength maxPasswordAge lockoutThreshold") {
+  // Minimum password length
+  minPasswordLength int
+  // Maximum password age in days
+  maxPasswordAge int
+  // Minimum password age in days
+  minPasswordAge int
+  // Password history count
+  passwordHistoryCount int
+  // Whether password complexity is required
+  complexityEnabled bool
+  // Whether reversible encryption is enabled
+  reversibleEncryption bool
+  // Account lockout threshold
+  lockoutThreshold int
+  // Account lockout duration in minutes
+  lockoutDuration int
+  // Account lockout observation window in minutes
+  lockoutObservationWindow int
+}
+
+// Active Directory Fine-Grained Password Policy
+activedirectory.fineGrainedPasswordPolicy @defaults("name precedence minPasswordLength") {
+  // Policy name
+  name string
+  // Distinguished name
+  distinguishedName string
+  // Precedence value (lower = higher priority)
+  precedence int
+  // Minimum password length
+  minPasswordLength int
+  // Maximum password age in days
+  maxPasswordAge int
+  // Minimum password age in days
+  minPasswordAge int
+  // Password history count
+  passwordHistoryCount int
+  // Whether password complexity is required
+  complexityEnabled bool
+  // Whether reversible encryption is enabled
+  reversibleEncryption bool
+  // Account lockout threshold
+  lockoutThreshold int
+  // Account lockout duration in minutes
+  lockoutDuration int
+  // Subjects the policy applies to
+  appliesTo []string
+}
+
+// Active Directory user account (Phase 2)
+activedirectory.user @defaults("sAMAccountName displayName enabled") {
+  // sAMAccountName
+  sAMAccountName string
+  // Display name
+  displayName string
+  // Distinguished name
+  distinguishedName string
+  // Whether the account is enabled
+  enabled bool
+}
+
+// Active Directory group (Phase 2)
+activedirectory.group @defaults("sAMAccountName groupType") {
+  // sAMAccountName
+  sAMAccountName string
+  // Distinguished name
+  distinguishedName string
+  // Group type
+  groupType string
+}
+
+// Active Directory computer account (Phase 2)
+activedirectory.computer @defaults("name operatingSystem enabled") {
+  // sAMAccountName
+  sAMAccountName string
+  // DNS hostname
+  name string
+  // Distinguished name
+  distinguishedName string
+  // Operating system
+  operatingSystem string
+  // Whether the account is enabled
+  enabled bool
+}
+
+// Active Directory Organizational Unit (Phase 3)
+activedirectory.ou @defaults("name") {
+  // OU name
+  name string
+  // Distinguished name
+  distinguishedName string
+}
+
+// Active Directory Group Policy Object (Phase 3)
+activedirectory.gpo @defaults("displayName") {
+  // Display name
+  displayName string
+  // Distinguished name
+  distinguishedName string
+}
+
+// Active Directory domain trust (Phase 3)
+activedirectory.trust @defaults("targetDomain trustType trustDirection") {
+  // Target domain name
+  targetDomain string
+  // Trust type
+  trustType string
+  // Trust direction
+  trustDirection string
+}
+
+// Active Directory Certificate Services template (Phase 4)
+activedirectory.certificateTemplate @defaults("name") {
+  // Template name
+  name string
+  // Distinguished name
+  distinguishedName string
+}
+
+// Active Directory Certificate Authority (Phase 4)
+activedirectory.certificateAuthority @defaults("name") {
+  // CA name
+  name string
+  // Distinguished name
+  distinguishedName string
+}
+
+// Active Directory PKI object (Phase 4)
+activedirectory.pkiObject @defaults("name objectClass") {
+  // Object name
+  name string
+  // Distinguished name
+  distinguishedName string
+  // Object class
+  objectClass string
+}
+
+// Active Directory DNS zone (Phase 3)
+activedirectory.dnsZone @defaults("name") {
+  // Zone name
+  name string
+  // Distinguished name
+  distinguishedName string
+}

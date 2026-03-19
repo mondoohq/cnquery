@@ -195,6 +195,7 @@ providers/mqlr/install: providers/mqlr
 # Provider list — add new providers here.
 # core is excluded: it has no install target and is always built as a dependency of providers/build.
 PROVIDERS := \
+	activedirectory \
 	ansible \
 	arista \
 	atlassian \
@@ -263,6 +264,7 @@ providers/test:
 	@$(call testProvider, providers/core)
 	@$(call testProvider, providers/network)
 	@$(call testProvider, providers/os)
+	@$(call testGoModProvider, providers/activedirectory)
 	@$(call testGoModProvider, providers/ansible)
 	@$(call testGoModProvider, providers/arista)
 	@$(call testGoModProvider, providers/atlassian)
