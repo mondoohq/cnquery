@@ -358,6 +358,11 @@ func ParseSemodule(output string) []SELinuxModule {
 }
 
 func (s *mqlSelinux) modules() ([]any, error) {
+	conn, ok := s.MqlRuntime.Connection.(shared.Connection)
+	if !ok || !conn.Capabilities().Has(shared.Capability_RunCommand) {
+		return nil, nil
+	}
+
 	o, err := CreateResource(s.MqlRuntime, "command", map[string]*llx.RawData{
 		"command": llx.StringData("semodule -l"),
 	})
