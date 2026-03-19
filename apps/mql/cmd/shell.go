@@ -62,10 +62,18 @@ var shellRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plug
 				"Full discovery (takes longer)",
 			}
 			selected := components.Select("Choose discovery scope", options)
-			if selected == 1 {
+			switch selected {
+			case -1:
+				os.Exit(0)
+			case 1:
 				targets = []string{"auto"}
 			}
 		}
+		// AWS, Azure, and GCP explicitly handle "minimal" to discover only
+		// top-level assets (accounts/subscriptions/projects). Other providers
+		// will ignore the unknown target and discover no child assets, which
+		// is the correct minimal behavior — the main connection asset is
+		// always available regardless of discovery.
 		for _, conn := range cliRes.Asset.Connections {
 			if conn.Discover == nil {
 				conn.Discover = &inventory.Discovery{}

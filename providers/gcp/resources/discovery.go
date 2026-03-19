@@ -143,7 +143,7 @@ func getDiscoveryTargets(config *inventory.Config) []string {
 		// return all discovery targets
 		return All
 	}
-	if stringx.ContainsAnyOf(targets, DiscoveryMinimal) {
+	if stringx.Contains(targets, DiscoveryMinimal) {
 		return Minimal
 	}
 	if stringx.ContainsAnyOf(targets, DiscoveryAuto) {
