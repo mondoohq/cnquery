@@ -1504,6 +1504,27 @@ private grub.config.entry @defaults("title") {
   isSubmenu bool
 }
 
+// FreeBSD rc.conf system configuration via sysrc
+sysrc @defaults("files") {
+  init(path? string)
+  // List of rc.conf files that make up the configuration
+  files() []file
+  // Raw contents of all rc.conf files
+  content(files) string
+  // Parsed key-value entries from all rc.conf files
+  entries(files) []sysrc.entry
+}
+
+// Single rc.conf variable entry
+private sysrc.entry @defaults("name value") {
+  // Variable name
+  name string
+  // Variable value
+  value string
+  // File where this entry is defined
+  file string
+}
+
 // Process on this system
 process @defaults("executable pid state") {
   init(pid int)

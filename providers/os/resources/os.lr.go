@@ -126,6 +126,8 @@ const (
 	ResourceFstabEntry                 string = "fstab.entry"
 	ResourceGrubConfig                 string = "grub.config"
 	ResourceGrubConfigEntry            string = "grub.config.entry"
+	ResourceSysrc                      string = "sysrc"
+	ResourceSysrcEntry                 string = "sysrc.entry"
 	ResourceProcess                    string = "process"
 	ResourceProcesses                  string = "processes"
 	ResourcePort                       string = "port"
@@ -664,6 +666,14 @@ func init() {
 		"grub.config.entry": {
 			// to override args, implement: initGrubConfigEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGrubConfigEntry,
+		},
+		"sysrc": {
+			Init:   initSysrc,
+			Create: createSysrc,
+		},
+		"sysrc.entry": {
+			// to override args, implement: initSysrcEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSysrcEntry,
 		},
 		"process": {
 			Init:   initProcess,
@@ -2689,6 +2699,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"grub.config.entry.isSubmenu": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGrubConfigEntry).GetIsSubmenu()).ToDataRes(types.Bool)
+	},
+	"sysrc.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSysrc).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
+	},
+	"sysrc.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSysrc).GetContent()).ToDataRes(types.String)
+	},
+	"sysrc.entries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSysrc).GetEntries()).ToDataRes(types.Array(types.Resource("sysrc.entry")))
+	},
+	"sysrc.entry.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSysrcEntry).GetName()).ToDataRes(types.String)
+	},
+	"sysrc.entry.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSysrcEntry).GetValue()).ToDataRes(types.String)
+	},
+	"sysrc.entry.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSysrcEntry).GetFile()).ToDataRes(types.String)
 	},
 	"process.pid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProcess).GetPid()).ToDataRes(types.Int)
@@ -6955,6 +6983,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"grub.config.entry.isSubmenu": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGrubConfigEntry).IsSubmenu, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"sysrc.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSysrc).__id, ok = v.Value.(string)
+		return
+	},
+	"sysrc.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSysrc).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"sysrc.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSysrc).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sysrc.entries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSysrc).Entries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"sysrc.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSysrcEntry).__id, ok = v.Value.(string)
+		return
+	},
+	"sysrc.entry.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSysrcEntry).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sysrc.entry.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSysrcEntry).Value, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sysrc.entry.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSysrcEntry).File, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"process.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -18369,6 +18429,160 @@ func (c *mqlGrubConfigEntry) GetInitrd() *plugin.TValue[string] {
 
 func (c *mqlGrubConfigEntry) GetIsSubmenu() *plugin.TValue[bool] {
 	return &c.IsSubmenu
+}
+
+// mqlSysrc for the sysrc resource
+type mqlSysrc struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSysrcInternal it will be used here
+	Files   plugin.TValue[[]any]
+	Content plugin.TValue[string]
+	Entries plugin.TValue[[]any]
+}
+
+// createSysrc creates a new instance of this resource
+func createSysrc(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSysrc{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("sysrc", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSysrc) MqlName() string {
+	return "sysrc"
+}
+
+func (c *mqlSysrc) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSysrc) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("sysrc", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+func (c *mqlSysrc) GetContent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		vargFiles := c.GetFiles()
+		if vargFiles.Error != nil {
+			return "", vargFiles.Error
+		}
+
+		return c.content(vargFiles.Data)
+	})
+}
+
+func (c *mqlSysrc) GetEntries() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Entries, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("sysrc", c.__id, "entries")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		vargFiles := c.GetFiles()
+		if vargFiles.Error != nil {
+			return nil, vargFiles.Error
+		}
+
+		return c.entries(vargFiles.Data)
+	})
+}
+
+// mqlSysrcEntry for the sysrc.entry resource
+type mqlSysrcEntry struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSysrcEntryInternal it will be used here
+	Name  plugin.TValue[string]
+	Value plugin.TValue[string]
+	File  plugin.TValue[string]
+}
+
+// createSysrcEntry creates a new instance of this resource
+func createSysrcEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSysrcEntry{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("sysrc.entry", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSysrcEntry) MqlName() string {
+	return "sysrc.entry"
+}
+
+func (c *mqlSysrcEntry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSysrcEntry) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlSysrcEntry) GetValue() *plugin.TValue[string] {
+	return &c.Value
+}
+
+func (c *mqlSysrcEntry) GetFile() *plugin.TValue[string] {
+	return &c.File
 }
 
 // mqlProcess for the process resource

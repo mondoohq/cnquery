@@ -1056,6 +1056,14 @@ sudoers.userSpec.runasUsers 11.7.0
 sudoers.userSpec.tags 11.7.0
 sudoers.userSpec.users 11.7.0
 sudoers.userSpecs 11.7.0
+sysrc 13.2.6
+sysrc.content 13.2.6
+sysrc.entries 13.2.6
+sysrc.entry 13.2.6
+sysrc.entry.file 13.2.6
+sysrc.entry.name 13.2.6
+sysrc.entry.value 13.2.6
+sysrc.files 13.2.6
 ufw 13.2.8
 ufw.application 13.2.8
 ufw.application.description 13.2.8
