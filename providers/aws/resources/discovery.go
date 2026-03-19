@@ -22,7 +22,7 @@ const (
 	DiscoveryECR          = "ecr"
 	DiscoveryECS          = "ecs"
 
-	DiscoveryAll  = "all"  // resources, accounts, instances, ecr, ecs, everything
+	DiscoveryAll  = "all"  // all discovery targets
 	DiscoveryAuto = "auto" // account + resources
 
 	// API scan
@@ -163,7 +163,7 @@ func getDiscoveryTargets(config *inventory.Config) []string {
 	targets := config.GetDiscover().GetTargets()
 
 	if stringx.Contains(targets, DiscoveryAll) {
-		// return the All list + All Api Resources list
+		// return all discovery targets
 		return All
 	}
 

@@ -135,7 +135,7 @@ func getDiscoveryTargets(config *inventory.Config) []string {
 	}
 
 	if stringx.ContainsAnyOf(targets, DiscoveryAll) {
-		// return the All list + All Api Resources list
+		// return all discovery targets
 		return All
 	}
 	if stringx.ContainsAnyOf(targets, DiscoveryAuto) {
