@@ -36,6 +36,9 @@ func (s *mqlSelinuxModule) id() (string, error) {
 }
 
 // fetchGetenforce runs getenforce once and caches the result.
+// Uses double-checked locking (same pattern as apparmor.fetchStatus):
+// the first unlocked check is the fast path for already-cached results,
+// the second check inside the lock guards against concurrent first calls.
 func (s *mqlSelinux) fetchGetenforce() (available bool, mode string, err error) {
 	if s.getenforced {
 		return s.getenforceAvail, s.getenforceMode, nil
@@ -73,8 +76,20 @@ func (s *mqlSelinux) fetchGetenforce() (available bool, mode string, err error) 
 }
 
 func (s *mqlSelinux) installed() (bool, error) {
+	// Try command-based detection first (gives us runtime mode too)
 	avail, _, err := s.fetchGetenforce()
-	return avail, err
+	if err != nil {
+		return false, err
+	}
+	if avail {
+		return true, nil
+	}
+	// Fall back to checking /etc/selinux/config for disk scan scenarios
+	// where command execution is not available
+	if err := s.parseConfig(); err != nil {
+		return false, err
+	}
+	return s.cfgMode != "", nil
 }
 
 func (s *mqlSelinux) mode() (string, error) {
@@ -88,7 +103,8 @@ func (s *mqlSelinux) mode() (string, error) {
 	return mode, nil
 }
 
-// parseConfig reads /etc/selinux/config and extracts SELINUX= and SELINUXTYPE= values
+// parseConfig reads /etc/selinux/config and extracts SELINUX= and SELINUXTYPE= values.
+// Uses double-checked locking (same pattern as fetchGetenforce above).
 func (s *mqlSelinux) parseConfig() error {
 	if s.configParsed {
 		return nil
@@ -135,13 +151,13 @@ func ParseSelinuxConfig(content string) (mode string, policyType string) {
 			continue
 		}
 
-		eqIdx := strings.Index(line, "=")
-		if eqIdx < 0 {
+		key, value, ok := strings.Cut(line, "=")
+		if !ok {
 			continue
 		}
 
-		key := strings.TrimSpace(line[:eqIdx])
-		value := strings.TrimSpace(line[eqIdx+1:])
+		key = strings.TrimSpace(key)
+		value = strings.TrimSpace(value)
 
 		switch key {
 		case "SELINUX":
