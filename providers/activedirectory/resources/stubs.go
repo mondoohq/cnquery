@@ -3,27 +3,9 @@
 
 package resources
 
-// Stub implementations for computed resource fields defined in the .lr file
-// but not yet implemented. These will be replaced in future phases.
+import "fmt"
 
-
-func (a *mqlActivedirectory) organizationalUnits() ([]interface{}, error) {
-	return nil, nil
-}
-
-func (a *mqlActivedirectory) gpos() ([]interface{}, error) {
-	return nil, nil
-}
-
-func (a *mqlActivedirectory) trusts() ([]interface{}, error) {
-	return nil, nil
-}
-
-func (a *mqlActivedirectory) dnsZones() ([]interface{}, error) {
-	return nil, nil
-}
-
-// Phase 4: ADCS
+// Phase 4: ADCS — stubs until implementation
 
 func (a *mqlActivedirectory) certificateTemplates() ([]interface{}, error) {
 	return nil, nil
@@ -37,7 +19,7 @@ func (a *mqlActivedirectory) pkiObjects() ([]interface{}, error) {
 	return nil, nil
 }
 
-// Stub id() methods for resources not yet implemented
+// id() methods for Phase 3 resources
 
 func (a *mqlActivedirectoryOu) id() (string, error) {
 	return a.DistinguishedName.Data, nil
@@ -47,9 +29,19 @@ func (a *mqlActivedirectoryGpo) id() (string, error) {
 	return a.DistinguishedName.Data, nil
 }
 
+func (a *mqlActivedirectoryGpoLink) id() (string, error) {
+	return fmt.Sprintf("%s/%d", a.Target.Data, a.Order.Data), nil
+}
+
 func (a *mqlActivedirectoryTrust) id() (string, error) {
 	return a.TargetDomain.Data, nil
 }
+
+func (a *mqlActivedirectoryDnsZone) id() (string, error) {
+	return a.DistinguishedName.Data, nil
+}
+
+// Phase 4 id() stubs
 
 func (a *mqlActivedirectoryCertificateTemplate) id() (string, error) {
 	return a.DistinguishedName.Data, nil
@@ -60,9 +52,5 @@ func (a *mqlActivedirectoryCertificateAuthority) id() (string, error) {
 }
 
 func (a *mqlActivedirectoryPkiObject) id() (string, error) {
-	return a.DistinguishedName.Data, nil
-}
-
-func (a *mqlActivedirectoryDnsZone) id() (string, error) {
 	return a.DistinguishedName.Data, nil
 }

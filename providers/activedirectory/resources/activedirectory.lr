@@ -294,30 +294,88 @@ activedirectory.computer @defaults("name operatingSystem enabled") {
   isDomainController bool
 }
 
-// Active Directory Organizational Unit (Phase 3)
+// Active Directory Organizational Unit
 activedirectory.ou @defaults("name") {
   // OU name
   name string
   // Distinguished name
   distinguishedName string
+  // Description
+  description string
+  // Whether GPO inheritance is blocked
+  gpoInheritanceBlocked bool
+  // Linked GPOs in link order
+  linkedGpos() []activedirectory.gpoLink
+  // Creation timestamp
+  whenCreated time
 }
 
-// Active Directory Group Policy Object (Phase 3)
+// Active Directory Group Policy Object
 activedirectory.gpo @defaults("displayName") {
+  // GPO GUID
+  id string
   // Display name
   displayName string
   // Distinguished name
   distinguishedName string
+  // GPO status (enabled, disabled, user disabled, computer disabled)
+  gpoStatus string
+  // Path in SYSVOL
+  gpcFileSysPath string
+  // Whether the GPO is linked anywhere
+  isLinked bool
+  // Link metadata for each OU/domain/site this GPO is attached to
+  links() []activedirectory.gpoLink
+  // Creation timestamp
+  whenCreated time
+  // Last modified timestamp
+  whenChanged time
+  // Version number
+  version int
 }
 
-// Active Directory domain trust (Phase 3)
+// Active Directory GPO link
+activedirectory.gpoLink @defaults("target") {
+  // Target DN or site this link applies to
+  target string
+  // Link order; 1 is highest precedence (applied last)
+  order int
+  // Whether the link is enforced
+  enforced bool
+  // Whether the link is enabled
+  enabled bool
+}
+
+// Active Directory domain trust
 activedirectory.trust @defaults("targetDomain trustType trustDirection") {
   // Target domain name
   targetDomain string
-  // Trust type
+  // Source domain name
+  sourceDomain string
+  // Trust type (External, Forest, ParentChild, CrossLink, MIT)
   trustType string
-  // Trust direction
+  // Trust direction (Inbound, Outbound, Bidirectional)
   trustDirection string
+  // Whether SID filtering is enabled
+  sidFilteringEnabled bool
+  // Whether SID history is enabled across the trust
+  sidHistoryEnabled bool
+  // Whether selective authentication is used
+  selectiveAuthentication bool
+  // Whether the trust uses AES encryption
+  aesEncryption bool
+  // Whether the trust uses RC4 encryption (weak)
+  rc4Encryption bool
+  // Whether TGT delegation is enabled
+  tgtDelegation bool
+  // Trust creation timestamp
+  whenCreated time
+  // Whether the trust is to Azure AD
+  isAzureADTrust bool
+  // Whether the trust is transitive
+  isTransitive bool
+  // Trust attributes raw value
+  trustAttributes int
 }
 
 // Active Directory Certificate Services template (Phase 4)
@@ -346,10 +404,16 @@ activedirectory.pkiObject @defaults("name objectClass") {
   objectClass string
 }
 
-// Active Directory DNS zone (Phase 3)
+// Active Directory-integrated DNS zone
 activedirectory.dnsZone @defaults("name") {
   // Zone name
   name string
   // Distinguished name
   distinguishedName string
+  // Zone type
+  zoneType string
+  // Whether dynamic updates are enabled
+  dynamicUpdate bool
+  // Whether secure-only dynamic updates
+  secureOnly bool
 }

@@ -27,6 +27,7 @@ const (
 	ResourceActivedirectoryComputer                  string = "activedirectory.computer"
 	ResourceActivedirectoryOu                        string = "activedirectory.ou"
 	ResourceActivedirectoryGpo                       string = "activedirectory.gpo"
+	ResourceActivedirectoryGpoLink                   string = "activedirectory.gpoLink"
 	ResourceActivedirectoryTrust                     string = "activedirectory.trust"
 	ResourceActivedirectoryCertificateTemplate       string = "activedirectory.certificateTemplate"
 	ResourceActivedirectoryCertificateAuthority      string = "activedirectory.certificateAuthority"
@@ -77,6 +78,10 @@ func init() {
 		"activedirectory.gpo": {
 			// to override args, implement: initActivedirectoryGpo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createActivedirectoryGpo,
+		},
+		"activedirectory.gpoLink": {
+			// to override args, implement: initActivedirectoryGpoLink(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createActivedirectoryGpoLink,
 		},
 		"activedirectory.trust": {
 			// to override args, implement: initActivedirectoryTrust(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -571,20 +576,101 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"activedirectory.ou.distinguishedName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryOu).GetDistinguishedName()).ToDataRes(types.String)
 	},
+	"activedirectory.ou.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryOu).GetDescription()).ToDataRes(types.String)
+	},
+	"activedirectory.ou.gpoInheritanceBlocked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryOu).GetGpoInheritanceBlocked()).ToDataRes(types.Bool)
+	},
+	"activedirectory.ou.linkedGpos": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryOu).GetLinkedGpos()).ToDataRes(types.Array(types.Resource("activedirectory.gpoLink")))
+	},
+	"activedirectory.ou.whenCreated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryOu).GetWhenCreated()).ToDataRes(types.Time)
+	},
+	"activedirectory.gpo.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryGpo).GetId()).ToDataRes(types.String)
+	},
 	"activedirectory.gpo.displayName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryGpo).GetDisplayName()).ToDataRes(types.String)
 	},
 	"activedirectory.gpo.distinguishedName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryGpo).GetDistinguishedName()).ToDataRes(types.String)
 	},
+	"activedirectory.gpo.gpoStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryGpo).GetGpoStatus()).ToDataRes(types.String)
+	},
+	"activedirectory.gpo.gpcFileSysPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryGpo).GetGpcFileSysPath()).ToDataRes(types.String)
+	},
+	"activedirectory.gpo.isLinked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryGpo).GetIsLinked()).ToDataRes(types.Bool)
+	},
+	"activedirectory.gpo.links": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryGpo).GetLinks()).ToDataRes(types.Array(types.Resource("activedirectory.gpoLink")))
+	},
+	"activedirectory.gpo.whenCreated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryGpo).GetWhenCreated()).ToDataRes(types.Time)
+	},
+	"activedirectory.gpo.whenChanged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryGpo).GetWhenChanged()).ToDataRes(types.Time)
+	},
+	"activedirectory.gpo.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryGpo).GetVersion()).ToDataRes(types.Int)
+	},
+	"activedirectory.gpoLink.target": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryGpoLink).GetTarget()).ToDataRes(types.String)
+	},
+	"activedirectory.gpoLink.order": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryGpoLink).GetOrder()).ToDataRes(types.Int)
+	},
+	"activedirectory.gpoLink.enforced": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryGpoLink).GetEnforced()).ToDataRes(types.Bool)
+	},
+	"activedirectory.gpoLink.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryGpoLink).GetEnabled()).ToDataRes(types.Bool)
+	},
 	"activedirectory.trust.targetDomain": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryTrust).GetTargetDomain()).ToDataRes(types.String)
+	},
+	"activedirectory.trust.sourceDomain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryTrust).GetSourceDomain()).ToDataRes(types.String)
 	},
 	"activedirectory.trust.trustType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryTrust).GetTrustType()).ToDataRes(types.String)
 	},
 	"activedirectory.trust.trustDirection": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryTrust).GetTrustDirection()).ToDataRes(types.String)
+	},
+	"activedirectory.trust.sidFilteringEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryTrust).GetSidFilteringEnabled()).ToDataRes(types.Bool)
+	},
+	"activedirectory.trust.sidHistoryEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryTrust).GetSidHistoryEnabled()).ToDataRes(types.Bool)
+	},
+	"activedirectory.trust.selectiveAuthentication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryTrust).GetSelectiveAuthentication()).ToDataRes(types.Bool)
+	},
+	"activedirectory.trust.aesEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryTrust).GetAesEncryption()).ToDataRes(types.Bool)
+	},
+	"activedirectory.trust.rc4Encryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryTrust).GetRc4Encryption()).ToDataRes(types.Bool)
+	},
+	"activedirectory.trust.tgtDelegation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryTrust).GetTgtDelegation()).ToDataRes(types.Bool)
+	},
+	"activedirectory.trust.whenCreated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryTrust).GetWhenCreated()).ToDataRes(types.Time)
+	},
+	"activedirectory.trust.isAzureADTrust": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryTrust).GetIsAzureADTrust()).ToDataRes(types.Bool)
+	},
+	"activedirectory.trust.isTransitive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryTrust).GetIsTransitive()).ToDataRes(types.Bool)
+	},
+	"activedirectory.trust.trustAttributes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryTrust).GetTrustAttributes()).ToDataRes(types.Int)
 	},
 	"activedirectory.certificateTemplate.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryCertificateTemplate).GetName()).ToDataRes(types.String)
@@ -612,6 +698,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"activedirectory.dnsZone.distinguishedName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryDnsZone).GetDistinguishedName()).ToDataRes(types.String)
+	},
+	"activedirectory.dnsZone.zoneType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryDnsZone).GetZoneType()).ToDataRes(types.String)
+	},
+	"activedirectory.dnsZone.dynamicUpdate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryDnsZone).GetDynamicUpdate()).ToDataRes(types.Bool)
+	},
+	"activedirectory.dnsZone.secureOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryDnsZone).GetSecureOnly()).ToDataRes(types.Bool)
 	},
 }
 
@@ -1185,8 +1280,28 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlActivedirectoryOu).DistinguishedName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"activedirectory.ou.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryOu).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.ou.gpoInheritanceBlocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryOu).GpoInheritanceBlocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.ou.linkedGpos": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryOu).LinkedGpos, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"activedirectory.ou.whenCreated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryOu).WhenCreated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"activedirectory.gpo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlActivedirectoryGpo).__id, ok = v.Value.(string)
+		return
+	},
+	"activedirectory.gpo.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryGpo).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"activedirectory.gpo.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1197,6 +1312,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlActivedirectoryGpo).DistinguishedName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"activedirectory.gpo.gpoStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryGpo).GpoStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.gpo.gpcFileSysPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryGpo).GpcFileSysPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.gpo.isLinked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryGpo).IsLinked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.gpo.links": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryGpo).Links, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"activedirectory.gpo.whenCreated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryGpo).WhenCreated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"activedirectory.gpo.whenChanged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryGpo).WhenChanged, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"activedirectory.gpo.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryGpo).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"activedirectory.gpoLink.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryGpoLink).__id, ok = v.Value.(string)
+		return
+	},
+	"activedirectory.gpoLink.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryGpoLink).Target, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.gpoLink.order": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryGpoLink).Order, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"activedirectory.gpoLink.enforced": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryGpoLink).Enforced, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.gpoLink.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryGpoLink).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"activedirectory.trust.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlActivedirectoryTrust).__id, ok = v.Value.(string)
 		return
@@ -1205,12 +1368,56 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlActivedirectoryTrust).TargetDomain, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"activedirectory.trust.sourceDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryTrust).SourceDomain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"activedirectory.trust.trustType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlActivedirectoryTrust).TrustType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"activedirectory.trust.trustDirection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlActivedirectoryTrust).TrustDirection, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.trust.sidFilteringEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryTrust).SidFilteringEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.trust.sidHistoryEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryTrust).SidHistoryEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.trust.selectiveAuthentication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryTrust).SelectiveAuthentication, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.trust.aesEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryTrust).AesEncryption, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.trust.rc4Encryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryTrust).Rc4Encryption, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.trust.tgtDelegation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryTrust).TgtDelegation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.trust.whenCreated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryTrust).WhenCreated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"activedirectory.trust.isAzureADTrust": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryTrust).IsAzureADTrust, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.trust.isTransitive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryTrust).IsTransitive, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.trust.trustAttributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryTrust).TrustAttributes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"activedirectory.certificateTemplate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1263,6 +1470,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"activedirectory.dnsZone.distinguishedName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlActivedirectoryDnsZone).DistinguishedName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.dnsZone.zoneType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryDnsZone).ZoneType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.dnsZone.dynamicUpdate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryDnsZone).DynamicUpdate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.dnsZone.secureOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryDnsZone).SecureOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 }
@@ -2465,8 +2684,12 @@ type mqlActivedirectoryOu struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlActivedirectoryOuInternal it will be used here
-	Name              plugin.TValue[string]
-	DistinguishedName plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	DistinguishedName     plugin.TValue[string]
+	Description           plugin.TValue[string]
+	GpoInheritanceBlocked plugin.TValue[bool]
+	LinkedGpos            plugin.TValue[[]any]
+	WhenCreated           plugin.TValue[*time.Time]
 }
 
 // createActivedirectoryOu creates a new instance of this resource
@@ -2514,13 +2737,49 @@ func (c *mqlActivedirectoryOu) GetDistinguishedName() *plugin.TValue[string] {
 	return &c.DistinguishedName
 }
 
+func (c *mqlActivedirectoryOu) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlActivedirectoryOu) GetGpoInheritanceBlocked() *plugin.TValue[bool] {
+	return &c.GpoInheritanceBlocked
+}
+
+func (c *mqlActivedirectoryOu) GetLinkedGpos() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LinkedGpos, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("activedirectory.ou", c.__id, "linkedGpos")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.linkedGpos()
+	})
+}
+
+func (c *mqlActivedirectoryOu) GetWhenCreated() *plugin.TValue[*time.Time] {
+	return &c.WhenCreated
+}
+
 // mqlActivedirectoryGpo for the activedirectory.gpo resource
 type mqlActivedirectoryGpo struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlActivedirectoryGpoInternal it will be used here
+	Id                plugin.TValue[string]
 	DisplayName       plugin.TValue[string]
 	DistinguishedName plugin.TValue[string]
+	GpoStatus         plugin.TValue[string]
+	GpcFileSysPath    plugin.TValue[string]
+	IsLinked          plugin.TValue[bool]
+	Links             plugin.TValue[[]any]
+	WhenCreated       plugin.TValue[*time.Time]
+	WhenChanged       plugin.TValue[*time.Time]
+	Version           plugin.TValue[int64]
 }
 
 // createActivedirectoryGpo creates a new instance of this resource
@@ -2560,6 +2819,10 @@ func (c *mqlActivedirectoryGpo) MqlID() string {
 	return c.__id
 }
 
+func (c *mqlActivedirectoryGpo) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
 func (c *mqlActivedirectoryGpo) GetDisplayName() *plugin.TValue[string] {
 	return &c.DisplayName
 }
@@ -2568,14 +2831,129 @@ func (c *mqlActivedirectoryGpo) GetDistinguishedName() *plugin.TValue[string] {
 	return &c.DistinguishedName
 }
 
+func (c *mqlActivedirectoryGpo) GetGpoStatus() *plugin.TValue[string] {
+	return &c.GpoStatus
+}
+
+func (c *mqlActivedirectoryGpo) GetGpcFileSysPath() *plugin.TValue[string] {
+	return &c.GpcFileSysPath
+}
+
+func (c *mqlActivedirectoryGpo) GetIsLinked() *plugin.TValue[bool] {
+	return &c.IsLinked
+}
+
+func (c *mqlActivedirectoryGpo) GetLinks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Links, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("activedirectory.gpo", c.__id, "links")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.links()
+	})
+}
+
+func (c *mqlActivedirectoryGpo) GetWhenCreated() *plugin.TValue[*time.Time] {
+	return &c.WhenCreated
+}
+
+func (c *mqlActivedirectoryGpo) GetWhenChanged() *plugin.TValue[*time.Time] {
+	return &c.WhenChanged
+}
+
+func (c *mqlActivedirectoryGpo) GetVersion() *plugin.TValue[int64] {
+	return &c.Version
+}
+
+// mqlActivedirectoryGpoLink for the activedirectory.gpoLink resource
+type mqlActivedirectoryGpoLink struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlActivedirectoryGpoLinkInternal it will be used here
+	Target   plugin.TValue[string]
+	Order    plugin.TValue[int64]
+	Enforced plugin.TValue[bool]
+	Enabled  plugin.TValue[bool]
+}
+
+// createActivedirectoryGpoLink creates a new instance of this resource
+func createActivedirectoryGpoLink(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlActivedirectoryGpoLink{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("activedirectory.gpoLink", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlActivedirectoryGpoLink) MqlName() string {
+	return "activedirectory.gpoLink"
+}
+
+func (c *mqlActivedirectoryGpoLink) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlActivedirectoryGpoLink) GetTarget() *plugin.TValue[string] {
+	return &c.Target
+}
+
+func (c *mqlActivedirectoryGpoLink) GetOrder() *plugin.TValue[int64] {
+	return &c.Order
+}
+
+func (c *mqlActivedirectoryGpoLink) GetEnforced() *plugin.TValue[bool] {
+	return &c.Enforced
+}
+
+func (c *mqlActivedirectoryGpoLink) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
 // mqlActivedirectoryTrust for the activedirectory.trust resource
 type mqlActivedirectoryTrust struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlActivedirectoryTrustInternal it will be used here
-	TargetDomain   plugin.TValue[string]
-	TrustType      plugin.TValue[string]
-	TrustDirection plugin.TValue[string]
+	TargetDomain            plugin.TValue[string]
+	SourceDomain            plugin.TValue[string]
+	TrustType               plugin.TValue[string]
+	TrustDirection          plugin.TValue[string]
+	SidFilteringEnabled     plugin.TValue[bool]
+	SidHistoryEnabled       plugin.TValue[bool]
+	SelectiveAuthentication plugin.TValue[bool]
+	AesEncryption           plugin.TValue[bool]
+	Rc4Encryption           plugin.TValue[bool]
+	TgtDelegation           plugin.TValue[bool]
+	WhenCreated             plugin.TValue[*time.Time]
+	IsAzureADTrust          plugin.TValue[bool]
+	IsTransitive            plugin.TValue[bool]
+	TrustAttributes         plugin.TValue[int64]
 }
 
 // createActivedirectoryTrust creates a new instance of this resource
@@ -2619,12 +2997,56 @@ func (c *mqlActivedirectoryTrust) GetTargetDomain() *plugin.TValue[string] {
 	return &c.TargetDomain
 }
 
+func (c *mqlActivedirectoryTrust) GetSourceDomain() *plugin.TValue[string] {
+	return &c.SourceDomain
+}
+
 func (c *mqlActivedirectoryTrust) GetTrustType() *plugin.TValue[string] {
 	return &c.TrustType
 }
 
 func (c *mqlActivedirectoryTrust) GetTrustDirection() *plugin.TValue[string] {
 	return &c.TrustDirection
+}
+
+func (c *mqlActivedirectoryTrust) GetSidFilteringEnabled() *plugin.TValue[bool] {
+	return &c.SidFilteringEnabled
+}
+
+func (c *mqlActivedirectoryTrust) GetSidHistoryEnabled() *plugin.TValue[bool] {
+	return &c.SidHistoryEnabled
+}
+
+func (c *mqlActivedirectoryTrust) GetSelectiveAuthentication() *plugin.TValue[bool] {
+	return &c.SelectiveAuthentication
+}
+
+func (c *mqlActivedirectoryTrust) GetAesEncryption() *plugin.TValue[bool] {
+	return &c.AesEncryption
+}
+
+func (c *mqlActivedirectoryTrust) GetRc4Encryption() *plugin.TValue[bool] {
+	return &c.Rc4Encryption
+}
+
+func (c *mqlActivedirectoryTrust) GetTgtDelegation() *plugin.TValue[bool] {
+	return &c.TgtDelegation
+}
+
+func (c *mqlActivedirectoryTrust) GetWhenCreated() *plugin.TValue[*time.Time] {
+	return &c.WhenCreated
+}
+
+func (c *mqlActivedirectoryTrust) GetIsAzureADTrust() *plugin.TValue[bool] {
+	return &c.IsAzureADTrust
+}
+
+func (c *mqlActivedirectoryTrust) GetIsTransitive() *plugin.TValue[bool] {
+	return &c.IsTransitive
+}
+
+func (c *mqlActivedirectoryTrust) GetTrustAttributes() *plugin.TValue[int64] {
+	return &c.TrustAttributes
 }
 
 // mqlActivedirectoryCertificateTemplate for the activedirectory.certificateTemplate resource
@@ -2801,6 +3223,9 @@ type mqlActivedirectoryDnsZone struct {
 	// optional: if you define mqlActivedirectoryDnsZoneInternal it will be used here
 	Name              plugin.TValue[string]
 	DistinguishedName plugin.TValue[string]
+	ZoneType          plugin.TValue[string]
+	DynamicUpdate     plugin.TValue[bool]
+	SecureOnly        plugin.TValue[bool]
 }
 
 // createActivedirectoryDnsZone creates a new instance of this resource
@@ -2846,4 +3271,16 @@ func (c *mqlActivedirectoryDnsZone) GetName() *plugin.TValue[string] {
 
 func (c *mqlActivedirectoryDnsZone) GetDistinguishedName() *plugin.TValue[string] {
 	return &c.DistinguishedName
+}
+
+func (c *mqlActivedirectoryDnsZone) GetZoneType() *plugin.TValue[string] {
+	return &c.ZoneType
+}
+
+func (c *mqlActivedirectoryDnsZone) GetDynamicUpdate() *plugin.TValue[bool] {
+	return &c.DynamicUpdate
+}
+
+func (c *mqlActivedirectoryDnsZone) GetSecureOnly() *plugin.TValue[bool] {
+	return &c.SecureOnly
 }
