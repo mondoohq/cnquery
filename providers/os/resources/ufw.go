@@ -187,6 +187,114 @@ func (u *mqlUfw) rules() ([]any, error) {
 	return rules, nil
 }
 
+const ufwAppsDir = "/etc/ufw/applications.d"
+
+func (u *mqlUfw) applications() ([]any, error) {
+	if err := u.fetchStatus(); err != nil {
+		return nil, err
+	}
+	if u.cacheStatus == "not installed" {
+		return []any{}, nil
+	}
+
+	afs, err := u.getFs()
+	if err != nil {
+		return nil, err
+	}
+
+	entries, err := afs.ReadDir(ufwAppsDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+
+	var apps []any
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		data, err := afs.ReadFile(ufwAppsDir + "/" + entry.Name())
+		if err != nil {
+			continue
+		}
+		parsed := parseUfwApplications(string(data))
+		for _, app := range parsed {
+			res, err := CreateResource(u.MqlRuntime, "ufw.application", map[string]*llx.RawData{
+				"name":        llx.StringData(app.name),
+				"title":       llx.StringData(app.title),
+				"description": llx.StringData(app.description),
+				"ports":       llx.StringData(app.ports),
+			})
+			if err != nil {
+				return nil, err
+			}
+			apps = append(apps, res)
+		}
+	}
+	return apps, nil
+}
+
+func (a *mqlUfwApplication) id() (string, error) {
+	return "ufw/application/" + a.Name.Data, nil
+}
+
+type ufwParsedApp struct {
+	name        string
+	title       string
+	description string
+	ports       string
+}
+
+// parseUfwApplications parses a UFW application profile file (INI-like format).
+//
+// Example:
+//
+//	[Nginx Full]
+//	title=Web Server (Nginx, HTTP + HTTPS)
+//	description=Small, but very powerful and efficient web server
+//	ports=80,443/tcp
+func parseUfwApplications(data string) []ufwParsedApp {
+	var apps []ufwParsedApp
+	var current *ufwParsedApp
+
+	for _, line := range strings.Split(data, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
+			if current != nil {
+				apps = append(apps, *current)
+			}
+			current = &ufwParsedApp{
+				name: line[1 : len(line)-1],
+			}
+			continue
+		}
+		if current == nil {
+			continue
+		}
+		key, val, ok := strings.Cut(line, "=")
+		if !ok {
+			continue
+		}
+		switch strings.TrimSpace(key) {
+		case "title":
+			current.title = strings.TrimSpace(val)
+		case "description":
+			current.description = strings.TrimSpace(val)
+		case "ports":
+			current.ports = strings.TrimSpace(val)
+		}
+	}
+	if current != nil {
+		apps = append(apps, *current)
+	}
+	return apps
+}
+
 func createUfwRuleResource(runtime *plugin.Runtime, rule ufwParsedRule) (plugin.Resource, error) {
 	return CreateResource(runtime, "ufw.rule", map[string]*llx.RawData{
 		"number":    llx.IntData(rule.number),

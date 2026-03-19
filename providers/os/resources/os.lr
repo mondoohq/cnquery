@@ -1304,6 +1304,8 @@ ufw @defaults("status rules") {
   logging() string
   // All UFW rules
   rules() []ufw.rule
+  // Application profiles from /etc/ufw/applications.d/
+  applications() []ufw.application
 }
 
 // Individual UFW rule
@@ -1328,6 +1330,18 @@ private ufw.rule @defaults("action direction port") {
   ipv6 bool
   // Raw rule text as reported by ufw
   raw string
+}
+
+// UFW application profile from /etc/ufw/applications.d/
+private ufw.application @defaults("name ports") {
+  // Profile name (e.g., "Nginx Full")
+  name string
+  // Short title describing the application
+  title string
+  // Description of the application
+  description string
+  // Port specification (e.g., "80/tcp", "80,443/tcp", "80,443/tcp|443/udp")
+  ports string
 }
 
 // fstab file and entries

@@ -988,6 +988,12 @@ sudoers.userSpec.tags 11.7.0
 sudoers.userSpec.users 11.7.0
 sudoers.userSpecs 11.7.0
 ufw 13.2.6
+ufw.application 13.2.6
+ufw.application.description 13.2.6
+ufw.application.name 13.2.6
+ufw.application.ports 13.2.6
+ufw.application.title 13.2.6
+ufw.applications 13.2.6
 ufw.defaultIncoming 13.2.6
 ufw.defaultOutgoing 13.2.6
 ufw.defaultRouted 13.2.6

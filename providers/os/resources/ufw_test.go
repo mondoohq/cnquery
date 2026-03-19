@@ -178,3 +178,60 @@ func TestParseUfwTuplesLogAll(t *testing.T) {
 	assert.Len(t, rules, 1)
 	assert.Equal(t, "DENY", rules[0].action)
 }
+
+func TestParseUfwApplications(t *testing.T) {
+	input := `[Nginx HTTP]
+title=Web Server (Nginx, HTTP)
+description=Small, but very powerful and efficient web server
+ports=80/tcp
+
+[Nginx HTTPS]
+title=Web Server (Nginx, HTTPS)
+description=Small, but very powerful and efficient web server
+ports=443/tcp
+
+[Nginx Full]
+title=Web Server (Nginx, HTTP + HTTPS)
+description=Small, but very powerful and efficient web server
+ports=80,443/tcp
+
+[Nginx QUIC]
+title=Web Server (Nginx, HTTP + HTTPS + QUIC)
+description=Small, but very powerful and efficient web server
+ports=80,443/tcp|443/udp
+`
+	apps := parseUfwApplications(input)
+	assert.Len(t, apps, 4)
+
+	assert.Equal(t, "Nginx HTTP", apps[0].name)
+	assert.Equal(t, "Web Server (Nginx, HTTP)", apps[0].title)
+	assert.Equal(t, "Small, but very powerful and efficient web server", apps[0].description)
+	assert.Equal(t, "80/tcp", apps[0].ports)
+
+	assert.Equal(t, "Nginx HTTPS", apps[1].name)
+	assert.Equal(t, "443/tcp", apps[1].ports)
+
+	assert.Equal(t, "Nginx Full", apps[2].name)
+	assert.Equal(t, "80,443/tcp", apps[2].ports)
+
+	assert.Equal(t, "Nginx QUIC", apps[3].name)
+	assert.Equal(t, "80,443/tcp|443/udp", apps[3].ports)
+}
+
+func TestParseUfwApplicationsEmpty(t *testing.T) {
+	apps := parseUfwApplications("")
+	assert.Empty(t, apps)
+}
+
+func TestParseUfwApplicationsWithComments(t *testing.T) {
+	input := `# Custom app
+[MyApp]
+title=My Application
+description=A custom application
+ports=8080/tcp
+`
+	apps := parseUfwApplications(input)
+	assert.Len(t, apps, 1)
+	assert.Equal(t, "MyApp", apps[0].name)
+	assert.Equal(t, "8080/tcp", apps[0].ports)
+}

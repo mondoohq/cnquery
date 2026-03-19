@@ -117,6 +117,7 @@ const (
 	ResourceNftablesRule               string = "nftables.rule"
 	ResourceUfw                        string = "ufw"
 	ResourceUfwRule                    string = "ufw.rule"
+	ResourceUfwApplication             string = "ufw.application"
 	ResourceFstab                      string = "fstab"
 	ResourceFstabEntry                 string = "fstab.entry"
 	ResourceGrubConfig                 string = "grub.config"
@@ -621,6 +622,10 @@ func init() {
 		"ufw.rule": {
 			// to override args, implement: initUfwRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createUfwRule,
+		},
+		"ufw.application": {
+			// to override args, implement: initUfwApplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createUfwApplication,
 		},
 		"fstab": {
 			Init:   initFstab,
@@ -2421,6 +2426,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ufw.rules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlUfw).GetRules()).ToDataRes(types.Array(types.Resource("ufw.rule")))
 	},
+	"ufw.applications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUfw).GetApplications()).ToDataRes(types.Array(types.Resource("ufw.application")))
+	},
 	"ufw.rule.number": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlUfwRule).GetNumber()).ToDataRes(types.Int)
 	},
@@ -2450,6 +2458,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ufw.rule.raw": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlUfwRule).GetRaw()).ToDataRes(types.String)
+	},
+	"ufw.application.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUfwApplication).GetName()).ToDataRes(types.String)
+	},
+	"ufw.application.title": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUfwApplication).GetTitle()).ToDataRes(types.String)
+	},
+	"ufw.application.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUfwApplication).GetDescription()).ToDataRes(types.String)
+	},
+	"ufw.application.ports": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUfwApplication).GetPorts()).ToDataRes(types.String)
 	},
 	"fstab.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFstab).GetPath()).ToDataRes(types.String)
@@ -6366,6 +6386,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlUfw).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"ufw.applications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUfw).Applications, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"ufw.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlUfwRule).__id, ok = v.Value.(string)
 		return
@@ -6408,6 +6432,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ufw.rule.raw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlUfwRule).Raw, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ufw.application.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUfwApplication).__id, ok = v.Value.(string)
+		return
+	},
+	"ufw.application.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUfwApplication).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ufw.application.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUfwApplication).Title, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ufw.application.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUfwApplication).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ufw.application.ports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUfwApplication).Ports, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"fstab.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16780,6 +16824,7 @@ type mqlUfw struct {
 	DefaultRouted   plugin.TValue[string]
 	Logging         plugin.TValue[string]
 	Rules           plugin.TValue[[]any]
+	Applications    plugin.TValue[[]any]
 }
 
 // createUfw creates a new instance of this resource
@@ -16862,6 +16907,22 @@ func (c *mqlUfw) GetRules() *plugin.TValue[[]any] {
 		}
 
 		return c.rules()
+	})
+}
+
+func (c *mqlUfw) GetApplications() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Applications, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ufw", c.__id, "applications")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.applications()
 	})
 }
 
@@ -16957,6 +17018,70 @@ func (c *mqlUfwRule) GetIpv6() *plugin.TValue[bool] {
 
 func (c *mqlUfwRule) GetRaw() *plugin.TValue[string] {
 	return &c.Raw
+}
+
+// mqlUfwApplication for the ufw.application resource
+type mqlUfwApplication struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlUfwApplicationInternal it will be used here
+	Name        plugin.TValue[string]
+	Title       plugin.TValue[string]
+	Description plugin.TValue[string]
+	Ports       plugin.TValue[string]
+}
+
+// createUfwApplication creates a new instance of this resource
+func createUfwApplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlUfwApplication{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ufw.application", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlUfwApplication) MqlName() string {
+	return "ufw.application"
+}
+
+func (c *mqlUfwApplication) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlUfwApplication) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlUfwApplication) GetTitle() *plugin.TValue[string] {
+	return &c.Title
+}
+
+func (c *mqlUfwApplication) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlUfwApplication) GetPorts() *plugin.TValue[string] {
+	return &c.Ports
 }
 
 // mqlFstab for the fstab resource
