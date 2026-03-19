@@ -595,14 +595,14 @@ mondoo.eol.version 9.0.1
 mount 9.0.1
 mount.list 9.0.1
 mount.point 9.0.1
-mount.point.available 13.2.3
+mount.point.available 13.2.7
 mount.point.device 9.0.1
 mount.point.fstype 9.0.1
 mount.point.mounted 9.0.1
 mount.point.options 9.0.1
 mount.point.path 9.0.1
-mount.point.size 13.2.3
-mount.point.used 13.2.3
+mount.point.size 13.2.7
+mount.point.used 13.2.7
 network 11.3.42
 network.interfaces 11.3.42
 network.ipv4 13.0.2
