@@ -16,6 +16,32 @@ func TestAllResolvedResources(t *testing.T) {
 		DiscoveryOrganization,
 		DiscoveryFolders,
 		DiscoveryProjects,
+		DiscoveryComputeImages,
+		DiscoveryComputeNetworks,
+		DiscoveryComputeSubnetworks,
+		DiscoveryComputeFirewalls,
+		DiscoveryGkeClusters,
+		DiscoveryStorageBuckets,
+		DiscoveryBigQueryDatasets,
+		DiscoverCloudSQLMySQL,
+		DiscoverCloudSQLPostgreSQL,
+		DiscoverCloudSQLSQLServer,
+		DiscoverCloudDNSZones,
+		DiscoverCloudKMSKeyrings,
+		DiscoverMemorystoreRedis,
+		DiscoverMemorystoreRedisCluster,
+		DiscoveryComputeInstances,
+		DiscoverSecretManager,
+		DiscoverPubSubTopics,
+		DiscoverPubSubSubscriptions,
+		DiscoverPubSubSnapshots,
+		DiscoverCloudRunServices,
+		DiscoverCloudRunJobs,
+		DiscoverCloudFunctions,
+		DiscoverDataprocClusters,
+		DiscoverLoggingBuckets,
+		DiscoverApiKeys,
+		DiscoverIamServiceAccounts,
 	}
 	require.ElementsMatch(t, expected, All)
 }
@@ -56,36 +82,52 @@ func TestAutoResolvedResources(t *testing.T) {
 }
 
 func TestGetDiscoveryTargets(t *testing.T) {
-	config := &inventory.Config{
-		Discover: &inventory.Discovery{
-			Targets: []string{},
+	cases := []struct {
+		name    string
+		targets []string
+		want    []string
+	}{
+		{
+			name:    "empty defaults to Auto",
+			targets: []string{},
+			want:    Auto,
+		},
+		{
+			name:    "all",
+			targets: []string{"all"},
+			want:    allDiscovery(),
+		},
+		{
+			name:    "all with extras",
+			targets: []string{"all", "projects", "instances"},
+			want:    allDiscovery(),
+		},
+		{
+			name:    "auto",
+			targets: []string{"auto"},
+			want:    Auto,
+		},
+		{
+			name:    "auto with extras",
+			targets: []string{"auto", "cloud-dns-zones", "compute-images"},
+			want:    append(slices.Clone(Auto), DiscoverCloudDNSZones, DiscoveryComputeImages),
+		},
+		{
+			name:    "explicit targets",
+			targets: []string{"cloud-dns-zones", "compute-images", "projects", "instances"},
+			want:    []string{DiscoverCloudDNSZones, DiscoveryComputeImages, DiscoveryProjects, DiscoveryComputeInstances},
 		},
 	}
-	// test all with other stuff
-	config.Discover.Targets = []string{"all", "projects", "instances"}
-	require.Equal(t, allDiscovery(), getDiscoveryTargets(config))
 
-	// test just all
-	config.Discover.Targets = []string{"all"}
-	require.Equal(t, allDiscovery(), getDiscoveryTargets(config))
-
-	// test auto with other stuff
-	config.Discover.Targets = []string{"auto", "cloud-dns-zones", "compute-images"}
-	res := append(Auto, []string{DiscoverCloudDNSZones, DiscoveryComputeImages}...)
-	slices.Sort(res)
-	targets := getDiscoveryTargets(config)
-	slices.Sort(targets)
-	require.Equal(t, res, targets)
-
-	// test just auto
-	config.Discover.Targets = []string{"auto"}
-	require.Equal(t, Auto, getDiscoveryTargets(config))
-
-	// test random
-	config.Discover.Targets = []string{"cloud-dns-zones", "compute-images", "projects", "instances"}
-	require.Equal(t, []string{DiscoverCloudDNSZones, DiscoveryComputeImages, DiscoveryProjects, DiscoveryComputeInstances}, getDiscoveryTargets(config))
-
-	// test standard cli run without options
-	config.Discover.Targets = []string{}
-	require.Equal(t, Auto, getDiscoveryTargets(config))
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			config := &inventory.Config{
+				Discover: &inventory.Discovery{
+					Targets: tc.targets,
+				},
+			}
+			got := getDiscoveryTargets(config)
+			require.ElementsMatch(t, tc.want, got)
+		})
+	}
 }

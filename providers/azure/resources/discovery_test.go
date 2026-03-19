@@ -4,7 +4,7 @@
 package resources
 
 import (
-	"sort"
+	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -14,7 +14,23 @@ import (
 func TestAllResolvedResources(t *testing.T) {
 	expected := []string{
 		DiscoverySubscriptions,
+		DiscoveryInstancesApi,
+		DiscoverySqlServers,
+		DiscoveryPostgresServers,
+		DiscoveryPostgresFlexibleServers,
+		DiscoveryMySqlServers,
+		DiscoveryMySqlFlexibleServers,
+		DiscoveryAksClusters,
+		DiscoveryAppServiceApps,
+		DiscoveryCacheRedis,
+		DiscoveryBatchAccounts,
+		DiscoveryStorageAccounts,
+		DiscoveryKeyVaults,
+		DiscoverySecurityGroups,
+		DiscoveryCosmosDb,
+		DiscoveryVirtualNetworks,
 		DiscoveryInstances,
+		DiscoveryStorageContainers,
 	}
 	require.ElementsMatch(t, expected, All)
 }
@@ -42,32 +58,52 @@ func TestAutoResolvedResources(t *testing.T) {
 }
 
 func TestGetDiscoveryTargets(t *testing.T) {
-	config := &inventory.Config{
-		Discover: &inventory.Discovery{
-			Targets: []string{},
+	cases := []struct {
+		name    string
+		targets []string
+		want    []string
+	}{
+		{
+			name:    "empty defaults to Auto",
+			targets: []string{},
+			want:    Auto,
+		},
+		{
+			name:    "all",
+			targets: []string{"all"},
+			want:    allDiscovery(),
+		},
+		{
+			name:    "all with extras",
+			targets: []string{"all", "projects", "instances"},
+			want:    allDiscovery(),
+		},
+		{
+			name:    "auto",
+			targets: []string{"auto"},
+			want:    Auto,
+		},
+		{
+			name:    "auto with extras",
+			targets: []string{"auto", "postgres-servers", "keyvaults-vaults"},
+			want:    append(slices.Clone(Auto), DiscoveryPostgresServers, DiscoveryKeyVaults),
+		},
+		{
+			name:    "explicit targets",
+			targets: []string{"postgres-servers", "keyvaults-vaults", "instances"},
+			want:    []string{DiscoveryPostgresServers, DiscoveryKeyVaults, DiscoveryInstances},
 		},
 	}
-	// test all with other stuff
-	config.Discover.Targets = []string{"all", "projects", "instances"}
-	require.Equal(t, allDiscovery(), getDiscoveryTargets(config))
 
-	// test just all
-	config.Discover.Targets = []string{"all"}
-	require.Equal(t, allDiscovery(), getDiscoveryTargets(config))
-
-	// test auto with other stuff
-	config.Discover.Targets = []string{"auto", "postgres-servers", "keyvaults-vaults"}
-	res := append(Auto, []string{DiscoveryPostgresServers, DiscoveryKeyVaults}...)
-	sort.Strings(res)
-	targets := getDiscoveryTargets(config)
-	sort.Strings(targets)
-	require.Equal(t, res, targets)
-
-	// test just auto
-	config.Discover.Targets = []string{"auto"}
-	require.Equal(t, Auto, getDiscoveryTargets(config))
-
-	// test random
-	config.Discover.Targets = []string{"postgres-servers", "keyvaults-vaults", "instances"}
-	require.Equal(t, []string{DiscoveryPostgresServers, DiscoveryKeyVaults, DiscoveryInstances}, getDiscoveryTargets(config))
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			config := &inventory.Config{
+				Discover: &inventory.Discovery{
+					Targets: tc.targets,
+				},
+			}
+			got := getDiscoveryTargets(config)
+			require.ElementsMatch(t, tc.want, got)
+		})
+	}
 }

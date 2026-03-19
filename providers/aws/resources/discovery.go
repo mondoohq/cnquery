@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"slices"
+
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
@@ -58,18 +60,6 @@ const (
 	DiscoveryElasticacheClusters        = "elasticache-clusters"
 	DiscoveryCloudfrontDistributions    = "cloudfront-distributions"
 )
-
-var All = []string{
-	DiscoveryAccounts,
-	DiscoveryInstances,
-	DiscoverySSMInstances,
-	DiscoveryECR,
-	DiscoveryECS,
-}
-
-func allDiscovery() []string {
-	return append(All, AllAPIResources...)
-}
 
 var Auto = []string{
 	DiscoveryAccounts,
@@ -132,6 +122,20 @@ var AllAPIResources = []string{
 	DiscoverySecretsManagerSecrets,
 	DiscoveryElasticacheClusters,
 	DiscoveryCloudfrontDistributions,
+}
+
+// All includes every discovery target: Auto plus OS-level instance discovery,
+// SSM instances, ECR, and ECS.
+var All = append(
+	slices.Clone(Auto),
+	DiscoveryInstances,
+	DiscoverySSMInstances,
+	DiscoveryECR,
+	DiscoveryECS,
+)
+
+func allDiscovery() []string {
+	return All
 }
 
 func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {

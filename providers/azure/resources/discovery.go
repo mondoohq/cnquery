@@ -48,11 +48,6 @@ const (
 	DiscoveryVirtualNetworks         = "virtual-networks"
 )
 
-var All = []string{
-	DiscoverySubscriptions,
-	DiscoveryInstances,
-}
-
 // Auto includes all API resources except storage containers (which require
 // additional permissions and can be very numerous). Defined in terms of
 // AllAPIResources so the two lists don't drift apart.
@@ -63,8 +58,16 @@ var Auto = append(
 	})...,
 )
 
+// All includes every discovery target: Auto plus OS-level instance discovery
+// and storage containers.
+var All = append(
+	slices.Clone(Auto),
+	DiscoveryInstances,
+	DiscoveryStorageContainers,
+)
+
 func allDiscovery() []string {
-	return append(All, AllAPIResources...)
+	return All
 }
 
 var AllAPIResources = []string{
