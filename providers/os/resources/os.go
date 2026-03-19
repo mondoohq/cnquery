@@ -680,6 +680,14 @@ func (s *mqlOsLinux) nftables() (*mqlNftables, error) {
 	return res.(*mqlNftables), nil
 }
 
+func (s *mqlOsLinux) ufw() (*mqlUfw, error) {
+	res, err := CreateResource(s.MqlRuntime, "ufw", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlUfw), nil
+}
+
 func (s *mqlOsLinux) fstab() (*mqlFstab, error) {
 	res, err := CreateResource(s.MqlRuntime, "fstab", map[string]*llx.RawData{})
 	if err != nil {

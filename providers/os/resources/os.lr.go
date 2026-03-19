@@ -115,6 +115,8 @@ const (
 	ResourceNftablesTable              string = "nftables.table"
 	ResourceNftablesChain              string = "nftables.chain"
 	ResourceNftablesRule               string = "nftables.rule"
+	ResourceUfw                        string = "ufw"
+	ResourceUfwRule                    string = "ufw.rule"
 	ResourceFstab                      string = "fstab"
 	ResourceFstabEntry                 string = "fstab.entry"
 	ResourceGrubConfig                 string = "grub.config"
@@ -611,6 +613,14 @@ func init() {
 		"nftables.rule": {
 			// to override args, implement: initNftablesRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createNftablesRule,
+		},
+		"ufw": {
+			// to override args, implement: initUfw(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createUfw,
+		},
+		"ufw.rule": {
+			// to override args, implement: initUfwRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createUfwRule,
 		},
 		"fstab": {
 			Init:   initFstab,
@@ -1414,6 +1424,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"os.linux.nftables": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOsLinux).GetNftables()).ToDataRes(types.Resource("nftables"))
+	},
+	"os.linux.ufw": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsLinux).GetUfw()).ToDataRes(types.Resource("ufw"))
 	},
 	"os.linux.fstab": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOsLinux).GetFstab()).ToDataRes(types.Resource("fstab"))
@@ -2389,6 +2402,54 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"nftables.rule.comment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNftablesRule).GetComment()).ToDataRes(types.String)
+	},
+	"ufw.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUfw).GetStatus()).ToDataRes(types.String)
+	},
+	"ufw.defaultIncoming": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUfw).GetDefaultIncoming()).ToDataRes(types.String)
+	},
+	"ufw.defaultOutgoing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUfw).GetDefaultOutgoing()).ToDataRes(types.String)
+	},
+	"ufw.defaultRouted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUfw).GetDefaultRouted()).ToDataRes(types.String)
+	},
+	"ufw.logging": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUfw).GetLogging()).ToDataRes(types.String)
+	},
+	"ufw.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUfw).GetRules()).ToDataRes(types.Array(types.Resource("ufw.rule")))
+	},
+	"ufw.rule.number": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUfwRule).GetNumber()).ToDataRes(types.Int)
+	},
+	"ufw.rule.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUfwRule).GetAction()).ToDataRes(types.String)
+	},
+	"ufw.rule.direction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUfwRule).GetDirection()).ToDataRes(types.String)
+	},
+	"ufw.rule.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUfwRule).GetProtocol()).ToDataRes(types.String)
+	},
+	"ufw.rule.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUfwRule).GetPort()).ToDataRes(types.String)
+	},
+	"ufw.rule.interface": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUfwRule).GetInterface()).ToDataRes(types.String)
+	},
+	"ufw.rule.from": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUfwRule).GetFrom()).ToDataRes(types.String)
+	},
+	"ufw.rule.to": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUfwRule).GetTo()).ToDataRes(types.String)
+	},
+	"ufw.rule.ipv6": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUfwRule).GetIpv6()).ToDataRes(types.Bool)
+	},
+	"ufw.rule.raw": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUfwRule).GetRaw()).ToDataRes(types.String)
 	},
 	"fstab.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFstab).GetPath()).ToDataRes(types.String)
@@ -4677,6 +4738,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOsLinux).Nftables, ok = plugin.RawToTValue[*mqlNftables](v.Value, v.Error)
 		return
 	},
+	"os.linux.ufw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsLinux).Ufw, ok = plugin.RawToTValue[*mqlUfw](v.Value, v.Error)
+		return
+	},
 	"os.linux.fstab": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOsLinux).Fstab, ok = plugin.RawToTValue[*mqlFstab](v.Value, v.Error)
 		return
@@ -6271,6 +6336,78 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"nftables.rule.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNftablesRule).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ufw.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUfw).__id, ok = v.Value.(string)
+		return
+	},
+	"ufw.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUfw).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ufw.defaultIncoming": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUfw).DefaultIncoming, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ufw.defaultOutgoing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUfw).DefaultOutgoing, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ufw.defaultRouted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUfw).DefaultRouted, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ufw.logging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUfw).Logging, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ufw.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUfw).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ufw.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUfwRule).__id, ok = v.Value.(string)
+		return
+	},
+	"ufw.rule.number": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUfwRule).Number, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"ufw.rule.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUfwRule).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ufw.rule.direction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUfwRule).Direction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ufw.rule.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUfwRule).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ufw.rule.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUfwRule).Port, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ufw.rule.interface": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUfwRule).Interface, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ufw.rule.from": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUfwRule).From, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ufw.rule.to": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUfwRule).To, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ufw.rule.ipv6": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUfwRule).Ipv6, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ufw.rule.raw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUfwRule).Raw, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"fstab.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10744,6 +10881,7 @@ type mqlOsLinux struct {
 	Iptables  plugin.TValue[*mqlIptables]
 	Ip6tables plugin.TValue[*mqlIp6tables]
 	Nftables  plugin.TValue[*mqlNftables]
+	Ufw       plugin.TValue[*mqlUfw]
 	Fstab     plugin.TValue[*mqlFstab]
 	Apparmor  plugin.TValue[*mqlApparmor]
 }
@@ -10846,6 +10984,22 @@ func (c *mqlOsLinux) GetNftables() *plugin.TValue[*mqlNftables] {
 		}
 
 		return c.nftables()
+	})
+}
+
+func (c *mqlOsLinux) GetUfw() *plugin.TValue[*mqlUfw] {
+	return plugin.GetOrCompute[*mqlUfw](&c.Ufw, func() (*mqlUfw, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("os.linux", c.__id, "ufw")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlUfw), nil
+			}
+		}
+
+		return c.ufw()
 	})
 }
 
@@ -16613,6 +16767,196 @@ func (c *mqlNftablesRule) GetExpr() *plugin.TValue[[]any] {
 
 func (c *mqlNftablesRule) GetComment() *plugin.TValue[string] {
 	return &c.Comment
+}
+
+// mqlUfw for the ufw resource
+type mqlUfw struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlUfwInternal
+	Status          plugin.TValue[string]
+	DefaultIncoming plugin.TValue[string]
+	DefaultOutgoing plugin.TValue[string]
+	DefaultRouted   plugin.TValue[string]
+	Logging         plugin.TValue[string]
+	Rules           plugin.TValue[[]any]
+}
+
+// createUfw creates a new instance of this resource
+func createUfw(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlUfw{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ufw", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlUfw) MqlName() string {
+	return "ufw"
+}
+
+func (c *mqlUfw) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlUfw) GetStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
+		return c.status()
+	})
+}
+
+func (c *mqlUfw) GetDefaultIncoming() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DefaultIncoming, func() (string, error) {
+		return c.defaultIncoming()
+	})
+}
+
+func (c *mqlUfw) GetDefaultOutgoing() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DefaultOutgoing, func() (string, error) {
+		return c.defaultOutgoing()
+	})
+}
+
+func (c *mqlUfw) GetDefaultRouted() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DefaultRouted, func() (string, error) {
+		return c.defaultRouted()
+	})
+}
+
+func (c *mqlUfw) GetLogging() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Logging, func() (string, error) {
+		return c.logging()
+	})
+}
+
+func (c *mqlUfw) GetRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ufw", c.__id, "rules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rules()
+	})
+}
+
+// mqlUfwRule for the ufw.rule resource
+type mqlUfwRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlUfwRuleInternal it will be used here
+	Number    plugin.TValue[int64]
+	Action    plugin.TValue[string]
+	Direction plugin.TValue[string]
+	Protocol  plugin.TValue[string]
+	Port      plugin.TValue[string]
+	Interface plugin.TValue[string]
+	From      plugin.TValue[string]
+	To        plugin.TValue[string]
+	Ipv6      plugin.TValue[bool]
+	Raw       plugin.TValue[string]
+}
+
+// createUfwRule creates a new instance of this resource
+func createUfwRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlUfwRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ufw.rule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlUfwRule) MqlName() string {
+	return "ufw.rule"
+}
+
+func (c *mqlUfwRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlUfwRule) GetNumber() *plugin.TValue[int64] {
+	return &c.Number
+}
+
+func (c *mqlUfwRule) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlUfwRule) GetDirection() *plugin.TValue[string] {
+	return &c.Direction
+}
+
+func (c *mqlUfwRule) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlUfwRule) GetPort() *plugin.TValue[string] {
+	return &c.Port
+}
+
+func (c *mqlUfwRule) GetInterface() *plugin.TValue[string] {
+	return &c.Interface
+}
+
+func (c *mqlUfwRule) GetFrom() *plugin.TValue[string] {
+	return &c.From
+}
+
+func (c *mqlUfwRule) GetTo() *plugin.TValue[string] {
+	return &c.To
+}
+
+func (c *mqlUfwRule) GetIpv6() *plugin.TValue[bool] {
+	return &c.Ipv6
+}
+
+func (c *mqlUfwRule) GetRaw() *plugin.TValue[string] {
+	return &c.Raw
 }
 
 // mqlFstab for the fstab resource
