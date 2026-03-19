@@ -173,12 +173,14 @@ func getDiscoveryTargets(config *inventory.Config) []string {
 		return All
 	}
 
+	if stringx.Contains(targets, DiscoveryMinimal) {
+		return Minimal
+	}
+
 	// the targets we return.
 	res := []string{}
 	for _, target := range targets {
 		switch target {
-		case DiscoveryMinimal:
-			res = append(res, Minimal...)
 		case DiscoveryAuto:
 			res = append(res, Auto...)
 		case DiscoveryResources:

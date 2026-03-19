@@ -45,16 +45,32 @@ var shellCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {},
 }
 
+// discoveryOption is a selectable item for the interactive discovery prompt.
+type discoveryOption string
+
+func (d discoveryOption) Display() string { return string(d) }
+
 var shellRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plugin.ParseCLIRes) {
-	// Use minimal discovery for interactive shell when --discover is not explicitly set
-	// and no -c command is provided. This avoids expensive full discovery when the user
-	// just wants to drop into an interactive shell.
+	// When --discover is not explicitly set and no -c command is provided,
+	// prompt the user to choose between minimal and full discovery.
 	command, _ := cmd.Flags().GetString("command")
 	if !cmd.Flags().Changed("discover") && command == "" && cliRes.Asset != nil {
-		for _, conn := range cliRes.Asset.Connections {
-			if conn.Discover != nil {
-				conn.Discover.Targets = []string{"minimal"}
+		targets := []string{"minimal"}
+		if isTTY := isatty.IsTerminal(os.Stdout.Fd()); isTTY {
+			options := []discoveryOption{
+				"Quick connect (minimal discovery)",
+				"Full discovery (takes longer)",
 			}
+			selected := components.Select("Choose discovery scope", options)
+			if selected == 1 {
+				targets = []string{"auto"}
+			}
+		}
+		for _, conn := range cliRes.Asset.Connections {
+			if conn.Discover == nil {
+				conn.Discover = &inventory.Discovery{}
+			}
+			conn.Discover.Targets = targets
 		}
 	}
 
