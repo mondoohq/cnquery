@@ -11,6 +11,36 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 )
 
+func TestAllResolvedResources(t *testing.T) {
+	expected := []string{
+		DiscoverySubscriptions,
+		DiscoveryInstances,
+	}
+	require.ElementsMatch(t, expected, All)
+}
+
+func TestAutoResolvedResources(t *testing.T) {
+	expected := []string{
+		DiscoverySubscriptions,
+		DiscoveryInstancesApi,
+		DiscoverySqlServers,
+		DiscoveryPostgresServers,
+		DiscoveryPostgresFlexibleServers,
+		DiscoveryMySqlServers,
+		DiscoveryMySqlFlexibleServers,
+		DiscoveryAksClusters,
+		DiscoveryAppServiceApps,
+		DiscoveryCacheRedis,
+		DiscoveryBatchAccounts,
+		DiscoveryStorageAccounts,
+		DiscoveryKeyVaults,
+		DiscoverySecurityGroups,
+		DiscoveryCosmosDb,
+		DiscoveryVirtualNetworks,
+	}
+	require.ElementsMatch(t, expected, Auto)
+}
+
 func TestGetDiscoveryTargets(t *testing.T) {
 	config := &inventory.Config{
 		Discover: &inventory.Discovery{

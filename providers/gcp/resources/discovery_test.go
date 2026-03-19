@@ -11,6 +11,50 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 )
 
+func TestAllResolvedResources(t *testing.T) {
+	expected := []string{
+		DiscoveryOrganization,
+		DiscoveryFolders,
+		DiscoveryProjects,
+	}
+	require.ElementsMatch(t, expected, All)
+}
+
+func TestAutoResolvedResources(t *testing.T) {
+	expected := []string{
+		DiscoveryOrganization,
+		DiscoveryFolders,
+		DiscoveryProjects,
+		DiscoveryComputeImages,
+		DiscoveryComputeNetworks,
+		DiscoveryComputeSubnetworks,
+		DiscoveryComputeFirewalls,
+		DiscoveryGkeClusters,
+		DiscoveryStorageBuckets,
+		DiscoveryBigQueryDatasets,
+		DiscoverCloudSQLMySQL,
+		DiscoverCloudSQLPostgreSQL,
+		DiscoverCloudSQLSQLServer,
+		DiscoverCloudDNSZones,
+		DiscoverCloudKMSKeyrings,
+		DiscoverMemorystoreRedis,
+		DiscoverMemorystoreRedisCluster,
+		DiscoveryComputeInstances,
+		DiscoverSecretManager,
+		DiscoverPubSubTopics,
+		DiscoverPubSubSubscriptions,
+		DiscoverPubSubSnapshots,
+		DiscoverCloudRunServices,
+		DiscoverCloudRunJobs,
+		DiscoverCloudFunctions,
+		DiscoverDataprocClusters,
+		DiscoverLoggingBuckets,
+		DiscoverApiKeys,
+		DiscoverIamServiceAccounts,
+	}
+	require.ElementsMatch(t, expected, Auto)
+}
+
 func TestGetDiscoveryTargets(t *testing.T) {
 	config := &inventory.Config{
 		Discover: &inventory.Discovery{

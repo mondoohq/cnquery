@@ -13,6 +13,50 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 )
 
+func TestAllResolvedResources(t *testing.T) {
+	expected := []string{
+		DiscoveryAccounts,
+		DiscoveryInstances,
+		DiscoverySSMInstances,
+		DiscoveryECR,
+		DiscoveryECS,
+	}
+	require.ElementsMatch(t, expected, All)
+}
+
+func TestAutoResolvedResources(t *testing.T) {
+	expected := []string{
+		DiscoveryAccounts,
+		DiscoveryS3Buckets,
+		DiscoveryEKSClusters,
+		DiscoveryCloudtrailTrails,
+		DiscoveryRdsDbInstances,
+		DiscoveryRdsDbClusters,
+		DiscoveryVPCs,
+		DiscoverySecurityGroups,
+		DiscoveryIAMUsers,
+		DiscoveryIAMGroups,
+		DiscoveryCloudwatchLoggroups,
+		DiscoveryLambdaFunctions,
+		DiscoveryDynamoDBTables,
+		DiscoveryDynamoDBGlobalTables,
+		DiscoveryRedshiftClusters,
+		DiscoveryVolumes,
+		DiscoverySnapshots,
+		DiscoveryEFSFilesystems,
+		DiscoveryAPIGatewayRestAPIs,
+		DiscoveryELBLoadBalancers,
+		DiscoveryESDomains,
+		DiscoveryOpenSearchDomains,
+		DiscoveryKMSKeys,
+		DiscoverySagemakerNotebookInstances,
+		DiscoverySecretsManagerSecrets,
+		DiscoveryElasticacheClusters,
+		DiscoveryCloudfrontDistributions,
+	}
+	require.ElementsMatch(t, expected, Auto)
+}
+
 func TestAddConnInfoToEc2Instances(t *testing.T) {
 	info := instanceInfo{}
 	a := &inventory.Asset{}
