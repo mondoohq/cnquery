@@ -15,6 +15,15 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 )
 
+// normalizeMultiSz strips the Windows API artifact where an empty REG_MULTI_SZ
+// value (raw bytes: \0\0) is parsed as []string{""} instead of []string{}.
+func normalizeMultiSz(entries []string) []string {
+	if len(entries) == 1 && entries[0] == "" {
+		return []string{}
+	}
+	return entries
+}
+
 // derived from "golang.org/x/sys/windows/registry"
 // see https://github.com/golang/sys/blob/master/windows/registry/value.go#L17-L31
 const (
@@ -191,9 +200,12 @@ func (k *RegistryKeyValue) UnmarshalJSON(b []byte) error {
 				for _, v := range value {
 					multiString = append(multiString, v.(string))
 				}
-				// NOTE: this is to be consistent with the output before we moved to multi-datatype support for registry keys
-				k.String = strings.Join(multiString, " ")
-				k.MultiString = multiString
+				multiString = normalizeMultiSz(multiString)
+				if len(multiString) > 0 {
+					// NOTE: this is to be consistent with the output before we moved to multi-datatype support for registry keys
+					k.String = strings.Join(multiString, " ")
+					k.MultiString = multiString
+				}
 			}
 		}
 	case RESOURCE_LIST:

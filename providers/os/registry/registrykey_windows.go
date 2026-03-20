@@ -96,6 +96,7 @@ func GetNativeRegistryKeyItems(path string) ([]RegistryKeyItem, error) {
 			if err != nil {
 				return nil, err
 			}
+			entries = normalizeMultiSz(entries)
 			regValue.MultiString = entries
 			if len(entries) > 0 {
 				// NOTE: this is to be consistent with the output before we moved to multi-datatype support for registry keys
