@@ -49,20 +49,20 @@ type ActiveDirectoryConnection struct {
 	ldapConn *ldap.Conn
 	dcHost   string
 
-	baseDN           string
-	configDN         string
-	schemaDN         string
-	rootDomainDN     string
-	domainSID        string
-	rootDomainSID    string
-	domainDnsZonesDN string
-	forestDnsZonesDN string
+	baseDN               string
+	configDN             string
+	schemaDN             string
+	rootDomainDN         string
+	domainSID            string
+	rootDomainSID        string
+	domainDnsZonesDN     string
+	forestDnsZonesDN     string
+	domainNamingContexts []string
 
 	domainFunctionalLevel string
 	forestFunctionalLevel string
-
-	cacheMu sync.RWMutex
-	cache   map[string]interface{}
+	cacheMu               sync.RWMutex
+	cache                 map[string]interface{}
 }
 
 // NewActiveDirectoryConnection dials the domain controller, binds, queries
@@ -356,15 +356,10 @@ func (c *ActiveDirectoryConnection) discoverRootDSE() error {
 	c.domainFunctionalLevel = FunctionalLevelName(domainLevel)
 	c.forestFunctionalLevel = FunctionalLevelName(forestLevel)
 
-	// Detect DomainDnsZones and ForestDnsZones application partitions.
-	for _, nc := range GetStringSliceAttr(entry, "namingContexts") {
-		upper := strings.ToUpper(nc)
-		if strings.HasPrefix(upper, "DC=DOMAINDNSZONES,") {
-			c.domainDnsZonesDN = nc
-		} else if strings.HasPrefix(upper, "DC=FORESTDNSZONES,") {
-			c.forestDnsZonesDN = nc
-		}
-	}
+	// Detect domain naming contexts and DNS application partitions from RootDSE.
+
+	namingContexts := GetStringSliceAttr(entry, "namingContexts")
+	c.domainDnsZonesDN, c.forestDnsZonesDN, c.domainNamingContexts = classifyNamingContexts(namingContexts)
 
 	return nil
 }
@@ -435,18 +430,23 @@ func defaultPort(useTLS bool) int {
 // Accessors
 // ---------------------------------------------------------------------------
 
-func (c *ActiveDirectoryConnection) Name() string              { return "activedirectory" }
-func (c *ActiveDirectoryConnection) Asset() *inventory.Asset   { return c.asset }
-func (c *ActiveDirectoryConnection) FQDN() string              { return c.dcHost }
-func (c *ActiveDirectoryConnection) LDAPConn() *ldap.Conn      { return c.ldapConn }
-func (c *ActiveDirectoryConnection) BaseDN() string            { return c.baseDN }
-func (c *ActiveDirectoryConnection) ConfigDN() string          { return c.configDN }
-func (c *ActiveDirectoryConnection) SchemaDN() string          { return c.schemaDN }
-func (c *ActiveDirectoryConnection) RootDomainDN() string      { return c.rootDomainDN }
-func (c *ActiveDirectoryConnection) DomainSID() string         { return c.domainSID }
-func (c *ActiveDirectoryConnection) RootDomainSID() string     { return c.rootDomainSID }
-func (c *ActiveDirectoryConnection) DomainDnsZonesDN() string  { return c.domainDnsZonesDN }
-func (c *ActiveDirectoryConnection) ForestDnsZonesDN() string  { return c.forestDnsZonesDN }
+func (c *ActiveDirectoryConnection) Name() string             { return "activedirectory" }
+func (c *ActiveDirectoryConnection) Asset() *inventory.Asset  { return c.asset }
+func (c *ActiveDirectoryConnection) FQDN() string             { return c.dcHost }
+func (c *ActiveDirectoryConnection) LDAPConn() *ldap.Conn     { return c.ldapConn }
+func (c *ActiveDirectoryConnection) BaseDN() string           { return c.baseDN }
+func (c *ActiveDirectoryConnection) ConfigDN() string         { return c.configDN }
+func (c *ActiveDirectoryConnection) SchemaDN() string         { return c.schemaDN }
+func (c *ActiveDirectoryConnection) RootDomainDN() string     { return c.rootDomainDN }
+func (c *ActiveDirectoryConnection) DomainSID() string        { return c.domainSID }
+func (c *ActiveDirectoryConnection) RootDomainSID() string    { return c.rootDomainSID }
+func (c *ActiveDirectoryConnection) DomainDnsZonesDN() string { return c.domainDnsZonesDN }
+func (c *ActiveDirectoryConnection) ForestDnsZonesDN() string { return c.forestDnsZonesDN }
+func (c *ActiveDirectoryConnection) DomainNamingContexts() []string {
+	res := make([]string, len(c.domainNamingContexts))
+	copy(res, c.domainNamingContexts)
+	return res
+}
 func (c *ActiveDirectoryConnection) DomainFunctionalLevel() string { return c.domainFunctionalLevel }
 func (c *ActiveDirectoryConnection) ForestFunctionalLevel() string { return c.forestFunctionalLevel }
 

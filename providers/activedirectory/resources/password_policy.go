@@ -44,6 +44,7 @@ func durationToMinutes(raw int64) int64 {
 
 // parseInt64Attr parses a string LDAP attribute into int64. Returns 0 on empty or parse error.
 func parseInt64Attr(s string) int64 {
+	s = strings.TrimSpace(strings.TrimRight(s, "\x00"))
 	if s == "" {
 		return 0
 	}

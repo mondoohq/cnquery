@@ -48,25 +48,17 @@ func (a *mqlActivedirectory) trusts() ([]interface{}, error) {
 		trustAttrs := parseInt64Attr(connection.GetStringAttr(entry, "trustAttributes"))
 		whenCreated := parseADGeneralizedTime(connection.GetStringAttr(entry, "whenCreated"))
 
-		trustTypeStr := parseTrustType(trustTypeRaw, trustAttrs)
+		trustTypeStr := parseTrustType(sourceDomain, targetDomain, trustTypeRaw, trustAttrs)
 		trustDirStr := parseTrustDirection(trustDirRaw)
 
-		isTransitive := (trustAttrs & 0x1) == 0
-		sidFilteringEnabled := (trustAttrs & 0x4) != 0
-		selectiveAuth := (trustAttrs & 0x10) != 0
-		tgtDelegation := (trustAttrs & 0x400) != 0
-		isAzureADTrust := (trustAttrs & 0x200) != 0
-		isIntraForest := (trustAttrs & 0x20) != 0
-
-		// SID history is enabled when SID filtering is off and the trust
-		// is not within the same forest.
-		sidHistoryEnabled := !sidFilteringEnabled && !isIntraForest
-
-		// Encryption: AD 2012+ defaults to AES for all trusts.
-		// Non-forest trusts may fall back to RC4.
-		isForestTrust := (trustAttrs & 0x8) != 0
-		aesEncryption := true
-		rc4Encryption := !isForestTrust
+		isTransitive := (trustAttrs & trustAttrNonTransitive) == 0
+		sidFilteringEnabled := trustHasSIDFilteringEnabled(trustAttrs)
+		selectiveAuth := trustUsesSelectiveAuthentication(trustAttrs)
+		tgtDelegation := trustAllowsTGTDelegation(trustAttrs)
+		isAzureADTrust := trustTypeRaw == trustTypeAAD
+		sidHistoryEnabled := trustHasSIDHistoryEnabled(trustAttrs)
+		aesEncryption := trustUsesAES(trustAttrs)
+		rc4Encryption := trustUsesRC4(trustTypeRaw, trustAttrs)
 
 		resource, err := CreateResource(a.MqlRuntime, "activedirectory.trust",
 			map[string]*llx.RawData{
@@ -93,27 +85,6 @@ func (a *mqlActivedirectory) trusts() ([]interface{}, error) {
 	}
 
 	return res, nil
-}
-
-// parseTrustType maps the AD trustType integer attribute to a label,
-// promoting Uplevel trusts to "Forest" when the forest-trust attribute
-// flag (0x8) is set.
-func parseTrustType(trustType, trustAttrs int64) string {
-	switch trustType {
-	case 1:
-		return "Downlevel"
-	case 2:
-		if trustAttrs&0x8 != 0 {
-			return "Forest"
-		}
-		return "Uplevel"
-	case 3:
-		return "MIT"
-	case 4:
-		return "DCE"
-	default:
-		return "Unknown"
-	}
 }
 
 // parseTrustDirection maps the AD trustDirection integer attribute to a label.

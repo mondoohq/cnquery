@@ -49,7 +49,7 @@ func init() {
 			Create: createActivedirectoryDomainController,
 		},
 		"activedirectory.passwordPolicy": {
-			// to override args, implement: initActivedirectoryPasswordPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initActivedirectoryPasswordPolicy,
 			Create: createActivedirectoryPasswordPolicy,
 		},
 		"activedirectory.fineGrainedPasswordPolicy": {

@@ -13,10 +13,10 @@ import (
 	"go.mondoo.com/mql/v13/providers/activedirectory/connection"
 )
 
-// classifyZoneType infers a DNS zone type from its name relative to the domain.
-// AD-integrated zones lack a reliable single attribute for zone type, so we
-// use naming conventions as a heuristic.
-func classifyZoneType(zoneName, domainDN string) string {
+// classifyZoneType provides a naming-based fallback when a zone is missing the
+// TYPE dnsProperty. AD-integrated zones normally publish the type directly in
+// dNSProperty, but lab and migration data can be incomplete.
+func classifyZoneType(zoneName string) string {
 	if strings.HasPrefix(zoneName, "_msdcs.") {
 		return "ForestDnsZones"
 	}
@@ -82,14 +82,10 @@ func (a *mqlActivedirectory) dnsZones() ([]interface{}, error) {
 	for _, entry := range allEntries {
 		name := connection.GetStringAttr(entry, "name")
 		dn := connection.GetStringAttr(entry, "distinguishedName")
-		zoneType := classifyZoneType(name, conn.BaseDN())
-
-		// AD-integrated zones default to secure-only dynamic updates.
-		// Accurate values require parsing the dnsProperty binary blob
-		// (DNSSRV_RPC_RECORD structures), which is deferred to a future
-		// enhancement.
-		dynamicUpdate := true
-		secureOnly := true
+		zoneType, dynamicUpdate, secureOnly := deriveDNSZoneSettings(entry.GetRawAttributeValues("dnsProperty"))
+		if zoneType == "Unknown" {
+			zoneType = classifyZoneType(name)
+		}
 
 		resource, err := CreateResource(a.MqlRuntime, "activedirectory.dnsZone",
 			map[string]*llx.RawData{

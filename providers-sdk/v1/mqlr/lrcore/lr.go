@@ -98,6 +98,38 @@ func (r Resource) GetFieldPaths() []string {
 	return res
 }
 
+func (r Resource) GetSelfAliasedFieldPaths() map[string]struct{} {
+	res := map[string]struct{}{}
+	if r.Body == nil {
+		return res
+	}
+
+	for _, f := range r.Body.Fields {
+		if f.BasicField == nil {
+			continue
+		}
+		fullyQualifiedAccessor := fmt.Sprintf("%s.%s", r.ID, f.BasicField.ID)
+		if f.BasicField.Type.NamedType() == fullyQualifiedAccessor {
+			res[fullyQualifiedAccessor] = struct{}{}
+		}
+	}
+
+	return res
+}
+
+func (t Type) NamedType() string {
+	switch {
+	case t.SimpleType != nil:
+		return t.SimpleType.Type
+	case t.ListType != nil:
+		return t.ListType.Type.NamedType()
+	case t.MapType != nil:
+		return t.MapType.Value.NamedType()
+	default:
+		return ""
+	}
+}
+
 // nolint: govet
 type Type struct {
 	MapType    *MapType    `( @@ |`
@@ -358,17 +390,24 @@ func Parse(input string) (*LR, error) {
 func (lr *LR) GetDuplicates() []string {
 	dups := []string{}
 	seen := map[string]struct{}{}
+	intentionalAliases := map[string]struct{}{}
 	// first populate with the resource names (ids), so we don't have fields that
-	// are the same as resource names
+	// are the same as resource names unless the field intentionally resolves to
+	// that exact resource type.
 	for _, r := range lr.Resources {
 		seen[r.ID] = struct{}{}
+		for path := range r.GetSelfAliasedFieldPaths() {
+			intentionalAliases[path] = struct{}{}
+		}
 	}
 
 	for _, r := range lr.Resources {
 		fields := r.GetFieldPaths()
 		for _, f := range fields {
 			if _, ok := seen[f]; ok {
-				dups = append(dups, f)
+				if _, allowed := intentionalAliases[f]; !allowed {
+					dups = append(dups, f)
+				}
 			}
 			seen[f] = struct{}{}
 		}

@@ -362,3 +362,25 @@ func TestGetDuplicates(t *testing.T) {
 	dups := lr.GetDuplicates()
 	assert.Equal(t, []string{"res1.res2"}, dups)
 }
+
+func TestGetDuplicatesIgnoresSelfAliasedResourceField(t *testing.T) {
+	res1 := &Resource{
+		ID: "res1",
+		Body: &ResourceDef{
+			Fields: []*Field{
+				{BasicField: &BasicField{ID: "res2", Type: Type{SimpleType: &SimpleType{"res1.res2"}}}},
+			},
+		},
+	}
+	res2 := &Resource{
+		ID: "res1.res2",
+		Body: &ResourceDef{
+			Fields: []*Field{
+				{BasicField: &BasicField{ID: "value", Type: Type{SimpleType: &SimpleType{"string"}}}},
+			},
+		},
+	}
+	lr := &LR{Resources: []*Resource{res1, res2}}
+
+	assert.Empty(t, lr.GetDuplicates())
+}

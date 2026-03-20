@@ -1,0 +1,28 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
+package resources
+
+import (
+	"testing"
+
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/v13/providers/activedirectory/connection"
+)
+
+func TestLDAPPortForConnection(t *testing.T) {
+	conn := &connection.ActiveDirectoryConnection{Conf: &inventory.Config{Options: map[string]string{}}}
+	if got := ldapPortForConnection(conn); got != 389 {
+		t.Fatalf("default port = %d", got)
+	}
+
+	conn.Conf.Options[connection.OptionLDAPS] = "true"
+	if got := ldapPortForConnection(conn); got != 636 {
+		t.Fatalf("ldaps port = %d", got)
+	}
+
+	conn.Conf.Options[connection.OptionPort] = "1389"
+	if got := ldapPortForConnection(conn); got != 1389 {
+		t.Fatalf("explicit port = %d", got)
+	}
+}

@@ -49,7 +49,9 @@ func (a *mqlActivedirectory) certificateAuthorities() ([]interface{}, error) {
 		dn := connection.GetStringAttr(entry, "distinguishedName")
 		dnsHostname := connection.GetStringAttr(entry, "dNSHostName")
 
-		// Parse certificate expiration from DER-encoded cACertificate.
+		// Parse certificate expiration and infer whether the Enterprise CA is root
+		// or subordinate from the published CA certificate.
+		caType := "Enterprise"
 		var certExpiration time.Time
 		rawCert := entry.GetRawAttributeValue("cACertificate")
 		if len(rawCert) > 0 {
@@ -58,6 +60,11 @@ func (a *mqlActivedirectory) certificateAuthorities() ([]interface{}, error) {
 				log.Warn().Err(parseErr).Str("ca", name).Msg("failed to parse cACertificate, using zero time for expiration")
 			} else {
 				certExpiration = cert.NotAfter.UTC()
+				if cert.CheckSignatureFrom(cert) == nil {
+					caType = "Enterprise Root"
+				} else {
+					caType = "Enterprise Subordinate"
+				}
 			}
 		}
 
@@ -73,7 +80,7 @@ func (a *mqlActivedirectory) certificateAuthorities() ([]interface{}, error) {
 				"name":                  llx.StringData(name),
 				"distinguishedName":     llx.StringData(dn),
 				"dnsHostname":           llx.StringData(dnsHostname),
-				"caType":                llx.StringData("Enterprise"),
+				"caType":                llx.StringData(caType),
 				"certificateTemplates":  llx.ArrayData(templatesRaw, types.String),
 				"certificateExpiration": llx.TimeData(certExpiration),
 			})

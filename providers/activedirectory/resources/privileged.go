@@ -142,8 +142,13 @@ func resolvePrivilegedGroupDNs(conn *connection.ActiveDirectoryConnection) (map[
 
 		filter := fmt.Sprintf("(&(objectClass=group)(objectSid=%s))", escapeBinaryForLDAP(sidBytes))
 
+		searchBase := conn.BaseDN()
+		if pg.Base == "forest" {
+			searchBase = conn.RootDomainDN()
+		}
+
 		entries, err := connection.PagedSearch(conn.LDAPConn(), ldap.NewSearchRequest(
-			conn.BaseDN(),
+			searchBase,
 			ldap.ScopeWholeSubtree,
 			ldap.NeverDerefAliases, 0, 0, false,
 			filter,
@@ -216,33 +221,40 @@ func buildPrivilegedMembershipSets(conn *connection.ActiveDirectoryConnection) (
 				ldap.EscapeFilter(groupDN),
 			)
 
-			entries, err := connection.PagedSearch(conn.LDAPConn(), ldap.NewSearchRequest(
-				conn.BaseDN(),
-				ldap.ScopeWholeSubtree,
-				ldap.NeverDerefAliases, 0, 0, false,
-				filter,
-				[]string{"distinguishedName"},
-				nil,
-			))
-			if err != nil {
-				// Non-fatal: some groups may not be searchable in this domain.
-				continue
+			searchBases := []string{conn.BaseDN()}
+			if pg.Base == "forest" {
+				searchBases = conn.DomainNamingContexts()
 			}
 
 			field := ridToField[pg.RID]
-			for _, entry := range entries {
-				dn := entry.DN
-				pm.AllPrivileged[dn] = true
+			for _, searchBase := range searchBases {
+				entries, err := connection.PagedSearch(conn.LDAPConn(), ldap.NewSearchRequest(
+					searchBase,
+					ldap.ScopeWholeSubtree,
+					ldap.NeverDerefAliases, 0, 0, false,
+					filter,
+					[]string{"distinguishedName"},
+					nil,
+				))
+				if err != nil {
+					// Non-fatal: some groups may not be searchable in this naming context.
+					continue
+				}
 
-				switch field {
-				case "DomainAdmins":
-					pm.DomainAdmins[dn] = true
-				case "EnterpriseAdmins":
-					pm.EnterpriseAdmins[dn] = true
-				case "SchemaAdmins":
-					pm.SchemaAdmins[dn] = true
-				case "ProtectedUsers":
-					pm.ProtectedUsers[dn] = true
+				for _, entry := range entries {
+					dn := entry.DN
+					pm.AllPrivileged[dn] = true
+
+					switch field {
+					case "DomainAdmins":
+						pm.DomainAdmins[dn] = true
+					case "EnterpriseAdmins":
+						pm.EnterpriseAdmins[dn] = true
+					case "SchemaAdmins":
+						pm.SchemaAdmins[dn] = true
+					case "ProtectedUsers":
+						pm.ProtectedUsers[dn] = true
+					}
 				}
 			}
 		}

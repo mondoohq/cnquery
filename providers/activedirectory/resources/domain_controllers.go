@@ -43,7 +43,6 @@ func extractSiteFromServerRef(dn string) string {
 	return ""
 }
 
-
 func (a *mqlActivedirectoryDomainController) id() (string, error) {
 	return a.DistinguishedName.Data, nil
 }
@@ -91,12 +90,10 @@ func (a *mqlActivedirectory) domainControllers() ([]interface{}, error) {
 		site := extractSiteFromServerRef(serverRef)
 
 		isRODC := uacHasFlag(uac, UACPartialSecretsAccount)
-
-		// Global Catalog detection requires querying the DC's NTDS Settings object
-		// for the options attribute, which is a separate subtree query per DC.
-		// TODO(phase2): query CN=NTDS Settings under the server reference and check
-		// options bit 0x01 for GC status.
-		isGlobalCatalog := false
+		isGlobalCatalog, err := isGlobalCatalogServer(conn, name, serverRef)
+		if err != nil {
+			return nil, fmt.Errorf("failed to determine GC state for %s: %w", name, err)
+		}
 
 		resource, err := CreateResource(a.MqlRuntime, "activedirectory.domainController",
 			map[string]*llx.RawData{
@@ -107,7 +104,7 @@ func (a *mqlActivedirectory) domainControllers() ([]interface{}, error) {
 				"isGlobalCatalog":        llx.BoolData(isGlobalCatalog),
 				"isRODC":                 llx.BoolData(isRODC),
 				"pwdLastSet":             llx.TimeData(pwdLastSet),
-				"lastLogonTimestamp":      llx.TimeData(lastLogon),
+				"lastLogonTimestamp":     llx.TimeData(lastLogon),
 				"site":                   llx.StringData(site),
 			})
 		if err != nil {
