@@ -62,7 +62,7 @@ var Auto = append(
 // and storage containers.
 var All = append(
 	slices.Clone(Auto),
-	DiscoveryInstances,
+	// DiscoveryInstances, note: we disable this for now since we dont support policies for this. we support the API version (DiscoveryInstancesApi)
 	DiscoveryStorageContainers,
 )
 

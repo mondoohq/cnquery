@@ -29,7 +29,6 @@ func TestAllResolvedResources(t *testing.T) {
 		DiscoverySecurityGroups,
 		DiscoveryCosmosDb,
 		DiscoveryVirtualNetworks,
-		DiscoveryInstances,
 		DiscoveryStorageContainers,
 	}
 	require.ElementsMatch(t, expected, All)
