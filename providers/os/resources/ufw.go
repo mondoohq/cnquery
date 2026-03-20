@@ -86,9 +86,9 @@ func (u *mqlUfw) fetchStatus() error {
 	}
 	if err == nil {
 		defaults := parseUfwKeyValue(string(defaultsData))
-		u.cacheDefIncoming = strings.ToLower(defaults["DEFAULT_INPUT_POLICY"])
-		u.cacheDefOutgoing = strings.ToLower(defaults["DEFAULT_OUTPUT_POLICY"])
-		u.cacheDefRouted = strings.ToLower(defaults["DEFAULT_FORWARD_POLICY"])
+		u.cacheDefIncoming = ufwPolicyName(defaults["DEFAULT_INPUT_POLICY"])
+		u.cacheDefOutgoing = ufwPolicyName(defaults["DEFAULT_OUTPUT_POLICY"])
+		u.cacheDefRouted = ufwPolicyName(defaults["DEFAULT_FORWARD_POLICY"])
 	}
 
 	u.fetched = true
@@ -331,6 +331,19 @@ func parseUfwKeyValue(data string) map[string]string {
 		result[strings.TrimSpace(key)] = val
 	}
 	return result
+}
+
+// ufwPolicyName translates iptables policy names from /etc/default/ufw
+// to UFW-style names that users expect (e.g., DROP -> deny, ACCEPT -> allow).
+func ufwPolicyName(raw string) string {
+	switch strings.ToLower(raw) {
+	case "drop":
+		return "deny"
+	case "accept":
+		return "allow"
+	default:
+		return strings.ToLower(raw)
+	}
 }
 
 type ufwParsedRule struct {

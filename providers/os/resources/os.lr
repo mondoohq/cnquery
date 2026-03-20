@@ -1292,13 +1292,13 @@ private nftables.rule @defaults("family table chain handle") {
 
 // UFW (Uncomplicated Firewall) status and rules
 ufw @defaults("status rules") {
-  // Whether UFW is active ("active", "inactive")
+  // Whether UFW is active ("active", "inactive", "not installed")
   status() string
   // Default policy for incoming traffic (e.g., "deny", "allow", "reject")
   defaultIncoming() string
   // Default policy for outgoing traffic (e.g., "allow", "deny", "reject")
   defaultOutgoing() string
-  // Default policy for routed traffic (e.g., "disabled", "deny", "allow", "reject")
+  // Default policy for routed traffic (e.g., "deny", "allow", "reject")
   defaultRouted() string
   // Logging level (off, low, medium, high, full)
   logging() string

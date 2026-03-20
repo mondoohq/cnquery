@@ -39,6 +39,15 @@ DEFAULT_APPLICATION_POLICY="SKIP"
 	assert.Equal(t, "SKIP", result["DEFAULT_APPLICATION_POLICY"])
 }
 
+func TestUfwPolicyName(t *testing.T) {
+	assert.Equal(t, "deny", ufwPolicyName("DROP"))
+	assert.Equal(t, "allow", ufwPolicyName("ACCEPT"))
+	assert.Equal(t, "reject", ufwPolicyName("REJECT"))
+	assert.Equal(t, "deny", ufwPolicyName("drop"))
+	assert.Equal(t, "allow", ufwPolicyName("accept"))
+	assert.Equal(t, "", ufwPolicyName(""))
+}
+
 func TestParseUfwKeyValueDisabled(t *testing.T) {
 	input := `ENABLED=no
 LOGLEVEL=low
