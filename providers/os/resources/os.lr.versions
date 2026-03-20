@@ -721,7 +721,6 @@ os.hypervisor 11.3.35
 os.linux 9.0.0
 os.linux.apparmor 13.2.4
 os.linux.fstab 11.3.5
-os.linux.grub 13.2.7
 os.linux.ip6tables 9.0.0
 os.linux.iptables 9.0.0
 os.linux.nftables 11.8.14

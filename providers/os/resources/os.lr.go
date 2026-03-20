@@ -1406,9 +1406,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"os.linux.apparmor": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOsLinux).GetApparmor()).ToDataRes(types.Resource("apparmor"))
 	},
-	"os.linux.grub": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOsLinux).GetGrub()).ToDataRes(types.Resource("grub.config"))
-	},
 	"os.rootCertificates.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOsRootCertificates).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
 	},
@@ -4638,10 +4635,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"os.linux.apparmor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOsLinux).Apparmor, ok = plugin.RawToTValue[*mqlApparmor](v.Value, v.Error)
-		return
-	},
-	"os.linux.grub": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOsLinux).Grub, ok = plugin.RawToTValue[*mqlGrubConfig](v.Value, v.Error)
 		return
 	},
 	"os.rootCertificates.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10649,7 +10642,6 @@ type mqlOsLinux struct {
 	Nftables  plugin.TValue[*mqlNftables]
 	Fstab     plugin.TValue[*mqlFstab]
 	Apparmor  plugin.TValue[*mqlApparmor]
-	Grub      plugin.TValue[*mqlGrubConfig]
 }
 
 // createOsLinux creates a new instance of this resource
@@ -10782,22 +10774,6 @@ func (c *mqlOsLinux) GetApparmor() *plugin.TValue[*mqlApparmor] {
 		}
 
 		return c.apparmor()
-	})
-}
-
-func (c *mqlOsLinux) GetGrub() *plugin.TValue[*mqlGrubConfig] {
-	return plugin.GetOrCompute[*mqlGrubConfig](&c.Grub, func() (*mqlGrubConfig, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("os.linux", c.__id, "grub")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlGrubConfig), nil
-			}
-		}
-
-		return c.grub()
 	})
 }
 

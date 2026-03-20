@@ -323,8 +323,6 @@ os.linux {
   fstab() fstab
   // AppArmor mandatory access control
   apparmor() apparmor
-  // GRUB bootloader configuration
-  grub() grub.config
 }
 
 // Operating system root certificates

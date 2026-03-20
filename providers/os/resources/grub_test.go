@@ -213,6 +213,53 @@ password root secret
 	})
 }
 
+func TestParseGrubPasswordProtectedCommentedOut(t *testing.T) {
+	t.Run("commented superusers and password", func(t *testing.T) {
+		input := `# set superusers="root"
+# password_pbkdf2 root grub.pbkdf2.sha512.10000.ABC123
+`
+		assert.False(t, ParseGrubPasswordProtected([]byte(input)))
+	})
+
+	t.Run("commented superusers only", func(t *testing.T) {
+		input := `# set superusers="root"
+password_pbkdf2 root grub.pbkdf2.sha512.10000.ABC123
+`
+		assert.False(t, ParseGrubPasswordProtected([]byte(input)))
+	})
+
+	t.Run("commented password only", func(t *testing.T) {
+		input := `set superusers="root"
+# password_pbkdf2 root grub.pbkdf2.sha512.10000.ABC123
+`
+		assert.False(t, ParseGrubPasswordProtected([]byte(input)))
+	})
+}
+
+func TestParseGrubCfgEntriesShellVariableExpansion(t *testing.T) {
+	input := `menuentry 'Ubuntu' {
+	set root='hd0,msdos1'
+	linux /vmlinuz root=${rootdev} ro quiet
+	echo "Loading ${kernel_name}"
+	initrd /initrd.img
+}
+menuentry 'Recovery' {
+	linux /vmlinuz root=/dev/sda1 ro single
+	initrd /initrd-recovery.img
+}
+`
+	entries, err := ParseGrubCfgEntries(strings.NewReader(input))
+	require.NoError(t, err)
+	require.Len(t, entries, 2)
+
+	assert.Equal(t, "Ubuntu", entries[0].Title)
+	assert.Contains(t, entries[0].Cmdline, "${rootdev}")
+	assert.Equal(t, "/initrd.img", entries[0].Initrd)
+
+	assert.Equal(t, "Recovery", entries[1].Title)
+	assert.Contains(t, entries[1].Cmdline, "single")
+}
+
 func TestStripQuotes(t *testing.T) {
 	assert.Equal(t, "hello", stripQuotes(`"hello"`))
 	assert.Equal(t, "hello", stripQuotes(`'hello'`))

@@ -8,7 +8,6 @@ import (
 	"errors"
 	"io"
 	"regexp"
-	"strconv"
 	"strings"
 	"sync"
 
@@ -186,9 +185,10 @@ func (g *mqlGrubConfig) entries() ([]any, error) {
 	}
 
 	resources := make([]any, 0, len(entries))
-	for i, entry := range entries {
+	for _, entry := range entries {
+		entryID := "grub.config.entry:" + entry.Title + ":" + entry.Cmdline
 		resource, err := CreateResource(g.MqlRuntime, "grub.config.entry", map[string]*llx.RawData{
-			"__id":      llx.StringData("grub.config.entry:" + strconv.Itoa(i) + ":" + entry.Title),
+			"__id":      llx.StringData(entryID),
 			"title":     llx.StringData(entry.Title),
 			"cmdline":   llx.StringData(entry.Cmdline),
 			"initrd":    llx.StringData(entry.Initrd),
@@ -312,17 +312,12 @@ func ParseGrubCfgEntries(r io.Reader) ([]GrubEntry, error) {
 
 		if current != nil {
 			if !isComment {
-				if strings.Contains(line, "{") {
-					depth++
-				}
-				if strings.Contains(line, "}") {
-					depth--
-					if depth <= 0 {
-						entries = append(entries, *current)
-						current = nil
-						depth = 0
-						continue
-					}
+				depth += strings.Count(line, "{") - strings.Count(line, "}")
+				if depth <= 0 {
+					entries = append(entries, *current)
+					current = nil
+					depth = 0
+					continue
 				}
 			}
 
@@ -334,14 +329,9 @@ func ParseGrubCfgEntries(r io.Reader) ([]GrubEntry, error) {
 			}
 		} else if !isComment {
 			// Track braces outside of menu entries (e.g., submenu closing braces)
-			if strings.Contains(line, "{") {
-				depth++
-			}
-			if strings.Contains(line, "}") {
-				depth--
-				if depth < 0 {
-					depth = 0
-				}
+			depth += strings.Count(line, "{") - strings.Count(line, "}")
+			if depth < 0 {
+				depth = 0
 			}
 		}
 	}
@@ -364,13 +354,4 @@ var (
 // 'password_pbkdf2' directive.
 func ParseGrubPasswordProtected(content []byte) bool {
 	return reSuperusers.Match(content) && rePassword.Match(content)
-}
-
-// os.linux accessor
-func (s *mqlOsLinux) grub() (*mqlGrubConfig, error) {
-	res, err := CreateResource(s.MqlRuntime, "grub.config", map[string]*llx.RawData{})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlGrubConfig), nil
 }
