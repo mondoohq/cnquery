@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/spf13/afero"
 	"go.mondoo.com/mql/v13/llx"
@@ -48,7 +49,11 @@ var grubCfgPaths = []string{
 	"/boot/efi/EFI/Microsoft/grub.cfg",   // WSL/Hyper-V (EFI)
 }
 
-type mqlGrubConfigInternal struct{}
+type mqlGrubConfigInternal struct {
+	grubCfgOnce    sync.Once
+	grubCfgContent []byte
+	grubCfgErr     error
+}
 
 func initGrubConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	conn, ok := runtime.Connection.(shared.Connection)
@@ -133,28 +138,49 @@ func (g *mqlGrubConfig) params() (map[string]any, error) {
 	return result, nil
 }
 
+// readGrubCfg reads and caches the grub.cfg content so that entries() and
+// passwordProtected() don't perform duplicate I/O.
+func (g *mqlGrubConfig) readGrubCfg() ([]byte, error) {
+	g.grubCfgOnce.Do(func() {
+		path := g.GetGrubPath().Data
+		if path == "" {
+			g.grubCfgContent = nil
+			return
+		}
+
+		conn, ok := g.MqlRuntime.Connection.(shared.Connection)
+		if !ok {
+			g.grubCfgErr = errors.New("wrong connection type")
+			return
+		}
+		fs := conn.FileSystem()
+		if fs == nil {
+			g.grubCfgErr = errors.New("filesystem not available")
+			return
+		}
+
+		f, err := fs.Open(path)
+		if err != nil {
+			g.grubCfgErr = err
+			return
+		}
+		defer f.Close()
+
+		g.grubCfgContent, g.grubCfgErr = io.ReadAll(f)
+	})
+	return g.grubCfgContent, g.grubCfgErr
+}
+
 func (g *mqlGrubConfig) entries() ([]any, error) {
-	path := g.GetGrubPath().Data
-	if path == "" {
-		return []any{}, nil
-	}
-
-	conn, ok := g.MqlRuntime.Connection.(shared.Connection)
-	if !ok {
-		return nil, errors.New("wrong connection type")
-	}
-	fs := conn.FileSystem()
-	if fs == nil {
-		return nil, errors.New("filesystem not available")
-	}
-
-	f, err := fs.Open(path)
+	content, err := g.readGrubCfg()
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	if content == nil {
+		return []any{}, nil
+	}
 
-	entries, err := ParseGrubCfgEntries(f)
+	entries, err := ParseGrubCfgEntries(strings.NewReader(string(content)))
 	if err != nil {
 		return nil, err
 	}
@@ -178,27 +204,15 @@ func (g *mqlGrubConfig) entries() ([]any, error) {
 }
 
 func (g *mqlGrubConfig) passwordProtected() (bool, error) {
-	path := g.GetGrubPath().Data
-	if path == "" {
-		return false, nil
-	}
-
-	conn, ok := g.MqlRuntime.Connection.(shared.Connection)
-	if !ok {
-		return false, errors.New("wrong connection type")
-	}
-	fs := conn.FileSystem()
-	if fs == nil {
-		return false, errors.New("filesystem not available")
-	}
-
-	f, err := fs.Open(path)
+	content, err := g.readGrubCfg()
 	if err != nil {
 		return false, err
 	}
-	defer f.Close()
+	if content == nil {
+		return false, nil
+	}
 
-	return ParseGrubPasswordProtection(f)
+	return ParseGrubPasswordProtected(content), nil
 }
 
 func (e *mqlGrubConfigEntry) id() (string, error) {
@@ -342,21 +356,14 @@ func ParseGrubCfgEntries(r io.Reader) ([]GrubEntry, error) {
 
 var (
 	reSuperusers = regexp.MustCompile(`(?m)^\s*set\s+superusers\s*=`)
-	rePassword   = regexp.MustCompile(`(?m)^\s*password_pbkdf2\s+`)
+	rePassword   = regexp.MustCompile(`(?m)^\s*password(?:_pbkdf2)?\s+`)
 )
 
-// ParseGrubPasswordProtection reads grub.cfg and checks for password protection.
-// GRUB password protection requires both 'set superusers=' and 'password_pbkdf2' directives.
-func ParseGrubPasswordProtection(r io.Reader) (bool, error) {
-	content, err := io.ReadAll(r)
-	if err != nil {
-		return false, err
-	}
-
-	hasSuperusers := reSuperusers.Match(content)
-	hasPassword := rePassword.Match(content)
-
-	return hasSuperusers && hasPassword, nil
+// ParseGrubPasswordProtected checks grub.cfg content for password protection.
+// GRUB password protection requires both 'set superusers=' and a 'password' or
+// 'password_pbkdf2' directive.
+func ParseGrubPasswordProtected(content []byte) bool {
+	return reSuperusers.Match(content) && rePassword.Match(content)
 }
 
 // os.linux accessor

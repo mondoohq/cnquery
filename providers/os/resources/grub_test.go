@@ -181,36 +181,35 @@ func TestParseGrubCfgEntriesCommentWithBraces(t *testing.T) {
 	assert.Contains(t, entries[0].Cmdline, "vmlinuz")
 }
 
-func TestParseGrubPasswordProtection(t *testing.T) {
-	t.Run("protected", func(t *testing.T) {
+func TestParseGrubPasswordProtected(t *testing.T) {
+	t.Run("protected with pbkdf2", func(t *testing.T) {
 		input := `set superusers="root"
 password_pbkdf2 root grub.pbkdf2.sha512.10000.ABC123
 `
-		protected, err := ParseGrubPasswordProtection(strings.NewReader(input))
-		require.NoError(t, err)
-		assert.True(t, protected)
+		assert.True(t, ParseGrubPasswordProtected([]byte(input)))
+	})
+
+	t.Run("protected with plaintext password", func(t *testing.T) {
+		input := `set superusers="root"
+password root secret
+`
+		assert.True(t, ParseGrubPasswordProtected([]byte(input)))
 	})
 
 	t.Run("no superusers", func(t *testing.T) {
 		input := `password_pbkdf2 root grub.pbkdf2.sha512.10000.ABC123
 `
-		protected, err := ParseGrubPasswordProtection(strings.NewReader(input))
-		require.NoError(t, err)
-		assert.False(t, protected)
+		assert.False(t, ParseGrubPasswordProtected([]byte(input)))
 	})
 
 	t.Run("no password", func(t *testing.T) {
 		input := `set superusers="root"
 `
-		protected, err := ParseGrubPasswordProtection(strings.NewReader(input))
-		require.NoError(t, err)
-		assert.False(t, protected)
+		assert.False(t, ParseGrubPasswordProtected([]byte(input)))
 	})
 
 	t.Run("empty config", func(t *testing.T) {
-		protected, err := ParseGrubPasswordProtection(strings.NewReader(""))
-		require.NoError(t, err)
-		assert.False(t, protected)
+		assert.False(t, ParseGrubPasswordProtected([]byte("")))
 	})
 }
 

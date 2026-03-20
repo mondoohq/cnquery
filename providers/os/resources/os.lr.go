@@ -16674,7 +16674,7 @@ func (c *mqlFstabEntry) GetFsck() *plugin.TValue[int64] {
 type mqlGrubConfig struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGrubConfigInternal it will be used here
+	mqlGrubConfigInternal
 	DefaultsPath      plugin.TValue[string]
 	GrubPath          plugin.TValue[string]
 	Params            plugin.TValue[map[string]any]
