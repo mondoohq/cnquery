@@ -1310,7 +1310,7 @@ ufw @defaults("status rules") {
 
 // Individual UFW rule
 private ufw.rule @defaults("action direction port") {
-  // Rule number
+  // Rule number (sequential across IPv4 and IPv6 rules; may differ from `ufw status numbered`)
   number int
   // Action (ALLOW, DENY, REJECT, LIMIT)
   action string

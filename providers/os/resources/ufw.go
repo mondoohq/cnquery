@@ -6,7 +6,6 @@ package resources
 import (
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 	"sync"
 
@@ -311,7 +310,9 @@ func createUfwRuleResource(runtime *plugin.Runtime, rule ufwParsedRule) (plugin.
 }
 
 func (r *mqlUfwRule) id() (string, error) {
-	return "ufw/rule/" + strconv.FormatInt(r.Number.Data, 10), nil
+	// Use the raw tuple line as the ID so that caching is stable even if
+	// rules are reordered or new rules are inserted between invocations.
+	return "ufw/rule/" + r.Raw.Data, nil
 }
 
 // parseUfwKeyValue parses a simple KEY=VALUE config file (with optional quotes).
@@ -391,7 +392,9 @@ func parseUfwTuples(data string) []ufwParsedRule {
 
 		// Action is first field, may have _log or _log-all suffix
 		action := fields[0]
-		action, _, _ = strings.Cut(action, "_log")
+		if i := strings.Index(action, "_log"); i != -1 {
+			action = action[:i]
+		}
 		rule.action = strings.ToUpper(action)
 
 		rule.protocol = fields[1]
