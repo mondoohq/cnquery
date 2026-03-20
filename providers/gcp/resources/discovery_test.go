@@ -46,6 +46,13 @@ func TestAllResolvedResources(t *testing.T) {
 	require.ElementsMatch(t, expected, All)
 }
 
+func TestMinimalResolvedResources(t *testing.T) {
+	expected := []string{
+		DiscoveryProjects,
+	}
+	require.ElementsMatch(t, expected, Minimal)
+}
+
 func TestAutoResolvedResources(t *testing.T) {
 	expected := []string{
 		DiscoveryOrganization,
@@ -101,6 +108,11 @@ func TestGetDiscoveryTargets(t *testing.T) {
 			name:    "all with extras",
 			targets: []string{"all", "projects", "instances"},
 			want:    All,
+		},
+		{
+			name:    "minimal",
+			targets: []string{"minimal"},
+			want:    Minimal,
 		},
 		{
 			name:    "auto",

@@ -50,6 +50,13 @@ func TestAllResolvedResources(t *testing.T) {
 	require.ElementsMatch(t, expected, All)
 }
 
+func TestMinimalResolvedResources(t *testing.T) {
+	expected := []string{
+		DiscoveryAccounts,
+	}
+	require.ElementsMatch(t, expected, Minimal)
+}
+
 func TestAutoResolvedResources(t *testing.T) {
 	expected := []string{
 		DiscoveryAccounts,
@@ -356,6 +363,7 @@ func TestDiscoveryAndFilterPropagation(t *testing.T) {
 				[]string{"s3-buckets", "instances", "iam-users"},
 				[]string{DiscoveryS3Buckets, DiscoveryInstances, DiscoveryIAMUsers},
 			},
+			{"minimal keyword", []string{"minimal"}, Minimal},
 			{"auto takes precedence", []string{"auto", "s3-buckets"}, Auto},
 			{"all takes precedence", []string{"all", "s3-buckets"}, All},
 		}
@@ -463,6 +471,11 @@ func TestGetDiscoveryTargets(t *testing.T) {
 			name:    "all",
 			targets: []string{"all"},
 			want:    All,
+		},
+		{
+			name:    "minimal",
+			targets: []string{"minimal"},
+			want:    Minimal,
 		},
 		{
 			name:    "auto",
