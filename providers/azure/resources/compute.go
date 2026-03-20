@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -109,9 +110,14 @@ func (a *mqlAzureSubscriptionComputeService) vms() ([]any, error) {
 				}
 			}
 
+			var id *string
+			if vm.ID != nil {
+				normalized := strings.ToLower(*vm.ID)
+				id = &normalized
+			}
 			mqlAzureVm, err := CreateResource(a.MqlRuntime, "azure.subscription.computeService.vm",
 				map[string]*llx.RawData{
-					"id":                llx.StringDataPtr(vm.ID),
+					"id":                llx.StringDataPtr(id),
 					"name":              llx.StringDataPtr(vm.Name),
 					"location":          llx.StringDataPtr(vm.Location),
 					"zones":             llx.ArrayData(convert.SliceStrPtrToInterface(vm.Zones), types.String),

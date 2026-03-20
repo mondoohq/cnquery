@@ -112,7 +112,7 @@ type subWithConfig struct {
 }
 
 func MondooAzureInstanceID(instanceID string) string {
-	return "//platformid.api.mondoo.app/runtime/azure" + instanceID
+	return "//platformid.api.mondoo.app/runtime/azure" + strings.ToLower(instanceID)
 }
 
 func getDiscoveryTargets(config *inventory.Config) []string {

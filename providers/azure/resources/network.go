@@ -258,7 +258,7 @@ func (a *mqlAzureSubscriptionNetworkServiceInterface) vm() (*mqlAzureSubscriptio
 		return nil, nil
 	}
 	res, err := NewResource(a.MqlRuntime, "azure.subscription.computeService.vm", map[string]*llx.RawData{
-		"id": llx.StringData(vmID),
+		"id": llx.StringData(strings.ToLower(vmID)),
 	})
 	if err != nil {
 		return nil, err
