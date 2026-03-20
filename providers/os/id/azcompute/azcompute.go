@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
@@ -41,7 +42,7 @@ Invoke-RestMethod -TimeoutSec 5 -Headers $Headers -URI http://169.254.169.254/me
 )
 
 func MondooAzureInstanceID(instanceID string) string {
-	return "//platformid.api.mondoo.app/runtime/azure" + instanceID
+	return "//platformid.api.mondoo.app/runtime/azure" + strings.ToLower(instanceID)
 }
 
 type instanceMetadata struct {
