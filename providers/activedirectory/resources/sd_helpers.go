@@ -14,9 +14,10 @@ import (
 // SECURITY_DESCRIPTOR DACL.
 type aceEntry struct {
 	// aceType: 0 = ACCESS_ALLOWED, 1 = ACCESS_DENIED, 5 = ACCESS_ALLOWED_OBJECT
-	aceType  uint8
-	mask     uint32
-	sid      string
+	aceType    uint8
+	aceFlags   uint8  // ACE header flags (INHERITED_ACE = 0x10, etc.)
+	mask       uint32
+	sid        string
 	objectGUID string // non-empty only for object ACEs (type 5)
 }
 
@@ -123,6 +124,7 @@ func parseDACL(sd []byte, offset int) parsedSD {
 		}
 
 		aceType := sd[pos]
+		aceFlags := sd[pos+1]
 		aceSize := int(binary.LittleEndian.Uint16(sd[pos+2 : pos+4]))
 		if aceSize < 4 || pos+aceSize > len(sd) {
 			log.Warn().Int("aceIndex", i).Int("aceSize", aceSize).Msg("SD: invalid ACE size")
@@ -133,11 +135,13 @@ func parseDACL(sd []byte, offset int) parsedSD {
 		case 0x00: // ACCESS_ALLOWED_ACE
 			ace, ok := parseBasicACE(sd, pos, aceType)
 			if ok {
+				ace.aceFlags = aceFlags
 				result.aces = append(result.aces, ace)
 			}
 		case 0x05: // ACCESS_ALLOWED_OBJECT_ACE
 			ace, ok := parseObjectACE(sd, pos)
 			if ok {
+				ace.aceFlags = aceFlags
 				result.aces = append(result.aces, ace)
 			}
 		}

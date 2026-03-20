@@ -62,6 +62,32 @@ func privilegedGroupSIDs(domainSID, rootDomainSID string) map[string]bool {
 	return sids
 }
 
+// computeMemberCount determines the accurate member count for a group.
+// If the member attribute was returned with range markers (indicating
+// truncation at MaxValRange), it performs full range retrieval to count
+// all members. Otherwise it uses the directly returned member values.
+func computeMemberCount(l *ldap.Conn, entry *ldap.Entry, groupDN string) (int64, bool) {
+	// Check if the server returned a range-limited member attribute.
+	for _, attr := range entry.Attributes {
+		if strings.HasPrefix(strings.ToLower(attr.Name), "member;range=") {
+			// Range-limited: do full retrieval for accurate count.
+			allMembers, err := rangeRetrieveMembers(l, groupDN)
+			if err != nil {
+				// Fall back to what we have.
+				count := int64(len(attr.Values))
+				return count, count == 0
+			}
+			count := int64(len(allMembers))
+			return count, count == 0
+		}
+	}
+
+	// No range limitation: use the direct member attribute.
+	members := connection.GetStringSliceAttr(entry, "member")
+	count := int64(len(members))
+	return count, count == 0
+}
+
 func (a *mqlActivedirectory) groups() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
 	baseDN := conn.BaseDN()
@@ -116,11 +142,9 @@ func (a *mqlActivedirectory) groups() ([]interface{}, error) {
 		// whenCreated: AD generalized time "20060102150405.0Z"
 		whenCreated := parseADGeneralizedTime(connection.GetStringAttr(entry, "whenCreated"))
 
-		// memberCount: count from the initial member fetch.
-		// AD may truncate at MaxValRange (1500) for large groups.
-		members := connection.GetStringSliceAttr(entry, "member")
-		memberCount := int64(len(members))
-		isEmpty := memberCount == 0
+		// Get initial member count. AD may truncate at MaxValRange (1500),
+		// so check for range-limited responses and do full retrieval if needed.
+		memberCount, isEmpty := computeMemberCount(conn.LDAPConn(), entry, dn)
 
 		ouPath := extractOU(dn)
 

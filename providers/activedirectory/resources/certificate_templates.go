@@ -92,14 +92,17 @@ func (a *mqlActivedirectory) certificateTemplates() ([]interface{}, error) {
 		"whenChanged",
 	}
 
-	entries, err := connection.PagedSearch(conn.LDAPConn(), ldap.NewSearchRequest(
+	sdCtrl := ldap.NewControlMicrosoftSDFlags()
+	sdCtrl.ControlValue = 0x7 // Owner + Group + DACL
+
+	entries, err := pagedSearchWithControls(conn.LDAPConn(), ldap.NewSearchRequest(
 		searchBase,
 		ldap.ScopeSingleLevel,
 		ldap.NeverDerefAliases, 0, 0, false,
 		"(objectClass=pKICertificateTemplate)",
 		attrs,
 		nil,
-	))
+	), []ldap.Control{sdCtrl})
 	if err != nil {
 		if ldap.IsErrorWithCode(err, ldap.LDAPResultNoSuchObject) {
 			log.Warn().Msg("ADCS Certificate Templates container not found, ADCS may not be installed")

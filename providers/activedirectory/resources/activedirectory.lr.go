@@ -33,6 +33,7 @@ const (
 	ResourceActivedirectoryCertificateAuthority      string = "activedirectory.certificateAuthority"
 	ResourceActivedirectoryPkiObject                 string = "activedirectory.pkiObject"
 	ResourceActivedirectoryDnsZone                   string = "activedirectory.dnsZone"
+	ResourceActivedirectoryDangerousPermission       string = "activedirectory.dangerousPermission"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -102,6 +103,10 @@ func init() {
 		"activedirectory.dnsZone": {
 			// to override args, implement: initActivedirectoryDnsZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createActivedirectoryDnsZone,
+		},
+		"activedirectory.dangerousPermission": {
+			// to override args, implement: initActivedirectoryDangerousPermission(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createActivedirectoryDangerousPermission,
 		},
 	}
 }
@@ -248,6 +253,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"activedirectory.schemaVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectory).GetSchemaVersion()).ToDataRes(types.Int)
+	},
+	"activedirectory.dangerousPermissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectory).GetDangerousPermissions()).ToDataRes(types.Array(types.Resource("activedirectory.dangerousPermission")))
 	},
 	"activedirectory.domainController.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryDomainController).GetName()).ToDataRes(types.String)
@@ -801,6 +809,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"activedirectory.dnsZone.secureOnly": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryDnsZone).GetSecureOnly()).ToDataRes(types.Bool)
 	},
+	"activedirectory.dangerousPermission.targetDN": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryDangerousPermission).GetTargetDN()).ToDataRes(types.String)
+	},
+	"activedirectory.dangerousPermission.targetName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryDangerousPermission).GetTargetName()).ToDataRes(types.String)
+	},
+	"activedirectory.dangerousPermission.targetType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryDangerousPermission).GetTargetType()).ToDataRes(types.String)
+	},
+	"activedirectory.dangerousPermission.principalSID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryDangerousPermission).GetPrincipalSID()).ToDataRes(types.String)
+	},
+	"activedirectory.dangerousPermission.rightType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryDangerousPermission).GetRightType()).ToDataRes(types.String)
+	},
+	"activedirectory.dangerousPermission.accessMask": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryDangerousPermission).GetAccessMask()).ToDataRes(types.Int)
+	},
+	"activedirectory.dangerousPermission.isLowPrivilege": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryDangerousPermission).GetIsLowPrivilege()).ToDataRes(types.Bool)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -903,6 +932,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"activedirectory.schemaVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlActivedirectory).SchemaVersion, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"activedirectory.dangerousPermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectory).DangerousPermissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"activedirectory.domainController.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1701,6 +1734,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlActivedirectoryDnsZone).SecureOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"activedirectory.dangerousPermission.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryDangerousPermission).__id, ok = v.Value.(string)
+		return
+	},
+	"activedirectory.dangerousPermission.targetDN": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryDangerousPermission).TargetDN, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.dangerousPermission.targetName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryDangerousPermission).TargetName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.dangerousPermission.targetType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryDangerousPermission).TargetType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.dangerousPermission.principalSID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryDangerousPermission).PrincipalSID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.dangerousPermission.rightType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryDangerousPermission).RightType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.dangerousPermission.accessMask": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryDangerousPermission).AccessMask, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"activedirectory.dangerousPermission.isLowPrivilege": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryDangerousPermission).IsLowPrivilege, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -1752,6 +1817,7 @@ type mqlActivedirectory struct {
 	DnsZones                    plugin.TValue[[]any]
 	LapsEnabled                 plugin.TValue[bool]
 	SchemaVersion               plugin.TValue[int64]
+	DangerousPermissions        plugin.TValue[[]any]
 }
 
 // createActivedirectory creates a new instance of this resource
@@ -2038,6 +2104,22 @@ func (c *mqlActivedirectory) GetLapsEnabled() *plugin.TValue[bool] {
 func (c *mqlActivedirectory) GetSchemaVersion() *plugin.TValue[int64] {
 	return plugin.GetOrCompute[int64](&c.SchemaVersion, func() (int64, error) {
 		return c.schemaVersion()
+	})
+}
+
+func (c *mqlActivedirectory) GetDangerousPermissions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DangerousPermissions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("activedirectory", c.__id, "dangerousPermissions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.dangerousPermissions()
 	})
 }
 
@@ -3655,4 +3737,83 @@ func (c *mqlActivedirectoryDnsZone) GetDynamicUpdate() *plugin.TValue[bool] {
 
 func (c *mqlActivedirectoryDnsZone) GetSecureOnly() *plugin.TValue[bool] {
 	return &c.SecureOnly
+}
+
+// mqlActivedirectoryDangerousPermission for the activedirectory.dangerousPermission resource
+type mqlActivedirectoryDangerousPermission struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlActivedirectoryDangerousPermissionInternal it will be used here
+	TargetDN       plugin.TValue[string]
+	TargetName     plugin.TValue[string]
+	TargetType     plugin.TValue[string]
+	PrincipalSID   plugin.TValue[string]
+	RightType      plugin.TValue[string]
+	AccessMask     plugin.TValue[int64]
+	IsLowPrivilege plugin.TValue[bool]
+}
+
+// createActivedirectoryDangerousPermission creates a new instance of this resource
+func createActivedirectoryDangerousPermission(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlActivedirectoryDangerousPermission{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("activedirectory.dangerousPermission", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlActivedirectoryDangerousPermission) MqlName() string {
+	return "activedirectory.dangerousPermission"
+}
+
+func (c *mqlActivedirectoryDangerousPermission) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlActivedirectoryDangerousPermission) GetTargetDN() *plugin.TValue[string] {
+	return &c.TargetDN
+}
+
+func (c *mqlActivedirectoryDangerousPermission) GetTargetName() *plugin.TValue[string] {
+	return &c.TargetName
+}
+
+func (c *mqlActivedirectoryDangerousPermission) GetTargetType() *plugin.TValue[string] {
+	return &c.TargetType
+}
+
+func (c *mqlActivedirectoryDangerousPermission) GetPrincipalSID() *plugin.TValue[string] {
+	return &c.PrincipalSID
+}
+
+func (c *mqlActivedirectoryDangerousPermission) GetRightType() *plugin.TValue[string] {
+	return &c.RightType
+}
+
+func (c *mqlActivedirectoryDangerousPermission) GetAccessMask() *plugin.TValue[int64] {
+	return &c.AccessMask
+}
+
+func (c *mqlActivedirectoryDangerousPermission) GetIsLowPrivilege() *plugin.TValue[bool] {
+	return &c.IsLowPrivilege
 }

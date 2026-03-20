@@ -38,49 +38,58 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	domain := flags["domain"]
 	baseDN := flags["base-dn"]
 	ldaps := flags["ldaps"]
+	starttls := flags["starttls"]
 	port := flags["port"]
 	insecure := flags["insecure"]
+	kerberos := flags["kerberos"]
+	keytab := flags["keytab"]
+	krb5conf := flags["krb5conf"]
+	ccache := flags["ccache"]
 	backend := flags["backend"]
+
 
 	if len(dc.Value) == 0 {
 		return nil, errors.New("dc flag is required: specify the domain controller hostname or IP address")
 	}
 
 	opts := map[string]string{}
-	opts[connection.OptionDC] = string(dc.Value)
+	opts[connection.OptionDC] = strVal(dc.Value)
 
-	if len(domain.Value) > 0 {
-		opts[connection.OptionDomain] = string(domain.Value)
-	}
-	if len(baseDN.Value) > 0 {
-		opts[connection.OptionBaseDN] = string(baseDN.Value)
-	}
-	if len(ldaps.Value) > 0 {
-		opts[connection.OptionLDAPS] = string(ldaps.Value)
-	}
-	portStr := strings.TrimRight(string(port.Value), "\x00")
+	setStrOpt(opts, connection.OptionDomain, domain.Value)
+	setStrOpt(opts, connection.OptionBaseDN, baseDN.Value)
+	setBoolOpt(opts, connection.OptionLDAPS, ldaps.Value)
+	setBoolOpt(opts, connection.OptionStartTLS, starttls.Value)
+	portStr := strVal(port.Value)
 	if portStr != "" && portStr != "0" {
 		if _, err := strconv.Atoi(portStr); err != nil {
 			return nil, errors.New("port flag must be a valid integer: " + err.Error())
 		}
 		opts[connection.OptionPort] = portStr
 	}
-	if len(insecure.Value) > 0 {
-		opts[connection.OptionInsecure] = string(insecure.Value)
-	}
-	if len(backend.Value) > 0 {
-		b := string(backend.Value)
+	setBoolOpt(opts, connection.OptionInsecure, insecure.Value)
+	setBoolOpt(opts, connection.OptionKerberos, kerberos.Value)
+	setStrOpt(opts, connection.OptionKeytab, keytab.Value)
+	setStrOpt(opts, connection.OptionKrb5Conf, krb5conf.Value)
+	setStrOpt(opts, connection.OptionCCache, ccache.Value)
+	if b := strVal(backend.Value); b != "" {
 		if b != "ldap" && b != "rsat" {
 			return nil, errors.New("backend flag must be 'ldap' or 'rsat'")
 		}
 		opts[connection.OptionBackend] = b
 	}
 
+	// Always store user in options so Kerberos keytab/ccache paths can
+	// read it even when --password is not provided.
+	userStr := strVal(user.Value)
+	if userStr != "" {
+		opts[connection.OptionUser] = userStr
+	}
+
 	creds := []*vault.Credential{}
 	if len(password.Value) > 0 {
 		creds = append(creds, &vault.Credential{
 			Type:   vault.CredentialType_password,
-			User:   string(user.Value),
+			User:   userStr,
 			Secret: password.Value,
 		})
 	}
@@ -176,4 +185,27 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.ActiveDirector
 	asset.PlatformIds = []string{conn.PlatformId()}
 
 	return nil
+}
+
+
+// setBoolOpt converts a plugin bool flag value (which may be \x01 for true
+// or \x00 for false) to the string "true" and stores it in the options map.
+// Only "true" values are stored; false/unset flags are omitted.
+func setBoolOpt(opts map[string]string, key string, value []byte) {
+	if len(value) > 0 && value[0] != 0 {
+		opts[key] = "true"
+	}
+}
+
+// strVal converts a plugin flag value to a clean Go string, stripping
+// trailing null bytes that the plugin framework appends to string values.
+func strVal(b []byte) string {
+	return strings.TrimRight(string(b), "\x00")
+}
+
+// setStrOpt stores a non-empty, null-trimmed string flag value in opts.
+func setStrOpt(opts map[string]string, key string, value []byte) {
+	if s := strVal(value); s != "" {
+		opts[key] = s
+	}
 }

@@ -40,3 +40,7 @@ func (a *mqlActivedirectoryCertificateAuthority) id() (string, error) {
 func (a *mqlActivedirectoryPkiObject) id() (string, error) {
 	return a.DistinguishedName.Data, nil
 }
+
+func (a *mqlActivedirectoryDangerousPermission) id() (string, error) {
+	return fmt.Sprintf("%s/%s/%s", a.TargetDN.Data, a.PrincipalSID.Data, a.RightType.Data), nil
+}

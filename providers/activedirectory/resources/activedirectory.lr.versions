@@ -65,6 +65,15 @@ activedirectory.computer.unconstrainedDelegation 13.0.1
 activedirectory.computer.userAccountControl 13.0.1
 activedirectory.computer.whenCreated 13.0.1
 activedirectory.computers 13.0.1
+activedirectory.dangerousPermission 13.0.1
+activedirectory.dangerousPermission.accessMask 13.0.1
+activedirectory.dangerousPermission.isLowPrivilege 13.0.1
+activedirectory.dangerousPermission.principalSID 13.0.1
+activedirectory.dangerousPermission.rightType 13.0.1
+activedirectory.dangerousPermission.targetDN 13.0.1
+activedirectory.dangerousPermission.targetName 13.0.1
+activedirectory.dangerousPermission.targetType 13.0.1
+activedirectory.dangerousPermissions 13.0.1
 activedirectory.distinguishedName 13.0.1
 activedirectory.dnsZone 13.0.1
 activedirectory.dnsZone.distinguishedName 13.0.1

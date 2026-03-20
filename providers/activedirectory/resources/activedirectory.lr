@@ -50,6 +50,8 @@ activedirectory @defaults("domain functionalLevel") {
   lapsEnabled() bool
   // Schema version
   schemaVersion() int
+  // Dangerous ACL delegations on critical AD objects
+  dangerousPermissions() []activedirectory.dangerousPermission
 }
 
 // Active Directory Domain Controller
@@ -478,4 +480,26 @@ activedirectory.dnsZone @defaults("name") {
   dynamicUpdate bool
   // Whether secure-only dynamic updates
   secureOnly bool
+}
+
+// Dangerous ACL delegation found on a critical AD object.
+// These represent attack paths where a low-privilege principal holds
+// powerful rights (GenericAll, WriteDACL, WriteOwner, DCSync, etc.)
+// on sensitive objects like the domain head, AdminSDHolder, or
+// privileged group/DC computer accounts.
+activedirectory.dangerousPermission @defaults("targetName rightType principalSID") {
+  // DN of the AD object with the dangerous ACL
+  targetDN string
+  // Friendly name of the target object
+  targetName string
+  // Category of the target (domain, adminSDHolder, group, computer, user, ou)
+  targetType string
+  // SID of the principal granted dangerous access
+  principalSID string
+  // Type of dangerous right (GenericAll, WriteDACL, WriteOwner, GenericWrite, DCSync, ForceChangePassword)
+  rightType string
+  // Raw access mask value
+  accessMask int
+  // Whether the principal is a well-known low-privilege identity (Everyone, Auth Users, Domain Users, etc.)
+  isLowPrivilege bool
 }

@@ -7,11 +7,14 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
 
 	"github.com/go-ldap/ldap/v3"
+	"github.com/go-ldap/ldap/v3/gssapi"
+	"github.com/jcmturner/gokrb5/v8/client"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -29,6 +32,11 @@ const (
 	OptionPort     = "port"
 	OptionInsecure = "insecure"
 	OptionBackend  = "backend"
+	OptionStartTLS = "starttls"
+	OptionKerberos = "kerberos"
+	OptionKeytab   = "keytab"
+	OptionKrb5Conf = "krb5conf"
+	OptionCCache   = "ccache"
 )
 
 // ActiveDirectoryConnection manages a single LDAP connection to an
@@ -79,15 +87,32 @@ func NewActiveDirectoryConnection(id uint32, asset *inventory.Asset, conf *inven
 		user = conf.Options[OptionUser]
 		password = conf.Options[OptionPassword]
 	}
-	if user == "" {
-		return nil, errors.New("active directory provider requires option 'user'")
-	}
-	if password == "" {
-		return nil, errors.New("active directory provider requires option 'password'")
+
+	backend := conf.Options[OptionBackend]
+	if backend == "rsat" {
+		return nil, errors.New("backend 'rsat' is not yet implemented; use --backend=ldap (the default)")
 	}
 
 	useTLS := strings.EqualFold(conf.Options[OptionLDAPS], "true")
+	useStartTLS := strings.EqualFold(conf.Options[OptionStartTLS], "true")
+	useKerberos := strings.EqualFold(conf.Options[OptionKerberos], "true")
 	insecure := strings.EqualFold(conf.Options[OptionInsecure], "true")
+
+	// Validate mutually exclusive TLS options.
+	if useTLS && useStartTLS {
+		return nil, errors.New("--ldaps and --starttls are mutually exclusive; use one or the other")
+	}
+
+	// Kerberos auth doesn't require a password (keytab or ccache can substitute),
+	// but simple bind always does.
+	if !useKerberos {
+		if user == "" {
+			return nil, errors.New("active directory provider requires option 'user'")
+		}
+		if password == "" {
+			return nil, errors.New("active directory provider requires option 'password'")
+		}
+	}
 
 	port := defaultPort(useTLS)
 	if p := conf.Options[OptionPort]; p != "" {
@@ -100,7 +125,7 @@ func NewActiveDirectoryConnection(id uint32, asset *inventory.Asset, conf *inven
 
 	addr := fmt.Sprintf("%s:%d", dcHost, port)
 
-	// Dial LDAP
+	// --- Dial ---
 	var ldapConn *ldap.Conn
 	var err error
 	if useTLS {
@@ -114,10 +139,28 @@ func NewActiveDirectoryConnection(id uint32, asset *inventory.Asset, conf *inven
 		return nil, fmt.Errorf("failed to dial LDAP at %s: %w", addr, err)
 	}
 
-	// Simple bind
-	if err := ldapConn.Bind(user, password); err != nil {
-		ldapConn.Close()
-		return nil, fmt.Errorf("LDAP bind failed for %s: %w", user, err)
+	// --- StartTLS: upgrade plaintext connection to TLS before bind ---
+	if useStartTLS {
+		if err := ldapConn.StartTLS(&tls.Config{
+			ServerName:         dcHost,
+			InsecureSkipVerify: insecure, //nolint:gosec // user-controlled flag for lab/test environments
+		}); err != nil {
+			ldapConn.Close()
+			return nil, fmt.Errorf("StartTLS upgrade failed for %s: %w", addr, err)
+		}
+	}
+
+	// --- Bind: Kerberos/GSSAPI or simple bind ---
+	if useKerberos {
+		if err := kerberosGSSAPIBind(ldapConn, dcHost, user, password, conf.Options); err != nil {
+			ldapConn.Close()
+			return nil, err
+		}
+	} else {
+		if err := ldapConn.Bind(user, password); err != nil {
+			ldapConn.Close()
+			return nil, fmt.Errorf("LDAP bind failed for %s: %w", user, err)
+		}
 	}
 
 	c := &ActiveDirectoryConnection{
@@ -129,9 +172,11 @@ func NewActiveDirectoryConnection(id uint32, asset *inventory.Asset, conf *inven
 		cache:      make(map[string]interface{}),
 	}
 
-	// Override baseDN from option if provided
+	// Override baseDN: --base-dn takes precedence, then --domain, then RootDSE auto-detection.
 	if explicitBase := conf.Options[OptionBaseDN]; explicitBase != "" {
 		c.baseDN = explicitBase
+	} else if domain := conf.Options[OptionDomain]; domain != "" {
+		c.baseDN = domainToDN(domain)
 	}
 
 	if err := c.discoverRootDSE(); err != nil {
@@ -149,6 +194,10 @@ func NewActiveDirectoryConnection(id uint32, asset *inventory.Asset, conf *inven
 		return nil, fmt.Errorf("forest root domain SID discovery failed: %w", err)
 	}
 
+	authMethod := "simple-bind"
+	if useKerberos {
+		authMethod = "kerberos/gssapi"
+	}
 	log.Info().
 		Str("dc", dcHost).
 		Str("baseDN", c.baseDN).
@@ -156,9 +205,111 @@ func NewActiveDirectoryConnection(id uint32, asset *inventory.Asset, conf *inven
 		Str("forestRootSID", c.rootDomainSID).
 		Str("domainLevel", c.domainFunctionalLevel).
 		Str("forestLevel", c.forestFunctionalLevel).
+		Str("auth", authMethod).
 		Msg("Active Directory connection established")
 
 	return c, nil
+}
+
+// domainToDN converts a DNS domain name to an LDAP distinguished name.
+// Example: "mini.lab" → "DC=mini,DC=lab"
+func domainToDN(domain string) string {
+	parts := strings.Split(domain, ".")
+	for i, p := range parts {
+		parts[i] = "DC=" + p
+	}
+	return strings.Join(parts, ",")
+}
+
+// kerberosGSSAPIBind performs a Kerberos/GSSAPI SASL bind on the connection.
+// It supports three credential sources, tried in order:
+//  1. --keytab: service keytab file
+//  2. --ccache: existing Kerberos credential cache (e.g. from kinit)
+//  3. --user + --password: password-based Kerberos AS exchange
+//
+// The krb5.conf location is taken from --krb5conf, KRB5_CONFIG env, or
+// the platform default /etc/krb5.conf.
+func kerberosGSSAPIBind(conn *ldap.Conn, dcHost, user, password string, opts map[string]string) error {
+	krb5confPath := resolveKrb5Conf(opts[OptionKrb5Conf])
+
+	// LDAP service principal: ldap/<dc_hostname>
+	servicePrincipal := "ldap/" + dcHost
+
+	var gssClient *gssapi.Client
+	var err error
+
+	switch {
+	case opts[OptionKeytab] != "":
+		if user == "" {
+			return errors.New("--user is required with --keytab to identify the principal")
+		}
+		// Extract realm from user@REALM or use empty string for default realm.
+		principal, realm := splitPrincipal(user)
+		gssClient, err = gssapi.NewClientWithKeytab(principal, realm, opts[OptionKeytab], krb5confPath, client.DisablePAFXFAST(true))
+		if err != nil {
+			return fmt.Errorf("kerberos keytab client: %w", err)
+		}
+
+	case opts[OptionCCache] != "":
+		gssClient, err = gssapi.NewClientFromCCache(opts[OptionCCache], krb5confPath, client.DisablePAFXFAST(true))
+		if err != nil {
+			return fmt.Errorf("kerberos ccache client: %w", err)
+		}
+
+	default:
+		if user == "" || password == "" {
+			return errors.New("--kerberos requires either --keytab, --ccache, or both --user and --password")
+		}
+		principal, realm := splitPrincipal(user)
+		gssClient, err = gssapi.NewClientWithPassword(principal, realm, password, krb5confPath, client.DisablePAFXFAST(true))
+		if err != nil {
+			return fmt.Errorf("kerberos password client: %w", err)
+		}
+	}
+
+	log.Debug().
+		Str("servicePrincipal", servicePrincipal).
+		Str("krb5conf", krb5confPath).
+		Msg("performing GSSAPI/Kerberos bind")
+
+	if err := conn.GSSAPIBind(gssClient, servicePrincipal, ""); err != nil {
+		gssClient.Close()
+		// AD error 80090308 (SEC_E_INVALID_TOKEN) with data 57 typically means
+		// the DC requires LDAP signing/sealing for SASL binds but the go-ldap
+		// GSSAPI client does not negotiate SASL security layers (upstream
+		// issue: https://github.com/go-ldap/ldap/issues/552). Advise the user
+		// to use LDAPS/StartTLS or fall back to simple bind.
+		if strings.Contains(err.Error(), "80090308") {
+			return fmt.Errorf("GSSAPI bind to %s failed (the domain controller likely requires "+
+				"LDAP signing for SASL binds; use --ldaps or --starttls, or fall back to "+
+				"simple bind with --user/--password without --kerberos): %w", servicePrincipal, err)
+		}
+		return fmt.Errorf("GSSAPI bind to %s failed: %w", servicePrincipal, err)
+	}
+
+	return nil
+}
+
+// resolveKrb5Conf returns the krb5.conf path from the explicit option,
+// the KRB5_CONFIG environment variable, or the platform default.
+func resolveKrb5Conf(explicit string) string {
+	if explicit != "" {
+		return explicit
+	}
+	if env := os.Getenv("KRB5_CONFIG"); env != "" {
+		return env
+	}
+	return "/etc/krb5.conf"
+}
+
+// splitPrincipal splits a Kerberos principal like "user@REALM" into
+// ("user", "REALM"). If no '@' is present, realm is empty and the
+// gokrb5 client uses the default realm from krb5.conf.
+func splitPrincipal(upn string) (string, string) {
+	if idx := strings.LastIndex(upn, "@"); idx >= 0 {
+		return upn[:idx], upn[idx+1:]
+	}
+	return upn, ""
 }
 
 // discoverRootDSE queries the RootDSE (base scope, empty baseDN) to populate
