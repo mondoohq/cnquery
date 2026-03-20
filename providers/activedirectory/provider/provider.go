@@ -31,47 +31,56 @@ func Init() *Service {
 
 func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error) {
 	flags := req.GetFlags()
+	flagValue := func(name string) []byte {
+		if flags == nil {
+			return nil
+		}
+		flag, ok := flags[name]
+		if !ok || flag == nil {
+			return nil
+		}
+		return flag.Value
+	}
 
-	dc := flags["dc"]
-	user := flags["user"]
-	password := flags["password"]
-	domain := flags["domain"]
-	baseDN := flags["base-dn"]
-	ldaps := flags["ldaps"]
-	starttls := flags["starttls"]
-	port := flags["port"]
-	insecure := flags["insecure"]
-	kerberos := flags["kerberos"]
-	keytab := flags["keytab"]
-	krb5conf := flags["krb5conf"]
-	ccache := flags["ccache"]
-	backend := flags["backend"]
+	dc := flagValue("dc")
+	user := flagValue("user")
+	password := flagValue("password")
+	domain := flagValue("domain")
+	baseDN := flagValue("base-dn")
+	ldaps := flagValue("ldaps")
+	starttls := flagValue("starttls")
+	port := flagValue("port")
+	insecure := flagValue("insecure")
+	kerberos := flagValue("kerberos")
+	keytab := flagValue("keytab")
+	krb5conf := flagValue("krb5conf")
+	ccache := flagValue("ccache")
+	backend := flagValue("backend")
 
-
-	if len(dc.Value) == 0 {
+	if len(dc) == 0 {
 		return nil, errors.New("dc flag is required: specify the domain controller hostname or IP address")
 	}
 
 	opts := map[string]string{}
-	opts[connection.OptionDC] = strVal(dc.Value)
+	opts[connection.OptionDC] = strVal(dc)
 
-	setStrOpt(opts, connection.OptionDomain, domain.Value)
-	setStrOpt(opts, connection.OptionBaseDN, baseDN.Value)
-	setBoolOpt(opts, connection.OptionLDAPS, ldaps.Value)
-	setBoolOpt(opts, connection.OptionStartTLS, starttls.Value)
-	portStr := strVal(port.Value)
+	setStrOpt(opts, connection.OptionDomain, domain)
+	setStrOpt(opts, connection.OptionBaseDN, baseDN)
+	setBoolOpt(opts, connection.OptionLDAPS, ldaps)
+	setBoolOpt(opts, connection.OptionStartTLS, starttls)
+	portStr := strVal(port)
 	if portStr != "" && portStr != "0" {
 		if _, err := strconv.Atoi(portStr); err != nil {
 			return nil, errors.New("port flag must be a valid integer: " + err.Error())
 		}
 		opts[connection.OptionPort] = portStr
 	}
-	setBoolOpt(opts, connection.OptionInsecure, insecure.Value)
-	setBoolOpt(opts, connection.OptionKerberos, kerberos.Value)
-	setStrOpt(opts, connection.OptionKeytab, keytab.Value)
-	setStrOpt(opts, connection.OptionKrb5Conf, krb5conf.Value)
-	setStrOpt(opts, connection.OptionCCache, ccache.Value)
-	if b := strVal(backend.Value); b != "" {
+	setBoolOpt(opts, connection.OptionInsecure, insecure)
+	setBoolOpt(opts, connection.OptionKerberos, kerberos)
+	setStrOpt(opts, connection.OptionKeytab, keytab)
+	setStrOpt(opts, connection.OptionKrb5Conf, krb5conf)
+	setStrOpt(opts, connection.OptionCCache, ccache)
+	if b := strVal(backend); b != "" {
 		if b != "ldap" && b != "rsat" {
 			return nil, errors.New("backend flag must be 'ldap' or 'rsat'")
 		}
@@ -80,17 +89,17 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 
 	// Always store user in options so Kerberos keytab/ccache paths can
 	// read it even when --password is not provided.
-	userStr := strVal(user.Value)
+	userStr := strVal(user)
 	if userStr != "" {
 		opts[connection.OptionUser] = userStr
 	}
 
 	creds := []*vault.Credential{}
-	if len(password.Value) > 0 {
+	if len(password) > 0 {
 		creds = append(creds, &vault.Credential{
 			Type:   vault.CredentialType_password,
 			User:   userStr,
-			Secret: password.Value,
+			Secret: password,
 		})
 	}
 
@@ -186,7 +195,6 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.ActiveDirector
 
 	return nil
 }
-
 
 // setBoolOpt converts a plugin bool flag value (which may be \x01 for true
 // or \x00 for false) to the string "true" and stores it in the options map.

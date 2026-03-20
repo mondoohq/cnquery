@@ -104,10 +104,10 @@ func queryRootDSEGC(conn *connection.ActiveDirectoryConnection, host string) (bo
 	var ldapConn *ldap.Conn
 	var err error
 	if useTLS {
-		ldapConn, err = ldap.DialTLS("tcp", addr, &tls.Config{
+		ldapConn, err = ldap.DialURL("ldaps://"+addr, ldap.DialWithTLSConfig(&tls.Config{
 			ServerName:         host,
 			InsecureSkipVerify: insecure, //nolint:gosec
-		})
+		}))
 	} else {
 		ldapConn, err = ldap.DialURL("ldap://" + addr)
 	}

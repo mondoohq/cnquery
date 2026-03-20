@@ -80,9 +80,9 @@ func buildSD(dacl []byte) []byte {
 	// revision(1) + sbz1(1) + control(2) + ownerOff(4) + groupOff(4) + saclOff(4) + daclOff(4)
 	daclOffset := uint32(20)
 	sd := make([]byte, 20+len(dacl))
-	sd[0] = 0x01                                                       // revision
-	binary.LittleEndian.PutUint16(sd[2:4], 0x8004)                    // SE_DACL_PRESENT | SE_SELF_RELATIVE
-	binary.LittleEndian.PutUint32(sd[16:20], daclOffset)              // DACL offset
+	sd[0] = 0x01                                         // revision
+	binary.LittleEndian.PutUint16(sd[2:4], 0x8004)       // SE_DACL_PRESENT | SE_SELF_RELATIVE
+	binary.LittleEndian.PutUint32(sd[16:20], daclOffset) // DACL offset
 	copy(sd[20:], dacl)
 	return sd
 }
@@ -92,7 +92,7 @@ var everyoneSID = []byte{
 	0x01,                               // revision
 	0x01,                               // sub-authority count
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x01, // authority = 1
-	0x00, 0x00, 0x00, 0x00,             // sub-authority 1 = 0
+	0x00, 0x00, 0x00, 0x00, // sub-authority 1 = 0
 }
 
 // adminSID is a synthetic domain admin SID S-1-5-21-100-200-300-512.
@@ -100,11 +100,11 @@ var adminSID = []byte{
 	0x01,                               // revision
 	0x05,                               // sub-authority count
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x05, // authority = 5
-	0x15, 0x00, 0x00, 0x00,             // 21
-	0x64, 0x00, 0x00, 0x00,             // 100
-	0xC8, 0x00, 0x00, 0x00,             // 200
-	0x2C, 0x01, 0x00, 0x00,             // 300
-	0x00, 0x02, 0x00, 0x00,             // 512 (Domain Admins)
+	0x15, 0x00, 0x00, 0x00, // 21
+	0x64, 0x00, 0x00, 0x00, // 100
+	0xC8, 0x00, 0x00, 0x00, // 200
+	0x2C, 0x01, 0x00, 0x00, // 300
+	0x00, 0x02, 0x00, 0x00, // 512 (Domain Admins)
 }
 
 func TestIsLowPrivSID(t *testing.T) {
@@ -209,9 +209,9 @@ func TestDecodeGUID(t *testing.T) {
 			name: "Certificate Enrollment GUID",
 			raw: []byte{
 				0x68, 0xc9, 0x10, 0x0e, // Data1 LE: 0x0e10c968
-				0xfb, 0x78,             // Data2 LE: 0x78fb
-				0xd2, 0x11,             // Data3 LE: 0x11d2
-				0x90, 0xd4,             // Data4[0:2] BE
+				0xfb, 0x78, // Data2 LE: 0x78fb
+				0xd2, 0x11, // Data3 LE: 0x11d2
+				0x90, 0xd4, // Data4[0:2] BE
 				0x00, 0xc0, 0x4f, 0x79, 0xdc, 0x55, // Data4[2:8] BE
 			},
 			want: "0e10c968-78fb-11d2-90d4-00c04f79dc55",

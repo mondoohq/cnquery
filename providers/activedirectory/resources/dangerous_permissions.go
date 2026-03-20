@@ -173,20 +173,17 @@ func scanTargetACL(conn *connection.ActiveDirectoryConnection, target criticalTa
 
 		dangerous := false
 
-		if ace.aceType == 0x05 { // Object ACE
+		switch ace.aceType {
+		case 0x05: // Object ACE
 			switch ace.objectGUID {
-			case guidDSReplicationGetChanges, guidDSReplicationGetChangesAll:
-				dangerous = true
-			case guidForceChangePassword:
+			case guidDSReplicationGetChanges, guidDSReplicationGetChangesAll, guidForceChangePassword:
 				dangerous = true
 			}
 			if !dangerous && hasDangerousRights(ace.mask) {
 				dangerous = true
 			}
-		} else if ace.aceType == 0x00 { // Basic ACE
-			if hasDangerousRights(ace.mask) {
-				dangerous = true
-			}
+		case 0x00: // Basic ACE
+			dangerous = hasDangerousRights(ace.mask)
 		}
 
 		if !dangerous {

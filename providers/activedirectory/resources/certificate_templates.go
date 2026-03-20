@@ -18,10 +18,10 @@ import (
 
 // Authentication and enrollment EKU OIDs.
 const (
-	ekuClientAuth   = "1.3.6.1.5.5.7.3.2"
-	ekuPKINITClient = "1.3.6.1.5.2.3.4"
-	ekuSmartCardLogon = "1.3.6.1.4.1.311.20.2.2"
-	ekuAnyPurpose   = "2.5.29.37.0"
+	ekuClientAuth       = "1.3.6.1.5.5.7.3.2"
+	ekuPKINITClient     = "1.3.6.1.5.2.3.4"
+	ekuSmartCardLogon   = "1.3.6.1.4.1.311.20.2.2"
+	ekuAnyPurpose       = "2.5.29.37.0"
 	ekuCertRequestAgent = "1.3.6.1.4.1.311.20.2.1"
 
 	// Extended right GUIDs for enrollment permissions (lowercase).
@@ -174,31 +174,31 @@ func (a *mqlActivedirectory) certificateTemplates() ([]interface{}, error) {
 
 		resource, err := CreateResource(a.MqlRuntime, "activedirectory.certificateTemplate",
 			map[string]*llx.RawData{
-				"name":                        llx.StringData(cn),
-				"displayName":                 llx.StringData(displayName),
-				"distinguishedName":           llx.StringData(dn),
-				"oid":                         llx.StringData(oid),
-				"schemaVersion":               llx.IntData(schemaVersion),
-				"enrolleeSuppliesSubject":     llx.BoolData(enrolleeSuppliesSubject),
-				"extendedKeyUsages":           llx.ArrayData(ekusRaw, types.String),
-				"hasAuthenticationEku":        llx.BoolData(hasAuthEKU),
-				"hasAnyPurposeEku":            llx.BoolData(hasAnyPurposeEKU),
-				"hasNoEku":                    llx.BoolData(hasNoEKU),
-				"managerApprovalRequired":     llx.BoolData(managerApproval),
+				"name":                         llx.StringData(cn),
+				"displayName":                  llx.StringData(displayName),
+				"distinguishedName":            llx.StringData(dn),
+				"oid":                          llx.StringData(oid),
+				"schemaVersion":                llx.IntData(schemaVersion),
+				"enrolleeSuppliesSubject":      llx.BoolData(enrolleeSuppliesSubject),
+				"extendedKeyUsages":            llx.ArrayData(ekusRaw, types.String),
+				"hasAuthenticationEku":         llx.BoolData(hasAuthEKU),
+				"hasAnyPurposeEku":             llx.BoolData(hasAnyPurposeEKU),
+				"hasNoEku":                     llx.BoolData(hasNoEKU),
+				"managerApprovalRequired":      llx.BoolData(managerApproval),
 				"authorizedSignaturesRequired": llx.IntData(authorizedSigs),
-				"enrollmentFlags":             llx.IntData(enrollmentFlags),
-				"certificateNameFlags":        llx.IntData(certNameFlags),
-				"validityPeriod":              llx.StringData(validityPeriod),
-				"renewalPeriod":               llx.StringData(renewalPeriod),
-				"isPublished":                 llx.BoolData(isPublished),
-				"isVulnerableESC1":            llx.BoolData(isESC1),
-				"isVulnerableESC2":            llx.BoolData(isESC2),
-				"isVulnerableESC3":            llx.BoolData(isESC3),
-				"isVulnerableESC4":            llx.BoolData(isESC4),
-				"enrollmentPermissions":       llx.ArrayData(enrollPermsRaw, types.String),
-				"lowPrivilegedEnrollment":     llx.BoolData(lowPrivEnroll),
-				"whenCreated":                 llx.TimeData(whenCreated),
-				"whenChanged":                 llx.TimeData(whenChanged),
+				"enrollmentFlags":              llx.IntData(enrollmentFlags),
+				"certificateNameFlags":         llx.IntData(certNameFlags),
+				"validityPeriod":               llx.StringData(validityPeriod),
+				"renewalPeriod":                llx.StringData(renewalPeriod),
+				"isPublished":                  llx.BoolData(isPublished),
+				"isVulnerableESC1":             llx.BoolData(isESC1),
+				"isVulnerableESC2":             llx.BoolData(isESC2),
+				"isVulnerableESC3":             llx.BoolData(isESC3),
+				"isVulnerableESC4":             llx.BoolData(isESC4),
+				"enrollmentPermissions":        llx.ArrayData(enrollPermsRaw, types.String),
+				"lowPrivilegedEnrollment":      llx.BoolData(lowPrivEnroll),
+				"whenCreated":                  llx.TimeData(whenCreated),
+				"whenChanged":                  llx.TimeData(whenChanged),
 			})
 		if err != nil {
 			return nil, err

@@ -23,8 +23,8 @@ func TestDecodeSID(t *testing.T) {
 		{
 			name: "BUILTIN Administrators S-1-5-32-544",
 			raw: []byte{
-				0x01,                   // revision
-				0x02,                   // sub-authority count
+				0x01,                               // revision
+				0x02,                               // sub-authority count
 				0x00, 0x00, 0x00, 0x00, 0x00, 0x05, // authority = 5
 				0x20, 0x00, 0x00, 0x00, // sub-auth 1 = 32 (BUILTIN)
 				0x20, 0x02, 0x00, 0x00, // sub-auth 2 = 544 (Administrators)
@@ -34,13 +34,13 @@ func TestDecodeSID(t *testing.T) {
 		{
 			name: "domain SID S-1-5-21-3623811015-3361044348-30300820",
 			raw: []byte{
-				0x01,                                       // revision
-				0x04,                                       // sub-authority count = 4
-				0x00, 0x00, 0x00, 0x00, 0x00, 0x05,         // authority = 5
-				0x15, 0x00, 0x00, 0x00,                     // sub-auth 1 = 21
-				0xC7, 0xF7, 0xFE, 0xD7,                     // sub-auth 2 = 3623811015 (little-endian)
-				0x7C, 0x77, 0x55, 0xC8,                     // sub-auth 3 = 3361044348
-				0x94, 0x5A, 0xCE, 0x01,                     // sub-auth 4 = 30300820
+				0x01,                               // revision
+				0x04,                               // sub-authority count = 4
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x05, // authority = 5
+				0x15, 0x00, 0x00, 0x00, // sub-auth 1 = 21
+				0xC7, 0xF7, 0xFE, 0xD7, // sub-auth 2 = 3623811015 (little-endian)
+				0x7C, 0x77, 0x55, 0xC8, // sub-auth 3 = 3361044348
+				0x94, 0x5A, 0xCE, 0x01, // sub-auth 4 = 30300820
 			},
 			want: "S-1-5-21-3623811015-3361044348-30300820",
 		},

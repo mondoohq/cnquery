@@ -23,9 +23,6 @@ const filetimeNeverExpires = 0x7FFFFFFFFFFFFFFF
 // pagedSearchPageSize is the number of entries per page for LDAP paged results.
 const pagedSearchPageSize = 1000
 
-// pagedResultsControlOID is the OID for the LDAP paged results control (RFC 2696).
-const pagedResultsControlOID = "1.2.840.113556.1.4.319"
-
 // functionalLevels maps AD domainFunctionality / forestFunctionality integer
 // strings to human-readable Windows Server version names.
 var functionalLevels = map[string]string{

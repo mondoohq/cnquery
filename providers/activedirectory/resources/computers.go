@@ -54,7 +54,6 @@ func parseADGeneralizedTime(s string) time.Time {
 	return t.UTC()
 }
 
-
 func (a *mqlActivedirectoryComputer) id() (string, error) {
 	return a.DistinguishedName.Data, nil
 }
@@ -182,32 +181,32 @@ func (a *mqlActivedirectory) computers() ([]interface{}, error) {
 
 		resource, err := CreateResource(a.MqlRuntime, "activedirectory.computer",
 			map[string]*llx.RawData{
-				"sAMAccountName":            llx.StringData(samAccountName),
-				"name":                      llx.StringData(name),
-				"distinguishedName":         llx.StringData(dn),
-				"sid":                       llx.StringData(sid),
-				"enabled":                   llx.BoolData(enabled),
-				"operatingSystem":           llx.StringData(osName),
-				"operatingSystemVersion":    llx.StringData(osVersion),
-				"operatingSystemServicePack": llx.StringData(osSP),
-				"isObsoleteOS":              llx.BoolData(isObsoleteOS(osName)),
-				"pwdLastSet":                llx.TimeData(pwdLastSet),
-				"lastLogonTimestamp":         llx.TimeData(lastLogon),
-				"whenCreated":               llx.TimeData(whenCreated),
-				"passwordAgeDays":           llx.IntData(passwordAgeDays),
-				"daysSinceLastLogon":         llx.IntData(daysSinceLastLogon),
-				"isStale":                   llx.BoolData(isStale),
-				"userAccountControl":         llx.IntData(uac),
-				"unconstrainedDelegation":    llx.BoolData(unconstrainedDelegation),
-				"constrainedDelegation":      llx.BoolData(constrainedDelegation),
+				"sAMAccountName":               llx.StringData(samAccountName),
+				"name":                         llx.StringData(name),
+				"distinguishedName":            llx.StringData(dn),
+				"sid":                          llx.StringData(sid),
+				"enabled":                      llx.BoolData(enabled),
+				"operatingSystem":              llx.StringData(osName),
+				"operatingSystemVersion":       llx.StringData(osVersion),
+				"operatingSystemServicePack":   llx.StringData(osSP),
+				"isObsoleteOS":                 llx.BoolData(isObsoleteOS(osName)),
+				"pwdLastSet":                   llx.TimeData(pwdLastSet),
+				"lastLogonTimestamp":           llx.TimeData(lastLogon),
+				"whenCreated":                  llx.TimeData(whenCreated),
+				"passwordAgeDays":              llx.IntData(passwordAgeDays),
+				"daysSinceLastLogon":           llx.IntData(daysSinceLastLogon),
+				"isStale":                      llx.BoolData(isStale),
+				"userAccountControl":           llx.IntData(uac),
+				"unconstrainedDelegation":      llx.BoolData(unconstrainedDelegation),
+				"constrainedDelegation":        llx.BoolData(constrainedDelegation),
 				"constrainedDelegationTargets": llx.ArrayData(delegateTargetsRaw, types.String),
-				"rbcd":                      llx.BoolData(rbcd),
-				"servicePrincipalNames":      llx.ArrayData(spnsRaw, types.String),
-				"lapsEnabled":               llx.BoolData(lapsEnabled),
-				"lapsExpirationTime":         llx.TimeData(lapsExpirationTime),
-				"description":               llx.StringData(desc),
-				"ouPath":                    llx.StringData(ouPath),
-				"isDomainController":         llx.BoolData(isDomainController),
+				"rbcd":                         llx.BoolData(rbcd),
+				"servicePrincipalNames":        llx.ArrayData(spnsRaw, types.String),
+				"lapsEnabled":                  llx.BoolData(lapsEnabled),
+				"lapsExpirationTime":           llx.TimeData(lapsExpirationTime),
+				"description":                  llx.StringData(desc),
+				"ouPath":                       llx.StringData(ouPath),
+				"isDomainController":           llx.BoolData(isDomainController),
 			})
 		if err != nil {
 			return nil, err

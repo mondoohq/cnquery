@@ -152,19 +152,19 @@ func (a *mqlActivedirectory) groups() ([]interface{}, error) {
 
 		resource, err := CreateResource(a.MqlRuntime, "activedirectory.group",
 			map[string]*llx.RawData{
-				"sAMAccountName":   llx.StringData(samName),
+				"sAMAccountName":    llx.StringData(samName),
 				"distinguishedName": llx.StringData(dn),
-				"displayName":      llx.StringData(displayName),
-				"sid":              llx.StringData(sid),
-				"groupType":        llx.StringData(groupTypeLabel),
-				"groupTypeRaw":     llx.IntData(groupTypeVal),
-				"description":      llx.StringData(desc),
-				"adminCount":       llx.BoolData(adminCount),
-				"memberCount":      llx.IntData(memberCount),
-				"isPrivileged":     llx.BoolData(isPrivileged),
-				"isEmpty":          llx.BoolData(isEmpty),
-				"whenCreated":      llx.TimeData(whenCreated),
-				"ouPath":           llx.StringData(ouPath),
+				"displayName":       llx.StringData(displayName),
+				"sid":               llx.StringData(sid),
+				"groupType":         llx.StringData(groupTypeLabel),
+				"groupTypeRaw":      llx.IntData(groupTypeVal),
+				"description":       llx.StringData(desc),
+				"adminCount":        llx.BoolData(adminCount),
+				"memberCount":       llx.IntData(memberCount),
+				"isPrivileged":      llx.BoolData(isPrivileged),
+				"isEmpty":           llx.BoolData(isEmpty),
+				"whenCreated":       llx.TimeData(whenCreated),
+				"ouPath":            llx.StringData(ouPath),
 			})
 		if err != nil {
 			return nil, err

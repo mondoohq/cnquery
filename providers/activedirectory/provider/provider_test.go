@@ -3,14 +3,18 @@
 
 package provider
 
-import "testing"
+import (
+	"testing"
+
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+)
 
 func TestSetBoolOpt(t *testing.T) {
 	tests := []struct {
-		name     string
-		value    []byte
-		wantSet  bool
-		wantVal  string
+		name    string
+		value   []byte
+		wantSet bool
+		wantVal string
 	}{
 		{"binary true (\\x01)", []byte{0x01}, true, "true"},
 		{"binary false (\\x00)", []byte{0x00}, false, ""},
@@ -70,5 +74,16 @@ func TestSetStrOpt(t *testing.T) {
 	}
 	if _, ok := opts["k3"]; ok {
 		t.Error("k3 should not be set")
+	}
+}
+
+func TestParseCLINilFlagsDoesNotPanic(t *testing.T) {
+	svc := Init()
+	_, err := svc.ParseCLI(&plugin.ParseCLIReq{})
+	if err == nil {
+		t.Fatal("expected missing dc error")
+	}
+	if got, want := err.Error(), "dc flag is required: specify the domain controller hostname or IP address"; got != want {
+		t.Fatalf("ParseCLI() error = %q, want %q", got, want)
 	}
 }

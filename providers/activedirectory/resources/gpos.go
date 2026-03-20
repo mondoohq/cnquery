@@ -16,11 +16,11 @@ import (
 
 // gpLinkEntry represents a single parsed entry from an AD gPLink attribute.
 type gpLinkEntry struct {
-	gpoDN   string // lowercase-normalized DN of the linked GPO
-	status  int    // raw status bits: 0=enabled+not enforced, 1=disabled, 2=enforced
-	order   int    // 1 = highest precedence (last in the gPLink string)
-	rawDN   string // original-case DN as found in gPLink
-	enabled bool
+	gpoDN    string // lowercase-normalized DN of the linked GPO
+	status   int    // raw status bits: 0=enabled+not enforced, 1=disabled, 2=enforced
+	order    int    // 1 = highest precedence (last in the gPLink string)
+	rawDN    string // original-case DN as found in gPLink
+	enabled  bool
 	enforced bool
 }
 
@@ -94,8 +94,8 @@ type gpoLinkMap struct {
 
 // scopeLink captures a single scope (domain root, OU, or site) that links a GPO.
 type scopeLink struct {
-	scopeDN  string       // DN of the scope object
-	link     gpLinkEntry  // the parsed link entry for this specific GPO
+	scopeDN string      // DN of the scope object
+	link    gpLinkEntry // the parsed link entry for this specific GPO
 }
 
 // buildGPOLinkMap collects all gPLink attributes from domain root, OUs, and
@@ -258,15 +258,15 @@ func (a *mqlActivedirectory) gpos() ([]interface{}, error) {
 
 		resource, err := CreateResource(a.MqlRuntime, "activedirectory.gpo",
 			map[string]*llx.RawData{
-				"id":              llx.StringData(cn),
-				"displayName":     llx.StringData(displayName),
+				"id":                llx.StringData(cn),
+				"displayName":       llx.StringData(displayName),
 				"distinguishedName": llx.StringData(dn),
-				"gpoStatus":       llx.StringData(gpoStatusLabel(flags)),
-				"gpcFileSysPath":   llx.StringData(gpcPath),
-				"isLinked":         llx.BoolData(isLinked),
-				"whenCreated":      llx.TimeData(whenCreated),
-				"whenChanged":      llx.TimeData(whenChanged),
-				"version":          llx.IntData(version),
+				"gpoStatus":         llx.StringData(gpoStatusLabel(flags)),
+				"gpcFileSysPath":    llx.StringData(gpcPath),
+				"isLinked":          llx.BoolData(isLinked),
+				"whenCreated":       llx.TimeData(whenCreated),
+				"whenChanged":       llx.TimeData(whenChanged),
+				"version":           llx.IntData(version),
 			})
 		if err != nil {
 			return nil, err

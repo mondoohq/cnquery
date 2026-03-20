@@ -129,9 +129,9 @@ func NewActiveDirectoryConnection(id uint32, asset *inventory.Asset, conf *inven
 	var ldapConn *ldap.Conn
 	var err error
 	if useTLS {
-		ldapConn, err = ldap.DialTLS("tcp", addr, &tls.Config{
+		ldapConn, err = ldap.DialURL("ldaps://"+addr, ldap.DialWithTLSConfig(&tls.Config{
 			InsecureSkipVerify: insecure, //nolint:gosec // user-controlled flag for lab/test environments
-		})
+		}))
 	} else {
 		ldapConn, err = ldap.DialURL("ldap://" + addr)
 	}
@@ -456,11 +456,10 @@ func (c *ActiveDirectoryConnection) PlatformId() string {
 }
 
 // Close terminates the LDAP connection.
-func (c *ActiveDirectoryConnection) Close() error {
+func (c *ActiveDirectoryConnection) Close() {
 	if c.ldapConn != nil {
 		c.ldapConn.Close()
 	}
-	return nil
 }
 
 // ---------------------------------------------------------------------------

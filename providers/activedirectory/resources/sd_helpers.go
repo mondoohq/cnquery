@@ -15,7 +15,7 @@ import (
 type aceEntry struct {
 	// aceType: 0 = ACCESS_ALLOWED, 1 = ACCESS_DENIED, 5 = ACCESS_ALLOWED_OBJECT
 	aceType    uint8
-	aceFlags   uint8  // ACE header flags (INHERITED_ACE = 0x10, etc.)
+	aceFlags   uint8 // ACE header flags (INHERITED_ACE = 0x10, etc.)
 	mask       uint32
 	sid        string
 	objectGUID string // non-empty only for object ACEs (type 5)
@@ -28,18 +28,18 @@ type parsedSD struct {
 
 // Well-known dangerous right masks.
 const (
-	rightGenericAll   = 0x10000000
-	rightWriteDACL    = 0x00040000
-	rightWriteOwner   = 0x00080000
-	rightGenericWrite = 0x40000000
+	rightGenericAll    = 0x10000000
+	rightWriteDACL     = 0x00040000
+	rightWriteOwner    = 0x00080000
+	rightGenericWrite  = 0x40000000
 	rightWriteProperty = 0x00000020
 )
 
 // Low-privilege SID prefixes and exact matches used to detect risky ACLs.
 var lowPrivSIDs = map[string]bool{
-	"S-1-1-0":     true, // Everyone
-	"S-1-5-7":     true, // Anonymous
-	"S-1-5-11":    true, // Authenticated Users
+	"S-1-1-0":      true, // Everyone
+	"S-1-5-7":      true, // Anonymous
+	"S-1-5-11":     true, // Authenticated Users
 	"S-1-5-32-545": true, // BUILTIN\Users
 }
 
