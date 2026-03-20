@@ -111,7 +111,6 @@ BUILDS=(
   "linux amd64"
   "linux 386"
   "linux arm64"
-  "linux arm 6"
   "linux arm 7"
   "linux ppc64le"
   "linux s390x"
