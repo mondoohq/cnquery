@@ -65,40 +65,14 @@ var Minimal = []string{
 	DiscoveryProjects,
 }
 
+// Auto includes top-level assets plus all API resources.
+var Auto = append(
+	[]string{DiscoveryOrganization, DiscoveryFolders, DiscoveryProjects},
+	AllAPIResources...,
+)
+
 // All includes every discovery target: Auto covers all of them for GCP.
 var All = slices.Clone(Auto)
-
-var Auto = []string{
-	DiscoveryOrganization,
-	DiscoveryFolders,
-	DiscoveryProjects,
-	DiscoveryComputeImages,
-	DiscoveryComputeNetworks,
-	DiscoveryComputeSubnetworks,
-	DiscoveryComputeFirewalls,
-	DiscoveryGkeClusters,
-	DiscoveryStorageBuckets,
-	DiscoveryBigQueryDatasets,
-	DiscoverCloudSQLMySQL,
-	DiscoverCloudSQLPostgreSQL,
-	DiscoverCloudSQLSQLServer,
-	DiscoverCloudDNSZones,
-	DiscoverCloudKMSKeyrings,
-	DiscoverMemorystoreRedis,
-	DiscoverMemorystoreRedisCluster,
-	DiscoveryComputeInstances,
-	DiscoverSecretManager,
-	DiscoverPubSubTopics,
-	DiscoverPubSubSubscriptions,
-	DiscoverPubSubSnapshots,
-	DiscoverCloudRunServices,
-	DiscoverCloudRunJobs,
-	DiscoverCloudFunctions,
-	DiscoverDataprocClusters,
-	DiscoverLoggingBuckets,
-	DiscoverApiKeys,
-	DiscoverIamServiceAccounts,
-}
 
 var AllAPIResources = []string{
 	DiscoveryComputeImages,
@@ -139,25 +113,24 @@ func getDiscoveryTargets(config *inventory.Config) []string {
 		return Auto
 	}
 
-	if stringx.ContainsAnyOf(targets, DiscoveryAll) {
-		// return all discovery targets
+	// Precedence: all > auto > minimal.
+	if stringx.Contains(targets, DiscoveryAll) {
 		return All
 	}
-	if stringx.Contains(targets, DiscoveryMinimal) {
-		return Minimal
-	}
-	if stringx.ContainsAnyOf(targets, DiscoveryAuto) {
-		for i, target := range targets {
-			if target == DiscoveryAuto {
-				// remove the auto keyword
-				targets = slices.Delete(targets, i, i+1)
-			}
+
+	res := []string{}
+	for _, target := range targets {
+		switch target {
+		case DiscoveryMinimal:
+			res = append(res, Minimal...)
+		case DiscoveryAuto:
+			res = append(res, Auto...)
+		default:
+			res = append(res, target)
 		}
-		// add in the required discovery targets
-		return append(targets, Auto...)
 	}
-	// random assortment of targets
-	return targets
+
+	return stringx.DedupStringArray(res)
 }
 
 func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {

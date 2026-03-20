@@ -66,7 +66,6 @@ var Minimal = []string{
 	DiscoveryAccounts,
 }
 
-
 var Auto = []string{
 	DiscoveryAccounts,
 	DiscoveryS3Buckets,
@@ -168,19 +167,17 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 func getDiscoveryTargets(config *inventory.Config) []string {
 	targets := config.GetDiscover().GetTargets()
 
+	// Precedence: all > auto > minimal.
 	if stringx.Contains(targets, DiscoveryAll) {
-		// return all discovery targets
 		return All
-	}
-
-	if stringx.Contains(targets, DiscoveryMinimal) {
-		return Minimal
 	}
 
 	// the targets we return.
 	res := []string{}
 	for _, target := range targets {
 		switch target {
+		case DiscoveryMinimal:
+			res = append(res, Minimal...)
 		case DiscoveryAuto:
 			res = append(res, Auto...)
 		case DiscoveryResources:

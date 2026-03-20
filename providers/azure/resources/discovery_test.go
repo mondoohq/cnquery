@@ -96,9 +96,24 @@ func TestGetDiscoveryTargets(t *testing.T) {
 			want:    Auto,
 		},
 		{
-			name:    "auto with extras",
+			name:    "auto with extras already in auto deduplicates",
 			targets: []string{"auto", "postgres-servers", "keyvaults-vaults"},
-			want:    append(slices.Clone(Auto), DiscoveryPostgresServers, DiscoveryKeyVaults),
+			want:    Auto,
+		},
+		{
+			name:    "auto with extras not in auto",
+			targets: []string{"auto", "instances", "storage-containers"},
+			want:    append(slices.Clone(Auto), DiscoveryInstances, DiscoveryStorageContainers),
+		},
+		{
+			name:    "minimal and auto prefers auto",
+			targets: []string{"minimal", "auto"},
+			want:    Auto,
+		},
+		{
+			name:    "minimal and all prefers all",
+			targets: []string{"minimal", "all"},
+			want:    All,
 		},
 		{
 			name:    "explicit targets",

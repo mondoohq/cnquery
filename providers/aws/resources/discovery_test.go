@@ -508,6 +508,21 @@ func TestGetDiscoveryTargets(t *testing.T) {
 			want:    []string{DiscoveryS3Buckets, DiscoveryIAMUsers, DiscoveryInstances},
 		},
 		{
+			name:    "minimal and auto prefers auto",
+			targets: []string{"minimal", "auto"},
+			want:    Auto,
+		},
+		{
+			name:    "minimal and all prefers all",
+			targets: []string{"minimal", "all"},
+			want:    All,
+		},
+		{
+			name:    "auto with target already in auto deduplicates",
+			targets: []string{"auto", "s3-buckets"},
+			want:    Auto,
+		},
+		{
 			name:    "duplicates",
 			targets: []string{"auto", "s3-buckets", "iam-users", "s3-buckets", "auto"},
 			want:    Auto,

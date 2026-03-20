@@ -53,14 +53,12 @@ var Minimal = []string{
 	DiscoverySubscriptions,
 }
 
-// Auto includes all API resources except storage containers (which require
-// additional permissions and can be very numerous). Defined in terms of
-// AllAPIResources so the two lists don't drift apart.
+// Auto includes subscriptions plus all API resources. Storage containers
+// are excluded because they require additional permissions and can be very
+// numerous — they appear only in All.
 var Auto = append(
 	[]string{DiscoverySubscriptions},
-	slices.DeleteFunc(slices.Clone(AllAPIResources), func(s string) bool {
-		return s == DiscoveryStorageContainers
-	})...,
+	AllAPIResources...,
 )
 
 // All includes every discovery target: Auto plus OS-level instance discovery
@@ -83,7 +81,6 @@ var AllAPIResources = []string{
 	DiscoveryCacheRedis,
 	DiscoveryBatchAccounts,
 	DiscoveryStorageAccounts,
-	DiscoveryStorageContainers,
 	DiscoveryKeyVaults,
 	DiscoverySecurityGroups,
 	DiscoveryCosmosDb,
@@ -124,25 +121,25 @@ func getDiscoveryTargets(config *inventory.Config) []string {
 	if len(targets) == 0 {
 		return Auto
 	}
-	if stringx.ContainsAnyOf(targets, DiscoveryAll) {
-		// return all discovery targets
+
+	// Precedence: all > auto > minimal.
+	if stringx.Contains(targets, DiscoveryAll) {
 		return All
 	}
-	if stringx.Contains(targets, DiscoveryMinimal) {
-		return Minimal
-	}
-	if stringx.ContainsAnyOf(targets, DiscoveryAuto) {
-		for i, target := range targets {
-			if target == DiscoveryAuto {
-				// remove the auto keyword
-				targets = slices.Delete(targets, i, i+1)
-			}
+
+	res := []string{}
+	for _, target := range targets {
+		switch target {
+		case DiscoveryMinimal:
+			res = append(res, Minimal...)
+		case DiscoveryAuto:
+			res = append(res, Auto...)
+		default:
+			res = append(res, target)
 		}
-		// add in the required discovery targets
-		return append(targets, Auto...)
 	}
-	// random assortment of targets
-	return targets
+
+	return stringx.DedupStringArray(res)
 }
 
 func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.Inventory, error) {

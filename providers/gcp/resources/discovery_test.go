@@ -4,7 +4,6 @@
 package resources
 
 import (
-	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -120,9 +119,19 @@ func TestGetDiscoveryTargets(t *testing.T) {
 			want:    Auto,
 		},
 		{
-			name:    "auto with extras",
+			name:    "auto with extras already in auto deduplicates",
 			targets: []string{"auto", "cloud-dns-zones", "compute-images"},
-			want:    append(slices.Clone(Auto), DiscoverCloudDNSZones, DiscoveryComputeImages),
+			want:    Auto,
+		},
+		{
+			name:    "minimal and auto prefers auto",
+			targets: []string{"minimal", "auto"},
+			want:    Auto,
+		},
+		{
+			name:    "minimal and all prefers all",
+			targets: []string{"minimal", "all"},
+			want:    All,
 		},
 		{
 			name:    "explicit targets",
