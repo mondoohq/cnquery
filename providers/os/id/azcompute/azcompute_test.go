@@ -25,7 +25,7 @@ func TestCommandProviderLinux(t *testing.T) {
 	ident, err := metadata.Identify()
 
 	assert.Nil(t, err)
-	assert.Equal(t, "//platformid.api.mondoo.app/runtime/azure/subscriptions/xxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx/resourceGroups/TestResources/providers/Microsoft.Compute/virtualMachines/examplevmname", ident.InstanceID)
+	assert.Equal(t, "//platformid.api.mondoo.app/runtime/azure/subscriptions/xxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx/resourcegroups/testresources/providers/microsoft.compute/virtualmachines/examplevmname", ident.InstanceID)
 	assert.Equal(t, "//platformid.api.mondoo.app/runtime/azure/subscriptions/xxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx", ident.AccountID)
 
 	t.Run("raw metadata", func(t *testing.T) {
@@ -48,7 +48,7 @@ func TestCommandProviderWindows(t *testing.T) {
 	ident, err := metadata.Identify()
 
 	assert.Nil(t, err)
-	assert.Equal(t, "//platformid.api.mondoo.app/runtime/azure/subscriptions/xxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx/resourceGroups/TestResources/providers/Microsoft.Compute/virtualMachines/examplevmname", ident.InstanceID)
+	assert.Equal(t, "//platformid.api.mondoo.app/runtime/azure/subscriptions/xxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx/resourcegroups/testresources/providers/microsoft.compute/virtualmachines/examplevmname", ident.InstanceID)
 	assert.Equal(t, "//platformid.api.mondoo.app/runtime/azure/subscriptions/xxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx", ident.AccountID)
 
 	t.Run("raw metadata", func(t *testing.T) {
@@ -71,7 +71,7 @@ func TestCommandProviderLinuxNoLoadbalancerInformation(t *testing.T) {
 	ident, err := metadata.Identify()
 
 	assert.Nil(t, err)
-	assert.Equal(t, "//platformid.api.mondoo.app/runtime/azure/subscriptions/xxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx/resourceGroups/TestResources/providers/Microsoft.Compute/virtualMachines/examplevmname", ident.InstanceID)
+	assert.Equal(t, "//platformid.api.mondoo.app/runtime/azure/subscriptions/xxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx/resourcegroups/testresources/providers/microsoft.compute/virtualmachines/examplevmname", ident.InstanceID)
 	assert.Equal(t, "//platformid.api.mondoo.app/runtime/azure/subscriptions/xxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx", ident.AccountID)
 
 	t.Run("raw metadata", func(t *testing.T) {
