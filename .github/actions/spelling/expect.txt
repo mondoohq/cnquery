@@ -1,6 +1,8 @@
 aad
 ACCOUNTADMIN
 ACTIVEMQ
+ADCS
+activedirectory
 adr
 advancedthreatprotection
 alloydb
@@ -52,6 +54,7 @@ ctx
 customresources
 cwes
 cyclonedx
+DACL
 dast
 databricks
 datapath
@@ -77,7 +80,7 @@ Ecmp
 efi
 eip
 ekm
-ekus
+eku
 elbv
 endpointslice
 exo
@@ -100,6 +103,8 @@ GENEVE
 geomatchstatement
 gistfile
 gotestsum
+gpc
+gpo
 gpu
 grafana
 groupname
@@ -129,6 +134,8 @@ istio
 jira
 jsonbody
 junos
+kerberoastable
+krbtgt
 kqueue
 KSK
 kubenet
@@ -140,6 +147,7 @@ limitrange
 linuxefi
 liveanalytics
 loggingservice
+logon
 longtermretentionpolicy
 lsp
 manageddevice
@@ -165,6 +173,7 @@ MULTIAZ
 naflags
 natgateway
 networkfirewall
+netbios
 networkinterface
 nexthop
 nft
@@ -180,8 +189,8 @@ nsrecord
 nss
 nullgroup
 nullstring
+oid
 oidc
-OIDs
 ondemand
 ontap
 opcplc
@@ -196,6 +205,7 @@ PAYG
 pagerduty
 persistentvolume
 persistentvolumeclaim
+pki
 Pids
 pipefail
 portgroup
@@ -211,6 +221,7 @@ pzi
 pzs
 querypack
 RABBITMQ
+rbcd
 raidz
 ratebasedstatement
 recaptcha
@@ -220,6 +231,7 @@ resourcegroup
 resourcequota
 richrule
 rpo
+RODC
 RRULE
 rtsp
 rulegroup
@@ -243,6 +255,7 @@ sizeconstraintstatement
 Snat
 SNYK
 softdep
+SPN
 spdx
 sph
 splunk
@@ -253,6 +266,7 @@ sqlserver
 Sspr
 stringx
 superusers
+SYSVOL
 switchports
 tailscale
 targetgroup
