@@ -194,10 +194,38 @@ providers/mqlr/install: providers/mqlr
 
 # Provider list — add new providers here.
 # core is excluded: it has no install target and is always built as a dependency of providers/build.
-PROVIDERS := network os ipmi ipinfo oci slack github gitlab terraform \
-	vsphere opcua okta google-workspace arista equinix vcd gcp k8s azure \
-	ms365 aws atlassian cloudformation shodan ansible snowflake mondoo \
-	cloudflare nmap tailscale depsdev
+PROVIDERS := \
+	ansible \
+	arista \
+	atlassian \
+	aws \
+	azure \
+	cloudflare \
+	cloudformation \
+	depsdev \
+	equinix \
+	gcp \
+	github \
+	gitlab \
+	google-workspace \
+	ipinfo \
+	ipmi \
+	k8s \
+	mondoo \
+	ms365 \
+	network \
+	nmap \
+	oci \
+	okta \
+	opcua \
+	os \
+	shodan \
+	slack \
+	snowflake \
+	tailscale \
+	terraform \
+	vcd \
+	vsphere
 
 .PHONY: providers/build
 providers/build: \
