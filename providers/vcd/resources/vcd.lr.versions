@@ -5,7 +5,6 @@ vcd 9.0.0
 vcd.externalNetwork 9.0.0
 vcd.externalNetwork.configuration 9.0.0
 vcd.externalNetwork.description 9.0.0
-vcd.externalNetwork.id 9.0.0
 vcd.externalNetwork.name 9.0.0
 vcd.externalNetwork.urn 9.0.0
 vcd.externalNetworks 9.0.0

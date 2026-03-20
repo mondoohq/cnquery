@@ -1,7 +1,7 @@
 {
   "provider": "azure",
-  "version": "13.1.4",
-  "generated_at": "2026-03-19T11:02:10-07:00",
+  "version": "13.1.6",
+  "generated_at": "2026-03-20T15:44:46-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Authorization/roleAssignments/read",

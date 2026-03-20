@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
-  "version": "13.2.0",
-  "generated_at": "2026-03-18T12:00:35-06:00",
+  "version": "13.2.1",
+  "generated_at": "2026-03-20T15:44:46-07:00",
   "permissions": [
     "accessapproval.accessApprovalSettings.get",
     "aiplatform.datasets.list",
