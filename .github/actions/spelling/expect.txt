@@ -40,6 +40,7 @@ clcerts
 cloudflare
 Clusterwide
 cmek
+cmdline
 cmnd
 cname
 compressratio
@@ -115,6 +116,7 @@ ilb
 imds
 imei
 ingresstls
+initrdefi
 iotedge
 ipc
 ipsetforwardedipconfig
@@ -128,6 +130,7 @@ KSK
 labelmatchstatement
 lfs
 limitrange
+linuxefi
 liveanalytics
 loggingservice
 longtermretentionpolicy
