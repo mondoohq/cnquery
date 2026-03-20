@@ -8,6 +8,7 @@ import (
 	"errors"
 	"io"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/afero"
@@ -159,8 +160,9 @@ func (g *mqlGrubConfig) entries() ([]any, error) {
 	}
 
 	resources := make([]any, 0, len(entries))
-	for _, entry := range entries {
+	for i, entry := range entries {
 		resource, err := CreateResource(g.MqlRuntime, "grub.config.entry", map[string]*llx.RawData{
+			"__id":      llx.StringData("grub.config.entry:" + strconv.Itoa(i) + ":" + entry.Title),
 			"title":     llx.StringData(entry.Title),
 			"cmdline":   llx.StringData(entry.Cmdline),
 			"initrd":    llx.StringData(entry.Initrd),
@@ -200,7 +202,7 @@ func (g *mqlGrubConfig) passwordProtected() (bool, error) {
 }
 
 func (e *mqlGrubConfigEntry) id() (string, error) {
-	return "grub.config.entry:" + e.Title.Data, nil
+	return "grub.config.entry:" + e.Title.Data + ":" + e.Cmdline.Data, nil
 }
 
 // ParseGrubDefaults parses /etc/default/grub which is a shell-style key=value file.
@@ -263,30 +265,50 @@ func ParseGrubCfgEntries(r io.Reader) ([]GrubEntry, error) {
 		line := scanner.Text()
 
 		if m := reMenuEntry.FindStringSubmatch(line); m != nil {
+			// Flush any in-progress entry that was never closed
+			if current != nil {
+				entries = append(entries, *current)
+			}
 			current = &GrubEntry{Title: m[1]}
-			// Opening brace is typically on the same line; start at depth 1
-			depth = 1
+			depth = 0
+			if strings.Contains(line, "{") {
+				depth = 1
+			}
 			continue
 		}
 
 		if m := reSubmenu.FindStringSubmatch(line); m != nil {
+			// Flush any in-progress entry that was never closed
+			if current != nil {
+				entries = append(entries, *current)
+				current = nil
+			}
 			entries = append(entries, GrubEntry{Title: m[1], IsSubmenu: true})
-			current = nil
 			depth = 0
+			if strings.Contains(line, "{") {
+				depth = 1
+			}
 			continue
 		}
 
+		// Skip comment lines for brace counting to avoid false matches
+		// from braces inside comments (e.g., "# echo {something}")
+		trimmed := strings.TrimSpace(line)
+		isComment := len(trimmed) > 0 && trimmed[0] == '#'
+
 		if current != nil {
-			if strings.Contains(line, "{") {
-				depth++
-			}
-			if strings.Contains(line, "}") {
-				depth--
-				if depth <= 0 {
-					entries = append(entries, *current)
-					current = nil
-					depth = 0
-					continue
+			if !isComment {
+				if strings.Contains(line, "{") {
+					depth++
+				}
+				if strings.Contains(line, "}") {
+					depth--
+					if depth <= 0 {
+						entries = append(entries, *current)
+						current = nil
+						depth = 0
+						continue
+					}
 				}
 			}
 
@@ -295,6 +317,17 @@ func ParseGrubCfgEntries(r io.Reader) ([]GrubEntry, error) {
 			}
 			if m := reInitrd.FindStringSubmatch(line); m != nil {
 				current.Initrd = strings.TrimSpace(m[1])
+			}
+		} else if !isComment {
+			// Track braces outside of menu entries (e.g., submenu closing braces)
+			if strings.Contains(line, "{") {
+				depth++
+			}
+			if strings.Contains(line, "}") {
+				depth--
+				if depth < 0 {
+					depth = 0
+				}
 			}
 		}
 	}

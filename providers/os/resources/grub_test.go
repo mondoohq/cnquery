@@ -130,6 +130,57 @@ func TestParseGrubCfgEntriesLinuxefi(t *testing.T) {
 	assert.Contains(t, entries[0].Initrd, "initramfs-6.2.0")
 }
 
+func TestParseGrubCfgEntriesBraceOnNextLine(t *testing.T) {
+	input := `menuentry 'Test Entry'
+{
+	linux /vmlinuz root=/dev/sda1 ro
+	initrd /initrd.img
+}
+`
+	entries, err := ParseGrubCfgEntries(strings.NewReader(input))
+	require.NoError(t, err)
+	require.Len(t, entries, 1)
+
+	assert.Equal(t, "Test Entry", entries[0].Title)
+	assert.Contains(t, entries[0].Cmdline, "vmlinuz")
+	assert.Contains(t, entries[0].Initrd, "initrd.img")
+}
+
+func TestParseGrubCfgEntriesDuplicateTitles(t *testing.T) {
+	input := `menuentry 'Ubuntu' {
+	linux /vmlinuz-5.4 root=/dev/sda1 ro
+	initrd /initrd.img-5.4
+}
+menuentry 'Ubuntu' {
+	linux /vmlinuz-5.3 root=/dev/sda1 ro
+	initrd /initrd.img-5.3
+}
+`
+	entries, err := ParseGrubCfgEntries(strings.NewReader(input))
+	require.NoError(t, err)
+	require.Len(t, entries, 2)
+
+	assert.Equal(t, "Ubuntu", entries[0].Title)
+	assert.Contains(t, entries[0].Cmdline, "vmlinuz-5.4")
+	assert.Equal(t, "Ubuntu", entries[1].Title)
+	assert.Contains(t, entries[1].Cmdline, "vmlinuz-5.3")
+}
+
+func TestParseGrubCfgEntriesCommentWithBraces(t *testing.T) {
+	input := `menuentry 'Ubuntu' {
+	# echo "Use {grub} menu"
+	linux /vmlinuz root=/dev/sda1 ro
+	initrd /initrd.img
+}
+`
+	entries, err := ParseGrubCfgEntries(strings.NewReader(input))
+	require.NoError(t, err)
+	require.Len(t, entries, 1)
+
+	assert.Equal(t, "Ubuntu", entries[0].Title)
+	assert.Contains(t, entries[0].Cmdline, "vmlinuz")
+}
+
 func TestParseGrubPasswordProtection(t *testing.T) {
 	t.Run("protected", func(t *testing.T) {
 		input := `set superusers="root"
