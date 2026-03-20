@@ -125,7 +125,7 @@ var DefaultProviders Providers = map[string]*Provider{
 				{
 					Name:  "cloudflare",
 					Use:   "cloudflare",
-					Short: "Cloudflare provider",
+					Short: "a Cloudflare account",
 				},
 			},
 		},
@@ -152,6 +152,21 @@ var DefaultProviders Providers = map[string]*Provider{
 			ID:              "go.mondoo.com/mql/providers/core",
 			ConnectionTypes: []string(nil),
 			Connectors:      []plugin.Connector{},
+		},
+	},
+
+	"depsdev": {
+		Provider: &plugin.Provider{
+			Name:            "depsdev",
+			ID:              "go.mondoo.com/mql/v13/providers/depsdev",
+			ConnectionTypes: []string{"depsdev"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "depsdev",
+					Use:   "depsdev [path-to-go.mod]",
+					Short: "deps.dev dependency analysis",
+				},
+			},
 		},
 	},
 
