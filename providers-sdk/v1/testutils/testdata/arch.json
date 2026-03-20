@@ -157,7 +157,7 @@
           "Fields": {
             "content": {
               "type": "\u0007",
-              "value": "{\n  \"_\": null,\n  \"true\": true,\n  \"1\": 1,\n  \"1.0\": 1.0,\n  \"e\": {\"1\": 1, \"hi\": \"hello\"},\n  \"eins\": \"1\",\n  \"int-array\": [1,2,3],\n  \"dict\": {\n    \"ee\": 3,\n    \"ej\": 4,\n    \"ek\": 5\n  },\n  \"f\": [{\"ff\": 3}],\n  \"string-array\": [\"a\", \"b\", \"c\"],\n  \"hello\": \"hello\",\n  \"date\": \"2016-01-28T23:02:24Z\",\n  \"aoa\": [[1, 2], 3],\n  \"users\": [\n    {\n      \"name\": \"yor\",\n      \"children\": [\n        {\"name\": \"anya\"}\n      ]\n    },\n    {\"name\": \"loid\"}\n  ],\n  \"zzzlast\": \"🌒\"}\n"
+              "value": "{\n  \"_\": null,\n  \"true\": true,\n  \"1\": 1,\n  \"1.0\": 1.0,\n  \"e\": {\"1\": 1, \"hi\": \"hello\"},\n  \"eins\": \"1\",\n  \"int-array\": [1,2,3],\n  \"dict\": {\n    \"ee\": 3,\n    \"ej\": 4,\n    \"ek\": 5\n  },\n  \"f\": [{\"ff\": 3}],\n  \"string-array\": [\"a\", \"b\", \"c\"],\n  \"hello\": \"hello\",\n  \"date\": \"2016-01-28T23:02:24Z\",\n  \"aoa\": [[1, 2], 3],\n  \"users\": [\n    {\n      \"name\": \"yor\",\n      \"children\": [\n        {\"name\": \"anya\"}\n      ]\n    },\n    {\"name\": \"loid\"}\n  ],\n  \"zzzlast\": \"\ud83c\udf12\"}\n"
             },
             "path": {
               "type": "\u0007",
@@ -307,7 +307,7 @@
           "Fields": {
             "content": {
               "type": "\u0007",
-              "value": "<root>\n  <box>\n    <hello a=\"1\"/>\n  </box>\n  <box>\n    <world b=\"2\">\n      <c>3</c>\n      4\n    </world>\n  </box>\n  <box>🌎</box>\n</root>\n\n"
+              "value": "<root>\n  <box>\n    <hello a=\"1\"/>\n  </box>\n  <box>\n    <world b=\"2\">\n      <c>3</c>\n      4\n    </world>\n  </box>\n  <box>\ud83c\udf0e</box>\n</root>\n\n"
             },
             "path": {
               "type": "\u0007",
