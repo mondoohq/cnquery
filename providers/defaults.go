@@ -118,9 +118,9 @@ var DefaultProviders Providers = map[string]*Provider{
 
 	"cloudflare": {
 		Provider: &plugin.Provider{
-			Name:            "cloudformation",
-			ID:              "go.mondoo.com/cnquery/v12/providers/cloudformation",
-			ConnectionTypes: []string{"cloudformation"},
+			Name:            "cloudflare",
+			ID:              "go.mondoo.com/cnquery/v12/providers/cloudflare",
+			ConnectionTypes: []string{"cloudflare"},
 			Connectors: []plugin.Connector{
 				{
 					Name:  "cloudflare",
@@ -133,9 +133,9 @@ var DefaultProviders Providers = map[string]*Provider{
 
 	"cloudformation": {
 		Provider: &plugin.Provider{
-			Name:            "cloudflare",
-			ID:              "go.mondoo.com/cnquery/v12/providers/cloudflare",
-			ConnectionTypes: []string{"cloudflare"},
+			Name:            "cloudformation",
+			ID:              "go.mondoo.com/cnquery/v12/providers/cloudformation",
+			ConnectionTypes: []string{"cloudformation"},
 			Connectors: []plugin.Connector{
 				{
 					Name:  "cloudformation",
