@@ -117,6 +117,8 @@ const (
 	ResourceNftablesRule               string = "nftables.rule"
 	ResourceFstab                      string = "fstab"
 	ResourceFstabEntry                 string = "fstab.entry"
+	ResourceGrubConfig                 string = "grub.config"
+	ResourceGrubConfigEntry            string = "grub.config.entry"
 	ResourceProcess                    string = "process"
 	ResourceProcesses                  string = "processes"
 	ResourcePort                       string = "port"
@@ -614,6 +616,14 @@ func init() {
 		"fstab.entry": {
 			// to override args, implement: initFstabEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createFstabEntry,
+		},
+		"grub.config": {
+			Init:   initGrubConfig,
+			Create: createGrubConfig,
+		},
+		"grub.config.entry": {
+			// to override args, implement: initGrubConfigEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGrubConfigEntry,
 		},
 		"process": {
 			Init:   initProcess,
@@ -1395,6 +1405,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"os.linux.apparmor": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOsLinux).GetApparmor()).ToDataRes(types.Resource("apparmor"))
+	},
+	"os.linux.grub": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsLinux).GetGrub()).ToDataRes(types.Resource("grub.config"))
 	},
 	"os.rootCertificates.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOsRootCertificates).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
@@ -2388,6 +2401,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"fstab.entry.fsck": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFstabEntry).GetFsck()).ToDataRes(types.Int)
+	},
+	"grub.config.defaultsPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrubConfig).GetDefaultsPath()).ToDataRes(types.String)
+	},
+	"grub.config.grubPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrubConfig).GetGrubPath()).ToDataRes(types.String)
+	},
+	"grub.config.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrubConfig).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"grub.config.entries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrubConfig).GetEntries()).ToDataRes(types.Array(types.Resource("grub.config.entry")))
+	},
+	"grub.config.passwordProtected": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrubConfig).GetPasswordProtected()).ToDataRes(types.Bool)
+	},
+	"grub.config.entry.title": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrubConfigEntry).GetTitle()).ToDataRes(types.String)
+	},
+	"grub.config.entry.cmdline": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrubConfigEntry).GetCmdline()).ToDataRes(types.String)
+	},
+	"grub.config.entry.initrd": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrubConfigEntry).GetInitrd()).ToDataRes(types.String)
+	},
+	"grub.config.entry.isSubmenu": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrubConfigEntry).GetIsSubmenu()).ToDataRes(types.Bool)
 	},
 	"process.pid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProcess).GetPid()).ToDataRes(types.Int)
@@ -4600,6 +4640,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOsLinux).Apparmor, ok = plugin.RawToTValue[*mqlApparmor](v.Value, v.Error)
 		return
 	},
+	"os.linux.grub": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsLinux).Grub, ok = plugin.RawToTValue[*mqlGrubConfig](v.Value, v.Error)
+		return
+	},
 	"os.rootCertificates.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOsRootCertificates).__id, ok = v.Value.(string)
 		return
@@ -6226,6 +6270,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"fstab.entry.fsck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlFstabEntry).Fsck, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"grub.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrubConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"grub.config.defaultsPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrubConfig).DefaultsPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"grub.config.grubPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrubConfig).GrubPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"grub.config.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrubConfig).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"grub.config.entries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrubConfig).Entries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"grub.config.passwordProtected": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrubConfig).PasswordProtected, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"grub.config.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrubConfigEntry).__id, ok = v.Value.(string)
+		return
+	},
+	"grub.config.entry.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrubConfigEntry).Title, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"grub.config.entry.cmdline": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrubConfigEntry).Cmdline, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"grub.config.entry.initrd": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrubConfigEntry).Initrd, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"grub.config.entry.isSubmenu": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrubConfigEntry).IsSubmenu, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"process.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10561,6 +10649,7 @@ type mqlOsLinux struct {
 	Nftables  plugin.TValue[*mqlNftables]
 	Fstab     plugin.TValue[*mqlFstab]
 	Apparmor  plugin.TValue[*mqlApparmor]
+	Grub      plugin.TValue[*mqlGrubConfig]
 }
 
 // createOsLinux creates a new instance of this resource
@@ -10693,6 +10782,22 @@ func (c *mqlOsLinux) GetApparmor() *plugin.TValue[*mqlApparmor] {
 		}
 
 		return c.apparmor()
+	})
+}
+
+func (c *mqlOsLinux) GetGrub() *plugin.TValue[*mqlGrubConfig] {
+	return plugin.GetOrCompute[*mqlGrubConfig](&c.Grub, func() (*mqlGrubConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("os.linux", c.__id, "grub")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGrubConfig), nil
+			}
+		}
+
+		return c.grub()
 	})
 }
 
@@ -16563,6 +16668,155 @@ func (c *mqlFstabEntry) GetDump() *plugin.TValue[int64] {
 
 func (c *mqlFstabEntry) GetFsck() *plugin.TValue[int64] {
 	return &c.Fsck
+}
+
+// mqlGrubConfig for the grub.config resource
+type mqlGrubConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGrubConfigInternal
+	DefaultsPath      plugin.TValue[string]
+	GrubPath          plugin.TValue[string]
+	Params            plugin.TValue[map[string]any]
+	Entries           plugin.TValue[[]any]
+	PasswordProtected plugin.TValue[bool]
+}
+
+// createGrubConfig creates a new instance of this resource
+func createGrubConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGrubConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("grub.config", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGrubConfig) MqlName() string {
+	return "grub.config"
+}
+
+func (c *mqlGrubConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGrubConfig) GetDefaultsPath() *plugin.TValue[string] {
+	return &c.DefaultsPath
+}
+
+func (c *mqlGrubConfig) GetGrubPath() *plugin.TValue[string] {
+	return &c.GrubPath
+}
+
+func (c *mqlGrubConfig) GetParams() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Params, func() (map[string]any, error) {
+		return c.params()
+	})
+}
+
+func (c *mqlGrubConfig) GetEntries() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Entries, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("grub.config", c.__id, "entries")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.entries()
+	})
+}
+
+func (c *mqlGrubConfig) GetPasswordProtected() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PasswordProtected, func() (bool, error) {
+		return c.passwordProtected()
+	})
+}
+
+// mqlGrubConfigEntry for the grub.config.entry resource
+type mqlGrubConfigEntry struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGrubConfigEntryInternal it will be used here
+	Title     plugin.TValue[string]
+	Cmdline   plugin.TValue[string]
+	Initrd    plugin.TValue[string]
+	IsSubmenu plugin.TValue[bool]
+}
+
+// createGrubConfigEntry creates a new instance of this resource
+func createGrubConfigEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGrubConfigEntry{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("grub.config.entry", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGrubConfigEntry) MqlName() string {
+	return "grub.config.entry"
+}
+
+func (c *mqlGrubConfigEntry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGrubConfigEntry) GetTitle() *plugin.TValue[string] {
+	return &c.Title
+}
+
+func (c *mqlGrubConfigEntry) GetCmdline() *plugin.TValue[string] {
+	return &c.Cmdline
+}
+
+func (c *mqlGrubConfigEntry) GetInitrd() *plugin.TValue[string] {
+	return &c.Initrd
+}
+
+func (c *mqlGrubConfigEntry) GetIsSubmenu() *plugin.TValue[bool] {
+	return &c.IsSubmenu
 }
 
 // mqlProcess for the process resource

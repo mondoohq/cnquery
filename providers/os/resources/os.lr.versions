@@ -331,6 +331,17 @@ group.name 9.0.0
 group.sid 9.0.0
 groups 9.0.0
 groups.list 9.0.0
+grub.config 13.2.7
+grub.config.defaultsPath 13.2.7
+grub.config.entries 13.2.7
+grub.config.entry 13.2.7
+grub.config.entry.cmdline 13.2.7
+grub.config.entry.initrd 13.2.7
+grub.config.entry.isSubmenu 13.2.7
+grub.config.entry.title 13.2.7
+grub.config.grubPath 13.2.7
+grub.config.params 13.2.7
+grub.config.passwordProtected 13.2.7
 ip6tables 9.0.0
 ip6tables.input 9.0.0
 ip6tables.output 9.0.0
@@ -710,6 +721,7 @@ os.hypervisor 11.3.35
 os.linux 9.0.0
 os.linux.apparmor 13.2.4
 os.linux.fstab 11.3.5
+os.linux.grub 13.2.7
 os.linux.ip6tables 9.0.0
 os.linux.iptables 9.0.0
 os.linux.nftables 11.8.14

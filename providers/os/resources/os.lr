@@ -323,6 +323,8 @@ os.linux {
   fstab() fstab
   // AppArmor mandatory access control
   apparmor() apparmor
+  // GRUB bootloader configuration
+  grub() grub.config
 }
 
 // Operating system root certificates
@@ -1311,6 +1313,33 @@ private fstab.entry @defaults("device mountpoint") {
   dump int
   // File system check order, e.g., 1
   fsck int
+}
+
+// GRUB bootloader configuration
+grub.config @defaults("defaultsPath grubPath") {
+  init(defaultsPath? string, grubPath? string)
+  // Path to /etc/default/grub (key-value defaults)
+  defaultsPath string
+  // Path to grub.cfg (generated configuration)
+  grubPath string
+  // Configuration parameters from /etc/default/grub (e.g., GRUB_TIMEOUT, GRUB_CMDLINE_LINUX)
+  params() map[string]string
+  // Menu entries defined in grub.cfg
+  entries() []grub.config.entry
+  // Whether GRUB password protection is enabled (superusers + password_pbkdf2)
+  passwordProtected() bool
+}
+
+// GRUB menu entry
+private grub.config.entry @defaults("title") {
+  // Menu entry title
+  title string
+  // Kernel command line (linux/linux16/linuxefi line)
+  cmdline string
+  // Initrd path (initrd/initrd16/initrdefi line)
+  initrd string
+  // Whether this is a submenu
+  isSubmenu bool
 }
 
 // Process on this system
