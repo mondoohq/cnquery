@@ -22,8 +22,8 @@ const (
 	DiscoveryECR          = "ecr"
 	DiscoveryECS          = "ecs"
 
-	DiscoveryAll     = "all"  // all discovery targets
-	DiscoveryAuto    = "auto" // account + resources
+	DiscoveryAll     = "all"     // all discovery targets
+	DiscoveryAuto    = "auto"    // account + resources
 	DiscoveryMinimal = "minimal" // accounts only, for interactive shell
 
 	// API scan
