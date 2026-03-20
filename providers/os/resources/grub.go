@@ -202,7 +202,7 @@ func (g *mqlGrubConfig) passwordProtected() (bool, error) {
 }
 
 func (e *mqlGrubConfigEntry) id() (string, error) {
-	return "grub.config.entry:" + e.Title.Data + ":" + e.Cmdline.Data, nil
+	return e.MqlID(), nil
 }
 
 // ParseGrubDefaults parses /etc/default/grub which is a shell-style key=value file.
