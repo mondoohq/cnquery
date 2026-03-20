@@ -49,9 +49,10 @@ var grubCfgPaths = []string{
 }
 
 type mqlGrubConfigInternal struct {
-	grubCfgOnce    sync.Once
-	grubCfgContent []byte
-	grubCfgErr     error
+	lock              sync.Mutex
+	fetched           bool
+	cachedEntries     []GrubEntry
+	cachedPwProtected bool
 }
 
 func initGrubConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -137,55 +138,62 @@ func (g *mqlGrubConfig) params() (map[string]any, error) {
 	return result, nil
 }
 
-// readGrubCfg reads and caches the grub.cfg content so that entries() and
-// passwordProtected() don't perform duplicate I/O.
-func (g *mqlGrubConfig) readGrubCfg() ([]byte, error) {
-	g.grubCfgOnce.Do(func() {
-		path := g.GetGrubPath().Data
-		if path == "" {
-			g.grubCfgContent = nil
-			return
-		}
-
-		conn, ok := g.MqlRuntime.Connection.(shared.Connection)
-		if !ok {
-			g.grubCfgErr = errors.New("wrong connection type")
-			return
-		}
-		fs := conn.FileSystem()
-		if fs == nil {
-			g.grubCfgErr = errors.New("filesystem not available")
-			return
-		}
-
-		f, err := fs.Open(path)
-		if err != nil {
-			g.grubCfgErr = err
-			return
-		}
-		defer f.Close()
-
-		g.grubCfgContent, g.grubCfgErr = io.ReadAll(f)
-	})
-	return g.grubCfgContent, g.grubCfgErr
-}
-
-func (g *mqlGrubConfig) entries() ([]any, error) {
-	content, err := g.readGrubCfg()
-	if err != nil {
-		return nil, err
+// fetchGrubCfg reads grub.cfg once and parses both entries and password
+// protection status so that multiple field accessors share a single read.
+func (g *mqlGrubConfig) fetchGrubCfg() error {
+	if g.fetched {
+		return nil
 	}
-	if content == nil {
-		return []any{}, nil
+	g.lock.Lock()
+	defer g.lock.Unlock()
+	if g.fetched {
+		return nil
+	}
+
+	path := g.GetGrubPath().Data
+	if path == "" {
+		g.fetched = true
+		return nil
+	}
+
+	conn, ok := g.MqlRuntime.Connection.(shared.Connection)
+	if !ok {
+		return errors.New("wrong connection type")
+	}
+	fs := conn.FileSystem()
+	if fs == nil {
+		return errors.New("filesystem not available")
+	}
+
+	f, err := fs.Open(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	content, err := io.ReadAll(f)
+	if err != nil {
+		return err
 	}
 
 	entries, err := ParseGrubCfgEntries(strings.NewReader(string(content)))
 	if err != nil {
+		return err
+	}
+
+	g.cachedEntries = entries
+	g.cachedPwProtected = ParseGrubPasswordProtected(content)
+	g.fetched = true
+	return nil
+}
+
+func (g *mqlGrubConfig) entries() ([]any, error) {
+	if err := g.fetchGrubCfg(); err != nil {
 		return nil, err
 	}
 
-	resources := make([]any, 0, len(entries))
-	for _, entry := range entries {
+	resources := make([]any, 0, len(g.cachedEntries))
+	for _, entry := range g.cachedEntries {
 		entryID := "grub.config.entry:" + entry.Title + ":" + entry.Cmdline
 		resource, err := CreateResource(g.MqlRuntime, "grub.config.entry", map[string]*llx.RawData{
 			"__id":      llx.StringData(entryID),
@@ -204,15 +212,10 @@ func (g *mqlGrubConfig) entries() ([]any, error) {
 }
 
 func (g *mqlGrubConfig) passwordProtected() (bool, error) {
-	content, err := g.readGrubCfg()
-	if err != nil {
+	if err := g.fetchGrubCfg(); err != nil {
 		return false, err
 	}
-	if content == nil {
-		return false, nil
-	}
-
-	return ParseGrubPasswordProtected(content), nil
+	return g.cachedPwProtected, nil
 }
 
 func (e *mqlGrubConfigEntry) id() (string, error) {
