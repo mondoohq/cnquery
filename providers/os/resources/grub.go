@@ -9,7 +9,6 @@ import (
 	"io"
 	"regexp"
 	"strings"
-	"sync"
 
 	"github.com/spf13/afero"
 	"go.mondoo.com/mql/v13/llx"
@@ -24,33 +23,31 @@ var grubDefaultsPaths = []string{
 
 // Known paths for grub.cfg across different distros and boot modes
 var grubCfgPaths = []string{
-	"/boot/grub2/grub.cfg",                // RHEL/CentOS/Fedora (BIOS)
-	"/boot/grub/grub.cfg",                 // Debian/Ubuntu (BIOS)
-	"/boot/efi/EFI/centos/grub.cfg",       // CentOS (EFI)
-	"/boot/efi/EFI/redhat/grub.cfg",       // RHEL (EFI)
-	"/boot/efi/EFI/fedora/grub.cfg",       // Fedora (EFI)
-	"/boot/efi/EFI/debian/grub.cfg",       // Debian (EFI)
-	"/boot/efi/EFI/ubuntu/grub.cfg",       // Ubuntu (EFI)
-	"/boot/efi/EFI/sles/grub.cfg",         // SUSE (EFI)
-	"/boot/efi/EFI/opensuse/grub.cfg",     // openSUSE (EFI)
-	"/boot/efi/EFI/amazon/grub.cfg",       // Amazon Linux (EFI)
-	"/boot/efi/EFI/rocky/grub.cfg",        // Rocky Linux (EFI)
-	"/boot/efi/EFI/almalinux/grub.cfg",    // AlmaLinux (EFI)
-	"/boot/efi/EFI/arch/grub/grub.cfg",    // Arch Linux (EFI)
-	"/boot/efi/EFI/BOOT/grub.cfg",         // Generic EFI fallback
-	"/boot/efi/EFI/oracle/grub.cfg",       // Oracle Linux (EFI)
-	"/boot/efi/EFI/scientific/grub.cfg",   // Scientific Linux (EFI)
-	"/boot/efi/EFI/virtuozzo/grub.cfg",    // Virtuozzo (EFI)
-	"/boot/efi/EFI/photon/grub.cfg",       // VMware Photon OS (EFI)
-	"/boot/efi/EFI/mariner/grub.cfg",      // Azure Linux / Mariner (EFI)
-	"/boot/efi/EFI/CBL-Mariner/grub.cfg",  // CBL-Mariner (EFI)
-	"/boot/efi/EFI/azurelinux/grub.cfg",   // Azure Linux (EFI)
-	"/boot/efi/EFI/Microsoft/grub.cfg",    // WSL/Hyper-V (EFI)
+	"/boot/grub2/grub.cfg",               // RHEL/CentOS/Fedora (BIOS)
+	"/boot/grub/grub.cfg",                // Debian/Ubuntu (BIOS)
+	"/boot/efi/EFI/centos/grub.cfg",      // CentOS (EFI)
+	"/boot/efi/EFI/redhat/grub.cfg",      // RHEL (EFI)
+	"/boot/efi/EFI/fedora/grub.cfg",      // Fedora (EFI)
+	"/boot/efi/EFI/debian/grub.cfg",      // Debian (EFI)
+	"/boot/efi/EFI/ubuntu/grub.cfg",      // Ubuntu (EFI)
+	"/boot/efi/EFI/sles/grub.cfg",        // SUSE (EFI)
+	"/boot/efi/EFI/opensuse/grub.cfg",    // openSUSE (EFI)
+	"/boot/efi/EFI/amazon/grub.cfg",      // Amazon Linux (EFI)
+	"/boot/efi/EFI/rocky/grub.cfg",       // Rocky Linux (EFI)
+	"/boot/efi/EFI/almalinux/grub.cfg",   // AlmaLinux (EFI)
+	"/boot/efi/EFI/arch/grub/grub.cfg",   // Arch Linux (EFI)
+	"/boot/efi/EFI/BOOT/grub.cfg",        // Generic EFI fallback
+	"/boot/efi/EFI/oracle/grub.cfg",      // Oracle Linux (EFI)
+	"/boot/efi/EFI/scientific/grub.cfg",  // Scientific Linux (EFI)
+	"/boot/efi/EFI/virtuozzo/grub.cfg",   // Virtuozzo (EFI)
+	"/boot/efi/EFI/photon/grub.cfg",      // VMware Photon OS (EFI)
+	"/boot/efi/EFI/mariner/grub.cfg",     // Azure Linux / Mariner (EFI)
+	"/boot/efi/EFI/CBL-Mariner/grub.cfg", // CBL-Mariner (EFI)
+	"/boot/efi/EFI/azurelinux/grub.cfg",  // Azure Linux (EFI)
+	"/boot/efi/EFI/Microsoft/grub.cfg",   // WSL/Hyper-V (EFI)
 }
 
-type mqlGrubConfigInternal struct {
-	lock sync.Mutex
-}
+type mqlGrubConfigInternal struct{}
 
 func initGrubConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	conn, ok := runtime.Connection.(shared.Connection)
@@ -267,10 +264,8 @@ func ParseGrubCfgEntries(r io.Reader) ([]GrubEntry, error) {
 
 		if m := reMenuEntry.FindStringSubmatch(line); m != nil {
 			current = &GrubEntry{Title: m[1]}
+			// Opening brace is typically on the same line; start at depth 1
 			depth = 1
-			if strings.Contains(line, "{") {
-				// Opening brace on same line, depth already counted
-			}
 			continue
 		}
 
