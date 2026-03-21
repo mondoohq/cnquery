@@ -14797,7 +14797,7 @@ func (c *mqlAzureSubscriptionNetworkService) GetRouteTables() *plugin.TValue[[]a
 type mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayInternal it will be used here
+	mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayInternal
 	Id                              plugin.TValue[string]
 	Name                            plugin.TValue[string]
 	Location                        plugin.TValue[string]
@@ -14948,15 +14948,51 @@ func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) GetVpnType() *
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) GetIpConfigurations() *plugin.TValue[[]any] {
-	return &c.IpConfigurations
+	return plugin.GetOrCompute[[]any](&c.IpConfigurations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.virtualNetworkGateway", c.__id, "ipConfigurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ipConfigurations()
+	})
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) GetBgpSettings() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceBgpSettings] {
-	return &c.BgpSettings
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceBgpSettings](&c.BgpSettings, func() (*mqlAzureSubscriptionNetworkServiceBgpSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.virtualNetworkGateway", c.__id, "bgpSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceBgpSettings), nil
+			}
+		}
+
+		return c.bgpSettings()
+	})
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) GetNatRules() *plugin.TValue[[]any] {
-	return &c.NatRules
+	return plugin.GetOrCompute[[]any](&c.NatRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.virtualNetworkGateway", c.__id, "natRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.natRules()
+	})
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) GetConnections() *plugin.TValue[[]any] {
@@ -15062,7 +15098,7 @@ func (c *mqlAzureSubscriptionNetworkServiceAppSecurityGroup) GetProperties() *pl
 type mqlAzureSubscriptionNetworkServiceFirewall struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionNetworkServiceFirewallInternal it will be used here
+	mqlAzureSubscriptionNetworkServiceFirewallInternal
 	Id                        plugin.TValue[string]
 	Name                      plugin.TValue[string]
 	Location                  plugin.TValue[string]
@@ -15180,23 +15216,83 @@ func (c *mqlAzureSubscriptionNetworkServiceFirewall) GetPolicy() *plugin.TValue[
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceFirewall) GetIpConfigurations() *plugin.TValue[[]any] {
-	return &c.IpConfigurations
+	return plugin.GetOrCompute[[]any](&c.IpConfigurations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.firewall", c.__id, "ipConfigurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ipConfigurations()
+	})
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceFirewall) GetManagementIpConfiguration() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceFirewallIpConfig] {
-	return &c.ManagementIpConfiguration
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceFirewallIpConfig](&c.ManagementIpConfiguration, func() (*mqlAzureSubscriptionNetworkServiceFirewallIpConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.firewall", c.__id, "managementIpConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceFirewallIpConfig), nil
+			}
+		}
+
+		return c.managementIpConfiguration()
+	})
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceFirewall) GetNetworkRules() *plugin.TValue[[]any] {
-	return &c.NetworkRules
+	return plugin.GetOrCompute[[]any](&c.NetworkRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.firewall", c.__id, "networkRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.networkRules()
+	})
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceFirewall) GetNatRules() *plugin.TValue[[]any] {
-	return &c.NatRules
+	return plugin.GetOrCompute[[]any](&c.NatRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.firewall", c.__id, "natRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.natRules()
+	})
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceFirewall) GetApplicationRules() *plugin.TValue[[]any] {
-	return &c.ApplicationRules
+	return plugin.GetOrCompute[[]any](&c.ApplicationRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.firewall", c.__id, "applicationRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.applicationRules()
+	})
 }
 
 // mqlAzureSubscriptionNetworkServiceFirewallIpConfig for the azure.subscription.networkService.firewall.ipConfig resource
@@ -16456,7 +16552,7 @@ func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkDhcpOptions) GetDnsServ
 type mqlAzureSubscriptionNetworkServiceLoadBalancer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionNetworkServiceLoadBalancerInternal it will be used here
+	mqlAzureSubscriptionNetworkServiceLoadBalancerInternal
 	Id                plugin.TValue[string]
 	Name              plugin.TValue[string]
 	Location          plugin.TValue[string]
@@ -16549,31 +16645,115 @@ func (c *mqlAzureSubscriptionNetworkServiceLoadBalancer) GetSkuTier() *plugin.TV
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceLoadBalancer) GetProbes() *plugin.TValue[[]any] {
-	return &c.Probes
+	return plugin.GetOrCompute[[]any](&c.Probes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.loadBalancer", c.__id, "probes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.probes()
+	})
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceLoadBalancer) GetBackendPools() *plugin.TValue[[]any] {
-	return &c.BackendPools
+	return plugin.GetOrCompute[[]any](&c.BackendPools, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.loadBalancer", c.__id, "backendPools")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.backendPools()
+	})
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceLoadBalancer) GetFrontendIpConfigs() *plugin.TValue[[]any] {
-	return &c.FrontendIpConfigs
+	return plugin.GetOrCompute[[]any](&c.FrontendIpConfigs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.loadBalancer", c.__id, "frontendIpConfigs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.frontendIpConfigs()
+	})
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceLoadBalancer) GetInboundNatPools() *plugin.TValue[[]any] {
-	return &c.InboundNatPools
+	return plugin.GetOrCompute[[]any](&c.InboundNatPools, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.loadBalancer", c.__id, "inboundNatPools")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.inboundNatPools()
+	})
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceLoadBalancer) GetInboundNatRules() *plugin.TValue[[]any] {
-	return &c.InboundNatRules
+	return plugin.GetOrCompute[[]any](&c.InboundNatRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.loadBalancer", c.__id, "inboundNatRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.inboundNatRules()
+	})
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceLoadBalancer) GetOutboundRules() *plugin.TValue[[]any] {
-	return &c.OutboundRules
+	return plugin.GetOrCompute[[]any](&c.OutboundRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.loadBalancer", c.__id, "outboundRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.outboundRules()
+	})
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceLoadBalancer) GetLoadBalancerRules() *plugin.TValue[[]any] {
-	return &c.LoadBalancerRules
+	return plugin.GetOrCompute[[]any](&c.LoadBalancerRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.loadBalancer", c.__id, "loadBalancerRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.loadBalancerRules()
+	})
 }
 
 // mqlAzureSubscriptionNetworkServiceProbe for the azure.subscription.networkService.probe resource
@@ -17367,7 +17547,7 @@ func (c *mqlAzureSubscriptionNetworkServiceBastionHost) GetSku() *plugin.TValue[
 type mqlAzureSubscriptionNetworkServiceSecurityGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionNetworkServiceSecurityGroupInternal it will be used here
+	mqlAzureSubscriptionNetworkServiceSecurityGroupInternal
 	Id                   plugin.TValue[string]
 	Name                 plugin.TValue[string]
 	Location             plugin.TValue[string]
@@ -17446,15 +17626,51 @@ func (c *mqlAzureSubscriptionNetworkServiceSecurityGroup) GetProperties() *plugi
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceSecurityGroup) GetInterfaces() *plugin.TValue[[]any] {
-	return &c.Interfaces
+	return plugin.GetOrCompute[[]any](&c.Interfaces, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.securityGroup", c.__id, "interfaces")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.interfaces()
+	})
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceSecurityGroup) GetSecurityRules() *plugin.TValue[[]any] {
-	return &c.SecurityRules
+	return plugin.GetOrCompute[[]any](&c.SecurityRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.securityGroup", c.__id, "securityRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityRules()
+	})
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceSecurityGroup) GetDefaultSecurityRules() *plugin.TValue[[]any] {
-	return &c.DefaultSecurityRules
+	return plugin.GetOrCompute[[]any](&c.DefaultSecurityRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.securityGroup", c.__id, "defaultSecurityRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.defaultSecurityRules()
+	})
 }
 
 // mqlAzureSubscriptionNetworkServiceSecurityrule for the azure.subscription.networkService.securityrule resource

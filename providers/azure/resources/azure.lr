@@ -473,11 +473,11 @@ azure.subscription.networkService.virtualNetworkGateway @defaults("id name locat
   // VNet gateway VPN type
   vpnType string
   // VNet gateway IP configurations
-  ipConfigurations []azure.subscription.networkService.virtualNetworkGateway.ipConfig
+  ipConfigurations() []azure.subscription.networkService.virtualNetworkGateway.ipConfig
   // VNet gateway BGP settings
-  bgpSettings azure.subscription.networkService.bgpSettings
+  bgpSettings() azure.subscription.networkService.bgpSettings
   // VNet gateway NAT rules
-  natRules []azure.subscription.networkService.virtualNetworkGateway.natRule
+  natRules() []azure.subscription.networkService.virtualNetworkGateway.natRule
   // Applicable connections for the gateway
   connections() []azure.subscription.networkService.virtualNetworkGateway.connection
   // VPN client configuration (only set if P2S is configured for the gateway)
@@ -529,15 +529,15 @@ azure.subscription.networkService.firewall @defaults("id name location") {
   // Policy associated with this firewall
   policy() azure.subscription.networkService.firewallPolicy
   // List of IP configurations for the firewall
-  ipConfigurations []azure.subscription.networkService.firewall.ipConfig
+  ipConfigurations() []azure.subscription.networkService.firewall.ipConfig
   // The IP configuration used for management traffic
-  managementIpConfiguration azure.subscription.networkService.firewall.ipConfig
+  managementIpConfiguration() azure.subscription.networkService.firewall.ipConfig
   // List of network rules for the firewall
-  networkRules []azure.subscription.networkService.firewall.networkRule
+  networkRules() []azure.subscription.networkService.firewall.networkRule
   // List of NAT rules for the firewall
-  natRules []azure.subscription.networkService.firewall.natRule
+  natRules() []azure.subscription.networkService.firewall.natRule
   // List of application rules for the firewall
-  applicationRules []azure.subscription.networkService.firewall.applicationRule
+  applicationRules() []azure.subscription.networkService.firewall.applicationRule
 }
 
 // Azure network firewall IP configuration
@@ -819,19 +819,19 @@ azure.subscription.networkService.loadBalancer @defaults("id name location") {
   // Load Balancer SKU tier ("Global" or "Regional")
   skuTier string
   // List of Load Balancer probes
-  probes []azure.subscription.networkService.probe
+  probes() []azure.subscription.networkService.probe
   // List of Load Balancer backend address pools
-  backendPools []azure.subscription.networkService.backendAddressPool
+  backendPools() []azure.subscription.networkService.backendAddressPool
   // List of Load Balancer frontend IP configurations
-  frontendIpConfigs []azure.subscription.networkService.frontendIpConfig
+  frontendIpConfigs() []azure.subscription.networkService.frontendIpConfig
   // List of Load Balancer inbound NAT pools
-  inboundNatPools []azure.subscription.networkService.inboundNatPool
+  inboundNatPools() []azure.subscription.networkService.inboundNatPool
   // List of Load Balancer inbound NAT rules
-  inboundNatRules []azure.subscription.networkService.inboundNatRule
+  inboundNatRules() []azure.subscription.networkService.inboundNatRule
   // List of Load Balancer outbound rules
-  outboundRules []azure.subscription.networkService.outboundRule
+  outboundRules() []azure.subscription.networkService.outboundRule
   // List of Load Balancer rules
-  loadBalancerRules []azure.subscription.networkService.loadBalancerRule
+  loadBalancerRules() []azure.subscription.networkService.loadBalancerRule
 }
 
 // Azure network probe
@@ -1029,11 +1029,11 @@ private azure.subscription.networkService.securityGroup @defaults("id name locat
   // Security group properties
   properties dict
   // Security group interfaces
-  interfaces []azure.subscription.networkService.interface
+  interfaces() []azure.subscription.networkService.interface
   // Security group rules
-  securityRules []azure.subscription.networkService.securityrule
+  securityRules() []azure.subscription.networkService.securityrule
   // Security group default security rules
-  defaultSecurityRules []azure.subscription.networkService.securityrule
+  defaultSecurityRules() []azure.subscription.networkService.securityrule
 }
 
 // Azure network security rule
