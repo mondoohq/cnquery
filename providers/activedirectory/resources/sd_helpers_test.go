@@ -517,3 +517,38 @@ func mustUint64LE(v uint64) []byte {
 	binary.LittleEndian.PutUint64(b, v)
 	return b
 }
+
+
+func TestParseObjectACE_TruncatedHeader(t *testing.T) {
+	// An ACE where offset+4 > len(sd) — must not panic.
+	buf := []byte{0x05, 0x00, 0x20} // only 3 bytes, need at least 4 for aceSize
+	_, ok := parseObjectACE(buf, 0)
+	if ok {
+		t.Error("expected parseObjectACE to return false for truncated header")
+	}
+}
+
+func TestParseObjectACE_CorruptAceSize(t *testing.T) {
+	// aceSize claims 255 bytes but buffer is only 20 bytes — must not panic.
+	buf := make([]byte, 20)
+	buf[0] = 0x05                                           // type
+	binary.LittleEndian.PutUint16(buf[2:4], 0x00FF)         // aceSize = 255 (corrupt)
+	binary.LittleEndian.PutUint32(buf[4:8], rightGenericAll) // mask
+	binary.LittleEndian.PutUint32(buf[8:12], 0)             // flags
+	_, ok := parseObjectACE(buf, 0)
+	if ok {
+		t.Error("expected parseObjectACE to return false for corrupt aceSize")
+	}
+}
+
+func TestParseBasicACE_CorruptAceSize(t *testing.T) {
+	// aceSize claims 200 bytes but buffer is only 12 bytes — must not panic.
+	buf := make([]byte, 12)
+	buf[0] = 0x00                                           // type
+	binary.LittleEndian.PutUint16(buf[2:4], 200)            // aceSize = 200 (corrupt)
+	binary.LittleEndian.PutUint32(buf[4:8], rightGenericAll) // mask
+	_, ok := parseBasicACE(buf, 0, 0x00)
+	if ok {
+		t.Error("expected parseBasicACE to return false for corrupt aceSize")
+	}
+}

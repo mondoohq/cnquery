@@ -164,9 +164,12 @@ func parseBasicACE(sd []byte, offset int, aceType uint8) (aceEntry, bool) {
 	if offset+8 > len(sd) {
 		return aceEntry{}, false
 	}
+	aceSize := int(binary.LittleEndian.Uint16(sd[offset+2 : offset+4]))
+	if offset+aceSize > len(sd) {
+		return aceEntry{}, false
+	}
 
 	mask := binary.LittleEndian.Uint32(sd[offset+4 : offset+8])
-	aceSize := int(binary.LittleEndian.Uint16(sd[offset+2 : offset+4]))
 	sidBytes := sd[offset+8 : offset+aceSize]
 
 	sid, err := decodeSIDBytes(sidBytes)
@@ -188,8 +191,11 @@ func parseBasicACE(sd []byte, offset int, aceType uint8) (aceEntry, bool) {
 //	12/28   16?   InheritedObjectType GUID (if flags & 2)
 //	...     var   SID
 func parseObjectACE(sd []byte, offset int) (aceEntry, bool) {
+	if offset+4 > len(sd) {
+		return aceEntry{}, false
+	}
 	aceSize := int(binary.LittleEndian.Uint16(sd[offset+2 : offset+4]))
-	if offset+12 > len(sd) {
+	if offset+aceSize > len(sd) || offset+12 > len(sd) {
 		return aceEntry{}, false
 	}
 
