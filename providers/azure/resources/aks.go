@@ -18,7 +18,8 @@ import (
 )
 
 type mqlAzureSubscriptionAksServiceClusterInternal struct {
-	cacheKmsKeyId string
+	cacheKmsKeyId   string
+	cacheProperties *clusters.ManagedClusterProperties
 }
 
 func (a *mqlAzureSubscriptionAksService) id() (string, error) {
@@ -238,74 +239,6 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 				skuTier = string(*entry.SKU.Tier)
 			}
 
-			// Create AAD Profile sub-resource
-			var aadProfileData *llx.RawData = llx.NilData
-			if entry.Properties.AADProfile != nil {
-				aadP := entry.Properties.AADProfile
-				adminGroupObjectIDs := []any{}
-				for _, gid := range aadP.AdminGroupObjectIDs {
-					if gid != nil {
-						adminGroupObjectIDs = append(adminGroupObjectIDs, *gid)
-					}
-				}
-				aadRes, err := CreateResource(a.MqlRuntime, "azure.subscription.aksService.cluster.aadProfile",
-					map[string]*llx.RawData{
-						"id":                  llx.StringData(*entry.ID + "/aadProfile"),
-						"managed":             llx.BoolDataPtr(aadP.Managed),
-						"enableAzureRBAC":     llx.BoolDataPtr(aadP.EnableAzureRBAC),
-						"adminGroupObjectIDs": llx.ArrayData(adminGroupObjectIDs, types.String),
-					})
-				if err != nil {
-					return nil, err
-				}
-				aadProfileData = llx.ResourceData(aadRes, "azure.subscription.aksService.cluster.aadProfile")
-			}
-
-			// Create Auto-Upgrade Profile sub-resource
-			var autoUpgradeProfileData *llx.RawData = llx.NilData
-			if entry.Properties.AutoUpgradeProfile != nil {
-				aup := entry.Properties.AutoUpgradeProfile
-				autoUpgradeRes, err := CreateResource(a.MqlRuntime, "azure.subscription.aksService.cluster.autoUpgradeProfile",
-					map[string]*llx.RawData{
-						"id":                   llx.StringData(*entry.ID + "/autoUpgradeProfile"),
-						"upgradeChannel":       llx.StringDataPtr((*string)(aup.UpgradeChannel)),
-						"nodeOSUpgradeChannel": llx.StringDataPtr((*string)(aup.NodeOSUpgradeChannel)),
-					})
-				if err != nil {
-					return nil, err
-				}
-				autoUpgradeProfileData = llx.ResourceData(autoUpgradeRes, "azure.subscription.aksService.cluster.autoUpgradeProfile")
-			}
-
-			// Create Advanced Networking sub-resource
-			var advancedNetworkingData *llx.RawData = llx.NilData
-			if entry.Properties.NetworkProfile != nil && entry.Properties.NetworkProfile.AdvancedNetworking != nil {
-				an := entry.Properties.NetworkProfile.AdvancedNetworking
-				var transitEncryptionType, accelerationMode *string
-				var securityEnabled *bool
-				if an.Security != nil {
-					securityEnabled = an.Security.Enabled
-					if an.Security.TransitEncryption != nil {
-						transitEncryptionType = (*string)(an.Security.TransitEncryption.Type)
-					}
-				}
-				if an.Performance != nil {
-					accelerationMode = (*string)(an.Performance.AccelerationMode)
-				}
-				anRes, err := CreateResource(a.MqlRuntime, "azure.subscription.aksService.cluster.advancedNetworking",
-					map[string]*llx.RawData{
-						"id":                    llx.StringData(*entry.ID + "/advancedNetworking"),
-						"enabled":               llx.BoolDataPtr(an.Enabled),
-						"transitEncryptionType": llx.StringDataPtr(transitEncryptionType),
-						"accelerationMode":      llx.StringDataPtr(accelerationMode),
-						"securityEnabled":       llx.BoolDataPtr(securityEnabled),
-					})
-				if err != nil {
-					return nil, err
-				}
-				advancedNetworkingData = llx.ResourceData(anRes, "azure.subscription.aksService.cluster.advancedNetworking")
-			}
-
 			mqlAksCluster, err := CreateResource(a.MqlRuntime, "azure.subscription.aksService.cluster",
 				map[string]*llx.RawData{
 					"id":                                llx.StringDataPtr(entry.ID),
@@ -351,16 +284,14 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 					"nodeResourceGroupRestrictionLevel": llx.StringDataPtr(nodeResourceGroupRestrictionLevel),
 					"serviceMeshMode":                   llx.StringDataPtr(serviceMeshMode),
 					"supportPlan":                       llx.StringDataPtr((*string)(entry.Properties.SupportPlan)),
-					"advancedNetworking":                advancedNetworkingData,
-					"aadProfile":                        aadProfileData,
-					"autoUpgradeProfile":                autoUpgradeProfileData,
 				})
 			if err != nil {
 				return nil, err
 			}
 			mqlCluster := mqlAksCluster.(*mqlAzureSubscriptionAksServiceCluster)
 			mqlCluster.cacheKmsKeyId = azureKeyVaultKmsKeyId
-			res = append(res, mqlAksCluster)
+			mqlCluster.cacheProperties = entry.Properties
+			res = append(res, mqlCluster)
 		}
 	}
 	return res, nil
@@ -372,4 +303,47 @@ func (a *mqlAzureSubscriptionAksServiceCluster) azureKeyVaultKmsKey() (*mqlAzure
 		return nil, nil
 	}
 	return newKeyVaultKeyResource(a.MqlRuntime, a.cacheKmsKeyId)
+}
+
+func (a *mqlAzureSubscriptionAksServiceCluster) aadProfile() (*mqlAzureSubscriptionAksServiceClusterAadProfile, error) {
+	if a.cacheProperties == nil || a.cacheProperties.AADProfile == nil {
+		a.AadProfile.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	aadP := a.cacheProperties.AADProfile
+	adminGroupObjectIDs := []any{}
+	for _, gid := range aadP.AdminGroupObjectIDs {
+		if gid != nil {
+			adminGroupObjectIDs = append(adminGroupObjectIDs, *gid)
+		}
+	}
+	aadRes, err := CreateResource(a.MqlRuntime, "azure.subscription.aksService.cluster.aadProfile",
+		map[string]*llx.RawData{
+			"id":                  llx.StringData(a.Id.Data + "/aadProfile"),
+			"managed":             llx.BoolDataPtr(aadP.Managed),
+			"enableAzureRBAC":     llx.BoolDataPtr(aadP.EnableAzureRBAC),
+			"adminGroupObjectIDs": llx.ArrayData(adminGroupObjectIDs, types.String),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return aadRes.(*mqlAzureSubscriptionAksServiceClusterAadProfile), nil
+}
+
+func (a *mqlAzureSubscriptionAksServiceCluster) autoUpgradeProfile() (*mqlAzureSubscriptionAksServiceClusterAutoUpgradeProfile, error) {
+	if a.cacheProperties == nil || a.cacheProperties.AutoUpgradeProfile == nil {
+		a.AutoUpgradeProfile.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	aup := a.cacheProperties.AutoUpgradeProfile
+	autoUpgradeRes, err := CreateResource(a.MqlRuntime, "azure.subscription.aksService.cluster.autoUpgradeProfile",
+		map[string]*llx.RawData{
+			"id":                   llx.StringData(a.Id.Data + "/autoUpgradeProfile"),
+			"upgradeChannel":       llx.StringDataPtr((*string)(aup.UpgradeChannel)),
+			"nodeOSUpgradeChannel": llx.StringDataPtr((*string)(aup.NodeOSUpgradeChannel)),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return autoUpgradeRes.(*mqlAzureSubscriptionAksServiceClusterAutoUpgradeProfile), nil
 }

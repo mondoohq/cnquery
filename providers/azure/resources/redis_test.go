@@ -127,16 +127,11 @@ func TestAzureSubscriptionCacheServiceRedis(t *testing.T) {
 		assert.Equal(t, "principal-123", identity["principalId"])
 		assert.Equal(t, "tenant-456", identity["tenantId"])
 
-		// Verify privateEndpointConnections is empty array (no PECs in mock data)
-		require.Contains(t, rawData, "privateEndpointConnections")
-		pecs, ok := rawData["privateEndpointConnections"].Value.([]any)
-		require.True(t, ok, "privateEndpointConnections should be a []any")
-		assert.Len(t, pecs, 0)
+		// privateEndpointConnections is now lazy-loaded and no longer in rawData
 	})
 
 	t.Run("TestNilOptionalFields", func(t *testing.T) {
 		// Test with minimal mock data to ensure nil fields are handled gracefully.
-		// runtime is nil because mock data has no PECs (see note above).
 		minimalCache := &armredis.ResourceInfo{
 			ID:       ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Cache/redis/minimal-cache"),
 			Name:     ptr("minimal-cache"),
@@ -184,10 +179,6 @@ func TestAzureSubscriptionCacheServiceRedis(t *testing.T) {
 		// Nil redisConfiguration
 		assert.Nil(t, rawData["redisConfiguration"].Value)
 
-		// Empty PECs
-		require.Contains(t, rawData, "privateEndpointConnections")
-		pecs, ok := rawData["privateEndpointConnections"].Value.([]any)
-		require.True(t, ok, "privateEndpointConnections should be a []any")
-		assert.Len(t, pecs, 0)
+		// privateEndpointConnections is now lazy-loaded and no longer in rawData
 	})
 }

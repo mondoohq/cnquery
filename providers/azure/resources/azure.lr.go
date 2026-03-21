@@ -28148,7 +28148,7 @@ func (c *mqlAzureSubscriptionAuthorizationService) GetManagedIdentities() *plugi
 type mqlAzureSubscriptionAuthorizationServiceRoleDefinition struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionAuthorizationServiceRoleDefinitionInternal it will be used here
+	mqlAzureSubscriptionAuthorizationServiceRoleDefinitionInternal
 	Id          plugin.TValue[string]
 	Description plugin.TValue[string]
 	Name        plugin.TValue[string]
@@ -28210,7 +28210,19 @@ func (c *mqlAzureSubscriptionAuthorizationServiceRoleDefinition) GetScopes() *pl
 }
 
 func (c *mqlAzureSubscriptionAuthorizationServiceRoleDefinition) GetPermissions() *plugin.TValue[[]any] {
-	return &c.Permissions
+	return plugin.GetOrCompute[[]any](&c.Permissions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.authorizationService.roleDefinition", c.__id, "permissions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.permissions()
+	})
 }
 
 // mqlAzureSubscriptionAuthorizationServiceRoleDefinitionPermission for the azure.subscription.authorizationService.roleDefinition.permission resource
@@ -28799,11 +28811,35 @@ func (c *mqlAzureSubscriptionAksServiceCluster) GetAdvancedNetworking() *plugin.
 }
 
 func (c *mqlAzureSubscriptionAksServiceCluster) GetAadProfile() *plugin.TValue[*mqlAzureSubscriptionAksServiceClusterAadProfile] {
-	return &c.AadProfile
+	return plugin.GetOrCompute[*mqlAzureSubscriptionAksServiceClusterAadProfile](&c.AadProfile, func() (*mqlAzureSubscriptionAksServiceClusterAadProfile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.aksService.cluster", c.__id, "aadProfile")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionAksServiceClusterAadProfile), nil
+			}
+		}
+
+		return c.aadProfile()
+	})
 }
 
 func (c *mqlAzureSubscriptionAksServiceCluster) GetAutoUpgradeProfile() *plugin.TValue[*mqlAzureSubscriptionAksServiceClusterAutoUpgradeProfile] {
-	return &c.AutoUpgradeProfile
+	return plugin.GetOrCompute[*mqlAzureSubscriptionAksServiceClusterAutoUpgradeProfile](&c.AutoUpgradeProfile, func() (*mqlAzureSubscriptionAksServiceClusterAutoUpgradeProfile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.aksService.cluster", c.__id, "autoUpgradeProfile")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionAksServiceClusterAutoUpgradeProfile), nil
+			}
+		}
+
+		return c.autoUpgradeProfile()
+	})
 }
 
 // mqlAzureSubscriptionAksServiceClusterAadProfile for the azure.subscription.aksService.cluster.aadProfile resource
@@ -29821,7 +29857,19 @@ func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetEncryptionKey() *plug
 }
 
 func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetPrivateEndpointConnections() *plugin.TValue[[]any] {
-	return &c.PrivateEndpointConnections
+	return plugin.GetOrCompute[[]any](&c.PrivateEndpointConnections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cacheService.redisInstance", c.__id, "privateEndpointConnections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.privateEndpointConnections()
+	})
 }
 
 func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetFirewallRules() *plugin.TValue[[]any] {

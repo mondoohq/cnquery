@@ -78,15 +78,6 @@ func (a *mqlAzureSubscriptionAuthorizationService) roles() ([]any, error) {
 					scopes = append(scopes, *s)
 				}
 			}
-			permissions := []any{}
-			for idx, p := range roleDef.Properties.Permissions {
-				id := fmt.Sprintf("%s/azure.subscription.authorizationService.roleDefinition.permission/%d", *roleDef.ID, idx)
-				permission, err := newMqlRolePermission(a.MqlRuntime, id, p)
-				if err != nil {
-					return nil, err
-				}
-				permissions = append(permissions, permission)
-			}
 			mqlRoleDefinition, err := CreateResource(a.MqlRuntime, "azure.subscription.authorizationService.roleDefinition",
 				map[string]*llx.RawData{
 					"__id":        llx.StringDataPtr(roleDef.ID),
@@ -95,13 +86,31 @@ func (a *mqlAzureSubscriptionAuthorizationService) roles() ([]any, error) {
 					"description": llx.StringDataPtr(roleDef.Properties.Description),
 					"type":        llx.StringData(roleType),
 					"scopes":      llx.ArrayData(scopes, types.String),
-					"permissions": llx.ArrayData(permissions, types.ResourceLike),
 				})
 			if err != nil {
 				return nil, err
 			}
-			res = append(res, mqlRoleDefinition)
+			mqlRole := mqlRoleDefinition.(*mqlAzureSubscriptionAuthorizationServiceRoleDefinition)
+			mqlRole.cachePermissions = roleDef.Properties.Permissions
+			res = append(res, mqlRole)
 		}
+	}
+	return res, nil
+}
+
+type mqlAzureSubscriptionAuthorizationServiceRoleDefinitionInternal struct {
+	cachePermissions []*authorization.Permission
+}
+
+func (a *mqlAzureSubscriptionAuthorizationServiceRoleDefinition) permissions() ([]any, error) {
+	res := []any{}
+	for idx, p := range a.cachePermissions {
+		id := fmt.Sprintf("%s/azure.subscription.authorizationService.roleDefinition.permission/%d", a.Id.Data, idx)
+		permission, err := newMqlRolePermission(a.MqlRuntime, id, p)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, permission)
 	}
 	return res, nil
 }

@@ -571,7 +571,7 @@ func (a *mqlAzureSubscriptionNetworkServiceLoadBalancer) outboundRules() ([]any,
 		if err != nil {
 			return nil, err
 		}
-		mqlOutbound, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.outbundRule",
+		mqlOutbound, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.outboundRule",
 			map[string]*llx.RawData{
 				"id":         llx.StringDataPtr(outboundRule.ID),
 				"type":       llx.StringDataPtr(outboundRule.Type),
@@ -1246,12 +1246,16 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) ipConfiguratio
 		if err != nil {
 			return nil, err
 		}
+		var privateIP *string
+		if ipc.Properties != nil {
+			privateIP = ipc.Properties.PrivateIPAddress
+		}
 		mqlIpc, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.virtualNetworkGateway.ipConfig", map[string]*llx.RawData{
 			"id":               llx.StringDataPtr(ipc.ID),
 			"name":             llx.StringDataPtr(ipc.Name),
 			"etag":             llx.StringDataPtr(ipc.Etag),
 			"properties":       llx.DictData(props),
-			"privateIpAddress": llx.StringDataPtr(ipc.Properties.PrivateIPAddress),
+			"privateIpAddress": llx.StringDataPtr(privateIP),
 		})
 		if err != nil {
 			return nil, err
@@ -2305,12 +2309,16 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewall) ipConfigurations() ([]any, 
 		if err != nil {
 			return nil, err
 		}
+		var privateIP *string
+		if ipConfig.Properties != nil {
+			privateIP = ipConfig.Properties.PrivateIPAddress
+		}
 		mqlIpConfig, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.firewall.ipConfig",
 			map[string]*llx.RawData{
 				"id":               llx.StringDataPtr(ipConfig.ID),
 				"name":             llx.StringDataPtr(ipConfig.Name),
 				"etag":             llx.StringDataPtr(ipConfig.Etag),
-				"privateIpAddress": llx.StringDataPtr(ipConfig.Properties.PrivateIPAddress),
+				"privateIpAddress": llx.StringDataPtr(privateIP),
 				"properties":       llx.DictData(props),
 			})
 		if err != nil {
@@ -2331,12 +2339,16 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewall) managementIpConfiguration()
 	if err != nil {
 		return nil, err
 	}
+	var privateIP *string
+	if ipConfig.Properties != nil {
+		privateIP = ipConfig.Properties.PrivateIPAddress
+	}
 	mqlIpConfig, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.firewall.ipConfig",
 		map[string]*llx.RawData{
 			"id":               llx.StringDataPtr(ipConfig.ID),
 			"name":             llx.StringDataPtr(ipConfig.Name),
 			"etag":             llx.StringDataPtr(ipConfig.Etag),
-			"privateIpAddress": llx.StringDataPtr(ipConfig.Properties.PrivateIPAddress),
+			"privateIpAddress": llx.StringDataPtr(privateIP),
 			"properties":       llx.DictData(props),
 		})
 	if err != nil {

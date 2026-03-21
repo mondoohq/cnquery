@@ -3334,7 +3334,7 @@ private azure.subscription.authorizationService.roleDefinition @defaults ("name 
   // Scopes for which the role definition applies
   scopes []string
   // Permissions that are attached to the role definition
-  permissions []azure.subscription.authorizationService.roleDefinition.permission
+  permissions() []azure.subscription.authorizationService.roleDefinition.permission
 }
 
 // Azure role definition permission
@@ -3474,9 +3474,9 @@ azure.subscription.aksService.cluster @defaults("name location kubernetesVersion
   // Advanced networking configuration for the cluster
   advancedNetworking azure.subscription.aksService.cluster.advancedNetworking
   // Azure Active Directory configuration for the cluster
-  aadProfile azure.subscription.aksService.cluster.aadProfile
+  aadProfile() azure.subscription.aksService.cluster.aadProfile
   // Auto-upgrade configuration for the cluster
-  autoUpgradeProfile azure.subscription.aksService.cluster.autoUpgradeProfile
+  autoUpgradeProfile() azure.subscription.aksService.cluster.autoUpgradeProfile
 }
 
 // Azure Kubernetes Service cluster AAD profile
@@ -3686,7 +3686,7 @@ azure.subscription.cacheService.redisInstance @defaults("id hostName") {
   // Key Vault key used for customer-managed encryption (null if platform-managed)
   encryptionKey() azure.subscription.keyVaultService.key
   // Private endpoint connections for the Redis cache
-  privateEndpointConnections []azure.subscription.cacheService.redisInstance.privateEndpointConnection
+  privateEndpointConnections() []azure.subscription.cacheService.redisInstance.privateEndpointConnection
   // Firewall rules for the Redis cache
   firewallRules() []azure.subscription.cacheService.redisInstance.firewallRule
   // Patch schedules for the Redis cache

@@ -131,7 +131,9 @@ func (a *mqlAzureSubscriptionCacheService) redis() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
-			caches = append(caches, cacheData)
+			mqlRedis := cacheData.(*mqlAzureSubscriptionCacheServiceRedisInstance)
+			mqlRedis.cachePrivateEndpointConnections = cache.Properties.PrivateEndpointConnections
+			caches = append(caches, mqlRedis)
 		}
 	}
 
@@ -184,74 +186,77 @@ func createRedisInstanceRawData(runtime *plugin.Runtime, cache *armredis.Resourc
 		}
 	}
 
-	// Map private endpoint connections as typed sub-resources
-	privateEndpointConns := []any{}
-	if runtime != nil {
-		for _, pec := range cache.Properties.PrivateEndpointConnections {
-			if pec == nil {
-				continue
-			}
-			var privateEndpointId *string
-			if pec.Properties != nil && pec.Properties.PrivateEndpoint != nil {
-				privateEndpointId = pec.Properties.PrivateEndpoint.ID
-			}
-			var status *string
-			if pec.Properties != nil && pec.Properties.PrivateLinkServiceConnectionState != nil && pec.Properties.PrivateLinkServiceConnectionState.Status != nil {
-				val := string(*pec.Properties.PrivateLinkServiceConnectionState.Status)
-				status = &val
-			}
-			var description *string
-			if pec.Properties != nil && pec.Properties.PrivateLinkServiceConnectionState != nil {
-				description = pec.Properties.PrivateLinkServiceConnectionState.Description
-			}
-			var pecProvisioningState *string
-			if pec.Properties != nil && pec.Properties.ProvisioningState != nil {
-				val := string(*pec.Properties.ProvisioningState)
-				pecProvisioningState = &val
-			}
-			pecResource, err := CreateResource(runtime, "azure.subscription.cacheService.redisInstance.privateEndpointConnection",
-				map[string]*llx.RawData{
-					"id":                llx.StringDataPtr(pec.ID),
-					"name":              llx.StringDataPtr(pec.Name),
-					"type":              llx.StringDataPtr(pec.Type),
-					"privateEndpointId": llx.StringDataPtr(privateEndpointId),
-					"status":            llx.StringDataPtr(status),
-					"description":       llx.StringDataPtr(description),
-					"provisioningState": llx.StringDataPtr(pecProvisioningState),
-				})
-			if err != nil {
-				return nil, err
-			}
-			privateEndpointConns = append(privateEndpointConns, pecResource)
-		}
-	}
-
 	return map[string]*llx.RawData{
-		"id":                         llx.StringDataPtr(cache.ID),
-		"name":                       llx.StringDataPtr(cache.Name),
-		"type":                       llx.StringDataPtr(cache.Type),
-		"location":                   llx.StringDataPtr(cache.Location),
-		"properties":                 llx.DictData(properties),
-		"hostName":                   llx.StringDataPtr(cache.Properties.HostName),
-		"enableNonSslPort":           llx.BoolDataPtr(cache.Properties.EnableNonSSLPort),
-		"publicNetworkAccess":        llx.StringDataPtr(publicNetworkAccess),
-		"port":                       llx.IntDataPtr(cache.Properties.Port),
-		"sslPort":                    llx.IntDataPtr(cache.Properties.SSLPort),
-		"provisioningState":          llx.StringDataPtr(provisioningState),
-		"redisVersion":               llx.StringDataPtr(cache.Properties.RedisVersion),
-		"replicasPerMaster":          llx.IntDataPtr(cache.Properties.ReplicasPerMaster),
-		"replicasPerPrimary":         llx.IntDataPtr(cache.Properties.ReplicasPerPrimary),
-		"sku":                        llx.DictData(sku),
-		"tags":                       llx.MapData(convert.PtrMapStrToInterface(cache.Tags), types.String),
-		"minimumTlsVersion":          llx.StringDataPtr(minimumTlsVersion),
-		"redisConfiguration":         llx.DictData(redisConfiguration),
-		"shardCount":                 llx.IntDataPtr(cache.Properties.ShardCount),
-		"staticIp":                   llx.StringDataPtr(cache.Properties.StaticIP),
-		"subnetId":                   llx.StringDataPtr(cache.Properties.SubnetID),
-		"zones":                      llx.ArrayData(zones, types.String),
-		"identity":                   llx.DictData(identity),
-		"privateEndpointConnections": llx.ArrayData(privateEndpointConns, types.Resource("azure.subscription.cacheService.redisInstance.privateEndpointConnection")),
+		"id":                  llx.StringDataPtr(cache.ID),
+		"name":                llx.StringDataPtr(cache.Name),
+		"type":                llx.StringDataPtr(cache.Type),
+		"location":            llx.StringDataPtr(cache.Location),
+		"properties":          llx.DictData(properties),
+		"hostName":            llx.StringDataPtr(cache.Properties.HostName),
+		"enableNonSslPort":    llx.BoolDataPtr(cache.Properties.EnableNonSSLPort),
+		"publicNetworkAccess": llx.StringDataPtr(publicNetworkAccess),
+		"port":                llx.IntDataPtr(cache.Properties.Port),
+		"sslPort":             llx.IntDataPtr(cache.Properties.SSLPort),
+		"provisioningState":   llx.StringDataPtr(provisioningState),
+		"redisVersion":        llx.StringDataPtr(cache.Properties.RedisVersion),
+		"replicasPerMaster":   llx.IntDataPtr(cache.Properties.ReplicasPerMaster),
+		"replicasPerPrimary":  llx.IntDataPtr(cache.Properties.ReplicasPerPrimary),
+		"sku":                 llx.DictData(sku),
+		"tags":                llx.MapData(convert.PtrMapStrToInterface(cache.Tags), types.String),
+		"minimumTlsVersion":   llx.StringDataPtr(minimumTlsVersion),
+		"redisConfiguration":  llx.DictData(redisConfiguration),
+		"shardCount":          llx.IntDataPtr(cache.Properties.ShardCount),
+		"staticIp":            llx.StringDataPtr(cache.Properties.StaticIP),
+		"subnetId":            llx.StringDataPtr(cache.Properties.SubnetID),
+		"zones":               llx.ArrayData(zones, types.String),
+		"identity":            llx.DictData(identity),
 	}, nil
+}
+
+type mqlAzureSubscriptionCacheServiceRedisInstanceInternal struct {
+	cachePrivateEndpointConnections []*armredis.PrivateEndpointConnection
+}
+
+func (a *mqlAzureSubscriptionCacheServiceRedisInstance) privateEndpointConnections() ([]any, error) {
+	res := []any{}
+	for _, pec := range a.cachePrivateEndpointConnections {
+		if pec == nil {
+			continue
+		}
+		var privateEndpointId *string
+		if pec.Properties != nil && pec.Properties.PrivateEndpoint != nil {
+			privateEndpointId = pec.Properties.PrivateEndpoint.ID
+		}
+		var status *string
+		if pec.Properties != nil && pec.Properties.PrivateLinkServiceConnectionState != nil && pec.Properties.PrivateLinkServiceConnectionState.Status != nil {
+			val := string(*pec.Properties.PrivateLinkServiceConnectionState.Status)
+			status = &val
+		}
+		var description *string
+		if pec.Properties != nil && pec.Properties.PrivateLinkServiceConnectionState != nil {
+			description = pec.Properties.PrivateLinkServiceConnectionState.Description
+		}
+		var pecProvisioningState *string
+		if pec.Properties != nil && pec.Properties.ProvisioningState != nil {
+			val := string(*pec.Properties.ProvisioningState)
+			pecProvisioningState = &val
+		}
+		pecResource, err := CreateResource(a.MqlRuntime, "azure.subscription.cacheService.redisInstance.privateEndpointConnection",
+			map[string]*llx.RawData{
+				"id":                llx.StringDataPtr(pec.ID),
+				"name":              llx.StringDataPtr(pec.Name),
+				"type":              llx.StringDataPtr(pec.Type),
+				"privateEndpointId": llx.StringDataPtr(privateEndpointId),
+				"status":            llx.StringDataPtr(status),
+				"description":       llx.StringDataPtr(description),
+				"provisioningState": llx.StringDataPtr(pecProvisioningState),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, pecResource)
+	}
+	return res, nil
 }
 
 func (a *mqlAzureSubscriptionCacheServiceRedisInstance) firewallRules() ([]any, error) {
