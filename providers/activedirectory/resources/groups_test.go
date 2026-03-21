@@ -13,9 +13,9 @@ func TestParseGroupType(t *testing.T) {
 		wantRaw   int64
 	}{
 		// Security groups (bit 31 set — stored as negative int32 values in AD).
-		{"security global", -2147483646, "Security - Global", -2147483646},       // 0x80000002
+		{"security global", -2147483646, "Security - Global", -2147483646},            // 0x80000002
 		{"security domain-local", -2147483644, "Security - DomainLocal", -2147483644}, // 0x80000004
-		{"security universal", -2147483640, "Security - Universal", -2147483640},       // 0x80000008
+		{"security universal", -2147483640, "Security - Universal", -2147483640},      // 0x80000008
 
 		// Distribution groups (bit 31 clear — positive values).
 		{"distribution global", 2, "Distribution - Global", 2},
@@ -54,7 +54,7 @@ func TestParseInt64Attr(t *testing.T) {
 		{"zero", "0", 0},
 		{"null-byte terminated", "100\x00", 100},
 		{"null-byte padded", "200\x00\x00", 200},
-		{"large positive", "9223372036854775807", 9223372036854775807},       // max int64
+		{"large positive", "9223372036854775807", 9223372036854775807},   // max int64
 		{"large negative", "-9223372036854775808", -9223372036854775808}, // min int64
 	}
 

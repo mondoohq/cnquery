@@ -28,11 +28,11 @@ type parsedSD struct {
 
 // Well-known dangerous right masks.
 const (
-	rightGenericAll    = 0x10000000
-	rightWriteDACL     = 0x00040000
-	rightWriteOwner    = 0x00080000
-	rightGenericWrite  = 0x40000000
-	rightWriteProperty = 0x00000020
+	rightGenericAll      = 0x10000000
+	rightWriteDACL       = 0x00040000
+	rightWriteOwner      = 0x00080000
+	rightGenericWrite    = 0x40000000
+	rightWriteProperty   = 0x00000020
 	rightDSControlAccess = 0x00000100
 )
 

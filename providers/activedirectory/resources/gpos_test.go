@@ -7,9 +7,9 @@ import "testing"
 
 func TestParseGPLinks(t *testing.T) {
 	tests := []struct {
-		name    string
-		gplink  string
-		want    []gpLinkEntry
+		name   string
+		gplink string
+		want   []gpLinkEntry
 	}{
 		{
 			name:   "empty string",

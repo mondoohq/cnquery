@@ -50,7 +50,7 @@ type ActiveDirectoryConnection struct {
 	ldapConn *ldap.Conn
 	dcHost   string
 
-	baseDN               string
+	baseDN string
 	// domainDN is always the domain root DN from RootDSE, used for SID/metadata.
 	// Separate from baseDN which may be overridden by --base-dn.
 	domainDN             string
@@ -454,7 +454,7 @@ func (c *ActiveDirectoryConnection) DomainNamingContexts() []string {
 	copy(res, c.domainNamingContexts)
 	return res
 }
-func (c *ActiveDirectoryConnection) DomainDN() string        { return c.domainDN }
+func (c *ActiveDirectoryConnection) DomainDN() string              { return c.domainDN }
 func (c *ActiveDirectoryConnection) DomainFunctionalLevel() string { return c.domainFunctionalLevel }
 func (c *ActiveDirectoryConnection) ForestFunctionalLevel() string { return c.forestFunctionalLevel }
 
