@@ -66,14 +66,7 @@ func (a *mqlActivedirectory) users() ([]interface{}, error) {
 
 	privMemberships, err := buildPrivilegedMembershipSets(conn)
 	if err != nil {
-		log.Warn().Err(err).Msg("failed to resolve privileged group memberships, continuing with empty sets")
-		privMemberships = &privilegedMemberships{
-			DomainAdmins:     make(map[string]bool),
-			EnterpriseAdmins: make(map[string]bool),
-			SchemaAdmins:     make(map[string]bool),
-			ProtectedUsers:   make(map[string]bool),
-			AllPrivileged:    make(map[string]bool),
-		}
+		return nil, fmt.Errorf("failed to resolve privileged group memberships: %w", err)
 	}
 
 	res := make([]interface{}, 0, len(entries))

@@ -28,7 +28,8 @@ func parseDNSZoneProperty(raw []byte) (dnsZoneProperty, bool) {
 
 	dataLength := binary.LittleEndian.Uint32(raw[0:4])
 	id := binary.LittleEndian.Uint32(raw[16:20])
-	if int(20+dataLength) > len(raw) {
+	// Guard against uint32 overflow: check dataLength independently before adding.
+	if dataLength > uint32(len(raw)) || int(20+dataLength) > len(raw) {
 		return dnsZoneProperty{}, false
 	}
 

@@ -33,6 +33,7 @@ const (
 	rightWriteOwner    = 0x00080000
 	rightGenericWrite  = 0x40000000
 	rightWriteProperty = 0x00000020
+	rightDSControlAccess = 0x00000100
 )
 
 // Low-privilege SID prefixes and exact matches used to detect risky ACLs.
@@ -199,7 +200,7 @@ func parseObjectACE(sd []byte, offset int) (aceEntry, bool) {
 	var objectGUID string
 
 	if flags&0x01 != 0 {
-		if pos+16 > len(sd) {
+		if pos+16 > offset+aceSize {
 			return aceEntry{}, false
 		}
 		objectGUID = decodeGUID(sd[pos : pos+16])
@@ -207,7 +208,7 @@ func parseObjectACE(sd []byte, offset int) (aceEntry, bool) {
 	}
 
 	if flags&0x02 != 0 {
-		if pos+16 > len(sd) {
+		if pos+16 > offset+aceSize {
 			return aceEntry{}, false
 		}
 		pos += 16 // skip InheritedObjectType

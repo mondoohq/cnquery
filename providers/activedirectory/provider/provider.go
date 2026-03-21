@@ -159,6 +159,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		if req.Upstream != nil && !req.Upstream.Incognito {
 			upstream, err = req.Upstream.InitClient(context.Background())
 			if err != nil {
+				conn.Close()
 				return nil, err
 			}
 		}

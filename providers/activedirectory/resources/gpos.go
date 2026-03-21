@@ -296,8 +296,10 @@ func (a *mqlActivedirectoryGpo) links() ([]interface{}, error) {
 
 	res := make([]interface{}, 0, len(scopeLinks))
 	for _, sl := range scopeLinks {
+		id := fmt.Sprintf("%s|%s/%d", a.DistinguishedName.Data, sl.scopeDN, sl.link.order)
 		resource, err := CreateResource(a.MqlRuntime, "activedirectory.gpoLink",
 			map[string]*llx.RawData{
+				"__id":     llx.StringData(id),
 				"target":   llx.StringData(sl.scopeDN),
 				"order":    llx.IntData(int64(sl.link.order)),
 				"enforced": llx.BoolData(sl.link.enforced),

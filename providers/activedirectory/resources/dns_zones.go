@@ -61,11 +61,10 @@ func (a *mqlActivedirectory) dnsZones() ([]interface{}, error) {
 			// The MicrosoftDNS container may not exist if AD-integrated DNS
 			// is not configured for this partition.
 			if ldap.IsErrorWithCode(err, ldap.LDAPResultNoSuchObject) {
-				log.Warn().Str("baseDN", baseDN).Msg("MicrosoftDNS container not found, skipping partition")
+				log.Debug().Str("baseDN", baseDN).Msg("MicrosoftDNS container not found, skipping partition")
 				continue
 			}
-			log.Warn().Err(err).Str("baseDN", baseDN).Msg("failed to query DNS zones, skipping partition")
-			continue
+			return nil, fmt.Errorf("failed to query DNS zones in %s: %w", baseDN, err)
 		}
 
 		for _, entry := range entries {

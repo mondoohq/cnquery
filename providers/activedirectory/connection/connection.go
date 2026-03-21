@@ -7,6 +7,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"net"
 	"os"
 	"strconv"
 	"strings"
@@ -50,6 +51,9 @@ type ActiveDirectoryConnection struct {
 	dcHost   string
 
 	baseDN               string
+	// domainDN is always the domain root DN from RootDSE, used for SID/metadata.
+	// Separate from baseDN which may be overridden by --base-dn.
+	domainDN             string
 	configDN             string
 	schemaDN             string
 	rootDomainDN         string
@@ -123,13 +127,14 @@ func NewActiveDirectoryConnection(id uint32, asset *inventory.Asset, conf *inven
 		port = parsed
 	}
 
-	addr := fmt.Sprintf("%s:%d", dcHost, port)
+	addr := net.JoinHostPort(dcHost, strconv.Itoa(port))
 
 	// --- Dial ---
 	var ldapConn *ldap.Conn
 	var err error
 	if useTLS {
 		ldapConn, err = ldap.DialURL("ldaps://"+addr, ldap.DialWithTLSConfig(&tls.Config{
+			MinVersion:         tls.VersionTLS12,
 			InsecureSkipVerify: insecure, //nolint:gosec // user-controlled flag for lab/test environments
 		}))
 	} else {
@@ -142,6 +147,7 @@ func NewActiveDirectoryConnection(id uint32, asset *inventory.Asset, conf *inven
 	// --- StartTLS: upgrade plaintext connection to TLS before bind ---
 	if useStartTLS {
 		if err := ldapConn.StartTLS(&tls.Config{
+			MinVersion:         tls.VersionTLS12,
 			ServerName:         dcHost,
 			InsecureSkipVerify: insecure, //nolint:gosec // user-controlled flag for lab/test environments
 		}); err != nil {
@@ -343,9 +349,10 @@ func (c *ActiveDirectoryConnection) discoverRootDSE() error {
 
 	entry := resp.Entries[0]
 
+	c.domainDN = GetStringAttr(entry, "defaultNamingContext")
 	// Only set baseDN from RootDSE if not explicitly overridden via options.
 	if c.baseDN == "" {
-		c.baseDN = GetStringAttr(entry, "defaultNamingContext")
+		c.baseDN = c.domainDN
 	}
 	c.configDN = GetStringAttr(entry, "configurationNamingContext")
 	c.schemaDN = GetStringAttr(entry, "schemaNamingContext")
@@ -365,22 +372,22 @@ func (c *ActiveDirectoryConnection) discoverRootDSE() error {
 }
 
 // discoverDomainSID retrieves the objectSid of the current domain by
-// searching the baseDN at base scope.
+// searching the domainDN at base scope.
 func (c *ActiveDirectoryConnection) discoverDomainSID() error {
-	sid, err := c.fetchObjectSID(c.baseDN)
+	sid, err := c.fetchObjectSID(c.domainDN)
 	if err != nil {
-		return fmt.Errorf("reading domain objectSid from %s: %w", c.baseDN, err)
+		return fmt.Errorf("reading domain objectSid from %s: %w", c.domainDN, err)
 	}
 	c.domainSID = sid
 	return nil
 }
 
 // discoverRootDomainSID retrieves the objectSid of the forest root domain.
-// In a single-domain forest, rootDomainDN == baseDN, so this may be identical
+// In a single-domain forest, rootDomainDN == domainDN, so this may be identical
 // to domainSID. In a child domain it differs and is needed for resolving
 // Enterprise Admins / Schema Admins well-known SIDs.
 func (c *ActiveDirectoryConnection) discoverRootDomainSID() error {
-	if c.rootDomainDN == "" || c.rootDomainDN == c.baseDN {
+	if c.rootDomainDN == "" || c.rootDomainDN == c.domainDN {
 		// Same domain — reuse the already-fetched SID.
 		c.rootDomainSID = c.domainSID
 		return nil
@@ -447,12 +454,13 @@ func (c *ActiveDirectoryConnection) DomainNamingContexts() []string {
 	copy(res, c.domainNamingContexts)
 	return res
 }
+func (c *ActiveDirectoryConnection) DomainDN() string        { return c.domainDN }
 func (c *ActiveDirectoryConnection) DomainFunctionalLevel() string { return c.domainFunctionalLevel }
 func (c *ActiveDirectoryConnection) ForestFunctionalLevel() string { return c.forestFunctionalLevel }
 
 // PlatformId returns a deterministic platform identifier for the connected domain.
 func (c *ActiveDirectoryConnection) PlatformId() string {
-	return "//platformid.api.mondoo.app/runtime/activedirectory/domain/" + c.baseDN
+	return "//platformid.api.mondoo.app/runtime/activedirectory/domain/" + c.domainDN
 }
 
 // Close terminates the LDAP connection.

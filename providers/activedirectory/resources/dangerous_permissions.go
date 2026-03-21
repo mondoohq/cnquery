@@ -33,6 +33,9 @@ func rightTypeLabel(ace aceEntry) string {
 			return "ForceChangePassword"
 		}
 	}
+	if ace.aceType == 0x05 && ace.objectGUID == "" && ace.mask&rightDSControlAccess != 0 {
+		return "AllExtendedRights"
+	}
 
 	switch {
 	case ace.mask&rightGenericAll != 0:
@@ -58,7 +61,7 @@ type criticalTarget struct {
 // discoverCriticalTargets returns the set of AD objects whose DACLs should
 // be audited. The list is built from well-known containers and a lightweight
 // search for privileged groups and domain controllers.
-func discoverCriticalTargets(conn *connection.ActiveDirectoryConnection) []criticalTarget {
+func discoverCriticalTargets(conn *connection.ActiveDirectoryConnection) ([]criticalTarget, error) {
 	baseDN := conn.BaseDN()
 	targets := []criticalTarget{
 		{dn: baseDN, name: "Domain Head", targetType: "domain"},
@@ -86,15 +89,14 @@ func discoverCriticalTargets(conn *connection.ActiveDirectoryConnection) []criti
 
 	sr, err := conn.LDAPConn().Search(privGroupSearch)
 	if err != nil {
-		log.Warn().Err(err).Msg("failed to enumerate privileged groups for ACL scan")
-	} else {
-		for _, e := range sr.Entries {
-			targets = append(targets, criticalTarget{
-				dn:         connection.GetStringAttr(e, "distinguishedName"),
-				name:       connection.GetStringAttr(e, "sAMAccountName"),
-				targetType: "group",
-			})
-		}
+		return nil, fmt.Errorf("enumerating privileged groups for ACL scan: %w", err)
+	}
+	for _, e := range sr.Entries {
+		targets = append(targets, criticalTarget{
+			dn:         connection.GetStringAttr(e, "distinguishedName"),
+			name:       connection.GetStringAttr(e, "sAMAccountName"),
+			targetType: "group",
+		})
 	}
 
 	// Domain Controllers.
@@ -107,18 +109,17 @@ func discoverCriticalTargets(conn *connection.ActiveDirectoryConnection) []criti
 	)
 	sr, err = conn.LDAPConn().Search(dcSearch)
 	if err != nil {
-		log.Warn().Err(err).Msg("failed to enumerate domain controllers for ACL scan")
-	} else {
-		for _, e := range sr.Entries {
-			targets = append(targets, criticalTarget{
-				dn:         connection.GetStringAttr(e, "distinguishedName"),
-				name:       connection.GetStringAttr(e, "sAMAccountName"),
-				targetType: "computer",
-			})
-		}
+		return nil, fmt.Errorf("enumerating domain controllers for ACL scan: %w", err)
+	}
+	for _, e := range sr.Entries {
+		targets = append(targets, criticalTarget{
+			dn:         connection.GetStringAttr(e, "distinguishedName"),
+			name:       connection.GetStringAttr(e, "sAMAccountName"),
+			targetType: "computer",
+		})
 	}
 
-	return targets
+	return targets, nil
 }
 
 // scanTargetACL reads the nTSecurityDescriptor for a single target and
@@ -178,6 +179,10 @@ func scanTargetACL(conn *connection.ActiveDirectoryConnection, target criticalTa
 			switch ace.objectGUID {
 			case guidDSReplicationGetChanges, guidDSReplicationGetChangesAll, guidForceChangePassword:
 				dangerous = true
+			case "": // Empty objectGUID = All Extended Rights (includes replication)
+				if ace.mask&rightDSControlAccess != 0 {
+					dangerous = true
+				}
 			}
 			if !dangerous && hasDangerousRights(ace.mask) {
 				dangerous = true
@@ -227,7 +232,10 @@ type dangerousPermFinding struct {
 func (a *mqlActivedirectory) dangerousPermissions() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
 
-	targets := discoverCriticalTargets(conn)
+	targets, err := discoverCriticalTargets(conn)
+	if err != nil {
+		return nil, err
+	}
 	log.Debug().Int("targetCount", len(targets)).Msg("scanning critical objects for dangerous ACLs")
 
 	var allFindings []dangerousPermFinding

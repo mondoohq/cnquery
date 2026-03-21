@@ -71,14 +71,16 @@ func (a *mqlActivedirectory) organizationalUnits() ([]interface{}, error) {
 
 // gpLinksToResources converts parsed gpLinkEntry values into
 // activedirectory.gpoLink MQL resources.
-func gpLinksToResources(runtime *plugin.Runtime, entries []gpLinkEntry) ([]interface{}, error) {
+func gpLinksToResources(runtime *plugin.Runtime, scopeDN string, entries []gpLinkEntry) ([]interface{}, error) {
 	if len(entries) == 0 {
-		return nil, nil
+		return []interface{}{}, nil
 	}
 	res := make([]interface{}, 0, len(entries))
 	for _, e := range entries {
+		id := fmt.Sprintf("%s|%s/%d", scopeDN, e.rawDN, e.order)
 		resource, err := CreateResource(runtime, "activedirectory.gpoLink",
 			map[string]*llx.RawData{
+				"__id":     llx.StringData(id),
 				"target":   llx.StringData(e.rawDN),
 				"order":    llx.IntData(int64(e.order)),
 				"enforced": llx.BoolData(e.enforced),
@@ -110,9 +112,9 @@ func (a *mqlActivedirectoryOu) linkedGpos() ([]interface{}, error) {
 	}
 
 	if len(entries) == 0 {
-		return nil, nil
+		return []interface{}{}, nil
 	}
 
 	raw := connection.GetStringAttr(entries[0], "gPLink")
-	return gpLinksToResources(a.MqlRuntime, parseGPLinks(raw))
+	return gpLinksToResources(a.MqlRuntime, dn, parseGPLinks(raw))
 }
