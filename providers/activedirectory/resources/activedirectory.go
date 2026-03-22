@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/go-ldap/ldap/v3"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/activedirectory/connection"
@@ -156,4 +157,76 @@ func (a *mqlActivedirectory) schemaVersion() (int64, error) {
 	}
 
 	return version, nil
+}
+
+
+func (a *mqlActivedirectory) machineAccountQuota() (int64, error) {
+	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
+	baseDN := conn.BaseDN()
+
+	result, err := connection.PagedSearch(conn.LDAPConn(), ldap.NewSearchRequest(
+		baseDN,
+		ldap.ScopeBaseObject,
+		ldap.NeverDerefAliases, 0, 0, false,
+		"(objectClass=*)",
+		[]string{"ms-DS-MachineAccountQuota"},
+		nil,
+	))
+	if err != nil {
+		return 10, fmt.Errorf("failed to query machine account quota: %w", err)
+	}
+
+	if len(result) == 0 {
+		return 10, nil // AD default
+	}
+
+	v := result[0].GetAttributeValue("ms-DS-MachineAccountQuota")
+	if v == "" {
+		return 10, nil // AD default
+	}
+
+	return parseInt64Attr(v), nil
+}
+
+func (a *mqlActivedirectory) recycleBinEnabled() (bool, error) {
+	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
+	configDN := conn.ConfigDN()
+
+	searchBase := "CN=Partitions," + configDN
+	result, err := connection.PagedSearch(conn.LDAPConn(), ldap.NewSearchRequest(
+		searchBase,
+		ldap.ScopeBaseObject,
+		ldap.NeverDerefAliases, 0, 0, false,
+		"(objectClass=crossRefContainer)",
+		[]string{"msDS-EnabledFeature"},
+		nil,
+	))
+	if err != nil {
+		// Permission denied or container missing; treat as not enabled.
+		return false, nil
+	}
+
+	if len(result) == 0 {
+		return false, nil
+	}
+
+	// msDS-EnabledFeature is multi-valued. Each value is a DN.
+	// The Recycle Bin feature DN contains "CN=Recycle Bin Feature".
+	for _, v := range result[0].GetAttributeValues("msDS-EnabledFeature") {
+		if strings.Contains(v, "CN=Recycle Bin Feature") {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+func (a *mqlActivedirectory) ldapSigningRequired() (bool, error) {
+	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
+	required, err := conn.ProbeLDAPSigning()
+	if err != nil {
+		log.Warn().Err(err).Msg("LDAP signing probe inconclusive")
+		return false, err
+	}
+	return required, nil
 }

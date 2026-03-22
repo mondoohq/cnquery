@@ -7,8 +7,13 @@ activedirectory.certificateAuthority 13.0.1
 activedirectory.certificateAuthority.caType 13.0.1
 activedirectory.certificateAuthority.certificateExpiration 13.0.1
 activedirectory.certificateAuthority.certificateTemplates 13.0.1
+activedirectory.certificateAuthority.dangerousCAPermissions 13.0.1
 activedirectory.certificateAuthority.distinguishedName 13.0.1
 activedirectory.certificateAuthority.dnsHostname 13.0.1
+activedirectory.certificateAuthority.enrollmentAgentRestrictionsConfigured 13.0.1
+activedirectory.certificateAuthority.hasHttpEnrollment 13.0.1
+activedirectory.certificateAuthority.httpEnrollmentEndpoints 13.0.1
+activedirectory.certificateAuthority.isVulnerableESC7 13.0.1
 activedirectory.certificateAuthority.name 13.0.1
 activedirectory.certificateTemplate 13.0.1
 activedirectory.certificateTemplate.authorizedSignaturesRequired 13.0.1
@@ -24,12 +29,16 @@ activedirectory.certificateTemplate.hasAuthenticationEku 13.0.1
 activedirectory.certificateTemplate.hasNoEku 13.0.1
 activedirectory.certificateTemplate.isPublished 13.0.1
 activedirectory.certificateTemplate.isVulnerableESC1 13.0.1
+activedirectory.certificateTemplate.isVulnerableESC13 13.0.1
 activedirectory.certificateTemplate.isVulnerableESC2 13.0.1
 activedirectory.certificateTemplate.isVulnerableESC3 13.0.1
 activedirectory.certificateTemplate.isVulnerableESC4 13.0.1
+activedirectory.certificateTemplate.isVulnerableESC9 13.0.1
+activedirectory.certificateTemplate.issuancePolicies 13.0.1
 activedirectory.certificateTemplate.lowPrivilegedEnrollment 13.0.1
 activedirectory.certificateTemplate.managerApprovalRequired 13.0.1
 activedirectory.certificateTemplate.name 13.0.1
+activedirectory.certificateTemplate.noSecurityExtension 13.0.1
 activedirectory.certificateTemplate.oid 13.0.1
 activedirectory.certificateTemplate.renewalPeriod 13.0.1
 activedirectory.certificateTemplate.schemaVersion 13.0.1
@@ -56,6 +65,7 @@ activedirectory.computer.operatingSystemServicePack 13.0.1
 activedirectory.computer.operatingSystemVersion 13.0.1
 activedirectory.computer.ouPath 13.0.1
 activedirectory.computer.passwordAgeDays 13.0.1
+activedirectory.computer.protocolTransition 13.0.1
 activedirectory.computer.pwdLastSet 13.0.1
 activedirectory.computer.rbcd 13.0.1
 activedirectory.computer.sAMAccountName 13.0.1
@@ -151,6 +161,8 @@ activedirectory.groupMember.sid 13.0.1
 activedirectory.groupMember.type 13.0.1
 activedirectory.groups 13.0.1
 activedirectory.lapsEnabled 13.0.1
+activedirectory.ldapSigningRequired 13.0.1
+activedirectory.machineAccountQuota 13.0.1
 activedirectory.netbiosName 13.0.1
 activedirectory.organizationalUnits 13.0.1
 activedirectory.ou 13.0.1
@@ -179,6 +191,7 @@ activedirectory.pkiObject.objectClass 13.0.1
 activedirectory.pkiObject.whenChanged 13.0.1
 activedirectory.pkiObject.whenCreated 13.0.1
 activedirectory.pkiObjects 13.0.1
+activedirectory.recycleBinEnabled 13.0.1
 activedirectory.schemaVersion 13.0.1
 activedirectory.trust 13.0.1
 activedirectory.trust.aesEncryption 13.0.1
@@ -207,6 +220,7 @@ activedirectory.user.email 13.0.1
 activedirectory.user.enabled 13.0.1
 activedirectory.user.isDomainAdmin 13.0.1
 activedirectory.user.isEnterpriseAdmin 13.0.1
+activedirectory.user.isGMSA 13.0.1
 activedirectory.user.isPrivileged 13.0.1
 activedirectory.user.isSchemaAdmin 13.0.1
 activedirectory.user.isStale 13.0.1

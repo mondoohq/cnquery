@@ -144,6 +144,7 @@ func (a *mqlActivedirectory) computers() ([]interface{}, error) {
 		enabled := !uacHasFlag(uac, UACAccountDisable)
 		unconstrainedDelegation := uacHasFlag(uac, UACTrustedForDelegation)
 		isDomainController := uacHasFlag(uac, UACServerTrustAccount)
+		protocolTransition := uacHasFlag(uac, UACTrustedToAuthForDelegation)
 
 		// Constrained delegation
 		delegateTargets := connection.GetStringSliceAttr(entry, "msDS-AllowedToDelegateTo")
@@ -206,6 +207,7 @@ func (a *mqlActivedirectory) computers() ([]interface{}, error) {
 				"description":                  llx.StringData(desc),
 				"ouPath":                       llx.StringData(ouPath),
 				"isDomainController":           llx.BoolData(isDomainController),
+				"protocolTransition":           llx.BoolData(protocolTransition),
 			})
 		if err != nil {
 			return nil, err

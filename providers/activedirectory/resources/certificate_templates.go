@@ -33,6 +33,9 @@ const (
 
 	// Enrollment flag: pend all requests (manager approval).
 	ctFlagPendAllRequests = 0x2
+
+	// Enrollment flag: no security extension in issued cert (ESC9).
+	ctFlagNoSecurityExtension int64 = 0x00080000
 )
 
 // getPublishedTemplates returns the set of certificate template CN names
@@ -71,6 +74,44 @@ func getPublishedTemplates(conn *connection.ActiveDirectoryConnection) (map[stri
 	return raw.(map[string]bool), nil
 }
 
+// resolveOIDGroupLinks queries the OID container under Public Key Services for
+// enterprise OID objects that have msDS-OIDToGroupLink set (ESC13 prerequisite).
+// Returns a map of OID string -> linked group DN. Cached on the connection.
+func resolveOIDGroupLinks(conn *connection.ActiveDirectoryConnection) (map[string]string, error) {
+	raw, err := conn.CachedFetch("oidGroupLinks", func() (interface{}, error) {
+		baseDN := fmt.Sprintf("CN=OID,CN=Public Key Services,CN=Services,%s", conn.ConfigDN())
+
+		entries, err := connection.PagedSearch(conn.LDAPConn(), ldap.NewSearchRequest(
+			baseDN,
+			ldap.ScopeWholeSubtree,
+			ldap.NeverDerefAliases, 0, 0, false,
+			"(&(objectClass=msPKI-Enterprise-Oid)(msDS-OIDToGroupLink=*))",
+			[]string{"msPKI-Cert-Template-OID", "msDS-OIDToGroupLink"},
+			nil,
+		))
+		if err != nil {
+			if ldap.IsErrorWithCode(err, ldap.LDAPResultNoSuchObject) {
+				return make(map[string]string), nil
+			}
+			return nil, fmt.Errorf("querying OID group links: %w", err)
+		}
+
+		links := make(map[string]string, len(entries))
+		for _, e := range entries {
+			oid := connection.GetStringAttr(e, "msPKI-Cert-Template-OID")
+			groupDN := connection.GetStringAttr(e, "msDS-OIDToGroupLink")
+			if oid != "" && groupDN != "" {
+				links[oid] = groupDN
+			}
+		}
+		return links, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return raw.(map[string]string), nil
+}
+
 func (a *mqlActivedirectory) certificateTemplates() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
 	searchBase := "CN=Certificate Templates,CN=Public Key Services,CN=Services," + conn.ConfigDN()
@@ -86,6 +127,7 @@ func (a *mqlActivedirectory) certificateTemplates() ([]interface{}, error) {
 		"msPKI-RA-Signature",
 		"msPKI-Template-Schema-Version",
 		"pKIExpirationPeriod",
+		"msPKI-Certificate-Policy",
 		"pKIOverlapPeriod",
 		"nTSecurityDescriptor",
 		"whenCreated",
@@ -116,6 +158,16 @@ func (a *mqlActivedirectory) certificateTemplates() ([]interface{}, error) {
 		return nil, err
 	}
 
+	oidLinks, err := resolveOIDGroupLinks(conn)
+	if err != nil {
+		return nil, err
+	}
+
+	privSets, err := buildPrivilegedMembershipSets(conn)
+	if err != nil {
+		return nil, err
+	}
+
 	res := make([]interface{}, 0, len(entries))
 
 	for _, entry := range entries {
@@ -142,6 +194,7 @@ func (a *mqlActivedirectory) certificateTemplates() ([]interface{}, error) {
 
 		enrolleeSuppliesSubject := certNameFlags&ctFlagEnrolleeSuppliesSubject != 0
 		managerApproval := enrollmentFlags&ctFlagPendAllRequests != 0
+		noSecurityExtension := enrollmentFlags&ctFlagNoSecurityExtension != 0
 		isPublished := publishedSet[cn]
 
 		// Parse security descriptor for enrollment permissions and ESC4.
@@ -172,6 +225,30 @@ func (a *mqlActivedirectory) certificateTemplates() ([]interface{}, error) {
 			lowPrivEnroll && !managerApproval
 		isESC3 := isPublished && ekuSet[ekuCertRequestAgent] && lowPrivEnroll
 
+		// ESC9: CT_FLAG_NO_SECURITY_EXTENSION set, has auth EKU, low-priv enrollment,
+		// and enrollee supplies subject or schema v1 (no SAN control).
+		isESC9 := isPublished && noSecurityExtension && hasAuthEKU &&
+			lowPrivEnroll && !managerApproval &&
+			(enrolleeSuppliesSubject || schemaVersion == 1)
+
+		// Issuance policy OIDs for ESC13 analysis.
+		certPolicies := connection.GetStringSliceAttr(entry, "msPKI-Certificate-Policy")
+		isESC13 := false
+		if isPublished && lowPrivEnroll {
+			for _, policyOID := range certPolicies {
+				if groupDN, ok := oidLinks[policyOID]; ok {
+					if privSets.AllPrivileged[groupDN] {
+						isESC13 = true
+						break
+					}
+				}
+			}
+		}
+		certPoliciesRaw := make([]interface{}, len(certPolicies))
+		for i, v := range certPolicies {
+			certPoliciesRaw[i] = v
+		}
+
 		resource, err := CreateResource(a.MqlRuntime, "activedirectory.certificateTemplate",
 			map[string]*llx.RawData{
 				"name":                         llx.StringData(cn),
@@ -195,6 +272,10 @@ func (a *mqlActivedirectory) certificateTemplates() ([]interface{}, error) {
 				"isVulnerableESC2":             llx.BoolData(isESC2),
 				"isVulnerableESC3":             llx.BoolData(isESC3),
 				"isVulnerableESC4":             llx.BoolData(isESC4),
+				"noSecurityExtension":          llx.BoolData(noSecurityExtension),
+				"isVulnerableESC9":             llx.BoolData(isESC9),
+				"issuancePolicies":             llx.ArrayData(certPoliciesRaw, types.String),
+				"isVulnerableESC13":            llx.BoolData(isESC13),
 				"enrollmentPermissions":        llx.ArrayData(enrollPermsRaw, types.String),
 				"lowPrivilegedEnrollment":      llx.BoolData(lowPrivEnroll),
 				"whenCreated":                  llx.TimeData(whenCreated),

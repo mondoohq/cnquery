@@ -515,6 +515,41 @@ func (c *ActiveDirectoryConnection) Close() {
 	}
 }
 
+// ProbeLDAPSigning detects whether the DC requires LDAP signing by
+// attempting an unsigned simple bind to port 389. If the DC rejects with
+// LDAPResultStrongAuthRequired (code 8), signing is enforced. If the bind
+// succeeds, signing is NOT required. Uses a throwaway connection.
+func (c *ActiveDirectoryConnection) ProbeLDAPSigning() (bool, error) {
+	user := c.Conf.Options[OptionUser]
+	password := c.Conf.Options[OptionPassword]
+	if len(c.Conf.Credentials) > 0 && c.Conf.Credentials[0].Type == vault.CredentialType_password {
+		user = c.Conf.Credentials[0].User
+		password = string(c.Conf.Credentials[0].Secret)
+	}
+	if user == "" || password == "" {
+		return false, fmt.Errorf("LDAP signing probe requires simple bind credentials")
+	}
+
+	addr := net.JoinHostPort(c.dcHost, "389")
+	dialer := &net.Dialer{Timeout: 10 * time.Second}
+	probeConn, err := ldap.DialURL("ldap://"+addr, ldap.DialWithDialer(dialer))
+	if err != nil {
+		return false, fmt.Errorf("LDAP signing probe: port 389 unreachable on %s: %w", c.dcHost, err)
+	}
+	defer probeConn.Close()
+
+	err = probeConn.Bind(user, password)
+	if err != nil {
+		if ldap.IsErrorWithCode(err, ldap.LDAPResultStrongAuthRequired) {
+			return true, nil // DC requires signing
+		}
+		return false, fmt.Errorf("LDAP signing probe bind failed: %w", err)
+	}
+
+	// Bind succeeded without signing — signing is NOT required.
+	return false, nil
+}
+
 // ---------------------------------------------------------------------------
 // Thread-safe cache
 // ---------------------------------------------------------------------------

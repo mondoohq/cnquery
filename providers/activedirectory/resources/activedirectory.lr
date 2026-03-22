@@ -52,6 +52,12 @@ activedirectory @defaults("domain functionalLevel") {
   schemaVersion() int
   // Dangerous ACL delegations on critical AD objects
   dangerousPermissions() []activedirectory.dangerousPermission
+  // Number of machine accounts any user can create (ms-DS-MachineAccountQuota; should be 0)
+  machineAccountQuota() int
+  // Whether the AD Recycle Bin optional feature is enabled
+  recycleBinEnabled() bool
+  // Whether the DC requires LDAP signing (detected via unsigned simple bind probe)
+  ldapSigningRequired() bool
 }
 
 // Active Directory Domain Controller
@@ -194,6 +200,8 @@ activedirectory.user @defaults("sAMAccountName displayName enabled") {
   sidHistory []string
   // Constrained delegation targets (msDS-AllowedToDelegateTo)
   constrainedDelegationTargets []string
+  // Whether the account is a Group Managed Service Account
+  isGMSA bool
 }
 
 // Active Directory group
@@ -294,6 +302,8 @@ activedirectory.computer @defaults("name operatingSystem enabled") {
   ouPath string
   // Whether the computer is a domain controller
   isDomainController bool
+  // Whether protocol transition (S4U2Self) is enabled via TRUSTED_TO_AUTH_FOR_DELEGATION
+  protocolTransition bool
 }
 
 // Active Directory Organizational Unit
@@ -432,6 +442,14 @@ activedirectory.certificateTemplate @defaults("name") {
   whenCreated time
   // Last modified timestamp
   whenChanged time
+  // Whether CT_FLAG_NO_SECURITY_EXTENSION is set in enrollment flags
+  noSecurityExtension bool
+  // Whether the template is vulnerable to ESC9 (no security extension with auth EKU)
+  isVulnerableESC9 bool
+  // Issuance policy OIDs (msPKI-Certificate-Policy) referenced by this template
+  issuancePolicies []string
+  // Whether the template is vulnerable to ESC13 (issuance policy OID linked to privileged group)
+  isVulnerableESC13 bool
 }
 
 // Active Directory Certificate Authority (Enrollment Service)
@@ -448,6 +466,16 @@ activedirectory.certificateAuthority @defaults("name") {
   certificateTemplates []string
   // CA certificate expiration
   certificateExpiration time
+  // Whether any low-privilege principal has ManageCA rights (ESC7)
+  isVulnerableESC7 bool
+  // Principals with ManageCA or ManageCertificates rights
+  dangerousCAPermissions []string
+  // HTTP(S) enrollment endpoint URLs registered for this CA
+  httpEnrollmentEndpoints []string
+  // Whether the CA has HTTP (non-TLS) enrollment endpoints (ESC8)
+  hasHttpEnrollment bool
+  // Whether enrollment agent restrictions are configured on this CA
+  enrollmentAgentRestrictionsConfigured bool
 }
 
 // Active Directory PKI object under CN=Public Key Services for ESC5 analysis

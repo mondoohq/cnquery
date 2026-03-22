@@ -32,7 +32,7 @@ func (a *mqlActivedirectory) users() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
 	baseDN := conn.BaseDN()
 
-	filter := "(&(objectCategory=person)(objectClass=user))"
+	filter := "(|(&(objectCategory=person)(objectClass=user))(objectClass=msDS-GroupManagedServiceAccount))"
 	attrs := []string{
 		"sAMAccountName",
 		"userPrincipalName",
@@ -50,6 +50,7 @@ func (a *mqlActivedirectory) users() ([]interface{}, error) {
 		"memberOf",
 		"sIDHistory",
 		"msDS-AllowedToDelegateTo",
+		"objectClass",
 	}
 
 	entries, err := connection.PagedSearch(conn.LDAPConn(), ldap.NewSearchRequest(
@@ -143,6 +144,16 @@ func (a *mqlActivedirectory) users() ([]interface{}, error) {
 		// Constrained delegation targets
 		constrainedTargets := connection.GetStringSliceAttr(entry, "msDS-AllowedToDelegateTo")
 
+		// Detect Group Managed Service Accounts by objectClass.
+		objectClasses := connection.GetStringSliceAttr(entry, "objectClass")
+		isGMSA := false
+		for _, oc := range objectClasses {
+			if strings.EqualFold(oc, "msDS-GroupManagedServiceAccount") {
+				isGMSA = true
+				break
+			}
+		}
+
 		// Convert string slices to []interface{} for llx array data
 		spnIface := make([]interface{}, len(spns))
 		for i, s := range spns {
@@ -192,6 +203,7 @@ func (a *mqlActivedirectory) users() ([]interface{}, error) {
 				"ouPath":                        llx.StringData(ouPath),
 				"sidHistory":                    llx.ArrayData(sidHistIface, types.String),
 				"constrainedDelegationTargets":  llx.ArrayData(constrainedIface, types.String),
+				"isGMSA":                        llx.BoolData(isGMSA),
 			})
 		if err != nil {
 			return nil, err
