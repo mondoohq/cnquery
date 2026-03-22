@@ -159,7 +159,6 @@ func (a *mqlActivedirectory) schemaVersion() (int64, error) {
 	return version, nil
 }
 
-
 func (a *mqlActivedirectory) machineAccountQuota() (int64, error) {
 	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
 	baseDN := conn.BaseDN()

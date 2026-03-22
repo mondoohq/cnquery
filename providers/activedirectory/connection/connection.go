@@ -392,25 +392,35 @@ func (c *ActiveDirectoryConnection) discoverDomainSID() error {
 // discoverRootDomainSID retrieves the objectSid of the forest root domain.
 // In a single-domain forest, rootDomainDN == domainDN, so this may be identical
 // to domainSID. In a child domain, the child DC does not hold the parent partition
-// so a direct base-scope read would yield a referral. In that case we look up the
-// crossRef object in CN=Partitions,CN=Configuration,... which is replicated everywhere.
+// so a direct base-scope read would yield a referral. Fallback order:
+//  1. Direct base-scope read (works when connected to the forest root DC).
+//  2. Global Catalog query on port 3268 (works when the DC is a GC — typical).
+//  3. crossRef objectSid from CN=Partitions,CN=Configuration,... (rarely populated).
+//  4. Current domainSID with warning (last resort; Enterprise/Schema Admin detection will be wrong).
 func (c *ActiveDirectoryConnection) discoverRootDomainSID() error {
 	if c.rootDomainDN == "" || c.rootDomainDN == c.domainDN {
-		// Same domain \u2014 reuse the already-fetched SID.
 		c.rootDomainSID = c.domainSID
 		return nil
 	}
 
-	// Try direct base-scope read first (works if connected to a DC that holds the partition).
+	// 1. Direct base-scope read.
 	sid, err := c.fetchObjectSID(c.rootDomainDN)
 	if err == nil {
 		c.rootDomainSID = sid
 		return nil
 	}
+	log.Debug().Err(err).Msg("direct root domain SID lookup failed")
 
-	// Fallback: query the crossRef for the root domain from the Partitions container.
-	// The Configuration NC is replicated to all DCs in the forest, so this always works.
-	log.Debug().Err(err).Msg("direct root domain SID lookup failed, falling back to Partitions crossRef")
+	// 2. Global Catalog (port 3268). Any GC holds a partial replica of every
+	//    domain in the forest, including the root domain's objectSid.
+	gcSID, gcErr := c.fetchRootDomainSIDViaGC()
+	if gcErr == nil {
+		c.rootDomainSID = gcSID
+		return nil
+	}
+	log.Debug().Err(gcErr).Msg("GC root domain SID lookup failed")
+
+	// 3. crossRef objectSid from the Partitions container.
 	partitionsDN := "CN=Partitions," + c.configDN
 	req := ldap.NewSearchRequest(
 		partitionsDN,
@@ -423,26 +433,70 @@ func (c *ActiveDirectoryConnection) discoverRootDomainSID() error {
 	)
 	resp, searchErr := c.ldapConn.Search(req)
 	if searchErr != nil {
-		return fmt.Errorf("crossRef lookup in %s failed: %w (original: %v)", partitionsDN, searchErr, err)
+		return fmt.Errorf("crossRef lookup in %s failed: %w (direct: %v, GC: %v)", partitionsDN, searchErr, err, gcErr)
+	}
+	if len(resp.Entries) > 0 {
+		raw := GetBinaryAttr(resp.Entries[0], "objectSid")
+		if len(raw) > 0 {
+			rootSID, decodeErr := DecodeSID(raw)
+			if decodeErr != nil {
+				return fmt.Errorf("decoding forest root SID from crossRef: %w", decodeErr)
+			}
+			c.rootDomainSID = rootSID
+			return nil
+		}
+	}
+
+	// 4. Last resort: use current domain SID.
+	log.Warn().Str("rootDomainDN", c.rootDomainDN).Msg("could not resolve forest root SID via direct read, GC, or crossRef; Enterprise/Schema Admin detection may be incomplete")
+	c.rootDomainSID = c.domainSID
+	return nil
+}
+
+// fetchRootDomainSIDViaGC connects to the Global Catalog (port 3268) on the
+// current DC and reads the forest root domain's objectSid. The GC holds a
+// partial replica of every domain in the forest, so this works on any GC-enabled DC.
+func (c *ActiveDirectoryConnection) fetchRootDomainSIDViaGC() (string, error) {
+	gcAddr := net.JoinHostPort(c.dcHost, "3268")
+	dialer := &net.Dialer{Timeout: 5 * time.Second}
+	gcConn, err := ldap.DialURL("ldap://"+gcAddr, ldap.DialWithDialer(dialer))
+	if err != nil {
+		return "", fmt.Errorf("GC port 3268 unreachable on %s: %w", c.dcHost, err)
+	}
+	defer gcConn.Close()
+
+	// Re-bind with the same credentials on the GC connection.
+	user := c.Conf.Options[OptionUser]
+	password := c.Conf.Options[OptionPassword]
+	if len(c.Conf.Credentials) > 0 && c.Conf.Credentials[0].Type == vault.CredentialType_password {
+		user = c.Conf.Credentials[0].User
+		password = string(c.Conf.Credentials[0].Secret)
+	}
+	if err := gcConn.Bind(user, password); err != nil {
+		return "", fmt.Errorf("GC bind failed: %w", err)
+	}
+
+	req := ldap.NewSearchRequest(
+		c.rootDomainDN,
+		ldap.ScopeBaseObject,
+		ldap.NeverDerefAliases,
+		0, 0, false,
+		"(objectClass=*)",
+		[]string{"objectSid"},
+		nil,
+	)
+	resp, err := gcConn.Search(req)
+	if err != nil {
+		return "", fmt.Errorf("GC search for %s: %w", c.rootDomainDN, err)
 	}
 	if len(resp.Entries) == 0 {
-		return fmt.Errorf("no crossRef found for nCName=%s in %s (original: %v)", c.rootDomainDN, partitionsDN, err)
+		return "", fmt.Errorf("GC returned no entry for %s", c.rootDomainDN)
 	}
 	raw := GetBinaryAttr(resp.Entries[0], "objectSid")
 	if len(raw) == 0 {
-		// crossRef objectSid is not always replicated to child DCs.
-		// Fall back to current domain SID; Enterprise/Schema Admin detection
-		// will mis-match but the provider remains functional.
-		log.Warn().Str("rootDomainDN", c.rootDomainDN).Msg("crossRef for forest root has no objectSid; Enterprise/Schema Admin detection may be incomplete")
-		c.rootDomainSID = c.domainSID
-		return nil
+		return "", fmt.Errorf("GC objectSid empty for %s", c.rootDomainDN)
 	}
-	rootSID, decodeErr := DecodeSID(raw)
-	if decodeErr != nil {
-		return fmt.Errorf("decoding forest root SID from crossRef: %w", decodeErr)
-	}
-	c.rootDomainSID = rootSID
-	return nil
+	return DecodeSID(raw)
 }
 
 // fetchObjectSID performs a base-scope search for objectSid on the given DN

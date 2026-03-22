@@ -225,11 +225,11 @@ func (a *mqlActivedirectory) certificateTemplates() ([]interface{}, error) {
 			lowPrivEnroll && !managerApproval
 		isESC3 := isPublished && ekuSet[ekuCertRequestAgent] && lowPrivEnroll
 
-		// ESC9: CT_FLAG_NO_SECURITY_EXTENSION set, has auth EKU, low-priv enrollment,
-		// and enrollee supplies subject or schema v1 (no SAN control).
+		// ESC9: CT_FLAG_NO_SECURITY_EXTENSION set, has auth EKU, low-priv enrollment.
+		// Without the SID extension the DC cannot enforce strong certificate binding,
+		// allowing an attacker to authenticate as another principal.
 		isESC9 := isPublished && noSecurityExtension && hasAuthEKU &&
-			lowPrivEnroll && !managerApproval &&
-			(enrolleeSuppliesSubject || schemaVersion == 1)
+			lowPrivEnroll && !managerApproval
 
 		// Issuance policy OIDs for ESC13 analysis.
 		certPolicies := connection.GetStringSliceAttr(entry, "msPKI-Certificate-Policy")
