@@ -391,19 +391,57 @@ func (c *ActiveDirectoryConnection) discoverDomainSID() error {
 
 // discoverRootDomainSID retrieves the objectSid of the forest root domain.
 // In a single-domain forest, rootDomainDN == domainDN, so this may be identical
-// to domainSID. In a child domain it differs and is needed for resolving
-// Enterprise Admins / Schema Admins well-known SIDs.
+// to domainSID. In a child domain, the child DC does not hold the parent partition
+// so a direct base-scope read would yield a referral. In that case we look up the
+// crossRef object in CN=Partitions,CN=Configuration,... which is replicated everywhere.
 func (c *ActiveDirectoryConnection) discoverRootDomainSID() error {
 	if c.rootDomainDN == "" || c.rootDomainDN == c.domainDN {
-		// Same domain — reuse the already-fetched SID.
+		// Same domain \u2014 reuse the already-fetched SID.
 		c.rootDomainSID = c.domainSID
 		return nil
 	}
+
+	// Try direct base-scope read first (works if connected to a DC that holds the partition).
 	sid, err := c.fetchObjectSID(c.rootDomainDN)
-	if err != nil {
-		return fmt.Errorf("reading forest root objectSid from %s: %w", c.rootDomainDN, err)
+	if err == nil {
+		c.rootDomainSID = sid
+		return nil
 	}
-	c.rootDomainSID = sid
+
+	// Fallback: query the crossRef for the root domain from the Partitions container.
+	// The Configuration NC is replicated to all DCs in the forest, so this always works.
+	log.Debug().Err(err).Msg("direct root domain SID lookup failed, falling back to Partitions crossRef")
+	partitionsDN := "CN=Partitions," + c.configDN
+	req := ldap.NewSearchRequest(
+		partitionsDN,
+		ldap.ScopeSingleLevel,
+		ldap.NeverDerefAliases,
+		0, 0, false,
+		fmt.Sprintf("(&(objectClass=crossRef)(nCName=%s))", ldap.EscapeFilter(c.rootDomainDN)),
+		[]string{"objectSid"},
+		nil,
+	)
+	resp, searchErr := c.ldapConn.Search(req)
+	if searchErr != nil {
+		return fmt.Errorf("crossRef lookup in %s failed: %w (original: %v)", partitionsDN, searchErr, err)
+	}
+	if len(resp.Entries) == 0 {
+		return fmt.Errorf("no crossRef found for nCName=%s in %s (original: %v)", c.rootDomainDN, partitionsDN, err)
+	}
+	raw := GetBinaryAttr(resp.Entries[0], "objectSid")
+	if len(raw) == 0 {
+		// crossRef objectSid is not always replicated to child DCs.
+		// Fall back to current domain SID; Enterprise/Schema Admin detection
+		// will mis-match but the provider remains functional.
+		log.Warn().Str("rootDomainDN", c.rootDomainDN).Msg("crossRef for forest root has no objectSid; Enterprise/Schema Admin detection may be incomplete")
+		c.rootDomainSID = c.domainSID
+		return nil
+	}
+	rootSID, decodeErr := DecodeSID(raw)
+	if decodeErr != nil {
+		return fmt.Errorf("decoding forest root SID from crossRef: %w", decodeErr)
+	}
+	c.rootDomainSID = rootSID
 	return nil
 }
 
