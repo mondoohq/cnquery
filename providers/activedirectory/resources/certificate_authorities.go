@@ -156,17 +156,17 @@ func (a *mqlActivedirectory) certificateAuthorities() ([]interface{}, error) {
 
 		resource, err := CreateResource(a.MqlRuntime, "activedirectory.certificateAuthority",
 			map[string]*llx.RawData{
-				"name":                   llx.StringData(name),
-				"distinguishedName":      llx.StringData(dn),
-				"dnsHostname":            llx.StringData(dnsHostname),
-				"caType":                 llx.StringData(caType),
-				"certificateTemplates":   llx.ArrayData(templatesRaw, types.String),
-				"certificateExpiration":  llx.TimeData(certExpiration),
-				"isVulnerableESC7":       llx.BoolData(isVulnerableESC7),
-				"dangerousCAPermissions": llx.ArrayData(dangerousCAPermsRaw, types.String),
-				"httpEnrollmentEndpoints": llx.ArrayData(httpEndpointsRaw, types.String),
-				"hasHttpEnrollment":                       llx.BoolData(hasHTTPEnrollment),
-				"enrollmentAgentRestrictionsConfigured":    llx.BoolData(enrollmentAgentRestrictions),
+				"name":                                  llx.StringData(name),
+				"distinguishedName":                     llx.StringData(dn),
+				"dnsHostname":                           llx.StringData(dnsHostname),
+				"caType":                                llx.StringData(caType),
+				"certificateTemplates":                  llx.ArrayData(templatesRaw, types.String),
+				"certificateExpiration":                 llx.TimeData(certExpiration),
+				"isVulnerableESC7":                      llx.BoolData(isVulnerableESC7),
+				"dangerousCAPermissions":                llx.ArrayData(dangerousCAPermsRaw, types.String),
+				"httpEnrollmentEndpoints":               llx.ArrayData(httpEndpointsRaw, types.String),
+				"hasHttpEnrollment":                     llx.BoolData(hasHTTPEnrollment),
+				"enrollmentAgentRestrictionsConfigured": llx.BoolData(enrollmentAgentRestrictions),
 			})
 		if err != nil {
 			return nil, err

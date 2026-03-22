@@ -233,7 +233,6 @@ func parseObjectACE(sd []byte, offset int) (aceEntry, bool) {
 	return aceEntry{aceType: 0x05, mask: mask, sid: sid, objectGUID: objectGUID}, true
 }
 
-
 // decodeGUID converts a 16-byte binary GUID (mixed-endian as used by AD)
 // to its lowercase string form: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.
 func decodeGUID(b []byte) string {

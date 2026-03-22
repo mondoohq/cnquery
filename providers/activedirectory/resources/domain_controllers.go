@@ -12,7 +12,6 @@ import (
 	"go.mondoo.com/mql/v13/providers/activedirectory/connection"
 )
 
-
 // extractSiteFromServerRef extracts the AD site name from a serverReferenceBL DN.
 // Expected format: CN=<DC>,CN=Servers,CN=<SiteName>,CN=Sites,CN=Configuration,...
 func extractSiteFromServerRef(dn string) string {
