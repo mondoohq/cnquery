@@ -5,7 +5,6 @@ package resources
 
 import (
 	"fmt"
-	"math"
 	"strings"
 	"time"
 
@@ -125,22 +124,22 @@ func (a *mqlActivedirectory) computers() ([]interface{}, error) {
 		osSP := connection.GetStringAttr(entry, "operatingSystemServicePack")
 		desc := connection.GetStringAttr(entry, "description")
 
-		pwdLastSet := fileTimeToTime(parseInt64Attr(connection.GetStringAttr(entry, "pwdLastSet")))
-		lastLogon := fileTimeToTime(parseInt64Attr(connection.GetStringAttr(entry, "lastLogonTimestamp")))
+		pwdLastSet := connection.FileTimeToTime(parseInt64Attr(connection.GetStringAttr(entry, "pwdLastSet")))
+		lastLogon := connection.FileTimeToTime(parseInt64Attr(connection.GetStringAttr(entry, "lastLogonTimestamp")))
 		whenCreated := parseADGeneralizedTime(connection.GetStringAttr(entry, "whenCreated"))
 
 		// Password age and last-logon staleness.
 		var passwordAgeDays int64 = -1
 		if !pwdLastSet.IsZero() {
-			passwordAgeDays = int64(math.Floor(now.Sub(pwdLastSet).Hours() / 24))
+			passwordAgeDays = int64(now.Sub(pwdLastSet).Hours() / 24)
 		}
 
 		var daysSinceLastLogon int64 = -1
 		if !lastLogon.IsZero() {
-			daysSinceLastLogon = int64(math.Floor(now.Sub(lastLogon).Hours() / 24))
+			daysSinceLastLogon = int64(now.Sub(lastLogon).Hours() / 24)
 		}
 
-		isStale := daysSinceLastLogon > 90 && daysSinceLastLogon >= 0
+		isStale := daysSinceLastLogon >= 0 && daysSinceLastLogon > 90
 
 		enabled := !uacHasFlag(uac, UACAccountDisable)
 		unconstrainedDelegation := uacHasFlag(uac, UACTrustedForDelegation)
@@ -172,9 +171,9 @@ func (a *mqlActivedirectory) computers() ([]interface{}, error) {
 		var lapsExpirationTime time.Time
 		// Prefer Windows LAPS over legacy.
 		if windowsLaps != "" {
-			lapsExpirationTime = fileTimeToTime(parseInt64Attr(windowsLaps))
+			lapsExpirationTime = connection.FileTimeToTime(parseInt64Attr(windowsLaps))
 		} else if legacyLaps != "" {
-			lapsExpirationTime = fileTimeToTime(parseInt64Attr(legacyLaps))
+			lapsExpirationTime = connection.FileTimeToTime(parseInt64Attr(legacyLaps))
 		}
 
 		ouPath := extractOU(dn)

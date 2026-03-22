@@ -69,6 +69,7 @@ func (a *mqlActivedirectory) users() ([]interface{}, error) {
 		return nil, fmt.Errorf("failed to resolve privileged group memberships: %w", err)
 	}
 
+	now := time.Now().UTC()
 	res := make([]interface{}, 0, len(entries))
 	for _, entry := range entries {
 		samAccountName := connection.GetStringAttr(entry, "sAMAccountName")
@@ -101,19 +102,19 @@ func (a *mqlActivedirectory) users() ([]interface{}, error) {
 			!strings.HasSuffix(samAccountName, "$")
 
 		// Timestamps
-		pwdLastSet := fileTimeToTime(parseInt64Attr(entry.GetAttributeValue("pwdLastSet")))
-		lastLogon := fileTimeToTime(parseInt64Attr(entry.GetAttributeValue("lastLogonTimestamp")))
+		pwdLastSet := connection.FileTimeToTime(parseInt64Attr(entry.GetAttributeValue("pwdLastSet")))
+		lastLogon := connection.FileTimeToTime(parseInt64Attr(entry.GetAttributeValue("lastLogonTimestamp")))
 		whenCreated := parseADGeneralizedTime(entry.GetAttributeValue("whenCreated"))
 
 		// Computed age fields
 		var passwordAgeDays int64
 		if !pwdLastSet.IsZero() {
-			passwordAgeDays = int64(time.Since(pwdLastSet).Hours() / 24)
+			passwordAgeDays = int64(now.Sub(pwdLastSet).Hours() / 24)
 		}
 
 		var daysSinceLastLogon int64 = -1
 		if !lastLogon.IsZero() {
-			daysSinceLastLogon = int64(time.Since(lastLogon).Hours() / 24)
+			daysSinceLastLogon = int64(now.Sub(lastLogon).Hours() / 24)
 		}
 
 		isStale := daysSinceLastLogon >= 0 && daysSinceLastLogon > 90

@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/mql/v13/providers/activedirectory/connection"
 )
 
 // aceEntry represents a parsed ACCESS_ALLOWED_ACE from a Windows
@@ -172,7 +173,7 @@ func parseBasicACE(sd []byte, offset int, aceType uint8) (aceEntry, bool) {
 	mask := binary.LittleEndian.Uint32(sd[offset+4 : offset+8])
 	sidBytes := sd[offset+8 : offset+aceSize]
 
-	sid, err := decodeSIDBytes(sidBytes)
+	sid, err := connection.DecodeSID(sidBytes)
 	if err != nil {
 		return aceEntry{}, false
 	}
@@ -224,7 +225,7 @@ func parseObjectACE(sd []byte, offset int) (aceEntry, bool) {
 		return aceEntry{}, false
 	}
 
-	sid, err := decodeSIDBytes(sd[pos : offset+aceSize])
+	sid, err := connection.DecodeSID(sd[pos : offset+aceSize])
 	if err != nil {
 		return aceEntry{}, false
 	}
@@ -232,33 +233,6 @@ func parseObjectACE(sd []byte, offset int) (aceEntry, bool) {
 	return aceEntry{aceType: 0x05, mask: mask, sid: sid, objectGUID: objectGUID}, true
 }
 
-// decodeSIDBytes converts a binary SID to its string representation (S-1-...).
-func decodeSIDBytes(b []byte) (string, error) {
-	if len(b) < 8 {
-		return "", fmt.Errorf("SID too short: %d bytes", len(b))
-	}
-
-	revision := b[0]
-	subAuthorityCount := int(b[1])
-
-	if len(b) < 8+4*subAuthorityCount {
-		return "", fmt.Errorf("SID truncated: need %d bytes, have %d", 8+4*subAuthorityCount, len(b))
-	}
-
-	// Authority is big-endian 6 bytes at offset 2.
-	var authority uint64
-	for i := 2; i < 8; i++ {
-		authority = authority<<8 | uint64(b[i])
-	}
-
-	sid := fmt.Sprintf("S-%d-%d", revision, authority)
-	for i := 0; i < subAuthorityCount; i++ {
-		subAuth := binary.LittleEndian.Uint32(b[8+4*i : 12+4*i])
-		sid += fmt.Sprintf("-%d", subAuth)
-	}
-
-	return sid, nil
-}
 
 // decodeGUID converts a 16-byte binary GUID (mixed-endian as used by AD)
 // to its lowercase string form: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.

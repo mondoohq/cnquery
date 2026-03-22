@@ -72,9 +72,6 @@ func discoverCriticalTargets(conn *connection.ActiveDirectoryConnection) ([]crit
 	// names (which vary by language). Domain Admins = 512, Enterprise
 	// Admins = 519, Schema Admins = 518, Account Operators = 548,
 	// Backup Operators = 551, Server Operators = 549.
-	privGroupFilter := "(|" +
-		"(objectSid=\\01\\02\\00\\00\\00\\00\\00\\05\\20\\00\\00\\00\\00\\02\\00\\00)" + // BUILTIN\Administrators (S-1-5-32-544)
-		")"
 	// For domain-relative groups, it's easier to search by adminCount and
 	// filter in code. We query groups where adminCount=1 (these are the
 	// groups protected by AdminSDHolder = privileged).
@@ -85,7 +82,6 @@ func discoverCriticalTargets(conn *connection.ActiveDirectoryConnection) ([]crit
 		[]string{"distinguishedName", "sAMAccountName"},
 		nil,
 	)
-	_ = privGroupFilter // unused — we use adminCount=1 instead
 
 	sr, err := conn.LDAPConn().Search(privGroupSearch)
 	if err != nil {

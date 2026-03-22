@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/go-ldap/ldap/v3"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers/activedirectory/connection"
 	"go.mondoo.com/mql/v13/types"
@@ -50,6 +51,7 @@ func parseInt64Attr(s string) int64 {
 	}
 	v, err := strconv.ParseInt(s, 10, 64)
 	if err != nil {
+		log.Warn().Str("value", s).Err(err).Msg("parseInt64Attr: non-numeric LDAP attribute value, defaulting to 0")
 		return 0
 	}
 	return v

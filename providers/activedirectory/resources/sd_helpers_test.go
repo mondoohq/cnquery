@@ -6,6 +6,8 @@ package resources
 import (
 	"encoding/binary"
 	"testing"
+
+	"go.mondoo.com/mql/v13/providers/activedirectory/connection"
 )
 
 // buildBasicACE constructs a minimal ACCESS_ALLOWED_ACE (type 0) binary blob.
@@ -186,12 +188,12 @@ func TestDecodeSIDBytes(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := decodeSIDBytes(tt.raw)
+			got, err := connection.DecodeSID(tt.raw)
 			if (err != nil) != tt.wantErr {
-				t.Fatalf("decodeSIDBytes() error = %v, wantErr %v", err, tt.wantErr)
+				t.Fatalf("DecodeSID() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if got != tt.want {
-				t.Errorf("decodeSIDBytes() = %q, want %q", got, tt.want)
+				t.Errorf("DecodeSID() = %q, want %q", got, tt.want)
 			}
 		})
 	}

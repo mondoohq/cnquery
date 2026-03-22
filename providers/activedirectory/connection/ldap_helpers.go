@@ -88,10 +88,10 @@ func DecodeSID(raw []byte) (string, error) {
 // FileTimeToTime converts an Active Directory FILETIME value (100-nanosecond
 // intervals since 1601-01-01 UTC) to a Go time.Time.
 //
-// Sentinel values 0 and 0x7FFFFFFFFFFFFFFF (never / never-expires) return
+// Sentinel values (≤ 0 and 0x7FFFFFFFFFFFFFFF / never-expires) return
 // the zero time.
 func FileTimeToTime(ft int64) time.Time {
-	if ft == 0 || ft == filetimeNeverExpires {
+	if ft <= 0 || ft == filetimeNeverExpires {
 		return time.Time{}
 	}
 	// Convert from Windows 100ns ticks to Unix nanoseconds.

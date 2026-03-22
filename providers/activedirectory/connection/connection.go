@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/go-ldap/ldap/v3"
 	"github.com/go-ldap/ldap/v3/gssapi"
@@ -38,6 +39,8 @@ const (
 	OptionKeytab   = "keytab"
 	OptionKrb5Conf = "krb5conf"
 	OptionCCache   = "ccache"
+	// dialTimeout caps how long we wait for TCP connection to the DC.
+	dialTimeout = 30 * time.Second
 )
 
 // ActiveDirectoryConnection manages a single LDAP connection to an
@@ -132,13 +135,14 @@ func NewActiveDirectoryConnection(id uint32, asset *inventory.Asset, conf *inven
 	// --- Dial ---
 	var ldapConn *ldap.Conn
 	var err error
+	dialer := &net.Dialer{Timeout: dialTimeout}
 	if useTLS {
-		ldapConn, err = ldap.DialURL("ldaps://"+addr, ldap.DialWithTLSConfig(&tls.Config{
+		ldapConn, err = ldap.DialURL("ldaps://"+addr, ldap.DialWithDialer(dialer), ldap.DialWithTLSConfig(&tls.Config{
 			MinVersion:         tls.VersionTLS12,
 			InsecureSkipVerify: insecure, //nolint:gosec // user-controlled flag for lab/test environments
 		}))
 	} else {
-		ldapConn, err = ldap.DialURL("ldap://" + addr)
+		ldapConn, err = ldap.DialURL("ldap://"+addr, ldap.DialWithDialer(dialer))
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to dial LDAP at %s: %w", addr, err)
@@ -163,6 +167,9 @@ func NewActiveDirectoryConnection(id uint32, asset *inventory.Asset, conf *inven
 			return nil, err
 		}
 	} else {
+		if !useTLS && !useStartTLS {
+			log.Warn().Str("dc", dcHost).Msg("LDAP simple bind over plaintext connection — credentials are transmitted in the clear; use --ldaps or --starttls to encrypt")
+		}
 		if err := ldapConn.Bind(user, password); err != nil {
 			ldapConn.Close()
 			return nil, fmt.Errorf("LDAP bind failed for %s: %w", user, err)

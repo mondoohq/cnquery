@@ -6,25 +6,12 @@ package resources
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/go-ldap/ldap/v3"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers/activedirectory/connection"
 )
 
-// fileTimeToTime converts a Windows FILETIME (100ns intervals since 1601-01-01)
-// to a Go time.Time. Sentinel values 0 and 0x7FFFFFFFFFFFFFFF (never) return
-// the zero time.
-func fileTimeToTime(ft int64) time.Time {
-	if ft <= 0 || ft == 0x7FFFFFFFFFFFFFFF {
-		return time.Time{}
-	}
-	// Windows epoch starts 116444736000000000 100ns intervals before Unix epoch.
-	const epochDiff = 116_444_736_000_000_000
-	unixNano := (ft - epochDiff) * 100
-	return time.Unix(0, unixNano).UTC()
-}
 
 // extractSiteFromServerRef extracts the AD site name from a serverReferenceBL DN.
 // Expected format: CN=<DC>,CN=Servers,CN=<SiteName>,CN=Sites,CN=Configuration,...
@@ -83,8 +70,8 @@ func (a *mqlActivedirectory) domainControllers() ([]interface{}, error) {
 		osVersion := entry.GetAttributeValue("operatingSystemVersion")
 		uac := parseInt64Attr(entry.GetAttributeValue("userAccountControl"))
 
-		pwdLastSet := fileTimeToTime(parseInt64Attr(entry.GetAttributeValue("pwdLastSet")))
-		lastLogon := fileTimeToTime(parseInt64Attr(entry.GetAttributeValue("lastLogonTimestamp")))
+		pwdLastSet := connection.FileTimeToTime(parseInt64Attr(entry.GetAttributeValue("pwdLastSet")))
+		lastLogon := connection.FileTimeToTime(parseInt64Attr(entry.GetAttributeValue("lastLogonTimestamp")))
 
 		serverRef := entry.GetAttributeValue("serverReferenceBL")
 		site := extractSiteFromServerRef(serverRef)
