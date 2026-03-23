@@ -126,7 +126,10 @@ func (r *Runtime) CriticalErrors() []error {
 func (r *Runtime) addCriticalError(err error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	r.criticalErrors = append(r.criticalErrors, err)
+	const maxCriticalErrors = 100
+	if len(r.criticalErrors) < maxCriticalErrors {
+		r.criticalErrors = append(r.criticalErrors, err)
+	}
 }
 
 func (r *Runtime) Recording() llx.Recording {
