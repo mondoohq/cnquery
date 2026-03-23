@@ -4,9 +4,13 @@
 package connection
 
 import (
+	"net/http"
+	"time"
+
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/azauth"
@@ -52,6 +56,9 @@ func NewAzureConnection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 		asset:          asset,
 		token:          token,
 		subscriptionId: subId,
+		clientOptions: policy.ClientOptions{
+			PerCallPolicies: []policy.Policy{&apiTracePolicy{}},
+		},
 	}, nil
 }
 
@@ -85,4 +92,30 @@ func (p *AzureConnection) Config() *inventory.Config {
 
 func (p *AzureConnection) Type() shared.ConnectionType {
 	return "azure"
+}
+
+// apiTracePolicy is an Azure SDK pipeline policy that logs every HTTP request
+// with its method, URL, status code, and duration at Debug level.
+type apiTracePolicy struct{}
+
+func (p *apiTracePolicy) Do(req *policy.Request) (*http.Response, error) {
+	start := time.Now()
+	rawReq := req.Raw()
+
+	resp, err := req.Next()
+
+	elapsed := time.Since(start)
+	status := 0
+	if resp != nil {
+		status = resp.StatusCode
+	}
+	log.Debug().
+		Str("method", rawReq.Method).
+		Str("url", rawReq.URL.String()).
+		Int("status", status).
+		Dur("duration", elapsed).
+		Err(err).
+		Msg("azure api call")
+
+	return resp, err
 }

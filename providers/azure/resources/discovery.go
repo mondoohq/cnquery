@@ -4,18 +4,22 @@
 package resources
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"slices"
 	"strings"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
+	armresources "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v3"
+	subscriptions "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions"
+
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/azure/connection"
 	"go.mondoo.com/mql/v13/utils/stringx"
-
-	subscriptions "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions"
 )
 
 const (
@@ -83,6 +87,35 @@ var AllAPIResources = []string{
 	DiscoverySecurityGroups,
 	DiscoveryCosmosDb,
 	DiscoveryVirtualNetworks,
+}
+
+// genericDiscoverySpec maps an ARM resource type to the discovery metadata
+// needed to build an inventory asset. Resources listed here are discovered via
+// a single armresources.Client.NewListPager call per subscription instead of
+// individual service-specific API calls.
+type genericDiscoverySpec struct {
+	armType                string // ARM resource type, e.g. "Microsoft.Sql/servers"
+	discoveryTarget        string // discovery constant, e.g. DiscoverySqlServers
+	service                string // service label for azureObject
+	objectType             string // objectType label for azureObject
+	includeObjectTypeInUrl bool   // passed to mqlObjectToAsset
+}
+
+var genericDiscoverySpecs = []genericDiscoverySpec{
+	{"Microsoft.Sql/servers", DiscoverySqlServers, "sql", "server", false},
+	{"Microsoft.DBforMySQL/servers", DiscoveryMySqlServers, "mysql", "server", false},
+	{"Microsoft.DBforMySQL/flexibleServers", DiscoveryMySqlFlexibleServers, "mysql", "flexible-server", false},
+	{"Microsoft.DBforPostgreSQL/servers", DiscoveryPostgresServers, "postgresql", "server", false},
+	{"Microsoft.DBforPostgreSQL/flexibleServers", DiscoveryPostgresFlexibleServers, "postgresql", "flexible-server", false},
+	{"Microsoft.ContainerService/managedClusters", DiscoveryAksClusters, "aks", "cluster", false},
+	{"Microsoft.Web/sites", DiscoveryAppServiceApps, "app-service", "app", false},
+	{"Microsoft.Cache/Redis", DiscoveryCacheRedis, "cache", "redis", false},
+	{"Microsoft.Batch/batchAccounts", DiscoveryBatchAccounts, "batch", "account", false},
+	{"Microsoft.Storage/storageAccounts", DiscoveryStorageAccounts, "storage", "account", true},
+	{"Microsoft.Network/networkSecurityGroups", DiscoverySecurityGroups, "network", "security-group", true},
+	{"Microsoft.KeyVault/vaults", DiscoveryKeyVaults, "keyvault", "vault", false},
+	{"Microsoft.DocumentDB/databaseAccounts", DiscoveryCosmosDb, "cosmosdb", "account", false},
+	{"Microsoft.Network/virtualNetworks", DiscoveryVirtualNetworks, "network", "virtual-network", true},
 }
 
 type azureObject struct {
@@ -188,84 +221,6 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 		}
 		assets = append(assets, vms...)
 	}
-	if stringx.ContainsAnyOf(targets, DiscoverySqlServers) {
-		sqlServers, err := discoverSqlServers(runtime, subsWithConfigs)
-		if err != nil {
-			return nil, err
-		}
-		assets = append(assets, sqlServers...)
-	}
-	if stringx.ContainsAnyOf(targets, DiscoveryMySqlServers) {
-		mySqlServers, err := discoverMySqlServers(runtime, subsWithConfigs)
-		if err != nil {
-			return nil, err
-		}
-		assets = append(assets, mySqlServers...)
-	}
-	if stringx.ContainsAnyOf(targets, DiscoveryMySqlFlexibleServers) {
-		flexibleServers, err := discoverMySqlFlexibleServers(runtime, subsWithConfigs)
-		if err != nil {
-			return nil, err
-		}
-		assets = append(assets, flexibleServers...)
-	}
-
-	if stringx.ContainsAnyOf(targets, DiscoveryPostgresServers) {
-		postgresServers, err := discoverPostgresqlServers(runtime, subsWithConfigs)
-		if err != nil {
-			return nil, err
-		}
-		assets = append(assets, postgresServers...)
-	}
-
-	if stringx.ContainsAnyOf(targets, DiscoveryPostgresFlexibleServers) {
-		flexibleServers, err := discoverPostgresqlFlexibleServers(runtime, subsWithConfigs)
-		if err != nil {
-			return nil, err
-		}
-		assets = append(assets, flexibleServers...)
-	}
-
-	if stringx.ContainsAnyOf(targets, DiscoveryAksClusters) {
-		aksClusters, err := discoverAksClusters(runtime, subsWithConfigs)
-		if err != nil {
-			return nil, err
-		}
-		assets = append(assets, aksClusters...)
-	}
-
-	if stringx.ContainsAnyOf(targets, DiscoveryAppServiceApps) {
-		appServiceApps, err := discoverAppServiceApps(runtime, subsWithConfigs)
-		if err != nil {
-			return nil, err
-		}
-		assets = append(assets, appServiceApps...)
-	}
-
-	if stringx.ContainsAnyOf(targets, DiscoveryCacheRedis) {
-		redisInstances, err := discoverCacheRedis(runtime, subsWithConfigs)
-		if err != nil {
-			return nil, err
-		}
-		assets = append(assets, redisInstances...)
-	}
-
-	if stringx.ContainsAnyOf(targets, DiscoveryBatchAccounts) {
-		batchAccounts, err := discoverBatchAccounts(runtime, subsWithConfigs)
-		if err != nil {
-			return nil, err
-		}
-		assets = append(assets, batchAccounts...)
-	}
-
-	if stringx.ContainsAnyOf(targets, DiscoveryStorageAccounts) {
-		accs, err := discoverStorageAccounts(runtime, subsWithConfigs)
-		if err != nil {
-			return nil, err
-		}
-		assets = append(assets, accs...)
-	}
-
 	// FIXME: bring back the storage containers as as part of FF scanning once we can do parallel scanning
 	if stringx.ContainsAnyOf(targets, DiscoveryStorageContainers) {
 		containers, err := discoverStorageAccountsContainers(runtime, subsWithConfigs)
@@ -275,37 +230,13 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 		assets = append(assets, containers...)
 	}
 
-	if stringx.ContainsAnyOf(targets, DiscoverySecurityGroups) {
-		secGrps, err := discoverSecurityGroups(runtime, subsWithConfigs)
-		if err != nil {
-			return nil, err
-		}
-		assets = append(assets, secGrps...)
+	// Discover all other resource types via a single ARM generic list call per
+	// subscription, replacing 13 individual service-specific API calls.
+	genericAssets, err := discoverGeneric(conn, subsWithConfigs, targets)
+	if err != nil {
+		return nil, err
 	}
-
-	if stringx.ContainsAnyOf(targets, DiscoveryKeyVaults) {
-		kvs, err := discoverVaults(runtime, subsWithConfigs)
-		if err != nil {
-			return nil, err
-		}
-		assets = append(assets, kvs...)
-	}
-
-	if stringx.ContainsAnyOf(targets, DiscoveryCosmosDb) {
-		cosmosDbAccounts, err := discoverCosmosDb(runtime, subsWithConfigs)
-		if err != nil {
-			return nil, err
-		}
-		assets = append(assets, cosmosDbAccounts...)
-	}
-
-	if stringx.ContainsAnyOf(targets, DiscoveryVirtualNetworks) {
-		vnets, err := discoverVirtualNetworks(runtime, subsWithConfigs)
-		if err != nil {
-			return nil, err
-		}
-		assets = append(assets, vnets...)
-	}
+	assets = append(assets, genericAssets...)
 
 	return &inventory.Inventory{
 		Spec: &inventory.InventorySpec{
@@ -418,378 +349,84 @@ func discoverInstances(runtime *plugin.Runtime, subsWithConfigs []subWithConfig)
 	return assets, nil
 }
 
-func discoverSqlServers(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([]*inventory.Asset, error) {
-	assets := []*inventory.Asset{}
-	for _, subWithConfig := range subsWithConfigs {
-		svc, err := NewResource(runtime, "azure.subscription.sqlService", map[string]*llx.RawData{
-			"subscriptionId": llx.StringDataPtr(subWithConfig.sub.SubscriptionID),
+// discoverGeneric uses a single ARM resource list call per subscription to
+// discover all resource types that only need name/id/location/tags. This
+// replaces 13 individual service-specific API calls.
+func discoverGeneric(conn *connection.AzureConnection, subsWithConfigs []subWithConfig, targets []string) ([]*inventory.Asset, error) {
+	// Filter to only specs whose discovery target is active.
+	var activeSpecs []genericDiscoverySpec
+	for _, spec := range genericDiscoverySpecs {
+		if stringx.ContainsAnyOf(targets, spec.discoveryTarget) {
+			activeSpecs = append(activeSpecs, spec)
+		}
+	}
+	if len(activeSpecs) == 0 {
+		return nil, nil
+	}
+
+	// Build OR filter: "resourceType eq 'X' or resourceType eq 'Y' or ..."
+	clauses := make([]string, len(activeSpecs))
+	for i, s := range activeSpecs {
+		clauses[i] = fmt.Sprintf("resourceType eq '%s'", s.armType)
+	}
+	filter := strings.Join(clauses, " or ")
+
+	// Build a lookup map: lowercase ARM type → spec
+	specByType := make(map[string]genericDiscoverySpec, len(activeSpecs))
+	for _, s := range activeSpecs {
+		specByType[strings.ToLower(s.armType)] = s
+	}
+
+	var assets []*inventory.Asset
+	for _, swc := range subsWithConfigs {
+		subId := *swc.sub.SubscriptionID
+		client, err := armresources.NewClient(subId, conn.Token(), &arm.ClientOptions{
+			ClientOptions: conn.ClientOptions(),
 		})
 		if err != nil {
 			return nil, err
 		}
-		sqlSvc := svc.(*mqlAzureSubscriptionSqlService)
-		servers := sqlSvc.GetServers()
-		if servers.Error != nil {
-			return nil, servers.Error
-		}
-		for _, sqlServ := range servers.Data {
-			s := sqlServ.(*mqlAzureSubscriptionSqlServiceServer)
-			asset := mqlObjectToAsset(mqlObject{
-				name:   s.Name.Data,
-				labels: interfaceMapToStr(s.Tags.Data),
-				azureObject: azureObject{
-					id:           s.Id.Data,
-					subscription: *subWithConfig.sub.SubscriptionID,
-					tenant:       subWithConfig.sub.TenantID,
-					location:     s.Location.Data,
-					service:      "sql",
-					objectType:   "server",
-				},
-			}, subWithConfig.conf, false)
-			assets = append(assets, asset)
+
+		pager := client.NewListPager(&armresources.ClientListOptions{
+			Filter: &filter,
+		})
+		for pager.More() {
+			page, err := pager.NextPage(context.Background())
+			if err != nil {
+				return nil, err
+			}
+			for _, resource := range page.Value {
+				resType := strings.ToLower(derefStr(resource.Type))
+				spec, ok := specByType[resType]
+				if !ok {
+					continue
+				}
+				asset := mqlObjectToAsset(mqlObject{
+					name:   derefStr(resource.Name),
+					labels: convert.PtrMapStrToStr(resource.Tags),
+					azureObject: azureObject{
+						id:           derefStr(resource.ID),
+						subscription: subId,
+						tenant:       swc.sub.TenantID,
+						location:     derefStr(resource.Location),
+						service:      spec.service,
+						objectType:   spec.objectType,
+					},
+				}, swc.conf, spec.includeObjectTypeInUrl)
+				if asset != nil {
+					assets = append(assets, asset)
+				}
+			}
 		}
 	}
 	return assets, nil
 }
 
-func discoverMySqlServers(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([]*inventory.Asset, error) {
-	assets := []*inventory.Asset{}
-	for _, subWithConfig := range subsWithConfigs {
-		svc, err := NewResource(runtime, "azure.subscription.mySqlService", map[string]*llx.RawData{
-			"subscriptionId": llx.StringDataPtr(subWithConfig.sub.SubscriptionID),
-		})
-		if err != nil {
-			return nil, err
-		}
-		mysqlSvc := svc.(*mqlAzureSubscriptionMySqlService)
-		servers := mysqlSvc.GetServers()
-		if servers.Error != nil {
-			return nil, servers.Error
-		}
-		for _, mysqlServ := range servers.Data {
-			s := mysqlServ.(*mqlAzureSubscriptionMySqlServiceServer)
-			asset := mqlObjectToAsset(mqlObject{
-				name:   s.Name.Data,
-				labels: interfaceMapToStr(s.Tags.Data),
-				azureObject: azureObject{
-					id:           s.Id.Data,
-					subscription: *subWithConfig.sub.SubscriptionID,
-					tenant:       subWithConfig.sub.TenantID,
-					location:     s.Location.Data,
-					service:      "mysql",
-					objectType:   "server",
-				},
-			}, subWithConfig.conf, false)
-			assets = append(assets, asset)
-		}
+func derefStr(s *string) string {
+	if s == nil {
+		return ""
 	}
-	return assets, nil
-}
-
-func discoverMySqlFlexibleServers(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([]*inventory.Asset, error) {
-	assets := []*inventory.Asset{}
-	for _, subWithConfig := range subsWithConfigs {
-		svc, err := NewResource(runtime, "azure.subscription.mySqlService", map[string]*llx.RawData{
-			"subscriptionId": llx.StringDataPtr(subWithConfig.sub.SubscriptionID),
-		})
-		if err != nil {
-			return nil, err
-		}
-		mysqlSvc := svc.(*mqlAzureSubscriptionMySqlService)
-		servers := mysqlSvc.GetFlexibleServers()
-		if servers.Error != nil {
-			return nil, servers.Error
-		}
-		for _, mysqlServ := range servers.Data {
-			s := mysqlServ.(*mqlAzureSubscriptionMySqlServiceFlexibleServer)
-			asset := mqlObjectToAsset(mqlObject{
-				name:   s.Name.Data,
-				labels: interfaceMapToStr(s.Tags.Data),
-				azureObject: azureObject{
-					id:           s.Id.Data,
-					subscription: *subWithConfig.sub.SubscriptionID,
-					tenant:       subWithConfig.sub.TenantID,
-					location:     s.Location.Data,
-					service:      "mysql",
-					objectType:   "flexible-server",
-				},
-			}, subWithConfig.conf, false)
-			assets = append(assets, asset)
-		}
-	}
-	return assets, nil
-}
-
-func discoverPostgresqlServers(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([]*inventory.Asset, error) {
-	assets := []*inventory.Asset{}
-	for _, subWithConfig := range subsWithConfigs {
-		svc, err := NewResource(runtime, "azure.subscription.postgreSqlService", map[string]*llx.RawData{
-			"subscriptionId": llx.StringDataPtr(subWithConfig.sub.SubscriptionID),
-		})
-		if err != nil {
-			return nil, err
-		}
-		postgresSvc := svc.(*mqlAzureSubscriptionPostgreSqlService)
-		servers := postgresSvc.GetServers()
-		if servers.Error != nil {
-			return nil, servers.Error
-		}
-		for _, mysqlServ := range servers.Data {
-			s := mysqlServ.(*mqlAzureSubscriptionPostgreSqlServiceServer)
-			asset := mqlObjectToAsset(mqlObject{
-				name:   s.Name.Data,
-				labels: interfaceMapToStr(s.Tags.Data),
-				azureObject: azureObject{
-					id:           s.Id.Data,
-					subscription: *subWithConfig.sub.SubscriptionID,
-					tenant:       subWithConfig.sub.TenantID,
-					location:     s.Location.Data,
-					service:      "postgresql",
-					objectType:   "server",
-				},
-			}, subWithConfig.conf, false)
-			assets = append(assets, asset)
-		}
-	}
-	return assets, nil
-}
-
-func discoverPostgresqlFlexibleServers(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([]*inventory.Asset, error) {
-	assets := []*inventory.Asset{}
-	for _, subWithConfig := range subsWithConfigs {
-		svc, err := NewResource(runtime, "azure.subscription.postgreSqlService", map[string]*llx.RawData{
-			"subscriptionId": llx.StringDataPtr(subWithConfig.sub.SubscriptionID),
-		})
-		if err != nil {
-			return nil, err
-		}
-		postgresSvc := svc.(*mqlAzureSubscriptionPostgreSqlService)
-		servers := postgresSvc.GetFlexibleServers()
-		if servers.Error != nil {
-			return nil, servers.Error
-		}
-		for _, mysqlServ := range servers.Data {
-			s := mysqlServ.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer)
-			asset := mqlObjectToAsset(mqlObject{
-				name:   s.Name.Data,
-				labels: interfaceMapToStr(s.Tags.Data),
-				azureObject: azureObject{
-					id:           s.Id.Data,
-					subscription: *subWithConfig.sub.SubscriptionID,
-					tenant:       subWithConfig.sub.TenantID,
-					location:     s.Location.Data,
-					service:      "postgresql",
-					objectType:   "flexible-server",
-				},
-			}, subWithConfig.conf, false)
-			assets = append(assets, asset)
-		}
-	}
-	return assets, nil
-}
-
-func discoverAksClusters(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([]*inventory.Asset, error) {
-	assets := []*inventory.Asset{}
-	for _, subWithConfig := range subsWithConfigs {
-		svc, err := NewResource(runtime, "azure.subscription.aksService", map[string]*llx.RawData{
-			"subscriptionId": llx.StringDataPtr(subWithConfig.sub.SubscriptionID),
-		})
-		if err != nil {
-			return nil, err
-		}
-		aksSvc := svc.(*mqlAzureSubscriptionAksService)
-		clusters := aksSvc.GetClusters()
-		if clusters.Error != nil {
-			return nil, clusters.Error
-		}
-		for _, c := range clusters.Data {
-			cluster := c.(*mqlAzureSubscriptionAksServiceCluster)
-			asset := mqlObjectToAsset(mqlObject{
-				name:   cluster.Name.Data,
-				labels: interfaceMapToStr(cluster.Tags.Data),
-				azureObject: azureObject{
-					id:           cluster.Id.Data,
-					subscription: *subWithConfig.sub.SubscriptionID,
-					tenant:       subWithConfig.sub.TenantID,
-					location:     cluster.Location.Data,
-					service:      "aks",
-					objectType:   "cluster",
-				},
-			}, subWithConfig.conf, false)
-			assets = append(assets, asset)
-		}
-	}
-	return assets, nil
-}
-
-func discoverAppServiceApps(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([]*inventory.Asset, error) {
-	assets := []*inventory.Asset{}
-	for _, subWithConfig := range subsWithConfigs {
-		svc, err := NewResource(runtime, "azure.subscription.webService", map[string]*llx.RawData{
-			"subscriptionId": llx.StringDataPtr(subWithConfig.sub.SubscriptionID),
-		})
-		if err != nil {
-			return nil, err
-		}
-		webSvc := svc.(*mqlAzureSubscriptionWebService)
-		apps := webSvc.GetApps()
-		if apps.Error != nil {
-			return nil, apps.Error
-		}
-		for _, a := range apps.Data {
-			app := a.(*mqlAzureSubscriptionWebServiceAppsite)
-			asset := mqlObjectToAsset(mqlObject{
-				name:   app.Name.Data,
-				labels: interfaceMapToStr(app.Tags.Data),
-				azureObject: azureObject{
-					id:           app.Id.Data,
-					subscription: *subWithConfig.sub.SubscriptionID,
-					tenant:       subWithConfig.sub.TenantID,
-					location:     app.Location.Data,
-					service:      "app-service",
-					objectType:   "app",
-				},
-			}, subWithConfig.conf, false)
-			assets = append(assets, asset)
-		}
-	}
-	return assets, nil
-}
-
-func discoverCacheRedis(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([]*inventory.Asset, error) {
-	assets := []*inventory.Asset{}
-	for _, subWithConfig := range subsWithConfigs {
-		svc, err := NewResource(runtime, "azure.subscription.cacheService", map[string]*llx.RawData{
-			"subscriptionId": llx.StringDataPtr(subWithConfig.sub.SubscriptionID),
-		})
-		if err != nil {
-			return nil, err
-		}
-		cacheSvc := svc.(*mqlAzureSubscriptionCacheService)
-		redisInstances := cacheSvc.GetRedis()
-		if redisInstances.Error != nil {
-			return nil, redisInstances.Error
-		}
-		for _, r := range redisInstances.Data {
-			instance := r.(*mqlAzureSubscriptionCacheServiceRedisInstance)
-			asset := mqlObjectToAsset(mqlObject{
-				name:   instance.Name.Data,
-				labels: interfaceMapToStr(instance.Tags.Data),
-				azureObject: azureObject{
-					id:           instance.Id.Data,
-					subscription: *subWithConfig.sub.SubscriptionID,
-					tenant:       subWithConfig.sub.TenantID,
-					location:     instance.Location.Data,
-					service:      "cache",
-					objectType:   "redis",
-				},
-			}, subWithConfig.conf, false)
-			assets = append(assets, asset)
-		}
-	}
-	return assets, nil
-}
-
-func discoverBatchAccounts(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([]*inventory.Asset, error) {
-	assets := []*inventory.Asset{}
-	for _, subWithConfig := range subsWithConfigs {
-		svc, err := NewResource(runtime, "azure.subscription.batchService", map[string]*llx.RawData{
-			"subscriptionId": llx.StringDataPtr(subWithConfig.sub.SubscriptionID),
-		})
-		if err != nil {
-			return nil, err
-		}
-		batchSvc := svc.(*mqlAzureSubscriptionBatchService)
-		accounts := batchSvc.GetAccounts()
-		if accounts.Error != nil {
-			return nil, accounts.Error
-		}
-		for _, a := range accounts.Data {
-			account := a.(*mqlAzureSubscriptionBatchServiceAccount)
-			asset := mqlObjectToAsset(mqlObject{
-				name:   account.Name.Data,
-				labels: interfaceMapToStr(account.Tags.Data),
-				azureObject: azureObject{
-					id:           account.Id.Data,
-					subscription: *subWithConfig.sub.SubscriptionID,
-					tenant:       subWithConfig.sub.TenantID,
-					location:     account.Location.Data,
-					service:      "batch",
-					objectType:   "account",
-				},
-			}, subWithConfig.conf, false)
-			assets = append(assets, asset)
-		}
-	}
-	return assets, nil
-}
-
-func discoverCosmosDb(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([]*inventory.Asset, error) {
-	assets := []*inventory.Asset{}
-	for _, subWithConfig := range subsWithConfigs {
-		svc, err := NewResource(runtime, "azure.subscription.cosmosDbService", map[string]*llx.RawData{
-			"subscriptionId": llx.StringDataPtr(subWithConfig.sub.SubscriptionID),
-		})
-		if err != nil {
-			return nil, err
-		}
-		cosmosDbSvc := svc.(*mqlAzureSubscriptionCosmosDbService)
-		accounts := cosmosDbSvc.GetAccounts()
-		if accounts.Error != nil {
-			return nil, accounts.Error
-		}
-		for _, a := range accounts.Data {
-			account := a.(*mqlAzureSubscriptionCosmosDbServiceAccount)
-			asset := mqlObjectToAsset(mqlObject{
-				name:   account.Name.Data,
-				labels: interfaceMapToStr(account.Tags.Data),
-				azureObject: azureObject{
-					id:           account.Id.Data,
-					subscription: *subWithConfig.sub.SubscriptionID,
-					tenant:       subWithConfig.sub.TenantID,
-					location:     account.Location.Data,
-					service:      "cosmosdb",
-					objectType:   "account",
-				},
-			}, subWithConfig.conf, false)
-			assets = append(assets, asset)
-		}
-	}
-	return assets, nil
-}
-
-func discoverStorageAccounts(runtime *plugin.Runtime, subsWithConfig []subWithConfig) ([]*inventory.Asset, error) {
-	assets := []*inventory.Asset{}
-	for _, subWithConfig := range subsWithConfig {
-		svc, err := NewResource(runtime, "azure.subscription.storageService", map[string]*llx.RawData{
-			"subscriptionId": llx.StringDataPtr(subWithConfig.sub.SubscriptionID),
-		})
-		if err != nil {
-			return nil, err
-		}
-		storageSvc := svc.(*mqlAzureSubscriptionStorageService)
-		accounts := storageSvc.GetAccounts()
-		if accounts.Error != nil {
-			return nil, accounts.Error
-		}
-		for _, account := range accounts.Data {
-			a := account.(*mqlAzureSubscriptionStorageServiceAccount)
-			asset := mqlObjectToAsset(mqlObject{
-				name:   a.Name.Data,
-				labels: interfaceMapToStr(a.Tags.Data),
-				azureObject: azureObject{
-					id:           a.Id.Data,
-					subscription: *subWithConfig.sub.SubscriptionID,
-					tenant:       subWithConfig.sub.TenantID,
-					location:     a.Location.Data,
-					service:      "storage",
-					objectType:   "account",
-				},
-			}, subWithConfig.conf, true)
-			assets = append(assets, asset)
-		}
-	}
-	return assets, nil
+	return *s
 }
 
 func discoverStorageAccountsContainers(runtime *plugin.Runtime, subsWithConfig []subWithConfig) ([]*inventory.Asset, error) {
@@ -828,108 +465,6 @@ func discoverStorageAccountsContainers(runtime *plugin.Runtime, subsWithConfig [
 				}, subWithConfig.conf, true)
 				assets = append(assets, asset)
 			}
-		}
-	}
-	return assets, nil
-}
-
-func discoverSecurityGroups(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([]*inventory.Asset, error) {
-	assets := []*inventory.Asset{}
-	for _, subWithConfig := range subsWithConfigs {
-		svc, err := NewResource(runtime, "azure.subscription.networkService", map[string]*llx.RawData{
-			"subscriptionId": llx.StringDataPtr(subWithConfig.sub.SubscriptionID),
-		})
-		if err != nil {
-			return nil, err
-		}
-		networkSvc := svc.(*mqlAzureSubscriptionNetworkService)
-		secGrps := networkSvc.GetSecurityGroups()
-		if secGrps.Error != nil {
-			return nil, secGrps.Error
-		}
-		for _, secGrp := range secGrps.Data {
-			s := secGrp.(*mqlAzureSubscriptionNetworkServiceSecurityGroup)
-			asset := mqlObjectToAsset(mqlObject{
-				name:   s.Name.Data,
-				labels: interfaceMapToStr(s.Tags.Data),
-				azureObject: azureObject{
-					id:           s.Id.Data,
-					subscription: *subWithConfig.sub.SubscriptionID,
-					tenant:       subWithConfig.sub.TenantID,
-					location:     s.Location.Data,
-					service:      "network",
-					objectType:   "security-group",
-				},
-			}, subWithConfig.conf, true)
-			assets = append(assets, asset)
-		}
-	}
-	return assets, nil
-}
-
-func discoverVirtualNetworks(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([]*inventory.Asset, error) {
-	assets := []*inventory.Asset{}
-	for _, subWithConfig := range subsWithConfigs {
-		svc, err := NewResource(runtime, "azure.subscription.networkService", map[string]*llx.RawData{
-			"subscriptionId": llx.StringDataPtr(subWithConfig.sub.SubscriptionID),
-		})
-		if err != nil {
-			return nil, err
-		}
-		networkSvc := svc.(*mqlAzureSubscriptionNetworkService)
-		vnets := networkSvc.GetVirtualNetworks()
-		if vnets.Error != nil {
-			return nil, vnets.Error
-		}
-		for _, vnet := range vnets.Data {
-			v := vnet.(*mqlAzureSubscriptionNetworkServiceVirtualNetwork)
-			asset := mqlObjectToAsset(mqlObject{
-				name:   v.Name.Data,
-				labels: interfaceMapToStr(v.Tags.Data),
-				azureObject: azureObject{
-					id:           v.Id.Data,
-					subscription: *subWithConfig.sub.SubscriptionID,
-					tenant:       subWithConfig.sub.TenantID,
-					location:     v.Location.Data,
-					service:      "network",
-					objectType:   "virtual-network",
-				},
-			}, subWithConfig.conf, true)
-			assets = append(assets, asset)
-		}
-	}
-	return assets, nil
-}
-
-func discoverVaults(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([]*inventory.Asset, error) {
-	assets := []*inventory.Asset{}
-	for _, subWithConfig := range subsWithConfigs {
-		svc, err := NewResource(runtime, "azure.subscription.keyVaultService", map[string]*llx.RawData{
-			"subscriptionId": llx.StringDataPtr(subWithConfig.sub.SubscriptionID),
-		})
-		if err != nil {
-			return nil, err
-		}
-		kvSvc := svc.(*mqlAzureSubscriptionKeyVaultService)
-		vaults := kvSvc.GetVaults()
-		if vaults.Error != nil {
-			return nil, vaults.Error
-		}
-		for _, vlt := range vaults.Data {
-			v := vlt.(*mqlAzureSubscriptionKeyVaultServiceVault)
-			asset := mqlObjectToAsset(mqlObject{
-				name:   v.VaultName.Data,
-				labels: interfaceMapToStr(v.Tags.Data),
-				azureObject: azureObject{
-					id:           v.Id.Data,
-					subscription: *subWithConfig.sub.SubscriptionID,
-					tenant:       subWithConfig.sub.TenantID,
-					location:     v.Location.Data,
-					service:      "keyvault",
-					objectType:   "vault",
-				},
-			}, subWithConfig.conf, false)
-			assets = append(assets, asset)
 		}
 	}
 	return assets, nil
