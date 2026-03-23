@@ -36,7 +36,6 @@ func pkiObjectClass(classes []string) string {
 	return classes[len(classes)-1]
 }
 
-
 func (a *mqlActivedirectory) pkiObjects() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
 

@@ -48,7 +48,7 @@ func TestParseSMB2NegotiateResponse(t *testing.T) {
 	t.Run("3.1.1 with encryption context", func(t *testing.T) {
 		resp := buildMockSMB311NegResponse(
 			uint16(gosmb.SecurityModeSigningRequired)|uint16(gosmb.SecurityModeSigningEnabled),
-			0, // no CAP_ENCRYPTION in Capabilities — encryption comes from context
+			0,                // no CAP_ENCRYPTION in Capabilities — encryption comes from context
 			[]uint16{0x0002}, // AES-128-GCM
 		)
 		result, err := parseSMB2NegotiateResponse(resp)
@@ -243,8 +243,8 @@ func buildMockSMB311NegResponse(secMode uint16, caps uint32, ciphers []uint16) [
 		// SMB2_ENCRYPTION_CAPABILITIES: header(8) + CipherCount(2) + ciphers(2 each).
 		dataLen := 2 + len(ciphers)*2
 		ctx := make([]byte, 8+dataLen)
-		le16Put(ctx[0:2], 0x0002)           // ContextType
-		le16Put(ctx[2:4], uint16(dataLen))   // DataLength
+		le16Put(ctx[0:2], 0x0002)          // ContextType
+		le16Put(ctx[2:4], uint16(dataLen)) // DataLength
 		le16Put(ctx[8:10], uint16(len(ciphers)))
 		for i, c := range ciphers {
 			le16Put(ctx[10+i*2:12+i*2], c)
@@ -256,19 +256,21 @@ func buildMockSMB311NegResponse(secMode uint16, caps uint32, ciphers []uint16) [
 	copy(resp[0:4], []byte{0xFE, 'S', 'M', 'B'})
 
 	body := resp[64:]
-	le16Put(body[0:2], 65)                  // StructureSize
-	le16Put(body[2:4], secMode)             // SecurityMode
+	le16Put(body[0:2], 65)                     // StructureSize
+	le16Put(body[2:4], secMode)                // SecurityMode
 	le16Put(body[4:6], gosmb.DialectSmb_3_1_1) // DialectRevision
-	le16Put(body[6:8], ctxCount)            // NegotiateContextCount
-	le32Put(body[24:28], caps)              // Capabilities
-	le32Put(body[60:64], ctxOffset)         // NegotiateContextOffset
+	le16Put(body[6:8], ctxCount)               // NegotiateContextCount
+	le32Put(body[24:28], caps)                 // Capabilities
+	le32Put(body[60:64], ctxOffset)            // NegotiateContextOffset
 
 	copy(resp[ctxOffset:], ctxData)
 	return resp
 }
 
 func le16(b []byte) uint16 { return uint16(b[0]) | uint16(b[1])<<8 }
-func le32(b []byte) uint32 { return uint32(b[0]) | uint32(b[1])<<8 | uint32(b[2])<<16 | uint32(b[3])<<24 }
+func le32(b []byte) uint32 {
+	return uint32(b[0]) | uint32(b[1])<<8 | uint32(b[2])<<16 | uint32(b[3])<<24
+}
 func le16Put(b []byte, v uint16) {
 	b[0] = byte(v)
 	b[1] = byte(v >> 8)

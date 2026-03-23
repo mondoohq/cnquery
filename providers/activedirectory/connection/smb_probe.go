@@ -103,7 +103,9 @@ func probeSMB2Negotiate(addr string) (*NegotiateResult, error) {
 		return nil, fmt.Errorf("port 445 unreachable: %w", err)
 	}
 	defer conn.Close()
-	conn.SetDeadline(time.Now().Add(smbProbeTimeout))
+	if err := conn.SetDeadline(time.Now().Add(smbProbeTimeout)); err != nil {
+		return nil, fmt.Errorf("setting connection deadline: %w", err)
+	}
 
 	// Build a minimal SMB2 negotiate request.
 	negReq := buildSMB2NegotiateRequest()
@@ -128,7 +130,9 @@ func probeSMB1Negotiate(addr string) (bool, error) {
 		return false, fmt.Errorf("port 445 unreachable: %w", err)
 	}
 	defer conn.Close()
-	conn.SetDeadline(time.Now().Add(smbProbeTimeout))
+	if err := conn.SetDeadline(time.Now().Add(smbProbeTimeout)); err != nil {
+		return false, fmt.Errorf("setting connection deadline: %w", err)
+	}
 
 	negReq := buildSMB1NegotiateRequest()
 	if err := sendNetBIOS(conn, negReq); err != nil {
@@ -183,22 +187,22 @@ func buildSMB2NegotiateRequest() []byte {
 	// Context 1: SMB2_PREAUTH_INTEGRITY_CAPABILITIES (MS-SMB2 2.2.3.1.1).
 	// Data: HashAlgorithmCount(2) + SaltLength(2) + SHA-512(2) + 32-byte salt.
 	const preauthDataLen = 2 + 2 + 2 + 32 // 38 bytes
-	preauthCtxLen := 8 + preauthDataLen    // 46 bytes (header + data)
+	preauthCtxLen := 8 + preauthDataLen   // 46 bytes (header + data)
 	preauthPadded := preauthCtxLen + (8-preauthCtxLen%8)%8
 
 	// Context 2: SMB2_ENCRYPTION_CAPABILITIES (MS-SMB2 2.2.3.1.2).
 	// Data: CipherCount(2) + 4 ciphers(8).
-	const encDataLen = 2 + 4*2 // 10 bytes
+	const encDataLen = 2 + 4*2  // 10 bytes
 	encCtxLen := 8 + encDataLen // 18 bytes (last context, no padding)
 
 	totalLen := ctxOffset + preauthPadded + encCtxLen
 	pkt := make([]byte, totalLen)
 
 	// -- SMB2 Header --
-	copy(pkt[0:4], []byte{0xFE, 'S', 'M', 'B'}) // ProtocolId
-	binary.LittleEndian.PutUint16(pkt[4:6], 64)   // StructureSize (header)
-	binary.LittleEndian.PutUint16(pkt[12:14], 0)   // Command: NEGOTIATE
-	binary.LittleEndian.PutUint16(pkt[14:16], 1)   // CreditRequest
+	copy(pkt[0:4], []byte{0xFE, 'S', 'M', 'B'})  // ProtocolId
+	binary.LittleEndian.PutUint16(pkt[4:6], 64)  // StructureSize (header)
+	binary.LittleEndian.PutUint16(pkt[12:14], 0) // Command: NEGOTIATE
+	binary.LittleEndian.PutUint16(pkt[14:16], 1) // CreditRequest
 
 	// -- Negotiate Request Body --
 	body := pkt[64:]
@@ -226,17 +230,17 @@ func buildSMB2NegotiateRequest() []byte {
 	binary.LittleEndian.PutUint16(ctx[0:2], 0x0001)         // ContextType
 	binary.LittleEndian.PutUint16(ctx[2:4], preauthDataLen) // DataLength
 	// ctx[4:8] Reserved = 0
-	binary.LittleEndian.PutUint16(ctx[8:10], 1)      // HashAlgorithmCount
-	binary.LittleEndian.PutUint16(ctx[10:12], 32)    // SaltLength
+	binary.LittleEndian.PutUint16(ctx[8:10], 1)       // HashAlgorithmCount
+	binary.LittleEndian.PutUint16(ctx[10:12], 32)     // SaltLength
 	binary.LittleEndian.PutUint16(ctx[12:14], 0x0001) // SHA-512
 	// ctx[14:46] Salt = 32 zero bytes (sufficient for a probe)
 
 	// Context 2: SMB2_ENCRYPTION_CAPABILITIES.
 	ctx2 := ctx[preauthPadded:]
-	binary.LittleEndian.PutUint16(ctx2[0:2], 0x0002)    // ContextType
+	binary.LittleEndian.PutUint16(ctx2[0:2], 0x0002)     // ContextType
 	binary.LittleEndian.PutUint16(ctx2[2:4], encDataLen) // DataLength
 	// ctx2[4:8] Reserved = 0
-	binary.LittleEndian.PutUint16(ctx2[8:10], 4)      // CipherCount
+	binary.LittleEndian.PutUint16(ctx2[8:10], 4)       // CipherCount
 	binary.LittleEndian.PutUint16(ctx2[10:12], 0x0001) // AES-128-CCM
 	binary.LittleEndian.PutUint16(ctx2[12:14], 0x0002) // AES-128-GCM
 	binary.LittleEndian.PutUint16(ctx2[14:16], 0x0003) // AES-256-CCM
@@ -256,7 +260,7 @@ func buildSMB1NegotiateRequest() []byte {
 	pkt := make([]byte, headerSize+1+2+len(dialect))
 
 	copy(pkt[0:4], []byte{0xFF, 'S', 'M', 'B'}) // ProtocolId
-	pkt[4] = 0x72                                 // Command: SMB_COM_NEGOTIATE
+	pkt[4] = 0x72                               // Command: SMB_COM_NEGOTIATE
 
 	// Flags: case-insensitive pathnames.
 	pkt[13] = 0x08
@@ -279,7 +283,7 @@ func parseSMB2NegotiateResponse(resp []byte) (*NegotiateResult, error) {
 		return nil, errors.New("response too short")
 	}
 	// Validate SMB2 magic.
-	if !(resp[0] == 0xFE && resp[1] == 'S' && resp[2] == 'M' && resp[3] == 'B') {
+	if resp[0] != 0xFE || resp[1] != 'S' || resp[2] != 'M' || resp[3] != 'B' {
 		return nil, fmt.Errorf("expected SMB2 magic, got %02x%02x%02x%02x", resp[0], resp[1], resp[2], resp[3])
 	}
 	// Negotiate response body starts after the 64-byte SMB2 header.
@@ -427,7 +431,7 @@ func (c *ActiveDirectoryConnection) ProbeSMBNullSession() (bool, error) {
 	}
 	defer smbConn.Close()
 
-	return smbConn.Session.IsNullSession(), nil
+	return smbConn.IsNullSession(), nil
 }
 
 // ProbeSMBGuestAccess tests whether the DC falls back to a guest session
@@ -453,7 +457,7 @@ func (c *ActiveDirectoryConnection) ProbeSMBGuestAccess() (bool, error) {
 	}
 	defer smbConn.Close()
 
-	return smbConn.Session.IsGuestSession(), nil
+	return smbConn.IsGuestSession(), nil
 }
 
 func isConnectionRefused(err error) bool {
@@ -553,7 +557,7 @@ func (c *ActiveDirectoryConnection) ProbeRegistryDWORD(hive byte, subkeyPath, va
 	if err != nil {
 		return 0, fmt.Errorf("opening winreg pipe: %w", err)
 	}
-	defer file.CloseFile()
+	defer func() { _ = file.CloseFile() }()
 
 	transport, err := smbtransport.NewSMBTransport(file)
 	if err != nil {
@@ -572,14 +576,14 @@ func (c *ActiveDirectoryConnection) ProbeRegistryDWORD(hive byte, subkeyPath, va
 	if err != nil {
 		return 0, fmt.Errorf("opening base key %d: %w", hive, err)
 	}
-	defer rpc.CloseKeyHandle(hKey)
+	defer func() { _ = rpc.CloseKeyHandle(hKey) }()
 
 	// Open subkey path.
 	hSubKey, err := rpc.OpenSubKey(hKey, subkeyPath)
 	if err != nil {
 		return 0, fmt.Errorf("opening subkey %q: %w", subkeyPath, err)
 	}
-	defer rpc.CloseKeyHandle(hSubKey)
+	defer func() { _ = rpc.CloseKeyHandle(hSubKey) }()
 
 	// Read value.
 	result, dataType, err := rpc.QueryValueExt(hSubKey, valueName)
