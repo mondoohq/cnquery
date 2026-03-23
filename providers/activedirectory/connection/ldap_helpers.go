@@ -118,13 +118,17 @@ func DurationToDays(d int64) int {
 
 // PagedSearch executes an LDAP search request using the paged results control
 // (RFC 2696) with a page size of 1000, accumulating all entries across pages.
+// Caller-supplied controls on req.Controls are preserved alongside the paging control.
 func PagedSearch(conn *ldap.Conn, req *ldap.SearchRequest) ([]*ldap.Entry, error) {
 	var allEntries []*ldap.Entry
 	pagingControl := ldap.NewControlPaging(pagedSearchPageSize)
+	extraControls := req.Controls // preserve caller-supplied controls (e.g. SD flags)
 
 	for {
-		// Attach paging control to the request.
-		req.Controls = []ldap.Control{pagingControl}
+		controls := make([]ldap.Control, 0, len(extraControls)+1)
+		controls = append(controls, extraControls...)
+		controls = append(controls, pagingControl)
+		req.Controls = controls
 
 		resp, err := conn.Search(req)
 		if err != nil {

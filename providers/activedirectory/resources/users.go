@@ -98,7 +98,7 @@ func (a *mqlActivedirectory) users() ([]interface{}, error) {
 
 		// SPNs and kerberoastable check
 		spns := connection.GetStringSliceAttr(entry, "servicePrincipalName")
-		kerberoastable := len(spns) > 0 &&
+		kerberoastable := enabled && len(spns) > 0 &&
 			samAccountName != "krbtgt" &&
 			!strings.HasSuffix(samAccountName, "$")
 

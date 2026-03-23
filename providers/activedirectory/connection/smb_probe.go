@@ -10,6 +10,7 @@ import (
 	"io"
 	"net"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/jfjallid/go-smb/dcerpc"
@@ -457,7 +458,10 @@ func (c *ActiveDirectoryConnection) ProbeSMBGuestAccess() (bool, error) {
 
 func isConnectionRefused(err error) bool {
 	var opErr *net.OpError
-	return errors.As(err, &opErr)
+	if !errors.As(err, &opErr) {
+		return false
+	}
+	return errors.Is(opErr.Err, syscall.ECONNREFUSED)
 }
 
 // ---------------------------------------------------------------------------

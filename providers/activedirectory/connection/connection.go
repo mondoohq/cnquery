@@ -53,6 +53,7 @@ type ActiveDirectoryConnection struct {
 
 	ldapConn *ldap.Conn
 	dcHost   string
+	useTLS   bool
 
 	baseDN string
 	// domainDN is always the domain root DN from RootDSE, used for SID/metadata.
@@ -185,6 +186,7 @@ func NewActiveDirectoryConnection(id uint32, asset *inventory.Asset, conf *inven
 		asset:      asset,
 		ldapConn:   ldapConn,
 		dcHost:     dcHost,
+		useTLS:     useTLS,
 		cache:      make(map[string]interface{}),
 	}
 
@@ -456,15 +458,22 @@ func (c *ActiveDirectoryConnection) discoverRootDomainSID() error {
 	return nil
 }
 
-// fetchRootDomainSIDViaGC connects to the Global Catalog (port 3268) on the
-// current DC and reads the forest root domain's objectSid. The GC holds a
-// partial replica of every domain in the forest, so this works on any GC-enabled DC.
+// fetchRootDomainSIDViaGC connects to the Global Catalog on the current DC
+// and reads the forest root domain's objectSid. Uses port 3269 (LDAPS) when
+// the main connection uses TLS, otherwise port 3268 (plaintext).
 func (c *ActiveDirectoryConnection) fetchRootDomainSIDViaGC() (string, error) {
-	gcAddr := net.JoinHostPort(c.dcHost, "3268")
-	dialer := &net.Dialer{Timeout: 5 * time.Second}
-	gcConn, err := ldap.DialURL("ldap://"+gcAddr, ldap.DialWithDialer(dialer))
+	gcPort := "3268"
+	gcScheme := "ldap"
+	opts := []ldap.DialOpt{ldap.DialWithDialer(&net.Dialer{Timeout: 5 * time.Second})}
+	if c.useTLS {
+		gcPort = "3269"
+		gcScheme = "ldaps"
+		opts = append(opts, ldap.DialWithTLSConfig(&tls.Config{InsecureSkipVerify: true}))
+	}
+	gcAddr := net.JoinHostPort(c.dcHost, gcPort)
+	gcConn, err := ldap.DialURL(gcScheme+"://"+gcAddr, opts...)
 	if err != nil {
-		return "", fmt.Errorf("GC port 3268 unreachable on %s: %w", c.dcHost, err)
+		return "", fmt.Errorf("GC port %s unreachable on %s: %w", gcPort, c.dcHost, err)
 	}
 	defer gcConn.Close()
 

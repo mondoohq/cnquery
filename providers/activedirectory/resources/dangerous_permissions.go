@@ -83,11 +83,11 @@ func discoverCriticalTargets(conn *connection.ActiveDirectoryConnection) ([]crit
 		nil,
 	)
 
-	sr, err := conn.LDAPConn().Search(privGroupSearch)
+	privEntries, err := connection.PagedSearch(conn.LDAPConn(), privGroupSearch)
 	if err != nil {
 		return nil, fmt.Errorf("enumerating privileged groups for ACL scan: %w", err)
 	}
-	for _, e := range sr.Entries {
+	for _, e := range privEntries {
 		targets = append(targets, criticalTarget{
 			dn:         connection.GetStringAttr(e, "distinguishedName"),
 			name:       connection.GetStringAttr(e, "sAMAccountName"),
@@ -103,11 +103,11 @@ func discoverCriticalTargets(conn *connection.ActiveDirectoryConnection) ([]crit
 		[]string{"distinguishedName", "sAMAccountName"},
 		nil,
 	)
-	sr, err = conn.LDAPConn().Search(dcSearch)
+	dcEntries, err := connection.PagedSearch(conn.LDAPConn(), dcSearch)
 	if err != nil {
 		return nil, fmt.Errorf("enumerating domain controllers for ACL scan: %w", err)
 	}
-	for _, e := range sr.Entries {
+	for _, e := range dcEntries {
 		targets = append(targets, criticalTarget{
 			dn:         connection.GetStringAttr(e, "distinguishedName"),
 			name:       connection.GetStringAttr(e, "sAMAccountName"),

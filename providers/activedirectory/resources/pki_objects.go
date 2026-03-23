@@ -36,42 +36,6 @@ func pkiObjectClass(classes []string) string {
 	return classes[len(classes)-1]
 }
 
-// pagedSearchWithControls performs a paged LDAP search while preserving
-// additional controls (e.g. SD flags) alongside the paging control. The
-// standard PagedSearch helper overwrites req.Controls each iteration, so
-// this variant is needed when extra controls must travel with the request.
-func pagedSearchWithControls(lconn *ldap.Conn, req *ldap.SearchRequest, extra []ldap.Control) ([]*ldap.Entry, error) {
-	const pageSize = 500
-	var allEntries []*ldap.Entry
-	pagingCtrl := ldap.NewControlPaging(uint32(pageSize))
-
-	for {
-		controls := make([]ldap.Control, 0, len(extra)+1)
-		controls = append(controls, extra...)
-		controls = append(controls, pagingCtrl)
-		req.Controls = controls
-
-		resp, err := lconn.Search(req)
-		if err != nil {
-			return allEntries, fmt.Errorf("paged search with controls failed: %w", err)
-		}
-		allEntries = append(allEntries, resp.Entries...)
-
-		var cookie []byte
-		for _, ctrl := range resp.Controls {
-			if pc, ok := ctrl.(*ldap.ControlPaging); ok {
-				cookie = pc.Cookie
-				break
-			}
-		}
-		if len(cookie) == 0 {
-			break
-		}
-		pagingCtrl.SetCookie(cookie)
-	}
-
-	return allEntries, nil
-}
 
 func (a *mqlActivedirectory) pkiObjects() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
@@ -90,14 +54,14 @@ func (a *mqlActivedirectory) pkiObjects() ([]interface{}, error) {
 		"whenChanged",
 	}
 
-	entries, err := pagedSearchWithControls(conn.LDAPConn(), ldap.NewSearchRequest(
+	entries, err := connection.PagedSearch(conn.LDAPConn(), ldap.NewSearchRequest(
 		baseDN,
 		ldap.ScopeWholeSubtree,
 		ldap.NeverDerefAliases, 0, 0, false,
 		"(objectClass=*)",
 		attrs,
-		nil,
-	), []ldap.Control{sdCtrl})
+		[]ldap.Control{sdCtrl},
+	))
 	if err != nil {
 		if ldap.IsErrorWithCode(err, ldap.LDAPResultNoSuchObject) {
 			log.Warn().Str("baseDN", baseDN).Msg("CN=Public Key Services not found, skipping PKI objects")
