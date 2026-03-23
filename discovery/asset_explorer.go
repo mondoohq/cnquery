@@ -62,10 +62,9 @@ type AssetExplorerConfig struct {
 	Recording llx.Recording
 }
 
-// AssetExplorer provides lazy, caller-driven asset discovery. Unlike the
-// DiscoverAssets function which eagerly discovers the entire asset tree,
-// AssetExplorer discovers one level at a time and lets the caller control
-// which assets to connect to and when to release connections.
+// AssetExplorer provides lazy, caller-driven asset discovery. It discovers
+// one level at a time and lets the caller control which assets to connect
+// to and when to release connections.
 type AssetExplorer struct {
 	mu sync.Mutex
 

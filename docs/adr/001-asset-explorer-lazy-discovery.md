@@ -6,16 +6,16 @@ Accepted
 
 ## Context
 
-mql's `DiscoverAssets()` function eagerly discovers the **entire** asset tree recursively, using a pool of 10 worker goroutines. Every discovered asset gets a live connection (runtime) immediately, and all runtimes are returned to the caller in one batch. This works fine for batch scanning (the `run` command), but breaks down in two scenarios:
+mql's previous `DiscoverAssets()` function eagerly discovered the **entire** asset tree recursively, using a pool of 10 worker goroutines. Every discovered asset got a live connection (runtime) immediately, and all runtimes were returned to the caller in one batch. This broke down in two scenarios:
 
-- **Large inventories (50k+ assets):** Memory grows linearly because every discovered asset holds an open gRPC connection. A Kubernetes cluster with thousands of pods, or an AWS account with thousands of instances, can exhaust memory before the user even picks which asset to query.
-- **Interactive shell:** The shell command only needs **one** asset's connection at a time, but the eager approach forces it to discover and connect to everything upfront — wasting resources and adding startup latency.
+- **Large inventories (50k+ assets):** Memory grew linearly because every discovered asset held an open gRPC connection. A Kubernetes cluster with thousands of pods, or an AWS account with thousands of instances, could exhaust memory before the user even picked which asset to query.
+- **Interactive shell:** The shell command only needs **one** asset's connection at a time, but the eager approach forced it to discover and connect to everything upfront — wasting resources and adding startup latency.
 
-We needed a discovery mechanism that lets the caller control **when** connections are created and **which** assets to explore, without changing the existing batch discovery path.
+We needed a discovery mechanism that lets the caller control **when** connections are created and **which** assets to explore.
 
 ## Decision
 
-Introduce `AssetExplorer` — a stateful, lazy discovery struct that discovers one level at a time and lets the caller drive traversal. It coexists with the existing `DiscoverAssets()` function; only the `shell` command is migrated to use it.
+Replace `DiscoverAssets()` with `AssetExplorer` — a stateful, lazy discovery struct that discovers one level at a time and lets the caller drive traversal. All callers (shell, run, cnspec scanning) now use `AssetExplorer`.
 
 ### Asset Lifecycle State Machine
 
@@ -42,7 +42,7 @@ There are no transient states (no "connecting" or "closing"). State transitions 
 
 ### Deduplication
 
-Same subset/superset platform-ID logic as v1:
+Subset/superset platform-ID logic:
 
 1. **New asset is a subset of an existing connected asset:** New asset is evicted (closed immediately), `Connect()` returns `ErrDuplicateAsset`.
 2. **Existing connected assets are subsets of the new asset:** Existing subsets are evicted (closed), new asset is kept.
@@ -54,7 +54,7 @@ Two dedup layers exist by design:
 
 ### Staged Discovery
 
-All connections created through the shell path set the `OptionStagedDiscovery` flag. This tells providers they may split discovery into phases (e.g., K8s discovers the cluster first, then namespaces on demand). The flag is transparent to `AssetExplorer` — providers opt in independently.
+All callers set the `OptionStagedDiscovery` flag on inventory connections. This tells providers they may split discovery into phases (e.g., K8s discovers the cluster first, then namespaces on demand). The flag is transparent to `AssetExplorer` — providers opt in independently.
 
 ### Shell Command Integration
 
@@ -70,25 +70,21 @@ The `shell` command drives an interactive traversal loop:
 
 `TrackedAsset` implements the `SelectableItem` interface (`Display() string`) for direct integration with the `components.Select()` interactive prompt.
 
-### Coexistence with v1
+### Run Command Integration
 
-| Aspect | DiscoverAssets (v1) | AssetExplorer (v2) |
-|--------|---------------------|---------------------|
-| Discovery mode | Eager, recursive, entire tree | Lazy, one level, caller-driven |
-| Parallelism | 10-goroutine worker pool | None; caller controls sequencing |
-| Runtime ownership | Returned in batch; caller owns cleanup | Held in explorer; explicit `CloseAsset()` / `Shutdown()` |
-| Deduplication | `DiscoveredAssets.Add()` | `dedup()` + `discoverChildren()` |
-| Use case | Batch scanning (`run`, `plugin.go`) | Interactive shell |
+The `run` command (plugin.go) uses `AssetExplorer` with a `connectAll` helper that recursively connects all discovered assets depth-first into a flat list, then iterates over them to execute queries. Each asset is closed after its query completes.
 
-Both share the same underlying utilities: `createRuntimeForAsset()`, `prepareAsset()`, coordinator connection dedup, and `slicesx.IsSubsetOf()` for platform-ID matching.
+### Scanning Integration (cnspec)
+
+cnspec's `local_scanner.go` uses `AssetExplorer` with a depth-first `scanSubtree` traversal that processes one branch at a time, batching leaf assets in groups of 50 for upstream sync. This guarantees only one branch node's children are in memory at a time.
 
 ## Alternatives Considered
 
 ### Modify DiscoverAssets() to support lazy mode
 
 Adding a "lazy" flag to the existing function was considered, but rejected because:
-- The recursive worker-pool architecture is deeply coupled to eager semantics.
-- Retrofitting caller-driven control would require breaking the return type (`DiscoveredAssets`) and every caller.
+- The recursive worker-pool architecture was deeply coupled to eager semantics.
+- Retrofitting caller-driven control would have required breaking the return type (`DiscoveredAssets`) and every caller.
 - A separate struct with its own lifecycle is simpler to reason about and test independently.
 
 ### Connection pooling / LRU eviction
@@ -111,13 +107,12 @@ A channel-based approach where discovered assets are streamed to the caller was 
 
 - **Constant memory for shell:** Only the assets the user navigates to consume connections. A 50k-asset inventory uses the same memory as a 5-asset one until the user drills in.
 - **Faster shell startup:** Only root + first-level children are connected, not the entire tree.
-- **No v1 breakage:** `DiscoverAssets()` is untouched; all existing callers (`run`, plugins, scanning) continue to work identically.
+- **Single discovery path:** All callers use `AssetExplorer`, eliminating the maintenance burden of two parallel discovery implementations.
 - **Testable state machine:** 11 unit tests cover state transitions, dedup, closed-asset rejection, parent chains, and error cases — without needing cloud credentials.
 - **Foundation for future callers:** Any new command that needs incremental discovery (e.g., a TUI explorer, programmatic API) can use `AssetExplorer` directly.
 
 ### Negative
 
-- **Caller responsibility for cleanup:** Unlike v1 which returns everything in one shot, v2 requires explicit `CloseAsset()` or `Shutdown()`. Forgetting to call these leaks connections.
+- **Caller responsibility for cleanup:** `AssetExplorer` requires explicit `CloseAsset()` or `Shutdown()`. Forgetting to call these leaks connections.
 - **No concurrent `Connect()` safety:** The global mutex serializes all state mutations. Multiple goroutines calling `Connect()` concurrently is not supported (acceptable for the single-threaded shell UI, but would need per-asset locks for parallel callers).
-- **Two discovery paths to maintain:** v1 and v2 share utilities but have separate entry points. Changes to discovery semantics (e.g., new dedup rules) must be applied in both places.
 - **Closed assets are terminal:** An asset that was closed cannot be reconnected — the caller must create a new explorer. This is by design (prevents stale state) but limits flexibility for long-running sessions.

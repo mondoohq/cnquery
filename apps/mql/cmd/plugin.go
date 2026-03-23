@@ -8,7 +8,7 @@ import (
 	"os"
 
 	"github.com/cockroachdb/errors"
-	"github.com/hashicorp/go-plugin"
+	goplugin "github.com/hashicorp/go-plugin"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"go.mondoo.com/mql/v13/cli/config"
@@ -21,6 +21,7 @@ import (
 	"go.mondoo.com/mql/v13/mqlc"
 	"go.mondoo.com/mql/v13/mqlc/parser"
 	"go.mondoo.com/mql/v13/providers"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/recording"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream"
 	"go.mondoo.com/mql/v13/shared"
@@ -35,14 +36,14 @@ var pluginCmd = &cobra.Command{
 	Hidden: true,
 	Short:  "Run as a plugin",
 	Run: func(cmd *cobra.Command, args []string) {
-		plugin.Serve(&plugin.ServeConfig{
+		goplugin.Serve(&goplugin.ServeConfig{
 			HandshakeConfig: shared.Handshake,
-			Plugins: map[string]plugin.Plugin{
+			Plugins: map[string]goplugin.Plugin{
 				"counter": &shared.MqlPlugin{Impl: &mqlPlugin{}},
 			},
 
 			// A non-nil value here enables gRPC serving for this plugin...
-			GRPCServer: plugin.DefaultGRPCServer,
+			GRPCServer: goplugin.DefaultGRPCServer,
 		})
 	},
 }
@@ -115,10 +116,31 @@ func (c *mqlPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Runtim
 	}
 
 	ctx := context.Background()
-	discoveredAssets, err := discovery.DiscoverAssets(ctx, conf.Inventory, upstreamConfig, runtime.Recording())
+
+	// Enable staged discovery so providers can split discovery into phases
+	for _, asset := range conf.Inventory.Spec.Assets {
+		for _, conn := range asset.Connections {
+			if conn.Options == nil {
+				conn.Options = map[string]string{}
+			}
+			conn.Options[plugin.OptionStagedDiscovery] = ""
+		}
+	}
+
+	explorer, err := discovery.NewAssetExplorer(ctx, discovery.AssetExplorerConfig{
+		Inventory: conf.Inventory,
+		Upstream:  upstreamConfig,
+		Recording: runtime.Recording(),
+	})
 	if err != nil {
 		return err
 	}
+	defer explorer.Shutdown()
+
+	// Recursively connect all discovered assets depth-first
+	connectAll(explorer, explorer.Discovered())
+	allAssets := explorer.Connected()
+
 	if conf.Format == "json" {
 		_ = out.WriteString("[")
 	}
@@ -134,16 +156,14 @@ func (c *mqlPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Runtim
 		}
 	}()
 
-	for i := range discoveredAssets.Assets {
-		asset := discoveredAssets.Assets[i]
-
-		if asset.Asset.Connections[0].DelayDiscovery {
-			discoveredAsset, err := discovery.HandleDelayedDiscovery(ctx, asset.Asset, asset.Runtime)
+	for i, tracked := range allAssets {
+		if len(tracked.Asset.Connections) > 0 && tracked.Asset.Connections[0].DelayDiscovery {
+			discoveredAsset, err := discovery.HandleDelayedDiscovery(ctx, tracked.Asset, tracked.Runtime)
 			if err != nil {
-				log.Error().Err(err).Str("asset", asset.Asset.Name).Msg("failed to handle delayed discovery for asset")
+				log.Error().Err(err).Str("asset", tracked.Asset.Name).Msg("failed to handle delayed discovery for asset")
 				continue
 			}
-			asset.Asset = discoveredAsset
+			tracked.Asset = discoveredAsset
 		}
 
 		// when we close the shell, we need to close the backend and store the recording
@@ -161,10 +181,10 @@ func (c *mqlPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Runtim
 			shellOptions = append(shellOptions, shell.WithUpstreamConfig(upstreamConfig))
 		}
 
-		sh := shell.NewShell(asset.Runtime, shellOptions...)
+		sh := shell.NewShell(tracked.Runtime, shellOptions...)
 		defer func() {
 			// prevent the recording from being closed multiple times
-			err = asset.Runtime.SetRecording(recording.Null{})
+			err = tracked.Runtime.SetRecording(recording.Null{})
 			if err != nil {
 				log.Error().Err(err).Msg("failed to set the recording layer to null")
 			}
@@ -219,7 +239,7 @@ func (c *mqlPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Runtim
 			sh.PrintResults(code, results)
 		} else {
 			_ = reporter.CodeBundleToJSON(code, results, out)
-			if len(discoveredAssets.Assets) != i+1 {
+			if i < len(allAssets)-1 {
 				_ = out.WriteString(",")
 			}
 		}
@@ -230,4 +250,24 @@ func (c *mqlPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Runtim
 	}
 
 	return nil
+}
+
+// connectAll recursively connects all discovered assets depth-first,
+// returning a flat list of connected assets.
+func connectAll(explorer *discovery.AssetExplorer, assets []*discovery.TrackedAsset) []*discovery.TrackedAsset {
+	var result []*discovery.TrackedAsset
+	for _, asset := range assets {
+		connected, err := explorer.Connect(asset)
+		if err != nil {
+			if !errors.Is(err, discovery.ErrDuplicateAsset) {
+				log.Error().Err(err).Str("asset", asset.Asset.Name).Msg("failed to connect to asset")
+			}
+			continue
+		}
+		result = append(result, connected)
+		if len(connected.Children) > 0 {
+			result = append(result, connectAll(explorer, connected.Children)...)
+		}
+	}
+	return result
 }
