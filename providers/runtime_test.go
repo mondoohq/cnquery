@@ -11,6 +11,8 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/recording"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
 	"go.uber.org/mock/gomock"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func TestRuntimeClose(t *testing.T) {
@@ -379,4 +381,69 @@ func TestRuntime_LookupFieldProvider_ProviderOverridesOthers_ResourceInfo(t *tes
 	assert.Equal(t, "test", res.Provider)
 	assert.Equal(t, fieldName, field.Name)
 	assert.Equal(t, "test", field.Provider)
+}
+
+func TestRuntime_CriticalErrors_Empty(t *testing.T) {
+	r := &Runtime{}
+	assert.Empty(t, r.CriticalErrors())
+}
+
+func TestRuntime_HandlePluginError_PanicRecordsCriticalError(t *testing.T) {
+	r := &Runtime{}
+	provider := &ConnectedProvider{
+		Instance: &RunningProvider{Name: "aws"},
+	}
+
+	panicErr := status.Error(codes.Internal, "panic in provider aws: runtime error: nil pointer")
+	handled, err := r.handlePluginError(panicErr, provider)
+
+	assert.True(t, handled)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "provider panicked")
+
+	critErrs := r.CriticalErrors()
+	require.Len(t, critErrs, 1)
+	assert.Contains(t, critErrs[0].Error(), "provider panicked")
+}
+
+func TestRuntime_HandlePluginError_CrashDoesNotRecordCriticalError(t *testing.T) {
+	r := &Runtime{}
+	provider := &ConnectedProvider{
+		Instance: &RunningProvider{Name: "aws"},
+	}
+
+	crashErr := status.Error(codes.Unavailable, "connection lost")
+	handled, err := r.handlePluginError(crashErr, provider)
+
+	assert.False(t, handled)
+	require.Error(t, err)
+	assert.Empty(t, r.CriticalErrors())
+}
+
+func TestRuntime_HandlePluginError_NonPanicInternalDoesNotRecordCriticalError(t *testing.T) {
+	r := &Runtime{}
+	provider := &ConnectedProvider{
+		Instance: &RunningProvider{Name: "aws"},
+	}
+
+	internalErr := status.Error(codes.Internal, "some other internal error")
+	handled, err := r.handlePluginError(internalErr, provider)
+
+	assert.False(t, handled)
+	require.Error(t, err)
+	assert.Empty(t, r.CriticalErrors())
+}
+
+func TestRuntime_CriticalErrors_MultiplePanics(t *testing.T) {
+	r := &Runtime{}
+	provider := &ConnectedProvider{
+		Instance: &RunningProvider{Name: "aws"},
+	}
+
+	for i := 0; i < 3; i++ {
+		panicErr := status.Error(codes.Internal, "panic in provider aws: error")
+		r.handlePluginError(panicErr, provider)
+	}
+
+	assert.Len(t, r.CriticalErrors(), 3)
 }

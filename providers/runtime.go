@@ -45,6 +45,10 @@ type Runtime struct {
 	close           sync.Once
 	shutdownTimeout time.Duration
 
+	// criticalErrors collects serious errors (e.g. recovered provider panics)
+	// that should be reported to an error tracker even though execution continues.
+	criticalErrors []error
+
 	// used to lock unsafe tasks
 	mu sync.Mutex
 }
@@ -106,6 +110,23 @@ func (r *Runtime) Close() {
 		}
 		r.coordinator.RemoveRuntime(r)
 	})
+}
+
+// CriticalErrors returns serious errors (e.g. recovered provider panics) that
+// occurred during execution. These errors were handled gracefully (execution
+// continued), but they should still be reported to an error tracker like Sentry.
+func (r *Runtime) CriticalErrors() []error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	out := make([]error, len(r.criticalErrors))
+	copy(out, r.criticalErrors)
+	return out
+}
+
+func (r *Runtime) addCriticalError(err error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.criticalErrors = append(r.criticalErrors, err)
 }
 
 func (r *Runtime) Recording() llx.Recording {
@@ -500,7 +521,9 @@ func (r *Runtime) handlePluginError(err error, provider *ConnectedProvider) (boo
 		// this prefix is present; other Internal errors fall through.
 		if strings.HasPrefix(st.Message(), "panic in provider ") {
 			log.Error().Str("provider", provider.Instance.Name).Msg(st.Message())
-			return true, errors.New("the '" + provider.Instance.Name + "' provider panicked: " + st.Message())
+			panicErr := errors.New("the '" + provider.Instance.Name + "' provider panicked: " + st.Message())
+			r.addCriticalError(panicErr)
+			return true, panicErr
 		}
 
 	case codes.Unavailable:
