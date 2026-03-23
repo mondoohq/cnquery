@@ -302,24 +302,37 @@ func (a *mqlAzureSubscriptionNetworkServiceWatcher) flowLogs() ([]any, error) {
 			WorkspaceRegion     string `json:"workspaceRegion"`
 		}
 		for _, flowLog := range page.Value {
-			retentionPolicy := mqlRetentionPolicy{
-				Enabled:       convert.ToValue(flowLog.Properties.RetentionPolicy.Enabled),
-				RetentionDays: int(convert.ToValue(flowLog.Properties.RetentionPolicy.Days)),
+			var retentionPolicy mqlRetentionPolicy
+			if rp := flowLog.Properties.RetentionPolicy; rp != nil {
+				retentionPolicy = mqlRetentionPolicy{
+					Enabled:       convert.ToValue(rp.Enabled),
+					RetentionDays: int(convert.ToValue(rp.Days)),
+				}
 			}
 			retentionPolicyDict, err := convert.JsonToDict(retentionPolicy)
 			if err != nil {
 				return nil, err
 			}
-			flowLogAnalytics := mqlFlowLogAnalytics{
-				Enabled:             convert.ToValue(flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration.Enabled),
-				AnalyticsInterval:   int(convert.ToValue(flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration.TrafficAnalyticsInterval)),
-				WorkspaceRegion:     convert.ToValue(flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration.WorkspaceRegion),
-				WorkspaceResourceId: convert.ToValue(flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration.WorkspaceResourceID),
-				WorkspaceId:         convert.ToValue(flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration.WorkspaceID),
+			var flowLogAnalytics mqlFlowLogAnalytics
+			if fac := flowLog.Properties.FlowAnalyticsConfiguration; fac != nil && fac.NetworkWatcherFlowAnalyticsConfiguration != nil {
+				nwfac := fac.NetworkWatcherFlowAnalyticsConfiguration
+				flowLogAnalytics = mqlFlowLogAnalytics{
+					Enabled:             convert.ToValue(nwfac.Enabled),
+					AnalyticsInterval:   int(convert.ToValue(nwfac.TrafficAnalyticsInterval)),
+					WorkspaceRegion:     convert.ToValue(nwfac.WorkspaceRegion),
+					WorkspaceResourceId: convert.ToValue(nwfac.WorkspaceResourceID),
+					WorkspaceId:         convert.ToValue(nwfac.WorkspaceID),
+				}
 			}
 			flowLogAnalyticsDict, err := convert.JsonToDict(flowLogAnalytics)
 			if err != nil {
 				return nil, err
+			}
+			var formatType *string
+			var formatVersion *int32
+			if f := flowLog.Properties.Format; f != nil {
+				formatType = (*string)(f.Type)
+				formatVersion = f.Version
 			}
 			mqlFlowLog, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.watcher.flowlog",
 				map[string]*llx.RawData{
@@ -330,8 +343,8 @@ func (a *mqlAzureSubscriptionNetworkServiceWatcher) flowLogs() ([]any, error) {
 					"type":               llx.StringDataPtr(flowLog.Type),
 					"etag":               llx.StringDataPtr(flowLog.Etag),
 					"retentionPolicy":    llx.DictData(retentionPolicyDict),
-					"format":             llx.StringDataPtr((*string)(flowLog.Properties.Format.Type)),
-					"version":            llx.IntDataDefault(flowLog.Properties.Format.Version, 0),
+					"format":             llx.StringDataPtr(formatType),
+					"version":            llx.IntDataDefault(formatVersion, 0),
 					"enabled":            llx.BoolDataPtr(flowLog.Properties.Enabled),
 					"storageAccountId":   llx.StringDataPtr(flowLog.Properties.StorageID),
 					"targetResourceId":   llx.StringDataPtr(flowLog.Properties.TargetResourceID),
