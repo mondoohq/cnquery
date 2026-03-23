@@ -442,7 +442,7 @@ func TestRuntime_CriticalErrors_MultiplePanics(t *testing.T) {
 
 	for i := 0; i < 3; i++ {
 		panicErr := status.Error(codes.Internal, "panic in provider aws: error")
-		r.handlePluginError(panicErr, provider)
+		r.handlePluginError(panicErr, provider) // nolint:errcheck
 	}
 
 	assert.Len(t, r.CriticalErrors(), 3)
