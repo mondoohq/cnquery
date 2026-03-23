@@ -1,6 +1,7 @@
 aad
 ACCOUNTADMIN
 ACTIVEMQ
+adr
 advancedthreatprotection
 alloydb
 alpn
