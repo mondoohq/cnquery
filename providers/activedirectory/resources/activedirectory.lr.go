@@ -266,6 +266,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"activedirectory.ldapSigningRequired": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectory).GetLdapSigningRequired()).ToDataRes(types.Bool)
 	},
+	"activedirectory.smbSigningRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectory).GetSmbSigningRequired()).ToDataRes(types.Bool)
+	},
+	"activedirectory.smbv1Enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectory).GetSmbv1Enabled()).ToDataRes(types.Bool)
+	},
+	"activedirectory.smbEncryptionSupported": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectory).GetSmbEncryptionSupported()).ToDataRes(types.Bool)
+	},
+	"activedirectory.smbNullSessionAllowed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectory).GetSmbNullSessionAllowed()).ToDataRes(types.Bool)
+	},
+	"activedirectory.smbGuestAccessAllowed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectory).GetSmbGuestAccessAllowed()).ToDataRes(types.Bool)
+	},
+	"activedirectory.smbHighestDialect": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectory).GetSmbHighestDialect()).ToDataRes(types.String)
+	},
+	"activedirectory.ldapChannelBindingRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectory).GetLdapChannelBindingRequired()).ToDataRes(types.Bool)
+	},
 	"activedirectory.domainController.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryDomainController).GetName()).ToDataRes(types.String)
 	},
@@ -990,6 +1011,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"activedirectory.ldapSigningRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlActivedirectory).LdapSigningRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.smbSigningRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectory).SmbSigningRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.smbv1Enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectory).Smbv1Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.smbEncryptionSupported": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectory).SmbEncryptionSupported, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.smbNullSessionAllowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectory).SmbNullSessionAllowed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.smbGuestAccessAllowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectory).SmbGuestAccessAllowed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"activedirectory.smbHighestDialect": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectory).SmbHighestDialect, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"activedirectory.ldapChannelBindingRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectory).LdapChannelBindingRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"activedirectory.domainController.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1919,6 +1968,13 @@ type mqlActivedirectory struct {
 	MachineAccountQuota         plugin.TValue[int64]
 	RecycleBinEnabled           plugin.TValue[bool]
 	LdapSigningRequired         plugin.TValue[bool]
+	SmbSigningRequired          plugin.TValue[bool]
+	Smbv1Enabled                plugin.TValue[bool]
+	SmbEncryptionSupported      plugin.TValue[bool]
+	SmbNullSessionAllowed       plugin.TValue[bool]
+	SmbGuestAccessAllowed       plugin.TValue[bool]
+	SmbHighestDialect           plugin.TValue[string]
+	LdapChannelBindingRequired  plugin.TValue[bool]
 }
 
 // createActivedirectory creates a new instance of this resource
@@ -2239,6 +2295,48 @@ func (c *mqlActivedirectory) GetRecycleBinEnabled() *plugin.TValue[bool] {
 func (c *mqlActivedirectory) GetLdapSigningRequired() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.LdapSigningRequired, func() (bool, error) {
 		return c.ldapSigningRequired()
+	})
+}
+
+func (c *mqlActivedirectory) GetSmbSigningRequired() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SmbSigningRequired, func() (bool, error) {
+		return c.smbSigningRequired()
+	})
+}
+
+func (c *mqlActivedirectory) GetSmbv1Enabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Smbv1Enabled, func() (bool, error) {
+		return c.smbv1Enabled()
+	})
+}
+
+func (c *mqlActivedirectory) GetSmbEncryptionSupported() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SmbEncryptionSupported, func() (bool, error) {
+		return c.smbEncryptionSupported()
+	})
+}
+
+func (c *mqlActivedirectory) GetSmbNullSessionAllowed() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SmbNullSessionAllowed, func() (bool, error) {
+		return c.smbNullSessionAllowed()
+	})
+}
+
+func (c *mqlActivedirectory) GetSmbGuestAccessAllowed() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SmbGuestAccessAllowed, func() (bool, error) {
+		return c.smbGuestAccessAllowed()
+	})
+}
+
+func (c *mqlActivedirectory) GetSmbHighestDialect() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SmbHighestDialect, func() (string, error) {
+		return c.smbHighestDialect()
+	})
+}
+
+func (c *mqlActivedirectory) GetLdapChannelBindingRequired() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LdapChannelBindingRequired, func() (bool, error) {
+		return c.ldapChannelBindingRequired()
 	})
 }
 

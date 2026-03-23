@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -228,4 +229,73 @@ func (a *mqlActivedirectory) ldapSigningRequired() (bool, error) {
 		return false, err
 	}
 	return required, nil
+}
+
+// ---------------------------------------------------------------------------
+// SMB security posture — computed methods backed by port 445 probes
+// ---------------------------------------------------------------------------
+
+func (a *mqlActivedirectory) smbSigningRequired() (bool, error) {
+	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
+	result, err := conn.ProbeSMBNegotiate()
+	if err != nil {
+		return false, err
+	}
+	return result.SigningRequired, nil
+}
+
+func (a *mqlActivedirectory) smbv1Enabled() (bool, error) {
+	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
+	result, err := conn.ProbeSMBNegotiate()
+	if err != nil {
+		return false, err
+	}
+	return result.SMBv1Enabled, nil
+}
+
+func (a *mqlActivedirectory) smbEncryptionSupported() (bool, error) {
+	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
+	result, err := conn.ProbeSMBNegotiate()
+	if err != nil {
+		return false, err
+	}
+	return result.EncryptionSupported, nil
+}
+
+func (a *mqlActivedirectory) smbNullSessionAllowed() (bool, error) {
+	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
+	return conn.ProbeSMBNullSession()
+}
+
+func (a *mqlActivedirectory) smbGuestAccessAllowed() (bool, error) {
+	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
+	return conn.ProbeSMBGuestAccess()
+}
+
+func (a *mqlActivedirectory) smbHighestDialect() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
+	result, err := conn.ProbeSMBNegotiate()
+	if err != nil {
+		return "", err
+	}
+	return connection.DialectString(result.HighestDialect), nil
+}
+
+func (a *mqlActivedirectory) ldapChannelBindingRequired() (bool, error) {
+	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
+	// LdapEnforceChannelBinding: 0=never, 1=when supported, 2=always.
+	val, err := conn.ProbeRegistryDWORD(
+		2, // msrrp.HKEYLocalMachine (iota: ClassesRoot=0, CurrentUser=1, LocalMachine=2)
+		`SYSTEM\CurrentControlSet\Services\NTDS\Parameters`,
+		"LdapEnforceChannelBinding",
+	)
+	if err != nil {
+		// The registry value may not exist if channel binding was never configured.
+		// Windows default is 0 (disabled), so absent value means not required.
+		if errors.Is(err, connection.ErrRegistryValueNotFound) {
+			return false, nil
+		}
+		return false, err
+	}
+	return val == 2, nil
 }

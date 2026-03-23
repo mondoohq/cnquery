@@ -161,6 +161,7 @@ activedirectory.groupMember.sid 13.0.1
 activedirectory.groupMember.type 13.0.1
 activedirectory.groups 13.0.1
 activedirectory.lapsEnabled 13.0.1
+activedirectory.ldapChannelBindingRequired 13.0.2
 activedirectory.ldapSigningRequired 13.0.1
 activedirectory.machineAccountQuota 13.0.1
 activedirectory.netbiosName 13.0.1
@@ -193,6 +194,12 @@ activedirectory.pkiObject.whenCreated 13.0.1
 activedirectory.pkiObjects 13.0.1
 activedirectory.recycleBinEnabled 13.0.1
 activedirectory.schemaVersion 13.0.1
+activedirectory.smbEncryptionSupported 13.0.2
+activedirectory.smbGuestAccessAllowed 13.0.2
+activedirectory.smbHighestDialect 13.0.2
+activedirectory.smbNullSessionAllowed 13.0.2
+activedirectory.smbSigningRequired 13.0.2
+activedirectory.smbv1Enabled 13.0.2
 activedirectory.trust 13.0.1
 activedirectory.trust.aesEncryption 13.0.1
 activedirectory.trust.isAzureADTrust 13.0.1

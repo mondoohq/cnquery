@@ -17,6 +17,7 @@ import (
 	"github.com/go-ldap/ldap/v3"
 	"github.com/go-ldap/ldap/v3/gssapi"
 	"github.com/jcmturner/gokrb5/v8/client"
+	gosmb "github.com/jfjallid/go-smb/smb"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -70,6 +71,16 @@ type ActiveDirectoryConnection struct {
 	forestFunctionalLevel string
 	cacheMu               sync.RWMutex
 	cache                 map[string]interface{}
+
+	// SMB probe state. Lazy-initialized on first SMB-backed field access.
+	// sync.Once (not CachedFetch) because failed probes must not retry.
+	smbProbeOnce sync.Once
+	smbNegotiate *NegotiateResult
+	smbProbeErr  error
+
+	smbOnce sync.Once
+	smbConn *gosmb.Connection
+	smbErr  error
 }
 
 // NewActiveDirectoryConnection dials the domain controller, binds, queries
@@ -85,15 +96,7 @@ func NewActiveDirectoryConnection(id uint32, asset *inventory.Asset, conf *inven
 		return nil, errors.New("active directory provider requires option 'dc' (domain controller hostname)")
 	}
 
-	// Read credentials: prefer Credentials slice (set by ParseCLI), fall back to Options.
-	var user, password string
-	if len(conf.Credentials) > 0 && conf.Credentials[0].Type == vault.CredentialType_password {
-		user = conf.Credentials[0].User
-		password = string(conf.Credentials[0].Secret)
-	} else {
-		user = conf.Options[OptionUser]
-		password = conf.Options[OptionPassword]
-	}
+	user, password := resolveCredentials(conf)
 
 	backend := conf.Options[OptionBackend]
 	if backend == "rsat" {
@@ -466,12 +469,7 @@ func (c *ActiveDirectoryConnection) fetchRootDomainSIDViaGC() (string, error) {
 	defer gcConn.Close()
 
 	// Re-bind with the same credentials on the GC connection.
-	user := c.Conf.Options[OptionUser]
-	password := c.Conf.Options[OptionPassword]
-	if len(c.Conf.Credentials) > 0 && c.Conf.Credentials[0].Type == vault.CredentialType_password {
-		user = c.Conf.Credentials[0].User
-		password = string(c.Conf.Credentials[0].Secret)
-	}
+	user, password := c.resolveCredentials()
 	if err := gcConn.Bind(user, password); err != nil {
 		return "", fmt.Errorf("GC bind failed: %w", err)
 	}
@@ -562,11 +560,29 @@ func (c *ActiveDirectoryConnection) PlatformId() string {
 	return "//platformid.api.mondoo.app/runtime/activedirectory/domain/" + c.domainDN
 }
 
-// Close terminates the LDAP connection.
+// Close terminates the LDAP connection and any lazy-created SMB connection.
 func (c *ActiveDirectoryConnection) Close() {
 	if c.ldapConn != nil {
 		c.ldapConn.Close()
 	}
+	if c.smbConn != nil {
+		c.smbConn.Close()
+	}
+}
+
+// resolveCredentials extracts user/password from Config using the standard
+// precedence: Credentials[0] (set by ParseCLI) > Options map.
+// This is the free-function form used during construction before c exists.
+func resolveCredentials(conf *inventory.Config) (user, password string) {
+	if len(conf.Credentials) > 0 && conf.Credentials[0].Type == vault.CredentialType_password {
+		return conf.Credentials[0].User, string(conf.Credentials[0].Secret)
+	}
+	return conf.Options[OptionUser], conf.Options[OptionPassword]
+}
+
+// resolveCredentials is the method form for use after construction.
+func (c *ActiveDirectoryConnection) resolveCredentials() (user, password string) {
+	return resolveCredentials(c.Conf)
 }
 
 // ProbeLDAPSigning detects whether the DC requires LDAP signing by
@@ -574,12 +590,7 @@ func (c *ActiveDirectoryConnection) Close() {
 // LDAPResultStrongAuthRequired (code 8), signing is enforced. If the bind
 // succeeds, signing is NOT required. Uses a throwaway connection.
 func (c *ActiveDirectoryConnection) ProbeLDAPSigning() (bool, error) {
-	user := c.Conf.Options[OptionUser]
-	password := c.Conf.Options[OptionPassword]
-	if len(c.Conf.Credentials) > 0 && c.Conf.Credentials[0].Type == vault.CredentialType_password {
-		user = c.Conf.Credentials[0].User
-		password = string(c.Conf.Credentials[0].Secret)
-	}
+	user, password := c.resolveCredentials()
 	if user == "" || password == "" {
 		return false, fmt.Errorf("LDAP signing probe requires simple bind credentials")
 	}

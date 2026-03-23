@@ -235,6 +235,12 @@ require (
 	github.com/jcmturner/gofork v1.7.6 // indirect
 	github.com/jcmturner/goidentity/v6 v6.0.1 // indirect
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
+	github.com/jfjallid/go-smb v0.7.0 // indirect
+	github.com/jfjallid/gofork v1.7.6 // indirect
+	github.com/jfjallid/gokrb5/v8 v8.5.1 // indirect
+	github.com/jfjallid/golog v0.3.3 // indirect
+	github.com/jfjallid/mstypes v0.0.1 // indirect
+	github.com/jfjallid/ndr v0.0.2 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/klauspost/compress v1.18.4 // indirect

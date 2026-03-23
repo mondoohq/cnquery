@@ -58,6 +58,20 @@ activedirectory @defaults("domain functionalLevel") {
   recycleBinEnabled() bool
   // Whether the DC requires LDAP signing (detected via unsigned simple bind probe)
   ldapSigningRequired() bool
+  // Whether the DC requires SMB signing (detected via pre-auth negotiate probe on port 445)
+  smbSigningRequired() bool
+  // Whether the DC still accepts SMBv1 connections (detected via explicit SMB1 negotiate probe)
+  smbv1Enabled() bool
+  // Whether the DC advertises SMB3 encryption capability
+  smbEncryptionSupported() bool
+  // Whether the DC accepts SMB null sessions (unauthenticated access)
+  smbNullSessionAllowed() bool
+  // Whether the DC falls back to guest session on invalid credentials
+  smbGuestAccessAllowed() bool
+  // Highest SMB dialect negotiated by the DC (e.g., "3.1.1", "3.0", "2.1")
+  smbHighestDialect() string
+  // Whether LDAP channel binding is required (LdapEnforceChannelBinding == 2 via remote registry)
+  ldapChannelBindingRequired() bool
 }
 
 // Active Directory Domain Controller
