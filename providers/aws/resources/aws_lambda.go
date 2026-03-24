@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"maps"
 	"sync"
 	"time"
@@ -221,6 +222,13 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 					}
 					f := mqlFunc.(*mqlAwsLambdaFunction)
 					f.cacheRoleArn = function.Role
+					f.region = region
+					f.accountID = conn.AccountId()
+					if function.VpcConfig != nil {
+						f.cacheVpcId = function.VpcConfig.VpcId
+						f.cacheSubnetIds = function.VpcConfig.SubnetIds
+						f.cacheSecurityGroupIds = function.VpcConfig.SecurityGroupIds
+					}
 					if tags != nil {
 						f.cacheTags = tags
 						f.tagsFetched = true
@@ -303,10 +311,15 @@ func (a *mqlAwsLambdaFunction) id() (string, error) {
 }
 
 type mqlAwsLambdaFunctionInternal struct {
-	cacheRoleArn *string
-	cacheTags    map[string]string
-	tagsFetched  bool
-	tagsLock     sync.Mutex
+	cacheRoleArn        *string
+	cacheTags           map[string]string
+	tagsFetched         bool
+	tagsLock            sync.Mutex
+	cacheVpcId          *string
+	cacheSubnetIds      []string
+	cacheSecurityGroupIds []string
+	region              string
+	accountID           string
 }
 
 func (a *mqlAwsLambdaFunction) tags() (map[string]any, error) {
@@ -350,6 +363,53 @@ func (a *mqlAwsLambdaFunction) kmsKey() (*mqlAwsKmsKey, error) {
 		return nil, err
 	}
 	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
+func (a *mqlAwsLambdaFunction) vpc() (*mqlAwsVpc, error) {
+	if a.cacheVpcId == nil || *a.cacheVpcId == "" {
+		a.Vpc.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	vpcArn := fmt.Sprintf(vpcArnPattern, a.region, a.accountID, *a.cacheVpcId)
+	res, err := NewResource(a.MqlRuntime, "aws.vpc", map[string]*llx.RawData{"arn": llx.StringData(vpcArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsVpc), nil
+}
+
+func (a *mqlAwsLambdaFunction) subnets() ([]any, error) {
+	if len(a.cacheSubnetIds) == 0 {
+		return nil, nil
+	}
+	res := []any{}
+	for _, subnetId := range a.cacheSubnetIds {
+		subnetArn := fmt.Sprintf(subnetArnPattern, a.region, a.accountID, subnetId)
+		mqlSubnet, err := NewResource(a.MqlRuntime, "aws.vpc.subnet",
+			map[string]*llx.RawData{"arn": llx.StringData(subnetArn)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlSubnet)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsLambdaFunction) securityGroups() ([]any, error) {
+	if len(a.cacheSecurityGroupIds) == 0 {
+		return nil, nil
+	}
+	res := []any{}
+	for _, sgId := range a.cacheSecurityGroupIds {
+		sgArn := NewSecurityGroupArn(a.region, a.accountID, sgId)
+		mqlSg, err := NewResource(a.MqlRuntime, ResourceAwsEc2Securitygroup,
+			map[string]*llx.RawData{"arn": llx.StringData(sgArn)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlSg)
+	}
+	return res, nil
 }
 
 func (a *mqlAwsLambdaFunction) concurrency() (int64, error) {

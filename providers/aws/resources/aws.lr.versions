@@ -421,6 +421,7 @@ aws.cloudtrail.trail.eventSelectors 11.15.2
 aws.cloudtrail.trail.hasCustomEventSelectors 11.15.2
 aws.cloudtrail.trail.hasInsightSelectors 11.15.2
 aws.cloudtrail.trail.includeGlobalServiceEvents 11.15.2
+aws.cloudtrail.trail.isLogging 13.2.7
 aws.cloudtrail.trail.isMultiRegionTrail 11.15.2
 aws.cloudtrail.trail.isOrganizationTrail 11.15.2
 aws.cloudtrail.trail.kmsKey 11.15.2
@@ -1053,6 +1054,7 @@ aws.ec2.snapshot.createVolumePermission 11.15.2
 aws.ec2.snapshot.description 11.15.2
 aws.ec2.snapshot.encrypted 11.15.2
 aws.ec2.snapshot.id 11.15.2
+aws.ec2.snapshot.isPublic 13.2.7
 aws.ec2.snapshot.kmsKey 11.15.2
 aws.ec2.snapshot.region 11.15.2
 aws.ec2.snapshot.startTime 11.15.2
@@ -1191,6 +1193,7 @@ aws.ecs.container.command 11.15.2
 aws.ecs.container.containerName 11.15.2
 aws.ecs.container.cpuUnits 11.15.2
 aws.ecs.container.image 11.15.2
+aws.ecs.container.initProcessEnabled 13.2.7
 aws.ecs.container.logDriver 11.15.2
 aws.ecs.container.memoryHardLimit 11.15.2
 aws.ecs.container.memorySoftLimit 11.15.2
@@ -1204,6 +1207,7 @@ aws.ecs.container.runtimeId 11.15.2
 aws.ecs.container.status 11.15.2
 aws.ecs.container.taskArn 11.15.2
 aws.ecs.container.taskDefinitionArn 11.15.2
+aws.ecs.container.user 13.2.7
 aws.ecs.containerInstances 11.15.2
 aws.ecs.containers 11.15.2
 aws.ecs.instance 11.15.2
@@ -1911,6 +1915,7 @@ aws.iam.instanceProfile.tags 11.15.2
 aws.iam.instanceProfiles 11.15.2
 aws.iam.loginProfile 11.15.2
 aws.iam.loginProfile.createdAt 11.15.2
+aws.iam.loginProfile.passwordResetRequired 13.2.7
 aws.iam.oidcProvider 11.15.2
 aws.iam.oidcProvider.arn 11.15.2
 aws.iam.oidcProvider.clientIds 11.15.2
@@ -2231,9 +2236,11 @@ aws.kms.key.description 11.15.2
 aws.kms.key.enabled 11.15.2
 aws.kms.key.grants 11.15.2
 aws.kms.key.id 11.15.2
+aws.kms.key.keyManager 13.2.7
 aws.kms.key.keyRotationEnabled 11.15.2
 aws.kms.key.keyState 11.15.2
 aws.kms.key.metadata 11.15.2
+aws.kms.key.policy 13.2.7
 aws.kms.key.region 11.15.2
 aws.kms.key.tags 11.15.2
 aws.kms.keys 11.15.2
@@ -2322,12 +2329,14 @@ aws.lambda.function.provisionedConcurrencyConfigs 11.15.2
 aws.lambda.function.region 11.15.2
 aws.lambda.function.role 11.15.2
 aws.lambda.function.runtime 11.15.2
+aws.lambda.function.securityGroups 13.2.7
 aws.lambda.function.signingJobArn 11.15.2
 aws.lambda.function.signingProfileVersionArn 11.15.2
 aws.lambda.function.snapStartApplyOn 11.15.2
 aws.lambda.function.snapStartOptimizationStatus 11.15.2
 aws.lambda.function.state 11.15.2
 aws.lambda.function.stateReason 11.15.2
+aws.lambda.function.subnets 13.2.7
 aws.lambda.function.tags 11.15.2
 aws.lambda.function.timeout 11.15.2
 aws.lambda.function.tracingMode 11.15.2
@@ -2342,6 +2351,7 @@ aws.lambda.function.urlConfig.corsMaxAge 11.15.2
 aws.lambda.function.urlConfig.createdAt 11.15.2
 aws.lambda.function.urlConfig.functionUrl 11.15.2
 aws.lambda.function.urlConfig.lastModifiedAt 11.15.2
+aws.lambda.function.vpc 13.2.7
 aws.lambda.function.vpcConfig 11.15.2
 aws.lambda.functions 11.15.2
 aws.lambda.layer 11.15.2

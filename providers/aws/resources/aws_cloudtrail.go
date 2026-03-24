@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail/types"
@@ -92,7 +93,9 @@ func initAwsCloudtrailTrail(runtime *plugin.Runtime, args map[string]*llx.RawDat
 }
 
 type mqlAwsCloudtrailTrailInternal struct {
-	trailCache types.Trail
+	trailCache         types.Trail
+	cachedTrailStatus  *cloudtrail.GetTrailStatusOutput
+	trailStatusLock    sync.Mutex
 }
 
 func (a *mqlAwsCloudtrail) getTrails(conn *connection.AwsConnection) []*jobpool.Job {
@@ -204,22 +207,45 @@ func (a *mqlAwsCloudtrailTrail) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func (a *mqlAwsCloudtrailTrail) status() (any, error) {
+func (a *mqlAwsCloudtrailTrail) getTrailStatus() (*cloudtrail.GetTrailStatusOutput, error) {
+	if a.cachedTrailStatus != nil {
+		return a.cachedTrailStatus, nil
+	}
+	a.trailStatusLock.Lock()
+	defer a.trailStatusLock.Unlock()
+	if a.cachedTrailStatus != nil {
+		return a.cachedTrailStatus, nil
+	}
+
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.Cloudtrail(a.Region.Data)
 	ctx := context.Background()
 
 	arnValue := a.Arn.Data
-
-	// no pagination required
 	trailstatus, err := svc.GetTrailStatus(ctx, &cloudtrail.GetTrailStatusInput{
 		Name: &arnValue,
 	})
 	if err != nil {
 		return nil, err
 	}
+	a.cachedTrailStatus = trailstatus
+	return trailstatus, nil
+}
 
+func (a *mqlAwsCloudtrailTrail) status() (any, error) {
+	trailstatus, err := a.getTrailStatus()
+	if err != nil {
+		return nil, err
+	}
 	return convert.JsonToDict(trailstatus)
+}
+
+func (a *mqlAwsCloudtrailTrail) isLogging() (bool, error) {
+	trailstatus, err := a.getTrailStatus()
+	if err != nil {
+		return false, err
+	}
+	return convert.ToValue(trailstatus.IsLogging), nil
 }
 
 func (a *mqlAwsCloudtrailTrail) eventSelectors() ([]any, error) {

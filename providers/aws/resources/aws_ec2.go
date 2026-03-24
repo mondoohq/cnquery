@@ -2218,6 +2218,23 @@ func (a *mqlAwsEc2Snapshot) kmsKey() (*mqlAwsKmsKey, error) {
 	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
+func (a *mqlAwsEc2Snapshot) isPublic() (bool, error) {
+	perms, err := a.createVolumePermission()
+	if err != nil {
+		return false, err
+	}
+	for _, p := range perms {
+		permMap, ok := p.(map[string]any)
+		if !ok {
+			continue
+		}
+		if group, ok := permMap["Group"].(string); ok && group == "all" {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 func (a *mqlAwsEc2Snapshot) createVolumePermission() ([]any, error) {
 	id := a.Id.Data
 	region := a.Region.Data

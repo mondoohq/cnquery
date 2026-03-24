@@ -482,6 +482,8 @@ func (t *mqlAwsEcsTask) containers() ([]any, error) {
 	}
 	containerLogDriverMap := make(map[string]string)
 	containerCommandMap := make(map[string][]string)
+	containerUserMap := make(map[string]string)
+	containerInitProcessMap := make(map[string]bool)
 
 	for i := range definition.TaskDefinition.ContainerDefinitions {
 		cd := definition.TaskDefinition.ContainerDefinitions[i]
@@ -491,6 +493,10 @@ func (t *mqlAwsEcsTask) containers() ([]any, error) {
 				containerLogDriverMap[*cd.Name] = string(cd.LogConfiguration.LogDriver)
 			} else {
 				containerLogDriverMap[*cd.Name] = "none"
+			}
+			containerUserMap[*cd.Name] = convert.ToValue(cd.User)
+			if cd.LinuxParameters != nil {
+				containerInitProcessMap[*cd.Name] = convert.ToValue(cd.LinuxParameters.InitProcessEnabled)
 			}
 		}
 	}
@@ -533,9 +539,11 @@ func (t *mqlAwsEcsTask) containers() ([]any, error) {
 				"status":            llx.StringDataPtr(c.LastStatus),
 				"taskArn":           llx.StringData(t.Arn.Data),
 				"taskDefinitionArn": llx.StringData(t.Arn.Data),
-				"memorySoftLimit":   llx.StringDataPtr(c.MemoryReservation),
-				"memoryHardLimit":   llx.StringDataPtr(c.Memory),
-				"reason":            llx.StringDataPtr(c.Reason),
+				"memorySoftLimit":      llx.StringDataPtr(c.MemoryReservation),
+				"memoryHardLimit":      llx.StringDataPtr(c.Memory),
+				"reason":               llx.StringDataPtr(c.Reason),
+				"user":                 llx.StringData(containerUserMap[convert.ToValue(c.Name)]),
+				"initProcessEnabled":   llx.BoolData(containerInitProcessMap[convert.ToValue(c.Name)]),
 			})
 		if err != nil {
 			return nil, err

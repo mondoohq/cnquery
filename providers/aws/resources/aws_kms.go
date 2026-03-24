@@ -233,6 +233,28 @@ func (a *mqlAwsKmsKey) description() (string, error) {
 	return convert.ToValue(md.Description), nil
 }
 
+func (a *mqlAwsKmsKey) keyManager() (string, error) {
+	md, err := a.getKeyMetadata()
+	if err != nil {
+		return "", err
+	}
+	return string(md.KeyManager), nil
+}
+
+func (a *mqlAwsKmsKey) policy() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	keyArn := a.Arn.Data
+
+	svc := conn.Kms(a.Region.Data)
+	ctx := context.Background()
+
+	resp, err := svc.GetKeyPolicy(ctx, &kms.GetKeyPolicyInput{KeyId: &keyArn})
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(resp.Policy), nil
+}
+
 func (a *mqlAwsKmsKey) id() (string, error) {
 	return a.Arn.Data, nil
 }

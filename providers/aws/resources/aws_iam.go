@@ -1474,7 +1474,8 @@ func (a *mqlAwsIamUser) loginProfile() (*mqlAwsIamLoginProfile, error) {
 	}
 
 	o, err := CreateResource(a.MqlRuntime, ResourceAwsIamLoginProfile, map[string]*llx.RawData{
-		"createdAt": llx.TimeData(*date),
+		"createdAt":             llx.TimeData(*date),
+		"passwordResetRequired": llx.BoolData(profile.LoginProfile.PasswordResetRequired),
 	})
 	if err != nil {
 		return nil, err

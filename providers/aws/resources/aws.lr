@@ -1184,6 +1184,10 @@ private aws.kms.key @defaults("id region aliases metadata.Description") {
   description() string
   // Grants for the key
   grants() []aws.kms.grant
+  // Whether the key is managed by AWS or the customer (AWS or CUSTOMER)
+  keyManager() string
+  // Key policy document in JSON format
+  policy() string
 }
 
 // AWS KMS key grant
@@ -1341,6 +1345,8 @@ private aws.iam.instanceProfile @defaults("instanceProfileId instanceProfileName
 private aws.iam.loginProfile @defaults("createdAt") {
   // Time when the login profile was created
   createdAt time
+  // Whether the user is required to set a new password on next sign-in
+  passwordResetRequired bool
 }
 
 // AWS IAM policy
@@ -2772,6 +2778,10 @@ private aws.ecs.container @defaults("containerName runtimeId clusterName region"
   memoryHardLimit string
   // Short (1024 characters max) description of the running or stopped container
   reason string
+  // User to run as inside the container (from task definition)
+  user string
+  // Whether an init process is enabled inside the container (from task definition)
+  initProcessEnabled bool
 }
 
 // Amazon ECS Task Definition
@@ -3483,6 +3493,8 @@ private aws.cloudtrail.trail @defaults("name region") {
   hasInsightSelectors bool
   // Whether custom event selectors are configured (enables data event logging for S3/Lambda/DynamoDB)
   hasCustomEventSelectors bool
+  // Whether logging is currently enabled for the trail
+  isLogging() bool
 }
 
 // Amazon S3 bucket control
@@ -5204,7 +5216,14 @@ private aws.lambda.function @defaults("arn") {
   // Policy for the function
   policy() dict
   // VPC configuration for the Lambda function
+  // Deprecated: use vpc(), subnets(), and securityGroups() instead
   vpcConfig dict
+  // VPC the Lambda function is connected to
+  vpc() aws.vpc
+  // Subnets the Lambda function is connected to
+  subnets() []aws.vpc.subnet
+  // Security groups associated with the Lambda function
+  securityGroups() []aws.ec2.securitygroup
   // Region where the function exists
   region string
   // Tags for the function
@@ -5808,6 +5827,8 @@ private aws.ec2.snapshot @defaults("id region volumeSize state") {
   storageTier string
   // KMS key used for snapshot encryption
   kmsKey() aws.kms.key
+  // Whether the snapshot is public (shared with all AWS accounts)
+  isPublic() bool
 }
 
 // Amazon EC2 (EBS) volume

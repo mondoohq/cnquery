@@ -3435,6 +3435,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.kms.key.grants": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKmsKey).GetGrants()).ToDataRes(types.Array(types.Resource("aws.kms.grant")))
 	},
+	"aws.kms.key.keyManager": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKey).GetKeyManager()).ToDataRes(types.String)
+	},
+	"aws.kms.key.policy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKey).GetPolicy()).ToDataRes(types.String)
+	},
 	"aws.kms.grant.grantId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKmsGrant).GetGrantId()).ToDataRes(types.String)
 	},
@@ -3620,6 +3626,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.iam.loginProfile.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamLoginProfile).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.iam.loginProfile.passwordResetRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamLoginProfile).GetPasswordResetRequired()).ToDataRes(types.Bool)
 	},
 	"aws.iam.policy.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamPolicy).GetArn()).ToDataRes(types.String)
@@ -5376,6 +5385,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ecs.container.reason": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsContainer).GetReason()).ToDataRes(types.String)
 	},
+	"aws.ecs.container.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsContainer).GetUser()).ToDataRes(types.String)
+	},
+	"aws.ecs.container.initProcessEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsContainer).GetInitProcessEnabled()).ToDataRes(types.Bool)
+	},
 	"aws.ecs.taskDefinition.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsTaskDefinition).GetArn()).ToDataRes(types.String)
 	},
@@ -6194,6 +6209,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.cloudtrail.trail.hasCustomEventSelectors": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudtrailTrail).GetHasCustomEventSelectors()).ToDataRes(types.Bool)
+	},
+	"aws.cloudtrail.trail.isLogging": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudtrailTrail).GetIsLogging()).ToDataRes(types.Bool)
 	},
 	"aws.s3control.accountPublicAccessBlock": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3control).GetAccountPublicAccessBlock()).ToDataRes(types.Dict)
@@ -8361,6 +8379,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.lambda.function.vpcConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunction).GetVpcConfig()).ToDataRes(types.Dict)
 	},
+	"aws.lambda.function.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
+	"aws.lambda.function.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
+	"aws.lambda.function.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
 	"aws.lambda.function.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunction).GetRegion()).ToDataRes(types.String)
 	},
@@ -9101,6 +9128,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.snapshot.kmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Snapshot).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.ec2.snapshot.isPublic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Snapshot).GetIsPublic()).ToDataRes(types.Bool)
 	},
 	"aws.ec2.volume.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Volume).GetArn()).ToDataRes(types.String)
@@ -15168,6 +15198,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsKmsKey).Grants, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.kms.key.keyManager": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKey).KeyManager, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kms.key.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKey).Policy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.kms.grant.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsKmsGrant).__id, ok = v.Value.(string)
 		return
@@ -15438,6 +15476,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.iam.loginProfile.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamLoginProfile).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.loginProfile.passwordResetRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamLoginProfile).PasswordResetRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.iam.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -18036,6 +18078,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEcsContainer).Reason, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.ecs.container.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsContainer).User, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.container.initProcessEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsContainer).InitProcessEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.ecs.taskDefinition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsTaskDefinition).__id, ok = v.Value.(string)
 		return
@@ -19290,6 +19340,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.cloudtrail.trail.hasCustomEventSelectors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudtrailTrail).HasCustomEventSelectors, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.cloudtrail.trail.isLogging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudtrailTrail).IsLogging, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.s3control.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -22460,6 +22514,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsLambdaFunction).VpcConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.lambda.function.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.lambda.function.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLambdaFunction).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -23554,6 +23620,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.snapshot.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Snapshot).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.snapshot.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Snapshot).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.volume.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -34996,6 +35066,8 @@ type mqlAwsKmsKey struct {
 	Enabled            plugin.TValue[bool]
 	Description        plugin.TValue[string]
 	Grants             plugin.TValue[[]any]
+	KeyManager         plugin.TValue[string]
+	Policy             plugin.TValue[string]
 }
 
 // createAwsKmsKey creates a new instance of this resource
@@ -35114,6 +35186,18 @@ func (c *mqlAwsKmsKey) GetGrants() *plugin.TValue[[]any] {
 		}
 
 		return c.grants()
+	})
+}
+
+func (c *mqlAwsKmsKey) GetKeyManager() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.KeyManager, func() (string, error) {
+		return c.keyManager()
+	})
+}
+
+func (c *mqlAwsKmsKey) GetPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Policy, func() (string, error) {
+		return c.policy()
 	})
 }
 
@@ -35869,7 +35953,8 @@ type mqlAwsIamLoginProfile struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsIamLoginProfileInternal it will be used here
-	CreatedAt plugin.TValue[*time.Time]
+	CreatedAt             plugin.TValue[*time.Time]
+	PasswordResetRequired plugin.TValue[bool]
 }
 
 // createAwsIamLoginProfile creates a new instance of this resource
@@ -35906,6 +35991,10 @@ func (c *mqlAwsIamLoginProfile) MqlID() string {
 
 func (c *mqlAwsIamLoginProfile) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
+}
+
+func (c *mqlAwsIamLoginProfile) GetPasswordResetRequired() *plugin.TValue[bool] {
+	return &c.PasswordResetRequired
 }
 
 // mqlAwsIamPolicy for the aws.iam.policy resource
@@ -42608,25 +42697,27 @@ type mqlAwsEcsContainer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsEcsContainerInternal it will be used here
-	Name              plugin.TValue[string]
-	Arn               plugin.TValue[string]
-	PublicIp          plugin.TValue[string]
-	Image             plugin.TValue[string]
-	ClusterName       plugin.TValue[string]
-	TaskDefinitionArn plugin.TValue[string]
-	LogDriver         plugin.TValue[string]
-	PlatformFamily    plugin.TValue[string]
-	PlatformVersion   plugin.TValue[string]
-	Status            plugin.TValue[string]
-	Region            plugin.TValue[string]
-	Command           plugin.TValue[[]any]
-	TaskArn           plugin.TValue[string]
-	RuntimeId         plugin.TValue[string]
-	ContainerName     plugin.TValue[string]
-	CpuUnits          plugin.TValue[string]
-	MemorySoftLimit   plugin.TValue[string]
-	MemoryHardLimit   plugin.TValue[string]
-	Reason            plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Arn                plugin.TValue[string]
+	PublicIp           plugin.TValue[string]
+	Image              plugin.TValue[string]
+	ClusterName        plugin.TValue[string]
+	TaskDefinitionArn  plugin.TValue[string]
+	LogDriver          plugin.TValue[string]
+	PlatformFamily     plugin.TValue[string]
+	PlatformVersion    plugin.TValue[string]
+	Status             plugin.TValue[string]
+	Region             plugin.TValue[string]
+	Command            plugin.TValue[[]any]
+	TaskArn            plugin.TValue[string]
+	RuntimeId          plugin.TValue[string]
+	ContainerName      plugin.TValue[string]
+	CpuUnits           plugin.TValue[string]
+	MemorySoftLimit    plugin.TValue[string]
+	MemoryHardLimit    plugin.TValue[string]
+	Reason             plugin.TValue[string]
+	User               plugin.TValue[string]
+	InitProcessEnabled plugin.TValue[bool]
 }
 
 // createAwsEcsContainer creates a new instance of this resource
@@ -42740,6 +42831,14 @@ func (c *mqlAwsEcsContainer) GetMemoryHardLimit() *plugin.TValue[string] {
 
 func (c *mqlAwsEcsContainer) GetReason() *plugin.TValue[string] {
 	return &c.Reason
+}
+
+func (c *mqlAwsEcsContainer) GetUser() *plugin.TValue[string] {
+	return &c.User
+}
+
+func (c *mqlAwsEcsContainer) GetInitProcessEnabled() *plugin.TValue[bool] {
+	return &c.InitProcessEnabled
 }
 
 // mqlAwsEcsTaskDefinition for the aws.ecs.taskDefinition resource
@@ -46249,6 +46348,7 @@ type mqlAwsCloudtrailTrail struct {
 	Region                     plugin.TValue[string]
 	HasInsightSelectors        plugin.TValue[bool]
 	HasCustomEventSelectors    plugin.TValue[bool]
+	IsLogging                  plugin.TValue[bool]
 }
 
 // createAwsCloudtrailTrail creates a new instance of this resource
@@ -46394,6 +46494,12 @@ func (c *mqlAwsCloudtrailTrail) GetHasInsightSelectors() *plugin.TValue[bool] {
 
 func (c *mqlAwsCloudtrailTrail) GetHasCustomEventSelectors() *plugin.TValue[bool] {
 	return &c.HasCustomEventSelectors
+}
+
+func (c *mqlAwsCloudtrailTrail) GetIsLogging() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsLogging, func() (bool, error) {
+		return c.isLogging()
+	})
 }
 
 // mqlAwsS3control for the aws.s3control resource
@@ -54102,6 +54208,9 @@ type mqlAwsLambdaFunction struct {
 	DlqTargetArn                  plugin.TValue[string]
 	Policy                        plugin.TValue[any]
 	VpcConfig                     plugin.TValue[any]
+	Vpc                           plugin.TValue[*mqlAwsVpc]
+	Subnets                       plugin.TValue[[]any]
+	SecurityGroups                plugin.TValue[[]any]
 	Region                        plugin.TValue[string]
 	Tags                          plugin.TValue[map[string]any]
 	Architectures                 plugin.TValue[[]any]
@@ -54204,6 +54313,54 @@ func (c *mqlAwsLambdaFunction) GetPolicy() *plugin.TValue[any] {
 
 func (c *mqlAwsLambdaFunction) GetVpcConfig() *plugin.TValue[any] {
 	return &c.VpcConfig
+}
+
+func (c *mqlAwsLambdaFunction) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.lambda.function", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
+func (c *mqlAwsLambdaFunction) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.lambda.function", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
+}
+
+func (c *mqlAwsLambdaFunction) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.lambda.function", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
 }
 
 func (c *mqlAwsLambdaFunction) GetRegion() *plugin.TValue[string] {
@@ -56876,6 +57033,7 @@ type mqlAwsEc2Snapshot struct {
 	Encrypted              plugin.TValue[bool]
 	StorageTier            plugin.TValue[string]
 	KmsKey                 plugin.TValue[*mqlAwsKmsKey]
+	IsPublic               plugin.TValue[bool]
 }
 
 // createAwsEc2Snapshot creates a new instance of this resource
@@ -56982,6 +57140,12 @@ func (c *mqlAwsEc2Snapshot) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
 		}
 
 		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsEc2Snapshot) GetIsPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
+		return c.isPublic()
 	})
 }
 
