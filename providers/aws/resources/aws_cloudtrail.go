@@ -93,9 +93,9 @@ func initAwsCloudtrailTrail(runtime *plugin.Runtime, args map[string]*llx.RawDat
 }
 
 type mqlAwsCloudtrailTrailInternal struct {
-	trailCache         types.Trail
-	cachedTrailStatus  *cloudtrail.GetTrailStatusOutput
-	trailStatusLock    sync.Mutex
+	trailCache        types.Trail
+	cachedTrailStatus *cloudtrail.GetTrailStatusOutput
+	trailStatusLock   sync.Mutex
 }
 
 func (a *mqlAwsCloudtrail) getTrails(conn *connection.AwsConnection) []*jobpool.Job {

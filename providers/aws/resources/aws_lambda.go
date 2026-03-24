@@ -227,7 +227,11 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 					if function.VpcConfig != nil {
 						f.cacheVpcId = function.VpcConfig.VpcId
 						f.cacheSubnetIds = function.VpcConfig.SubnetIds
-						f.cacheSecurityGroupIds = function.VpcConfig.SecurityGroupIds
+						var sgArns []string
+						for _, sgId := range function.VpcConfig.SecurityGroupIds {
+							sgArns = append(sgArns, NewSecurityGroupArn(region, conn.AccountId(), sgId))
+						}
+						f.setSecurityGroupArns(sgArns)
 					}
 					if tags != nil {
 						f.cacheTags = tags
@@ -311,15 +315,15 @@ func (a *mqlAwsLambdaFunction) id() (string, error) {
 }
 
 type mqlAwsLambdaFunctionInternal struct {
-	cacheRoleArn        *string
-	cacheTags           map[string]string
-	tagsFetched         bool
-	tagsLock            sync.Mutex
-	cacheVpcId          *string
-	cacheSubnetIds      []string
-	cacheSecurityGroupIds []string
-	region              string
-	accountID           string
+	securityGroupIdHandler
+	cacheRoleArn   *string
+	cacheTags      map[string]string
+	tagsFetched    bool
+	tagsLock       sync.Mutex
+	cacheVpcId     *string
+	cacheSubnetIds []string
+	region         string
+	accountID      string
 }
 
 func (a *mqlAwsLambdaFunction) tags() (map[string]any, error) {
@@ -396,20 +400,7 @@ func (a *mqlAwsLambdaFunction) subnets() ([]any, error) {
 }
 
 func (a *mqlAwsLambdaFunction) securityGroups() ([]any, error) {
-	if len(a.cacheSecurityGroupIds) == 0 {
-		return nil, nil
-	}
-	res := []any{}
-	for _, sgId := range a.cacheSecurityGroupIds {
-		sgArn := NewSecurityGroupArn(a.region, a.accountID, sgId)
-		mqlSg, err := NewResource(a.MqlRuntime, ResourceAwsEc2Securitygroup,
-			map[string]*llx.RawData{"arn": llx.StringData(sgArn)})
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, mqlSg)
-	}
-	return res, nil
+	return a.newSecurityGroupResources(a.MqlRuntime)
 }
 
 func (a *mqlAwsLambdaFunction) concurrency() (int64, error) {
