@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"strings"
 	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/service/dax"
@@ -13,6 +14,16 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
 )
+
+// isDaxAccessDeniedError checks for the DAX-specific access denied error which uses
+// InvalidParameterValueException instead of the standard AccessDenied error code.
+func isDaxAccessDeniedError(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(err.Error(), "InvalidParameterValueException") &&
+		strings.Contains(err.Error(), "Access Denied")
+}
 
 func (a *mqlAwsDynamodb) daxClusters() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
@@ -48,7 +59,7 @@ func (a *mqlAwsDynamodb) getDaxClusters(conn *connection.AwsConnection) []*jobpo
 					NextToken: nextToken,
 				})
 				if err != nil {
-					if Is400AccessDeniedError(err) {
+					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) || isDaxAccessDeniedError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS DAX API")
 						return res, nil
 					}

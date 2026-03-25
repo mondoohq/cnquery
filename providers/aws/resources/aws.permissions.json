@@ -1,7 +1,7 @@
 {
   "provider": "aws",
-  "version": "13.2.6",
-  "generated_at": "2026-03-20T15:44:46-07:00",
+  "version": "13.3.0",
+  "generated_at": "2026-03-25T10:56:42-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -150,6 +150,8 @@
     "elasticloadbalancing:DescribeTags",
     "elasticloadbalancing:DescribeTargetGroupAttributes",
     "elasticloadbalancing:DescribeTargetGroups",
+    "emr:DescribeCluster",
+    "emr:DescribeSecurityConfiguration",
     "emr:ListClusters",
     "emr:ListInstances",
     "es:DescribeDomains",
@@ -217,6 +219,7 @@
     "kinesis:ListStreams",
     "kinesis:ListTagsForStream",
     "kms:DescribeKey",
+    "kms:GetKeyPolicy",
     "kms:GetKeyRotationStatus",
     "kms:ListAliases",
     "kms:ListGrants",
@@ -1288,6 +1291,18 @@
       "source_file": "aws_elb.go"
     },
     {
+      "permission": "emr:DescribeCluster",
+      "service": "emr",
+      "action": "DescribeCluster",
+      "source_file": "aws_emr.go"
+    },
+    {
+      "permission": "emr:DescribeSecurityConfiguration",
+      "service": "emr",
+      "action": "DescribeSecurityConfiguration",
+      "source_file": "aws_emr.go"
+    },
+    {
       "permission": "emr:ListClusters",
       "service": "emr",
       "action": "ListClusters",
@@ -1693,6 +1708,12 @@
       "permission": "kms:DescribeKey",
       "service": "kms",
       "action": "DescribeKey",
+      "source_file": "aws_kms.go"
+    },
+    {
+      "permission": "kms:GetKeyPolicy",
+      "service": "kms",
+      "action": "GetKeyPolicy",
       "source_file": "aws_kms.go"
     },
     {
