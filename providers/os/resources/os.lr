@@ -321,6 +321,8 @@ os.linux {
   nftables() nftables
   // UFW (Uncomplicated Firewall)
   ufw() ufw
+  // firewalld dynamic firewall manager (RHEL/CentOS/Fedora)
+  firewalld() firewalld
   // /etc/fstab entries
   fstab() fstab
   // AppArmor mandatory access control
@@ -1342,6 +1344,62 @@ private ufw.application @defaults("name ports") {
   description string
   // Port specification (e.g., "80/tcp", "80,443/tcp", "80,443/tcp|443/udp")
   ports string
+}
+
+// firewalld - Dynamic firewall manager (RHEL/CentOS/Fedora)
+firewalld @defaults("status defaultZone") {
+  // Whether firewalld is running ("running", "not running", "not installed")
+  status() string
+  // Default zone name (e.g., "public", "home", "dmz")
+  defaultZone() string
+  // All configured zones
+  zones() []firewalld.zone
+}
+
+// firewalld zone configuration
+private firewalld.zone @defaults("name target") {
+  // Zone name (e.g., "public", "internal", "dmz")
+  name string
+  // Default target (default, ACCEPT, REJECT, DROP)
+  target string
+  // Whether ICMP block inversion is enabled
+  icmpBlockInversion bool
+  // Whether this zone is currently active (has bound interfaces or sources)
+  active bool
+  // Network interfaces bound to this zone
+  interfaces []string
+  // Source addresses/subnets bound to this zone
+  sources []string
+  // Allowed service names (e.g., "ssh", "http", "https")
+  services []string
+  // Allowed ports (e.g., "80/tcp", "443/tcp", "8080-8090/udp")
+  ports []string
+  // Whether masquerading is enabled
+  masquerade bool
+  // Port forwarding rules (e.g., "port=80:proto=tcp:toport=8080")
+  forwardPorts []string
+  // Source ports
+  sourcePorts []string
+  // ICMP types that are blocked
+  icmpBlocks []string
+  // Rich rules (expressive firewall rules)
+  richRules []firewalld.richrule
+  // Allowed protocols (e.g., "icmp", "ipv6-icmp")
+  protocols []string
+}
+
+// firewalld rich rule
+private firewalld.richrule @defaults("family rule") {
+  // Address family ("ipv4" or "ipv6"), empty if not specified
+  family string
+  // Full rich rule string
+  rule string
+  // Source address/subnet, empty if not specified
+  source string
+  // Destination address/subnet, empty if not specified
+  destination string
+  // Action (accept, reject, drop, mark), empty if not specified
+  action string
 }
 
 // fstab file and entries

@@ -688,6 +688,14 @@ func (s *mqlOsLinux) ufw() (*mqlUfw, error) {
 	return res.(*mqlUfw), nil
 }
 
+func (s *mqlOsLinux) firewalld() (*mqlFirewalld, error) {
+	res, err := CreateResource(s.MqlRuntime, "firewalld", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlFirewalld), nil
+}
+
 func (s *mqlOsLinux) fstab() (*mqlFstab, error) {
 	res, err := CreateResource(s.MqlRuntime, "fstab", map[string]*llx.RawData{})
 	if err != nil {

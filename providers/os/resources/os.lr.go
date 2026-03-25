@@ -118,6 +118,9 @@ const (
 	ResourceUfw                        string = "ufw"
 	ResourceUfwRule                    string = "ufw.rule"
 	ResourceUfwApplication             string = "ufw.application"
+	ResourceFirewalld                  string = "firewalld"
+	ResourceFirewalldZone              string = "firewalld.zone"
+	ResourceFirewalldRichrule          string = "firewalld.richrule"
 	ResourceFstab                      string = "fstab"
 	ResourceFstabEntry                 string = "fstab.entry"
 	ResourceGrubConfig                 string = "grub.config"
@@ -626,6 +629,18 @@ func init() {
 		"ufw.application": {
 			// to override args, implement: initUfwApplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createUfwApplication,
+		},
+		"firewalld": {
+			// to override args, implement: initFirewalld(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFirewalld,
+		},
+		"firewalld.zone": {
+			// to override args, implement: initFirewalldZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFirewalldZone,
+		},
+		"firewalld.richrule": {
+			// to override args, implement: initFirewalldRichrule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFirewalldRichrule,
 		},
 		"fstab": {
 			Init:   initFstab,
@@ -1432,6 +1447,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"os.linux.ufw": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOsLinux).GetUfw()).ToDataRes(types.Resource("ufw"))
+	},
+	"os.linux.firewalld": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsLinux).GetFirewalld()).ToDataRes(types.Resource("firewalld"))
 	},
 	"os.linux.fstab": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOsLinux).GetFstab()).ToDataRes(types.Resource("fstab"))
@@ -2470,6 +2488,72 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ufw.application.ports": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlUfwApplication).GetPorts()).ToDataRes(types.String)
+	},
+	"firewalld.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalld).GetStatus()).ToDataRes(types.String)
+	},
+	"firewalld.defaultZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalld).GetDefaultZone()).ToDataRes(types.String)
+	},
+	"firewalld.zones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalld).GetZones()).ToDataRes(types.Array(types.Resource("firewalld.zone")))
+	},
+	"firewalld.zone.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldZone).GetName()).ToDataRes(types.String)
+	},
+	"firewalld.zone.target": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldZone).GetTarget()).ToDataRes(types.String)
+	},
+	"firewalld.zone.icmpBlockInversion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldZone).GetIcmpBlockInversion()).ToDataRes(types.Bool)
+	},
+	"firewalld.zone.active": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldZone).GetActive()).ToDataRes(types.Bool)
+	},
+	"firewalld.zone.interfaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldZone).GetInterfaces()).ToDataRes(types.Array(types.String))
+	},
+	"firewalld.zone.sources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldZone).GetSources()).ToDataRes(types.Array(types.String))
+	},
+	"firewalld.zone.services": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldZone).GetServices()).ToDataRes(types.Array(types.String))
+	},
+	"firewalld.zone.ports": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldZone).GetPorts()).ToDataRes(types.Array(types.String))
+	},
+	"firewalld.zone.masquerade": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldZone).GetMasquerade()).ToDataRes(types.Bool)
+	},
+	"firewalld.zone.forwardPorts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldZone).GetForwardPorts()).ToDataRes(types.Array(types.String))
+	},
+	"firewalld.zone.sourcePorts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldZone).GetSourcePorts()).ToDataRes(types.Array(types.String))
+	},
+	"firewalld.zone.icmpBlocks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldZone).GetIcmpBlocks()).ToDataRes(types.Array(types.String))
+	},
+	"firewalld.zone.richRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldZone).GetRichRules()).ToDataRes(types.Array(types.Resource("firewalld.richrule")))
+	},
+	"firewalld.zone.protocols": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldZone).GetProtocols()).ToDataRes(types.Array(types.String))
+	},
+	"firewalld.richrule.family": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldRichrule).GetFamily()).ToDataRes(types.String)
+	},
+	"firewalld.richrule.rule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldRichrule).GetRule()).ToDataRes(types.String)
+	},
+	"firewalld.richrule.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldRichrule).GetSource()).ToDataRes(types.String)
+	},
+	"firewalld.richrule.destination": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldRichrule).GetDestination()).ToDataRes(types.String)
+	},
+	"firewalld.richrule.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldRichrule).GetAction()).ToDataRes(types.String)
 	},
 	"fstab.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFstab).GetPath()).ToDataRes(types.String)
@@ -4762,6 +4846,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOsLinux).Ufw, ok = plugin.RawToTValue[*mqlUfw](v.Value, v.Error)
 		return
 	},
+	"os.linux.firewalld": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsLinux).Firewalld, ok = plugin.RawToTValue[*mqlFirewalld](v.Value, v.Error)
+		return
+	},
 	"os.linux.fstab": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOsLinux).Fstab, ok = plugin.RawToTValue[*mqlFstab](v.Value, v.Error)
 		return
@@ -6452,6 +6540,106 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ufw.application.ports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlUfwApplication).Ports, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firewalld.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalld).__id, ok = v.Value.(string)
+		return
+	},
+	"firewalld.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalld).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firewalld.defaultZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalld).DefaultZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firewalld.zones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalld).Zones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"firewalld.zone.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldZone).__id, ok = v.Value.(string)
+		return
+	},
+	"firewalld.zone.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldZone).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firewalld.zone.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldZone).Target, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firewalld.zone.icmpBlockInversion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldZone).IcmpBlockInversion, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"firewalld.zone.active": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldZone).Active, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"firewalld.zone.interfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldZone).Interfaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"firewalld.zone.sources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldZone).Sources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"firewalld.zone.services": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldZone).Services, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"firewalld.zone.ports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldZone).Ports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"firewalld.zone.masquerade": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldZone).Masquerade, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"firewalld.zone.forwardPorts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldZone).ForwardPorts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"firewalld.zone.sourcePorts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldZone).SourcePorts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"firewalld.zone.icmpBlocks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldZone).IcmpBlocks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"firewalld.zone.richRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldZone).RichRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"firewalld.zone.protocols": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldZone).Protocols, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"firewalld.richrule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldRichrule).__id, ok = v.Value.(string)
+		return
+	},
+	"firewalld.richrule.family": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldRichrule).Family, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firewalld.richrule.rule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldRichrule).Rule, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firewalld.richrule.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldRichrule).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firewalld.richrule.destination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldRichrule).Destination, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firewalld.richrule.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldRichrule).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"fstab.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10926,6 +11114,7 @@ type mqlOsLinux struct {
 	Ip6tables plugin.TValue[*mqlIp6tables]
 	Nftables  plugin.TValue[*mqlNftables]
 	Ufw       plugin.TValue[*mqlUfw]
+	Firewalld plugin.TValue[*mqlFirewalld]
 	Fstab     plugin.TValue[*mqlFstab]
 	Apparmor  plugin.TValue[*mqlApparmor]
 }
@@ -11044,6 +11233,22 @@ func (c *mqlOsLinux) GetUfw() *plugin.TValue[*mqlUfw] {
 		}
 
 		return c.ufw()
+	})
+}
+
+func (c *mqlOsLinux) GetFirewalld() *plugin.TValue[*mqlFirewalld] {
+	return plugin.GetOrCompute[*mqlFirewalld](&c.Firewalld, func() (*mqlFirewalld, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("os.linux", c.__id, "firewalld")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFirewalld), nil
+			}
+		}
+
+		return c.firewalld()
 	})
 }
 
@@ -17082,6 +17287,264 @@ func (c *mqlUfwApplication) GetDescription() *plugin.TValue[string] {
 
 func (c *mqlUfwApplication) GetPorts() *plugin.TValue[string] {
 	return &c.Ports
+}
+
+// mqlFirewalld for the firewalld resource
+type mqlFirewalld struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlFirewalldInternal
+	Status      plugin.TValue[string]
+	DefaultZone plugin.TValue[string]
+	Zones       plugin.TValue[[]any]
+}
+
+// createFirewalld creates a new instance of this resource
+func createFirewalld(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFirewalld{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("firewalld", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFirewalld) MqlName() string {
+	return "firewalld"
+}
+
+func (c *mqlFirewalld) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFirewalld) GetStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
+		return c.status()
+	})
+}
+
+func (c *mqlFirewalld) GetDefaultZone() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DefaultZone, func() (string, error) {
+		return c.defaultZone()
+	})
+}
+
+func (c *mqlFirewalld) GetZones() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Zones, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("firewalld", c.__id, "zones")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.zones()
+	})
+}
+
+// mqlFirewalldZone for the firewalld.zone resource
+type mqlFirewalldZone struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlFirewalldZoneInternal it will be used here
+	Name               plugin.TValue[string]
+	Target             plugin.TValue[string]
+	IcmpBlockInversion plugin.TValue[bool]
+	Active             plugin.TValue[bool]
+	Interfaces         plugin.TValue[[]any]
+	Sources            plugin.TValue[[]any]
+	Services           plugin.TValue[[]any]
+	Ports              plugin.TValue[[]any]
+	Masquerade         plugin.TValue[bool]
+	ForwardPorts       plugin.TValue[[]any]
+	SourcePorts        plugin.TValue[[]any]
+	IcmpBlocks         plugin.TValue[[]any]
+	RichRules          plugin.TValue[[]any]
+	Protocols          plugin.TValue[[]any]
+}
+
+// createFirewalldZone creates a new instance of this resource
+func createFirewalldZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFirewalldZone{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("firewalld.zone", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFirewalldZone) MqlName() string {
+	return "firewalld.zone"
+}
+
+func (c *mqlFirewalldZone) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFirewalldZone) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlFirewalldZone) GetTarget() *plugin.TValue[string] {
+	return &c.Target
+}
+
+func (c *mqlFirewalldZone) GetIcmpBlockInversion() *plugin.TValue[bool] {
+	return &c.IcmpBlockInversion
+}
+
+func (c *mqlFirewalldZone) GetActive() *plugin.TValue[bool] {
+	return &c.Active
+}
+
+func (c *mqlFirewalldZone) GetInterfaces() *plugin.TValue[[]any] {
+	return &c.Interfaces
+}
+
+func (c *mqlFirewalldZone) GetSources() *plugin.TValue[[]any] {
+	return &c.Sources
+}
+
+func (c *mqlFirewalldZone) GetServices() *plugin.TValue[[]any] {
+	return &c.Services
+}
+
+func (c *mqlFirewalldZone) GetPorts() *plugin.TValue[[]any] {
+	return &c.Ports
+}
+
+func (c *mqlFirewalldZone) GetMasquerade() *plugin.TValue[bool] {
+	return &c.Masquerade
+}
+
+func (c *mqlFirewalldZone) GetForwardPorts() *plugin.TValue[[]any] {
+	return &c.ForwardPorts
+}
+
+func (c *mqlFirewalldZone) GetSourcePorts() *plugin.TValue[[]any] {
+	return &c.SourcePorts
+}
+
+func (c *mqlFirewalldZone) GetIcmpBlocks() *plugin.TValue[[]any] {
+	return &c.IcmpBlocks
+}
+
+func (c *mqlFirewalldZone) GetRichRules() *plugin.TValue[[]any] {
+	return &c.RichRules
+}
+
+func (c *mqlFirewalldZone) GetProtocols() *plugin.TValue[[]any] {
+	return &c.Protocols
+}
+
+// mqlFirewalldRichrule for the firewalld.richrule resource
+type mqlFirewalldRichrule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlFirewalldRichruleInternal it will be used here
+	Family      plugin.TValue[string]
+	Rule        plugin.TValue[string]
+	Source      plugin.TValue[string]
+	Destination plugin.TValue[string]
+	Action      plugin.TValue[string]
+}
+
+// createFirewalldRichrule creates a new instance of this resource
+func createFirewalldRichrule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFirewalldRichrule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("firewalld.richrule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFirewalldRichrule) MqlName() string {
+	return "firewalld.richrule"
+}
+
+func (c *mqlFirewalldRichrule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFirewalldRichrule) GetFamily() *plugin.TValue[string] {
+	return &c.Family
+}
+
+func (c *mqlFirewalldRichrule) GetRule() *plugin.TValue[string] {
+	return &c.Rule
+}
+
+func (c *mqlFirewalldRichrule) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlFirewalldRichrule) GetDestination() *plugin.TValue[string] {
+	return &c.Destination
+}
+
+func (c *mqlFirewalldRichrule) GetAction() *plugin.TValue[string] {
+	return &c.Action
 }
 
 // mqlFstab for the fstab resource
