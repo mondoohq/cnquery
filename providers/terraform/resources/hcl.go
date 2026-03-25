@@ -141,7 +141,7 @@ func (t *mqlTerraform) refreshCache(blocks []any) error {
 		case "provider":
 			t.Providers.Data = append(t.Providers.Data, block)
 		case "data":
-			t.Datasources.Data = append(t.Providers.Data, block)
+			t.Datasources.Data = append(t.Datasources.Data, block)
 		case "resource":
 			t.mqlTerraformInternal.resources = append(t.mqlTerraformInternal.resources, block)
 		case "variable":

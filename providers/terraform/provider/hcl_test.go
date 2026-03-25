@@ -54,6 +54,29 @@ func TestResource_Terraform(t *testing.T) {
 		assert.Equal(t, "provider", string(dataResp.Data.Value))
 	})
 
+	t.Run("terraform datasources are not empty", func(t *testing.T) {
+		srv, connRes := newTestService(HclConnectionType, terraformHclPath)
+		require.NotEmpty(t, srv)
+
+		// create terraform resource
+		dataResp, err := srv.GetData(&plugin.DataReq{
+			Connection: connRes.Id,
+			Resource:   "terraform",
+		})
+		require.NoError(t, err)
+		resourceId := string(dataResp.Data.Value)
+
+		// fetch datasources — previously broken: appended to Providers.Data instead of Datasources.Data
+		dataResp, err = srv.GetData(&plugin.DataReq{
+			Connection: connRes.Id,
+			Resource:   "terraform",
+			ResourceId: resourceId,
+			Field:      "datasources",
+		})
+		require.NoError(t, err)
+		assert.Equal(t, 2, len(dataResp.Data.Array))
+	})
+
 	t.Run("terraform ignore commented out resources", func(t *testing.T) {
 		srv, connRes := newTestService(HclConnectionType, terraformHclPath)
 		require.NotEmpty(t, srv)
