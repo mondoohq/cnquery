@@ -1868,6 +1868,12 @@ private aws.es.domain @defaults("arn name") {
   domainId string
   // Elasticsearch domain name
   domainName string
+  // Whether HTTPS is required for all traffic to the domain
+  enforceHTTPS bool
+  // TLS security policy for the domain
+  tlsSecurityPolicy string
+  // Whether audit logging is enabled for the domain
+  auditLogEnabled bool
 }
 
 // Amazon OpenSearch Service
@@ -3107,7 +3113,25 @@ private aws.emr.cluster @defaults("arn") {
   // EMR cluster ID
   id string
   // Tags for the cluster
-  tags map[string]string
+  tags() map[string]string
+  // Name of the security configuration applied to the cluster
+  securityConfiguration() string
+  // Encryption configuration from the security configuration
+  encryptionConfiguration() aws.emr.cluster.encryptionConfiguration
+  // S3 log URI for the cluster
+  logUri() string
+}
+
+// EMR cluster encryption configuration from the security configuration
+private aws.emr.cluster.encryptionConfiguration @defaults("atRestEnabled inTransitEnabled") {
+  // Whether at-rest encryption is enabled
+  atRestEnabled bool
+  // Whether in-transit encryption is enabled
+  inTransitEnabled bool
+  // At-rest encryption configuration details (S3 and local disk settings)
+  atRestConfiguration dict
+  // In-transit encryption configuration details (certificate provider settings)
+  inTransitConfiguration dict
 }
 
 // Amazon EventBridge
@@ -4018,6 +4042,34 @@ aws.dynamodb {
   limits() []aws.dynamodb.limit
   // List of exports for DynamoDB
   exports() []aws.dynamodb.export
+  // List of DAX clusters
+  daxClusters() []aws.dynamodb.dax.cluster
+}
+
+// Amazon DynamoDB Accelerator (DAX) cluster
+private aws.dynamodb.dax.cluster @defaults("arn clusterName") {
+  // ARN for the DAX cluster
+  arn string
+  // Name of the DAX cluster
+  clusterName string
+  // Description of the cluster
+  description string
+  // Node type for the nodes in the cluster
+  nodeType string
+  // Current status of the cluster
+  status string
+  // Total number of nodes in the cluster
+  totalNodes int
+  // Number of active nodes in the cluster
+  activeNodes int
+  // Region where the cluster exists
+  region string
+  // Whether server-side encryption (SSE) is enabled (ENABLING, ENABLED, DISABLING, DISABLED)
+  sseStatus string
+  // Cluster endpoint encryption type (NONE or TLS)
+  clusterEndpointEncryptionType string
+  // Tags for the cluster
+  tags() map[string]string
 }
 
 // Amazon DynamoDB Export
@@ -4164,6 +4216,8 @@ private aws.sqs.queue {
   deduplicationScope() string
   // FIFO throughput limit (perQueue or perMessageGroupId)
   fifoThroughputLimit() string
+  // Access policy for the queue (parsed JSON)
+  policy() dict
 }
 
 // Amazon Relational Database Service (RDS)

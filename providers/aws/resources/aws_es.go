@@ -149,6 +149,26 @@ func initAwsEsDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		nodeToNodeEncryptionEnabled = convert.ToValue(domainDetails.DomainStatus.NodeToNodeEncryptionOptions.Enabled)
 	}
 	args["nodeToNodeEncryptionEnabled"] = llx.BoolData(nodeToNodeEncryptionEnabled)
+
+	var enforceHTTPS bool
+	var tlsSecurityPolicy string
+	if domainDetails.DomainStatus.DomainEndpointOptions != nil {
+		enforceHTTPS = convert.ToValue(domainDetails.DomainStatus.DomainEndpointOptions.EnforceHTTPS)
+		tlsSecurityPolicy = string(domainDetails.DomainStatus.DomainEndpointOptions.TLSSecurityPolicy)
+	}
+	args["enforceHTTPS"] = llx.BoolData(enforceHTTPS)
+	args["tlsSecurityPolicy"] = llx.StringData(tlsSecurityPolicy)
+
+	var auditLogEnabled bool
+	if domainDetails.DomainStatus.LogPublishingOptions != nil {
+		if opt, ok := domainDetails.DomainStatus.LogPublishingOptions["AUDIT_LOGS"]; ok {
+			if opt.Enabled != nil {
+				auditLogEnabled = *opt.Enabled
+			}
+		}
+	}
+	args["auditLogEnabled"] = llx.BoolData(auditLogEnabled)
+
 	args["endpoint"] = llx.StringDataPtr(domainDetails.DomainStatus.Endpoint)
 	args["arn"] = llx.StringDataPtr(domainDetails.DomainStatus.ARN)
 	args["elasticsearchVersion"] = llx.StringDataPtr(domainDetails.DomainStatus.ElasticsearchVersion)

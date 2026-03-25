@@ -27,6 +27,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
+	"github.com/aws/aws-sdk-go-v2/service/dax"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	"github.com/aws/aws-sdk-go-v2/service/docdb"
 	"github.com/aws/aws-sdk-go-v2/service/drs"
@@ -875,6 +876,30 @@ func (t *AwsConnection) Dynamodb(region string) *dynamodb.Client {
 	cfg := t.cfg.Copy()
 	cfg.Region = region
 	client := dynamodb.NewFromConfig(cfg)
+
+	// cache it
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) Dax(region string) *dax.Client {
+	// if no region value is sent in, use the configured region
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_dax_" + region
+
+	// check for cached client and return it if it exists
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached dax client")
+		return c.Data.(*dax.Client)
+	}
+
+	// create the client
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := dax.NewFromConfig(cfg)
 
 	// cache it
 	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})

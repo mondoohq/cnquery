@@ -207,6 +207,8 @@ github.com/aws/aws-sdk-go-v2/service/configservice v1.62.0 h1:YhpMhebNgOMU2hUSUk
 github.com/aws/aws-sdk-go-v2/service/configservice v1.62.0/go.mod h1:RYnSwYvQI1pCZMbqarMlmeYAQ6buI2oH+aAMVyPT12g=
 github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.61.9 h1:TdwG480ZMSzDfwwo9annrKWWmXQVGtbETIeH8sAFmhA=
 github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.61.9/go.mod h1:I/976DEXr3xM+PaU82K6qvodjpNaQUclg9kio5L7YJ0=
+github.com/aws/aws-sdk-go-v2/service/dax v1.29.15 h1:N6FOHQBUE9Q4abNr8iSGvr7EAfOKGPFe3wfefe1HE7Y=
+github.com/aws/aws-sdk-go-v2/service/dax v1.29.15/go.mod h1:oQWcG5/eLbm6Ir3rNt/NL2wl0+eQJx1f2GVTmoOyJR0=
 github.com/aws/aws-sdk-go-v2/service/directoryservice v1.38.15 h1:Gr8OsR/2npUrGl3c/gcex+G/HNhK/mYZPFm1Ew/8tH8=
 github.com/aws/aws-sdk-go-v2/service/directoryservice v1.38.15/go.mod h1:jjuT+RTfsh4PsC0AG3z3iXaeJrgZjO4cPWdRCMyMLpA=
 github.com/aws/aws-sdk-go-v2/service/docdb v1.48.12 h1:OFKK/k8nTpRr6LDzLUwHlpXImFhcDNRxuk6PeYar97k=

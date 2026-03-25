@@ -318,3 +318,19 @@ func (a *mqlAwsSqsQueue) fifoThroughputLimit() (string, error) {
 	}
 	return atts["FifoThroughputLimit"], nil
 }
+
+func (a *mqlAwsSqsQueue) policy() (any, error) {
+	atts, err := a.fetchAttributes()
+	if err != nil {
+		return nil, err
+	}
+	policyStr := atts["Policy"]
+	if policyStr == "" {
+		return nil, nil
+	}
+	var policy any
+	if err := json.Unmarshal([]byte(policyStr), &policy); err != nil {
+		return nil, err
+	}
+	return policy, nil
+}

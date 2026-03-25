@@ -5,11 +5,14 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
+	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/service/emr"
 	emrtypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
@@ -93,6 +96,146 @@ func (a *mqlAwsEmr) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+type mqlAwsEmrClusterInternal struct {
+	clusterDetailsFetched bool
+	clusterDetailsLock    sync.Mutex
+	cacheSecurityConfig   string
+	cacheLogUri           string
+	cacheTags             map[string]any
+}
+
+func (a *mqlAwsEmrCluster) fetchClusterDetails() error {
+	if a.clusterDetailsFetched {
+		return nil
+	}
+	a.clusterDetailsLock.Lock()
+	defer a.clusterDetailsLock.Unlock()
+	if a.clusterDetailsFetched {
+		return nil
+	}
+
+	region, err := GetRegionFromArn(a.Arn.Data)
+	if err != nil {
+		return err
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Emr(region)
+	ctx := context.Background()
+
+	id := a.Id.Data
+	resp, err := svc.DescribeCluster(ctx, &emr.DescribeClusterInput{ClusterId: &id})
+	if err != nil {
+		return err
+	}
+
+	if resp.Cluster.SecurityConfiguration != nil {
+		a.cacheSecurityConfig = *resp.Cluster.SecurityConfiguration
+	}
+	if resp.Cluster.LogUri != nil {
+		a.cacheLogUri = *resp.Cluster.LogUri
+	}
+	tags := make(map[string]any)
+	for _, t := range resp.Cluster.Tags {
+		if t.Key != nil && t.Value != nil {
+			tags[*t.Key] = *t.Value
+		}
+	}
+	a.cacheTags = tags
+	a.clusterDetailsFetched = true
+	return nil
+}
+
+func (a *mqlAwsEmrCluster) tags() (map[string]any, error) {
+	if err := a.fetchClusterDetails(); err != nil {
+		return nil, err
+	}
+	return a.cacheTags, nil
+}
+
+func (a *mqlAwsEmrCluster) securityConfiguration() (string, error) {
+	if err := a.fetchClusterDetails(); err != nil {
+		return "", err
+	}
+	return a.cacheSecurityConfig, nil
+}
+
+func (a *mqlAwsEmrCluster) logUri() (string, error) {
+	if err := a.fetchClusterDetails(); err != nil {
+		return "", err
+	}
+	return a.cacheLogUri, nil
+}
+
+func (a *mqlAwsEmrCluster) encryptionConfiguration() (*mqlAwsEmrClusterEncryptionConfiguration, error) {
+	if err := a.fetchClusterDetails(); err != nil {
+		return nil, err
+	}
+	if a.cacheSecurityConfig == "" {
+		a.EncryptionConfiguration.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	region, err := GetRegionFromArn(a.Arn.Data)
+	if err != nil {
+		return nil, err
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Emr(region)
+	ctx := context.Background()
+
+	resp, err := svc.DescribeSecurityConfiguration(ctx, &emr.DescribeSecurityConfigurationInput{
+		Name: &a.cacheSecurityConfig,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if resp.SecurityConfiguration == nil {
+		a.EncryptionConfiguration.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	var configJSON map[string]any
+	if err := json.Unmarshal([]byte(*resp.SecurityConfiguration), &configJSON); err != nil {
+		return nil, err
+	}
+
+	encConfigRaw, ok := configJSON["EncryptionConfiguration"]
+	if !ok {
+		a.EncryptionConfiguration.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	encConfig, ok := encConfigRaw.(map[string]any)
+	if !ok {
+		a.EncryptionConfiguration.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	atRestEnabled, _ := encConfig["EnableAtRestEncryption"].(bool)
+	inTransitEnabled, _ := encConfig["EnableInTransitEncryption"].(bool)
+
+	var atRestConfig any
+	if v, ok := encConfig["AtRestEncryptionConfiguration"]; ok {
+		atRestConfig, _ = convert.JsonToDict(v)
+	}
+	var inTransitConfig any
+	if v, ok := encConfig["InTransitEncryptionConfiguration"]; ok {
+		inTransitConfig, _ = convert.JsonToDict(v)
+	}
+
+	res, err := CreateResource(a.MqlRuntime, "aws.emr.cluster.encryptionConfiguration",
+		map[string]*llx.RawData{
+			"__id":                   llx.StringData(a.Arn.Data + "/encryptionConfiguration"),
+			"atRestEnabled":          llx.BoolData(atRestEnabled),
+			"inTransitEnabled":       llx.BoolData(inTransitEnabled),
+			"atRestConfiguration":    llx.DictData(atRestConfig),
+			"inTransitConfiguration": llx.DictData(inTransitConfig),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEmrClusterEncryptionConfiguration), nil
 }
 
 func (a *mqlAwsEmrCluster) masterInstances() ([]any, error) {

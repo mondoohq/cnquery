@@ -30,6 +30,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.59.2
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.62.0
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.61.9
+	github.com/aws/aws-sdk-go-v2/service/dax v1.29.15
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.38.15
 	github.com/aws/aws-sdk-go-v2/service/docdb v1.48.12
 	github.com/aws/aws-sdk-go-v2/service/drs v1.36.12

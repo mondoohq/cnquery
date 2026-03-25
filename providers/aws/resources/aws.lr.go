@@ -173,6 +173,7 @@ const (
 	ResourceAwsEcsTaskDefinitionEphemeralStorage                                string = "aws.ecs.taskDefinition.ephemeralStorage"
 	ResourceAwsEmr                                                              string = "aws.emr"
 	ResourceAwsEmrCluster                                                       string = "aws.emr.cluster"
+	ResourceAwsEmrClusterEncryptionConfiguration                                string = "aws.emr.cluster.encryptionConfiguration"
 	ResourceAwsEventbridge                                                      string = "aws.eventbridge"
 	ResourceAwsEventbridgeEventBus                                              string = "aws.eventbridge.eventBus"
 	ResourceAwsEventbridgeRule                                                  string = "aws.eventbridge.rule"
@@ -224,6 +225,7 @@ const (
 	ResourceAwsBackupPlanRule                                                   string = "aws.backup.plan.rule"
 	ResourceAwsBackupPlanRuleCopyAction                                         string = "aws.backup.plan.rule.copyAction"
 	ResourceAwsDynamodb                                                         string = "aws.dynamodb"
+	ResourceAwsDynamodbDaxCluster                                               string = "aws.dynamodb.dax.cluster"
 	ResourceAwsDynamodbExport                                                   string = "aws.dynamodb.export"
 	ResourceAwsDynamodbLimit                                                    string = "aws.dynamodb.limit"
 	ResourceAwsDynamodbGlobaltable                                              string = "aws.dynamodb.globaltable"
@@ -1041,6 +1043,10 @@ func init() {
 			// to override args, implement: initAwsEmrCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEmrCluster,
 		},
+		"aws.emr.cluster.encryptionConfiguration": {
+			// to override args, implement: initAwsEmrClusterEncryptionConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEmrClusterEncryptionConfiguration,
+		},
 		"aws.eventbridge": {
 			// to override args, implement: initAwsEventbridge(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEventbridge,
@@ -1244,6 +1250,10 @@ func init() {
 		"aws.dynamodb": {
 			// to override args, implement: initAwsDynamodb(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsDynamodb,
+		},
+		"aws.dynamodb.dax.cluster": {
+			// to override args, implement: initAwsDynamodbDaxCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDynamodbDaxCluster,
 		},
 		"aws.dynamodb.export": {
 			// to override args, implement: initAwsDynamodbExport(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4266,6 +4276,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.es.domain.domainName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEsDomain).GetDomainName()).ToDataRes(types.String)
 	},
+	"aws.es.domain.enforceHTTPS": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetEnforceHTTPS()).ToDataRes(types.Bool)
+	},
+	"aws.es.domain.tlsSecurityPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetTlsSecurityPolicy()).ToDataRes(types.String)
+	},
+	"aws.es.domain.auditLogEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetAuditLogEnabled()).ToDataRes(types.Bool)
+	},
 	"aws.opensearch.domains": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOpensearch).GetDomains()).ToDataRes(types.Array(types.Resource("aws.opensearch.domain")))
 	},
@@ -5754,6 +5773,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.emr.cluster.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEmrCluster).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"aws.emr.cluster.securityConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrCluster).GetSecurityConfiguration()).ToDataRes(types.String)
+	},
+	"aws.emr.cluster.encryptionConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrCluster).GetEncryptionConfiguration()).ToDataRes(types.Resource("aws.emr.cluster.encryptionConfiguration"))
+	},
+	"aws.emr.cluster.logUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrCluster).GetLogUri()).ToDataRes(types.String)
+	},
+	"aws.emr.cluster.encryptionConfiguration.atRestEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrClusterEncryptionConfiguration).GetAtRestEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.emr.cluster.encryptionConfiguration.inTransitEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrClusterEncryptionConfiguration).GetInTransitEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.emr.cluster.encryptionConfiguration.atRestConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrClusterEncryptionConfiguration).GetAtRestConfiguration()).ToDataRes(types.Dict)
+	},
+	"aws.emr.cluster.encryptionConfiguration.inTransitConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrClusterEncryptionConfiguration).GetInTransitConfiguration()).ToDataRes(types.Dict)
+	},
 	"aws.eventbridge.eventBuses": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEventbridge).GetEventBuses()).ToDataRes(types.Array(types.Resource("aws.eventbridge.eventBus")))
 	},
@@ -6816,6 +6856,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.dynamodb.exports": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDynamodb).GetExports()).ToDataRes(types.Array(types.Resource("aws.dynamodb.export")))
 	},
+	"aws.dynamodb.daxClusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodb).GetDaxClusters()).ToDataRes(types.Array(types.Resource("aws.dynamodb.dax.cluster")))
+	},
+	"aws.dynamodb.dax.cluster.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbDaxCluster).GetArn()).ToDataRes(types.String)
+	},
+	"aws.dynamodb.dax.cluster.clusterName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbDaxCluster).GetClusterName()).ToDataRes(types.String)
+	},
+	"aws.dynamodb.dax.cluster.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbDaxCluster).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.dynamodb.dax.cluster.nodeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbDaxCluster).GetNodeType()).ToDataRes(types.String)
+	},
+	"aws.dynamodb.dax.cluster.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbDaxCluster).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.dynamodb.dax.cluster.totalNodes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbDaxCluster).GetTotalNodes()).ToDataRes(types.Int)
+	},
+	"aws.dynamodb.dax.cluster.activeNodes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbDaxCluster).GetActiveNodes()).ToDataRes(types.Int)
+	},
+	"aws.dynamodb.dax.cluster.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbDaxCluster).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.dynamodb.dax.cluster.sseStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbDaxCluster).GetSseStatus()).ToDataRes(types.String)
+	},
+	"aws.dynamodb.dax.cluster.clusterEndpointEncryptionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbDaxCluster).GetClusterEndpointEncryptionType()).ToDataRes(types.String)
+	},
+	"aws.dynamodb.dax.cluster.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbDaxCluster).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"aws.dynamodb.export.table": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDynamodbExport).GetTable()).ToDataRes(types.Resource("aws.dynamodb.table"))
 	},
@@ -6998,6 +7074,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.sqs.queue.fifoThroughputLimit": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSqsQueue).GetFifoThroughputLimit()).ToDataRes(types.String)
+	},
+	"aws.sqs.queue.policy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetPolicy()).ToDataRes(types.Dict)
 	},
 	"aws.rds.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRds).GetInstances()).ToDataRes(types.Array(types.Resource("aws.rds.dbinstance")))
@@ -16426,6 +16505,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEsDomain).DomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.es.domain.enforceHTTPS": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).EnforceHTTPS, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.tlsSecurityPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).TlsSecurityPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.auditLogEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).AuditLogEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.opensearch.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsOpensearch).__id, ok = v.Value.(string)
 		return
@@ -18654,6 +18745,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEmrCluster).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"aws.emr.cluster.securityConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrCluster).SecurityConfiguration, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.emr.cluster.encryptionConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrCluster).EncryptionConfiguration, ok = plugin.RawToTValue[*mqlAwsEmrClusterEncryptionConfiguration](v.Value, v.Error)
+		return
+	},
+	"aws.emr.cluster.logUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrCluster).LogUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.emr.cluster.encryptionConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrClusterEncryptionConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.emr.cluster.encryptionConfiguration.atRestEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrClusterEncryptionConfiguration).AtRestEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.emr.cluster.encryptionConfiguration.inTransitEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrClusterEncryptionConfiguration).InTransitEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.emr.cluster.encryptionConfiguration.atRestConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrClusterEncryptionConfiguration).AtRestConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.emr.cluster.encryptionConfiguration.inTransitConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrClusterEncryptionConfiguration).InTransitConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"aws.eventbridge.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEventbridge).__id, ok = v.Value.(string)
 		return
@@ -20274,6 +20397,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsDynamodb).Exports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.dynamodb.daxClusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodb).DaxClusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.dax.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbDaxCluster).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.dynamodb.dax.cluster.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbDaxCluster).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.dax.cluster.clusterName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbDaxCluster).ClusterName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.dax.cluster.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbDaxCluster).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.dax.cluster.nodeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbDaxCluster).NodeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.dax.cluster.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbDaxCluster).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.dax.cluster.totalNodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbDaxCluster).TotalNodes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.dax.cluster.activeNodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbDaxCluster).ActiveNodes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.dax.cluster.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbDaxCluster).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.dax.cluster.sseStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbDaxCluster).SseStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.dax.cluster.clusterEndpointEncryptionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbDaxCluster).ClusterEndpointEncryptionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.dax.cluster.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbDaxCluster).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"aws.dynamodb.export.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDynamodbExport).__id, ok = v.Value.(string)
 		return
@@ -20540,6 +20715,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.sqs.queue.fifoThroughputLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSqsQueue).FifoThroughputLimit, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sqs.queue.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).Policy, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.rds.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -38507,6 +38686,9 @@ type mqlAwsEsDomain struct {
 	ElasticsearchVersion        plugin.TValue[string]
 	DomainId                    plugin.TValue[string]
 	DomainName                  plugin.TValue[string]
+	EnforceHTTPS                plugin.TValue[bool]
+	TlsSecurityPolicy           plugin.TValue[string]
+	AuditLogEnabled             plugin.TValue[bool]
 }
 
 // createAwsEsDomain creates a new instance of this resource
@@ -38584,6 +38766,18 @@ func (c *mqlAwsEsDomain) GetDomainId() *plugin.TValue[string] {
 
 func (c *mqlAwsEsDomain) GetDomainName() *plugin.TValue[string] {
 	return &c.DomainName
+}
+
+func (c *mqlAwsEsDomain) GetEnforceHTTPS() *plugin.TValue[bool] {
+	return &c.EnforceHTTPS
+}
+
+func (c *mqlAwsEsDomain) GetTlsSecurityPolicy() *plugin.TValue[string] {
+	return &c.TlsSecurityPolicy
+}
+
+func (c *mqlAwsEsDomain) GetAuditLogEnabled() *plugin.TValue[bool] {
+	return &c.AuditLogEnabled
 }
 
 // mqlAwsOpensearch for the aws.opensearch resource
@@ -44488,7 +44682,7 @@ func (c *mqlAwsEmr) GetClusters() *plugin.TValue[[]any] {
 type mqlAwsEmrCluster struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsEmrClusterInternal it will be used here
+	mqlAwsEmrClusterInternal
 	Arn                     plugin.TValue[string]
 	Name                    plugin.TValue[string]
 	NormalizedInstanceHours plugin.TValue[int64]
@@ -44497,6 +44691,9 @@ type mqlAwsEmrCluster struct {
 	MasterInstances         plugin.TValue[[]any]
 	Id                      plugin.TValue[string]
 	Tags                    plugin.TValue[map[string]any]
+	SecurityConfiguration   plugin.TValue[string]
+	EncryptionConfiguration plugin.TValue[*mqlAwsEmrClusterEncryptionConfiguration]
+	LogUri                  plugin.TValue[string]
 }
 
 // createAwsEmrCluster creates a new instance of this resource
@@ -44567,7 +44764,96 @@ func (c *mqlAwsEmrCluster) GetId() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsEmrCluster) GetTags() *plugin.TValue[map[string]any] {
-	return &c.Tags
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsEmrCluster) GetSecurityConfiguration() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SecurityConfiguration, func() (string, error) {
+		return c.securityConfiguration()
+	})
+}
+
+func (c *mqlAwsEmrCluster) GetEncryptionConfiguration() *plugin.TValue[*mqlAwsEmrClusterEncryptionConfiguration] {
+	return plugin.GetOrCompute[*mqlAwsEmrClusterEncryptionConfiguration](&c.EncryptionConfiguration, func() (*mqlAwsEmrClusterEncryptionConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.emr.cluster", c.__id, "encryptionConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEmrClusterEncryptionConfiguration), nil
+			}
+		}
+
+		return c.encryptionConfiguration()
+	})
+}
+
+func (c *mqlAwsEmrCluster) GetLogUri() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LogUri, func() (string, error) {
+		return c.logUri()
+	})
+}
+
+// mqlAwsEmrClusterEncryptionConfiguration for the aws.emr.cluster.encryptionConfiguration resource
+type mqlAwsEmrClusterEncryptionConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEmrClusterEncryptionConfigurationInternal it will be used here
+	AtRestEnabled          plugin.TValue[bool]
+	InTransitEnabled       plugin.TValue[bool]
+	AtRestConfiguration    plugin.TValue[any]
+	InTransitConfiguration plugin.TValue[any]
+}
+
+// createAwsEmrClusterEncryptionConfiguration creates a new instance of this resource
+func createAwsEmrClusterEncryptionConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEmrClusterEncryptionConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.emr.cluster.encryptionConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEmrClusterEncryptionConfiguration) MqlName() string {
+	return "aws.emr.cluster.encryptionConfiguration"
+}
+
+func (c *mqlAwsEmrClusterEncryptionConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEmrClusterEncryptionConfiguration) GetAtRestEnabled() *plugin.TValue[bool] {
+	return &c.AtRestEnabled
+}
+
+func (c *mqlAwsEmrClusterEncryptionConfiguration) GetInTransitEnabled() *plugin.TValue[bool] {
+	return &c.InTransitEnabled
+}
+
+func (c *mqlAwsEmrClusterEncryptionConfiguration) GetAtRestConfiguration() *plugin.TValue[any] {
+	return &c.AtRestConfiguration
+}
+
+func (c *mqlAwsEmrClusterEncryptionConfiguration) GetInTransitConfiguration() *plugin.TValue[any] {
+	return &c.InTransitConfiguration
 }
 
 // mqlAwsEventbridge for the aws.eventbridge resource
@@ -49033,6 +49319,7 @@ type mqlAwsDynamodb struct {
 	Tables       plugin.TValue[[]any]
 	Limits       plugin.TValue[[]any]
 	Exports      plugin.TValue[[]any]
+	DaxClusters  plugin.TValue[[]any]
 }
 
 // createAwsDynamodb creates a new instance of this resource
@@ -49139,6 +49426,123 @@ func (c *mqlAwsDynamodb) GetExports() *plugin.TValue[[]any] {
 		}
 
 		return c.exports()
+	})
+}
+
+func (c *mqlAwsDynamodb) GetDaxClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DaxClusters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.dynamodb", c.__id, "daxClusters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.daxClusters()
+	})
+}
+
+// mqlAwsDynamodbDaxCluster for the aws.dynamodb.dax.cluster resource
+type mqlAwsDynamodbDaxCluster struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsDynamodbDaxClusterInternal
+	Arn                           plugin.TValue[string]
+	ClusterName                   plugin.TValue[string]
+	Description                   plugin.TValue[string]
+	NodeType                      plugin.TValue[string]
+	Status                        plugin.TValue[string]
+	TotalNodes                    plugin.TValue[int64]
+	ActiveNodes                   plugin.TValue[int64]
+	Region                        plugin.TValue[string]
+	SseStatus                     plugin.TValue[string]
+	ClusterEndpointEncryptionType plugin.TValue[string]
+	Tags                          plugin.TValue[map[string]any]
+}
+
+// createAwsDynamodbDaxCluster creates a new instance of this resource
+func createAwsDynamodbDaxCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDynamodbDaxCluster{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.dynamodb.dax.cluster", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDynamodbDaxCluster) MqlName() string {
+	return "aws.dynamodb.dax.cluster"
+}
+
+func (c *mqlAwsDynamodbDaxCluster) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDynamodbDaxCluster) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsDynamodbDaxCluster) GetClusterName() *plugin.TValue[string] {
+	return &c.ClusterName
+}
+
+func (c *mqlAwsDynamodbDaxCluster) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsDynamodbDaxCluster) GetNodeType() *plugin.TValue[string] {
+	return &c.NodeType
+}
+
+func (c *mqlAwsDynamodbDaxCluster) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsDynamodbDaxCluster) GetTotalNodes() *plugin.TValue[int64] {
+	return &c.TotalNodes
+}
+
+func (c *mqlAwsDynamodbDaxCluster) GetActiveNodes() *plugin.TValue[int64] {
+	return &c.ActiveNodes
+}
+
+func (c *mqlAwsDynamodbDaxCluster) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsDynamodbDaxCluster) GetSseStatus() *plugin.TValue[string] {
+	return &c.SseStatus
+}
+
+func (c *mqlAwsDynamodbDaxCluster) GetClusterEndpointEncryptionType() *plugin.TValue[string] {
+	return &c.ClusterEndpointEncryptionType
+}
+
+func (c *mqlAwsDynamodbDaxCluster) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
 	})
 }
 
@@ -49672,6 +50076,7 @@ type mqlAwsSqsQueue struct {
 	VisibilityTimeoutSeconds      plugin.TValue[int64]
 	DeduplicationScope            plugin.TValue[string]
 	FifoThroughputLimit           plugin.TValue[string]
+	Policy                        plugin.TValue[any]
 }
 
 // createAwsSqsQueue creates a new instance of this resource
@@ -49826,6 +50231,12 @@ func (c *mqlAwsSqsQueue) GetDeduplicationScope() *plugin.TValue[string] {
 func (c *mqlAwsSqsQueue) GetFifoThroughputLimit() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.FifoThroughputLimit, func() (string, error) {
 		return c.fifoThroughputLimit()
+	})
+}
+
+func (c *mqlAwsSqsQueue) GetPolicy() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Policy, func() (any, error) {
+		return c.policy()
 	})
 }
 
