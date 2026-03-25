@@ -4,6 +4,7 @@
 package providers
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -395,29 +396,57 @@ func TestRuntime_HandlePluginError_PanicRecordsCriticalError(t *testing.T) {
 	}
 
 	panicErr := status.Error(codes.Internal, "panic in provider aws: runtime error: nil pointer")
-	handled, err := r.handlePluginError(panicErr, provider)
+	handled, err := r.handlePluginError(panicErr, provider, "aws.ec2.instance", "tags")
 
 	assert.True(t, handled)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "provider panicked")
+	assert.Contains(t, err.Error(), "resource=aws.ec2.instance")
+	assert.Contains(t, err.Error(), "field=tags")
 
 	critErrs := r.CriticalErrors()
 	require.Len(t, critErrs, 1)
 	assert.Contains(t, critErrs[0].Error(), "provider panicked")
+	assert.Contains(t, critErrs[0].Error(), "resource=aws.ec2.instance")
 }
 
-func TestRuntime_HandlePluginError_CrashDoesNotRecordCriticalError(t *testing.T) {
+func TestRuntime_HandlePluginError_CrashRecordsCriticalError(t *testing.T) {
 	r := &Runtime{}
 	provider := &ConnectedProvider{
 		Instance: &RunningProvider{Name: "aws"},
 	}
 
 	crashErr := status.Error(codes.Unavailable, "connection lost")
-	handled, err := r.handlePluginError(crashErr, provider)
+	handled, err := r.handlePluginError(crashErr, provider, "aws.ec2.instance", "")
 
 	assert.False(t, handled)
 	require.Error(t, err)
-	assert.Empty(t, r.CriticalErrors())
+	assert.Contains(t, err.Error(), "provider crashed")
+	assert.Contains(t, err.Error(), "resource=aws.ec2.instance")
+
+	critErrs := r.CriticalErrors()
+	require.Len(t, critErrs, 1)
+	assert.Contains(t, critErrs[0].Error(), "provider crashed")
+}
+
+func TestRuntime_HandlePluginError_TransportErrorRecordsCriticalError(t *testing.T) {
+	r := &Runtime{}
+	provider := &ConnectedProvider{
+		Instance: &RunningProvider{Name: "aws"},
+	}
+
+	// Raw transport errors (e.g. "dial tcp") don't carry a gRPC status.
+	transportErr := errors.New("connection error: desc = transport: error while dialing: dial tcp 127.0.0.1:1234: connect: connection refused")
+	handled, err := r.handlePluginError(transportErr, provider, "aws.ec2.instance", "securityGroups")
+
+	assert.False(t, handled)
+	require.Error(t, err)
+
+	critErrs := r.CriticalErrors()
+	require.Len(t, critErrs, 1)
+	assert.Contains(t, critErrs[0].Error(), "provider connection failed")
+	assert.Contains(t, critErrs[0].Error(), "resource=aws.ec2.instance")
+	assert.Contains(t, critErrs[0].Error(), "field=securityGroups")
 }
 
 func TestRuntime_HandlePluginError_NonPanicInternalDoesNotRecordCriticalError(t *testing.T) {
@@ -427,7 +456,7 @@ func TestRuntime_HandlePluginError_NonPanicInternalDoesNotRecordCriticalError(t 
 	}
 
 	internalErr := status.Error(codes.Internal, "some other internal error")
-	handled, err := r.handlePluginError(internalErr, provider)
+	handled, err := r.handlePluginError(internalErr, provider, "", "")
 
 	assert.False(t, handled)
 	require.Error(t, err)
@@ -442,7 +471,7 @@ func TestRuntime_CriticalErrors_MultiplePanics(t *testing.T) {
 
 	for i := 0; i < 3; i++ {
 		panicErr := status.Error(codes.Internal, "panic in provider aws: error")
-		r.handlePluginError(panicErr, provider) // nolint:errcheck
+		r.handlePluginError(panicErr, provider, "", "") // nolint:errcheck
 	}
 
 	assert.Len(t, r.CriticalErrors(), 3)

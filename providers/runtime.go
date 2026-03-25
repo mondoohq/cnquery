@@ -485,7 +485,7 @@ func (r *Runtime) watchAndUpdate(resource string, resourceID string, field strin
 		// Recoverable errors can continue with the execution,
 		// they only store errors in the place of actual data.
 		// Every other error is thrown up the chain.
-		handled, err := r.handlePluginError(err, provider)
+		handled, err := r.handlePluginError(err, provider, resource, field)
 		if !handled {
 			return nil, err
 		}
@@ -511,9 +511,25 @@ func (r *Runtime) watchAndUpdate(resource string, resourceID string, field strin
 	return raw, nil
 }
 
-func (r *Runtime) handlePluginError(err error, provider *ConnectedProvider) (bool, error) {
+func (r *Runtime) handlePluginError(err error, provider *ConnectedProvider, resource string, field string) (bool, error) {
+	// Build a context suffix so reported errors include which resource/field
+	// was being accessed when the failure occurred.
+	var ctx string
+	if resource != "" {
+		ctx = " (resource=" + resource
+		if field != "" {
+			ctx += ", field=" + field
+		}
+		ctx += ")"
+	}
+
 	st, ok := status.FromError(err)
 	if !ok {
+		// Transport-level errors (e.g. "dial tcp" connection failures) don't
+		// carry a gRPC status code. Record them as critical so they reach
+		// error reporting (Sentry) via runtime.CriticalErrors().
+		transportErr := errors.New("the '" + provider.Instance.Name + "' provider connection failed" + ctx + ": " + err.Error())
+		r.addCriticalError(transportErr)
 		return false, err
 	}
 
@@ -524,16 +540,17 @@ func (r *Runtime) handlePluginError(err error, provider *ConnectedProvider) (boo
 		// this prefix is present; other Internal errors fall through.
 		if strings.HasPrefix(st.Message(), "panic in provider ") {
 			log.Error().Str("provider", provider.Instance.Name).Msg(st.Message())
-			panicErr := errors.New("the '" + provider.Instance.Name + "' provider panicked: " + st.Message())
+			panicErr := errors.New("the '" + provider.Instance.Name + "' provider panicked" + ctx + ": " + st.Message())
 			r.addCriticalError(panicErr)
 			return true, panicErr
 		}
 
 	case codes.Unavailable:
-		// Happens when the plugin crashes.
+		// Happens when the plugin crashes or the gRPC connection drops.
 		// TODO: try to restart the plugin and reset its connections
 		provider.Instance.isClosed = true
-		provider.Instance.err = errors.New("the '" + provider.Instance.Name + "' provider crashed: " + err.Error())
+		provider.Instance.err = errors.New("the '" + provider.Instance.Name + "' provider crashed" + ctx + ": " + err.Error())
+		r.addCriticalError(provider.Instance.err)
 		return false, provider.Instance.err
 	}
 	return false, err
