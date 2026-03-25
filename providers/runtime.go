@@ -530,7 +530,7 @@ func (r *Runtime) handlePluginError(err error, provider *ConnectedProvider, reso
 		// error reporting (Sentry) via runtime.CriticalErrors().
 		transportErr := errors.New("the '" + provider.Instance.Name + "' provider connection failed" + ctx + ": " + err.Error())
 		r.addCriticalError(transportErr)
-		return false, err
+		return false, transportErr
 	}
 
 	switch st.Code() {
