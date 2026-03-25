@@ -118,15 +118,22 @@ func (a *mqlAwsDynamodbDaxCluster) tags() (map[string]any, error) {
 	ctx := context.Background()
 
 	arnVal := a.Arn.Data
-	resp, err := svc.ListTags(ctx, &dax.ListTagsInput{ResourceName: &arnVal})
-	if err != nil {
-		return nil, err
-	}
 	tags := make(map[string]any)
-	for _, t := range resp.Tags {
-		if t.Key != nil && t.Value != nil {
-			tags[*t.Key] = *t.Value
+	var nextToken *string
+	for {
+		resp, err := svc.ListTags(ctx, &dax.ListTagsInput{ResourceName: &arnVal, NextToken: nextToken})
+		if err != nil {
+			return nil, err
 		}
+		for _, t := range resp.Tags {
+			if t.Key != nil && t.Value != nil {
+				tags[*t.Key] = *t.Value
+			}
+		}
+		if resp.NextToken == nil {
+			break
+		}
+		nextToken = resp.NextToken
 	}
 	a.tagsFetched = true
 	a.cacheTags = tags
