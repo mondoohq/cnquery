@@ -251,6 +251,7 @@ func (a *mqlAwsKmsKey) policy() (string, error) {
 	resp, err := svc.GetKeyPolicy(ctx, &kms.GetKeyPolicyInput{KeyId: &keyArn})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
+			log.Warn().Str("key", keyArn).Msg("access denied when retrieving KMS key policy")
 			return "", nil
 		}
 		return "", err
