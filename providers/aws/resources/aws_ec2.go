@@ -2246,7 +2246,7 @@ func (a *mqlAwsEc2Snapshot) createVolumePermission() ([]any, error) {
 	attribute, err := svc.DescribeSnapshotAttribute(ctx, &ec2.DescribeSnapshotAttributeInput{SnapshotId: &id, Attribute: ec2types.SnapshotAttributeNameCreateVolumePermission})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
-			log.Warn().Str("snapshot", id).Msg("access denied when retrieving snapshot volume permissions")
+			log.Debug().Str("snapshot", id).Msg("access denied when retrieving snapshot volume permissions")
 			return nil, nil
 		}
 		return nil, err
