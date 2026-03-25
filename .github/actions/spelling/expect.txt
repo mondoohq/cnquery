@@ -157,6 +157,7 @@ naflags
 natgateway
 networkfirewall
 networkinterface
+nft
 nexthop
 nmap
 nocerts

@@ -1230,8 +1230,16 @@ iptables.entry {
 
 // nftables firewall
 nftables @defaults("tables") {
+  // nft version string (e.g., "1.0.2")
+  version() string
   // All nftables tables
   tables() []nftables.table
+  // All chains across all tables
+  chains() []nftables.chain
+  // All rules across all tables and chains
+  rules() []nftables.rule
+  // All named sets across all tables
+  sets() []nftables.set
 }
 
 // nftables table
@@ -1248,6 +1256,8 @@ private nftables.table @defaults("family name") {
   chains []nftables.chain
   // Rules in this table across all chains
   rules []nftables.rule
+  // Named sets in this table
+  sets []nftables.set
 }
 
 // nftables chain
@@ -1288,6 +1298,30 @@ private nftables.rule @defaults("family table chain handle") {
   expr []dict
   // Rule comment
   comment string
+}
+
+// nftables named set (or map)
+private nftables.set @defaults("family table name") {
+  // Address family
+  family string
+  // Table this set belongs to
+  table string
+  // Set name
+  name string
+  // Set handle number
+  handle int
+  // Element data type (e.g., "ipv4_addr", "inet_service", "ether_addr")
+  keyType string
+  // Value data type for maps (empty for plain sets)
+  valueType string
+  // Set flags (e.g., "constant", "interval", "timeout", "dynamic")
+  flags []string
+  // Set elements (values as strings)
+  elements []string
+  // Whether this is a map (has both key and value types)
+  isMap bool
+  // Set timeout in seconds (0 if not set)
+  timeout int
 }
 
 // UFW (Uncomplicated Firewall) status and rules

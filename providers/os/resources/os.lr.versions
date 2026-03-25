@@ -647,6 +647,7 @@ nftables.chain.prio 11.8.14
 nftables.chain.rules 11.8.14
 nftables.chain.table 11.8.14
 nftables.chain.type 11.8.14
+nftables.chains 13.2.9
 nftables.rule 11.8.14
 nftables.rule.chain 11.8.14
 nftables.rule.comment 11.8.14
@@ -654,6 +655,19 @@ nftables.rule.expr 11.8.14
 nftables.rule.family 11.8.14
 nftables.rule.handle 11.8.14
 nftables.rule.table 11.8.14
+nftables.rules 13.2.9
+nftables.set 13.2.9
+nftables.set.elements 13.2.9
+nftables.set.family 13.2.9
+nftables.set.flags 13.2.9
+nftables.set.handle 13.2.9
+nftables.set.isMap 13.2.9
+nftables.set.keyType 13.2.9
+nftables.set.name 13.2.9
+nftables.set.table 13.2.9
+nftables.set.timeout 13.2.9
+nftables.set.valueType 13.2.9
+nftables.sets 13.2.9
 nftables.table 11.8.14
 nftables.table.chains 11.8.14
 nftables.table.family 11.8.14
@@ -661,7 +675,9 @@ nftables.table.flags 11.8.14
 nftables.table.handle 11.8.14
 nftables.table.name 11.8.14
 nftables.table.rules 11.8.14
+nftables.table.sets 13.2.9
 nftables.tables 11.8.14
+nftables.version 13.2.9
 npm.package 10.2.1
 npm.package.cpes 10.2.1
 npm.package.files 10.2.1

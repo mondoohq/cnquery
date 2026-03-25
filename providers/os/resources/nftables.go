@@ -8,6 +8,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
+	"sync"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -27,6 +29,7 @@ type nftObject struct {
 	Table    *nftTable    `json:"table,omitempty"`
 	Chain    *nftChain    `json:"chain,omitempty"`
 	Rule     *nftRule     `json:"rule,omitempty"`
+	Set      *nftSet      `json:"set,omitempty"`
 }
 
 type nftMetainfo struct {
@@ -79,6 +82,111 @@ type nftRule struct {
 	Comment string `json:"comment,omitempty"`
 }
 
+type nftSet struct {
+	Family  string          `json:"family"`
+	Table   string          `json:"table"`
+	Name    string          `json:"name"`
+	Handle  int64           `json:"handle"`
+	Type    json.RawMessage `json:"type"`
+	Map     string          `json:"map,omitempty"`
+	Flags   json.RawMessage `json:"flags,omitempty"`
+	Elem    json.RawMessage `json:"elem,omitempty"`
+	Timeout int64           `json:"timeout,omitempty"`
+}
+
+// parseKeyType extracts the key type from the "type" field.
+// Type can be a string ("ipv4_addr") or an array for concatenated types (["ipv4_addr", "inet_service"]).
+func (s *nftSet) parseKeyType() string {
+	if s.Type == nil {
+		return ""
+	}
+	var str string
+	if err := json.Unmarshal(s.Type, &str); err == nil {
+		return str
+	}
+	var arr []string
+	if err := json.Unmarshal(s.Type, &arr); err == nil {
+		return strings.Join(arr, " . ")
+	}
+	return ""
+}
+
+// parseSetFlags parses the flags field (same format as table flags).
+func (s *nftSet) parseSetFlags() []string {
+	if s.Flags == nil || string(s.Flags) == "null" {
+		return nil
+	}
+	var arr []string
+	if err := json.Unmarshal(s.Flags, &arr); err == nil {
+		return arr
+	}
+	var str string
+	if err := json.Unmarshal(s.Flags, &str); err == nil {
+		return []string{str}
+	}
+	return nil
+}
+
+// parseSetElements extracts set elements as string representations.
+// Elements can be simple values or complex structures (ranges, prefixes, etc.).
+func (s *nftSet) parseSetElements() []string {
+	if s.Elem == nil || string(s.Elem) == "null" {
+		return nil
+	}
+	var elems []any
+	if err := json.Unmarshal(s.Elem, &elems); err != nil {
+		return nil
+	}
+	var result []string
+	for _, elem := range elems {
+		result = append(result, nftElemToString(elem))
+	}
+	return result
+}
+
+// nftElemToString converts a single set element to its string representation.
+func nftElemToString(v any) string {
+	switch x := v.(type) {
+	case string:
+		return x
+	case float64:
+		if x == float64(int64(x)) {
+			return strconv.FormatInt(int64(x), 10)
+		}
+		return strconv.FormatFloat(x, 'f', -1, 64)
+	case bool:
+		return strconv.FormatBool(x)
+	case map[string]any:
+		// Handle prefix: {"prefix": {"addr": "10.0.0.0", "len": 8}}
+		if prefix, ok := x["prefix"].(map[string]any); ok {
+			addr, _ := prefix["addr"].(string)
+			length, _ := prefix["len"].(float64)
+			return addr + "/" + strconv.FormatInt(int64(length), 10)
+		}
+		// Handle range: {"range": ["start", "end"]}
+		if rng, ok := x["range"].([]any); ok && len(rng) == 2 {
+			return nftElemToString(rng[0]) + "-" + nftElemToString(rng[1])
+		}
+		// Handle concat: {"concat": ["val1", "val2"]}
+		if concat, ok := x["concat"].([]any); ok {
+			parts := make([]string, len(concat))
+			for i, c := range concat {
+				parts[i] = nftElemToString(c)
+			}
+			return strings.Join(parts, " . ")
+		}
+		// Handle elem with map value: {"elem": {"val": x, "timeout": n, ...}}
+		if val, ok := x["val"]; ok {
+			return nftElemToString(val)
+		}
+		// Fallback: JSON encode
+		b, _ := json.Marshal(x)
+		return string(b)
+	default:
+		return fmt.Sprintf("%v", v)
+	}
+}
+
 func parseNftRuleset(data []byte) (*nftRuleset, error) {
 	var ruleset nftRuleset
 	dec := json.NewDecoder(bytes.NewReader(data))
@@ -125,6 +233,12 @@ func convertJSONNumbers(v any) any {
 	}
 }
 
+type mqlNftablesInternal struct {
+	fetched      bool
+	cacheRuleset *nftRuleset
+	lock         sync.Mutex
+}
+
 func (n *mqlNftables) id() (string, error) {
 	return "nftables", nil
 }
@@ -141,9 +255,24 @@ func (r *mqlNftablesRule) id() (string, error) {
 	return r.Family.Data + "/" + r.Table.Data + "/" + r.Chain.Data + "/" + strconv.FormatInt(r.Handle.Data, 10), nil
 }
 
-func (n *mqlNftables) tables() ([]any, error) {
+func (s *mqlNftablesSet) id() (string, error) {
+	return s.Family.Data + "/" + s.Table.Data + "/" + s.Name.Data, nil
+}
+
+// fetchRuleset lazily fetches and caches the nft JSON ruleset.
+func (n *mqlNftables) fetchRuleset() (*nftRuleset, error) {
+	if n.fetched {
+		return n.cacheRuleset, nil
+	}
+	n.lock.Lock()
+	defer n.lock.Unlock()
+	if n.fetched {
+		return n.cacheRuleset, nil
+	}
+
 	conn, ok := n.MqlRuntime.Connection.(shared.Connection)
 	if !ok || !conn.Capabilities().Has(shared.Capability_RunCommand) {
+		n.fetched = true
 		return nil, nil
 	}
 
@@ -161,6 +290,35 @@ func (n *mqlNftables) tables() ([]any, error) {
 	ruleset, err := parseNftRuleset([]byte(cmd.Stdout.Data))
 	if err != nil {
 		return nil, err
+	}
+	n.cacheRuleset = ruleset
+	n.fetched = true
+	return ruleset, nil
+}
+
+func (n *mqlNftables) version() (string, error) {
+	ruleset, err := n.fetchRuleset()
+	if err != nil {
+		return "", err
+	}
+	if ruleset == nil {
+		return "", nil
+	}
+	for _, obj := range ruleset.Nftables {
+		if obj.Metainfo != nil {
+			return obj.Metainfo.Version, nil
+		}
+	}
+	return "", nil
+}
+
+func (n *mqlNftables) tables() ([]any, error) {
+	ruleset, err := n.fetchRuleset()
+	if err != nil {
+		return nil, err
+	}
+	if ruleset == nil {
+		return nil, nil
 	}
 
 	tables := []any{}
@@ -214,6 +372,12 @@ func (n *mqlNftables) tables() ([]any, error) {
 			return nil, err
 		}
 
+		// Collect sets for this table
+		tableSets, err := nftCollectSets(n.MqlRuntime, ruleset, t.Family, t.Name)
+		if err != nil {
+			return nil, err
+		}
+
 		tableRes, err := CreateResource(n.MqlRuntime, "nftables.table", map[string]*llx.RawData{
 			"family": llx.StringData(t.Family),
 			"name":   llx.StringData(t.Name),
@@ -221,6 +385,7 @@ func (n *mqlNftables) tables() ([]any, error) {
 			"flags":  llx.ArrayData(flags, types.String),
 			"chains": llx.ArrayData(chains, types.Resource("nftables.chain")),
 			"rules":  llx.ArrayData(tableRules, types.Resource("nftables.rule")),
+			"sets":   llx.ArrayData(tableSets, types.Resource("nftables.set")),
 		})
 		if err != nil {
 			return nil, err
@@ -229,6 +394,57 @@ func (n *mqlNftables) tables() ([]any, error) {
 	}
 
 	return tables, nil
+}
+
+func (n *mqlNftables) chains() ([]any, error) {
+	tablesRaw := n.GetTables()
+	if tablesRaw.Error != nil {
+		return nil, tablesRaw.Error
+	}
+	var allChains []any
+	for _, tRaw := range tablesRaw.Data {
+		t := tRaw.(*mqlNftablesTable)
+		chainsVal := t.GetChains()
+		if chainsVal.Error != nil {
+			return nil, chainsVal.Error
+		}
+		allChains = append(allChains, chainsVal.Data...)
+	}
+	return allChains, nil
+}
+
+func (n *mqlNftables) rules() ([]any, error) {
+	tablesRaw := n.GetTables()
+	if tablesRaw.Error != nil {
+		return nil, tablesRaw.Error
+	}
+	var allRules []any
+	for _, tRaw := range tablesRaw.Data {
+		t := tRaw.(*mqlNftablesTable)
+		rulesVal := t.GetRules()
+		if rulesVal.Error != nil {
+			return nil, rulesVal.Error
+		}
+		allRules = append(allRules, rulesVal.Data...)
+	}
+	return allRules, nil
+}
+
+func (n *mqlNftables) sets() ([]any, error) {
+	tablesRaw := n.GetTables()
+	if tablesRaw.Error != nil {
+		return nil, tablesRaw.Error
+	}
+	var allSets []any
+	for _, tRaw := range tablesRaw.Data {
+		t := tRaw.(*mqlNftablesTable)
+		setsVal := t.GetSets()
+		if setsVal.Error != nil {
+			return nil, setsVal.Error
+		}
+		allSets = append(allSets, setsVal.Data...)
+	}
+	return allSets, nil
 }
 
 // nftCollectRules creates rule resources filtered by family/table and optionally chain.
@@ -264,4 +480,58 @@ func nftCollectRules(runtime *plugin.Runtime, ruleset *nftRuleset, family, table
 		rules = append(rules, ruleRes)
 	}
 	return rules, nil
+}
+
+// nftCollectSets creates set resources filtered by family/table.
+func nftCollectSets(runtime *plugin.Runtime, ruleset *nftRuleset, family, table string) ([]any, error) {
+	var sets []any
+	for _, obj := range ruleset.Nftables {
+		if obj.Set == nil {
+			continue
+		}
+		s := obj.Set
+		if s.Family != family || s.Table != table {
+			continue
+		}
+
+		setRes, err := nftCreateSetResource(runtime, s)
+		if err != nil {
+			return nil, err
+		}
+		sets = append(sets, setRes)
+	}
+	return sets, nil
+}
+
+// nftCreateSetResource builds a single nftables.set MQL resource from a parsed nftSet.
+func nftCreateSetResource(runtime *plugin.Runtime, s *nftSet) (any, error) {
+	keyType := s.parseKeyType()
+	valueType := s.Map
+
+	parsedFlags := s.parseSetFlags()
+	flags := make([]any, len(parsedFlags))
+	for i, f := range parsedFlags {
+		flags[i] = f
+	}
+
+	parsedElems := s.parseSetElements()
+	elements := make([]any, len(parsedElems))
+	for i, e := range parsedElems {
+		elements[i] = e
+	}
+
+	isMap := valueType != ""
+
+	return CreateResource(runtime, "nftables.set", map[string]*llx.RawData{
+		"family":    llx.StringData(s.Family),
+		"table":     llx.StringData(s.Table),
+		"name":      llx.StringData(s.Name),
+		"handle":    llx.IntData(s.Handle),
+		"keyType":   llx.StringData(keyType),
+		"valueType": llx.StringData(valueType),
+		"flags":     llx.ArrayData(flags, types.String),
+		"elements":  llx.ArrayData(elements, types.String),
+		"isMap":     llx.BoolData(isMap),
+		"timeout":   llx.IntData(s.Timeout),
+	})
 }
