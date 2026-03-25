@@ -201,13 +201,12 @@ func scanTargetACL(conn *connection.ActiveDirectoryConnection, target criticalTa
 		seen[key] = true
 
 		findings = append(findings, dangerousPermFinding{
-			targetDN:       target.dn,
-			targetName:     target.name,
-			targetType:     target.targetType,
-			principalSID:   ace.sid,
-			rightType:      label,
-			accessMask:     ace.mask,
-			isLowPrivilege: isLowPrivSID(ace.sid),
+			targetDN:     target.dn,
+			targetName:   target.name,
+			targetType:   target.targetType,
+			principalSID: ace.sid,
+			rightType:    label,
+			accessMask:   ace.mask,
 		})
 	}
 
@@ -216,13 +215,12 @@ func scanTargetACL(conn *connection.ActiveDirectoryConnection, target criticalTa
 
 // dangerousPermFinding is the intermediate result before creating MQL resources.
 type dangerousPermFinding struct {
-	targetDN       string
-	targetName     string
-	targetType     string
-	principalSID   string
-	rightType      string
-	accessMask     uint32
-	isLowPrivilege bool
+	targetDN     string
+	targetName   string
+	targetType   string
+	principalSID string
+	rightType    string
+	accessMask   uint32
 }
 
 func (a *mqlActivedirectory) dangerousPermissions() ([]interface{}, error) {
@@ -250,13 +248,12 @@ func (a *mqlActivedirectory) dangerousPermissions() ([]interface{}, error) {
 	for _, f := range allFindings {
 		resource, err := CreateResource(a.MqlRuntime, "activedirectory.dangerousPermission",
 			map[string]*llx.RawData{
-				"targetDN":       llx.StringData(f.targetDN),
-				"targetName":     llx.StringData(f.targetName),
-				"targetType":     llx.StringData(f.targetType),
-				"principalSID":   llx.StringData(f.principalSID),
-				"rightType":      llx.StringData(f.rightType),
-				"accessMask":     llx.IntData(int64(f.accessMask)),
-				"isLowPrivilege": llx.BoolData(f.isLowPrivilege),
+				"targetDN":     llx.StringData(f.targetDN),
+				"targetName":   llx.StringData(f.targetName),
+				"targetType":   llx.StringData(f.targetType),
+				"principalSID": llx.StringData(f.principalSID),
+				"rightType":    llx.StringData(f.rightType),
+				"accessMask":   llx.IntData(int64(f.accessMask)),
 			})
 		if err != nil {
 			return nil, err

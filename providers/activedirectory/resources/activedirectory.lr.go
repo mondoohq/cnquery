@@ -512,9 +512,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"activedirectory.group.isPrivileged": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryGroup).GetIsPrivileged()).ToDataRes(types.Bool)
 	},
-	"activedirectory.group.isEmpty": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlActivedirectoryGroup).GetIsEmpty()).ToDataRes(types.Bool)
-	},
 	"activedirectory.group.whenCreated": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryGroup).GetWhenCreated()).ToDataRes(types.Time)
 	},
@@ -556,9 +553,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"activedirectory.computer.operatingSystemServicePack": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryComputer).GetOperatingSystemServicePack()).ToDataRes(types.String)
-	},
-	"activedirectory.computer.isObsoleteOS": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlActivedirectoryComputer).GetIsObsoleteOS()).ToDataRes(types.Bool)
 	},
 	"activedirectory.computer.pwdLastSet": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryComputer).GetPwdLastSet()).ToDataRes(types.Time)
@@ -889,9 +883,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"activedirectory.dangerousPermission.accessMask": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryDangerousPermission).GetAccessMask()).ToDataRes(types.Int)
-	},
-	"activedirectory.dangerousPermission.isLowPrivilege": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlActivedirectoryDangerousPermission).GetIsLowPrivilege()).ToDataRes(types.Bool)
 	},
 }
 
@@ -1361,10 +1352,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlActivedirectoryGroup).IsPrivileged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"activedirectory.group.isEmpty": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlActivedirectoryGroup).IsEmpty, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
 	"activedirectory.group.whenCreated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlActivedirectoryGroup).WhenCreated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -1427,10 +1414,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"activedirectory.computer.operatingSystemServicePack": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlActivedirectoryComputer).OperatingSystemServicePack, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"activedirectory.computer.isObsoleteOS": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlActivedirectoryComputer).IsObsoleteOS, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"activedirectory.computer.pwdLastSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1907,10 +1890,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"activedirectory.dangerousPermission.accessMask": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlActivedirectoryDangerousPermission).AccessMask, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"activedirectory.dangerousPermission.isLowPrivilege": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlActivedirectoryDangerousPermission).IsLowPrivilege, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 }
@@ -2852,7 +2831,6 @@ type mqlActivedirectoryGroup struct {
 	Members           plugin.TValue[[]any]
 	MemberCount       plugin.TValue[int64]
 	IsPrivileged      plugin.TValue[bool]
-	IsEmpty           plugin.TValue[bool]
 	WhenCreated       plugin.TValue[*time.Time]
 	OuPath            plugin.TValue[string]
 }
@@ -2950,10 +2928,6 @@ func (c *mqlActivedirectoryGroup) GetIsPrivileged() *plugin.TValue[bool] {
 	return &c.IsPrivileged
 }
 
-func (c *mqlActivedirectoryGroup) GetIsEmpty() *plugin.TValue[bool] {
-	return &c.IsEmpty
-}
-
 func (c *mqlActivedirectoryGroup) GetWhenCreated() *plugin.TValue[*time.Time] {
 	return &c.WhenCreated
 }
@@ -3039,7 +3013,6 @@ type mqlActivedirectoryComputer struct {
 	OperatingSystem              plugin.TValue[string]
 	OperatingSystemVersion       plugin.TValue[string]
 	OperatingSystemServicePack   plugin.TValue[string]
-	IsObsoleteOS                 plugin.TValue[bool]
 	PwdLastSet                   plugin.TValue[*time.Time]
 	LastLogonTimestamp           plugin.TValue[*time.Time]
 	WhenCreated                  plugin.TValue[*time.Time]
@@ -3127,10 +3100,6 @@ func (c *mqlActivedirectoryComputer) GetOperatingSystemVersion() *plugin.TValue[
 
 func (c *mqlActivedirectoryComputer) GetOperatingSystemServicePack() *plugin.TValue[string] {
 	return &c.OperatingSystemServicePack
-}
-
-func (c *mqlActivedirectoryComputer) GetIsObsoleteOS() *plugin.TValue[bool] {
-	return &c.IsObsoleteOS
 }
 
 func (c *mqlActivedirectoryComputer) GetPwdLastSet() *plugin.TValue[*time.Time] {
@@ -4016,13 +3985,12 @@ type mqlActivedirectoryDangerousPermission struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlActivedirectoryDangerousPermissionInternal it will be used here
-	TargetDN       plugin.TValue[string]
-	TargetName     plugin.TValue[string]
-	TargetType     plugin.TValue[string]
-	PrincipalSID   plugin.TValue[string]
-	RightType      plugin.TValue[string]
-	AccessMask     plugin.TValue[int64]
-	IsLowPrivilege plugin.TValue[bool]
+	TargetDN     plugin.TValue[string]
+	TargetName   plugin.TValue[string]
+	TargetType   plugin.TValue[string]
+	PrincipalSID plugin.TValue[string]
+	RightType    plugin.TValue[string]
+	AccessMask   plugin.TValue[int64]
 }
 
 // createActivedirectoryDangerousPermission creates a new instance of this resource
@@ -4084,8 +4052,4 @@ func (c *mqlActivedirectoryDangerousPermission) GetRightType() *plugin.TValue[st
 
 func (c *mqlActivedirectoryDangerousPermission) GetAccessMask() *plugin.TValue[int64] {
 	return &c.AccessMask
-}
-
-func (c *mqlActivedirectoryDangerousPermission) GetIsLowPrivilege() *plugin.TValue[bool] {
-	return &c.IsLowPrivilege
 }

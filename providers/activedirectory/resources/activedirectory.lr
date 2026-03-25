@@ -242,8 +242,6 @@ activedirectory.group @defaults("sAMAccountName groupType") {
   memberCount int
   // Whether this is a built-in privileged group
   isPrivileged bool
-  // Whether group is empty (no members)
-  isEmpty bool
   // Creation timestamp
   whenCreated time
   // Organizational Unit path
@@ -280,8 +278,6 @@ activedirectory.computer @defaults("name operatingSystem enabled") {
   operatingSystemVersion string
   // Operating system service pack
   operatingSystemServicePack string
-  // Whether the OS is obsolete (unsupported)
-  isObsoleteOS bool
   // Last password set timestamp
   pwdLastSet time
   // Last logon timestamp (from lastLogonTimestamp)
@@ -542,6 +538,4 @@ activedirectory.dangerousPermission @defaults("targetName rightType principalSID
   rightType string
   // Raw access mask value
   accessMask int
-  // Whether the principal is a well-known low-privilege identity (Everyone, Auth Users, Domain Users, etc.)
-  isLowPrivilege bool
 }

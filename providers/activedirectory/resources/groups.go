@@ -66,7 +66,7 @@ func privilegedGroupSIDs(domainSID, rootDomainSID string) map[string]bool {
 // If the member attribute was returned with range markers (indicating
 // truncation at MaxValRange), it performs full range retrieval to count
 // all members. Otherwise it uses the directly returned member values.
-func computeMemberCount(l *ldap.Conn, entry *ldap.Entry, groupDN string) (int64, bool) {
+func computeMemberCount(l *ldap.Conn, entry *ldap.Entry, groupDN string) int64 {
 	// Check if the server returned a range-limited member attribute.
 	for _, attr := range entry.Attributes {
 		if strings.HasPrefix(strings.ToLower(attr.Name), "member;range=") {
@@ -74,18 +74,15 @@ func computeMemberCount(l *ldap.Conn, entry *ldap.Entry, groupDN string) (int64,
 			allMembers, err := rangeRetrieveMembers(l, groupDN)
 			if err != nil {
 				// Fall back to what we have.
-				count := int64(len(attr.Values))
-				return count, count == 0
+				return int64(len(attr.Values))
 			}
-			count := int64(len(allMembers))
-			return count, count == 0
+			return int64(len(allMembers))
 		}
 	}
 
 	// No range limitation: use the direct member attribute.
 	members := connection.GetStringSliceAttr(entry, "member")
-	count := int64(len(members))
-	return count, count == 0
+	return int64(len(members))
 }
 
 func (a *mqlActivedirectory) groups() ([]interface{}, error) {
@@ -144,7 +141,7 @@ func (a *mqlActivedirectory) groups() ([]interface{}, error) {
 
 		// Get initial member count. AD may truncate at MaxValRange (1500),
 		// so check for range-limited responses and do full retrieval if needed.
-		memberCount, isEmpty := computeMemberCount(conn.LDAPConn(), entry, dn)
+		memberCount := computeMemberCount(conn.LDAPConn(), entry, dn)
 
 		ouPath := extractOU(dn)
 
@@ -162,7 +159,6 @@ func (a *mqlActivedirectory) groups() ([]interface{}, error) {
 				"adminCount":        llx.BoolData(adminCount),
 				"memberCount":       llx.IntData(memberCount),
 				"isPrivileged":      llx.BoolData(isPrivileged),
-				"isEmpty":           llx.BoolData(isEmpty),
 				"whenCreated":       llx.TimeData(whenCreated),
 				"ouPath":            llx.StringData(ouPath),
 			})

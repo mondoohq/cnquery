@@ -54,7 +54,6 @@ activedirectory.computer.description 13.0.1
 activedirectory.computer.distinguishedName 13.0.1
 activedirectory.computer.enabled 13.0.1
 activedirectory.computer.isDomainController 13.0.1
-activedirectory.computer.isObsoleteOS 13.0.1
 activedirectory.computer.isStale 13.0.1
 activedirectory.computer.lapsEnabled 13.0.1
 activedirectory.computer.lapsExpirationTime 13.0.1
@@ -77,7 +76,6 @@ activedirectory.computer.whenCreated 13.0.1
 activedirectory.computers 13.0.1
 activedirectory.dangerousPermission 13.0.1
 activedirectory.dangerousPermission.accessMask 13.0.1
-activedirectory.dangerousPermission.isLowPrivilege 13.0.1
 activedirectory.dangerousPermission.principalSID 13.0.1
 activedirectory.dangerousPermission.rightType 13.0.1
 activedirectory.dangerousPermission.targetDN 13.0.1
@@ -146,7 +144,6 @@ activedirectory.group.displayName 13.0.1
 activedirectory.group.distinguishedName 13.0.1
 activedirectory.group.groupType 13.0.1
 activedirectory.group.groupTypeRaw 13.0.1
-activedirectory.group.isEmpty 13.0.1
 activedirectory.group.isPrivileged 13.0.1
 activedirectory.group.memberCount 13.0.1
 activedirectory.group.members 13.0.1

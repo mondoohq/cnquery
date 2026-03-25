@@ -5,7 +5,6 @@ package resources
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/go-ldap/ldap/v3"
@@ -14,31 +13,6 @@ import (
 	"go.mondoo.com/mql/v13/providers/activedirectory/connection"
 	"go.mondoo.com/mql/v13/types"
 )
-
-// obsoleteOSNames contains end-of-life Windows OS substrings for isObsoleteOS detection.
-var obsoleteOSNames = []string{
-	"windows xp",
-	"windows vista",
-	"windows 7",
-	"windows 8",
-	"windows server 2003",
-	"windows server 2008 r2",
-	"windows server 2008",
-	"windows server 2012 r2",
-	"windows server 2012",
-}
-
-// isObsoleteOS returns true if the operating system string matches a known
-// end-of-life Windows version. Comparison is case-insensitive.
-func isObsoleteOS(os string) bool {
-	lower := strings.ToLower(os)
-	for _, eol := range obsoleteOSNames {
-		if strings.Contains(lower, eol) {
-			return true
-		}
-	}
-	return false
-}
 
 // parseADGeneralizedTime parses an Active Directory generalized time string
 // (format "20060102150405.0Z") into a Go time.Time.
@@ -189,7 +163,6 @@ func (a *mqlActivedirectory) computers() ([]interface{}, error) {
 				"operatingSystem":              llx.StringData(osName),
 				"operatingSystemVersion":       llx.StringData(osVersion),
 				"operatingSystemServicePack":   llx.StringData(osSP),
-				"isObsoleteOS":                 llx.BoolData(isObsoleteOS(osName)),
 				"pwdLastSet":                   llx.TimeData(pwdLastSet),
 				"lastLogonTimestamp":           llx.TimeData(lastLogon),
 				"whenCreated":                  llx.TimeData(whenCreated),
