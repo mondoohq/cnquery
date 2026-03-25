@@ -2297,11 +2297,35 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"iptables.output": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIptables).GetOutput()).ToDataRes(types.Array(types.Resource("iptables.entry")))
 	},
+	"iptables.forward": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptables).GetForward()).ToDataRes(types.Array(types.Resource("iptables.entry")))
+	},
+	"iptables.inputPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptables).GetInputPolicy()).ToDataRes(types.String)
+	},
+	"iptables.forwardPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptables).GetForwardPolicy()).ToDataRes(types.String)
+	},
+	"iptables.outputPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptables).GetOutputPolicy()).ToDataRes(types.String)
+	},
 	"ip6tables.input": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIp6tables).GetInput()).ToDataRes(types.Array(types.Resource("iptables.entry")))
 	},
 	"ip6tables.output": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIp6tables).GetOutput()).ToDataRes(types.Array(types.Resource("iptables.entry")))
+	},
+	"ip6tables.forward": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIp6tables).GetForward()).ToDataRes(types.Array(types.Resource("iptables.entry")))
+	},
+	"ip6tables.inputPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIp6tables).GetInputPolicy()).ToDataRes(types.String)
+	},
+	"ip6tables.forwardPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIp6tables).GetForwardPolicy()).ToDataRes(types.String)
+	},
+	"ip6tables.outputPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIp6tables).GetOutputPolicy()).ToDataRes(types.String)
 	},
 	"iptables.entry.lineNumber": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIptablesEntry).GetLineNumber()).ToDataRes(types.Int)
@@ -6195,6 +6219,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlIptables).Output, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"iptables.forward": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptables).Forward, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"iptables.inputPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptables).InputPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iptables.forwardPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptables).ForwardPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iptables.outputPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptables).OutputPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"ip6tables.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIp6tables).__id, ok = v.Value.(string)
 		return
@@ -6205,6 +6245,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ip6tables.output": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIp6tables).Output, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ip6tables.forward": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIp6tables).Forward, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ip6tables.inputPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIp6tables).InputPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ip6tables.forwardPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIp6tables).ForwardPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ip6tables.outputPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIp6tables).OutputPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"iptables.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16285,9 +16341,13 @@ func (c *mqlContainerdContainer) GetSnapshotter() *plugin.TValue[string] {
 type mqlIptables struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlIptablesInternal it will be used here
-	Input  plugin.TValue[[]any]
-	Output plugin.TValue[[]any]
+	mqlIptablesInternal
+	Input         plugin.TValue[[]any]
+	Output        plugin.TValue[[]any]
+	Forward       plugin.TValue[[]any]
+	InputPolicy   plugin.TValue[string]
+	ForwardPolicy plugin.TValue[string]
+	OutputPolicy  plugin.TValue[string]
 }
 
 // createIptables creates a new instance of this resource
@@ -16354,13 +16414,51 @@ func (c *mqlIptables) GetOutput() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlIptables) GetForward() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Forward, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("iptables", c.__id, "forward")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.forward()
+	})
+}
+
+func (c *mqlIptables) GetInputPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.InputPolicy, func() (string, error) {
+		return c.inputPolicy()
+	})
+}
+
+func (c *mqlIptables) GetForwardPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ForwardPolicy, func() (string, error) {
+		return c.forwardPolicy()
+	})
+}
+
+func (c *mqlIptables) GetOutputPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.OutputPolicy, func() (string, error) {
+		return c.outputPolicy()
+	})
+}
+
 // mqlIp6tables for the ip6tables resource
 type mqlIp6tables struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlIp6tablesInternal it will be used here
-	Input  plugin.TValue[[]any]
-	Output plugin.TValue[[]any]
+	mqlIp6tablesInternal
+	Input         plugin.TValue[[]any]
+	Output        plugin.TValue[[]any]
+	Forward       plugin.TValue[[]any]
+	InputPolicy   plugin.TValue[string]
+	ForwardPolicy plugin.TValue[string]
+	OutputPolicy  plugin.TValue[string]
 }
 
 // createIp6tables creates a new instance of this resource
@@ -16424,6 +16522,40 @@ func (c *mqlIp6tables) GetOutput() *plugin.TValue[[]any] {
 		}
 
 		return c.output()
+	})
+}
+
+func (c *mqlIp6tables) GetForward() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Forward, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ip6tables", c.__id, "forward")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.forward()
+	})
+}
+
+func (c *mqlIp6tables) GetInputPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.InputPolicy, func() (string, error) {
+		return c.inputPolicy()
+	})
+}
+
+func (c *mqlIp6tables) GetForwardPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ForwardPolicy, func() (string, error) {
+		return c.forwardPolicy()
+	})
+}
+
+func (c *mqlIp6tables) GetOutputPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.OutputPolicy, func() (string, error) {
+		return c.outputPolicy()
 	})
 }
 

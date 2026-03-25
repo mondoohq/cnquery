@@ -343,8 +343,12 @@ grub.config.grubPath 13.2.7
 grub.config.params 13.2.7
 grub.config.passwordProtected 13.2.7
 ip6tables 9.0.0
+ip6tables.forward 13.2.9
+ip6tables.forwardPolicy 13.2.9
 ip6tables.input 9.0.0
+ip6tables.inputPolicy 13.2.9
 ip6tables.output 9.0.0
+ip6tables.outputPolicy 13.2.9
 ipAddress 11.3.42
 ipAddress.broadcast 11.3.42
 ipAddress.cidr 11.3.42
@@ -365,8 +369,12 @@ iptables.entry.packets 9.0.0
 iptables.entry.protocol 9.0.0
 iptables.entry.source 9.0.0
 iptables.entry.target 9.0.0
+iptables.forward 13.2.9
+iptables.forwardPolicy 13.2.9
 iptables.input 9.0.0
+iptables.inputPolicy 13.2.9
 iptables.output 9.0.0
+iptables.outputPolicy 13.2.9
 journald.config 11.4.51
 journald.config.file 11.4.51
 journald.config.params 11.4.51

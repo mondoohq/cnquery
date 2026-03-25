@@ -8,10 +8,13 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 )
 
@@ -30,185 +33,192 @@ type Stat struct {
 	Options     string
 }
 
+// ChainResult holds the parsed entries and default policy for a single chain.
+type ChainResult struct {
+	Policy  string // e.g., "ACCEPT", "DROP", "REJECT"
+	Entries []Stat
+}
+
 func (ie *mqlIptablesEntry) id() (string, error) {
 	return strconv.FormatInt(ie.LineNumber.Data, 10) + ie.Chain.Data, nil
 }
 
-func (i *mqlIptables) output() ([]any, error) {
-	conn := i.MqlRuntime.Connection.(shared.Connection)
+// statToRawData converts a Stat into the llx data map for creating an iptables.entry resource.
+func statToRawData(stat Stat, chain string) map[string]*llx.RawData {
+	return map[string]*llx.RawData{
+		"lineNumber":  llx.IntData(stat.LineNumber),
+		"packets":     llx.IntData(stat.Packets),
+		"bytes":       llx.IntData(stat.Bytes),
+		"target":      llx.StringData(stat.Target),
+		"protocol":    llx.StringData(stat.Protocol),
+		"opt":         llx.StringData(stat.Opt),
+		"in":          llx.StringData(stat.Input),
+		"out":         llx.StringData(stat.Output),
+		"source":      llx.StringData(stat.Source),
+		"destination": llx.StringData(stat.Destination),
+		"options":     llx.StringData(stat.Options),
+		"chain":       llx.StringData(chain),
+	}
+}
 
-	ipstats := []any{}
-	cmd, err := conn.RunCommand("iptables -L OUTPUT -v -n -x --line-numbers")
+// chainCache stores the result of a single chain query so that both the
+// entries and policy fields can be served from one shell command.
+// Fields are written inside the sync.Once callback and read after Do returns;
+// sync.Once guarantees happens-before visibility of all writes to subsequent callers.
+type chainCache struct {
+	once    sync.Once
+	entries []any
+	policy  string
+	err     error
+}
+
+// mqlIptablesInternal caches chain results to avoid running the same
+// iptables command twice when both entries and policy are queried.
+type mqlIptablesInternal struct {
+	inputCache   chainCache
+	outputCache  chainCache
+	forwardCache chainCache
+}
+
+// mqlIp6tablesInternal caches chain results to avoid running the same
+// ip6tables command twice when both entries and policy are queried.
+type mqlIp6tablesInternal struct {
+	inputCache   chainCache
+	outputCache  chainCache
+	forwardCache chainCache
+}
+
+// fetchChain runs an iptables/ip6tables command for a chain, parses the output,
+// and creates MQL entry resources. Returns entries, policy, and any error.
+func fetchChain(runtime *plugin.Runtime, conn shared.Connection, binary, chainName, mqlChainID string, ipv6 bool) ([]any, string, error) {
+	cmd, err := conn.RunCommand(fmt.Sprintf("%s -L %s -v -n -x --line-numbers", binary, chainName))
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	data, err := io.ReadAll(cmd.Stdout)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	if cmd.ExitStatus != 0 {
 		outErr, _ := io.ReadAll(cmd.Stderr)
-		return nil, errors.New(string(outErr))
+		return nil, "", errors.New(string(outErr))
 	}
+
 	lines := getLines(string(data))
-	stats, err := ParseStat(lines, false)
+	result, err := ParseChain(lines, ipv6)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
-	for _, stat := range stats {
-		entry, err := CreateResource(i.MqlRuntime, "iptables.entry", map[string]*llx.RawData{
-			"lineNumber":  llx.IntData(stat.LineNumber),
-			"packets":     llx.IntData(stat.Packets),
-			"bytes":       llx.IntData(stat.Bytes),
-			"target":      llx.StringData(stat.Target),
-			"protocol":    llx.StringData(stat.Protocol),
-			"opt":         llx.StringData(stat.Opt),
-			"in":          llx.StringData(stat.Input),
-			"out":         llx.StringData(stat.Output),
-			"source":      llx.StringData(stat.Source),
-			"destination": llx.StringData(stat.Destination),
-			"options":     llx.StringData(stat.Options),
-			"chain":       llx.StringData("output"),
-		})
+
+	entries := make([]any, 0, len(result.Entries))
+	for _, stat := range result.Entries {
+		entry, err := CreateResource(runtime, "iptables.entry", statToRawData(stat, mqlChainID))
 		if err != nil {
-			return nil, err
+			return nil, "", err
 		}
-		ipstats = append(ipstats, entry.(*mqlIptablesEntry))
+		entries = append(entries, entry.(*mqlIptablesEntry))
 	}
-	return ipstats, nil
+	return entries, result.Policy, nil
+}
+
+// --- iptables (IPv4) ---
+
+func (i *mqlIptables) fetchInput() {
+	conn := i.MqlRuntime.Connection.(shared.Connection)
+	i.inputCache.entries, i.inputCache.policy, i.inputCache.err =
+		fetchChain(i.MqlRuntime, conn, "iptables", "INPUT", "input", false)
+}
+
+func (i *mqlIptables) fetchOutput() {
+	conn := i.MqlRuntime.Connection.(shared.Connection)
+	i.outputCache.entries, i.outputCache.policy, i.outputCache.err =
+		fetchChain(i.MqlRuntime, conn, "iptables", "OUTPUT", "output", false)
+}
+
+func (i *mqlIptables) fetchForward() {
+	conn := i.MqlRuntime.Connection.(shared.Connection)
+	i.forwardCache.entries, i.forwardCache.policy, i.forwardCache.err =
+		fetchChain(i.MqlRuntime, conn, "iptables", "FORWARD", "forward", false)
 }
 
 func (i *mqlIptables) input() ([]any, error) {
-	conn := i.MqlRuntime.Connection.(shared.Connection)
-
-	ipstats := []any{}
-	cmd, err := conn.RunCommand("iptables -L INPUT -v -n -x --line-numbers")
-	if err != nil {
-		return nil, err
-	}
-	data, err := io.ReadAll(cmd.Stdout)
-	if err != nil {
-		return nil, err
-	}
-	if cmd.ExitStatus != 0 {
-		outErr, _ := io.ReadAll(cmd.Stderr)
-		return nil, errors.New(string(outErr))
-	}
-	lines := getLines(string(data))
-	stats, err := ParseStat(lines, false)
-	if err != nil {
-		return nil, err
-	}
-	for _, stat := range stats {
-		entry, err := CreateResource(i.MqlRuntime, "iptables.entry", map[string]*llx.RawData{
-			"lineNumber":  llx.IntData(stat.LineNumber),
-			"packets":     llx.IntData(stat.Packets),
-			"bytes":       llx.IntData(stat.Bytes),
-			"target":      llx.StringData(stat.Target),
-			"protocol":    llx.StringData(stat.Protocol),
-			"opt":         llx.StringData(stat.Opt),
-			"in":          llx.StringData(stat.Input),
-			"out":         llx.StringData(stat.Output),
-			"source":      llx.StringData(stat.Source),
-			"destination": llx.StringData(stat.Destination),
-			"options":     llx.StringData(stat.Options),
-			"chain":       llx.StringData("input"),
-		})
-		if err != nil {
-			return nil, err
-		}
-		ipstats = append(ipstats, entry.(*mqlIptablesEntry))
-	}
-	return ipstats, nil
+	i.inputCache.once.Do(i.fetchInput)
+	return i.inputCache.entries, i.inputCache.err
 }
 
-func (i *mqlIp6tables) output() ([]any, error) {
-	conn := i.MqlRuntime.Connection.(shared.Connection)
+func (i *mqlIptables) output() ([]any, error) {
+	i.outputCache.once.Do(i.fetchOutput)
+	return i.outputCache.entries, i.outputCache.err
+}
 
-	ipstats := []any{}
-	cmd, err := conn.RunCommand("ip6tables -L OUTPUT -v -n -x --line-numbers")
-	if err != nil {
-		return nil, err
-	}
-	data, err := io.ReadAll(cmd.Stdout)
-	if err != nil {
-		return nil, err
-	}
-	if cmd.ExitStatus != 0 {
-		outErr, _ := io.ReadAll(cmd.Stderr)
-		return nil, errors.New(string(outErr))
-	}
-	lines := getLines(string(data))
-	stats, err := ParseStat(lines, true)
-	if err != nil {
-		return nil, err
-	}
-	for _, stat := range stats {
-		entry, err := CreateResource(i.MqlRuntime, "iptables.entry", map[string]*llx.RawData{
-			"lineNumber":  llx.IntData(stat.LineNumber),
-			"packets":     llx.IntData(stat.Packets),
-			"bytes":       llx.IntData(stat.Bytes),
-			"target":      llx.StringData(stat.Target),
-			"protocol":    llx.StringData(stat.Protocol),
-			"opt":         llx.StringData(stat.Opt),
-			"in":          llx.StringData(stat.Input),
-			"out":         llx.StringData(stat.Output),
-			"source":      llx.StringData(stat.Source),
-			"destination": llx.StringData(stat.Destination),
-			"options":     llx.StringData(stat.Options),
-			"chain":       llx.StringData("output6"),
-		})
-		if err != nil {
-			return nil, err
-		}
-		ipstats = append(ipstats, entry.(*mqlIptablesEntry))
-	}
-	return ipstats, nil
+func (i *mqlIptables) forward() ([]any, error) {
+	i.forwardCache.once.Do(i.fetchForward)
+	return i.forwardCache.entries, i.forwardCache.err
+}
+
+func (i *mqlIptables) inputPolicy() (string, error) {
+	i.inputCache.once.Do(i.fetchInput)
+	return i.inputCache.policy, i.inputCache.err
+}
+
+func (i *mqlIptables) outputPolicy() (string, error) {
+	i.outputCache.once.Do(i.fetchOutput)
+	return i.outputCache.policy, i.outputCache.err
+}
+
+func (i *mqlIptables) forwardPolicy() (string, error) {
+	i.forwardCache.once.Do(i.fetchForward)
+	return i.forwardCache.policy, i.forwardCache.err
+}
+
+// --- ip6tables (IPv6) ---
+
+func (i *mqlIp6tables) fetchInput() {
+	conn := i.MqlRuntime.Connection.(shared.Connection)
+	i.inputCache.entries, i.inputCache.policy, i.inputCache.err =
+		fetchChain(i.MqlRuntime, conn, "ip6tables", "INPUT", "input6", true)
+}
+
+func (i *mqlIp6tables) fetchOutput() {
+	conn := i.MqlRuntime.Connection.(shared.Connection)
+	i.outputCache.entries, i.outputCache.policy, i.outputCache.err =
+		fetchChain(i.MqlRuntime, conn, "ip6tables", "OUTPUT", "output6", true)
+}
+
+func (i *mqlIp6tables) fetchForward() {
+	conn := i.MqlRuntime.Connection.(shared.Connection)
+	i.forwardCache.entries, i.forwardCache.policy, i.forwardCache.err =
+		fetchChain(i.MqlRuntime, conn, "ip6tables", "FORWARD", "forward6", true)
 }
 
 func (i *mqlIp6tables) input() ([]any, error) {
-	conn := i.MqlRuntime.Connection.(shared.Connection)
+	i.inputCache.once.Do(i.fetchInput)
+	return i.inputCache.entries, i.inputCache.err
+}
 
-	ipstats := []any{}
-	cmd, err := conn.RunCommand("ip6tables -L INPUT -v -n -x --line-numbers")
-	if err != nil {
-		return nil, err
-	}
-	data, err := io.ReadAll(cmd.Stdout)
-	if err != nil {
-		return nil, err
-	}
+func (i *mqlIp6tables) output() ([]any, error) {
+	i.outputCache.once.Do(i.fetchOutput)
+	return i.outputCache.entries, i.outputCache.err
+}
 
-	if cmd.ExitStatus != 0 {
-		outErr, _ := io.ReadAll(cmd.Stderr)
-		return nil, errors.New(string(outErr))
-	}
-	lines := getLines(string(data))
-	stats, err := ParseStat(lines, true)
-	if err != nil {
-		return nil, err
-	}
-	for _, stat := range stats {
-		entry, err := CreateResource(i.MqlRuntime, "iptables.entry", map[string]*llx.RawData{
-			"lineNumber":  llx.IntData(stat.LineNumber),
-			"packets":     llx.IntData(stat.Packets),
-			"bytes":       llx.IntData(stat.Bytes),
-			"target":      llx.StringData(stat.Target),
-			"protocol":    llx.StringData(stat.Protocol),
-			"opt":         llx.StringData(stat.Opt),
-			"in":          llx.StringData(stat.Input),
-			"out":         llx.StringData(stat.Output),
-			"source":      llx.StringData(stat.Source),
-			"destination": llx.StringData(stat.Destination),
-			"options":     llx.StringData(stat.Options),
-			"chain":       llx.StringData("input6"),
-		})
-		if err != nil {
-			return nil, err
-		}
-		ipstats = append(ipstats, entry.(*mqlIptablesEntry))
-	}
-	return ipstats, nil
+func (i *mqlIp6tables) forward() ([]any, error) {
+	i.forwardCache.once.Do(i.fetchForward)
+	return i.forwardCache.entries, i.forwardCache.err
+}
+
+func (i *mqlIp6tables) inputPolicy() (string, error) {
+	i.inputCache.once.Do(i.fetchInput)
+	return i.inputCache.policy, i.inputCache.err
+}
+
+func (i *mqlIp6tables) outputPolicy() (string, error) {
+	i.outputCache.once.Do(i.fetchOutput)
+	return i.outputCache.policy, i.outputCache.err
+}
+
+func (i *mqlIp6tables) forwardPolicy() (string, error) {
+	i.forwardCache.once.Do(i.fetchForward)
+	return i.forwardCache.policy, i.forwardCache.err
 }
 
 // Credit to github.com/coreos/go-iptables for some of the parsing logic
@@ -223,6 +233,37 @@ func getLines(data string) []string {
 	return rules
 }
 
+// reChainPolicy matches the chain header line, e.g.:
+//
+//	"Chain INPUT (policy DROP 227 packets, 12904 bytes)"
+var reChainPolicy = regexp.MustCompile(`^Chain\s+\S+\s+\(policy\s+([A-Z]+)`)
+
+// ParseChainPolicy extracts the default policy from the first line of
+// iptables/ip6tables -L output. Returns "" for user-defined chains or
+// missing headers.
+func ParseChainPolicy(lines []string) string {
+	if len(lines) == 0 {
+		return ""
+	}
+	if m := reChainPolicy.FindStringSubmatch(lines[0]); m != nil {
+		return m[1]
+	}
+	return ""
+}
+
+// ParseChain parses the full output of an iptables/ip6tables -L command,
+// returning both the chain's default policy and its rule entries.
+func ParseChain(lines []string, ipv6 bool) (ChainResult, error) {
+	result := ChainResult{
+		Policy: ParseChainPolicy(lines),
+	}
+	var err error
+	result.Entries, err = ParseStat(lines, ipv6)
+	return result, err
+}
+
+// ParseStat parses the tabular rule entries from iptables/ip6tables -L output.
+// Lines 0-1 (chain header + column names) are skipped.
 func ParseStat(lines []string, ipv6 bool) ([]Stat, error) {
 	entries := []Stat{}
 	for i, line := range lines {

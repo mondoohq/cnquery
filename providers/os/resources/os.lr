@@ -1186,18 +1186,34 @@ containerd.container @defaults("id status") {
 
 // IPv4 tables
 iptables {
-  // IPv4 input chain stats
+  // IPv4 input chain entries
   input() []iptables.entry
-  // IPv4 output chain stats
+  // IPv4 output chain entries
   output() []iptables.entry
+  // IPv4 forward chain entries
+  forward() []iptables.entry
+  // Default policy for the INPUT chain (e.g., ACCEPT, DROP)
+  inputPolicy() string
+  // Default policy for the FORWARD chain (e.g., ACCEPT, DROP)
+  forwardPolicy() string
+  // Default policy for the OUTPUT chain (e.g., ACCEPT, DROP)
+  outputPolicy() string
 }
 
 // IPv6 tables
 ip6tables {
-  // IPv6 input chain stats
+  // IPv6 input chain entries
   input() []iptables.entry
-  // IPv6 output chain stats
+  // IPv6 output chain entries
   output() []iptables.entry
+  // IPv6 forward chain entries
+  forward() []iptables.entry
+  // Default policy for the INPUT chain (e.g., ACCEPT, DROP)
+  inputPolicy() string
+  // Default policy for the FORWARD chain (e.g., ACCEPT, DROP)
+  forwardPolicy() string
+  // Default policy for the OUTPUT chain (e.g., ACCEPT, DROP)
+  outputPolicy() string
 }
 
 // Individual iptables entry
