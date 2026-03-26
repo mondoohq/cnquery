@@ -2114,6 +2114,42 @@ macos.alf {
   applications []dict
 }
 
+// macOS application layer firewall
+macos.firewall @defaults("enabled stealthEnabled") {
+  // Whether the firewall is enabled
+  enabled() bool
+  // Whether block-all-incoming mode is active (globalState == 2)
+  blockAllIncoming() bool
+  // Whether stealth mode is enabled
+  stealthEnabled() bool
+  // Whether logging is enabled
+  loggingEnabled() bool
+  // Logging detail level: disabled, throttled, brief, detail
+  loggingDetail() string
+  // Whether signed applications are automatically allowed
+  allowSignedApps() bool
+  // Whether downloaded signed applications are automatically allowed
+  allowDownloadSignedApps() bool
+  // ALF version
+  version() string
+  // Service exceptions
+  exceptions() []dict
+  // Services explicitly allowed to perform networking
+  explicitAuths() []string
+  // Applications with explicit firewall rules
+  applications() []macos.firewall.app
+}
+
+// macOS firewall per-application rule
+private macos.firewall.app @defaults("name state") {
+  // Application path
+  name string
+  // Bundle ID
+  bundleId string
+  // Whether incoming connections are allowed (0=block, 1=allow)
+  state int
+}
+
 // macOS Time Machine
 macos.timemachine {
   // macOS Time Machine preferences

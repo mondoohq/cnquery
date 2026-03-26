@@ -171,6 +171,8 @@ const (
 	ResourceMacos                      string = "macos"
 	ResourceMacosHardware              string = "macos.hardware"
 	ResourceMacosAlf                   string = "macos.alf"
+	ResourceMacosFirewall              string = "macos.firewall"
+	ResourceMacosFirewallApp           string = "macos.firewall.app"
 	ResourceMacosTimemachine           string = "macos.timemachine"
 	ResourceMacosSystemsetup           string = "macos.systemsetup"
 	ResourceOpenBSMAudit               string = "openBSMAudit"
@@ -838,6 +840,14 @@ func init() {
 		"macos.alf": {
 			Init:   initMacosAlf,
 			Create: createMacosAlf,
+		},
+		"macos.firewall": {
+			// to override args, implement: initMacosFirewall(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMacosFirewall,
+		},
+		"macos.firewall.app": {
+			// to override args, implement: initMacosFirewallApp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMacosFirewallApp,
 		},
 		"macos.timemachine": {
 			// to override args, implement: initMacosTimemachine(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3283,6 +3293,48 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"macos.alf.applications": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacosAlf).GetApplications()).ToDataRes(types.Array(types.Dict))
+	},
+	"macos.firewall.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosFirewall).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"macos.firewall.blockAllIncoming": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosFirewall).GetBlockAllIncoming()).ToDataRes(types.Bool)
+	},
+	"macos.firewall.stealthEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosFirewall).GetStealthEnabled()).ToDataRes(types.Bool)
+	},
+	"macos.firewall.loggingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosFirewall).GetLoggingEnabled()).ToDataRes(types.Bool)
+	},
+	"macos.firewall.loggingDetail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosFirewall).GetLoggingDetail()).ToDataRes(types.String)
+	},
+	"macos.firewall.allowSignedApps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosFirewall).GetAllowSignedApps()).ToDataRes(types.Bool)
+	},
+	"macos.firewall.allowDownloadSignedApps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosFirewall).GetAllowDownloadSignedApps()).ToDataRes(types.Bool)
+	},
+	"macos.firewall.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosFirewall).GetVersion()).ToDataRes(types.String)
+	},
+	"macos.firewall.exceptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosFirewall).GetExceptions()).ToDataRes(types.Array(types.Dict))
+	},
+	"macos.firewall.explicitAuths": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosFirewall).GetExplicitAuths()).ToDataRes(types.Array(types.String))
+	},
+	"macos.firewall.applications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosFirewall).GetApplications()).ToDataRes(types.Array(types.Resource("macos.firewall.app")))
+	},
+	"macos.firewall.app.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosFirewallApp).GetName()).ToDataRes(types.String)
+	},
+	"macos.firewall.app.bundleId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosFirewallApp).GetBundleId()).ToDataRes(types.String)
+	},
+	"macos.firewall.app.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosFirewallApp).GetState()).ToDataRes(types.Int)
 	},
 	"macos.timemachine.preferences": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacosTimemachine).GetPreferences()).ToDataRes(types.Dict)
@@ -7781,6 +7833,70 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"macos.alf.applications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMacosAlf).Applications, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"macos.firewall.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosFirewall).__id, ok = v.Value.(string)
+		return
+	},
+	"macos.firewall.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosFirewall).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"macos.firewall.blockAllIncoming": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosFirewall).BlockAllIncoming, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"macos.firewall.stealthEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosFirewall).StealthEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"macos.firewall.loggingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosFirewall).LoggingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"macos.firewall.loggingDetail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosFirewall).LoggingDetail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.firewall.allowSignedApps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosFirewall).AllowSignedApps, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"macos.firewall.allowDownloadSignedApps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosFirewall).AllowDownloadSignedApps, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"macos.firewall.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosFirewall).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.firewall.exceptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosFirewall).Exceptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"macos.firewall.explicitAuths": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosFirewall).ExplicitAuths, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"macos.firewall.applications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosFirewall).Applications, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"macos.firewall.app.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosFirewallApp).__id, ok = v.Value.(string)
+		return
+	},
+	"macos.firewall.app.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosFirewallApp).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.firewall.app.bundleId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosFirewallApp).BundleId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.firewall.app.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosFirewallApp).State, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"macos.timemachine.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21583,6 +21699,191 @@ func (c *mqlMacosAlf) GetExplicitAuths() *plugin.TValue[[]any] {
 
 func (c *mqlMacosAlf) GetApplications() *plugin.TValue[[]any] {
 	return &c.Applications
+}
+
+// mqlMacosFirewall for the macos.firewall resource
+type mqlMacosFirewall struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlMacosFirewallInternal
+	Enabled                 plugin.TValue[bool]
+	BlockAllIncoming        plugin.TValue[bool]
+	StealthEnabled          plugin.TValue[bool]
+	LoggingEnabled          plugin.TValue[bool]
+	LoggingDetail           plugin.TValue[string]
+	AllowSignedApps         plugin.TValue[bool]
+	AllowDownloadSignedApps plugin.TValue[bool]
+	Version                 plugin.TValue[string]
+	Exceptions              plugin.TValue[[]any]
+	ExplicitAuths           plugin.TValue[[]any]
+	Applications            plugin.TValue[[]any]
+}
+
+// createMacosFirewall creates a new instance of this resource
+func createMacosFirewall(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMacosFirewall{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("macos.firewall", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMacosFirewall) MqlName() string {
+	return "macos.firewall"
+}
+
+func (c *mqlMacosFirewall) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMacosFirewall) GetEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Enabled, func() (bool, error) {
+		return c.enabled()
+	})
+}
+
+func (c *mqlMacosFirewall) GetBlockAllIncoming() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.BlockAllIncoming, func() (bool, error) {
+		return c.blockAllIncoming()
+	})
+}
+
+func (c *mqlMacosFirewall) GetStealthEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.StealthEnabled, func() (bool, error) {
+		return c.stealthEnabled()
+	})
+}
+
+func (c *mqlMacosFirewall) GetLoggingEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LoggingEnabled, func() (bool, error) {
+		return c.loggingEnabled()
+	})
+}
+
+func (c *mqlMacosFirewall) GetLoggingDetail() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LoggingDetail, func() (string, error) {
+		return c.loggingDetail()
+	})
+}
+
+func (c *mqlMacosFirewall) GetAllowSignedApps() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowSignedApps, func() (bool, error) {
+		return c.allowSignedApps()
+	})
+}
+
+func (c *mqlMacosFirewall) GetAllowDownloadSignedApps() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowDownloadSignedApps, func() (bool, error) {
+		return c.allowDownloadSignedApps()
+	})
+}
+
+func (c *mqlMacosFirewall) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlMacosFirewall) GetExceptions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Exceptions, func() ([]any, error) {
+		return c.exceptions()
+	})
+}
+
+func (c *mqlMacosFirewall) GetExplicitAuths() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ExplicitAuths, func() ([]any, error) {
+		return c.explicitAuths()
+	})
+}
+
+func (c *mqlMacosFirewall) GetApplications() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Applications, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("macos.firewall", c.__id, "applications")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.applications()
+	})
+}
+
+// mqlMacosFirewallApp for the macos.firewall.app resource
+type mqlMacosFirewallApp struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMacosFirewallAppInternal it will be used here
+	Name     plugin.TValue[string]
+	BundleId plugin.TValue[string]
+	State    plugin.TValue[int64]
+}
+
+// createMacosFirewallApp creates a new instance of this resource
+func createMacosFirewallApp(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMacosFirewallApp{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("macos.firewall.app", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMacosFirewallApp) MqlName() string {
+	return "macos.firewall.app"
+}
+
+func (c *mqlMacosFirewallApp) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMacosFirewallApp) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlMacosFirewallApp) GetBundleId() *plugin.TValue[string] {
+	return &c.BundleId
+}
+
+func (c *mqlMacosFirewallApp) GetState() *plugin.TValue[int64] {
+	return &c.State
 }
 
 // mqlMacosTimemachine for the macos.timemachine resource
