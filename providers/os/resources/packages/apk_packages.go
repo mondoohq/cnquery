@@ -18,9 +18,9 @@ import (
 )
 
 const (
-	AlpinePkgFormat    = "apk"
-	ApkDbInstalled     = "/lib/apk/db/installed"
-	ApkDbInstalledUsr  = "/usr/lib/apk/db/installed"
+	AlpinePkgFormat   = "apk"
+	ApkDbInstalled    = "/lib/apk/db/installed"
+	ApkDbInstalledUsr = "/usr/lib/apk/db/installed"
 )
 
 var APK_REGEX = regexp.MustCompile(`^([A-Za-z]):(.*)$`)
