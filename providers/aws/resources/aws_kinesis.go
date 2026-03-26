@@ -194,8 +194,8 @@ func (a *mqlAwsKinesisStream) kmsKey() (*mqlAwsKmsKey, error) {
 
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	keyArn := a.cachedKeyId
-	if strings.HasPrefix(keyArn, "arn:aws:kms:") {
-		// Already an ARN, use directly
+	if strings.HasPrefix(keyArn, "arn:") {
+		// Already an ARN (handles all partitions: aws, aws-cn, aws-us-gov)
 	} else if strings.HasPrefix(keyArn, "alias/") {
 		// Resolve alias to key ARN via DescribeKey
 		svc := conn.Kms(a.Region.Data)
