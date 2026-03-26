@@ -61,36 +61,6 @@ const (
 	DiscoveryCloudfrontDistributions    = "cloudfront-distributions"
 )
 
-var Auto = []string{
-	DiscoveryAccounts,
-	DiscoveryS3Buckets,
-	DiscoveryEKSClusters,
-	DiscoveryCloudtrailTrails,
-	DiscoveryRdsDbInstances,
-	DiscoveryRdsDbClusters,
-	DiscoveryVPCs,
-	DiscoverySecurityGroups,
-	DiscoveryIAMUsers,
-	DiscoveryIAMGroups,
-	DiscoveryCloudwatchLoggroups,
-	DiscoveryLambdaFunctions,
-	DiscoveryDynamoDBTables,
-	DiscoveryDynamoDBGlobalTables,
-	DiscoveryRedshiftClusters,
-	DiscoveryVolumes,
-	DiscoverySnapshots,
-	DiscoveryEFSFilesystems,
-	DiscoveryAPIGatewayRestAPIs,
-	DiscoveryELBLoadBalancers,
-	DiscoveryESDomains,
-	DiscoveryOpenSearchDomains,
-	DiscoveryKMSKeys,
-	DiscoverySagemakerNotebookInstances,
-	DiscoverySecretsManagerSecrets,
-	DiscoveryElasticacheClusters,
-	DiscoveryCloudfrontDistributions,
-}
-
 var AllAPIResources = []string{
 	// DiscoveryECSContainersAPI,
 	// DiscoveryECRImageAPI,
@@ -123,6 +93,11 @@ var AllAPIResources = []string{
 	DiscoveryElasticacheClusters,
 	DiscoveryCloudfrontDistributions,
 }
+
+var Auto = append(
+	[]string{DiscoveryAccounts},
+	AllAPIResources...,
+)
 
 // All includes every discovery target: Auto plus OS-level instance discovery,
 // SSM instances, ECR, and ECS.
