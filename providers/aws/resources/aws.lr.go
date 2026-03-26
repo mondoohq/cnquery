@@ -7147,6 +7147,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.dbcluster.storageEncrypted": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbcluster).GetStorageEncrypted()).ToDataRes(types.Bool)
 	},
+	"aws.rds.dbcluster.storageEncryptionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetStorageEncryptionType()).ToDataRes(types.String)
+	},
 	"aws.rds.dbcluster.storageAllocated": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbcluster).GetStorageAllocated()).ToDataRes(types.Int)
 	},
@@ -7288,6 +7291,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.snapshot.encrypted": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsSnapshot).GetEncrypted()).ToDataRes(types.Bool)
 	},
+	"aws.rds.snapshot.storageEncryptionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsSnapshot).GetStorageEncryptionType()).ToDataRes(types.String)
+	},
 	"aws.rds.snapshot.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsSnapshot).GetRegion()).ToDataRes(types.String)
 	},
@@ -7335,6 +7341,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.rds.dbinstance.storageEncrypted": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetStorageEncrypted()).ToDataRes(types.Bool)
+	},
+	"aws.rds.dbinstance.storageEncryptionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetStorageEncryptionType()).ToDataRes(types.String)
 	},
 	"aws.rds.dbinstance.storageAllocated": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetStorageAllocated()).ToDataRes(types.Int)
@@ -20828,6 +20837,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsRdsDbcluster).StorageEncrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"aws.rds.dbcluster.storageEncryptionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).StorageEncryptionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.rds.dbcluster.storageAllocated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbcluster).StorageAllocated, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -21020,6 +21033,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsRdsSnapshot).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"aws.rds.snapshot.storageEncryptionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsSnapshot).StorageEncryptionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.rds.snapshot.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsSnapshot).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -21086,6 +21103,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.rds.dbinstance.storageEncrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbinstance).StorageEncrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.storageEncryptionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).StorageEncryptionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.rds.dbinstance.storageAllocated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -50511,6 +50532,7 @@ type mqlAwsRdsDbcluster struct {
 	Snapshots                  plugin.TValue[[]any]
 	Tags                       plugin.TValue[map[string]any]
 	StorageEncrypted           plugin.TValue[bool]
+	StorageEncryptionType      plugin.TValue[string]
 	StorageAllocated           plugin.TValue[int64]
 	StorageIops                plugin.TValue[int64]
 	StorageType                plugin.TValue[string]
@@ -50630,6 +50652,10 @@ func (c *mqlAwsRdsDbcluster) GetTags() *plugin.TValue[map[string]any] {
 
 func (c *mqlAwsRdsDbcluster) GetStorageEncrypted() *plugin.TValue[bool] {
 	return &c.StorageEncrypted
+}
+
+func (c *mqlAwsRdsDbcluster) GetStorageEncryptionType() *plugin.TValue[string] {
+	return &c.StorageEncryptionType
 }
 
 func (c *mqlAwsRdsDbcluster) GetStorageAllocated() *plugin.TValue[int64] {
@@ -50853,21 +50879,22 @@ type mqlAwsRdsSnapshot struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsRdsSnapshotInternal
-	Arn               plugin.TValue[string]
-	Id                plugin.TValue[string]
-	Attributes        plugin.TValue[[]any]
-	Type              plugin.TValue[string]
-	Encrypted         plugin.TValue[bool]
-	Region            plugin.TValue[string]
-	IsClusterSnapshot plugin.TValue[bool]
-	Tags              plugin.TValue[map[string]any]
-	Engine            plugin.TValue[string]
-	EngineVersion     plugin.TValue[string]
-	Status            plugin.TValue[string]
-	Port              plugin.TValue[int64]
-	AllocatedStorage  plugin.TValue[int64]
-	CreatedAt         plugin.TValue[*time.Time]
-	KmsKey            plugin.TValue[*mqlAwsKmsKey]
+	Arn                   plugin.TValue[string]
+	Id                    plugin.TValue[string]
+	Attributes            plugin.TValue[[]any]
+	Type                  plugin.TValue[string]
+	Encrypted             plugin.TValue[bool]
+	StorageEncryptionType plugin.TValue[string]
+	Region                plugin.TValue[string]
+	IsClusterSnapshot     plugin.TValue[bool]
+	Tags                  plugin.TValue[map[string]any]
+	Engine                plugin.TValue[string]
+	EngineVersion         plugin.TValue[string]
+	Status                plugin.TValue[string]
+	Port                  plugin.TValue[int64]
+	AllocatedStorage      plugin.TValue[int64]
+	CreatedAt             plugin.TValue[*time.Time]
+	KmsKey                plugin.TValue[*mqlAwsKmsKey]
 }
 
 // createAwsRdsSnapshot creates a new instance of this resource
@@ -50927,6 +50954,10 @@ func (c *mqlAwsRdsSnapshot) GetType() *plugin.TValue[string] {
 
 func (c *mqlAwsRdsSnapshot) GetEncrypted() *plugin.TValue[bool] {
 	return &c.Encrypted
+}
+
+func (c *mqlAwsRdsSnapshot) GetStorageEncryptionType() *plugin.TValue[string] {
+	return &c.StorageEncryptionType
 }
 
 func (c *mqlAwsRdsSnapshot) GetRegion() *plugin.TValue[string] {
@@ -50992,6 +51023,7 @@ type mqlAwsRdsDbinstance struct {
 	BackupRetentionPeriod         plugin.TValue[int64]
 	Snapshots                     plugin.TValue[[]any]
 	StorageEncrypted              plugin.TValue[bool]
+	StorageEncryptionType         plugin.TValue[string]
 	StorageAllocated              plugin.TValue[int64]
 	StorageIops                   plugin.TValue[int64]
 	StorageType                   plugin.TValue[string]
@@ -51115,6 +51147,10 @@ func (c *mqlAwsRdsDbinstance) GetSnapshots() *plugin.TValue[[]any] {
 
 func (c *mqlAwsRdsDbinstance) GetStorageEncrypted() *plugin.TValue[bool] {
 	return &c.StorageEncrypted
+}
+
+func (c *mqlAwsRdsDbinstance) GetStorageEncryptionType() *plugin.TValue[string] {
+	return &c.StorageEncryptionType
 }
 
 func (c *mqlAwsRdsDbinstance) GetStorageAllocated() *plugin.TValue[int64] {

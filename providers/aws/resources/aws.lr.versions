@@ -2903,6 +2903,7 @@ aws.rds.dbcluster.snapshots 11.15.2
 aws.rds.dbcluster.status 11.15.2
 aws.rds.dbcluster.storageAllocated 11.15.2
 aws.rds.dbcluster.storageEncrypted 11.15.2
+aws.rds.dbcluster.storageEncryptionType 13.3.1
 aws.rds.dbcluster.storageIops 11.15.2
 aws.rds.dbcluster.storageType 11.15.2
 aws.rds.dbcluster.tags 11.15.2
@@ -2958,6 +2959,7 @@ aws.rds.dbinstance.snapshots 11.15.2
 aws.rds.dbinstance.status 11.15.2
 aws.rds.dbinstance.storageAllocated 11.15.2
 aws.rds.dbinstance.storageEncrypted 11.15.2
+aws.rds.dbinstance.storageEncryptionType 13.3.1
 aws.rds.dbinstance.storageIops 11.15.2
 aws.rds.dbinstance.storageThroughput 11.15.2
 aws.rds.dbinstance.storageType 11.15.2
@@ -3025,6 +3027,7 @@ aws.rds.snapshot.kmsKey 11.15.2
 aws.rds.snapshot.port 11.15.2
 aws.rds.snapshot.region 11.15.2
 aws.rds.snapshot.status 11.15.2
+aws.rds.snapshot.storageEncryptionType 13.3.1
 aws.rds.snapshot.tags 11.15.2
 aws.rds.snapshot.type 11.15.2
 aws.redshift 11.15.2

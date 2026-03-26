@@ -4276,6 +4276,8 @@ aws.rds.dbcluster @defaults("id region engine engineVersion") {
   tags map[string]string
   // Whether the cluster is encrypted
   storageEncrypted bool
+  // Type of encryption for data at rest: "none", "sse-rds", or "sse-kms"
+  storageEncryptionType string
   // Amount of storage, in GiB, provisioned on the cluster
   storageAllocated int
   // Storage IOPS provisioned on the cluster
@@ -4374,6 +4376,8 @@ private aws.rds.snapshot @defaults("id region type encrypted createdAt") {
   type string
   // Whether the snapshot is encrypted
   encrypted bool
+  // Type of encryption for data at rest: "none", "sse-rds", or "sse-kms"
+  storageEncryptionType string
   // Region where the snapshot exists
   region string
   // Whether the snapshot is for a cluster
@@ -4410,6 +4414,8 @@ aws.rds.dbinstance @defaults("id region engine engineVersion") {
   snapshots() []aws.rds.snapshot
   // Whether the instance is encrypted
   storageEncrypted bool
+  // Type of encryption for data at rest: "none", "sse-rds", or "sse-kms"
+  storageEncryptionType string
   // Amount of storage, in GiB, provisioned on the instance
   storageAllocated int
   // Storage IOPS provisioned on the instance
