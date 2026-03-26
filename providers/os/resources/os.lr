@@ -2124,7 +2124,7 @@ macos.firewall @defaults("enabled stealthEnabled") {
   stealthEnabled() bool
   // Whether logging is enabled
   loggingEnabled() bool
-  // Logging detail level: disabled, throttled, brief, detail
+  // Logging detail level: disabled (0), detail (1), brief (2), throttled (3)
   loggingDetail() string
   // Whether signed applications are automatically allowed
   allowSignedApps() bool

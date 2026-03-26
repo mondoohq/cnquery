@@ -5,6 +5,7 @@ package resources
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 
 	"github.com/rs/zerolog/log"
@@ -17,6 +18,30 @@ type mqlMacosFirewallInternal struct {
 	lock    sync.Mutex
 	fetched bool
 	config  plist.Data
+}
+
+func alfConfigFloat(config plist.Data, key string) (float64, error) {
+	v, ok := config[key].(float64)
+	if !ok {
+		return 0, fmt.Errorf("ALF config key %q not found or not a number", key)
+	}
+	return v, nil
+}
+
+func alfConfigString(config plist.Data, key string) (string, error) {
+	v, ok := config[key].(string)
+	if !ok {
+		return "", fmt.Errorf("ALF config key %q not found or not a string", key)
+	}
+	return v, nil
+}
+
+func alfConfigSlice(config plist.Data, key string) ([]any, error) {
+	v, ok := config[key].([]any)
+	if !ok {
+		return nil, fmt.Errorf("ALF config key %q not found or not an array", key)
+	}
+	return v, nil
 }
 
 func (m *mqlMacosFirewall) fetchConfig() (plist.Data, error) {
@@ -68,7 +93,11 @@ func (m *mqlMacosFirewall) globalState() (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	return int64(config["globalstate"].(float64)), nil
+	v, err := alfConfigFloat(config, "globalstate")
+	if err != nil {
+		return 0, err
+	}
+	return int64(v), nil
 }
 
 func (m *mqlMacosFirewall) enabled() (bool, error) {
@@ -92,7 +121,11 @@ func (m *mqlMacosFirewall) stealthEnabled() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return int64(config["stealthenabled"].(float64)) != 0, nil
+	v, err := alfConfigFloat(config, "stealthenabled")
+	if err != nil {
+		return false, err
+	}
+	return int64(v) != 0, nil
 }
 
 func (m *mqlMacosFirewall) loggingEnabled() (bool, error) {
@@ -100,7 +133,11 @@ func (m *mqlMacosFirewall) loggingEnabled() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return int64(config["loggingenabled"].(float64)) != 0, nil
+	v, err := alfConfigFloat(config, "loggingenabled")
+	if err != nil {
+		return false, err
+	}
+	return int64(v) != 0, nil
 }
 
 func (m *mqlMacosFirewall) loggingDetail() (string, error) {
@@ -108,8 +145,11 @@ func (m *mqlMacosFirewall) loggingDetail() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	option := int64(config["loggingoption"].(float64))
-	switch option {
+	v, err := alfConfigFloat(config, "loggingoption")
+	if err != nil {
+		return "", err
+	}
+	switch int64(v) {
 	case 0:
 		return "disabled", nil
 	case 1:
@@ -128,7 +168,11 @@ func (m *mqlMacosFirewall) allowSignedApps() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return int64(config["allowsignedenabled"].(float64)) != 0, nil
+	v, err := alfConfigFloat(config, "allowsignedenabled")
+	if err != nil {
+		return false, err
+	}
+	return int64(v) != 0, nil
 }
 
 func (m *mqlMacosFirewall) allowDownloadSignedApps() (bool, error) {
@@ -136,7 +180,11 @@ func (m *mqlMacosFirewall) allowDownloadSignedApps() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return int64(config["allowdownloadsignedenabled"].(float64)) != 0, nil
+	v, err := alfConfigFloat(config, "allowdownloadsignedenabled")
+	if err != nil {
+		return false, err
+	}
+	return int64(v) != 0, nil
 }
 
 func (m *mqlMacosFirewall) version() (string, error) {
@@ -144,7 +192,7 @@ func (m *mqlMacosFirewall) version() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return config["version"].(string), nil
+	return alfConfigString(config, "version")
 }
 
 func (m *mqlMacosFirewall) exceptions() ([]any, error) {
@@ -152,7 +200,7 @@ func (m *mqlMacosFirewall) exceptions() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	return config["exceptions"].([]any), nil
+	return alfConfigSlice(config, "exceptions")
 }
 
 func (m *mqlMacosFirewall) explicitAuths() ([]any, error) {
@@ -160,10 +208,16 @@ func (m *mqlMacosFirewall) explicitAuths() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	explicitAuthsRaw := config["explicitauths"].([]any)
+	explicitAuthsRaw, err := alfConfigSlice(config, "explicitauths")
+	if err != nil {
+		return nil, err
+	}
 	result := []any{}
 	for i := range explicitAuthsRaw {
-		entry := explicitAuthsRaw[i].(map[string]any)
+		entry, ok := explicitAuthsRaw[i].(map[string]any)
+		if !ok {
+			continue
+		}
 		result = append(result, entry["id"])
 	}
 	return result, nil
@@ -175,15 +229,24 @@ func (m *mqlMacosFirewall) applications() ([]any, error) {
 		return nil, err
 	}
 
-	appsRaw := config["applications"].([]any)
+	appsRaw, err := alfConfigSlice(config, "applications")
+	if err != nil {
+		return nil, err
+	}
 	apps := make([]any, 0, len(appsRaw))
-	for _, raw := range appsRaw {
-		entry := raw.(map[string]any)
+	for i, raw := range appsRaw {
+		entry, ok := raw.(map[string]any)
+		if !ok {
+			continue
+		}
 
-		name, _ := entry["bundleid"].(string)
-		bundleId := name
+		bundleId, _ := entry["bundleid"].(string)
+		name := bundleId
 		if path, ok := entry["path"].(string); ok && path != "" {
 			name = path
+		}
+		if name == "" {
+			name = fmt.Sprintf("unknown-%d", i)
 		}
 		state := int64(0)
 		if s, ok := entry["state"].(float64); ok {
