@@ -62,27 +62,11 @@ func privilegedGroupSIDs(domainSID, rootDomainSID string) map[string]bool {
 	return sids
 }
 
-// computeMemberCount determines the accurate member count for a group.
-// If the member attribute was returned with range markers (indicating
-// truncation at MaxValRange), it performs full range retrieval to count
-// all members. Otherwise it uses the directly returned member values.
-func computeMemberCount(l *ldap.Conn, entry *ldap.Entry, groupDN string) int64 {
-	// Check if the server returned a range-limited member attribute.
-	for _, attr := range entry.Attributes {
-		if strings.HasPrefix(strings.ToLower(attr.Name), "member;range=") {
-			// Range-limited: do full retrieval for accurate count.
-			allMembers, err := rangeRetrieveMembers(l, groupDN)
-			if err != nil {
-				// Fall back to what we have.
-				return int64(len(attr.Values))
-			}
-			return int64(len(allMembers))
-		}
-	}
+const groupMemberLookupBatchSize = 50
 
-	// No range limitation: use the direct member attribute.
-	members := connection.GetStringSliceAttr(entry, "member")
-	return int64(len(members))
+type groupMemberLookupBatch struct {
+	searchBase string
+	memberDNs  []string
 }
 
 func (a *mqlActivedirectory) groups() ([]interface{}, error) {
@@ -98,7 +82,6 @@ func (a *mqlActivedirectory) groups() ([]interface{}, error) {
 		"description",
 		"adminCount",
 		"whenCreated",
-		"member",
 	}
 
 	entries, err := connection.PagedSearch(conn.LDAPConn(), ldap.NewSearchRequest(
@@ -138,13 +121,7 @@ func (a *mqlActivedirectory) groups() ([]interface{}, error) {
 
 		// whenCreated: AD generalized time "20060102150405.0Z"
 		whenCreated := parseADGeneralizedTime(connection.GetStringAttr(entry, "whenCreated"))
-
-		// Get initial member count. AD may truncate at MaxValRange (1500),
-		// so check for range-limited responses and do full retrieval if needed.
-		memberCount := computeMemberCount(conn.LDAPConn(), entry, dn)
-
 		ouPath := extractOU(dn)
-
 		isPrivileged := privSIDs[sid]
 
 		resource, err := CreateResource(a.MqlRuntime, "activedirectory.group",
@@ -157,7 +134,6 @@ func (a *mqlActivedirectory) groups() ([]interface{}, error) {
 				"groupTypeRaw":      llx.IntData(groupTypeVal),
 				"description":       llx.StringData(desc),
 				"adminCount":        llx.BoolData(adminCount),
-				"memberCount":       llx.IntData(memberCount),
 				"isPrivileged":      llx.BoolData(isPrivileged),
 				"whenCreated":       llx.TimeData(whenCreated),
 				"ouPath":            llx.StringData(ouPath),
@@ -176,28 +152,30 @@ func (a *mqlActivedirectoryGroup) id() (string, error) {
 	return a.DistinguishedName.Data, nil
 }
 
+func (a *mqlActivedirectoryGroup) memberCount() (int64, error) {
+	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
+	groupDN := a.DistinguishedName.Data
+
+	memberDNs, err := fetchGroupMemberDNs(conn, groupDN)
+	if err != nil {
+		return 0, fmt.Errorf("failed to retrieve member count for group %s: %w", groupDN, err)
+	}
+
+	return int64(len(memberDNs)), nil
+}
+
 // members performs full range retrieval of the group's member attribute and
 // resolves each member DN to an activedirectory.groupMember resource.
 func (a *mqlActivedirectoryGroup) members() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
 	groupDN := a.DistinguishedName.Data
 
-	memberDNs, err := rangeRetrieveMembers(conn.LDAPConn(), groupDN)
+	memberDNs, err := fetchGroupMemberDNs(conn, groupDN)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve members for group %s: %w", groupDN, err)
 	}
 
-	res := make([]interface{}, 0, len(memberDNs))
-	for _, memberDN := range memberDNs {
-		member, err := resolveMember(a.MqlRuntime, conn, memberDN)
-		if err != nil {
-			// Skip orphaned or deleted objects gracefully.
-			continue
-		}
-		res = append(res, member)
-	}
-
-	return res, nil
+	return resolveMembers(a.MqlRuntime, conn, memberDNs)
 }
 
 // rangeRetrieveMembers collects all member DNs from a group using AD's
@@ -259,6 +237,170 @@ func rangeRetrieveMembers(l *ldap.Conn, groupDN string) ([]string, error) {
 	return allMembers, nil
 }
 
+func fetchGroupMemberDNs(conn *connection.ActiveDirectoryConnection, groupDN string) ([]string, error) {
+	raw, err := conn.CachedFetch("groupMembers:"+strings.ToLower(groupDN), func() (interface{}, error) {
+		return rangeRetrieveMembers(conn.LDAPConn(), groupDN)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	memberDNs, ok := raw.([]string)
+	if !ok {
+		return nil, fmt.Errorf("cached group members for %s have unexpected type %T", groupDN, raw)
+	}
+
+	return memberDNs, nil
+}
+
+func resolveMembers(runtime *plugin.Runtime, conn *connection.ActiveDirectoryConnection, memberDNs []string) ([]interface{}, error) {
+	searchBases := memberLookupSearchBases(conn)
+	batches := memberLookupBatches(memberDNs, searchBases, groupMemberLookupBatchSize)
+	resolved := make(map[string]interface{}, len(memberDNs))
+
+	for _, batch := range batches {
+		entries, err := connection.PagedSearch(conn.LDAPConn(), ldap.NewSearchRequest(
+			batch.searchBase,
+			ldap.ScopeWholeSubtree,
+			ldap.NeverDerefAliases, 0, 0, false,
+			buildDistinguishedNameFilter(batch.memberDNs),
+			[]string{"distinguishedName", "sAMAccountName", "objectSid", "objectClass"},
+			nil,
+		))
+		if err != nil {
+			continue
+		}
+
+		for _, entry := range entries {
+			memberDN := entry.DN
+			if memberDN == "" {
+				memberDN = connection.GetStringAttr(entry, "distinguishedName")
+			}
+			if memberDN == "" {
+				continue
+			}
+
+			member, err := createGroupMemberResource(runtime, entry, memberDN)
+			if err != nil {
+				continue
+			}
+
+			resolved[strings.ToLower(memberDN)] = member
+		}
+	}
+
+	res := make([]interface{}, 0, len(memberDNs))
+	for _, memberDN := range memberDNs {
+		if member, ok := resolved[strings.ToLower(memberDN)]; ok {
+			res = append(res, member)
+			continue
+		}
+
+		member, err := resolveMember(runtime, conn, memberDN)
+		if err != nil {
+			// Skip orphaned or deleted objects gracefully.
+			continue
+		}
+		res = append(res, member)
+	}
+
+	return res, nil
+}
+
+func memberLookupSearchBases(conn *connection.ActiveDirectoryConnection) []string {
+	candidates := append([]string{conn.BaseDN()}, conn.DomainNamingContexts()...)
+	seen := make(map[string]bool, len(candidates))
+	searchBases := make([]string, 0, len(candidates))
+
+	for _, candidate := range candidates {
+		if candidate == "" {
+			continue
+		}
+
+		key := strings.ToLower(candidate)
+		if seen[key] {
+			continue
+		}
+
+		seen[key] = true
+		searchBases = append(searchBases, candidate)
+	}
+
+	return searchBases
+}
+
+func memberLookupBatches(memberDNs, searchBases []string, batchSize int) []groupMemberLookupBatch {
+	if batchSize <= 0 {
+		batchSize = len(memberDNs)
+	}
+
+	fallbackBase := ""
+	if len(searchBases) > 0 {
+		fallbackBase = searchBases[0]
+	}
+
+	grouped := make(map[string][]string, len(searchBases))
+	for _, memberDN := range memberDNs {
+		searchBase := bestMatchingSearchBase(memberDN, searchBases)
+		if searchBase == "" {
+			searchBase = fallbackBase
+		}
+		if searchBase == "" {
+			continue
+		}
+
+		grouped[searchBase] = append(grouped[searchBase], memberDN)
+	}
+
+	var batches []groupMemberLookupBatch
+	for _, searchBase := range searchBases {
+		dns := grouped[searchBase]
+		for start := 0; start < len(dns); start += batchSize {
+			end := start + batchSize
+			if end > len(dns) {
+				end = len(dns)
+			}
+
+			batches = append(batches, groupMemberLookupBatch{
+				searchBase: searchBase,
+				memberDNs:  dns[start:end],
+			})
+		}
+	}
+
+	return batches
+}
+
+func bestMatchingSearchBase(memberDN string, searchBases []string) string {
+	best := ""
+	for _, searchBase := range searchBases {
+		if !dnWithinBase(memberDN, searchBase) {
+			continue
+		}
+		if len(searchBase) > len(best) {
+			best = searchBase
+		}
+	}
+	return best
+}
+
+func dnWithinBase(dn, baseDN string) bool {
+	dn = strings.ToLower(dn)
+	baseDN = strings.ToLower(baseDN)
+	if dn == baseDN {
+		return true
+	}
+	return strings.HasSuffix(dn, ","+baseDN)
+}
+
+func buildDistinguishedNameFilter(memberDNs []string) string {
+	parts := make([]string, 0, len(memberDNs))
+	for _, memberDN := range memberDNs {
+		parts = append(parts, fmt.Sprintf("(distinguishedName=%s)", ldap.EscapeFilter(memberDN)))
+	}
+	return fmt.Sprintf("(|%s)", strings.Join(parts, ""))
+}
+
 // resolveMember queries a single member DN to determine its type and
 // creates an activedirectory.groupMember resource.
 func resolveMember(runtime *plugin.Runtime, conn *connection.ActiveDirectoryConnection, memberDN string) (interface{}, error) {
@@ -277,7 +419,10 @@ func resolveMember(runtime *plugin.Runtime, conn *connection.ActiveDirectoryConn
 		return nil, fmt.Errorf("member not found: %s", memberDN)
 	}
 
-	entry := entries[0]
+	return createGroupMemberResource(runtime, entries[0], memberDN)
+}
+
+func createGroupMemberResource(runtime *plugin.Runtime, entry *ldap.Entry, memberDN string) (interface{}, error) {
 	name := connection.GetStringAttr(entry, "sAMAccountName")
 	sidRaw := connection.GetBinaryAttr(entry, "objectSid")
 	sid, _ := connection.DecodeSID(sidRaw)

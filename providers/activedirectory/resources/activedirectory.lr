@@ -56,7 +56,7 @@ activedirectory @defaults("domain functionalLevel") {
   machineAccountQuota() int
   // Whether the AD Recycle Bin optional feature is enabled
   recycleBinEnabled() bool
-  // Whether the DC requires LDAP signing (detected via unsigned simple bind probe)
+  // Whether the DC requires LDAP signing (detected via unsigned simple bind probe with invalid credentials)
   ldapSigningRequired() bool
   // Whether the DC requires SMB signing (detected via pre-auth negotiate probe on port 445)
   smbSigningRequired() bool
@@ -169,7 +169,7 @@ activedirectory.user @defaults("sAMAccountName displayName enabled") {
   // Whether account is sensitive and cannot be delegated
   sensitiveAndCannotBeDelegated bool
   // Whether account is a member of Protected Users group
-  protectedUser bool
+  protectedUser() bool
   // Whether account uses DES-only Kerberos encryption
   useDesKeyOnly bool
   // Whether reversible password encryption is allowed for the account
@@ -197,13 +197,13 @@ activedirectory.user @defaults("sAMAccountName displayName enabled") {
   // Group memberships (direct)
   memberOf []string
   // Whether user is member of Domain Admins
-  isDomainAdmin bool
+  isDomainAdmin() bool
   // Whether user is member of Enterprise Admins
-  isEnterpriseAdmin bool
+  isEnterpriseAdmin() bool
   // Whether user is member of Schema Admins
-  isSchemaAdmin bool
+  isSchemaAdmin() bool
   // Whether user is member of any privileged group
-  isPrivileged bool
+  isPrivileged() bool
   // Description (may contain credentials in misconfigured environments)
   description string
   // Email address
@@ -239,7 +239,7 @@ activedirectory.group @defaults("sAMAccountName groupType") {
   // Direct members
   members() []activedirectory.groupMember
   // Member count
-  memberCount int
+  memberCount() int
   // Whether this is a built-in privileged group
   isPrivileged bool
   // Creation timestamp

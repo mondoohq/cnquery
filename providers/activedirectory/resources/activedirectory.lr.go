@@ -2720,7 +2720,9 @@ func (c *mqlActivedirectoryUser) GetSensitiveAndCannotBeDelegated() *plugin.TVal
 }
 
 func (c *mqlActivedirectoryUser) GetProtectedUser() *plugin.TValue[bool] {
-	return &c.ProtectedUser
+	return plugin.GetOrCompute[bool](&c.ProtectedUser, func() (bool, error) {
+		return c.protectedUser()
+	})
 }
 
 func (c *mqlActivedirectoryUser) GetUseDesKeyOnly() *plugin.TValue[bool] {
@@ -2776,19 +2778,27 @@ func (c *mqlActivedirectoryUser) GetMemberOf() *plugin.TValue[[]any] {
 }
 
 func (c *mqlActivedirectoryUser) GetIsDomainAdmin() *plugin.TValue[bool] {
-	return &c.IsDomainAdmin
+	return plugin.GetOrCompute[bool](&c.IsDomainAdmin, func() (bool, error) {
+		return c.isDomainAdmin()
+	})
 }
 
 func (c *mqlActivedirectoryUser) GetIsEnterpriseAdmin() *plugin.TValue[bool] {
-	return &c.IsEnterpriseAdmin
+	return plugin.GetOrCompute[bool](&c.IsEnterpriseAdmin, func() (bool, error) {
+		return c.isEnterpriseAdmin()
+	})
 }
 
 func (c *mqlActivedirectoryUser) GetIsSchemaAdmin() *plugin.TValue[bool] {
-	return &c.IsSchemaAdmin
+	return plugin.GetOrCompute[bool](&c.IsSchemaAdmin, func() (bool, error) {
+		return c.isSchemaAdmin()
+	})
 }
 
 func (c *mqlActivedirectoryUser) GetIsPrivileged() *plugin.TValue[bool] {
-	return &c.IsPrivileged
+	return plugin.GetOrCompute[bool](&c.IsPrivileged, func() (bool, error) {
+		return c.isPrivileged()
+	})
 }
 
 func (c *mqlActivedirectoryUser) GetDescription() *plugin.TValue[string] {
@@ -2921,7 +2931,9 @@ func (c *mqlActivedirectoryGroup) GetMembers() *plugin.TValue[[]any] {
 }
 
 func (c *mqlActivedirectoryGroup) GetMemberCount() *plugin.TValue[int64] {
-	return &c.MemberCount
+	return plugin.GetOrCompute[int64](&c.MemberCount, func() (int64, error) {
+		return c.memberCount()
+	})
 }
 
 func (c *mqlActivedirectoryGroup) GetIsPrivileged() *plugin.TValue[bool] {

@@ -42,6 +42,10 @@ const (
 	OptionCCache   = "ccache"
 	// dialTimeout caps how long we wait for TCP connection to the DC.
 	dialTimeout = 30 * time.Second
+	// Probe with non-sensitive invalid credentials so we never expose real
+	// secrets on plaintext LDAP while checking signing enforcement.
+	ldapSigningProbeUser     = "invalid-probe-user"
+	ldapSigningProbePassword = "invalid-probe-password"
 )
 
 // ActiveDirectoryConnection manages a single LDAP connection to an
@@ -141,10 +145,7 @@ func NewActiveDirectoryConnection(id uint32, asset *inventory.Asset, conf *inven
 	var err error
 	dialer := &net.Dialer{Timeout: dialTimeout}
 	if useTLS {
-		ldapConn, err = ldap.DialURL("ldaps://"+addr, ldap.DialWithDialer(dialer), ldap.DialWithTLSConfig(&tls.Config{
-			MinVersion:         tls.VersionTLS12,
-			InsecureSkipVerify: insecure, //nolint:gosec // user-controlled flag for lab/test environments
-		}))
+		ldapConn, err = ldap.DialURL("ldaps://"+addr, ldap.DialWithDialer(dialer), ldap.DialWithTLSConfig(newLDAPTLSConfig(dcHost, insecure)))
 	} else {
 		ldapConn, err = ldap.DialURL("ldap://"+addr, ldap.DialWithDialer(dialer))
 	}
@@ -154,11 +155,7 @@ func NewActiveDirectoryConnection(id uint32, asset *inventory.Asset, conf *inven
 
 	// --- StartTLS: upgrade plaintext connection to TLS before bind ---
 	if useStartTLS {
-		if err := ldapConn.StartTLS(&tls.Config{
-			MinVersion:         tls.VersionTLS12,
-			ServerName:         dcHost,
-			InsecureSkipVerify: insecure, //nolint:gosec // user-controlled flag for lab/test environments
-		}); err != nil {
+		if err := ldapConn.StartTLS(newLDAPTLSConfig(dcHost, insecure)); err != nil {
 			ldapConn.Close()
 			return nil, fmt.Errorf("StartTLS upgrade failed for %s: %w", addr, err)
 		}
@@ -237,6 +234,14 @@ func domainToDN(domain string) string {
 		parts[i] = "DC=" + p
 	}
 	return strings.Join(parts, ",")
+}
+
+func newLDAPTLSConfig(serverName string, insecure bool) *tls.Config {
+	return &tls.Config{
+		MinVersion:         tls.VersionTLS12,
+		ServerName:         serverName,
+		InsecureSkipVerify: insecure, //nolint:gosec // user-controlled flag for lab/test environments
+	}
 }
 
 // kerberosGSSAPIBind performs a Kerberos/GSSAPI SASL bind on the connection.
@@ -468,7 +473,7 @@ func (c *ActiveDirectoryConnection) fetchRootDomainSIDViaGC() (string, error) {
 	if c.useTLS {
 		gcPort = "3269"
 		gcScheme = "ldaps"
-		opts = append(opts, ldap.DialWithTLSConfig(&tls.Config{InsecureSkipVerify: true}))
+		opts = append(opts, ldap.DialWithTLSConfig(newLDAPTLSConfig(c.dcHost, strings.EqualFold(c.Conf.Options[OptionInsecure], "true"))))
 	}
 	gcAddr := net.JoinHostPort(c.dcHost, gcPort)
 	gcConn, err := ldap.DialURL(gcScheme+"://"+gcAddr, opts...)
@@ -594,16 +599,12 @@ func (c *ActiveDirectoryConnection) resolveCredentials() (user, password string)
 	return resolveCredentials(c.Conf)
 }
 
-// ProbeLDAPSigning detects whether the DC requires LDAP signing by
-// attempting an unsigned simple bind to port 389. If the DC rejects with
-// LDAPResultStrongAuthRequired (code 8), signing is enforced. If the bind
-// succeeds, signing is NOT required. Uses a throwaway connection.
+// ProbeLDAPSigning detects whether the DC rejects unsigned simple binds by
+// attempting one with invalid credentials on port 389. If the DC rejects with
+// LDAPResultStrongAuthRequired, signing is enforced. If the DC instead rejects
+// the bogus credentials as invalid, unsigned simple binds are still accepted.
+// Uses a throwaway connection and never transmits real scan credentials.
 func (c *ActiveDirectoryConnection) ProbeLDAPSigning() (bool, error) {
-	user, password := c.resolveCredentials()
-	if user == "" || password == "" {
-		return false, fmt.Errorf("LDAP signing probe requires simple bind credentials")
-	}
-
 	addr := net.JoinHostPort(c.dcHost, "389")
 	dialer := &net.Dialer{Timeout: 10 * time.Second}
 	probeConn, err := ldap.DialURL("ldap://"+addr, ldap.DialWithDialer(dialer))
@@ -612,15 +613,17 @@ func (c *ActiveDirectoryConnection) ProbeLDAPSigning() (bool, error) {
 	}
 	defer probeConn.Close()
 
-	err = probeConn.Bind(user, password)
+	err = probeConn.Bind(ldapSigningProbeUser, ldapSigningProbePassword)
 	if err != nil {
 		if ldap.IsErrorWithCode(err, ldap.LDAPResultStrongAuthRequired) {
-			return true, nil // DC requires signing
+			return true, nil
+		}
+		if ldap.IsErrorWithCode(err, ldap.LDAPResultInvalidCredentials) {
+			return false, nil
 		}
 		return false, fmt.Errorf("LDAP signing probe bind failed: %w", err)
 	}
 
-	// Bind succeeded without signing — signing is NOT required.
 	return false, nil
 }
 

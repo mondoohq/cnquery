@@ -40,6 +40,19 @@ var privilegedGroups = []privilegedGroupDef{
 	{RID: "551", Base: "builtin", Label: "Backup Operators"},
 }
 
+func privilegedGroupSID(conn *connection.ActiveDirectoryConnection, pg privilegedGroupDef) (string, error) {
+	switch pg.Base {
+	case "domain":
+		return conn.DomainSID() + "-" + pg.RID, nil
+	case "forest":
+		return conn.RootDomainSID() + "-" + pg.RID, nil
+	case "builtin":
+		return "S-1-5-32-" + pg.RID, nil
+	default:
+		return "", fmt.Errorf("unknown privileged group base %q", pg.Base)
+	}
+}
+
 // privilegedMemberships holds sets of distinguished names that are (recursively)
 // members of each well-known privileged group.
 type privilegedMemberships struct {
@@ -120,19 +133,15 @@ func escapeBinaryForLDAP(b []byte) string {
 // The returned map is keyed by SID string → DN. Groups that don't exist in the
 // directory (e.g. Enterprise Admins in a child domain) are silently skipped.
 func resolvePrivilegedGroupDNs(conn *connection.ActiveDirectoryConnection) (map[string]string, error) {
-	result := make(map[string]string, len(privilegedGroups))
+	type privilegedGroupQuery struct {
+		sidFilter string
+	}
 
+	queriesByBase := make(map[string][]privilegedGroupQuery)
 	for _, pg := range privilegedGroups {
-		var sidStr string
-		switch pg.Base {
-		case "domain":
-			sidStr = conn.DomainSID() + "-" + pg.RID
-		case "forest":
-			sidStr = conn.RootDomainSID() + "-" + pg.RID
-		case "builtin":
-			sidStr = "S-1-5-32-" + pg.RID
-		default:
-			return nil, fmt.Errorf("unknown privileged group base %q", pg.Base)
+		sidStr, err := privilegedGroupSID(conn, pg)
+		if err != nil {
+			return nil, err
 		}
 
 		sidBytes, err := sidStringToBytes(sidStr)
@@ -140,32 +149,48 @@ func resolvePrivilegedGroupDNs(conn *connection.ActiveDirectoryConnection) (map[
 			return nil, fmt.Errorf("encoding SID %s for %s: %w", sidStr, pg.Label, err)
 		}
 
-		filter := fmt.Sprintf("(&(objectClass=group)(objectSid=%s))", escapeBinaryForLDAP(sidBytes))
-
 		searchBase := conn.BaseDN()
 		if pg.Base == "forest" {
 			searchBase = conn.RootDomainDN()
+		}
+		if searchBase == "" {
+			continue
+		}
+
+		queriesByBase[searchBase] = append(queriesByBase[searchBase], privilegedGroupQuery{
+			sidFilter: fmt.Sprintf("(objectSid=%s)", escapeBinaryForLDAP(sidBytes)),
+		})
+	}
+
+	result := make(map[string]string, len(privilegedGroups))
+	for searchBase, queries := range queriesByBase {
+		filterParts := make([]string, 0, len(queries))
+		for _, query := range queries {
+			filterParts = append(filterParts, query.sidFilter)
 		}
 
 		entries, err := connection.PagedSearch(conn.LDAPConn(), ldap.NewSearchRequest(
 			searchBase,
 			ldap.ScopeWholeSubtree,
 			ldap.NeverDerefAliases, 0, 0, false,
-			filter,
-			[]string{"distinguishedName"},
+			fmt.Sprintf("(&(objectClass=group)(|%s))", strings.Join(filterParts, "")),
+			[]string{"distinguishedName", "objectSid"},
 			nil,
 		))
 		if err != nil {
 			// BUILTIN groups live under CN=Builtin which is always under baseDN,
 			// but forest-root groups may not exist in this domain at all.
-			// Treat search errors for individual groups as non-fatal.
-			continue
-		}
-		if len(entries) == 0 {
+			// Treat search errors for each search base as non-fatal.
 			continue
 		}
 
-		result[sidStr] = entries[0].DN
+		for _, entry := range entries {
+			sidStr, err := connection.DecodeSID(connection.GetBinaryAttr(entry, "objectSid"))
+			if err != nil || sidStr == "" {
+				continue
+			}
+			result[sidStr] = entry.DN
+		}
 	}
 
 	return result, nil
@@ -200,14 +225,9 @@ func buildPrivilegedMembershipSets(conn *connection.ActiveDirectoryConnection) (
 		}
 
 		for _, pg := range privilegedGroups {
-			var sidStr string
-			switch pg.Base {
-			case "domain":
-				sidStr = conn.DomainSID() + "-" + pg.RID
-			case "forest":
-				sidStr = conn.RootDomainSID() + "-" + pg.RID
-			case "builtin":
-				sidStr = "S-1-5-32-" + pg.RID
+			sidStr, err := privilegedGroupSID(conn, pg)
+			if err != nil {
+				return nil, err
 			}
 
 			groupDN, ok := groupDNs[sidStr]

@@ -65,11 +65,6 @@ func (a *mqlActivedirectory) users() ([]interface{}, error) {
 		return nil, fmt.Errorf("failed to query users: %w", err)
 	}
 
-	privMemberships, err := buildPrivilegedMembershipSets(conn)
-	if err != nil {
-		return nil, fmt.Errorf("failed to resolve privileged group memberships: %w", err)
-	}
-
 	now := time.Now().UTC()
 	res := make([]interface{}, 0, len(entries))
 	for _, entry := range entries {
@@ -127,13 +122,6 @@ func (a *mqlActivedirectory) users() ([]interface{}, error) {
 			memberOfIface[i] = m
 		}
 
-		// Privileged group lookups
-		isDomainAdmin := privMemberships.DomainAdmins[dn]
-		isEnterpriseAdmin := privMemberships.EnterpriseAdmins[dn]
-		isSchemaAdmin := privMemberships.SchemaAdmins[dn]
-		protectedUser := privMemberships.ProtectedUsers[dn]
-		isPrivileged := privMemberships.AllPrivileged[dn]
-
 		email := entry.GetAttributeValue("mail")
 		description := entry.GetAttributeValue("description")
 		ouPath := extractOU(dn)
@@ -180,7 +168,6 @@ func (a *mqlActivedirectory) users() ([]interface{}, error) {
 				"passwordNotRequired":           llx.BoolData(passwordNotRequired),
 				"kerberosPreAuthNotRequired":    llx.BoolData(kerberosPreAuthNotRequired),
 				"sensitiveAndCannotBeDelegated": llx.BoolData(sensitiveAndCannotBeDelegated),
-				"protectedUser":                 llx.BoolData(protectedUser),
 				"useDesKeyOnly":                 llx.BoolData(useDesKeyOnly),
 				"reversibleEncryption":          llx.BoolData(reversibleEncryption),
 				"userAccountControl":            llx.IntData(uac),
@@ -194,10 +181,6 @@ func (a *mqlActivedirectory) users() ([]interface{}, error) {
 				"daysSinceLastLogon":            llx.IntData(daysSinceLastLogon),
 				"isStale":                       llx.BoolData(isStale),
 				"memberOf":                      llx.ArrayData(memberOfIface, types.String),
-				"isDomainAdmin":                 llx.BoolData(isDomainAdmin),
-				"isEnterpriseAdmin":             llx.BoolData(isEnterpriseAdmin),
-				"isSchemaAdmin":                 llx.BoolData(isSchemaAdmin),
-				"isPrivileged":                  llx.BoolData(isPrivileged),
 				"description":                   llx.StringData(description),
 				"email":                         llx.StringData(email),
 				"ouPath":                        llx.StringData(ouPath),
@@ -213,6 +196,71 @@ func (a *mqlActivedirectory) users() ([]interface{}, error) {
 	}
 
 	return res, nil
+}
+
+type userPrivilegeFlags struct {
+	protectedUser     bool
+	isDomainAdmin     bool
+	isEnterpriseAdmin bool
+	isSchemaAdmin     bool
+	isPrivileged      bool
+}
+
+func (a *mqlActivedirectoryUser) privilegeFlags() (userPrivilegeFlags, error) {
+	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
+	sets, err := buildPrivilegedMembershipSets(conn)
+	if err != nil {
+		return userPrivilegeFlags{}, err
+	}
+
+	userDN := a.DistinguishedName.Data
+	return userPrivilegeFlags{
+		protectedUser:     sets.ProtectedUsers[userDN],
+		isDomainAdmin:     sets.DomainAdmins[userDN],
+		isEnterpriseAdmin: sets.EnterpriseAdmins[userDN],
+		isSchemaAdmin:     sets.SchemaAdmins[userDN],
+		isPrivileged:      sets.AllPrivileged[userDN],
+	}, nil
+}
+
+func (a *mqlActivedirectoryUser) protectedUser() (bool, error) {
+	flags, err := a.privilegeFlags()
+	if err != nil {
+		return false, err
+	}
+	return flags.protectedUser, nil
+}
+
+func (a *mqlActivedirectoryUser) isDomainAdmin() (bool, error) {
+	flags, err := a.privilegeFlags()
+	if err != nil {
+		return false, err
+	}
+	return flags.isDomainAdmin, nil
+}
+
+func (a *mqlActivedirectoryUser) isEnterpriseAdmin() (bool, error) {
+	flags, err := a.privilegeFlags()
+	if err != nil {
+		return false, err
+	}
+	return flags.isEnterpriseAdmin, nil
+}
+
+func (a *mqlActivedirectoryUser) isSchemaAdmin() (bool, error) {
+	flags, err := a.privilegeFlags()
+	if err != nil {
+		return false, err
+	}
+	return flags.isSchemaAdmin, nil
+}
+
+func (a *mqlActivedirectoryUser) isPrivileged() (bool, error) {
+	flags, err := a.privilegeFlags()
+	if err != nil {
+		return false, err
+	}
+	return flags.isPrivileged, nil
 }
 
 // decodeSIDHistory extracts and decodes the multi-value binary sIDHistory

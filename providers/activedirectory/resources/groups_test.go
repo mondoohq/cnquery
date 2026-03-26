@@ -3,7 +3,10 @@
 
 package resources
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
 func TestParseGroupType(t *testing.T) {
 	tests := []struct {
@@ -65,5 +68,85 @@ func TestParseInt64Attr(t *testing.T) {
 				t.Errorf("parseInt64Attr(%q) = %d, want %d", tt.s, got, tt.want)
 			}
 		})
+	}
+}
+
+func TestBestMatchingSearchBase(t *testing.T) {
+	searchBases := []string{
+		"DC=mini,DC=lab",
+		"DC=child,DC=mini,DC=lab",
+	}
+
+	tests := []struct {
+		name     string
+		memberDN string
+		want     string
+	}{
+		{
+			name:     "matches root domain base",
+			memberDN: "CN=Alice,CN=Users,DC=mini,DC=lab",
+			want:     "DC=mini,DC=lab",
+		},
+		{
+			name:     "prefers longest matching child base",
+			memberDN: "CN=Bob,CN=Users,DC=child,DC=mini,DC=lab",
+			want:     "DC=child,DC=mini,DC=lab",
+		},
+		{
+			name:     "returns empty when no base matches",
+			memberDN: "CN=Carol,CN=Users,DC=other,DC=lab",
+			want:     "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := bestMatchingSearchBase(tt.memberDN, searchBases)
+			if got != tt.want {
+				t.Fatalf("bestMatchingSearchBase(%q) = %q, want %q", tt.memberDN, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMemberLookupBatches(t *testing.T) {
+	searchBases := []string{
+		"DC=mini,DC=lab",
+		"DC=child,DC=mini,DC=lab",
+	}
+	memberDNs := []string{
+		"CN=ChildOne,CN=Users,DC=child,DC=mini,DC=lab",
+		"CN=BaseOne,CN=Users,DC=mini,DC=lab",
+		"CN=ChildTwo,CN=Users,DC=child,DC=mini,DC=lab",
+		"CN=BaseTwo,CN=Users,DC=mini,DC=lab",
+		"CN=BaseThree,CN=Users,DC=mini,DC=lab",
+	}
+
+	got := memberLookupBatches(memberDNs, searchBases, 2)
+	want := []groupMemberLookupBatch{
+		{
+			searchBase: "DC=mini,DC=lab",
+			memberDNs: []string{
+				"CN=BaseOne,CN=Users,DC=mini,DC=lab",
+				"CN=BaseTwo,CN=Users,DC=mini,DC=lab",
+			},
+		},
+		{
+			searchBase: "DC=mini,DC=lab",
+			memberDNs: []string{
+				"CN=BaseThree,CN=Users,DC=mini,DC=lab",
+			},
+		},
+		{
+			searchBase: "DC=child,DC=mini,DC=lab",
+			memberDNs: []string{
+				"CN=ChildOne,CN=Users,DC=child,DC=mini,DC=lab",
+				"CN=ChildTwo,CN=Users,DC=child,DC=mini,DC=lab",
+			},
+		},
+	}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("memberLookupBatches() = %#v, want %#v", got, want)
 	}
 }
