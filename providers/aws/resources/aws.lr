@@ -7791,6 +7791,8 @@ private aws.kinesis.stream @defaults("name status region") {
   encryptionType() string
   // KMS key ID for encryption
   keyId() string
+  // KMS key used for encryption
+  kmsKey() aws.kms.key
   // Number of hours data records are accessible after being added to the stream
   retentionPeriodHours() int
   // Number of open shards in the stream

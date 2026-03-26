@@ -11617,6 +11617,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.kinesis.stream.keyId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKinesisStream).GetKeyId()).ToDataRes(types.String)
 	},
+	"aws.kinesis.stream.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisStream).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
 	"aws.kinesis.stream.retentionPeriodHours": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKinesisStream).GetRetentionPeriodHours()).ToDataRes(types.Int)
 	},
@@ -27311,6 +27314,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.kinesis.stream.keyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsKinesisStream).KeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.stream.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisStream).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.kinesis.stream.retentionPeriodHours": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -65839,6 +65846,7 @@ type mqlAwsKinesisStream struct {
 	Status               plugin.TValue[string]
 	EncryptionType       plugin.TValue[string]
 	KeyId                plugin.TValue[string]
+	KmsKey               plugin.TValue[*mqlAwsKmsKey]
 	RetentionPeriodHours plugin.TValue[int64]
 	OpenShardCount       plugin.TValue[int64]
 	ConsumerCount        plugin.TValue[int64]
@@ -65903,6 +65911,22 @@ func (c *mqlAwsKinesisStream) GetEncryptionType() *plugin.TValue[string] {
 func (c *mqlAwsKinesisStream) GetKeyId() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.KeyId, func() (string, error) {
 		return c.keyId()
+	})
+}
+
+func (c *mqlAwsKinesisStream) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.kinesis.stream", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
 	})
 }
 

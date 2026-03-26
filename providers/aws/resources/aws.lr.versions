@@ -2225,6 +2225,7 @@ aws.kinesis.stream.createdAt 11.16.1
 aws.kinesis.stream.encryptionType 11.16.1
 aws.kinesis.stream.enhancedMonitoring 11.16.1
 aws.kinesis.stream.keyId 11.16.1
+aws.kinesis.stream.kmsKey 13.3.1
 aws.kinesis.stream.name 11.16.1
 aws.kinesis.stream.openShardCount 11.16.1
 aws.kinesis.stream.region 11.16.1
