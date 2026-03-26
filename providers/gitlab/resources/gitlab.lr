@@ -4,6 +4,33 @@
 option provider = "go.mondoo.com/cnquery/v9/providers/gitlab"
 option go_package = "go.mondoo.com/mql/v13/providers/gitlab/resources"
 
+// GitLab instance-level application settings
+// Requires admin access to the GitLab instance.
+gitlab.settings @defaults("requireTwoFactorAuthentication") {
+  // Settings ID
+  id int
+  // Last update time
+  updatedAt time
+  // Whether all users are required to set up two-factor authentication
+  requireTwoFactorAuthentication bool
+  // Time (in hours) users are allowed to skip forced 2FA configuration
+  twoFactorGracePeriod int
+  // Whether two-factor authentication is required for administrators
+  requireAdminTwoFactorAuthentication bool
+  // Session expiry for Git operations when 2FA is enabled (in minutes)
+  gitTwoFactorSessionExpiry int
+  // Whether password authentication is enabled for the web interface
+  passwordAuthenticationEnabledForWeb bool
+  // Whether password authentication is enabled for Git over HTTP(S)
+  passwordAuthenticationEnabledForGit bool
+  // Whether new user registration is enabled
+  signupEnabled bool
+  // The default project visibility (private, internal, public)
+  defaultProjectVisibility string
+  // The default group visibility (private, internal, public)
+  defaultGroupVisibility string
+}
+
 // GitLab user
 gitlab.user @defaults("username name state") {
   // User ID

@@ -17,6 +17,7 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
+	ResourceGitlabSettings               string = "gitlab.settings"
 	ResourceGitlabUser                   string = "gitlab.user"
 	ResourceGitlabMember                 string = "gitlab.member"
 	ResourceGitlabNamespace              string = "gitlab.namespace"
@@ -51,6 +52,10 @@ var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
 	resourceFactories = map[string]plugin.ResourceFactory{
+		"gitlab.settings": {
+			Init:   initGitlabSettings,
+			Create: createGitlabSettings,
+		},
 		"gitlab.user": {
 			// to override args, implement: initGitlabUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGitlabUser,
@@ -243,6 +248,39 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 }
 
 var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
+	"gitlab.settings.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabSettings).GetId()).ToDataRes(types.Int)
+	},
+	"gitlab.settings.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabSettings).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"gitlab.settings.requireTwoFactorAuthentication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabSettings).GetRequireTwoFactorAuthentication()).ToDataRes(types.Bool)
+	},
+	"gitlab.settings.twoFactorGracePeriod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabSettings).GetTwoFactorGracePeriod()).ToDataRes(types.Int)
+	},
+	"gitlab.settings.requireAdminTwoFactorAuthentication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabSettings).GetRequireAdminTwoFactorAuthentication()).ToDataRes(types.Bool)
+	},
+	"gitlab.settings.gitTwoFactorSessionExpiry": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabSettings).GetGitTwoFactorSessionExpiry()).ToDataRes(types.Int)
+	},
+	"gitlab.settings.passwordAuthenticationEnabledForWeb": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabSettings).GetPasswordAuthenticationEnabledForWeb()).ToDataRes(types.Bool)
+	},
+	"gitlab.settings.passwordAuthenticationEnabledForGit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabSettings).GetPasswordAuthenticationEnabledForGit()).ToDataRes(types.Bool)
+	},
+	"gitlab.settings.signupEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabSettings).GetSignupEnabled()).ToDataRes(types.Bool)
+	},
+	"gitlab.settings.defaultProjectVisibility": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabSettings).GetDefaultProjectVisibility()).ToDataRes(types.String)
+	},
+	"gitlab.settings.defaultGroupVisibility": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabSettings).GetDefaultGroupVisibility()).ToDataRes(types.String)
+	},
 	"gitlab.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabUser).GetId()).ToDataRes(types.Int)
 	},
@@ -1182,6 +1220,54 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 }
 
 var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
+	"gitlab.settings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"gitlab.settings.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabSettings).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.settings.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabSettings).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gitlab.settings.requireTwoFactorAuthentication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabSettings).RequireTwoFactorAuthentication, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.settings.twoFactorGracePeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabSettings).TwoFactorGracePeriod, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.settings.requireAdminTwoFactorAuthentication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabSettings).RequireAdminTwoFactorAuthentication, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.settings.gitTwoFactorSessionExpiry": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabSettings).GitTwoFactorSessionExpiry, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gitlab.settings.passwordAuthenticationEnabledForWeb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabSettings).PasswordAuthenticationEnabledForWeb, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.settings.passwordAuthenticationEnabledForGit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabSettings).PasswordAuthenticationEnabledForGit, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.settings.signupEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabSettings).SignupEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.settings.defaultProjectVisibility": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabSettings).DefaultProjectVisibility, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.settings.defaultGroupVisibility": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabSettings).DefaultGroupVisibility, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gitlab.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabUser).__id, ok = v.Value.(string)
 		return
@@ -2552,6 +2638,105 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 		}
 	}
 	return nil
+}
+
+// mqlGitlabSettings for the gitlab.settings resource
+type mqlGitlabSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGitlabSettingsInternal it will be used here
+	Id                                  plugin.TValue[int64]
+	UpdatedAt                           plugin.TValue[*time.Time]
+	RequireTwoFactorAuthentication      plugin.TValue[bool]
+	TwoFactorGracePeriod                plugin.TValue[int64]
+	RequireAdminTwoFactorAuthentication plugin.TValue[bool]
+	GitTwoFactorSessionExpiry           plugin.TValue[int64]
+	PasswordAuthenticationEnabledForWeb plugin.TValue[bool]
+	PasswordAuthenticationEnabledForGit plugin.TValue[bool]
+	SignupEnabled                       plugin.TValue[bool]
+	DefaultProjectVisibility            plugin.TValue[string]
+	DefaultGroupVisibility              plugin.TValue[string]
+}
+
+// createGitlabSettings creates a new instance of this resource
+func createGitlabSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGitlabSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gitlab.settings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGitlabSettings) MqlName() string {
+	return "gitlab.settings"
+}
+
+func (c *mqlGitlabSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGitlabSettings) GetId() *plugin.TValue[int64] {
+	return &c.Id
+}
+
+func (c *mqlGitlabSettings) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlGitlabSettings) GetRequireTwoFactorAuthentication() *plugin.TValue[bool] {
+	return &c.RequireTwoFactorAuthentication
+}
+
+func (c *mqlGitlabSettings) GetTwoFactorGracePeriod() *plugin.TValue[int64] {
+	return &c.TwoFactorGracePeriod
+}
+
+func (c *mqlGitlabSettings) GetRequireAdminTwoFactorAuthentication() *plugin.TValue[bool] {
+	return &c.RequireAdminTwoFactorAuthentication
+}
+
+func (c *mqlGitlabSettings) GetGitTwoFactorSessionExpiry() *plugin.TValue[int64] {
+	return &c.GitTwoFactorSessionExpiry
+}
+
+func (c *mqlGitlabSettings) GetPasswordAuthenticationEnabledForWeb() *plugin.TValue[bool] {
+	return &c.PasswordAuthenticationEnabledForWeb
+}
+
+func (c *mqlGitlabSettings) GetPasswordAuthenticationEnabledForGit() *plugin.TValue[bool] {
+	return &c.PasswordAuthenticationEnabledForGit
+}
+
+func (c *mqlGitlabSettings) GetSignupEnabled() *plugin.TValue[bool] {
+	return &c.SignupEnabled
+}
+
+func (c *mqlGitlabSettings) GetDefaultProjectVisibility() *plugin.TValue[string] {
+	return &c.DefaultProjectVisibility
+}
+
+func (c *mqlGitlabSettings) GetDefaultGroupVisibility() *plugin.TValue[string] {
+	return &c.DefaultGroupVisibility
 }
 
 // mqlGitlabUser for the gitlab.user resource
