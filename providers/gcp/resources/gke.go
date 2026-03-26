@@ -226,6 +226,23 @@ func (g *mqlGcpProjectGkeServiceClusterNetworkConfig) id() (string, error) {
 	return g.Id.Data, g.Id.Error
 }
 
+type mqlGcpProjectGkeServiceClusterInternal struct {
+	cacheDatabaseEncryptionKeyName string
+}
+
+func (g *mqlGcpProjectGkeServiceCluster) databaseEncryptionKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	if g.cacheDatabaseEncryptionKeyName == "" {
+		g.DatabaseEncryptionKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.kmsService.keyring.cryptokey",
+		map[string]*llx.RawData{"resourcePath": llx.StringData(g.cacheDatabaseEncryptionKeyName)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+}
+
 func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 	// when the service is not enabled, we return nil
 	if !g.serviceEnabled {
@@ -525,10 +542,14 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 		}
 
 		var databaseEncryption map[string]any
+		var databaseEncryptionState string
+		var databaseEncryptionKeyName string
 		if c.DatabaseEncryption != nil {
+			databaseEncryptionState = c.DatabaseEncryption.State.String()
+			databaseEncryptionKeyName = c.DatabaseEncryption.KeyName
 			databaseEncryption = map[string]any{
-				"state":   c.DatabaseEncryption.State.String(),
-				"keyName": c.DatabaseEncryption.KeyName,
+				"state":   databaseEncryptionState,
+				"keyName": databaseEncryptionKeyName,
 			}
 		}
 
@@ -661,6 +682,7 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 			"masterAuthorizedNetworksConfig": llx.DictData(masterAuthorizedNetworksCfg),
 			"privateClusterConfig":           llx.DictData(privateClusterCfg),
 			"databaseEncryption":             llx.DictData(databaseEncryption),
+			"databaseEncryptionState":        llx.StringData(databaseEncryptionState),
 			"shieldedNodesConfig":            llx.DictData(shieldedNodesConfig),
 			"costManagementConfig":           llx.DictData(costManagementConfig),
 			"confidentialNodesConfig":        llx.DictData(confidentialNodesConfig),
@@ -681,6 +703,8 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlC := mqlCluster.(*mqlGcpProjectGkeServiceCluster)
+		mqlC.cacheDatabaseEncryptionKeyName = databaseEncryptionKeyName
 		res = append(res, mqlCluster)
 	}
 

@@ -182,9 +182,28 @@ func (g *mqlGcpProject) cloudFunctions() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlFunc := mqlCloudFuncs.(*mqlGcpProjectCloudFunction)
+		mqlFunc.cacheKmsKeyName = f.KmsKeyName
 		cloudFunctions = append(cloudFunctions, mqlCloudFuncs)
 	}
 	return cloudFunctions, nil
+}
+
+type mqlGcpProjectCloudFunctionInternal struct {
+	cacheKmsKeyName string
+}
+
+func (g *mqlGcpProjectCloudFunction) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	if g.cacheKmsKeyName == "" {
+		g.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.kmsService.keyring.cryptokey",
+		map[string]*llx.RawData{"resourcePath": llx.StringData(g.cacheKmsKeyName)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
 }
 
 func (g *mqlGcpProjectCloudFunction) id() (string, error) {

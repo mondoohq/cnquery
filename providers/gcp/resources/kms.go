@@ -124,6 +124,92 @@ func (g *mqlGcpProjectKmsServiceKeyring) id() (string, error) {
 	return g.ResourcePath.Data, g.ResourcePath.Error
 }
 
+func initGcpProjectKmsServiceKeyringCryptokey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	resourcePathRaw, ok := args["resourcePath"]
+	if !ok || resourcePathRaw.Value == nil || resourcePathRaw.Value.(string) == "" {
+		return args, nil, nil
+	}
+	resourcePath := resourcePathRaw.Value.(string)
+
+	conn, ok := runtime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
+
+	creds, err := conn.Credentials(kms.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	ctx := context.Background()
+	kmsSvc, err := kms.NewKeyManagementClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, nil, err
+	}
+	defer kmsSvc.Close()
+
+	k, err := kmsSvc.GetCryptoKey(ctx, &kmspb.GetCryptoKeyRequest{Name: resourcePath})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var mqlPrimary plugin.Resource
+	if k.Primary != nil {
+		mqlPrimary, err = cryptoKeyVersionToMql(runtime, k.Primary)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	type mqlVersionTemplate struct {
+		ProtectionLevel string `json:"protectionLevel"`
+		Algorithm       string `json:"algorithm"`
+	}
+
+	var versionTemplate map[string]any
+	if k.VersionTemplate != nil {
+		versionTemplate, err = convert.JsonToDict(mqlVersionTemplate{
+			ProtectionLevel: k.VersionTemplate.ProtectionLevel.String(),
+			Algorithm:       k.VersionTemplate.Algorithm.String(),
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	var mqlRotationPeriod *time.Time
+	rotationPeriod := k.GetRotationPeriod()
+	if rotationPeriod != nil {
+		v := llx.DurationToTime(rotationPeriod.Seconds)
+		mqlRotationPeriod = &v
+	}
+
+	var mqlDestroyScheduledDuration *time.Time
+	if k.DestroyScheduledDuration != nil {
+		v := llx.DurationToTime(k.DestroyScheduledDuration.Seconds)
+		mqlDestroyScheduledDuration = &v
+	}
+
+	args["resourcePath"] = llx.StringData(k.Name)
+	args["name"] = llx.StringData(parseResourceName(k.Name))
+	args["primary"] = llx.ResourceData(mqlPrimary, "gcp.project.kmsService.keyring.cryptokey.version")
+	args["purpose"] = llx.StringData(k.Purpose.String())
+	args["created"] = llx.TimeData(k.CreateTime.AsTime())
+	args["nextRotation"] = llx.TimeData(k.NextRotationTime.AsTime())
+	args["rotationPeriod"] = llx.TimeDataPtr(mqlRotationPeriod)
+	args["versionTemplate"] = llx.DictData(versionTemplate)
+	args["labels"] = llx.MapData(convert.MapToInterfaceMap(k.Labels), types.String)
+	args["importOnly"] = llx.BoolData(k.ImportOnly)
+	args["destroyScheduledDuration"] = llx.TimeDataPtr(mqlDestroyScheduledDuration)
+	args["cryptoKeyBackend"] = llx.StringData(k.CryptoKeyBackend)
+
+	return args, nil, nil
+}
+
 func (g *mqlGcpProjectKmsServiceKeyringCryptokey) id() (string, error) {
 	return g.ResourcePath.Data, g.ResourcePath.Error
 }

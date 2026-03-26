@@ -646,7 +646,7 @@ func init() {
 			Create: createGcpProjectKmsServiceKeyring,
 		},
 		"gcp.project.kmsService.keyring.cryptokey": {
-			// to override args, implement: initGcpProjectKmsServiceKeyringCryptokey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectKmsServiceKeyringCryptokey,
 			Create: createGcpProjectKmsServiceKeyringCryptokey,
 		},
 		"gcp.project.kmsService.keyring.cryptokey.version": {
@@ -3078,6 +3078,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.storageService.bucket.encryption": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectStorageServiceBucket).GetEncryption()).ToDataRes(types.Dict)
 	},
+	"gcp.project.storageService.bucket.defaultKmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucket).GetDefaultKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
 	"gcp.project.storageService.bucket.lifecycle": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectStorageServiceBucket).GetLifecycle()).ToDataRes(types.Array(types.Resource("gcp.project.storageService.bucket.lifecycleRule")))
 	},
@@ -3437,6 +3440,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.sqlService.instance.settings.ipConfiguration.enablePrivatePathForGoogleCloudServices": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).GetEnablePrivatePathForGoogleCloudServices()).ToDataRes(types.Bool)
+	},
+	"gcp.project.sqlService.instance.settings.ipConfiguration.serverCaMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).GetServerCaMode()).ToDataRes(types.String)
 	},
 	"gcp.project.sqlService.instance.settings.maintenanceWindow.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstanceSettingsMaintenanceWindow).GetId()).ToDataRes(types.String)
@@ -3890,6 +3896,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.gkeService.cluster.databaseEncryption": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceCluster).GetDatabaseEncryption()).ToDataRes(types.Dict)
+	},
+	"gcp.project.gkeService.cluster.databaseEncryptionState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetDatabaseEncryptionState()).ToDataRes(types.String)
+	},
+	"gcp.project.gkeService.cluster.databaseEncryptionKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetDatabaseEncryptionKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
 	},
 	"gcp.project.gkeService.cluster.shieldedNodesConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceCluster).GetShieldedNodesConfig()).ToDataRes(types.Dict)
@@ -4967,6 +4979,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.cloudFunction.kmsKeyName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudFunction).GetKmsKeyName()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudFunction.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunction).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
 	},
 	"gcp.project.cloudFunction.buildWorkerPool": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudFunction).GetBuildWorkerPool()).ToDataRes(types.String)
@@ -10761,6 +10776,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectStorageServiceBucket).Encryption, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.storageService.bucket.defaultKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucket).DefaultKmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
 	"gcp.project.storageService.bucket.lifecycle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectStorageServiceBucket).Lifecycle, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -11283,6 +11302,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.sqlService.instance.settings.ipConfiguration.enablePrivatePathForGoogleCloudServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).EnablePrivatePathForGoogleCloudServices, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.settings.ipConfiguration.serverCaMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).ServerCaMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.sqlService.instance.settings.maintenanceWindow.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11943,6 +11966,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.gkeService.cluster.databaseEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceCluster).DatabaseEncryption, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.databaseEncryptionState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).DatabaseEncryptionState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.databaseEncryptionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).DatabaseEncryptionKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
 		return
 	},
 	"gcp.project.gkeService.cluster.shieldedNodesConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13579,6 +13610,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.cloudFunction.kmsKeyName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudFunction).KmsKeyName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunction.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunction).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
 		return
 	},
 	"gcp.project.cloudFunction.buildWorkerPool": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24277,7 +24312,7 @@ func (c *mqlGcpProjectStorageService) GetBuckets() *plugin.TValue[[]any] {
 type mqlGcpProjectStorageServiceBucket struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectStorageServiceBucketInternal it will be used here
+	mqlGcpProjectStorageServiceBucketInternal
 	Id                     plugin.TValue[string]
 	ProjectId              plugin.TValue[string]
 	Name                   plugin.TValue[string]
@@ -24292,6 +24327,7 @@ type mqlGcpProjectStorageServiceBucket struct {
 	IamConfiguration       plugin.TValue[any]
 	RetentionPolicy        plugin.TValue[any]
 	Encryption             plugin.TValue[any]
+	DefaultKmsKey          plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	Lifecycle              plugin.TValue[[]any]
 	DefaultEventBasedHold  plugin.TValue[bool]
 	Rpo                    plugin.TValue[string]
@@ -24404,6 +24440,22 @@ func (c *mqlGcpProjectStorageServiceBucket) GetRetentionPolicy() *plugin.TValue[
 
 func (c *mqlGcpProjectStorageServiceBucket) GetEncryption() *plugin.TValue[any] {
 	return &c.Encryption
+}
+
+func (c *mqlGcpProjectStorageServiceBucket) GetDefaultKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.DefaultKmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.storageService.bucket", c.__id, "defaultKmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.defaultKmsKey()
+	})
 }
 
 func (c *mqlGcpProjectStorageServiceBucket) GetLifecycle() *plugin.TValue[[]any] {
@@ -25445,6 +25497,7 @@ type mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration struct {
 	RequireSsl                              plugin.TValue[bool]
 	SslMode                                 plugin.TValue[string]
 	EnablePrivatePathForGoogleCloudServices plugin.TValue[bool]
+	ServerCaMode                            plugin.TValue[string]
 }
 
 // createGcpProjectSqlServiceInstanceSettingsIpConfiguration creates a new instance of this resource
@@ -25514,6 +25567,10 @@ func (c *mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration) GetSslMode() *p
 
 func (c *mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration) GetEnablePrivatePathForGoogleCloudServices() *plugin.TValue[bool] {
 	return &c.EnablePrivatePathForGoogleCloudServices
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration) GetServerCaMode() *plugin.TValue[string] {
+	return &c.ServerCaMode
 }
 
 // mqlGcpProjectSqlServiceInstanceSettingsMaintenanceWindow for the gcp.project.sqlService.instance.settings.maintenanceWindow resource
@@ -26800,7 +26857,7 @@ func (c *mqlGcpProjectGkeService) GetClusters() *plugin.TValue[[]any] {
 type mqlGcpProjectGkeServiceCluster struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectGkeServiceClusterInternal it will be used here
+	mqlGcpProjectGkeServiceClusterInternal
 	ProjectId                      plugin.TValue[string]
 	Id                             plugin.TValue[string]
 	Name                           plugin.TValue[string]
@@ -26832,6 +26889,8 @@ type mqlGcpProjectGkeServiceCluster struct {
 	MasterAuthorizedNetworksConfig plugin.TValue[any]
 	PrivateClusterConfig           plugin.TValue[any]
 	DatabaseEncryption             plugin.TValue[any]
+	DatabaseEncryptionState        plugin.TValue[string]
+	DatabaseEncryptionKey          plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	ShieldedNodesConfig            plugin.TValue[any]
 	CostManagementConfig           plugin.TValue[any]
 	ConfidentialNodesConfig        plugin.TValue[any]
@@ -27009,6 +27068,26 @@ func (c *mqlGcpProjectGkeServiceCluster) GetPrivateClusterConfig() *plugin.TValu
 
 func (c *mqlGcpProjectGkeServiceCluster) GetDatabaseEncryption() *plugin.TValue[any] {
 	return &c.DatabaseEncryption
+}
+
+func (c *mqlGcpProjectGkeServiceCluster) GetDatabaseEncryptionState() *plugin.TValue[string] {
+	return &c.DatabaseEncryptionState
+}
+
+func (c *mqlGcpProjectGkeServiceCluster) GetDatabaseEncryptionKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.DatabaseEncryptionKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.gkeService.cluster", c.__id, "databaseEncryptionKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.databaseEncryptionKey()
+	})
 }
 
 func (c *mqlGcpProjectGkeServiceCluster) GetShieldedNodesConfig() *plugin.TValue[any] {
@@ -31088,7 +31167,7 @@ func (c *mqlGcpProjectIamServiceServiceAccountKey) GetDisabled() *plugin.TValue[
 type mqlGcpProjectCloudFunction struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectCloudFunctionInternal it will be used here
+	mqlGcpProjectCloudFunctionInternal
 	ProjectId           plugin.TValue[string]
 	Location            plugin.TValue[string]
 	Name                plugin.TValue[string]
@@ -31116,6 +31195,7 @@ type mqlGcpProjectCloudFunction struct {
 	EgressSettings      plugin.TValue[string]
 	IngressSettings     plugin.TValue[string]
 	KmsKeyName          plugin.TValue[string]
+	KmsKey              plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	BuildWorkerPool     plugin.TValue[string]
 	BuildId             plugin.TValue[string]
 	BuildName           plugin.TValue[string]
@@ -31268,6 +31348,22 @@ func (c *mqlGcpProjectCloudFunction) GetIngressSettings() *plugin.TValue[string]
 
 func (c *mqlGcpProjectCloudFunction) GetKmsKeyName() *plugin.TValue[string] {
 	return &c.KmsKeyName
+}
+
+func (c *mqlGcpProjectCloudFunction) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.cloudFunction", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
 }
 
 func (c *mqlGcpProjectCloudFunction) GetBuildWorkerPool() *plugin.TValue[string] {

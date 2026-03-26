@@ -138,9 +138,30 @@ func (g *mqlGcpProjectStorageService) buckets() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlBucket := mqlInstance.(*mqlGcpProjectStorageServiceBucket)
+		if bucket.Encryption != nil {
+			mqlBucket.cacheDefaultKmsKeyName = bucket.Encryption.DefaultKmsKeyName
+		}
 		res = append(res, mqlInstance)
 	}
 	return res, nil
+}
+
+type mqlGcpProjectStorageServiceBucketInternal struct {
+	cacheDefaultKmsKeyName string
+}
+
+func (g *mqlGcpProjectStorageServiceBucket) defaultKmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	if g.cacheDefaultKmsKeyName == "" {
+		g.DefaultKmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.kmsService.keyring.cryptokey",
+		map[string]*llx.RawData{"resourcePath": llx.StringData(g.cacheDefaultKmsKeyName)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
 }
 
 func storageLifecycleRulesToArrayInterface(runtime *plugin.Runtime, bucketId string, lifecycle *storage.BucketLifecycle) (list []any) {

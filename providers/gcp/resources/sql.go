@@ -313,6 +313,7 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 					"privateNetwork": llx.StringData(s.IpConfiguration.PrivateNetwork),
 					"requireSsl":     llx.BoolData(s.IpConfiguration.RequireSsl),
 					"sslMode":        llx.StringData(s.IpConfiguration.SslMode),
+					"serverCaMode":   llx.StringData(s.IpConfiguration.ServerCaMode),
 				})
 				if err != nil {
 					return err

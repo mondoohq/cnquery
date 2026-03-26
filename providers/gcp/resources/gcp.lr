@@ -1424,6 +1424,8 @@ private gcp.project.storageService.bucket @defaults("id") {
   retentionPolicy dict
   // Encryption
   encryption dict
+  // Default Cloud KMS encryption key for new objects in this bucket
+  defaultKmsKey() gcp.project.kmsService.keyring.cryptokey
   // Lifecycle configuration
   lifecycle []gcp.project.storageService.bucket.lifecycleRule
   // Whether a default event-based hold is enabled for newly created objects
@@ -1736,6 +1738,8 @@ private gcp.project.sqlService.instance.settings.ipConfiguration {
   sslMode string
   // Whether the service uses an internal direct path instead of the private IP address inside of the Virtual Private Cloud (Controls connectivity to private IP instances from Google services, such as BigQuery)
   enablePrivatePathForGoogleCloudServices bool
+  // Specifies how the server CA certificate is signed (GOOGLE_MANAGED_INTERNAL_CA, GOOGLE_MANAGED_CAS_CA)
+  serverCaMode string
 }
 
 // Google Cloud (GCP) SQL instance settings maintenance window
@@ -2094,6 +2098,10 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   privateClusterConfig dict
   // Etcd encryption configuration
   databaseEncryption dict
+  // Etcd encryption state (ENCRYPTED, DECRYPTED)
+  databaseEncryptionState string
+  // Cloud KMS key used for etcd encryption
+  databaseEncryptionKey() gcp.project.kmsService.keyring.cryptokey
   // Configuration for Shielded Nodes feature
   shieldedNodesConfig dict
   // Configuration for the fine-grained cost management feature
@@ -3017,6 +3025,8 @@ private gcp.project.cloudFunction @defaults("name") {
   ingressSettings string
   // Resource name of a KMS crypto key used to encrypt/decrypt function resources
   kmsKeyName string
+  // Cloud KMS key used to encrypt/decrypt function resources
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Name of the Cloud Build custom WorkerPool that should be used to build the function
   buildWorkerPool string
   // Cloud Build ID of the latest successful deployment of the function
