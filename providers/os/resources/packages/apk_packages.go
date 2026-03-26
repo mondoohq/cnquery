@@ -18,8 +18,9 @@ import (
 )
 
 const (
-	AlpinePkgFormat = "apk"
-	ApkDbInstalled  = "/lib/apk/db/installed"
+	AlpinePkgFormat    = "apk"
+	ApkDbInstalled     = "/lib/apk/db/installed"
+	ApkDbInstalledUsr  = "/usr/lib/apk/db/installed"
 )
 
 var APK_REGEX = regexp.MustCompile(`^([A-Za-z]):(.*)$`)
@@ -148,7 +149,11 @@ func (apm *AlpinePkgManager) Format() string {
 func (apm *AlpinePkgManager) List() ([]Package, error) {
 	fr, err := apm.conn.FileSystem().Open(ApkDbInstalled)
 	if err != nil {
-		return nil, fmt.Errorf("could not read apk package list")
+		// Wolfi uses /usr/lib/apk/db/installed (usrmerge layout)
+		fr, err = apm.conn.FileSystem().Open(ApkDbInstalledUsr)
+		if err != nil {
+			return nil, fmt.Errorf("could not read apk package list")
+		}
 	}
 	defer fr.Close()
 
