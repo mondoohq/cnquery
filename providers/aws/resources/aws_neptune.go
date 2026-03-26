@@ -80,7 +80,7 @@ func (a *mqlAwsNeptune) getDbClusters(conn *connection.AwsConnection) []*jobpool
 					return nil, nil
 				}
 				for _, cluster := range cluster.DBClusters {
-					mqlCluster, err := newMqlAwsNeptuneCluster(a.MqlRuntime, region, cluster)
+					mqlCluster, err := newMqlAwsNeptuneCluster(a.MqlRuntime, region, conn.AccountId(), cluster)
 					if err != nil {
 						return nil, err
 					}
@@ -94,7 +94,11 @@ func (a *mqlAwsNeptune) getDbClusters(conn *connection.AwsConnection) []*jobpool
 	return tasks
 }
 
-func newMqlAwsNeptuneCluster(runtime *plugin.Runtime, region string, cluster neptune_types.DBCluster) (*mqlAwsNeptuneCluster, error) {
+type mqlAwsNeptuneClusterInternal struct {
+	securityGroupIdHandler
+}
+
+func newMqlAwsNeptuneCluster(runtime *plugin.Runtime, region string, accountID string, cluster neptune_types.DBCluster) (*mqlAwsNeptuneCluster, error) {
 	resource, err := CreateResource(runtime, "aws.neptune.cluster",
 		map[string]*llx.RawData{
 			"__id":                             llx.StringDataPtr(cluster.DBClusterArn),
@@ -132,7 +136,19 @@ func newMqlAwsNeptuneCluster(runtime *plugin.Runtime, region string, cluster nep
 	if err != nil {
 		return nil, err
 	}
-	return resource.(*mqlAwsNeptuneCluster), nil
+	sgsArn := []string{}
+	for _, sg := range cluster.VpcSecurityGroups {
+		if sg.VpcSecurityGroupId != nil {
+			sgsArn = append(sgsArn, NewSecurityGroupArn(region, accountID, *sg.VpcSecurityGroupId))
+		}
+	}
+	mqlCluster := resource.(*mqlAwsNeptuneCluster)
+	mqlCluster.setSecurityGroupArns(sgsArn)
+	return mqlCluster, nil
+}
+
+func (a *mqlAwsNeptuneCluster) securityGroups() ([]any, error) {
+	return a.newSecurityGroupResources(a.MqlRuntime)
 }
 
 func (a *mqlAwsNeptune) instances() ([]any, error) {

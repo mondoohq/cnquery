@@ -90,6 +90,8 @@ func (a *mqlAwsElasticache) getCacheClusters(conn *connection.AwsConnection) []*
 
 type mqlAwsElasticacheClusterInternal struct {
 	securityGroupIdHandler
+	cacheReplicationGroupId *string
+	region                  string
 }
 
 func newMqlAwsElasticacheCluster(runtime *plugin.Runtime, region string, accountID string, cluster elasticache_types.CacheCluster) (*mqlAwsElasticacheCluster, error) {
@@ -158,11 +160,41 @@ func newMqlAwsElasticacheCluster(runtime *plugin.Runtime, region string, account
 
 	mqlCluster := resource.(*mqlAwsElasticacheCluster)
 	mqlCluster.setSecurityGroupArns(sgs)
+	mqlCluster.cacheReplicationGroupId = cluster.ReplicationGroupId
+	mqlCluster.region = region
 	return mqlCluster, nil
 }
 
 func (a *mqlAwsElasticacheCluster) securityGroups() ([]any, error) {
 	return a.newSecurityGroupResources(a.MqlRuntime)
+}
+
+func (a *mqlAwsElasticacheCluster) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.cacheReplicationGroupId == nil || *a.cacheReplicationGroupId == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Elasticache(a.region)
+	ctx := context.Background()
+	resp, err := svc.DescribeReplicationGroups(ctx, &elasticache.DescribeReplicationGroupsInput{
+		ReplicationGroupId: a.cacheReplicationGroupId,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(resp.ReplicationGroups) == 0 || resp.ReplicationGroups[0].KmsKeyId == nil || *resp.ReplicationGroups[0].KmsKeyId == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{
+			"arn": llx.StringDataPtr(resp.ReplicationGroups[0].KmsKeyId),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
 func (a *mqlAwsElasticache) serverlessCaches() ([]any, error) {

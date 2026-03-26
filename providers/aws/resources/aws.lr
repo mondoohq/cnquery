@@ -3120,6 +3120,12 @@ private aws.emr.cluster @defaults("arn") {
   encryptionConfiguration() aws.emr.cluster.encryptionConfiguration
   // S3 log URI for the cluster
   logUri() string
+  // Whether termination protection is enabled for the cluster
+  terminationProtected() bool
+  // Public DNS name of the master node
+  masterPublicDnsName() string
+  // KMS key used for log encryption
+  logEncryptionKmsKey() aws.kms.key
 }
 
 // EMR cluster encryption configuration from the security configuration
@@ -3429,6 +3435,8 @@ private aws.cloudfront.distribution @defaults("domainName status") {
   viewerProtocolPolicy string
   // Minimum SSL/TLS protocol version for viewer connections (e.g., TLSv1.2_2021)
   minimumProtocolVersion string
+  // SSL support method: "sni-only", "vip", or "static-ip"
+  sslSupportMethod string
   // ARN of the AWS WAF web ACL associated with the distribution (empty string if none)
   webAclId string
   // Type of geographic restriction applied to the distribution (none, whitelist, or blacklist)
@@ -4140,6 +4148,10 @@ private aws.dynamodb.table @defaults("name region") {
   backups() []dict
   // Description of server-side encryption for the table
   sseDescription dict
+  // Type of server-side encryption: "AES256" (AWS-owned) or "KMS" (customer-managed or AWS-managed KMS key)
+  sseType string
+  // KMS key used for server-side encryption at rest
+  sseKmsKey() aws.kms.key
   // Provisioned throughput settings for the table
   provisionedThroughput dict
   // Continuous backups and point-in-time recovery settings for the table
@@ -4659,6 +4671,8 @@ private aws.elasticache.cluster @defaults("cacheClusterId region nodeType engine
   transitEncryptionEnabled bool
   // Whether migrating clients to use in-transit encryption (with no downtime) is allowed
   transitEncryptionMode string
+  // KMS key used for at-rest encryption
+  kmsKey() aws.kms.key
   // Specifies the weekly time range during which maintenance on the cluster is performed
   preferredMaintenanceWindow string
   // Whether log delivery is enabled for the replication group
@@ -4779,6 +4793,8 @@ private aws.redshift.cluster @defaults("dbName clusterVersion clusterStatus regi
   manualSnapshotRetentionPeriod int
   // IP address type for the cluster (ipv4 or dualstack)
   ipAddressType string
+  // KMS key used to encrypt the master password secret in Secrets Manager
+  masterPasswordSecretKmsKey() aws.kms.key
   // Snapshots for this cluster
   snapshots() []aws.redshift.snapshot
 }
@@ -6729,6 +6745,8 @@ private aws.neptune.cluster @defaults("arn name status") {
   storageEncrypted bool
   // Storage type
   storageType string
+  // List of VPC security groups associated with the DB cluster
+  securityGroups() []aws.ec2.securitygroup
 }
 
 // Amazon Neptune instance
@@ -6964,6 +6982,10 @@ private aws.documentdb.cluster @defaults("arn name status") {
   tags() map[string]string
   // Snapshots for this cluster
   snapshots() []aws.documentdb.snapshot
+  // List of VPC security groups associated with the DB cluster
+  securityGroups() []aws.ec2.securitygroup
+  // Network type for the cluster (IPV4 or DUAL)
+  networkType string
 }
 
 // Amazon DocumentDB instance

@@ -66,7 +66,7 @@ func (a *mqlAwsDocumentdb) getDbClusters(conn *connection.AwsConnection) []*jobp
 					return nil, err
 				}
 				for _, cluster := range page.DBClusters {
-					mqlCluster, err := newMqlAwsDocumentdbCluster(a.MqlRuntime, region, cluster)
+					mqlCluster, err := newMqlAwsDocumentdbCluster(a.MqlRuntime, region, conn.AccountId(), cluster)
 					if err != nil {
 						return nil, err
 					}
@@ -80,7 +80,7 @@ func (a *mqlAwsDocumentdb) getDbClusters(conn *connection.AwsConnection) []*jobp
 	return tasks
 }
 
-func newMqlAwsDocumentdbCluster(runtime *plugin.Runtime, region string, cluster docdb_types.DBCluster) (*mqlAwsDocumentdbCluster, error) {
+func newMqlAwsDocumentdbCluster(runtime *plugin.Runtime, region string, accountID string, cluster docdb_types.DBCluster) (*mqlAwsDocumentdbCluster, error) {
 	resource, err := CreateResource(runtime, "aws.documentdb.cluster",
 		map[string]*llx.RawData{
 			"__id":                         llx.StringDataPtr(cluster.DBClusterArn),
@@ -108,16 +108,29 @@ func newMqlAwsDocumentdbCluster(runtime *plugin.Runtime, region string, cluster 
 			"status":                       llx.StringDataPtr(cluster.Status),
 			"storageEncrypted":             llx.BoolDataPtr(cluster.StorageEncrypted),
 			"storageType":                  llx.StringDataPtr(cluster.StorageType),
+			"networkType":                  llx.StringDataPtr(cluster.NetworkType),
 		})
 	if err != nil {
 		return nil, err
 	}
+	sgsArn := []string{}
+	for _, sg := range cluster.VpcSecurityGroups {
+		if sg.VpcSecurityGroupId != nil {
+			sgsArn = append(sgsArn, NewSecurityGroupArn(region, accountID, *sg.VpcSecurityGroupId))
+		}
+	}
 	mqlCluster := resource.(*mqlAwsDocumentdbCluster)
 	mqlCluster.cacheKmsKeyId = cluster.KmsKeyId
+	mqlCluster.setSecurityGroupArns(sgsArn)
 	return mqlCluster, nil
 }
 
+func (a *mqlAwsDocumentdbCluster) securityGroups() ([]any, error) {
+	return a.newSecurityGroupResources(a.MqlRuntime)
+}
+
 type mqlAwsDocumentdbClusterInternal struct {
+	securityGroupIdHandler
 	cacheKmsKeyId *string
 }
 

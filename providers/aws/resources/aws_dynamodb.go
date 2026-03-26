@@ -361,6 +361,25 @@ func (a *mqlAwsDynamodbTable) backups() ([]any, error) {
 	return convert.JsonToDictSlice(allBackups)
 }
 
+type mqlAwsDynamodbTableInternal struct {
+	cacheSseKmsKeyArn *string
+}
+
+func (a *mqlAwsDynamodbTable) sseKmsKey() (*mqlAwsKmsKey, error) {
+	if a.cacheSseKmsKeyArn == nil || *a.cacheSseKmsKeyArn == "" {
+		a.SseKmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{
+			"arn": llx.StringDataPtr(a.cacheSseKmsKeyArn),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
 func (a *mqlAwsDynamodbTable) tags() (map[string]any, error) {
 	tableArn := a.Arn.Data
 	region := a.Region.Data
@@ -526,12 +545,20 @@ func (a *mqlAwsDynamodb) getTables(conn *connection.AwsConnection) []*jobpool.Jo
 						return nil, err
 					}
 
+					var sseType string
+					var sseKmsKeyArn *string
+					if table.Table.SSEDescription != nil {
+						sseType = string(table.Table.SSEDescription.SSEType)
+						sseKmsKeyArn = table.Table.SSEDescription.KMSMasterKeyArn
+					}
+
 					mqlTable, err := CreateResource(a.MqlRuntime, "aws.dynamodb.table",
 						map[string]*llx.RawData{
 							"arn":                       llx.StringData(fmt.Sprintf(dynamoTableArnPattern, region, conn.AccountId(), tableName)),
 							"name":                      llx.StringData(tableName),
 							"region":                    llx.StringData(region),
 							"sseDescription":            llx.DictData(sseDict),
+							"sseType":                   llx.StringData(sseType),
 							"provisionedThroughput":     llx.DictData(throughputDict),
 							"createdAt":                 llx.TimeDataPtr(table.Table.CreationDateTime),
 							"deletionProtectionEnabled": llx.BoolDataPtr(table.Table.DeletionProtectionEnabled),
@@ -551,6 +578,7 @@ func (a *mqlAwsDynamodb) getTables(conn *connection.AwsConnection) []*jobpool.Jo
 					if err != nil {
 						return nil, err
 					}
+					mqlTable.(*mqlAwsDynamodbTable).cacheSseKmsKeyArn = sseKmsKeyArn
 					res = append(res, mqlTable)
 				}
 				if listTablesResp.LastEvaluatedTableName == nil {

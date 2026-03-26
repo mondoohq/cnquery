@@ -123,6 +123,7 @@ func (a *mqlAwsRedshift) getClusters(conn *connection.AwsConnection) []*jobpool.
 						return nil, err
 					}
 					mqlDBInstance.(*mqlAwsRedshiftCluster).cacheKmsKeyId = cluster.KmsKeyId
+					mqlDBInstance.(*mqlAwsRedshiftCluster).cacheMasterPasswordSecretKmsKey = cluster.MasterPasswordSecretKmsKeyId
 					res = append(res, mqlDBInstance)
 				}
 			}
@@ -153,7 +154,8 @@ func redshiftTagsToMap(tags []redshifttypes.Tag) map[string]any {
 }
 
 type mqlAwsRedshiftClusterInternal struct {
-	cacheKmsKeyId *string
+	cacheKmsKeyId                   *string
+	cacheMasterPasswordSecretKmsKey *string
 }
 
 func (a *mqlAwsRedshiftCluster) id() (string, error) {
@@ -184,6 +186,21 @@ func (a *mqlAwsRedshiftCluster) kmsKey() (*mqlAwsKmsKey, error) {
 	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
 		map[string]*llx.RawData{
 			"arn": llx.StringDataPtr(a.cacheKmsKeyId),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
+func (a *mqlAwsRedshiftCluster) masterPasswordSecretKmsKey() (*mqlAwsKmsKey, error) {
+	if a.cacheMasterPasswordSecretKmsKey == nil || *a.cacheMasterPasswordSecretKmsKey == "" {
+		a.MasterPasswordSecretKmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{
+			"arn": llx.StringDataPtr(a.cacheMasterPasswordSecretKmsKey),
 		})
 	if err != nil {
 		return nil, err

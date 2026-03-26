@@ -99,11 +99,14 @@ func (a *mqlAwsEmr) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 }
 
 type mqlAwsEmrClusterInternal struct {
-	clusterDetailsFetched bool
-	clusterDetailsLock    sync.Mutex
-	cacheSecurityConfig   string
-	cacheLogUri           string
-	cacheTags             map[string]any
+	clusterDetailsFetched      bool
+	clusterDetailsLock         sync.Mutex
+	cacheSecurityConfig        string
+	cacheLogUri                string
+	cacheTags                  map[string]any
+	cacheTerminationProtected  bool
+	cacheMasterPublicDnsName   string
+	cacheLogEncryptionKmsKeyId *string
 }
 
 func (a *mqlAwsEmrCluster) fetchClusterDetails() error {
@@ -143,6 +146,13 @@ func (a *mqlAwsEmrCluster) fetchClusterDetails() error {
 		}
 	}
 	a.cacheTags = tags
+	if resp.Cluster.TerminationProtected != nil {
+		a.cacheTerminationProtected = *resp.Cluster.TerminationProtected
+	}
+	if resp.Cluster.MasterPublicDnsName != nil {
+		a.cacheMasterPublicDnsName = *resp.Cluster.MasterPublicDnsName
+	}
+	a.cacheLogEncryptionKmsKeyId = resp.Cluster.LogEncryptionKmsKeyId
 	a.clusterDetailsFetched = true
 	return nil
 }
@@ -166,6 +176,38 @@ func (a *mqlAwsEmrCluster) logUri() (string, error) {
 		return "", err
 	}
 	return a.cacheLogUri, nil
+}
+
+func (a *mqlAwsEmrCluster) terminationProtected() (bool, error) {
+	if err := a.fetchClusterDetails(); err != nil {
+		return false, err
+	}
+	return a.cacheTerminationProtected, nil
+}
+
+func (a *mqlAwsEmrCluster) masterPublicDnsName() (string, error) {
+	if err := a.fetchClusterDetails(); err != nil {
+		return "", err
+	}
+	return a.cacheMasterPublicDnsName, nil
+}
+
+func (a *mqlAwsEmrCluster) logEncryptionKmsKey() (*mqlAwsKmsKey, error) {
+	if err := a.fetchClusterDetails(); err != nil {
+		return nil, err
+	}
+	if a.cacheLogEncryptionKmsKeyId == nil || *a.cacheLogEncryptionKmsKeyId == "" {
+		a.LogEncryptionKmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{
+			"arn": llx.StringDataPtr(a.cacheLogEncryptionKmsKeyId),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
 func (a *mqlAwsEmrCluster) encryptionConfiguration() (*mqlAwsEmrClusterEncryptionConfiguration, error) {

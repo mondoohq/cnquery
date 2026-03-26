@@ -5782,6 +5782,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.emr.cluster.logUri": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEmrCluster).GetLogUri()).ToDataRes(types.String)
 	},
+	"aws.emr.cluster.terminationProtected": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrCluster).GetTerminationProtected()).ToDataRes(types.Bool)
+	},
+	"aws.emr.cluster.masterPublicDnsName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrCluster).GetMasterPublicDnsName()).ToDataRes(types.String)
+	},
+	"aws.emr.cluster.logEncryptionKmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrCluster).GetLogEncryptionKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
 	"aws.emr.cluster.encryptionConfiguration.atRestEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEmrClusterEncryptionConfiguration).GetAtRestEnabled()).ToDataRes(types.Bool)
 	},
@@ -6141,6 +6150,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.cloudfront.distribution.minimumProtocolVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfrontDistribution).GetMinimumProtocolVersion()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.distribution.sslSupportMethod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistribution).GetSslSupportMethod()).ToDataRes(types.String)
 	},
 	"aws.cloudfront.distribution.webAclId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfrontDistribution).GetWebAclId()).ToDataRes(types.String)
@@ -6973,6 +6985,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.dynamodb.table.sseDescription": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDynamodbTable).GetSseDescription()).ToDataRes(types.Dict)
 	},
+	"aws.dynamodb.table.sseType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetSseType()).ToDataRes(types.String)
+	},
+	"aws.dynamodb.table.sseKmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetSseKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
 	"aws.dynamodb.table.provisionedThroughput": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDynamodbTable).GetProvisionedThroughput()).ToDataRes(types.Dict)
 	},
@@ -7675,6 +7693,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.elasticache.cluster.transitEncryptionMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticacheCluster).GetTransitEncryptionMode()).ToDataRes(types.String)
 	},
+	"aws.elasticache.cluster.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
 	"aws.elasticache.cluster.preferredMaintenanceWindow": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticacheCluster).GetPreferredMaintenanceWindow()).ToDataRes(types.String)
 	},
@@ -7833,6 +7854,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.redshift.cluster.ipAddressType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftCluster).GetIpAddressType()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.masterPasswordSecretKmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetMasterPasswordSecretKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
 	"aws.redshift.cluster.snapshots": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftCluster).GetSnapshots()).ToDataRes(types.Array(types.Resource("aws.redshift.snapshot")))
@@ -10279,6 +10303,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.neptune.cluster.storageType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNeptuneCluster).GetStorageType()).ToDataRes(types.String)
 	},
+	"aws.neptune.cluster.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneCluster).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
 	"aws.neptune.instance.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNeptuneInstance).GetArn()).ToDataRes(types.String)
 	},
@@ -10587,6 +10614,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.documentdb.cluster.snapshots": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbCluster).GetSnapshots()).ToDataRes(types.Array(types.Resource("aws.documentdb.snapshot")))
+	},
+	"aws.documentdb.cluster.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.documentdb.cluster.networkType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetNetworkType()).ToDataRes(types.String)
 	},
 	"aws.documentdb.instance.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbInstance).GetArn()).ToDataRes(types.String)
@@ -18769,6 +18802,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEmrCluster).LogUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.emr.cluster.terminationProtected": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrCluster).TerminationProtected, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.emr.cluster.masterPublicDnsName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrCluster).MasterPublicDnsName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.emr.cluster.logEncryptionKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrCluster).LogEncryptionKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
 	"aws.emr.cluster.encryptionConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEmrClusterEncryptionConfiguration).__id, ok = v.Value.(string)
 		return
@@ -19315,6 +19360,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.cloudfront.distribution.minimumProtocolVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudfrontDistribution).MinimumProtocolVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.sslSupportMethod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistribution).SslSupportMethod, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.cloudfront.distribution.webAclId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20585,6 +20634,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsDynamodbTable).SseDescription, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.dynamodb.table.sseType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).SseType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.table.sseKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).SseKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
 	"aws.dynamodb.table.provisionedThroughput": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDynamodbTable).ProvisionedThroughput, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -21573,6 +21630,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsElasticacheCluster).TransitEncryptionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.elasticache.cluster.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
 	"aws.elasticache.cluster.preferredMaintenanceWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElasticacheCluster).PreferredMaintenanceWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -21795,6 +21856,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.redshift.cluster.ipAddressType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRedshiftCluster).IpAddressType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.masterPasswordSecretKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).MasterPasswordSecretKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.redshift.cluster.snapshots": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25373,6 +25438,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsNeptuneCluster).StorageType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.neptune.cluster.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneCluster).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.neptune.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsNeptuneInstance).__id, ok = v.Value.(string)
 		return
@@ -25811,6 +25880,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.documentdb.cluster.snapshots": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDocumentdbCluster).Snapshots, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.networkType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).NetworkType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.documentdb.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -44722,6 +44799,9 @@ type mqlAwsEmrCluster struct {
 	SecurityConfiguration   plugin.TValue[string]
 	EncryptionConfiguration plugin.TValue[*mqlAwsEmrClusterEncryptionConfiguration]
 	LogUri                  plugin.TValue[string]
+	TerminationProtected    plugin.TValue[bool]
+	MasterPublicDnsName     plugin.TValue[string]
+	LogEncryptionKmsKey     plugin.TValue[*mqlAwsKmsKey]
 }
 
 // createAwsEmrCluster creates a new instance of this resource
@@ -44822,6 +44902,34 @@ func (c *mqlAwsEmrCluster) GetEncryptionConfiguration() *plugin.TValue[*mqlAwsEm
 func (c *mqlAwsEmrCluster) GetLogUri() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.LogUri, func() (string, error) {
 		return c.logUri()
+	})
+}
+
+func (c *mqlAwsEmrCluster) GetTerminationProtected() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.TerminationProtected, func() (bool, error) {
+		return c.terminationProtected()
+	})
+}
+
+func (c *mqlAwsEmrCluster) GetMasterPublicDnsName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MasterPublicDnsName, func() (string, error) {
+		return c.masterPublicDnsName()
+	})
+}
+
+func (c *mqlAwsEmrCluster) GetLogEncryptionKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.LogEncryptionKmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.emr.cluster", c.__id, "logEncryptionKmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.logEncryptionKmsKey()
 	})
 }
 
@@ -46310,6 +46418,7 @@ type mqlAwsCloudfrontDistribution struct {
 	Cnames                 plugin.TValue[[]any]
 	ViewerProtocolPolicy   plugin.TValue[string]
 	MinimumProtocolVersion plugin.TValue[string]
+	SslSupportMethod       plugin.TValue[string]
 	WebAclId               plugin.TValue[string]
 	GeoRestrictionType     plugin.TValue[string]
 	LastModifiedAt         plugin.TValue[*time.Time]
@@ -46403,6 +46512,10 @@ func (c *mqlAwsCloudfrontDistribution) GetViewerProtocolPolicy() *plugin.TValue[
 
 func (c *mqlAwsCloudfrontDistribution) GetMinimumProtocolVersion() *plugin.TValue[string] {
 	return &c.MinimumProtocolVersion
+}
+
+func (c *mqlAwsCloudfrontDistribution) GetSslSupportMethod() *plugin.TValue[string] {
+	return &c.SslSupportMethod
 }
 
 func (c *mqlAwsCloudfrontDistribution) GetWebAclId() *plugin.TValue[string] {
@@ -49865,13 +49978,15 @@ func (c *mqlAwsDynamodbGlobaltable) GetReplicaSettings() *plugin.TValue[[]any] {
 type mqlAwsDynamodbTable struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsDynamodbTableInternal it will be used here
+	mqlAwsDynamodbTableInternal
 	Arn                       plugin.TValue[string]
 	Id                        plugin.TValue[string]
 	Name                      plugin.TValue[string]
 	Region                    plugin.TValue[string]
 	Backups                   plugin.TValue[[]any]
 	SseDescription            plugin.TValue[any]
+	SseType                   plugin.TValue[string]
+	SseKmsKey                 plugin.TValue[*mqlAwsKmsKey]
 	ProvisionedThroughput     plugin.TValue[any]
 	ContinuousBackups         plugin.TValue[any]
 	Tags                      plugin.TValue[map[string]any]
@@ -49951,6 +50066,26 @@ func (c *mqlAwsDynamodbTable) GetBackups() *plugin.TValue[[]any] {
 
 func (c *mqlAwsDynamodbTable) GetSseDescription() *plugin.TValue[any] {
 	return &c.SseDescription
+}
+
+func (c *mqlAwsDynamodbTable) GetSseType() *plugin.TValue[string] {
+	return &c.SseType
+}
+
+func (c *mqlAwsDynamodbTable) GetSseKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.SseKmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.dynamodb.table", c.__id, "sseKmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.sseKmsKey()
+	})
 }
 
 func (c *mqlAwsDynamodbTable) GetProvisionedThroughput() *plugin.TValue[any] {
@@ -51878,6 +52013,7 @@ type mqlAwsElasticacheCluster struct {
 	SnapshotWindow                     plugin.TValue[string]
 	TransitEncryptionEnabled           plugin.TValue[bool]
 	TransitEncryptionMode              plugin.TValue[string]
+	KmsKey                             plugin.TValue[*mqlAwsKmsKey]
 	PreferredMaintenanceWindow         plugin.TValue[string]
 	ReplicationGroupLogDeliveryEnabled plugin.TValue[bool]
 }
@@ -52036,6 +52172,22 @@ func (c *mqlAwsElasticacheCluster) GetTransitEncryptionEnabled() *plugin.TValue[
 
 func (c *mqlAwsElasticacheCluster) GetTransitEncryptionMode() *plugin.TValue[string] {
 	return &c.TransitEncryptionMode
+}
+
+func (c *mqlAwsElasticacheCluster) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elasticache.cluster", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
 }
 
 func (c *mqlAwsElasticacheCluster) GetPreferredMaintenanceWindow() *plugin.TValue[string] {
@@ -52297,6 +52449,7 @@ type mqlAwsRedshiftCluster struct {
 	MultiAZ                          plugin.TValue[bool]
 	ManualSnapshotRetentionPeriod    plugin.TValue[int64]
 	IpAddressType                    plugin.TValue[string]
+	MasterPasswordSecretKmsKey       plugin.TValue[*mqlAwsKmsKey]
 	Snapshots                        plugin.TValue[[]any]
 }
 
@@ -52503,6 +52656,22 @@ func (c *mqlAwsRedshiftCluster) GetManualSnapshotRetentionPeriod() *plugin.TValu
 
 func (c *mqlAwsRedshiftCluster) GetIpAddressType() *plugin.TValue[string] {
 	return &c.IpAddressType
+}
+
+func (c *mqlAwsRedshiftCluster) GetMasterPasswordSecretKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.MasterPasswordSecretKmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.redshift.cluster", c.__id, "masterPasswordSecretKmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.masterPasswordSecretKmsKey()
+	})
 }
 
 func (c *mqlAwsRedshiftCluster) GetSnapshots() *plugin.TValue[[]any] {
@@ -61059,7 +61228,7 @@ func (c *mqlAwsNeptune) GetInstances() *plugin.TValue[[]any] {
 type mqlAwsNeptuneCluster struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsNeptuneClusterInternal it will be used here
+	mqlAwsNeptuneClusterInternal
 	Arn                              plugin.TValue[string]
 	Name                             plugin.TValue[string]
 	Snapshots                        plugin.TValue[[]any]
@@ -61092,6 +61261,7 @@ type mqlAwsNeptuneCluster struct {
 	Status                           plugin.TValue[string]
 	StorageEncrypted                 plugin.TValue[bool]
 	StorageType                      plugin.TValue[string]
+	SecurityGroups                   plugin.TValue[[]any]
 }
 
 // createAwsNeptuneCluster creates a new instance of this resource
@@ -61276,6 +61446,22 @@ func (c *mqlAwsNeptuneCluster) GetStorageEncrypted() *plugin.TValue[bool] {
 
 func (c *mqlAwsNeptuneCluster) GetStorageType() *plugin.TValue[string] {
 	return &c.StorageType
+}
+
+func (c *mqlAwsNeptuneCluster) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.neptune.cluster", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
 }
 
 // mqlAwsNeptuneInstance for the aws.neptune.instance resource
@@ -62047,6 +62233,8 @@ type mqlAwsDocumentdbCluster struct {
 	StorageType                  plugin.TValue[string]
 	Tags                         plugin.TValue[map[string]any]
 	Snapshots                    plugin.TValue[[]any]
+	SecurityGroups               plugin.TValue[[]any]
+	NetworkType                  plugin.TValue[string]
 }
 
 // createAwsDocumentdbCluster creates a new instance of this resource
@@ -62213,6 +62401,26 @@ func (c *mqlAwsDocumentdbCluster) GetSnapshots() *plugin.TValue[[]any] {
 
 		return c.snapshots()
 	})
+}
+
+func (c *mqlAwsDocumentdbCluster) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb.cluster", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsDocumentdbCluster) GetNetworkType() *plugin.TValue[string] {
+	return &c.NetworkType
 }
 
 // mqlAwsDocumentdbInstance for the aws.documentdb.instance resource

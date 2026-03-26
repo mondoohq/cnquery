@@ -89,8 +89,10 @@ func (a *mqlAwsCloudfront) distributions() ([]any, error) {
 				viewerProtocolPolicy = string(distribution.DefaultCacheBehavior.ViewerProtocolPolicy)
 			}
 			var minimumProtocolVersion string
+			var sslSupportMethod string
 			if distribution.ViewerCertificate != nil {
 				minimumProtocolVersion = string(distribution.ViewerCertificate.MinimumProtocolVersion)
+				sslSupportMethod = string(distribution.ViewerCertificate.SSLSupportMethod)
 			}
 			var geoRestrictionType string
 			if distribution.Restrictions != nil && distribution.Restrictions.GeoRestriction != nil {
@@ -111,6 +113,7 @@ func (a *mqlAwsCloudfront) distributions() ([]any, error) {
 				"status":                 llx.StringDataPtr(distribution.Status),
 				"viewerProtocolPolicy":   llx.StringData(viewerProtocolPolicy),
 				"minimumProtocolVersion": llx.StringData(minimumProtocolVersion),
+				"sslSupportMethod":       llx.StringData(sslSupportMethod),
 				"webAclId":               llx.StringDataPtr(distribution.WebACLId),
 				"geoRestrictionType":     llx.StringData(geoRestrictionType),
 				"lastModifiedAt":         llx.TimeDataPtr(distribution.LastModifiedTime),

@@ -398,6 +398,7 @@ aws.cloudfront.distribution.origin.id 11.15.2
 aws.cloudfront.distribution.origin.originPath 11.15.2
 aws.cloudfront.distribution.origins 11.15.2
 aws.cloudfront.distribution.priceClass 11.15.2
+aws.cloudfront.distribution.sslSupportMethod 13.3.1
 aws.cloudfront.distribution.status 11.15.2
 aws.cloudfront.distribution.viewerProtocolPolicy 11.15.2
 aws.cloudfront.distribution.webAclId 11.15.2
@@ -684,10 +685,12 @@ aws.documentdb.cluster.kmsKey 11.16.1
 aws.documentdb.cluster.masterUsername 11.16.1
 aws.documentdb.cluster.multiAZ 11.16.1
 aws.documentdb.cluster.name 11.16.1
+aws.documentdb.cluster.networkType 13.3.1
 aws.documentdb.cluster.port 11.16.1
 aws.documentdb.cluster.preferredBackupWindow 11.16.1
 aws.documentdb.cluster.preferredMaintenanceWindow 11.16.1
 aws.documentdb.cluster.region 11.16.1
+aws.documentdb.cluster.securityGroups 13.3.1
 aws.documentdb.cluster.snapshots 11.16.1
 aws.documentdb.cluster.status 11.16.1
 aws.documentdb.cluster.storageEncrypted 11.16.1
@@ -842,6 +845,8 @@ aws.dynamodb.table.region 11.15.2
 aws.dynamodb.table.replicaRegions 11.16.1
 aws.dynamodb.table.sizeBytes 11.15.2
 aws.dynamodb.table.sseDescription 11.15.2
+aws.dynamodb.table.sseKmsKey 13.3.1
+aws.dynamodb.table.sseType 13.3.1
 aws.dynamodb.table.status 11.15.2
 aws.dynamodb.table.streamEnabled 11.16.1
 aws.dynamodb.table.streamViewType 11.16.1
@@ -1469,6 +1474,7 @@ aws.elasticache.cluster.clientDownloadLandingPage 11.15.2
 aws.elasticache.cluster.engine 11.15.2
 aws.elasticache.cluster.engineVersion 11.15.2
 aws.elasticache.cluster.ipDiscovery 11.15.2
+aws.elasticache.cluster.kmsKey 13.3.1
 aws.elasticache.cluster.logDeliveryConfigurations 11.15.2
 aws.elasticache.cluster.networkType 11.15.2
 aws.elasticache.cluster.nodeType 11.15.2
@@ -1624,14 +1630,17 @@ aws.emr.cluster.encryptionConfiguration.atRestEnabled 13.3.0
 aws.emr.cluster.encryptionConfiguration.inTransitConfiguration 13.3.0
 aws.emr.cluster.encryptionConfiguration.inTransitEnabled 13.3.0
 aws.emr.cluster.id 11.15.2
+aws.emr.cluster.logEncryptionKmsKey 13.3.1
 aws.emr.cluster.logUri 13.3.0
 aws.emr.cluster.masterInstances 11.15.2
+aws.emr.cluster.masterPublicDnsName 13.3.1
 aws.emr.cluster.name 11.15.2
 aws.emr.cluster.normalizedInstanceHours 11.15.2
 aws.emr.cluster.outpostArn 11.15.2
 aws.emr.cluster.securityConfiguration 13.3.0
 aws.emr.cluster.status 11.15.2
 aws.emr.cluster.tags 11.15.2
+aws.emr.cluster.terminationProtected 13.3.1
 aws.emr.clusters 11.15.2
 aws.es 11.15.2
 aws.es.domain 11.15.2
@@ -2666,6 +2675,7 @@ aws.neptune.cluster.port 11.15.2
 aws.neptune.cluster.preferredBackupWindow 11.15.2
 aws.neptune.cluster.preferredMaintenanceWindow 11.15.2
 aws.neptune.cluster.region 11.15.2
+aws.neptune.cluster.securityGroups 13.3.1
 aws.neptune.cluster.snapshots 11.15.2
 aws.neptune.cluster.status 11.15.2
 aws.neptune.cluster.storageEncrypted 11.15.2
@@ -3052,6 +3062,7 @@ aws.redshift.cluster.kmsKey 11.16.1
 aws.redshift.cluster.logging 11.15.2
 aws.redshift.cluster.maintenanceTrackName 11.16.1
 aws.redshift.cluster.manualSnapshotRetentionPeriod 11.15.2
+aws.redshift.cluster.masterPasswordSecretKmsKey 13.3.1
 aws.redshift.cluster.masterUsername 11.15.2
 aws.redshift.cluster.modifyStatus 11.16.1
 aws.redshift.cluster.multiAZ 11.15.2
