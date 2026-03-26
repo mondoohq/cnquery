@@ -529,6 +529,17 @@ func TestDict_Methods_Map(t *testing.T) {
 			Code:        p + "params['aoa'].flat",
 			Expectation: []any{float64(1), float64(2), float64(3)},
 		},
+		// Null equality: a missing dict key is null.
+		{
+			Code:        p + "params['yo'] == null",
+			ResultIndex: 1,
+			Expectation: true,
+		},
+		{
+			Code:        p + "params['yo'] != null",
+			ResultIndex: 1,
+			Expectation: false,
+		},
 		// Comparisons against nonexistent (null) dict keys evaluate to false,
 		// not error. A missing value is not less/greater/equal to anything.
 		{

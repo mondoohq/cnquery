@@ -173,8 +173,9 @@ func nonNilDataOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, t
 	if bind.Value == nil {
 		// For comparison operations, a null operand means the comparison
 		// is undefined and evaluates to false (e.g. a missing config param
-		// is not <= 4). This matches SQL NULL semantics and avoids surfacing
-		// errors for legitimately absent values.
+		// is not <= 4). This intentionally departs from SQL NULL semantics
+		// (which would return NULL/unknown); we return false so that policy
+		// checks against absent values fail rather than error.
 		return BoolData(false), 0, nil
 	}
 
@@ -195,6 +196,7 @@ func nonNilDataOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, t
 
 func nonNilDataOpT[T any](e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, typ types.Type, f func(T, T) *RawData) (*RawData, uint64, error) {
 	if bind.Value == nil {
+		// Null operand: comparison is undefined, return false. See nonNilDataOpV2.
 		return BoolData(false), 0, nil
 	}
 
