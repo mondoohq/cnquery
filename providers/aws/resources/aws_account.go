@@ -277,7 +277,10 @@ func initAwsAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	}
 
 	if len(args) == 0 {
-		conn := runtime.Connection.(*connection.AwsConnection)
+		conn, ok := runtime.Connection.(*connection.AwsConnection)
+		if !ok {
+			return nil, nil, errors.New("aws.account requires an AWS connection")
+		}
 		args["id"] = llx.StringData(conn.AccountId())
 	}
 	if args["id"] == nil {
