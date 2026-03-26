@@ -160,13 +160,13 @@ func TestAlfConfigSlice(t *testing.T) {
 // Since these methods require the full runtime, we test the mapping logic directly.
 func TestAlfFirewallGlobalStateMapping(t *testing.T) {
 	tests := []struct {
-		globalState      float64
-		expectEnabled    bool
-		expectBlockAll   bool
+		globalState    float64
+		expectEnabled  bool
+		expectBlockAll bool
 	}{
-		{0, false, false},  // firewall off
-		{1, true, false},   // firewall on, normal mode
-		{2, true, true},    // firewall on, block all incoming
+		{0, false, false}, // firewall off
+		{1, true, false},  // firewall on, normal mode
+		{2, true, true},   // firewall on, block all incoming
 	}
 
 	for _, tt := range tests {
