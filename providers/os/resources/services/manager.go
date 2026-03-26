@@ -182,7 +182,7 @@ func ResolveManager(conn shared.Connection) (OSServiceManager, error) {
 		osm = &OpenBsdRcctlServiceManager{conn: conn}
 	case asset.Platform.Name == "windows":
 		osm = &WindowsServiceManager{conn: conn}
-	case asset.Platform.Name == "alpine":
+	case asset.Platform.Name == "alpine" || asset.Platform.Name == "wolfi":
 		osm = &OpenrcServiceManager{conn: conn}
 	case asset.Platform.Name == "gentoo":
 		osm = &OpenrcServiceManager{conn: conn}
