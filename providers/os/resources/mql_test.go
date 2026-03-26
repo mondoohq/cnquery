@@ -529,17 +529,34 @@ func TestDict_Methods_Map(t *testing.T) {
 			Code:        p + "params['aoa'].flat",
 			Expectation: []any{float64(1), float64(2), float64(3)},
 		},
+		// Comparisons against nonexistent (null) dict keys evaluate to false,
+		// not error. A missing value is not less/greater/equal to anything.
+		{
+			Code:        p + "params['yo'] > 3",
+			ResultIndex: 1,
+			Expectation: false,
+		},
+		{
+			Code:        p + "params['yo'] >= 3",
+			ResultIndex: 1,
+			Expectation: false,
+		},
+		{
+			Code:        p + "params['yo'] < 3",
+			ResultIndex: 1,
+			Expectation: false,
+		},
+		{
+			Code:        p + "params['yo'] <= 3",
+			ResultIndex: 1,
+			Expectation: false,
+		},
 	})
 
 	x.TestSimpleErrors(t, []testutils.SimpleTest{
 		{
 			Code:        p + "params['does not exist'].values",
 			Expectation: "failed to get values of `null`",
-		},
-		{
-			Code:        p + "params['yo'] > 3",
-			ResultIndex: 1,
-			Expectation: "left side of operation is null",
 		},
 	})
 }

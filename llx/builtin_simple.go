@@ -171,7 +171,11 @@ func dataOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, typ typ
 
 func nonNilDataOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, typ types.Type, f func(any, any) *RawData) (*RawData, uint64, error) {
 	if bind.Value == nil {
-		return &RawData{Type: typ, Error: errors.New("left side of operation is null")}, 0, nil
+		// For comparison operations, a null operand means the comparison
+		// is undefined and evaluates to false (e.g. a missing config param
+		// is not <= 4). This matches SQL NULL semantics and avoids surfacing
+		// errors for legitimately absent values.
+		return BoolData(false), 0, nil
 	}
 
 	v, dref, err := e.resolveValue(chunk.Function.Args[0], ref)
@@ -183,7 +187,7 @@ func nonNilDataOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, t
 	}
 
 	if v == nil || v.Value == nil {
-		return &RawData{Type: typ, Error: errors.New("right side of operation is null")}, 0, nil
+		return BoolData(false), 0, nil
 	}
 
 	return f(bind.Value, v.Value), 0, nil
@@ -191,7 +195,7 @@ func nonNilDataOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, t
 
 func nonNilDataOpT[T any](e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, typ types.Type, f func(T, T) *RawData) (*RawData, uint64, error) {
 	if bind.Value == nil {
-		return &RawData{Type: typ, Error: errors.New("left side of operation is null")}, 0, nil
+		return BoolData(false), 0, nil
 	}
 
 	v, dref, err := e.resolveValue(chunk.Function.Args[0], ref)
@@ -203,7 +207,7 @@ func nonNilDataOpT[T any](e *blockExecutor, bind *RawData, chunk *Chunk, ref uin
 	}
 
 	if v == nil || v.Value == nil {
-		return &RawData{Type: typ, Error: errors.New("right side of operation is null")}, 0, nil
+		return BoolData(false), 0, nil
 	}
 
 	l, ok := bind.Value.(T)
@@ -810,11 +814,11 @@ func timeLTTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		l := left.(*time.Time)
 		if l == nil {
-			return &RawData{Type: types.Bool, Error: errors.New("left side of operation is null")}
+			return BoolData(false)
 		}
 		r := right.(*time.Time)
 		if r == nil {
-			return &RawData{Type: types.Bool, Error: errors.New("right side of operation is null")}
+			return BoolData(false)
 		}
 
 		return BoolData((*l).Before(*r))
@@ -825,11 +829,11 @@ func timeLTETimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		l := left.(*time.Time)
 		if l == nil {
-			return &RawData{Type: types.Bool, Error: errors.New("left side of operation is null")}
+			return BoolData(false)
 		}
 		r := right.(*time.Time)
 		if r == nil {
-			return &RawData{Type: types.Bool, Error: errors.New("right side of operation is null")}
+			return BoolData(false)
 		}
 
 		return BoolData((*l).Before(*r) || (*l).Equal(*r))
@@ -840,11 +844,11 @@ func timeGTTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		l := left.(*time.Time)
 		if l == nil {
-			return &RawData{Type: types.Bool, Error: errors.New("left side of operation is null")}
+			return BoolData(false)
 		}
 		r := right.(*time.Time)
 		if r == nil {
-			return &RawData{Type: types.Bool, Error: errors.New("right side of operation is null")}
+			return BoolData(false)
 		}
 
 		return BoolData((*l).After(*r))
@@ -855,11 +859,11 @@ func timeGTETimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left any, right any) *RawData {
 		l := left.(*time.Time)
 		if l == nil {
-			return &RawData{Type: types.Bool, Error: errors.New("left side of operation is null")}
+			return BoolData(false)
 		}
 		r := right.(*time.Time)
 		if r == nil {
-			return &RawData{Type: types.Bool, Error: errors.New("right side of operation is null")}
+			return BoolData(false)
 		}
 
 		return BoolData((*l).After(*r) || (*l).Equal(*r))
