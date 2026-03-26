@@ -7790,6 +7790,7 @@ private aws.kinesis.stream @defaults("name status region") {
   // Encryption type used (NONE or KMS)
   encryptionType() string
   // KMS key ID for encryption
+  // Deprecated: use kmsKey() instead
   keyId() string
   // KMS key used for encryption
   kmsKey() aws.kms.key
