@@ -18,15 +18,25 @@ import (
 	"github.com/jfjallid/go-smb/dcerpc/smbtransport"
 	gosmb "github.com/jfjallid/go-smb/smb"
 	"github.com/jfjallid/go-smb/spnego"
+	"github.com/jfjallid/golog"
 	"github.com/rs/zerolog/log"
 )
 
 // smbProbeTimeout caps how long we wait for SMB probe TCP connections.
-const smbProbeTimeout = 10 * time.Second
+const (
+	smbProbeTimeout = 10 * time.Second
+	msrrpLoggerName = "github.com/jfjallid/go-smb/dcerpc/msrrp"
+)
 
 // ErrRegistryValueNotFound indicates the queried registry value does not exist.
 // Callers use errors.Is to distinguish "not configured" from transport failures.
 var ErrRegistryValueNotFound = errors.New("registry value not found")
+
+func init() {
+	// The upstream msrrp package logs expected missing-value errors before returning
+	// them. We rely on the returned error path instead of duplicate stderr noise.
+	golog.Set(msrrpLoggerName, "msrrp", golog.LevelNone, golog.LstdFlags, io.Discard, io.Discard)
+}
 
 // ---------------------------------------------------------------------------
 // NegotiateResult — cached pre-auth SMB metadata from raw negotiate probes
