@@ -348,6 +348,27 @@ func TestGetPartitions(t *testing.T) {
 
 		require.ElementsMatch(t, expected, parts)
 	})
+
+	// Bottlerocket-like partition layout: the OS root partition is smaller
+	// than the data partition. GetPartitions must return both (sorted by
+	// size, largest first) so that tryDetectAsset can iterate through them.
+	t.Run("bottlerocket-like layout returns all non-boot partitions", func(t *testing.T) {
+		block := BlockDevice{
+			Name: "nvme1n1",
+			Children: []*BlockDevice{
+				{Name: "nvme1n1p1", FsType: "vfat", Uuid: "boot-uuid", Label: "boot", Size: 40 * 1024 * 1024},
+				{Name: "nvme1n1p2", FsType: "ext4", Uuid: "root-a-uuid", Size: 964 * 1024 * 1024},     // root-A
+				{Name: "nvme1n1p3", FsType: "ext4", Uuid: "root-b-uuid", Size: 964 * 1024 * 1024},     // root-B
+				{Name: "nvme1n1p4", FsType: "ext4", Uuid: "data-uuid", Size: 20 * 1024 * 1024 * 1024}, // data (largest)
+				{Name: "nvme1n1p5", FsType: "", Uuid: "", Size: 10 * 1024 * 1024},                     // verity hash (no fs)
+			},
+		}
+		parts, err := block.GetPartitions(false, false)
+		require.NoError(t, err)
+		require.Len(t, parts, 3, "should return all non-boot partitions with a filesystem type")
+		// sorted by size descending: data, root-A, root-B (or root-B, root-A since same size)
+		require.Equal(t, "data-uuid", parts[0].Uuid, "largest partition should be first")
+	})
 }
 
 func TestLongestMatchingSuffix(t *testing.T) {

@@ -67,9 +67,16 @@ func (d *OSReleaseDetector) unamem() (string, error) {
 // VERSION_CODENAME=xenial
 // UBUNTU_CODENAME=xenial
 func (d *OSReleaseDetector) osrelease() (map[string]string, error) {
+	// Per the freedesktop os-release spec, /etc/os-release takes precedence
+	// but /usr/lib/os-release should be used as a fallback. This is important
+	// for systems like Bottlerocket where /etc is an overlay and /etc/os-release
+	// only exists in the overlay upper layer, not on the raw root partition.
 	f, err := d.provider.FileSystem().Open("/etc/os-release")
 	if err != nil {
-		return nil, err
+		f, err = d.provider.FileSystem().Open("/usr/lib/os-release")
+		if err != nil {
+			return nil, err
+		}
 	}
 	defer f.Close()
 

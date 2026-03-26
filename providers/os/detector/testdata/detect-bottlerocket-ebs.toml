@@ -1,0 +1,33 @@
+# Simulates scanning a Bottlerocket root partition via EBS volume snapshot.
+# On Bottlerocket, /etc is an overlay filesystem. The /etc/os-release symlink
+# only exists in the overlay upper layer (data partition), not on the immutable
+# root partition. The canonical /usr/lib/os-release is on the root partition.
+# /etc/bottlerocket-release also does not exist on newer Bottlerocket versions.
+
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "5.10.205"
+
+[files."/etc/os-release"]
+enoent = true
+
+[files."/usr/lib/os-release"]
+content = """
+NAME=Bottlerocket
+ID=bottlerocket
+VERSION="1.50.0 (aws-ecs-2)"
+PRETTY_NAME="Bottlerocket OS 1.50.0 (aws-ecs-2)"
+VARIANT_ID=aws-ecs-2
+VERSION_ID=1.50.0
+BUILD_ID=80378023
+VENDOR_NAME=Bottlerocket
+HOME_URL="https://github.com/bottlerocket-os/bottlerocket"
+SUPPORT_URL="https://github.com/bottlerocket-os/bottlerocket/discussions"
+BUG_REPORT_URL="https://github.com/bottlerocket-os/bottlerocket/issues"
+DOCUMENTATION_URL="https://bottlerocket.dev"
+"""

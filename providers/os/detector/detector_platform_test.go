@@ -578,6 +578,21 @@ func TestBottlerocketDetector(t *testing.T) {
 	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
 }
 
+// TestBottlerocketEBSDetector tests Bottlerocket detection when scanning via
+// EBS volume snapshot. On Bottlerocket, /etc is an overlay filesystem and
+// /etc/os-release only exists in the overlay upper layer, not on the raw root
+// partition. The detector must fall back to /usr/lib/os-release.
+func TestBottlerocketEBSDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-bottlerocket-ebs.toml")
+	assert.Nil(t, err, "was able to detect the platform")
+
+	assert.Equal(t, "bottlerocket", di.Name, "os name should be identified")
+	assert.Equal(t, "Bottlerocket OS 1.50.0 (aws-ecs-2)", di.Title, "os title should be identified")
+	assert.Equal(t, "1.50.0", di.Version, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
+}
+
 func TestScientificLinuxDetector(t *testing.T) {
 	di, err := detectPlatformFromMock("./testdata/detect-scientific.toml")
 	assert.Nil(t, err, "was able to create the provider")
