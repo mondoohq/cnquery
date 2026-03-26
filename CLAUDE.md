@@ -508,18 +508,21 @@ When work appears complete, present this checklist to the user for local verific
 
 ### Essential Checks (Run These)
 ```bash
-# 1. Ensure generated code is up-to-date
+# 1. Run gofmt on any Go files you changed
+gofmt -w <changed .go files>
+
+# 2. Ensure generated code is up-to-date
 make mql/generate
 git diff --exit-code  # Should show no changes
 
-# 2. Verify go.mod is clean
+# 3. Verify go.mod is clean
 go mod tidy
 git diff go.mod go.sum  # Should show no changes
 
-# 3. Run linting
+# 4. Run linting
 make test/lint
 
-# 4. Run unit tests
+# 5. Run unit tests
 make test/go/plain
 ```
 
@@ -547,6 +550,7 @@ make test/integration
 ```
 
 ### Quick Pre-Commit Checklist
+- [ ] `gofmt -w` run on all changed `.go` files
 - [ ] Generated files are up-to-date (`.lr.go`, `.pb.go`)
 - [ ] Linting passes (`make test/lint`)
 - [ ] Changes work interactively (`mql shell <provider>`)
