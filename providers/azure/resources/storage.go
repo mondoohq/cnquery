@@ -47,6 +47,13 @@ func initAzureSubscriptionStorageService(runtime *plugin.Runtime, args map[strin
 	return args, nil, nil
 }
 
+type mqlAzureSubscriptionStorageServiceAccountInternal struct {
+	cacheEncryptionKeySource   string
+	cacheEncryptionKeyVaultURI string
+	cacheEncryptionKeyName     string
+	cacheEncryptionKeyVersion  string
+}
+
 func (a *mqlAzureSubscriptionStorageServiceAccount) id() (string, error) {
 	return a.Id.Data, nil
 }
@@ -773,7 +780,41 @@ func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mq
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionStorageServiceAccount), nil
+	mqlRes := res.(*mqlAzureSubscriptionStorageServiceAccount)
+	if account.Properties != nil && account.Properties.Encryption != nil {
+		enc := account.Properties.Encryption
+		if enc.KeySource != nil {
+			mqlRes.cacheEncryptionKeySource = string(*enc.KeySource)
+		}
+		if enc.KeyVaultProperties != nil {
+			if enc.KeyVaultProperties.KeyVaultURI != nil {
+				mqlRes.cacheEncryptionKeyVaultURI = *enc.KeyVaultProperties.KeyVaultURI
+			}
+			if enc.KeyVaultProperties.KeyName != nil {
+				mqlRes.cacheEncryptionKeyName = *enc.KeyVaultProperties.KeyName
+			}
+			if enc.KeyVaultProperties.KeyVersion != nil {
+				mqlRes.cacheEncryptionKeyVersion = *enc.KeyVaultProperties.KeyVersion
+			}
+		}
+	}
+	return mqlRes, nil
+}
+
+func (a *mqlAzureSubscriptionStorageServiceAccount) encryptionKeySource() (string, error) {
+	return a.cacheEncryptionKeySource, nil
+}
+
+func (a *mqlAzureSubscriptionStorageServiceAccount) encryptionKey() (*mqlAzureSubscriptionKeyVaultServiceKey, error) {
+	if a.cacheEncryptionKeyVaultURI == "" || a.cacheEncryptionKeyName == "" {
+		a.EncryptionKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	keyURI := a.cacheEncryptionKeyVaultURI + "/keys/" + a.cacheEncryptionKeyName
+	if a.cacheEncryptionKeyVersion != "" {
+		keyURI += "/" + a.cacheEncryptionKeyVersion
+	}
+	return newKeyVaultKeyResource(a.MqlRuntime, keyURI)
 }
 
 func getStorageAccount(id string, runtime *plugin.Runtime, azureConnection *connection.AzureConnection) (*mqlAzureSubscriptionStorageServiceAccount, error) {

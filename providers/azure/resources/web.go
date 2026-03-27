@@ -109,6 +109,11 @@ func createWebAppResourceFromSite(runtime *plugin.Runtime, resourceType string, 
 		args["enabled"] = llx.BoolDataPtr(site.Properties.Enabled)
 		args["state"] = llx.StringDataPtr(site.Properties.State)
 		args["endToEndEncryptionEnabled"] = llx.BoolDataPtr(site.Properties.EndToEndEncryptionEnabled)
+		var identityType string
+		if site.Identity != nil && site.Identity.Type != nil {
+			identityType = string(*site.Identity.Type)
+		}
+		args["identityType"] = llx.StringData(identityType)
 	}
 
 	return CreateResource(runtime, resourceType, args)
@@ -665,6 +670,66 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) configuration() (*mqlAzureSubscr
 	}
 
 	return res.(*mqlAzureSubscriptionWebServiceAppsiteconfig), nil
+}
+
+func (a *mqlAzureSubscriptionWebServiceAppsiteconfig) ipSecurityRestrictions() ([]any, error) {
+	props := a.Properties.Data
+	if props == nil {
+		return []any{}, nil
+	}
+	propsDict, ok := props.(map[string]any)
+	if !ok {
+		return []any{}, nil
+	}
+	restrictions, ok := propsDict["ipSecurityRestrictions"]
+	if !ok || restrictions == nil {
+		return []any{}, nil
+	}
+	arr, ok := restrictions.([]any)
+	if !ok {
+		return []any{}, nil
+	}
+	return arr, nil
+}
+
+func (a *mqlAzureSubscriptionWebServiceAppsiteconfig) scmIpSecurityRestrictions() ([]any, error) {
+	props := a.Properties.Data
+	if props == nil {
+		return []any{}, nil
+	}
+	propsDict, ok := props.(map[string]any)
+	if !ok {
+		return []any{}, nil
+	}
+	restrictions, ok := propsDict["scmIpSecurityRestrictions"]
+	if !ok || restrictions == nil {
+		return []any{}, nil
+	}
+	arr, ok := restrictions.([]any)
+	if !ok {
+		return []any{}, nil
+	}
+	return arr, nil
+}
+
+func (a *mqlAzureSubscriptionWebServiceAppsiteconfig) ipSecurityRestrictionsDefaultAction() (string, error) {
+	props := a.Properties.Data
+	if props == nil {
+		return "", nil
+	}
+	propsDict, ok := props.(map[string]any)
+	if !ok {
+		return "", nil
+	}
+	val, ok := propsDict["ipSecurityRestrictionsDefaultAction"]
+	if !ok || val == nil {
+		return "", nil
+	}
+	s, ok := val.(string)
+	if !ok {
+		return "", nil
+	}
+	return s, nil
 }
 
 func (a *mqlAzureSubscriptionWebServiceAppsite) authenticationSettings() (*mqlAzureSubscriptionWebServiceAppsiteauthsettings, error) {

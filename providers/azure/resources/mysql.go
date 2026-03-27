@@ -80,6 +80,8 @@ func (a *mqlAzureSubscriptionMySqlService) servers() ([]any, error) {
 			var publicNetworkAccess *string
 			var infrastructureEncryption *bool
 			var version *string
+			var backupRetentionDays int64
+			var geoRedundantBackup string
 			if dbServer.Properties != nil {
 				if dbServer.Properties.SSLEnforcement != nil {
 					v := *dbServer.Properties.SSLEnforcement == mysql.SSLEnforcementEnumEnabled
@@ -92,6 +94,14 @@ func (a *mqlAzureSubscriptionMySqlService) servers() ([]any, error) {
 					infrastructureEncryption = &v
 				}
 				version = (*string)(dbServer.Properties.Version)
+				if dbServer.Properties.StorageProfile != nil {
+					if dbServer.Properties.StorageProfile.BackupRetentionDays != nil {
+						backupRetentionDays = int64(*dbServer.Properties.StorageProfile.BackupRetentionDays)
+					}
+					if dbServer.Properties.StorageProfile.GeoRedundantBackup != nil {
+						geoRedundantBackup = string(*dbServer.Properties.StorageProfile.GeoRedundantBackup)
+					}
+				}
 			}
 
 			mqlAzureDbServer, err := CreateResource(a.MqlRuntime, "azure.subscription.mySqlService.server",
@@ -107,6 +117,8 @@ func (a *mqlAzureSubscriptionMySqlService) servers() ([]any, error) {
 					"publicNetworkAccess":      llx.StringDataPtr(publicNetworkAccess),
 					"infrastructureEncryption": llx.BoolDataPtr(infrastructureEncryption),
 					"version":                  llx.StringDataPtr(version),
+					"backupRetentionDays":      llx.IntData(backupRetentionDays),
+					"geoRedundantBackup":       llx.StringData(geoRedundantBackup),
 				})
 			if err != nil {
 				return nil, err
@@ -154,6 +166,13 @@ func (a *mqlAzureSubscriptionMySqlService) flexibleServers() ([]any, error) {
 				}
 			}
 
+			var dataEncryptionType string
+			if dbServer.Properties != nil && dbServer.Properties.DataEncryption != nil {
+				if dbServer.Properties.DataEncryption.Type != nil {
+					dataEncryptionType = string(*dbServer.Properties.DataEncryption.Type)
+				}
+			}
+
 			mqlAzureDbServer, err := CreateResource(a.MqlRuntime, "azure.subscription.mySqlService.flexibleServer",
 				map[string]*llx.RawData{
 					"id":                  llx.StringDataPtr(dbServer.ID),
@@ -164,9 +183,14 @@ func (a *mqlAzureSubscriptionMySqlService) flexibleServers() ([]any, error) {
 					"properties":          llx.DictData(properties),
 					"version":             llx.StringData(version),
 					"publicNetworkAccess": llx.StringData(publicNetworkAccess),
+					"dataEncryptionType":  llx.StringData(dataEncryptionType),
 				})
 			if err != nil {
 				return nil, err
+			}
+			mqlServer := mqlAzureDbServer.(*mqlAzureSubscriptionMySqlServiceFlexibleServer)
+			if dbServer.Properties != nil && dbServer.Properties.DataEncryption != nil && dbServer.Properties.DataEncryption.PrimaryKeyURI != nil {
+				mqlServer.cacheDataEncryptionKeyURI = *dbServer.Properties.DataEncryption.PrimaryKeyURI
 			}
 			res = append(res, mqlAzureDbServer)
 		}
@@ -494,6 +518,18 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) configuration() ([]any,
 		}
 	}
 	return res, nil
+}
+
+type mqlAzureSubscriptionMySqlServiceFlexibleServerInternal struct {
+	cacheDataEncryptionKeyURI string
+}
+
+func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) dataEncryptionKey() (*mqlAzureSubscriptionKeyVaultServiceKey, error) {
+	if a.cacheDataEncryptionKeyURI == "" {
+		a.DataEncryptionKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return newKeyVaultKeyResource(a.MqlRuntime, a.cacheDataEncryptionKeyURI)
 }
 
 func initAzureSubscriptionMySqlServiceServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {

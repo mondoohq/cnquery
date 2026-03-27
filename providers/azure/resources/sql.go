@@ -485,6 +485,104 @@ func (a *mqlAzureSubscriptionSqlServiceServer) encryptionProtector() (any, error
 	return convert.JsonToDict(policy.EncryptionProtector.Properties)
 }
 
+func (a *mqlAzureSubscriptionSqlServiceServer) encryptionProtectorServerKeyType() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	id := a.Id.Data
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return "", err
+	}
+
+	server, err := resourceID.Component("servers")
+	if err != nil {
+		return "", err
+	}
+
+	client, err := sql.NewEncryptionProtectorsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return "", err
+	}
+	policy, err := client.Get(ctx, resourceID.ResourceGroup, server, sql.EncryptionProtectorNameCurrent, &sql.EncryptionProtectorsClientGetOptions{})
+	if err != nil {
+		return "", err
+	}
+	if policy.Properties != nil && policy.Properties.ServerKeyType != nil {
+		return string(*policy.Properties.ServerKeyType), nil
+	}
+	return "", nil
+}
+
+func (a *mqlAzureSubscriptionSqlServiceServer) encryptionProtectorKey() (*mqlAzureSubscriptionKeyVaultServiceKey, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	id := a.Id.Data
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	server, err := resourceID.Component("servers")
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := sql.NewEncryptionProtectorsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	policy, err := client.Get(ctx, resourceID.ResourceGroup, server, sql.EncryptionProtectorNameCurrent, &sql.EncryptionProtectorsClientGetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	if policy.Properties == nil || policy.Properties.ServerKeyType == nil || string(*policy.Properties.ServerKeyType) != "AzureKeyVault" {
+		a.EncryptionProtectorKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	if policy.Properties.URI != nil {
+		return newKeyVaultKeyResource(a.MqlRuntime, *policy.Properties.URI)
+	}
+	a.EncryptionProtectorKey.State = plugin.StateIsNull | plugin.StateIsSet
+	return nil, nil
+}
+
+func (a *mqlAzureSubscriptionSqlServiceServer) azureAdOnlyAuthentication() (bool, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	id := a.Id.Data
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return false, err
+	}
+
+	server, err := resourceID.Component("servers")
+	if err != nil {
+		return false, err
+	}
+
+	client, err := sql.NewServerAzureADOnlyAuthenticationsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return false, err
+	}
+	result, err := client.Get(ctx, resourceID.ResourceGroup, server, sql.AuthenticationNameDefault, &sql.ServerAzureADOnlyAuthenticationsClientGetOptions{})
+	if err != nil {
+		return false, nil
+	}
+	if result.Properties != nil && result.Properties.AzureADOnlyAuthentication != nil {
+		return *result.Properties.AzureADOnlyAuthentication, nil
+	}
+	return false, nil
+}
+
 func (a *mqlAzureSubscriptionSqlServiceServer) vulnerabilityAssessmentSettings() (*mqlAzureSubscriptionSqlServiceServerVulnerabilityassessmentsettings, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()

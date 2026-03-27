@@ -97,6 +97,17 @@ func (a *mqlAzureSubscriptionPostgreSqlService) servers() ([]any, error) {
 				version = (*string)(dbServer.Properties.Version)
 			}
 
+			var backupRetentionDays int64
+			var geoRedundantBackup string
+			if dbServer.Properties != nil && dbServer.Properties.StorageProfile != nil {
+				if dbServer.Properties.StorageProfile.BackupRetentionDays != nil {
+					backupRetentionDays = int64(*dbServer.Properties.StorageProfile.BackupRetentionDays)
+				}
+				if dbServer.Properties.StorageProfile.GeoRedundantBackup != nil {
+					geoRedundantBackup = string(*dbServer.Properties.StorageProfile.GeoRedundantBackup)
+				}
+			}
+
 			mqlAzurePostgresServer, err := CreateResource(a.MqlRuntime, "azure.subscription.postgreSqlService.server",
 				map[string]*llx.RawData{
 					"id":                       llx.StringDataPtr(dbServer.ID),
@@ -110,6 +121,8 @@ func (a *mqlAzureSubscriptionPostgreSqlService) servers() ([]any, error) {
 					"publicNetworkAccess":      llx.StringDataPtr(publicNetworkAccess),
 					"infrastructureEncryption": llx.BoolDataPtr(infrastructureEncryption),
 					"version":                  llx.StringDataPtr(version),
+					"backupRetentionDays":      llx.IntData(backupRetentionDays),
+					"geoRedundantBackup":       llx.StringData(geoRedundantBackup),
 				})
 			if err != nil {
 				return nil, err
@@ -123,6 +136,11 @@ func (a *mqlAzureSubscriptionPostgreSqlService) servers() ([]any, error) {
 
 func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+type mqlAzureSubscriptionPostgreSqlServiceFlexibleServerInternal struct {
+	cachePrimaryKeyURI   string
+	cacheGeoBackupKeyURI string
 }
 
 func (a *mqlAzureSubscriptionPostgreSqlService) flexibleServers() ([]any, error) {
@@ -180,6 +198,17 @@ func (a *mqlAzureSubscriptionPostgreSqlService) flexibleServers() ([]any, error)
 				}
 			}
 
+			var backupRetentionDays int64
+			var geoRedundantBackup string
+			if dbServer.Properties != nil && dbServer.Properties.Backup != nil {
+				if dbServer.Properties.Backup.BackupRetentionDays != nil {
+					backupRetentionDays = int64(*dbServer.Properties.Backup.BackupRetentionDays)
+				}
+				if dbServer.Properties.Backup.GeoRedundantBackup != nil {
+					geoRedundantBackup = string(*dbServer.Properties.Backup.GeoRedundantBackup)
+				}
+			}
+
 			mqlAzurePostgresServer, err := CreateResource(a.MqlRuntime, "azure.subscription.postgreSqlService.flexibleServer",
 				map[string]*llx.RawData{
 					"id":                           llx.StringDataPtr(dbServer.ID),
@@ -195,9 +224,20 @@ func (a *mqlAzureSubscriptionPostgreSqlService) flexibleServers() ([]any, error)
 					"primaryEncryptionKeyStatus":   llx.StringDataPtr(primaryEncryptionKeyStatus),
 					"geoBackupEncryptionKeyStatus": llx.StringDataPtr(geoBackupEncryptionKeyStatus),
 					"publicNetworkAccess":          llx.StringDataPtr(publicNetworkAccess),
+					"backupRetentionDays":          llx.IntData(backupRetentionDays),
+					"geoRedundantBackup":           llx.StringData(geoRedundantBackup),
 				})
 			if err != nil {
 				return nil, err
+			}
+			mqlServer := mqlAzurePostgresServer.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer)
+			if dbServer.Properties != nil && dbServer.Properties.DataEncryption != nil {
+				if dbServer.Properties.DataEncryption.PrimaryKeyURI != nil {
+					mqlServer.cachePrimaryKeyURI = *dbServer.Properties.DataEncryption.PrimaryKeyURI
+				}
+				if dbServer.Properties.DataEncryption.GeoBackupKeyURI != nil {
+					mqlServer.cacheGeoBackupKeyURI = *dbServer.Properties.DataEncryption.GeoBackupKeyURI
+				}
 			}
 			res = append(res, mqlAzurePostgresServer)
 		}
@@ -574,4 +614,20 @@ func initAzureSubscriptionPostgreSqlServiceFlexibleServer(runtime *plugin.Runtim
 	}
 
 	return nil, nil, errors.New("azure postgresql flexible server does not exist")
+}
+
+func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) dataEncryptionKey() (*mqlAzureSubscriptionKeyVaultServiceKey, error) {
+	if a.cachePrimaryKeyURI == "" {
+		a.DataEncryptionKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return newKeyVaultKeyResource(a.MqlRuntime, a.cachePrimaryKeyURI)
+}
+
+func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) geoBackupEncryptionKey() (*mqlAzureSubscriptionKeyVaultServiceKey, error) {
+	if a.cacheGeoBackupKeyURI == "" {
+		a.GeoBackupEncryptionKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return newKeyVaultKeyResource(a.MqlRuntime, a.cacheGeoBackupKeyURI)
 }

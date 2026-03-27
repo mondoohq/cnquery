@@ -56,6 +56,7 @@ azure.subscription.aksService.cluster.autoUpgradeProfile.id 11.4.28
 azure.subscription.aksService.cluster.autoUpgradeProfile.nodeOSUpgradeChannel 11.4.28
 azure.subscription.aksService.cluster.autoUpgradeProfile.upgradeChannel 11.4.28
 azure.subscription.aksService.cluster.azureKeyVaultKmsEnabled 11.4.28
+azure.subscription.aksService.cluster.azureKeyVaultKmsKey 13.1.8
 azure.subscription.aksService.cluster.azureKeyVaultKmsNetworkAccess 11.4.28
 azure.subscription.aksService.cluster.createdAt 9.0.1
 azure.subscription.aksService.cluster.defenderEnabled 11.4.28
@@ -81,6 +82,7 @@ azure.subscription.aksService.cluster.provisioningState 9.0.1
 azure.subscription.aksService.cluster.publicNetworkAccess 11.4.28
 azure.subscription.aksService.cluster.rbacEnabled 9.0.1
 azure.subscription.aksService.cluster.securityProfile 9.0.1
+azure.subscription.aksService.cluster.skuTier 13.1.8
 azure.subscription.aksService.cluster.storageProfile 9.0.1
 azure.subscription.aksService.cluster.tags 9.0.1
 azure.subscription.aksService.cluster.workloadAutoScalerProfile 9.0.1
@@ -163,6 +165,7 @@ azure.subscription.cacheService 11.4.4
 azure.subscription.cacheService.redis 11.4.28
 azure.subscription.cacheService.redisInstance 11.4.4
 azure.subscription.cacheService.redisInstance.enableNonSslPort 11.4.4
+azure.subscription.cacheService.redisInstance.encryptionKey 13.1.8
 azure.subscription.cacheService.redisInstance.firewallRule 11.4.32
 azure.subscription.cacheService.redisInstance.firewallRule.endIpAddress 11.4.32
 azure.subscription.cacheService.redisInstance.firewallRule.id 11.4.32
@@ -478,10 +481,16 @@ azure.subscription.computeService.vms 9.0.1
 azure.subscription.cosmosDb 9.0.0
 azure.subscription.cosmosDbService 9.0.1
 azure.subscription.cosmosDbService.account 9.0.1
+azure.subscription.cosmosDbService.account.backupIntervalInMinutes 13.1.8
+azure.subscription.cosmosDbService.account.backupRetentionIntervalInHours 13.1.8
+azure.subscription.cosmosDbService.account.backupStorageRedundancy 13.1.8
+azure.subscription.cosmosDbService.account.backupType 13.1.8
+azure.subscription.cosmosDbService.account.defaultIdentity 13.1.8
 azure.subscription.cosmosDbService.account.disableKeyBasedMetadataWriteAccess 11.4.28
 azure.subscription.cosmosDbService.account.disableLocalAuth 11.4.28
 azure.subscription.cosmosDbService.account.enableAutomaticFailover 11.4.28
 azure.subscription.cosmosDbService.account.enableMultipleWriteLocations 11.4.28
+azure.subscription.cosmosDbService.account.encryptionKey 13.1.8
 azure.subscription.cosmosDbService.account.id 9.0.1
 azure.subscription.cosmosDbService.account.ipRangeFilter 11.4.28
 azure.subscription.cosmosDbService.account.isVirtualNetworkFilterEnabled 11.4.28
@@ -493,6 +502,7 @@ azure.subscription.cosmosDbService.account.properties 9.0.1
 azure.subscription.cosmosDbService.account.publicNetworkAccess 11.4.28
 azure.subscription.cosmosDbService.account.tags 9.0.1
 azure.subscription.cosmosDbService.account.type 9.0.1
+azure.subscription.cosmosDbService.account.virtualNetworkRules 13.1.8
 azure.subscription.cosmosDbService.accounts 9.0.1
 azure.subscription.cosmosDbService.subscriptionId 9.0.1
 azure.subscription.databricks 11.4.28
@@ -616,6 +626,7 @@ azure.subscription.keyVaultService.vault.properties 9.0.1
 azure.subscription.keyVaultService.vault.publicNetworkAccess 11.4.28
 azure.subscription.keyVaultService.vault.rbacAuthorizationEnabled 9.0.1
 azure.subscription.keyVaultService.vault.secrets 9.0.1
+azure.subscription.keyVaultService.vault.skuName 13.1.8
 azure.subscription.keyVaultService.vault.softDeleteRetentionInDays 11.4.28
 azure.subscription.keyVaultService.vault.tags 9.0.1
 azure.subscription.keyVaultService.vault.type 9.0.1
@@ -687,6 +698,8 @@ azure.subscription.mySqlService.database.name 9.0.1
 azure.subscription.mySqlService.database.type 9.0.1
 azure.subscription.mySqlService.flexibleServer 9.0.1
 azure.subscription.mySqlService.flexibleServer.configuration 9.0.1
+azure.subscription.mySqlService.flexibleServer.dataEncryptionKey 13.1.8
+azure.subscription.mySqlService.flexibleServer.dataEncryptionType 13.1.8
 azure.subscription.mySqlService.flexibleServer.databases 9.0.1
 azure.subscription.mySqlService.flexibleServer.firewallRules 9.0.1
 azure.subscription.mySqlService.flexibleServer.id 9.0.1
@@ -700,9 +713,11 @@ azure.subscription.mySqlService.flexibleServer.type 9.0.1
 azure.subscription.mySqlService.flexibleServer.version 11.4.28
 azure.subscription.mySqlService.flexibleServers 9.0.1
 azure.subscription.mySqlService.server 9.0.1
+azure.subscription.mySqlService.server.backupRetentionDays 13.1.8
 azure.subscription.mySqlService.server.configuration 9.0.1
 azure.subscription.mySqlService.server.databases 9.0.1
 azure.subscription.mySqlService.server.firewallRules 9.0.1
+azure.subscription.mySqlService.server.geoRedundantBackup 13.1.8
 azure.subscription.mySqlService.server.id 9.0.1
 azure.subscription.mySqlService.server.infrastructureEncryption 11.4.28
 azure.subscription.mySqlService.server.location 9.0.1
@@ -744,6 +759,9 @@ azure.subscription.networkService.applicationGateway.location 9.0.13
 azure.subscription.networkService.applicationGateway.name 9.0.13
 azure.subscription.networkService.applicationGateway.policy 9.0.13
 azure.subscription.networkService.applicationGateway.properties 9.0.13
+azure.subscription.networkService.applicationGateway.sslCipherSuites 13.1.8
+azure.subscription.networkService.applicationGateway.sslMinProtocolVersion 13.1.8
+azure.subscription.networkService.applicationGateway.sslPolicyType 13.1.8
 azure.subscription.networkService.applicationGateway.tags 9.0.13
 azure.subscription.networkService.applicationGateway.type 9.0.13
 azure.subscription.networkService.applicationGateway.wafConfiguration 11.3.3
@@ -858,6 +876,7 @@ azure.subscription.networkService.interface.enableAcceleratedNetworking 11.4.28
 azure.subscription.networkService.interface.enableIPForwarding 11.4.28
 azure.subscription.networkService.interface.etag 9.0.1
 azure.subscription.networkService.interface.id 9.0.1
+azure.subscription.networkService.interface.ipConfigurations 13.1.8
 azure.subscription.networkService.interface.location 9.0.1
 azure.subscription.networkService.interface.name 9.0.1
 azure.subscription.networkService.interface.networkSecurityGroupId 11.6.1
@@ -868,6 +887,7 @@ azure.subscription.networkService.interface.type 9.0.1
 azure.subscription.networkService.interface.vm 9.0.1
 azure.subscription.networkService.interfaces 9.0.1
 azure.subscription.networkService.ipAddress 9.0.1
+azure.subscription.networkService.ipAddress.ddosProtectionMode 13.1.8
 azure.subscription.networkService.ipAddress.id 9.0.1
 azure.subscription.networkService.ipAddress.ipAddress 9.0.1
 azure.subscription.networkService.ipAddress.ipAllocationMethod 11.6.1
@@ -876,6 +896,7 @@ azure.subscription.networkService.ipAddress.location 9.0.1
 azure.subscription.networkService.ipAddress.name 9.0.1
 azure.subscription.networkService.ipAddress.tags 9.0.1
 azure.subscription.networkService.ipAddress.type 9.0.1
+azure.subscription.networkService.ipAddress.zones 13.1.8
 azure.subscription.networkService.loadBalancer 9.0.8
 azure.subscription.networkService.loadBalancer.backendPools 9.0.8
 azure.subscription.networkService.loadBalancer.etag 9.0.8
@@ -890,6 +911,7 @@ azure.subscription.networkService.loadBalancer.outboundRules 9.0.8
 azure.subscription.networkService.loadBalancer.probes 9.0.8
 azure.subscription.networkService.loadBalancer.properties 9.0.8
 azure.subscription.networkService.loadBalancer.sku 9.0.8
+azure.subscription.networkService.loadBalancer.skuTier 13.1.8
 azure.subscription.networkService.loadBalancer.tags 9.0.8
 azure.subscription.networkService.loadBalancer.type 9.0.8
 azure.subscription.networkService.loadBalancerRule 9.0.8
@@ -1127,11 +1149,15 @@ azure.subscription.postgreSqlService.database.name 9.0.1
 azure.subscription.postgreSqlService.database.type 9.0.1
 azure.subscription.postgreSqlService.flexibleServer 11.0.9
 azure.subscription.postgreSqlService.flexibleServer.activeDirectoryAuth 11.4.28
+azure.subscription.postgreSqlService.flexibleServer.backupRetentionDays 13.1.8
 azure.subscription.postgreSqlService.flexibleServer.configuration 11.0.9
+azure.subscription.postgreSqlService.flexibleServer.dataEncryptionKey 13.1.8
 azure.subscription.postgreSqlService.flexibleServer.dataEncryptionType 11.4.28
 azure.subscription.postgreSqlService.flexibleServer.databases 11.0.9
 azure.subscription.postgreSqlService.flexibleServer.firewallRules 11.0.9
+azure.subscription.postgreSqlService.flexibleServer.geoBackupEncryptionKey 13.1.8
 azure.subscription.postgreSqlService.flexibleServer.geoBackupEncryptionKeyStatus 11.4.28
+azure.subscription.postgreSqlService.flexibleServer.geoRedundantBackup 13.1.8
 azure.subscription.postgreSqlService.flexibleServer.id 11.0.9
 azure.subscription.postgreSqlService.flexibleServer.location 11.0.9
 azure.subscription.postgreSqlService.flexibleServer.name 11.0.9
@@ -1144,9 +1170,11 @@ azure.subscription.postgreSqlService.flexibleServer.type 11.0.9
 azure.subscription.postgreSqlService.flexibleServer.version 11.4.28
 azure.subscription.postgreSqlService.flexibleServers 9.0.1
 azure.subscription.postgreSqlService.server 9.0.1
+azure.subscription.postgreSqlService.server.backupRetentionDays 13.1.8
 azure.subscription.postgreSqlService.server.configuration 9.0.1
 azure.subscription.postgreSqlService.server.databases 9.0.1
 azure.subscription.postgreSqlService.server.firewallRules 9.0.1
+azure.subscription.postgreSqlService.server.geoRedundantBackup 13.1.8
 azure.subscription.postgreSqlService.server.id 9.0.1
 azure.subscription.postgreSqlService.server.infrastructureEncryption 11.4.28
 azure.subscription.postgreSqlService.server.location 9.0.1
@@ -1282,9 +1310,12 @@ azure.subscription.sqlService.server.administrator.type 9.0.1
 azure.subscription.sqlService.server.administratorLogin 11.6.1
 azure.subscription.sqlService.server.auditingPolicy 9.0.1
 azure.subscription.sqlService.server.azureAdAdministrators 9.0.1
+azure.subscription.sqlService.server.azureAdOnlyAuthentication 13.1.8
 azure.subscription.sqlService.server.connectionPolicy 9.0.1
 azure.subscription.sqlService.server.databases 9.0.1
 azure.subscription.sqlService.server.encryptionProtector 9.0.1
+azure.subscription.sqlService.server.encryptionProtectorKey 13.1.8
+azure.subscription.sqlService.server.encryptionProtectorServerKeyType 13.1.8
 azure.subscription.sqlService.server.firewallRules 9.0.1
 azure.subscription.sqlService.server.fullyQualifiedDomainName 11.4.28
 azure.subscription.sqlService.server.id 9.0.1
@@ -1358,6 +1389,8 @@ azure.subscription.storageService.account.dataProtection.storageAccountId 9.0.1
 azure.subscription.storageService.account.defaultToOAuthAuthentication 11.6.2
 azure.subscription.storageService.account.enableHttpsTrafficOnly 11.4.28
 azure.subscription.storageService.account.enableNfsV3 11.6.2
+azure.subscription.storageService.account.encryptionKey 13.1.8
+azure.subscription.storageService.account.encryptionKeySource 13.1.8
 azure.subscription.storageService.account.fileProperties 11.4.24
 azure.subscription.storageService.account.fileProperties.protocolSettings.smbConfig 11.4.24
 azure.subscription.storageService.account.fileProperties.protocolSettings.smbConfig.authenticationMethods 11.4.24
@@ -1490,6 +1523,7 @@ azure.subscription.webService.appsite.hostNameBindings 11.4.32
 azure.subscription.webService.appsite.httpsOnly 11.4.28
 azure.subscription.webService.appsite.id 9.0.1
 azure.subscription.webService.appsite.identity 9.0.1
+azure.subscription.webService.appsite.identityType 13.1.8
 azure.subscription.webService.appsite.kind 9.0.1
 azure.subscription.webService.appsite.location 9.0.1
 azure.subscription.webService.appsite.metadata 9.0.1
@@ -1520,12 +1554,15 @@ azure.subscription.webService.appsiteconfig.alwaysOn 11.4.28
 azure.subscription.webService.appsiteconfig.ftpsState 11.4.28
 azure.subscription.webService.appsiteconfig.http20Enabled 11.4.28
 azure.subscription.webService.appsiteconfig.id 9.0.1
+azure.subscription.webService.appsiteconfig.ipSecurityRestrictions 13.1.8
+azure.subscription.webService.appsiteconfig.ipSecurityRestrictionsDefaultAction 13.1.8
 azure.subscription.webService.appsiteconfig.kind 9.0.1
 azure.subscription.webService.appsiteconfig.minTlsCipherSuite 11.4.28
 azure.subscription.webService.appsiteconfig.minTlsVersion 11.4.28
 azure.subscription.webService.appsiteconfig.name 9.0.1
 azure.subscription.webService.appsiteconfig.properties 9.0.1
 azure.subscription.webService.appsiteconfig.remoteDebuggingEnabled 11.4.28
+azure.subscription.webService.appsiteconfig.scmIpSecurityRestrictions 13.1.8
 azure.subscription.webService.appsiteconfig.type 9.0.1
 azure.subscription.webService.appslot 11.3.85
 azure.subscription.webService.appslot.applicationSettings 11.3.85

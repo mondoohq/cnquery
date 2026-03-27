@@ -800,8 +800,10 @@ azure.subscription.networkService.loadBalancer @defaults("id name location") {
   properties dict
   // Load Balancer etag
   etag string
-  // Load Balancer SKU
+  // Load Balancer SKU name ("Basic", "Gateway", "Standard")
   sku string
+  // Load Balancer SKU tier ("Global" or "Regional")
+  skuTier string
   // List of Load Balancer probes
   probes []azure.subscription.networkService.probe
   // List of Load Balancer backend address pools
@@ -948,6 +950,8 @@ azure.subscription.networkService.interface @defaults("name location properties.
   primary bool
   // Network security group associated with this interface
   networkSecurityGroupId string
+  // IP configurations for the network interface
+  ipConfigurations []dict
   // Network interface compute vm
   vm() azure.subscription.computeService.vm
 }
@@ -970,6 +974,10 @@ private azure.subscription.networkService.ipAddress @defaults("name location ipA
   ipAllocationMethod string
   // IP address version (IPv4, IPv6)
   ipVersion string
+  // Availability zones for the public IP address
+  zones []string
+  // DDoS protection mode ("VirtualNetworkInherited", "Enabled", "Disabled")
+  ddosProtectionMode string
 }
 
 // Azure Network Bastion host
@@ -1120,6 +1128,12 @@ azure.subscription.networkService.applicationGateway @defaults("id name location
   policy() azure.subscription.networkService.applicationFirewallPolicy
   // WAF configurations
   wafConfiguration() []azure.subscription.networkService.wafConfig
+  // SSL policy type ("Predefined", "Custom", "CustomV2")
+  sslPolicyType string
+  // Minimum SSL/TLS protocol version ("TLSv1_0", "TLSv1_1", "TLSv1_2", "TLSv1_3")
+  sslMinProtocolVersion string
+  // SSL cipher suites enabled on the application gateway
+  sslCipherSuites []string
 }
 
 // Azure Application Firewall Config
@@ -1312,6 +1326,10 @@ private azure.subscription.storageService.account @defaults("id name location") 
   largeFileSharesState string
   // When the last geo-failover occurred
   lastGeoFailoverTime time
+  // Encryption key source for the storage account ("Microsoft.Storage" or "Microsoft.Keyvault")
+  encryptionKeySource() string
+  // Key Vault key used for customer-managed encryption (null if platform-managed)
+  encryptionKey() azure.subscription.keyVaultService.key
   // Storage account containers
   containers() []azure.subscription.storageService.account.container
   // Storage account queue properties
@@ -1534,6 +1552,8 @@ azure.subscription.webService.appsite @defaults("id name location") {
   properties dict
   // App site identity
   identity dict
+  // Managed identity type ("None", "SystemAssigned", "UserAssigned", "SystemAssigned,UserAssigned")
+  identityType string
   // Whether the app requires HTTPS only
   httpsOnly bool
   // Whether client certificate authentication is enabled
@@ -1698,6 +1718,12 @@ private azure.subscription.webService.appsiteconfig @defaults("id name") {
   alwaysOn bool
   // Minimum strength TLS cipher suite allowed for the application
   minTlsCipherSuite string
+  // IP security restrictions for the main site
+  ipSecurityRestrictions() []dict
+  // IP security restrictions for the SCM/Kudu site
+  scmIpSecurityRestrictions() []dict
+  // Default action for IP security restrictions when no rule matches ("Allow" or "Deny")
+  ipSecurityRestrictionsDefaultAction() string
 }
 
 // Azure App Service Hosting Environment
@@ -1909,6 +1935,12 @@ private azure.subscription.sqlService.server @defaults("name location properties
   // SQL Database server vulnerability assessment settings
   vulnerabilityAssessmentSettings() azure.subscription.sqlService.server.vulnerabilityassessmentsettings
   virtualNetworkRules() []azure.subscription.sqlService.virtualNetworkRule
+  // Server key type for the encryption protector ("AzureKeyVault" or "ServiceManaged")
+  encryptionProtectorServerKeyType() string
+  // Key Vault key used by the encryption protector (null if service-managed)
+  encryptionProtectorKey() azure.subscription.keyVaultService.key
+  // Whether Azure AD-only authentication is enabled (SQL authentication disabled)
+  azureAdOnlyAuthentication() bool
 }
 
 // Azure SQL Database server vulnerability assessment settings
@@ -2115,6 +2147,14 @@ private azure.subscription.postgreSqlService.flexibleServer @defaults("name loca
   geoBackupEncryptionKeyStatus string
   // Whether public network access is enabled ("Enabled" or "Disabled")
   publicNetworkAccess string
+  // Key Vault key used for primary data encryption (null if system-managed)
+  dataEncryptionKey() azure.subscription.keyVaultService.key
+  // Key Vault key used for geo-backup encryption (null if system-managed)
+  geoBackupEncryptionKey() azure.subscription.keyVaultService.key
+  // Backup retention period in days
+  backupRetentionDays int
+  // Whether geo-redundant backup is enabled
+  geoRedundantBackup string
 }
 
 // Azure Database for PostgreSQL server
@@ -2141,6 +2181,10 @@ private azure.subscription.postgreSqlService.server @defaults("id name location"
   infrastructureEncryption bool
   // PostgreSQL server engine version
   version string
+  // Backup retention period in days
+  backupRetentionDays int
+  // Whether geo-redundant backup is enabled ("Enabled" or "Disabled")
+  geoRedundantBackup string
   // PostgreSQL server configuration
   configuration() []azure.subscription.sqlService.configuration
   // PostgreSQL server databases
@@ -2247,6 +2291,10 @@ private azure.subscription.mySqlService.server @defaults("id name location") {
   infrastructureEncryption bool
   // MySQL server engine version
   version string
+  // Backup retention period in days
+  backupRetentionDays int
+  // Whether geo-redundant backup is enabled ("Enabled" or "Disabled")
+  geoRedundantBackup string
   // MySQL server configuration
   configuration() []azure.subscription.sqlService.configuration
   // MySQL server databases
@@ -2289,6 +2337,10 @@ private azure.subscription.mySqlService.flexibleServer @defaults("name location 
   sslEnforcement() bool
   // Whether public network access is allowed
   publicNetworkAccess string
+  // Key Vault key used for data encryption (null if system-managed)
+  dataEncryptionKey() azure.subscription.keyVaultService.key
+  // Data encryption type ("SystemManaged" or "AzureKeyVault")
+  dataEncryptionType string
   // MySQL flexible server configuration
   configuration() []azure.subscription.sqlService.configuration
   // MySQL flexible server databases
@@ -2337,6 +2389,20 @@ azure.subscription.cosmosDbService.account @defaults("name kind location") {
   ipRangeFilter []string
   // Minimum allowed TLS version for the Cosmos DB account
   minimalTlsVersion string
+  // Key Vault key used for customer-managed encryption (null if platform-managed)
+  encryptionKey() azure.subscription.keyVaultService.key
+  // Default identity used for accessing customer-managed encryption key
+  defaultIdentity string
+  // Backup policy type ("Periodic" or "Continuous")
+  backupType string
+  // Backup interval in minutes (for Periodic backup policy)
+  backupIntervalInMinutes int
+  // Backup retention in hours (for Periodic backup policy)
+  backupRetentionIntervalInHours int
+  // Backup storage redundancy (for Periodic backup policy: "Geo", "Local", "Zone")
+  backupStorageRedundancy string
+  // Virtual network rules for the Cosmos DB account
+  virtualNetworkRules []dict
 }
 
 // Azure Key Vault
@@ -2379,6 +2445,8 @@ private azure.subscription.keyVaultService.vault @defaults("vaultName type vault
   enabledForDiskEncryption() bool
   // Whether the vault can be used for Azure Resource Manager template deployment
   enabledForTemplateDeployment() bool
+  // Vault SKU name ("standard" or "premium"; premium supports HSM-backed keys)
+  skuName() string
   // Vault keys
   keys() []azure.subscription.keyVaultService.key
   // Vault certificates
@@ -3307,6 +3375,10 @@ azure.subscription.aksService.cluster @defaults("name location kubernetesVersion
   disableLocalAccounts bool
   // Whether public network access is enabled for the cluster ("Enabled" or "Disabled")
   publicNetworkAccess string
+  // SKU tier for the AKS cluster ("Free", "Standard", or "Premium")
+  skuTier string
+  // Key Vault key used for Azure Key Vault KMS encryption (null if not enabled)
+  azureKeyVaultKmsKey() azure.subscription.keyVaultService.key
   // Azure Active Directory configuration for the cluster
   aadProfile azure.subscription.aksService.cluster.aadProfile
   // Auto-upgrade configuration for the cluster
@@ -3503,6 +3575,8 @@ azure.subscription.cacheService.redisInstance @defaults("id hostName") {
   zones []string
   // Managed identity information
   identity dict
+  // Key Vault key used for customer-managed encryption (null if platform-managed)
+  encryptionKey() azure.subscription.keyVaultService.key
   // Private endpoint connections for the Redis cache
   privateEndpointConnections []azure.subscription.cacheService.redisInstance.privateEndpointConnection
   // Firewall rules for the Redis cache

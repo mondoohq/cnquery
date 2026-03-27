@@ -550,6 +550,7 @@ func (a *mqlAzureSubscriptionNetworkService) loadBalancers() ([]any, error) {
 					"location":          llx.StringDataPtr(lb.Location),
 					"etag":              llx.StringDataPtr(lb.Etag),
 					"sku":               llx.StringDataPtr((*string)(lb.SKU.Name)),
+					"skuTier":           llx.StringDataPtr((*string)(lb.SKU.Tier)),
 					"tags":              llx.MapData(convert.PtrMapStrToInterface(lb.Tags), types.String),
 					"type":              llx.StringDataPtr(lb.Type),
 					"probes":            llx.ArrayData(probes, types.ResourceLike),
@@ -2160,14 +2161,34 @@ func azureAppGatewayToMql(runtime *plugin.Runtime, ag network.ApplicationGateway
 	if err != nil {
 		return nil, err
 	}
+	var sslPolicyType, sslMinProtocolVersion string
+	sslCipherSuites := []any{}
+	if ag.Properties != nil && ag.Properties.SSLPolicy != nil {
+		sp := ag.Properties.SSLPolicy
+		if sp.PolicyType != nil {
+			sslPolicyType = string(*sp.PolicyType)
+		}
+		if sp.MinProtocolVersion != nil {
+			sslMinProtocolVersion = string(*sp.MinProtocolVersion)
+		}
+		for _, cs := range sp.CipherSuites {
+			if cs != nil {
+				sslCipherSuites = append(sslCipherSuites, string(*cs))
+			}
+		}
+	}
+
 	args := map[string]*llx.RawData{
-		"id":         llx.StringDataPtr(ag.ID),
-		"name":       llx.StringDataPtr(ag.Name),
-		"type":       llx.StringDataPtr(ag.Type),
-		"location":   llx.StringDataPtr(ag.Location),
-		"tags":       llx.MapData(convert.PtrMapStrToInterface(ag.Tags), types.String),
-		"etag":       llx.StringDataPtr(ag.Etag),
-		"properties": llx.DictData(props),
+		"id":                    llx.StringDataPtr(ag.ID),
+		"name":                  llx.StringDataPtr(ag.Name),
+		"type":                  llx.StringDataPtr(ag.Type),
+		"location":              llx.StringDataPtr(ag.Location),
+		"tags":                  llx.MapData(convert.PtrMapStrToInterface(ag.Tags), types.String),
+		"etag":                  llx.StringDataPtr(ag.Etag),
+		"properties":            llx.DictData(props),
+		"sslPolicyType":         llx.StringData(sslPolicyType),
+		"sslMinProtocolVersion": llx.StringData(sslMinProtocolVersion),
+		"sslCipherSuites":       llx.ArrayData(sslCipherSuites, types.String),
 	}
 
 	mqlAg, err := CreateResource(runtime, "azure.subscription.networkService.applicationGateway", args)
@@ -2325,7 +2346,7 @@ func azureFirewallPolicyToMql(runtime *plugin.Runtime, fwp network.FirewallPolic
 }
 
 func azureIpToMql(runtime *plugin.Runtime, ip network.PublicIPAddress) (*mqlAzureSubscriptionNetworkServiceIpAddress, error) {
-	var ipAllocationMethod, ipVersion string
+	var ipAllocationMethod, ipVersion, ddosProtectionMode string
 	var ipAddr *string
 	if ip.Properties != nil {
 		ipAddr = ip.Properties.IPAddress
@@ -2334,6 +2355,15 @@ func azureIpToMql(runtime *plugin.Runtime, ip network.PublicIPAddress) (*mqlAzur
 		}
 		if ip.Properties.PublicIPAddressVersion != nil {
 			ipVersion = string(*ip.Properties.PublicIPAddressVersion)
+		}
+		if ip.Properties.DdosSettings != nil && ip.Properties.DdosSettings.ProtectionMode != nil {
+			ddosProtectionMode = string(*ip.Properties.DdosSettings.ProtectionMode)
+		}
+	}
+	zones := []any{}
+	for _, z := range ip.Zones {
+		if z != nil {
+			zones = append(zones, *z)
 		}
 	}
 	mqlAzure, err := CreateResource(runtime, "azure.subscription.networkService.ipAddress",
@@ -2346,6 +2376,8 @@ func azureIpToMql(runtime *plugin.Runtime, ip network.PublicIPAddress) (*mqlAzur
 			"ipAddress":          llx.StringDataPtr(ipAddr),
 			"ipAllocationMethod": llx.StringData(ipAllocationMethod),
 			"ipVersion":          llx.StringData(ipVersion),
+			"zones":              llx.ArrayData(zones, types.String),
+			"ddosProtectionMode": llx.StringData(ddosProtectionMode),
 		})
 	if err != nil {
 		return nil, err
@@ -2430,12 +2462,43 @@ func azureInterfaceToMql(runtime *plugin.Runtime, iface network.Interface) (*mql
 
 	var enableIPForwarding, enableAcceleratedNetworking, primary *llx.RawData
 	var networkSecurityGroupId string
+	ipConfigs := []any{}
 	if iface.Properties != nil {
 		enableIPForwarding = llx.BoolDataPtr(iface.Properties.EnableIPForwarding)
 		enableAcceleratedNetworking = llx.BoolDataPtr(iface.Properties.EnableAcceleratedNetworking)
 		primary = llx.BoolDataPtr(iface.Properties.Primary)
 		if iface.Properties.NetworkSecurityGroup != nil && iface.Properties.NetworkSecurityGroup.ID != nil {
 			networkSecurityGroupId = *iface.Properties.NetworkSecurityGroup.ID
+		}
+		for _, ipConfig := range iface.Properties.IPConfigurations {
+			if ipConfig == nil {
+				continue
+			}
+			configDict := map[string]any{}
+			if ipConfig.Name != nil {
+				configDict["name"] = *ipConfig.Name
+			}
+			if ipConfig.ID != nil {
+				configDict["id"] = *ipConfig.ID
+			}
+			if ipConfig.Properties != nil {
+				if ipConfig.Properties.PrivateIPAddress != nil {
+					configDict["privateIpAddress"] = *ipConfig.Properties.PrivateIPAddress
+				}
+				if ipConfig.Properties.PrivateIPAllocationMethod != nil {
+					configDict["privateIpAllocationMethod"] = string(*ipConfig.Properties.PrivateIPAllocationMethod)
+				}
+				if ipConfig.Properties.Primary != nil {
+					configDict["primary"] = *ipConfig.Properties.Primary
+				}
+				if ipConfig.Properties.PublicIPAddress != nil && ipConfig.Properties.PublicIPAddress.ID != nil {
+					configDict["publicIpAddressId"] = *ipConfig.Properties.PublicIPAddress.ID
+				}
+				if ipConfig.Properties.Subnet != nil && ipConfig.Properties.Subnet.ID != nil {
+					configDict["subnetId"] = *ipConfig.Properties.Subnet.ID
+				}
+			}
+			ipConfigs = append(ipConfigs, configDict)
 		}
 	} else {
 		enableIPForwarding = llx.BoolData(false)
@@ -2456,6 +2519,7 @@ func azureInterfaceToMql(runtime *plugin.Runtime, iface network.Interface) (*mql
 			"enableAcceleratedNetworking": enableAcceleratedNetworking,
 			"primary":                     primary,
 			"networkSecurityGroupId":      llx.StringData(networkSecurityGroupId),
+			"ipConfigurations":            llx.ArrayData(ipConfigs, types.Dict),
 		})
 	if err != nil {
 		return nil, err

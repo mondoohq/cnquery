@@ -22,6 +22,10 @@ func (a *mqlAzureSubscriptionCacheService) id() (string, error) {
 	return "azure.subscription.cache/" + a.SubscriptionId.Data, nil
 }
 
+type mqlAzureSubscriptionCacheServiceRedisInstanceInternal struct {
+	cacheEncryptionKeyURI string
+}
+
 func (a *mqlAzureSubscriptionCacheServiceRedisInstance) id() (string, error) {
 	return a.Id.Data, nil
 }
@@ -372,6 +376,14 @@ func (a *mqlAzureSubscriptionCacheServiceRedisInstance) patchSchedules() ([]any,
 		}
 	}
 	return res, nil
+}
+
+func (a *mqlAzureSubscriptionCacheServiceRedisInstance) encryptionKey() (*mqlAzureSubscriptionKeyVaultServiceKey, error) {
+	if a.cacheEncryptionKeyURI == "" {
+		a.EncryptionKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return newKeyVaultKeyResource(a.MqlRuntime, a.cacheEncryptionKeyURI)
 }
 
 func (a *mqlAzureSubscriptionCacheServiceRedisInstanceFirewallRule) id() (string, error) {

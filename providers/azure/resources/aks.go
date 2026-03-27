@@ -17,6 +17,10 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
+type mqlAzureSubscriptionAksServiceClusterInternal struct {
+	cacheKmsKeyId string
+}
+
 func (a *mqlAzureSubscriptionAksService) id() (string, error) {
 	return "azure.subscription.aks/" + a.SubscriptionId.Data, nil
 }
@@ -181,6 +185,7 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 			var defenderEnabled, imageCleanerEnabled, workloadIdentityEnabled, azureKeyVaultKmsEnabled *bool
 			var imageCleanerIntervalHours *int32
 			var azureKeyVaultKmsNetworkAccess *string
+			var azureKeyVaultKmsKeyId string
 			if entry.Properties.SecurityProfile != nil {
 				sp := entry.Properties.SecurityProfile
 				if sp.Defender != nil && sp.Defender.SecurityMonitoring != nil {
@@ -196,7 +201,15 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 				if sp.AzureKeyVaultKms != nil {
 					azureKeyVaultKmsEnabled = sp.AzureKeyVaultKms.Enabled
 					azureKeyVaultKmsNetworkAccess = (*string)(sp.AzureKeyVaultKms.KeyVaultNetworkAccess)
+					if sp.AzureKeyVaultKms.KeyID != nil {
+						azureKeyVaultKmsKeyId = *sp.AzureKeyVaultKms.KeyID
+					}
 				}
+			}
+
+			var skuTier string
+			if entry.SKU != nil && entry.SKU.Tier != nil {
+				skuTier = string(*entry.SKU.Tier)
 			}
 
 			// Create AAD Profile sub-resource
@@ -274,14 +287,25 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 					"azureKeyVaultKmsNetworkAccess":  llx.StringDataPtr(azureKeyVaultKmsNetworkAccess),
 					"disableLocalAccounts":           llx.BoolDataPtr(entry.Properties.DisableLocalAccounts),
 					"publicNetworkAccess":            llx.StringDataPtr((*string)(entry.Properties.PublicNetworkAccess)),
+					"skuTier":                        llx.StringData(skuTier),
 					"aadProfile":                     aadProfileData,
 					"autoUpgradeProfile":             autoUpgradeProfileData,
 				})
 			if err != nil {
 				return nil, err
 			}
+			mqlCluster := mqlAksCluster.(*mqlAzureSubscriptionAksServiceCluster)
+			mqlCluster.cacheKmsKeyId = azureKeyVaultKmsKeyId
 			res = append(res, mqlAksCluster)
 		}
 	}
 	return res, nil
+}
+
+func (a *mqlAzureSubscriptionAksServiceCluster) azureKeyVaultKmsKey() (*mqlAzureSubscriptionKeyVaultServiceKey, error) {
+	if a.cacheKmsKeyId == "" {
+		a.AzureKeyVaultKmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return newKeyVaultKeyResource(a.MqlRuntime, a.cacheKmsKeyId)
 }

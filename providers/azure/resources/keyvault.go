@@ -214,6 +214,27 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) softDeleteRetentionInDays() (
 	return int64(val.(float64)), nil
 }
 
+func (a *mqlAzureSubscriptionKeyVaultServiceVault) skuName() (string, error) {
+	props := a.GetProperties()
+	if props.Error != nil {
+		return "", props.Error
+	}
+	propsDict := props.Data.(map[string]any)
+	skuVal := propsDict["sku"]
+	if skuVal == nil {
+		return "", nil
+	}
+	skuDict, ok := skuVal.(map[string]any)
+	if !ok {
+		return "", nil
+	}
+	name := skuDict["name"]
+	if name == nil {
+		return "", nil
+	}
+	return fmt.Sprintf("%v", name), nil
+}
+
 func (a *mqlAzureSubscriptionKeyVaultServiceVault) publicNetworkAccess() (string, error) {
 	props := a.GetProperties()
 	if props.Error != nil {
