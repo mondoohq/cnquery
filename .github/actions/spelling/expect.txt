@@ -124,6 +124,7 @@ jira
 jsonbody
 junos
 kqueue
+kubenet
 KSK
 labelmatchstatement
 lfs
@@ -259,6 +260,7 @@ valkey
 vertexai
 VAULTNAME
 Vcpus
+Veth
 vdcs
 vdev
 VGeneration

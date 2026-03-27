@@ -1,7 +1,7 @@
 {
   "provider": "azure",
-  "version": "13.1.6",
-  "generated_at": "2026-03-20T15:44:46-07:00",
+  "version": "13.2.0",
+  "generated_at": "2026-03-27T11:14:32-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Authorization/roleAssignments/read",
@@ -65,6 +65,7 @@
     "Microsoft.Sql/longTermRetentionPolicies/read",
     "Microsoft.Sql/serverAdvancedThreatProtectionSettings/read",
     "Microsoft.Sql/serverAzureADAdministrators/read",
+    "Microsoft.Sql/serverAzureADOnlyAuthentications/read",
     "Microsoft.Sql/serverBlobAuditingPolicies/read",
     "Microsoft.Sql/serverConnectionPolicies/read",
     "Microsoft.Sql/serverSecurityAlertPolicies/read",
@@ -468,6 +469,12 @@
       "permission": "Microsoft.Sql/serverAzureADAdministrators/read",
       "service": "Microsoft.Sql",
       "action": "NewListByServerPager",
+      "source_file": "sql.go"
+    },
+    {
+      "permission": "Microsoft.Sql/serverAzureADOnlyAuthentications/read",
+      "service": "Microsoft.Sql",
+      "action": "Get",
       "source_file": "sql.go"
     },
     {

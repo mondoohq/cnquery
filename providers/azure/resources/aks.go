@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	clusters "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v8"
+	clusters "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v9"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -91,6 +91,10 @@ func (a *mqlAzureSubscriptionAksServiceClusterAadProfile) id() (string, error) {
 }
 
 func (a *mqlAzureSubscriptionAksServiceClusterAutoUpgradeProfile) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionAksServiceClusterAdvancedNetworking) id() (string, error) {
 	return a.Id.Data, nil
 }
 
@@ -207,6 +211,28 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 				}
 			}
 
+			var networkPlugin, networkPolicy *string
+			if entry.Properties.NetworkProfile != nil {
+				np := entry.Properties.NetworkProfile
+				networkPlugin = (*string)(np.NetworkPlugin)
+				networkPolicy = (*string)(np.NetworkPolicy)
+			}
+
+			var oidcIssuerEnabled *bool
+			if entry.Properties.OidcIssuerProfile != nil {
+				oidcIssuerEnabled = entry.Properties.OidcIssuerProfile.Enabled
+			}
+
+			var nodeResourceGroupRestrictionLevel *string
+			if entry.Properties.NodeResourceGroupProfile != nil {
+				nodeResourceGroupRestrictionLevel = (*string)(entry.Properties.NodeResourceGroupProfile.RestrictionLevel)
+			}
+
+			var serviceMeshMode *string
+			if entry.Properties.ServiceMeshProfile != nil {
+				serviceMeshMode = (*string)(entry.Properties.ServiceMeshProfile.Mode)
+			}
+
 			var skuTier string
 			if entry.SKU != nil && entry.SKU.Tier != nil {
 				skuTier = string(*entry.SKU.Tier)
@@ -251,45 +277,83 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 				autoUpgradeProfileData = llx.ResourceData(autoUpgradeRes, "azure.subscription.aksService.cluster.autoUpgradeProfile")
 			}
 
+			// Create Advanced Networking sub-resource
+			var advancedNetworkingData *llx.RawData = llx.NilData
+			if entry.Properties.NetworkProfile != nil && entry.Properties.NetworkProfile.AdvancedNetworking != nil {
+				an := entry.Properties.NetworkProfile.AdvancedNetworking
+				var transitEncryptionType, accelerationMode *string
+				var securityEnabled *bool
+				if an.Security != nil {
+					securityEnabled = an.Security.Enabled
+					if an.Security.TransitEncryption != nil {
+						transitEncryptionType = (*string)(an.Security.TransitEncryption.Type)
+					}
+				}
+				if an.Performance != nil {
+					accelerationMode = (*string)(an.Performance.AccelerationMode)
+				}
+				anRes, err := CreateResource(a.MqlRuntime, "azure.subscription.aksService.cluster.advancedNetworking",
+					map[string]*llx.RawData{
+						"id":                    llx.StringData(*entry.ID + "/advancedNetworking"),
+						"enabled":               llx.BoolDataPtr(an.Enabled),
+						"transitEncryptionType": llx.StringDataPtr(transitEncryptionType),
+						"accelerationMode":      llx.StringDataPtr(accelerationMode),
+						"securityEnabled":       llx.BoolDataPtr(securityEnabled),
+					})
+				if err != nil {
+					return nil, err
+				}
+				advancedNetworkingData = llx.ResourceData(anRes, "azure.subscription.aksService.cluster.advancedNetworking")
+			}
+
 			mqlAksCluster, err := CreateResource(a.MqlRuntime, "azure.subscription.aksService.cluster",
 				map[string]*llx.RawData{
-					"id":                             llx.StringDataPtr(entry.ID),
-					"name":                           llx.StringDataPtr(entry.Name),
-					"location":                       llx.StringDataPtr(entry.Location),
-					"kubernetesVersion":              llx.StringDataPtr(entry.Properties.KubernetesVersion),
-					"provisioningState":              llx.StringDataPtr(entry.Properties.ProvisioningState),
-					"createdAt":                      llx.TimeDataPtr(createdAt),
-					"nodeResourceGroup":              llx.StringDataPtr(entry.Properties.NodeResourceGroup),
-					"powerState":                     llx.StringDataPtr((*string)(entry.Properties.PowerState.Code)),
-					"tags":                           llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
-					"rbacEnabled":                    llx.BoolDataPtr(entry.Properties.EnableRBAC),
-					"dnsPrefix":                      llx.StringDataPtr(entry.Properties.DNSPrefix),
-					"fqdn":                           llx.StringDataPtr(entry.Properties.Fqdn),
-					"agentPoolProfiles":              llx.DictData(agentPoolProfiles),
-					"addonProfiles":                  llx.DictData(addonProfiles),
-					"httpProxyConfig":                llx.DictData(httpProxyConfig),
-					"networkProfile":                 llx.DictData(networkProfile),
-					"podIdentityProfile":             llx.DictData(podIdentityProfile),
-					"securityProfile":                llx.DictData(securityProfile),
-					"storageProfile":                 llx.DictData(storageProfile),
-					"workloadAutoScalerProfile":      llx.DictData(workloadAutoScalerProfile),
-					"apiServerAccessProfile":         llx.DictData(apiServerAccessProfile),
-					"enablePrivateCluster":           llx.BoolDataPtr(enablePrivateCluster),
-					"enablePrivateClusterPublicFQDN": llx.BoolDataPtr(enablePrivateClusterPublicFQDN),
-					"disableRunCommand":              llx.BoolDataPtr(disableRunCommand),
-					"apiServerAuthorizedIPRanges":    llx.ArrayData(apiServerAuthorizedIPRanges, types.String),
-					"privateDnsZone":                 llx.StringDataPtr(privateDnsZone),
-					"defenderEnabled":                llx.BoolDataPtr(defenderEnabled),
-					"imageCleanerEnabled":            llx.BoolDataPtr(imageCleanerEnabled),
-					"imageCleanerIntervalHours":      llx.IntDataDefault(imageCleanerIntervalHours, 0),
-					"workloadIdentityEnabled":        llx.BoolDataPtr(workloadIdentityEnabled),
-					"azureKeyVaultKmsEnabled":        llx.BoolDataPtr(azureKeyVaultKmsEnabled),
-					"azureKeyVaultKmsNetworkAccess":  llx.StringDataPtr(azureKeyVaultKmsNetworkAccess),
-					"disableLocalAccounts":           llx.BoolDataPtr(entry.Properties.DisableLocalAccounts),
-					"publicNetworkAccess":            llx.StringDataPtr((*string)(entry.Properties.PublicNetworkAccess)),
-					"skuTier":                        llx.StringData(skuTier),
-					"aadProfile":                     aadProfileData,
-					"autoUpgradeProfile":             autoUpgradeProfileData,
+					"id":                                llx.StringDataPtr(entry.ID),
+					"name":                              llx.StringDataPtr(entry.Name),
+					"location":                          llx.StringDataPtr(entry.Location),
+					"kubernetesVersion":                 llx.StringDataPtr(entry.Properties.KubernetesVersion),
+					"provisioningState":                 llx.StringDataPtr(entry.Properties.ProvisioningState),
+					"createdAt":                         llx.TimeDataPtr(createdAt),
+					"nodeResourceGroup":                 llx.StringDataPtr(entry.Properties.NodeResourceGroup),
+					"powerState":                        llx.StringDataPtr((*string)(entry.Properties.PowerState.Code)),
+					"tags":                              llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
+					"rbacEnabled":                       llx.BoolDataPtr(entry.Properties.EnableRBAC),
+					"dnsPrefix":                         llx.StringDataPtr(entry.Properties.DNSPrefix),
+					"fqdn":                              llx.StringDataPtr(entry.Properties.Fqdn),
+					"fqdnSubdomain":                     llx.StringDataPtr(entry.Properties.FqdnSubdomain),
+					"privateFqdn":                       llx.StringDataPtr(entry.Properties.PrivateFQDN),
+					"agentPoolProfiles":                 llx.DictData(agentPoolProfiles),
+					"addonProfiles":                     llx.DictData(addonProfiles),
+					"httpProxyConfig":                   llx.DictData(httpProxyConfig),
+					"networkProfile":                    llx.DictData(networkProfile),
+					"podIdentityProfile":                llx.DictData(podIdentityProfile),
+					"securityProfile":                   llx.DictData(securityProfile),
+					"storageProfile":                    llx.DictData(storageProfile),
+					"workloadAutoScalerProfile":         llx.DictData(workloadAutoScalerProfile),
+					"apiServerAccessProfile":            llx.DictData(apiServerAccessProfile),
+					"enablePrivateCluster":              llx.BoolDataPtr(enablePrivateCluster),
+					"enablePrivateClusterPublicFQDN":    llx.BoolDataPtr(enablePrivateClusterPublicFQDN),
+					"disableRunCommand":                 llx.BoolDataPtr(disableRunCommand),
+					"apiServerAuthorizedIPRanges":       llx.ArrayData(apiServerAuthorizedIPRanges, types.String),
+					"privateDnsZone":                    llx.StringDataPtr(privateDnsZone),
+					"defenderEnabled":                   llx.BoolDataPtr(defenderEnabled),
+					"imageCleanerEnabled":               llx.BoolDataPtr(imageCleanerEnabled),
+					"imageCleanerIntervalHours":         llx.IntDataDefault(imageCleanerIntervalHours, 0),
+					"workloadIdentityEnabled":           llx.BoolDataPtr(workloadIdentityEnabled),
+					"azureKeyVaultKmsEnabled":           llx.BoolDataPtr(azureKeyVaultKmsEnabled),
+					"azureKeyVaultKmsNetworkAccess":     llx.StringDataPtr(azureKeyVaultKmsNetworkAccess),
+					"disableLocalAccounts":              llx.BoolDataPtr(entry.Properties.DisableLocalAccounts),
+					"publicNetworkAccess":               llx.StringDataPtr((*string)(entry.Properties.PublicNetworkAccess)),
+					"skuTier":                           llx.StringData(skuTier),
+					"networkPlugin":                     llx.StringDataPtr(networkPlugin),
+					"networkPolicy":                     llx.StringDataPtr(networkPolicy),
+					"oidcIssuerEnabled":                 llx.BoolDataPtr(oidcIssuerEnabled),
+					"nodeResourceGroupRestrictionLevel": llx.StringDataPtr(nodeResourceGroupRestrictionLevel),
+					"serviceMeshMode":                   llx.StringDataPtr(serviceMeshMode),
+					"supportPlan":                       llx.StringDataPtr((*string)(entry.Properties.SupportPlan)),
+					"advancedNetworking":                advancedNetworkingData,
+					"aadProfile":                        aadProfileData,
+					"autoUpgradeProfile":                autoUpgradeProfileData,
 				})
 			if err != nil {
 				return nil, err

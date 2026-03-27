@@ -24,7 +24,7 @@ import (
 	"go.mondoo.com/mql/v13/providers/azure/connection"
 	"go.mondoo.com/mql/v13/types"
 
-	web "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/appservice/armappservice/v5"
+	web "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/appservice/armappservice/v6"
 )
 
 var majorVersionRegex = regexp.MustCompile(`^(\d+)`)
@@ -388,6 +388,10 @@ func (a *mqlAzureSubscriptionWebServiceAppsiteconfig) id() (string, error) {
 	return a.Id.Data, nil
 }
 
+func (a *mqlAzureSubscriptionWebServiceAppsiteOutboundVnetRouting) id() (string, error) {
+	return a.Id.Data, nil
+}
+
 func (a *mqlAzureSubscriptionWebServiceAppsite) diagnosticSettings() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	return getDiagnosticSettings(a.Id.Data, a.MqlRuntime, conn)
@@ -482,6 +486,34 @@ func (a *mqlAzureSubscriptionWebService) apps() ([]any, error) {
 				}
 				args["enabled"] = llx.BoolDataPtr(entry.Properties.Enabled)
 				args["state"] = llx.StringDataPtr(entry.Properties.State)
+				args["sshEnabled"] = llx.BoolDataPtr(entry.Properties.SSHEnabled)
+				args["publicNetworkAccess"] = llx.StringDataPtr(entry.Properties.PublicNetworkAccess)
+				if entry.Properties.IPMode != nil {
+					args["ipMode"] = llx.StringData(string(*entry.Properties.IPMode))
+				}
+				if entry.Properties.RedundancyMode != nil {
+					args["redundancyMode"] = llx.StringData(string(*entry.Properties.RedundancyMode))
+				}
+
+				// Create outbound VNet routing sub-resource
+				var outboundVnetRoutingData *llx.RawData = llx.NilData
+				if entry.Properties.OutboundVnetRouting != nil {
+					ovr := entry.Properties.OutboundVnetRouting
+					ovrRes, ovrErr := CreateResource(a.MqlRuntime, "azure.subscription.webService.appsite.outboundVnetRouting",
+						map[string]*llx.RawData{
+							"id":                          llx.StringData(*entry.ID + "/outboundVnetRouting"),
+							"allTrafficEnabled":           llx.BoolDataPtr(ovr.AllTraffic),
+							"applicationTrafficEnabled":   llx.BoolDataPtr(ovr.ApplicationTraffic),
+							"backupRestoreTrafficEnabled": llx.BoolDataPtr(ovr.BackupRestoreTraffic),
+							"contentShareTrafficEnabled":  llx.BoolDataPtr(ovr.ContentShareTraffic),
+							"imagePullTrafficEnabled":     llx.BoolDataPtr(ovr.ImagePullTraffic),
+						})
+					if ovrErr != nil {
+						return nil, ovrErr
+					}
+					outboundVnetRoutingData = llx.ResourceData(ovrRes, "azure.subscription.webService.appsite.outboundVnetRouting")
+				}
+				args["outboundVnetRouting"] = outboundVnetRoutingData
 			}
 
 			mqlAzure, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionWebServiceAppsite, args)
@@ -661,6 +693,9 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) configuration() (*mqlAzureSubscr
 		args["alwaysOn"] = llx.BoolDataPtr(entry.Properties.AlwaysOn)
 		if entry.Properties.MinTLSCipherSuite != nil {
 			args["minTlsCipherSuite"] = llx.StringData(string(*entry.Properties.MinTLSCipherSuite))
+		}
+		if entry.Properties.ScmMinTLSVersion != nil {
+			args["scmMinTlsVersion"] = llx.StringData(string(*entry.Properties.ScmMinTLSVersion))
 		}
 	}
 
@@ -1095,6 +1130,9 @@ func (a *mqlAzureSubscriptionWebServiceAppslot) configuration() (*mqlAzureSubscr
 		args["remoteDebuggingEnabled"] = llx.BoolDataPtr(configuration.Properties.RemoteDebuggingEnabled)
 		args["http20Enabled"] = llx.BoolDataPtr(configuration.Properties.Http20Enabled)
 		args["alwaysOn"] = llx.BoolDataPtr(configuration.Properties.AlwaysOn)
+		if configuration.Properties.ScmMinTLSVersion != nil {
+			args["scmMinTlsVersion"] = llx.StringData(string(*configuration.Properties.ScmMinTLSVersion))
+		}
 	}
 
 	res, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionWebServiceAppsiteconfig, args)

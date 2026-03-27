@@ -86,6 +86,7 @@ const (
 	ResourceAzureSubscriptionWebService                                                          string = "azure.subscription.webService"
 	ResourceAzureSubscriptionWebServiceAppRuntimeStack                                           string = "azure.subscription.webService.appRuntimeStack"
 	ResourceAzureSubscriptionWebServiceAppsite                                                   string = "azure.subscription.webService.appsite"
+	ResourceAzureSubscriptionWebServiceAppsiteOutboundVnetRouting                                string = "azure.subscription.webService.appsite.outboundVnetRouting"
 	ResourceAzureSubscriptionPrivateEndpointConnection                                           string = "azure.subscription.privateEndpointConnection"
 	ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState                            string = "azure.subscription.privateEndpointConnection.connectionState"
 	ResourceAzureSubscriptionWebServiceAppslot                                                   string = "azure.subscription.webService.appslot"
@@ -167,6 +168,7 @@ const (
 	ResourceAzureSubscriptionAksServiceCluster                                                   string = "azure.subscription.aksService.cluster"
 	ResourceAzureSubscriptionAksServiceClusterAadProfile                                         string = "azure.subscription.aksService.cluster.aadProfile"
 	ResourceAzureSubscriptionAksServiceClusterAutoUpgradeProfile                                 string = "azure.subscription.aksService.cluster.autoUpgradeProfile"
+	ResourceAzureSubscriptionAksServiceClusterAdvancedNetworking                                 string = "azure.subscription.aksService.cluster.advancedNetworking"
 	ResourceAzureSubscriptionAdvisorService                                                      string = "azure.subscription.advisorService"
 	ResourceAzureSubscriptionAdvisorServiceRecommendation                                        string = "azure.subscription.advisorService.recommendation"
 	ResourceAzureSubscriptionAdvisorServiceScore                                                 string = "azure.subscription.advisorService.score"
@@ -461,6 +463,10 @@ func init() {
 		"azure.subscription.webService.appsite": {
 			Init:   initAzureSubscriptionWebServiceAppsite,
 			Create: createAzureSubscriptionWebServiceAppsite,
+		},
+		"azure.subscription.webService.appsite.outboundVnetRouting": {
+			// to override args, implement: initAzureSubscriptionWebServiceAppsiteOutboundVnetRouting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionWebServiceAppsiteOutboundVnetRouting,
 		},
 		"azure.subscription.privateEndpointConnection": {
 			// to override args, implement: initAzureSubscriptionPrivateEndpointConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -785,6 +791,10 @@ func init() {
 		"azure.subscription.aksService.cluster.autoUpgradeProfile": {
 			// to override args, implement: initAzureSubscriptionAksServiceClusterAutoUpgradeProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionAksServiceClusterAutoUpgradeProfile,
+		},
+		"azure.subscription.aksService.cluster.advancedNetworking": {
+			// to override args, implement: initAzureSubscriptionAksServiceClusterAdvancedNetworking(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionAksServiceClusterAdvancedNetworking,
 		},
 		"azure.subscription.advisorService": {
 			Init:   initAzureSubscriptionAdvisorService,
@@ -1370,6 +1380,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.batchService.account.pool.virtualMachineConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionBatchServiceAccountPool).GetVirtualMachineConfiguration()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.batchService.account.pool.diskCustomerManagedKeyEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionBatchServiceAccountPool).GetDiskCustomerManagedKeyEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.batchService.account.pool.diskEncryptionTargets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionBatchServiceAccountPool).GetDiskEncryptionTargets()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.batchService.account.pool.hostEndpointProtectionMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionBatchServiceAccountPool).GetHostEndpointProtectionMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.batchService.account.pool.proxyAgentEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionBatchServiceAccountPool).GetProxyAgentEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.batchService.account.pool.securityEncryptionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionBatchServiceAccountPool).GetSecurityEncryptionType()).ToDataRes(types.String)
 	},
 	"azure.subscription.databricksService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionDatabricksService).GetSubscriptionId()).ToDataRes(types.String)
@@ -2886,11 +2911,44 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.webService.appsite.endToEndEncryptionEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetEndToEndEncryptionEnabled()).ToDataRes(types.Bool)
 	},
+	"azure.subscription.webService.appsite.sshEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetSshEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.webService.appsite.publicNetworkAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetPublicNetworkAccess()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsite.ipMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetIpMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsite.redundancyMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetRedundancyMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsite.outboundVnetRouting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetOutboundVnetRouting()).ToDataRes(types.Resource("azure.subscription.webService.appsite.outboundVnetRouting"))
+	},
 	"azure.subscription.webService.appsite.hostNameBindings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetHostNameBindings()).ToDataRes(types.Array(types.Resource("azure.subscription.webService.appsite.hostNameBinding")))
 	},
 	"azure.subscription.webService.appsite.virtualNetworkConnections": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetVirtualNetworkConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.webService.appsite.virtualNetworkConnection")))
+	},
+	"azure.subscription.webService.appsite.outboundVnetRouting.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteOutboundVnetRouting).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsite.outboundVnetRouting.allTrafficEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteOutboundVnetRouting).GetAllTrafficEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.webService.appsite.outboundVnetRouting.applicationTrafficEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteOutboundVnetRouting).GetApplicationTrafficEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.webService.appsite.outboundVnetRouting.backupRestoreTrafficEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteOutboundVnetRouting).GetBackupRestoreTrafficEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.webService.appsite.outboundVnetRouting.contentShareTrafficEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteOutboundVnetRouting).GetContentShareTrafficEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.webService.appsite.outboundVnetRouting.imagePullTrafficEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteOutboundVnetRouting).GetImagePullTrafficEnabled()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.privateEndpointConnection.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionPrivateEndpointConnection).GetId()).ToDataRes(types.String)
@@ -5127,6 +5185,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.aksService.cluster.apiServerAccessProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetApiServerAccessProfile()).ToDataRes(types.Dict)
 	},
+	"azure.subscription.aksService.cluster.fqdnSubdomain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetFqdnSubdomain()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.privateFqdn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetPrivateFqdn()).ToDataRes(types.String)
+	},
 	"azure.subscription.aksService.cluster.enablePrivateCluster": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetEnablePrivateCluster()).ToDataRes(types.Bool)
 	},
@@ -5172,6 +5236,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.aksService.cluster.azureKeyVaultKmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetAzureKeyVaultKmsKey()).ToDataRes(types.Resource("azure.subscription.keyVaultService.key"))
 	},
+	"azure.subscription.aksService.cluster.networkPlugin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetNetworkPlugin()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.networkPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetNetworkPolicy()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.oidcIssuerEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetOidcIssuerEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.aksService.cluster.nodeResourceGroupRestrictionLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetNodeResourceGroupRestrictionLevel()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.serviceMeshMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetServiceMeshMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.supportPlan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetSupportPlan()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.advancedNetworking": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetAdvancedNetworking()).ToDataRes(types.Resource("azure.subscription.aksService.cluster.advancedNetworking"))
+	},
 	"azure.subscription.aksService.cluster.aadProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetAadProfile()).ToDataRes(types.Resource("azure.subscription.aksService.cluster.aadProfile"))
 	},
@@ -5198,6 +5283,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.aksService.cluster.autoUpgradeProfile.nodeOSUpgradeChannel": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAksServiceClusterAutoUpgradeProfile).GetNodeOSUpgradeChannel()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.advancedNetworking.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterAdvancedNetworking).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.advancedNetworking.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterAdvancedNetworking).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.aksService.cluster.advancedNetworking.transitEncryptionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterAdvancedNetworking).GetTransitEncryptionType()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.advancedNetworking.accelerationMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterAdvancedNetworking).GetAccelerationMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.advancedNetworking.securityEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterAdvancedNetworking).GetSecurityEnabled()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.advisorService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAdvisorService).GetSubscriptionId()).ToDataRes(types.String)
@@ -6112,6 +6212,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.batchService.account.pool.virtualMachineConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionBatchServiceAccountPool).VirtualMachineConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.batchService.account.pool.diskCustomerManagedKeyEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionBatchServiceAccountPool).DiskCustomerManagedKeyEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.batchService.account.pool.diskEncryptionTargets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionBatchServiceAccountPool).DiskEncryptionTargets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.batchService.account.pool.hostEndpointProtectionMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionBatchServiceAccountPool).HostEndpointProtectionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.batchService.account.pool.proxyAgentEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionBatchServiceAccountPool).ProxyAgentEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.batchService.account.pool.securityEncryptionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionBatchServiceAccountPool).SecurityEncryptionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.databricksService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8366,12 +8486,60 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionWebServiceAppsite).EndToEndEncryptionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.webService.appsite.sshEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsite).SshEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.publicNetworkAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsite).PublicNetworkAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.ipMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsite).IpMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.redundancyMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsite).RedundancyMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.outboundVnetRouting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsite).OutboundVnetRouting, ok = plugin.RawToTValue[*mqlAzureSubscriptionWebServiceAppsiteOutboundVnetRouting](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.webService.appsite.hostNameBindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionWebServiceAppsite).HostNameBindings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.webService.appsite.virtualNetworkConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionWebServiceAppsite).VirtualNetworkConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.outboundVnetRouting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteOutboundVnetRouting).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.webService.appsite.outboundVnetRouting.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteOutboundVnetRouting).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.outboundVnetRouting.allTrafficEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteOutboundVnetRouting).AllTrafficEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.outboundVnetRouting.applicationTrafficEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteOutboundVnetRouting).ApplicationTrafficEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.outboundVnetRouting.backupRestoreTrafficEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteOutboundVnetRouting).BackupRestoreTrafficEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.outboundVnetRouting.contentShareTrafficEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteOutboundVnetRouting).ContentShareTrafficEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.outboundVnetRouting.imagePullTrafficEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteOutboundVnetRouting).ImagePullTrafficEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.privateEndpointConnection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11670,6 +11838,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionAksServiceCluster).ApiServerAccessProfile, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.aksService.cluster.fqdnSubdomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceCluster).FqdnSubdomain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.privateFqdn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceCluster).PrivateFqdn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.aksService.cluster.enablePrivateCluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionAksServiceCluster).EnablePrivateCluster, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -11730,6 +11906,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionAksServiceCluster).AzureKeyVaultKmsKey, ok = plugin.RawToTValue[*mqlAzureSubscriptionKeyVaultServiceKey](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.aksService.cluster.networkPlugin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceCluster).NetworkPlugin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.networkPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceCluster).NetworkPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.oidcIssuerEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceCluster).OidcIssuerEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodeResourceGroupRestrictionLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceCluster).NodeResourceGroupRestrictionLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.serviceMeshMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceCluster).ServiceMeshMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.supportPlan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceCluster).SupportPlan, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.advancedNetworking": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceCluster).AdvancedNetworking, ok = plugin.RawToTValue[*mqlAzureSubscriptionAksServiceClusterAdvancedNetworking](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.aksService.cluster.aadProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionAksServiceCluster).AadProfile, ok = plugin.RawToTValue[*mqlAzureSubscriptionAksServiceClusterAadProfile](v.Value, v.Error)
 		return
@@ -11772,6 +11976,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.aksService.cluster.autoUpgradeProfile.nodeOSUpgradeChannel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionAksServiceClusterAutoUpgradeProfile).NodeOSUpgradeChannel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.advancedNetworking.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterAdvancedNetworking).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.aksService.cluster.advancedNetworking.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterAdvancedNetworking).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.advancedNetworking.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterAdvancedNetworking).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.advancedNetworking.transitEncryptionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterAdvancedNetworking).TransitEncryptionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.advancedNetworking.accelerationMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterAdvancedNetworking).AccelerationMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.advancedNetworking.securityEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterAdvancedNetworking).SecurityEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.advisorService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13677,16 +13905,21 @@ type mqlAzureSubscriptionBatchServiceAccountPool struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAzureSubscriptionBatchServiceAccountPoolInternal it will be used here
-	Id                          plugin.TValue[string]
-	Name                        plugin.TValue[string]
-	Type                        plugin.TValue[string]
-	Etag                        plugin.TValue[string]
-	Identity                    plugin.TValue[any]
-	Properties                  plugin.TValue[any]
-	ProvisioningState           plugin.TValue[string]
-	VmSize                      plugin.TValue[string]
-	DeploymentConfiguration     plugin.TValue[any]
-	VirtualMachineConfiguration plugin.TValue[any]
+	Id                            plugin.TValue[string]
+	Name                          plugin.TValue[string]
+	Type                          plugin.TValue[string]
+	Etag                          plugin.TValue[string]
+	Identity                      plugin.TValue[any]
+	Properties                    plugin.TValue[any]
+	ProvisioningState             plugin.TValue[string]
+	VmSize                        plugin.TValue[string]
+	DeploymentConfiguration       plugin.TValue[any]
+	VirtualMachineConfiguration   plugin.TValue[any]
+	DiskCustomerManagedKeyEnabled plugin.TValue[bool]
+	DiskEncryptionTargets         plugin.TValue[[]any]
+	HostEndpointProtectionMode    plugin.TValue[string]
+	ProxyAgentEnabled             plugin.TValue[bool]
+	SecurityEncryptionType        plugin.TValue[string]
 }
 
 // createAzureSubscriptionBatchServiceAccountPool creates a new instance of this resource
@@ -13764,6 +13997,26 @@ func (c *mqlAzureSubscriptionBatchServiceAccountPool) GetDeploymentConfiguration
 
 func (c *mqlAzureSubscriptionBatchServiceAccountPool) GetVirtualMachineConfiguration() *plugin.TValue[any] {
 	return &c.VirtualMachineConfiguration
+}
+
+func (c *mqlAzureSubscriptionBatchServiceAccountPool) GetDiskCustomerManagedKeyEnabled() *plugin.TValue[bool] {
+	return &c.DiskCustomerManagedKeyEnabled
+}
+
+func (c *mqlAzureSubscriptionBatchServiceAccountPool) GetDiskEncryptionTargets() *plugin.TValue[[]any] {
+	return &c.DiskEncryptionTargets
+}
+
+func (c *mqlAzureSubscriptionBatchServiceAccountPool) GetHostEndpointProtectionMode() *plugin.TValue[string] {
+	return &c.HostEndpointProtectionMode
+}
+
+func (c *mqlAzureSubscriptionBatchServiceAccountPool) GetProxyAgentEnabled() *plugin.TValue[bool] {
+	return &c.ProxyAgentEnabled
+}
+
+func (c *mqlAzureSubscriptionBatchServiceAccountPool) GetSecurityEncryptionType() *plugin.TValue[string] {
+	return &c.SecurityEncryptionType
 }
 
 // mqlAzureSubscriptionDatabricksService for the azure.subscription.databricksService resource
@@ -19219,6 +19472,11 @@ type mqlAzureSubscriptionWebServiceAppsite struct {
 	Scm                        plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies]
 	PrivateEndpointConnections plugin.TValue[[]any]
 	EndToEndEncryptionEnabled  plugin.TValue[bool]
+	SshEnabled                 plugin.TValue[bool]
+	PublicNetworkAccess        plugin.TValue[string]
+	IpMode                     plugin.TValue[string]
+	RedundancyMode             plugin.TValue[string]
+	OutboundVnetRouting        plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteOutboundVnetRouting]
 	HostNameBindings           plugin.TValue[[]any]
 	VirtualNetworkConnections  plugin.TValue[[]any]
 }
@@ -19472,6 +19730,26 @@ func (c *mqlAzureSubscriptionWebServiceAppsite) GetEndToEndEncryptionEnabled() *
 	return &c.EndToEndEncryptionEnabled
 }
 
+func (c *mqlAzureSubscriptionWebServiceAppsite) GetSshEnabled() *plugin.TValue[bool] {
+	return &c.SshEnabled
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsite) GetPublicNetworkAccess() *plugin.TValue[string] {
+	return &c.PublicNetworkAccess
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsite) GetIpMode() *plugin.TValue[string] {
+	return &c.IpMode
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsite) GetRedundancyMode() *plugin.TValue[string] {
+	return &c.RedundancyMode
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsite) GetOutboundVnetRouting() *plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteOutboundVnetRouting] {
+	return &c.OutboundVnetRouting
+}
+
 func (c *mqlAzureSubscriptionWebServiceAppsite) GetHostNameBindings() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.HostNameBindings, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -19502,6 +19780,80 @@ func (c *mqlAzureSubscriptionWebServiceAppsite) GetVirtualNetworkConnections() *
 
 		return c.virtualNetworkConnections()
 	})
+}
+
+// mqlAzureSubscriptionWebServiceAppsiteOutboundVnetRouting for the azure.subscription.webService.appsite.outboundVnetRouting resource
+type mqlAzureSubscriptionWebServiceAppsiteOutboundVnetRouting struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionWebServiceAppsiteOutboundVnetRoutingInternal it will be used here
+	Id                          plugin.TValue[string]
+	AllTrafficEnabled           plugin.TValue[bool]
+	ApplicationTrafficEnabled   plugin.TValue[bool]
+	BackupRestoreTrafficEnabled plugin.TValue[bool]
+	ContentShareTrafficEnabled  plugin.TValue[bool]
+	ImagePullTrafficEnabled     plugin.TValue[bool]
+}
+
+// createAzureSubscriptionWebServiceAppsiteOutboundVnetRouting creates a new instance of this resource
+func createAzureSubscriptionWebServiceAppsiteOutboundVnetRouting(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionWebServiceAppsiteOutboundVnetRouting{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.webService.appsite.outboundVnetRouting", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteOutboundVnetRouting) MqlName() string {
+	return "azure.subscription.webService.appsite.outboundVnetRouting"
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteOutboundVnetRouting) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteOutboundVnetRouting) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteOutboundVnetRouting) GetAllTrafficEnabled() *plugin.TValue[bool] {
+	return &c.AllTrafficEnabled
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteOutboundVnetRouting) GetApplicationTrafficEnabled() *plugin.TValue[bool] {
+	return &c.ApplicationTrafficEnabled
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteOutboundVnetRouting) GetBackupRestoreTrafficEnabled() *plugin.TValue[bool] {
+	return &c.BackupRestoreTrafficEnabled
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteOutboundVnetRouting) GetContentShareTrafficEnabled() *plugin.TValue[bool] {
+	return &c.ContentShareTrafficEnabled
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteOutboundVnetRouting) GetImagePullTrafficEnabled() *plugin.TValue[bool] {
+	return &c.ImagePullTrafficEnabled
 }
 
 // mqlAzureSubscriptionPrivateEndpointConnection for the azure.subscription.privateEndpointConnection resource
@@ -27644,44 +27996,53 @@ type mqlAzureSubscriptionAksServiceCluster struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAzureSubscriptionAksServiceClusterInternal
-	Id                             plugin.TValue[string]
-	Name                           plugin.TValue[string]
-	Location                       plugin.TValue[string]
-	KubernetesVersion              plugin.TValue[string]
-	ProvisioningState              plugin.TValue[string]
-	PowerState                     plugin.TValue[string]
-	Tags                           plugin.TValue[map[string]any]
-	NodeResourceGroup              plugin.TValue[string]
-	CreatedAt                      plugin.TValue[*time.Time]
-	RbacEnabled                    plugin.TValue[bool]
-	Fqdn                           plugin.TValue[string]
-	DnsPrefix                      plugin.TValue[string]
-	StorageProfile                 plugin.TValue[any]
-	WorkloadAutoScalerProfile      plugin.TValue[any]
-	SecurityProfile                plugin.TValue[any]
-	PodIdentityProfile             plugin.TValue[any]
-	NetworkProfile                 plugin.TValue[any]
-	HttpProxyConfig                plugin.TValue[any]
-	AddonProfiles                  plugin.TValue[[]any]
-	AgentPoolProfiles              plugin.TValue[[]any]
-	ApiServerAccessProfile         plugin.TValue[any]
-	EnablePrivateCluster           plugin.TValue[bool]
-	EnablePrivateClusterPublicFQDN plugin.TValue[bool]
-	DisableRunCommand              plugin.TValue[bool]
-	ApiServerAuthorizedIPRanges    plugin.TValue[[]any]
-	PrivateDnsZone                 plugin.TValue[string]
-	DefenderEnabled                plugin.TValue[bool]
-	ImageCleanerEnabled            plugin.TValue[bool]
-	ImageCleanerIntervalHours      plugin.TValue[int64]
-	WorkloadIdentityEnabled        plugin.TValue[bool]
-	AzureKeyVaultKmsEnabled        plugin.TValue[bool]
-	AzureKeyVaultKmsNetworkAccess  plugin.TValue[string]
-	DisableLocalAccounts           plugin.TValue[bool]
-	PublicNetworkAccess            plugin.TValue[string]
-	SkuTier                        plugin.TValue[string]
-	AzureKeyVaultKmsKey            plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey]
-	AadProfile                     plugin.TValue[*mqlAzureSubscriptionAksServiceClusterAadProfile]
-	AutoUpgradeProfile             plugin.TValue[*mqlAzureSubscriptionAksServiceClusterAutoUpgradeProfile]
+	Id                                plugin.TValue[string]
+	Name                              plugin.TValue[string]
+	Location                          plugin.TValue[string]
+	KubernetesVersion                 plugin.TValue[string]
+	ProvisioningState                 plugin.TValue[string]
+	PowerState                        plugin.TValue[string]
+	Tags                              plugin.TValue[map[string]any]
+	NodeResourceGroup                 plugin.TValue[string]
+	CreatedAt                         plugin.TValue[*time.Time]
+	RbacEnabled                       plugin.TValue[bool]
+	Fqdn                              plugin.TValue[string]
+	DnsPrefix                         plugin.TValue[string]
+	StorageProfile                    plugin.TValue[any]
+	WorkloadAutoScalerProfile         plugin.TValue[any]
+	SecurityProfile                   plugin.TValue[any]
+	PodIdentityProfile                plugin.TValue[any]
+	NetworkProfile                    plugin.TValue[any]
+	HttpProxyConfig                   plugin.TValue[any]
+	AddonProfiles                     plugin.TValue[[]any]
+	AgentPoolProfiles                 plugin.TValue[[]any]
+	ApiServerAccessProfile            plugin.TValue[any]
+	FqdnSubdomain                     plugin.TValue[string]
+	PrivateFqdn                       plugin.TValue[string]
+	EnablePrivateCluster              plugin.TValue[bool]
+	EnablePrivateClusterPublicFQDN    plugin.TValue[bool]
+	DisableRunCommand                 plugin.TValue[bool]
+	ApiServerAuthorizedIPRanges       plugin.TValue[[]any]
+	PrivateDnsZone                    plugin.TValue[string]
+	DefenderEnabled                   plugin.TValue[bool]
+	ImageCleanerEnabled               plugin.TValue[bool]
+	ImageCleanerIntervalHours         plugin.TValue[int64]
+	WorkloadIdentityEnabled           plugin.TValue[bool]
+	AzureKeyVaultKmsEnabled           plugin.TValue[bool]
+	AzureKeyVaultKmsNetworkAccess     plugin.TValue[string]
+	DisableLocalAccounts              plugin.TValue[bool]
+	PublicNetworkAccess               plugin.TValue[string]
+	SkuTier                           plugin.TValue[string]
+	AzureKeyVaultKmsKey               plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey]
+	NetworkPlugin                     plugin.TValue[string]
+	NetworkPolicy                     plugin.TValue[string]
+	OidcIssuerEnabled                 plugin.TValue[bool]
+	NodeResourceGroupRestrictionLevel plugin.TValue[string]
+	ServiceMeshMode                   plugin.TValue[string]
+	SupportPlan                       plugin.TValue[string]
+	AdvancedNetworking                plugin.TValue[*mqlAzureSubscriptionAksServiceClusterAdvancedNetworking]
+	AadProfile                        plugin.TValue[*mqlAzureSubscriptionAksServiceClusterAadProfile]
+	AutoUpgradeProfile                plugin.TValue[*mqlAzureSubscriptionAksServiceClusterAutoUpgradeProfile]
 }
 
 // createAzureSubscriptionAksServiceCluster creates a new instance of this resource
@@ -27805,6 +28166,14 @@ func (c *mqlAzureSubscriptionAksServiceCluster) GetApiServerAccessProfile() *plu
 	return &c.ApiServerAccessProfile
 }
 
+func (c *mqlAzureSubscriptionAksServiceCluster) GetFqdnSubdomain() *plugin.TValue[string] {
+	return &c.FqdnSubdomain
+}
+
+func (c *mqlAzureSubscriptionAksServiceCluster) GetPrivateFqdn() *plugin.TValue[string] {
+	return &c.PrivateFqdn
+}
+
 func (c *mqlAzureSubscriptionAksServiceCluster) GetEnablePrivateCluster() *plugin.TValue[bool] {
 	return &c.EnablePrivateCluster
 }
@@ -27875,6 +28244,34 @@ func (c *mqlAzureSubscriptionAksServiceCluster) GetAzureKeyVaultKmsKey() *plugin
 
 		return c.azureKeyVaultKmsKey()
 	})
+}
+
+func (c *mqlAzureSubscriptionAksServiceCluster) GetNetworkPlugin() *plugin.TValue[string] {
+	return &c.NetworkPlugin
+}
+
+func (c *mqlAzureSubscriptionAksServiceCluster) GetNetworkPolicy() *plugin.TValue[string] {
+	return &c.NetworkPolicy
+}
+
+func (c *mqlAzureSubscriptionAksServiceCluster) GetOidcIssuerEnabled() *plugin.TValue[bool] {
+	return &c.OidcIssuerEnabled
+}
+
+func (c *mqlAzureSubscriptionAksServiceCluster) GetNodeResourceGroupRestrictionLevel() *plugin.TValue[string] {
+	return &c.NodeResourceGroupRestrictionLevel
+}
+
+func (c *mqlAzureSubscriptionAksServiceCluster) GetServiceMeshMode() *plugin.TValue[string] {
+	return &c.ServiceMeshMode
+}
+
+func (c *mqlAzureSubscriptionAksServiceCluster) GetSupportPlan() *plugin.TValue[string] {
+	return &c.SupportPlan
+}
+
+func (c *mqlAzureSubscriptionAksServiceCluster) GetAdvancedNetworking() *plugin.TValue[*mqlAzureSubscriptionAksServiceClusterAdvancedNetworking] {
+	return &c.AdvancedNetworking
 }
 
 func (c *mqlAzureSubscriptionAksServiceCluster) GetAadProfile() *plugin.TValue[*mqlAzureSubscriptionAksServiceClusterAadProfile] {
@@ -28006,6 +28403,75 @@ func (c *mqlAzureSubscriptionAksServiceClusterAutoUpgradeProfile) GetUpgradeChan
 
 func (c *mqlAzureSubscriptionAksServiceClusterAutoUpgradeProfile) GetNodeOSUpgradeChannel() *plugin.TValue[string] {
 	return &c.NodeOSUpgradeChannel
+}
+
+// mqlAzureSubscriptionAksServiceClusterAdvancedNetworking for the azure.subscription.aksService.cluster.advancedNetworking resource
+type mqlAzureSubscriptionAksServiceClusterAdvancedNetworking struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionAksServiceClusterAdvancedNetworkingInternal it will be used here
+	Id                    plugin.TValue[string]
+	Enabled               plugin.TValue[bool]
+	TransitEncryptionType plugin.TValue[string]
+	AccelerationMode      plugin.TValue[string]
+	SecurityEnabled       plugin.TValue[bool]
+}
+
+// createAzureSubscriptionAksServiceClusterAdvancedNetworking creates a new instance of this resource
+func createAzureSubscriptionAksServiceClusterAdvancedNetworking(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionAksServiceClusterAdvancedNetworking{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.aksService.cluster.advancedNetworking", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterAdvancedNetworking) MqlName() string {
+	return "azure.subscription.aksService.cluster.advancedNetworking"
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterAdvancedNetworking) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterAdvancedNetworking) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterAdvancedNetworking) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterAdvancedNetworking) GetTransitEncryptionType() *plugin.TValue[string] {
+	return &c.TransitEncryptionType
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterAdvancedNetworking) GetAccelerationMode() *plugin.TValue[string] {
+	return &c.AccelerationMode
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterAdvancedNetworking) GetSecurityEnabled() *plugin.TValue[bool] {
+	return &c.SecurityEnabled
 }
 
 // mqlAzureSubscriptionAdvisorService for the azure.subscription.advisorService resource

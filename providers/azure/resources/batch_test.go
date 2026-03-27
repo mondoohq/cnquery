@@ -6,7 +6,7 @@ package resources
 import (
 	"testing"
 
-	armbatch "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/batch/armbatch/v3"
+	armbatch "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/batch/armbatch/v4"
 	"github.com/stretchr/testify/assert"
 )
 

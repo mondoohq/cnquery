@@ -506,7 +506,7 @@ func (a *mqlAzureSubscriptionNetworkService) loadBalancers() ([]any, error) {
 				if err != nil {
 					return nil, err
 				}
-				mqlOutbound, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.outbundRule",
+				mqlOutbound, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.outboundRule",
 					map[string]*llx.RawData{
 						"id":         llx.StringDataPtr(outboundRule.ID),
 						"type":       llx.StringDataPtr(outboundRule.Type),

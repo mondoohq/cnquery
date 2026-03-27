@@ -348,6 +348,16 @@ azure.subscription.batchService.account.pool @defaults("id name") {
   deploymentConfiguration dict
   // Pool virtual machine configuration
   virtualMachineConfiguration dict
+  // Whether customer-managed keys are used for disk encryption
+  diskCustomerManagedKeyEnabled bool
+  // Disk encryption targets ("OsDisk", "TemporaryDisk")
+  diskEncryptionTargets []string
+  // Host endpoint protection mode for IMDS: "Audit" or "Enforce"
+  hostEndpointProtectionMode string
+  // Whether proxy agent is enabled on pool VMs
+  proxyAgentEnabled bool
+  // Security encryption type for confidential computing (e.g., "DiskWithVMGuestState")
+  securityEncryptionType string
 }
 
 // Azure Databricks
@@ -1590,10 +1600,36 @@ azure.subscription.webService.appsite @defaults("id name location") {
   privateEndpointConnections() []azure.subscription.privateEndpointConnection
   // Whether end-to-end encryption is enabled between FrontEnd and Worker
   endToEndEncryptionEnabled bool
+  // Whether SSH access is enabled on the app
+  sshEnabled bool
+  // Whether public network access is enabled ("Enabled" or "Disabled")
+  publicNetworkAccess string
+  // IP address mode for the app ("IPv4", "IPv4AndIPv6", "IPv6")
+  ipMode string
+  // Redundancy mode for the app ("None", "Manual", "Failover", "ActiveActive", "GeoRedundant")
+  redundancyMode string
+  // Outbound VNet routing configuration for the app
+  outboundVnetRouting azure.subscription.webService.appsite.outboundVnetRouting
   // Hostname bindings for the web app site
   hostNameBindings() []azure.subscription.webService.appsite.hostNameBinding
   // Virtual network connections for the web app site
   virtualNetworkConnections() []azure.subscription.webService.appsite.virtualNetworkConnection
+}
+
+// Azure Web app site outbound VNet routing configuration
+private azure.subscription.webService.appsite.outboundVnetRouting @defaults("allTrafficEnabled") {
+  // Outbound VNet routing ID
+  id string
+  // Whether all outbound traffic is routed through VNet
+  allTrafficEnabled bool
+  // Whether application traffic is routed through VNet
+  applicationTrafficEnabled bool
+  // Whether backup/restore traffic is routed through VNet
+  backupRestoreTrafficEnabled bool
+  // Whether content share traffic is routed through VNet
+  contentShareTrafficEnabled bool
+  // Whether container image pull traffic is routed through VNet
+  imagePullTrafficEnabled bool
 }
 
 // Azure private endpoint connection
@@ -3385,6 +3421,10 @@ azure.subscription.aksService.cluster @defaults("name location kubernetesVersion
   agentPoolProfiles []dict
   // The API server access profile
   apiServerAccessProfile dict
+  // FQDN subdomain for private DNS zone clusters
+  fqdnSubdomain string
+  // Private FQDN of the AKS cluster (only set for private clusters)
+  privateFqdn string
   // Whether the AKS cluster API server is a private cluster
   enablePrivateCluster bool
   // Whether the private cluster has a public FQDN
@@ -3415,6 +3455,20 @@ azure.subscription.aksService.cluster @defaults("name location kubernetesVersion
   skuTier string
   // Key Vault key used for Azure Key Vault KMS encryption (null if not enabled)
   azureKeyVaultKmsKey() azure.subscription.keyVaultService.key
+  // Network plugin used for building the Kubernetes network ("azure", "kubenet", "none")
+  networkPlugin string
+  // Network policy used for building the Kubernetes network ("calico", "azure", "cilium", "none")
+  networkPolicy string
+  // Whether the OIDC issuer is enabled for workload identity federation
+  oidcIssuerEnabled bool
+  // Restriction level for the node resource group ("Unrestricted" or "ReadOnly")
+  nodeResourceGroupRestrictionLevel string
+  // Service mesh mode ("Disabled" or "Istio")
+  serviceMeshMode string
+  // Kubernetes support plan ("KubernetesOfficial" or "AKSLongTermSupport")
+  supportPlan string
+  // Advanced networking configuration for the cluster
+  advancedNetworking azure.subscription.aksService.cluster.advancedNetworking
   // Azure Active Directory configuration for the cluster
   aadProfile azure.subscription.aksService.cluster.aadProfile
   // Auto-upgrade configuration for the cluster
@@ -3441,6 +3495,20 @@ private azure.subscription.aksService.cluster.autoUpgradeProfile @defaults("upgr
   upgradeChannel string
   // Node OS upgrade channel ("None", "NodeImage", "SecurityPatch", "Unmanaged")
   nodeOSUpgradeChannel string
+}
+
+// Azure Kubernetes Service cluster advanced networking configuration
+private azure.subscription.aksService.cluster.advancedNetworking @defaults("transitEncryptionType") {
+  // Advanced networking ID
+  id string
+  // Whether advanced networking is enabled
+  enabled bool
+  // Transit encryption type for pod-to-pod encryption: "None" or "WireGuard"
+  transitEncryptionType string
+  // Network acceleration mode: "BpfVeth" or "None"
+  accelerationMode string
+  // Whether advanced network security (FQDN-based policies) is enabled
+  securityEnabled bool
 }
 
 // Azure Advisor
