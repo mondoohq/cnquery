@@ -422,7 +422,7 @@ func createBatchPoolRawData(pool *armbatch.Pool) (map[string]*llx.RawData, error
 			// Disk encryption configuration
 			if vmConfig.DiskEncryptionConfiguration != nil {
 				dec := vmConfig.DiskEncryptionConfiguration
-				diskCustomerManagedKeyEnabled = llx.BoolData(dec.CustomerManagedKey != nil)
+				diskCustomerManagedKeyEnabled = llx.BoolData(dec.CustomerManagedKey != nil && dec.CustomerManagedKey.KeyURL != nil && *dec.CustomerManagedKey.KeyURL != "")
 				if dec.Targets != nil {
 					targets := []any{}
 					for _, t := range dec.Targets {
@@ -444,6 +444,8 @@ func createBatchPoolRawData(pool *armbatch.Pool) (map[string]*llx.RawData, error
 				sp := vmConfig.SecurityProfile
 				if sp.ProxyAgentSettings != nil {
 					proxyAgentEnabled = llx.BoolDataPtr(sp.ProxyAgentSettings.Enabled)
+					// Imds is of type HostEndpointSettings; Mode is the access control policy
+					// execution mode ("Audit" or "Enforce") for the IMDS endpoint protection.
 					if sp.ProxyAgentSettings.Imds != nil && sp.ProxyAgentSettings.Imds.Mode != nil {
 						hostEndpointProtectionMode = llx.StringData(string(*sp.ProxyAgentSettings.Imds.Mode))
 					}
