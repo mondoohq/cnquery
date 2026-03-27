@@ -1,0 +1,14 @@
+[commands."uname -s"]
+stdout = "FreeBSD"
+
+[commands."uname -m"]
+stdout = "amd64"
+
+[commands."uname -r"]
+stdout = "14.0-RELEASE"
+
+[commands."hostname"]
+exit_status = 1
+
+[commands."sysctl -n kern.hostname"]
+stdout = "freebsd-vagrant.local"

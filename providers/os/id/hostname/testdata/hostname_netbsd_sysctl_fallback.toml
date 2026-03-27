@@ -1,0 +1,14 @@
+[commands."uname -s"]
+stdout = "NetBSD"
+
+[commands."uname -m"]
+stdout = "amd64"
+
+[commands."uname -r"]
+stdout = "10.0"
+
+[commands."hostname"]
+exit_status = 1
+
+[commands."sysctl -n kern.hostname"]
+stdout = "netbsd-vagrant.local"

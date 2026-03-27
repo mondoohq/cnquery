@@ -145,3 +145,51 @@ func TestHostnameDragonFlyBSD(t *testing.T) {
 
 	assert.Equal(t, "dragonfly-server.local", hn)
 }
+
+func TestHostnameFreeBSDSysctlFallback(t *testing.T) {
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/hostname_freebsd_sysctl_fallback.toml"))
+	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
+
+	hn, ok := hostname.Hostname(conn, platform)
+	require.True(t, ok)
+
+	assert.Equal(t, "freebsd-vagrant.local", hn)
+}
+
+func TestHostnameOpenBSDSysctlFallback(t *testing.T) {
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/hostname_openbsd_sysctl_fallback.toml"))
+	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
+
+	hn, ok := hostname.Hostname(conn, platform)
+	require.True(t, ok)
+
+	assert.Equal(t, "openbsd-vagrant.local", hn)
+}
+
+func TestHostnameNetBSDSysctlFallback(t *testing.T) {
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/hostname_netbsd_sysctl_fallback.toml"))
+	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
+
+	hn, ok := hostname.Hostname(conn, platform)
+	require.True(t, ok)
+
+	assert.Equal(t, "netbsd-vagrant.local", hn)
+}
+
+func TestHostnameDragonFlyBSDSysctlFallback(t *testing.T) {
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/hostname_dragonflybsd_sysctl_fallback.toml"))
+	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
+
+	hn, ok := hostname.Hostname(conn, platform)
+	require.True(t, ok)
+
+	assert.Equal(t, "dragonfly-vagrant.local", hn)
+}

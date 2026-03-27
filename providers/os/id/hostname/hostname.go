@@ -60,6 +60,16 @@ func Hostname(conn shared.Connection, pf *inventory.Platform) (string, bool) {
 	}
 	log.Debug().Err(err).Msg("could not run `hostname` command")
 
+	// Fallback for BSD systems: use sysctl kern.hostname when the hostname command fails
+	// This handles cases where the hostname binary is missing or returns an error
+	if isBSDWithoutDarwin(pf) {
+		hostname, err := runCommand(conn, "sysctl -n kern.hostname")
+		if err == nil && hostname != "" {
+			return hostname, true
+		}
+		log.Debug().Err(err).Msg("could not detect hostname via `sysctl -n kern.hostname`")
+	}
+
 	// Fallback to for unix systems to /etc/hostname, since hostname command is not available on all systems
 	// This mechanism is also working for static analysis
 	if pf.IsFamily(inventory.FAMILY_LINUX) {
