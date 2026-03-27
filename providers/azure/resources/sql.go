@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"sync"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -17,6 +18,44 @@ import (
 
 	sql "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql"
 )
+
+type mqlAzureSubscriptionSqlServiceServerInternal struct {
+	encryptionProtectorOnce sync.Once
+	encryptionProtectorResp *sql.EncryptionProtectorsClientGetResponse
+	encryptionProtectorErr  error
+}
+
+func (a *mqlAzureSubscriptionSqlServiceServer) fetchEncryptionProtector() (*sql.EncryptionProtectorsClientGetResponse, error) {
+	a.encryptionProtectorOnce.Do(func() {
+		conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+		ctx := context.Background()
+		token := conn.Token()
+		id := a.Id.Data
+		resourceID, err := ParseResourceID(id)
+		if err != nil {
+			a.encryptionProtectorErr = err
+			return
+		}
+
+		server, err := resourceID.Component("servers")
+		if err != nil {
+			a.encryptionProtectorErr = err
+			return
+		}
+
+		client, err := sql.NewEncryptionProtectorsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+			ClientOptions: conn.ClientOptions(),
+		})
+		if err != nil {
+			a.encryptionProtectorErr = err
+			return
+		}
+		resp, err := client.Get(ctx, resourceID.ResourceGroup, server, sql.EncryptionProtectorNameCurrent, &sql.EncryptionProtectorsClientGetOptions{})
+		a.encryptionProtectorResp = &resp
+		a.encryptionProtectorErr = err
+	})
+	return a.encryptionProtectorResp, a.encryptionProtectorErr
+}
 
 func (a *mqlAzureSubscriptionSqlService) id() (string, error) {
 	return "azure.subscription.sql/" + a.SubscriptionId.Data, nil
@@ -458,95 +497,35 @@ func (a *mqlAzureSubscriptionSqlServiceServer) threatDetectionPolicy() (any, err
 }
 
 func (a *mqlAzureSubscriptionSqlServiceServer) encryptionProtector() (any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
-	id := a.Id.Data
-	resourceID, err := ParseResourceID(id)
+	resp, err := a.fetchEncryptionProtector()
 	if err != nil {
 		return nil, err
 	}
-
-	server, err := resourceID.Component("servers")
-	if err != nil {
-		return nil, err
-	}
-
-	client, err := sql.NewEncryptionProtectorsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
-	})
-	if err != nil {
-		return nil, err
-	}
-	policy, err := client.Get(ctx, resourceID.ResourceGroup, server, sql.EncryptionProtectorNameCurrent, &sql.EncryptionProtectorsClientGetOptions{})
-	if err != nil {
-		return nil, err
-	}
-	return convert.JsonToDict(policy.EncryptionProtector.Properties)
+	return convert.JsonToDict(resp.EncryptionProtector.Properties)
 }
 
 func (a *mqlAzureSubscriptionSqlServiceServer) encryptionProtectorServerKeyType() (string, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
-	id := a.Id.Data
-	resourceID, err := ParseResourceID(id)
+	resp, err := a.fetchEncryptionProtector()
 	if err != nil {
 		return "", err
 	}
-
-	server, err := resourceID.Component("servers")
-	if err != nil {
-		return "", err
-	}
-
-	client, err := sql.NewEncryptionProtectorsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
-	})
-	if err != nil {
-		return "", err
-	}
-	policy, err := client.Get(ctx, resourceID.ResourceGroup, server, sql.EncryptionProtectorNameCurrent, &sql.EncryptionProtectorsClientGetOptions{})
-	if err != nil {
-		return "", err
-	}
-	if policy.Properties != nil && policy.Properties.ServerKeyType != nil {
-		return string(*policy.Properties.ServerKeyType), nil
+	if resp.Properties != nil && resp.Properties.ServerKeyType != nil {
+		return string(*resp.Properties.ServerKeyType), nil
 	}
 	return "", nil
 }
 
 func (a *mqlAzureSubscriptionSqlServiceServer) encryptionProtectorKey() (*mqlAzureSubscriptionKeyVaultServiceKey, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
-	id := a.Id.Data
-	resourceID, err := ParseResourceID(id)
+	resp, err := a.fetchEncryptionProtector()
 	if err != nil {
 		return nil, err
 	}
-
-	server, err := resourceID.Component("servers")
-	if err != nil {
-		return nil, err
-	}
-
-	client, err := sql.NewEncryptionProtectorsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
-	})
-	if err != nil {
-		return nil, err
-	}
-	policy, err := client.Get(ctx, resourceID.ResourceGroup, server, sql.EncryptionProtectorNameCurrent, &sql.EncryptionProtectorsClientGetOptions{})
-	if err != nil {
-		return nil, err
-	}
-	if policy.Properties == nil || policy.Properties.ServerKeyType == nil || string(*policy.Properties.ServerKeyType) != "AzureKeyVault" {
+	if resp.Properties == nil || resp.Properties.ServerKeyType == nil || string(*resp.Properties.ServerKeyType) != "AzureKeyVault" {
 		a.EncryptionProtectorKey.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	if policy.Properties.URI != nil {
-		return newKeyVaultKeyResource(a.MqlRuntime, *policy.Properties.URI)
+	if resp.Properties.URI != nil {
+		return newKeyVaultKeyResource(a.MqlRuntime, *resp.Properties.URI)
 	}
 	a.EncryptionProtectorKey.State = plugin.StateIsNull | plugin.StateIsSet
 	return nil, nil

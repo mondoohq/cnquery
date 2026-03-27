@@ -20872,7 +20872,7 @@ func (c *mqlAzureSubscriptionSqlService) GetServers() *plugin.TValue[[]any] {
 type mqlAzureSubscriptionSqlServiceServer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionSqlServiceServerInternal it will be used here
+	mqlAzureSubscriptionSqlServiceServerInternal
 	Id                               plugin.TValue[string]
 	Name                             plugin.TValue[string]
 	Location                         plugin.TValue[string]
