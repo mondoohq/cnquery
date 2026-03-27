@@ -191,13 +191,28 @@ func fetchCosmosDBAccounts(ctx context.Context, runtime *plugin.Runtime, conn *c
 			virtualNetworkRules := []any{}
 			if account.Properties != nil && account.Properties.VirtualNetworkRules != nil {
 				for _, rule := range account.Properties.VirtualNetworkRules {
-					if rule != nil {
-						ruleDict, err := convert.JsonToDict(rule)
-						if err != nil {
-							return nil, err
-						}
-						virtualNetworkRules = append(virtualNetworkRules, ruleDict)
+					if rule == nil {
+						continue
 					}
+					var subnetId string
+					var ignoreMissing bool
+					if rule.ID != nil {
+						subnetId = *rule.ID
+					}
+					if rule.IgnoreMissingVNetServiceEndpoint != nil {
+						ignoreMissing = *rule.IgnoreMissingVNetServiceEndpoint
+					}
+					ruleId := *account.ID + "/virtualNetworkRules/" + subnetId
+					mqlRule, err := CreateResource(runtime, "azure.subscription.cosmosDbService.account.virtualNetworkRule",
+						map[string]*llx.RawData{
+							"id":                               llx.StringData(ruleId),
+							"subnetId":                         llx.StringData(subnetId),
+							"ignoreMissingVNetServiceEndpoint": llx.BoolData(ignoreMissing),
+						})
+					if err != nil {
+						return nil, err
+					}
+					virtualNetworkRules = append(virtualNetworkRules, mqlRule)
 				}
 			}
 
@@ -224,7 +239,7 @@ func fetchCosmosDBAccounts(ctx context.Context, runtime *plugin.Runtime, conn *c
 					"backupIntervalInMinutes":            llx.IntData(backupIntervalMinutes),
 					"backupRetentionIntervalInHours":     llx.IntData(backupRetentionHours),
 					"backupStorageRedundancy":            llx.StringData(backupRedundancy),
-					"virtualNetworkRules":                llx.ArrayData(virtualNetworkRules, types.Dict),
+					"virtualNetworkRules":                llx.ArrayData(virtualNetworkRules, types.Resource("azure.subscription.cosmosDbService.account.virtualNetworkRule")),
 				})
 			if err != nil {
 				return nil, err

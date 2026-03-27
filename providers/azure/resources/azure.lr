@@ -2426,7 +2426,17 @@ azure.subscription.cosmosDbService.account @defaults("name kind location") {
   // Backup storage redundancy (for Periodic backup policy: "Geo", "Local", "Zone")
   backupStorageRedundancy string
   // Virtual network rules for the Cosmos DB account
-  virtualNetworkRules []dict
+  virtualNetworkRules []azure.subscription.cosmosDbService.account.virtualNetworkRule
+}
+
+// Azure Cosmos DB account virtual network rule
+private azure.subscription.cosmosDbService.account.virtualNetworkRule @defaults("subnetId ignoreMissingVNetServiceEndpoint") {
+  // Rule ID (account ID + subnet ID hash)
+  id string
+  // Virtual network subnet resource ID
+  subnetId string
+  // Whether to allow requests from the subnet even if the service endpoint is not configured
+  ignoreMissingVNetServiceEndpoint bool
 }
 
 // Azure Key Vault

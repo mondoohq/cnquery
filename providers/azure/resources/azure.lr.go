@@ -121,6 +121,7 @@ const (
 	ResourceAzureSubscriptionMySqlServiceFlexibleServer                                          string = "azure.subscription.mySqlService.flexibleServer"
 	ResourceAzureSubscriptionCosmosDbService                                                     string = "azure.subscription.cosmosDbService"
 	ResourceAzureSubscriptionCosmosDbServiceAccount                                              string = "azure.subscription.cosmosDbService.account"
+	ResourceAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule                            string = "azure.subscription.cosmosDbService.account.virtualNetworkRule"
 	ResourceAzureSubscriptionKeyVaultService                                                     string = "azure.subscription.keyVaultService"
 	ResourceAzureSubscriptionKeyVaultServiceVault                                                string = "azure.subscription.keyVaultService.vault"
 	ResourceAzureSubscriptionKeyVaultServiceVaultAccessPolicy                                    string = "azure.subscription.keyVaultService.vault.accessPolicy"
@@ -600,6 +601,10 @@ func init() {
 		"azure.subscription.cosmosDbService.account": {
 			Init:   initAzureSubscriptionCosmosDbServiceAccount,
 			Create: createAzureSubscriptionCosmosDbServiceAccount,
+		},
+		"azure.subscription.cosmosDbService.account.virtualNetworkRule": {
+			// to override args, implement: initAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule,
 		},
 		"azure.subscription.keyVaultService": {
 			Init:   initAzureSubscriptionKeyVaultService,
@@ -3926,7 +3931,16 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetBackupStorageRedundancy()).ToDataRes(types.String)
 	},
 	"azure.subscription.cosmosDbService.account.virtualNetworkRules": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetVirtualNetworkRules()).ToDataRes(types.Array(types.Dict))
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetVirtualNetworkRules()).ToDataRes(types.Array(types.Resource("azure.subscription.cosmosDbService.account.virtualNetworkRule")))
+	},
+	"azure.subscription.cosmosDbService.account.virtualNetworkRule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.virtualNetworkRule.subnetId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule).GetSubnetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.virtualNetworkRule.ignoreMissingVNetServiceEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule).GetIgnoreMissingVNetServiceEndpoint()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.keyVaultService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultService).GetSubscriptionId()).ToDataRes(types.String)
@@ -9883,6 +9897,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cosmosDbService.account.virtualNetworkRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).VirtualNetworkRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.virtualNetworkRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.virtualNetworkRule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.virtualNetworkRule.subnetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule).SubnetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.virtualNetworkRule.ignoreMissingVNetServiceEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule).IgnoreMissingVNetServiceEndpoint, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.keyVaultService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -23218,6 +23248,60 @@ func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetBackupStorageRedundancy(
 
 func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetVirtualNetworkRules() *plugin.TValue[[]any] {
 	return &c.VirtualNetworkRules
+}
+
+// mqlAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule for the azure.subscription.cosmosDbService.account.virtualNetworkRule resource
+type mqlAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRuleInternal it will be used here
+	Id                               plugin.TValue[string]
+	SubnetId                         plugin.TValue[string]
+	IgnoreMissingVNetServiceEndpoint plugin.TValue[bool]
+}
+
+// createAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule creates a new instance of this resource
+func createAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cosmosDbService.account.virtualNetworkRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule) MqlName() string {
+	return "azure.subscription.cosmosDbService.account.virtualNetworkRule"
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule) GetSubnetId() *plugin.TValue[string] {
+	return &c.SubnetId
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule) GetIgnoreMissingVNetServiceEndpoint() *plugin.TValue[bool] {
+	return &c.IgnoreMissingVNetServiceEndpoint
 }
 
 // mqlAzureSubscriptionKeyVaultService for the azure.subscription.keyVaultService resource

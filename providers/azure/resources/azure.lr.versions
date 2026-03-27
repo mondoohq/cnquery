@@ -502,6 +502,10 @@ azure.subscription.cosmosDbService.account.properties 9.0.1
 azure.subscription.cosmosDbService.account.publicNetworkAccess 11.4.28
 azure.subscription.cosmosDbService.account.tags 9.0.1
 azure.subscription.cosmosDbService.account.type 9.0.1
+azure.subscription.cosmosDbService.account.virtualNetworkRule 13.1.8
+azure.subscription.cosmosDbService.account.virtualNetworkRule.id 13.1.8
+azure.subscription.cosmosDbService.account.virtualNetworkRule.ignoreMissingVNetServiceEndpoint 13.1.8
+azure.subscription.cosmosDbService.account.virtualNetworkRule.subnetId 13.1.8
 azure.subscription.cosmosDbService.account.virtualNetworkRules 13.1.8
 azure.subscription.cosmosDbService.accounts 9.0.1
 azure.subscription.cosmosDbService.subscriptionId 9.0.1
