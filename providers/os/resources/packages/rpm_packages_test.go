@@ -488,6 +488,31 @@ func TestModularitySupportedByPlatform(t *testing.T) {
 			want:     false,
 		},
 		{
+			name:     "RHEL 8",
+			platform: &inventory.Platform{Name: "redhat", Version: "8.10", Arch: "x86_64"},
+			want:     true,
+		},
+		{
+			name:     "RHEL 9",
+			platform: &inventory.Platform{Name: "redhat", Version: "9.4", Arch: "x86_64"},
+			want:     true,
+		},
+		{
+			name:     "RHEL 10",
+			platform: &inventory.Platform{Name: "redhat", Version: "10", Arch: "x86_64"},
+			want:     false,
+		},
+		{
+			name:     "CentOS 8",
+			platform: &inventory.Platform{Name: "centos", Version: "8", Arch: "x86_64"},
+			want:     true,
+		},
+		{
+			name:     "Rocky 9",
+			platform: &inventory.Platform{Name: "rocky", Version: "9.3", Arch: "x86_64"},
+			want:     true,
+		},
+		{
 			name:     "AmazonLinux",
 			platform: &inventory.Platform{Name: "amazonlinux", Version: "2", Arch: "x86_64"},
 			want:     false,

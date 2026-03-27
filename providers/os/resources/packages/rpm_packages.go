@@ -380,7 +380,7 @@ func modularitySupportedByPlatform(platform *inventory.Platform) bool {
 	supported := false
 
 	switch platform.Name {
-	case "oraclelinux", "almalinux":
+	case "oraclelinux", "almalinux", "redhat", "centos", "rocky":
 		vParser := semver.Parser{}
 		cmp, err := vParser.Compare(platform.Version, "10")
 		if err != nil {
