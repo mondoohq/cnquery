@@ -815,7 +815,8 @@ func (s *Tester) ocspRequest(cert *x509.Certificate, issuer *x509.Certificate) e
 	}
 
 	reqBody := bytes.NewBuffer(req)
-	res, err := http.Post(server, "application/ocsp-request", reqBody)
+	client := &http.Client{Timeout: 10 * time.Second}
+	res, err := client.Post(server, "application/ocsp-request", reqBody)
 	if err != nil {
 		return multierr.Wrap(err, "failed to post OCSP request")
 	}
