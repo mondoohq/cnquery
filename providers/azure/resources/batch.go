@@ -431,9 +431,12 @@ func createBatchPoolRawData(pool *armbatch.Pool) (map[string]*llx.RawData, error
 						}
 					}
 					diskEncryptionTargets = llx.ArrayData(targets, types.String)
+				} else {
+					diskEncryptionTargets = llx.ArrayData([]any{}, types.String)
 				}
 			} else {
 				diskCustomerManagedKeyEnabled = llx.BoolData(false)
+				diskEncryptionTargets = llx.ArrayData([]any{}, types.String)
 			}
 
 			// Security profile

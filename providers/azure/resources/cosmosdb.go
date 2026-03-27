@@ -295,6 +295,13 @@ func fetchDbAccountsByType(ctx context.Context, runtime *plugin.Runtime, conn *c
 					"enableAutomaticFailover":            llx.BoolData(false),
 					"enableMultipleWriteLocations":       llx.BoolData(false),
 					"ipRangeFilter":                      llx.ArrayData([]any{}, types.String),
+					"minimalTlsVersion":                  llx.StringData(""),
+					"defaultIdentity":                    llx.StringData(""),
+					"backupType":                         llx.StringData(""),
+					"backupIntervalInMinutes":            llx.IntData(0),
+					"backupRetentionIntervalInHours":     llx.IntData(0),
+					"backupStorageRedundancy":            llx.StringData(""),
+					"virtualNetworkRules":                llx.ArrayData([]any{}, types.Resource("azure.subscription.cosmosDbService.account.virtualNetworkRule")),
 				})
 			if err != nil {
 				return nil, err
@@ -344,6 +351,13 @@ func fetchCosmosForPostgres(ctx context.Context, runtime *plugin.Runtime, conn *
 					"enableAutomaticFailover":            llx.BoolData(false),
 					"enableMultipleWriteLocations":       llx.BoolData(false),
 					"ipRangeFilter":                      llx.ArrayData([]any{}, types.String),
+					"minimalTlsVersion":                  llx.StringData(""),
+					"defaultIdentity":                    llx.StringData(""),
+					"backupType":                         llx.StringData(""),
+					"backupIntervalInMinutes":            llx.IntData(0),
+					"backupRetentionIntervalInHours":     llx.IntData(0),
+					"backupStorageRedundancy":            llx.StringData(""),
+					"virtualNetworkRules":                llx.ArrayData([]any{}, types.Resource("azure.subscription.cosmosDbService.account.virtualNetworkRule")),
 				})
 			if err != nil {
 				return nil, err

@@ -23,6 +23,9 @@ func (a *mqlAzureSubscriptionCacheService) id() (string, error) {
 }
 
 type mqlAzureSubscriptionCacheServiceRedisInstanceInternal struct {
+	// cacheEncryptionKeyURI stores the customer-managed key URI for encryption.
+	// Note: armredis/v3 does not expose encryption fields on Properties.
+	// This will be populated when the SDK adds support for CMK encryption configuration.
 	cacheEncryptionKeyURI string
 }
 

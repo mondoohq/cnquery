@@ -109,6 +109,32 @@ func createWebAppResourceFromSite(runtime *plugin.Runtime, resourceType string, 
 		args["enabled"] = llx.BoolDataPtr(site.Properties.Enabled)
 		args["state"] = llx.StringDataPtr(site.Properties.State)
 		args["endToEndEncryptionEnabled"] = llx.BoolDataPtr(site.Properties.EndToEndEncryptionEnabled)
+		args["sshEnabled"] = llx.BoolDataPtr(site.Properties.SSHEnabled)
+		args["publicNetworkAccess"] = llx.StringDataPtr(site.Properties.PublicNetworkAccess)
+		if site.Properties.IPMode != nil {
+			args["ipMode"] = llx.StringData(string(*site.Properties.IPMode))
+		}
+		if site.Properties.RedundancyMode != nil {
+			args["redundancyMode"] = llx.StringData(string(*site.Properties.RedundancyMode))
+		}
+		var outboundVnetRoutingData *llx.RawData = llx.NilData
+		if site.Properties.OutboundVnetRouting != nil && site.ID != nil {
+			ovr := site.Properties.OutboundVnetRouting
+			ovrRes, ovrErr := CreateResource(runtime, "azure.subscription.webService.appsite.outboundVnetRouting",
+				map[string]*llx.RawData{
+					"id":                          llx.StringData(*site.ID + "/outboundVnetRouting"),
+					"allTrafficEnabled":           llx.BoolDataPtr(ovr.AllTraffic),
+					"applicationTrafficEnabled":   llx.BoolDataPtr(ovr.ApplicationTraffic),
+					"backupRestoreTrafficEnabled": llx.BoolDataPtr(ovr.BackupRestoreTraffic),
+					"contentShareTrafficEnabled":  llx.BoolDataPtr(ovr.ContentShareTraffic),
+					"imagePullTrafficEnabled":     llx.BoolDataPtr(ovr.ImagePullTraffic),
+				})
+			if ovrErr != nil {
+				return nil, ovrErr
+			}
+			outboundVnetRoutingData = llx.ResourceData(ovrRes, "azure.subscription.webService.appsite.outboundVnetRouting")
+		}
+		args["outboundVnetRouting"] = outboundVnetRoutingData
 		var identityType string
 		if site.Identity != nil && site.Identity.Type != nil {
 			identityType = string(*site.Identity.Type)
