@@ -1718,6 +1718,8 @@ private azure.subscription.webService.appsiteconfig @defaults("id name") {
   alwaysOn bool
   // Minimum strength TLS cipher suite allowed for the application
   minTlsCipherSuite string
+  // Minimum TLS version for the SCM/Kudu site (1.0, 1.1, 1.2, 1.3)
+  scmMinTlsVersion string
   // IP security restrictions for the main site
   ipSecurityRestrictions() []azure.subscription.webService.appsiteconfig.ipSecurityRestriction
   // IP security restrictions for the SCM/Kudu site

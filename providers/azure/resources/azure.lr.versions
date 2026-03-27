@@ -1578,6 +1578,7 @@ azure.subscription.webService.appsiteconfig.name 9.0.1
 azure.subscription.webService.appsiteconfig.properties 9.0.1
 azure.subscription.webService.appsiteconfig.remoteDebuggingEnabled 11.4.28
 azure.subscription.webService.appsiteconfig.scmIpSecurityRestrictions 13.1.8
+azure.subscription.webService.appsiteconfig.scmMinTlsVersion 13.1.8
 azure.subscription.webService.appsiteconfig.type 9.0.1
 azure.subscription.webService.appslot 11.3.85
 azure.subscription.webService.appslot.applicationSettings 11.3.85

@@ -3042,6 +3042,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.webService.appsiteconfig.minTlsCipherSuite": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsiteconfig).GetMinTlsCipherSuite()).ToDataRes(types.String)
 	},
+	"azure.subscription.webService.appsiteconfig.scmMinTlsVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteconfig).GetScmMinTlsVersion()).ToDataRes(types.String)
+	},
 	"azure.subscription.webService.appsiteconfig.ipSecurityRestrictions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsiteconfig).GetIpSecurityRestrictions()).ToDataRes(types.Array(types.Resource("azure.subscription.webService.appsiteconfig.ipSecurityRestriction")))
 	},
@@ -8593,6 +8596,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.webService.appsiteconfig.minTlsCipherSuite": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionWebServiceAppsiteconfig).MinTlsCipherSuite, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsiteconfig.scmMinTlsVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteconfig).ScmMinTlsVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.webService.appsiteconfig.ipSecurityRestrictions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20010,6 +20017,7 @@ type mqlAzureSubscriptionWebServiceAppsiteconfig struct {
 	Http20Enabled                       plugin.TValue[bool]
 	AlwaysOn                            plugin.TValue[bool]
 	MinTlsCipherSuite                   plugin.TValue[string]
+	ScmMinTlsVersion                    plugin.TValue[string]
 	IpSecurityRestrictions              plugin.TValue[[]any]
 	ScmIpSecurityRestrictions           plugin.TValue[[]any]
 	IpSecurityRestrictionsDefaultAction plugin.TValue[string]
@@ -20094,6 +20102,10 @@ func (c *mqlAzureSubscriptionWebServiceAppsiteconfig) GetAlwaysOn() *plugin.TVal
 
 func (c *mqlAzureSubscriptionWebServiceAppsiteconfig) GetMinTlsCipherSuite() *plugin.TValue[string] {
 	return &c.MinTlsCipherSuite
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteconfig) GetScmMinTlsVersion() *plugin.TValue[string] {
+	return &c.ScmMinTlsVersion
 }
 
 func (c *mqlAzureSubscriptionWebServiceAppsiteconfig) GetIpSecurityRestrictions() *plugin.TValue[[]any] {

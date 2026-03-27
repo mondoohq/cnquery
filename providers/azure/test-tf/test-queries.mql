@@ -1,0 +1,133 @@
+# ============================================================
+# MQL queries to validate new Azure security fields
+# Run in: mql shell azure
+# ============================================================
+
+# ── Storage Account: encryption key source + CMK reference ──
+
+# Platform-managed should show "Microsoft.Storage", null key
+azure.subscription.storageService.accounts.where(name == /platform/) { name encryptionKeySource encryptionKey }
+
+# CMK-managed should show "Microsoft.Keyvault", non-null key with details
+azure.subscription.storageService.accounts.where(name == /cmk/) { name encryptionKeySource encryptionKey { kid keyName keyType keySize } }
+
+# All accounts summary
+azure.subscription.storageService.accounts { name encryptionKeySource encryptionKey }
+
+# ── Cosmos DB: CMK, backup policy, VNet rules ──
+
+azure.subscription.cosmosDbService.accounts { name encryptionKey defaultIdentity backupType backupIntervalInMinutes backupRetentionIntervalInHours backupStorageRedundancy }
+
+# VNet rules as typed sub-resources
+azure.subscription.cosmosDbService.accounts { name virtualNetworkRules { subnetId ignoreMissingVNetServiceEndpoint } }
+
+# ── SQL Server: encryption protector + AD-only auth ──
+
+# All three fields share one API call
+azure.subscription.sqlService.servers { name encryptionProtectorServerKeyType encryptionProtectorKey azureAdOnlyAuthentication }
+
+# Encryption protector dict (pre-existing) should still work
+azure.subscription.sqlService.servers { name encryptionProtector }
+
+# ── PostgreSQL Flexible Server: backup + encryption key ──
+
+azure.subscription.postgreSqlService.flexibleServers { name dataEncryptionType primaryEncryptionKeyStatus backupRetentionDays geoRedundantBackup dataEncryptionKey geoBackupEncryptionKey }
+
+# ── MySQL Flexible Server: encryption + backup ──
+
+azure.subscription.mySqlService.flexibleServers { name dataEncryptionType dataEncryptionKey publicNetworkAccess }
+
+# ── MySQL Single Server: backup fields ──
+# (only if single servers exist in subscription)
+
+azure.subscription.mySqlService.servers { name backupRetentionDays geoRedundantBackup }
+
+# ── PostgreSQL Single Server: backup fields ──
+# (only if single servers exist in subscription)
+
+azure.subscription.postgreSqlService.servers { name backupRetentionDays geoRedundantBackup }
+
+# ── Redis: encryption key (null for basic tier) ──
+
+azure.subscription.cacheService.redis { name minimumTlsVersion encryptionKey }
+
+# ── Key Vault: SKU name ──
+
+# Premium vault should show "premium"
+azure.subscription.keyVaultService.vaults { vaultName skuName rbacAuthorizationEnabled enablePurgeProtection }
+
+# ── Web App: identity type + IP restrictions ──
+
+azure.subscription.webService.apps { name identityType }
+
+# IP restrictions as typed sub-resources
+azure.subscription.webService.apps { name configuration { ipSecurityRestrictions { name action ipAddress priority tag } } }
+
+# SCM restrictions
+azure.subscription.webService.apps { name configuration { scmIpSecurityRestrictions { name action ipAddress priority } } }
+
+# Default action
+azure.subscription.webService.apps { name configuration { ipSecurityRestrictionsDefaultAction } }
+
+# ── Load Balancer: SKU tier ──
+
+azure.subscription.networkService.loadBalancers { name sku skuTier }
+
+# ── Public IP: zones + DDoS ──
+
+azure.subscription.networkService.ipAddresses { name ipAddress zones ddosProtectionMode ipAllocationMethod }
+
+# ── Network Interface: IP configurations ──
+
+azure.subscription.networkService.interfaces { name ipConfigurations }
+
+# ── Application Gateway: SSL policy ──
+
+azure.subscription.networkService.applicationGateways { name sslPolicyType sslMinProtocolVersion sslCipherSuites }
+
+# ── AKS: SKU tier + KMS key ──
+
+azure.subscription.aksService.clusters { name kubernetesVersion skuTier azureKeyVaultKmsKey azureKeyVaultKmsEnabled }
+
+# ============================================================
+# Validation checks (these should return true for test infra)
+# ============================================================
+
+# Storage CMK account uses Key Vault encryption
+azure.subscription.storageService.accounts.where(name == /cmk/).all(encryptionKeySource == "Microsoft.Keyvault")
+
+# Storage platform account uses Microsoft-managed
+azure.subscription.storageService.accounts.where(name == /platform/).all(encryptionKeySource == "Microsoft.Storage")
+
+# Cosmos DB has periodic backup
+azure.subscription.cosmosDbService.accounts.where(name == /cosmos/).all(backupType == "Periodic")
+
+# Cosmos DB has VNet rule
+azure.subscription.cosmosDbService.accounts.where(name == /cosmos/).all(virtualNetworkRules.length > 0)
+
+# SQL Server uses service-managed encryption
+azure.subscription.sqlService.servers.where(name == /sql/).all(encryptionProtectorServerKeyType == "ServiceManaged")
+
+# PG Flex has 14 day backup retention
+azure.subscription.postgreSqlService.flexibleServers.where(name == /pgflex/).all(backupRetentionDays == 14)
+
+# Web app has SystemAssigned identity
+azure.subscription.webService.apps.where(name == /webapp/).all(identityType == "SystemAssigned")
+
+# Web app has IP restrictions
+azure.subscription.webService.apps.where(name == /webapp/) { configuration { ipSecurityRestrictions.length ipSecurityRestrictionsDefaultAction } }
+
+# LB is Standard tier
+azure.subscription.networkService.loadBalancers.where(name == /lb/).all(sku == "Standard")
+
+# Public IP has zones
+azure.subscription.networkService.ipAddresses.where(name == /pip/).all(zones.length > 0)
+
+# Key Vault is premium
+azure.subscription.keyVaultService.vaults.where(vaultName == /kv/).all(skuName == "premium")
+
+# AKS is Standard tier
+azure.subscription.aksService.clusters.where(name == /aks/).all(skuTier == "Standard")
+
+# App Gateway has TLS 1.2 minimum
+azure.subscription.networkService.applicationGateways.where(name == /appgw/).all(sslMinProtocolVersion == "TLSv1_2")
