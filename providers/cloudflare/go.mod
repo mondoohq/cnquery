@@ -7,7 +7,7 @@ go 1.25.7
 require (
 	github.com/cloudflare/cloudflare-go v0.116.0
 	github.com/rs/zerolog v1.34.0
-	go.mondoo.com/mql/v13 v13.1.1
+	go.mondoo.com/mql/v13 v13.2.0
 )
 
 require (

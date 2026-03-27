@@ -8,7 +8,7 @@ require (
 	github.com/gopcua/opcua v0.8.0
 	github.com/mozillazg/go-slugify v0.2.0
 	github.com/rs/zerolog v1.34.0
-	go.mondoo.com/mql/v13 v13.1.1
+	go.mondoo.com/mql/v13 v13.2.0
 )
 
 require (

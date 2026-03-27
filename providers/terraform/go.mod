@@ -6,7 +6,7 @@ go 1.25.7
 
 require (
 	github.com/hashicorp/hcl/v2 v2.24.0
-	go.mondoo.com/mql/v13 v13.1.1
+	go.mondoo.com/mql/v13 v13.2.0
 )
 
 require (

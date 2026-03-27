@@ -7,7 +7,7 @@ go 1.25.7
 require (
 	github.com/rs/zerolog v1.34.0
 	github.com/shadowscatcher/shodan v1.0.8
-	go.mondoo.com/mql/v13 v13.1.1
+	go.mondoo.com/mql/v13 v13.2.0
 )
 
 require (

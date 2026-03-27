@@ -7,7 +7,7 @@ replace go.mondoo.com/mql/v13 => ../..
 require (
 	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.11.1
-	go.mondoo.com/mql/v13 v13.1.1
+	go.mondoo.com/mql/v13 v13.2.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
