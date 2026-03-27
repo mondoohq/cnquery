@@ -1719,11 +1719,35 @@ private azure.subscription.webService.appsiteconfig @defaults("id name") {
   // Minimum strength TLS cipher suite allowed for the application
   minTlsCipherSuite string
   // IP security restrictions for the main site
-  ipSecurityRestrictions() []dict
+  ipSecurityRestrictions() []azure.subscription.webService.appsiteconfig.ipSecurityRestriction
   // IP security restrictions for the SCM/Kudu site
-  scmIpSecurityRestrictions() []dict
+  scmIpSecurityRestrictions() []azure.subscription.webService.appsiteconfig.ipSecurityRestriction
   // Default action for IP security restrictions when no rule matches ("Allow" or "Deny")
   ipSecurityRestrictionsDefaultAction() string
+}
+
+// Azure AppSite config IP security restriction rule
+private azure.subscription.webService.appsiteconfig.ipSecurityRestriction @defaults("name action ipAddress priority") {
+  // Restriction rule ID (config ID + index)
+  id string
+  // Restriction rule name
+  name string
+  // Restriction rule description
+  description string
+  // Action for the restriction rule ("Allow" or "Deny")
+  action string
+  // IP address or CIDR range for the restriction
+  ipAddress string
+  // Priority of the restriction rule (lower number = higher priority)
+  priority int
+  // Tag for the restriction rule ("Default", "XffProxy", "ServiceTag")
+  tag string
+  // Virtual network subnet resource ID for VNet-based restrictions
+  vnetSubnetResourceId string
+  // Service tag for service tag-based restrictions
+  subnetMask string
+  // HTTP headers for header-based restrictions
+  headers dict
 }
 
 // Azure App Service Hosting Environment

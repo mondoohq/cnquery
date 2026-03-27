@@ -92,6 +92,7 @@ const (
 	ResourceAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies                 string = "azure.subscription.webService.appsite.basicPublishingCredentialsPolicies"
 	ResourceAzureSubscriptionWebServiceAppsiteauthsettings                                       string = "azure.subscription.webService.appsiteauthsettings"
 	ResourceAzureSubscriptionWebServiceAppsiteconfig                                             string = "azure.subscription.webService.appsiteconfig"
+	ResourceAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction                        string = "azure.subscription.webService.appsiteconfig.ipSecurityRestriction"
 	ResourceAzureSubscriptionWebServiceHostingEnvironment                                        string = "azure.subscription.webService.hostingEnvironment"
 	ResourceAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork                          string = "azure.subscription.webService.hostingEnvironment.virtualNetwork"
 	ResourceAzureSubscriptionWebServiceAppServicePlan                                            string = "azure.subscription.webService.appServicePlan"
@@ -483,6 +484,10 @@ func init() {
 		"azure.subscription.webService.appsiteconfig": {
 			// to override args, implement: initAzureSubscriptionWebServiceAppsiteconfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionWebServiceAppsiteconfig,
+		},
+		"azure.subscription.webService.appsiteconfig.ipSecurityRestriction": {
+			// to override args, implement: initAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction,
 		},
 		"azure.subscription.webService.hostingEnvironment": {
 			// to override args, implement: initAzureSubscriptionWebServiceHostingEnvironment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3033,13 +3038,43 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAzureSubscriptionWebServiceAppsiteconfig).GetMinTlsCipherSuite()).ToDataRes(types.String)
 	},
 	"azure.subscription.webService.appsiteconfig.ipSecurityRestrictions": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebServiceAppsiteconfig).GetIpSecurityRestrictions()).ToDataRes(types.Array(types.Dict))
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteconfig).GetIpSecurityRestrictions()).ToDataRes(types.Array(types.Resource("azure.subscription.webService.appsiteconfig.ipSecurityRestriction")))
 	},
 	"azure.subscription.webService.appsiteconfig.scmIpSecurityRestrictions": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebServiceAppsiteconfig).GetScmIpSecurityRestrictions()).ToDataRes(types.Array(types.Dict))
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteconfig).GetScmIpSecurityRestrictions()).ToDataRes(types.Array(types.Resource("azure.subscription.webService.appsiteconfig.ipSecurityRestriction")))
 	},
 	"azure.subscription.webService.appsiteconfig.ipSecurityRestrictionsDefaultAction": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsiteconfig).GetIpSecurityRestrictionsDefaultAction()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsiteconfig.ipSecurityRestriction.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsiteconfig.ipSecurityRestriction.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsiteconfig.ipSecurityRestriction.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsiteconfig.ipSecurityRestriction.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction).GetAction()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsiteconfig.ipSecurityRestriction.ipAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction).GetIpAddress()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsiteconfig.ipSecurityRestriction.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction).GetPriority()).ToDataRes(types.Int)
+	},
+	"azure.subscription.webService.appsiteconfig.ipSecurityRestriction.tag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction).GetTag()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsiteconfig.ipSecurityRestriction.vnetSubnetResourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction).GetVnetSubnetResourceId()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsiteconfig.ipSecurityRestriction.subnetMask": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction).GetSubnetMask()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsiteconfig.ipSecurityRestriction.headers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction).GetHeaders()).ToDataRes(types.Dict)
 	},
 	"azure.subscription.webService.hostingEnvironment.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceHostingEnvironment).GetId()).ToDataRes(types.String)
@@ -8556,6 +8591,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.webService.appsiteconfig.ipSecurityRestrictionsDefaultAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionWebServiceAppsiteconfig).IpSecurityRestrictionsDefaultAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsiteconfig.ipSecurityRestriction.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.webService.appsiteconfig.ipSecurityRestriction.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsiteconfig.ipSecurityRestriction.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsiteconfig.ipSecurityRestriction.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsiteconfig.ipSecurityRestriction.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsiteconfig.ipSecurityRestriction.ipAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction).IpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsiteconfig.ipSecurityRestriction.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsiteconfig.ipSecurityRestriction.tag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction).Tag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsiteconfig.ipSecurityRestriction.vnetSubnetResourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction).VnetSubnetResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsiteconfig.ipSecurityRestriction.subnetMask": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction).SubnetMask, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsiteconfig.ipSecurityRestriction.headers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction).Headers, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.webService.hostingEnvironment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19989,12 +20068,32 @@ func (c *mqlAzureSubscriptionWebServiceAppsiteconfig) GetMinTlsCipherSuite() *pl
 
 func (c *mqlAzureSubscriptionWebServiceAppsiteconfig) GetIpSecurityRestrictions() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.IpSecurityRestrictions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.webService.appsiteconfig", c.__id, "ipSecurityRestrictions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
 		return c.ipSecurityRestrictions()
 	})
 }
 
 func (c *mqlAzureSubscriptionWebServiceAppsiteconfig) GetScmIpSecurityRestrictions() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.ScmIpSecurityRestrictions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.webService.appsiteconfig", c.__id, "scmIpSecurityRestrictions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
 		return c.scmIpSecurityRestrictions()
 	})
 }
@@ -20003,6 +20102,95 @@ func (c *mqlAzureSubscriptionWebServiceAppsiteconfig) GetIpSecurityRestrictionsD
 	return plugin.GetOrCompute[string](&c.IpSecurityRestrictionsDefaultAction, func() (string, error) {
 		return c.ipSecurityRestrictionsDefaultAction()
 	})
+}
+
+// mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction for the azure.subscription.webService.appsiteconfig.ipSecurityRestriction resource
+type mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestrictionInternal it will be used here
+	Id                   plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Description          plugin.TValue[string]
+	Action               plugin.TValue[string]
+	IpAddress            plugin.TValue[string]
+	Priority             plugin.TValue[int64]
+	Tag                  plugin.TValue[string]
+	VnetSubnetResourceId plugin.TValue[string]
+	SubnetMask           plugin.TValue[string]
+	Headers              plugin.TValue[any]
+}
+
+// createAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction creates a new instance of this resource
+func createAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.webService.appsiteconfig.ipSecurityRestriction", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction) MqlName() string {
+	return "azure.subscription.webService.appsiteconfig.ipSecurityRestriction"
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction) GetIpAddress() *plugin.TValue[string] {
+	return &c.IpAddress
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction) GetPriority() *plugin.TValue[int64] {
+	return &c.Priority
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction) GetTag() *plugin.TValue[string] {
+	return &c.Tag
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction) GetVnetSubnetResourceId() *plugin.TValue[string] {
+	return &c.VnetSubnetResourceId
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction) GetSubnetMask() *plugin.TValue[string] {
+	return &c.SubnetMask
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction) GetHeaders() *plugin.TValue[any] {
+	return &c.Headers
 }
 
 // mqlAzureSubscriptionWebServiceHostingEnvironment for the azure.subscription.webService.hostingEnvironment resource

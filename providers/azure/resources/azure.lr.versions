@@ -1554,6 +1554,17 @@ azure.subscription.webService.appsiteconfig.alwaysOn 11.4.28
 azure.subscription.webService.appsiteconfig.ftpsState 11.4.28
 azure.subscription.webService.appsiteconfig.http20Enabled 11.4.28
 azure.subscription.webService.appsiteconfig.id 9.0.1
+azure.subscription.webService.appsiteconfig.ipSecurityRestriction 13.1.8
+azure.subscription.webService.appsiteconfig.ipSecurityRestriction.action 13.1.8
+azure.subscription.webService.appsiteconfig.ipSecurityRestriction.description 13.1.8
+azure.subscription.webService.appsiteconfig.ipSecurityRestriction.headers 13.1.8
+azure.subscription.webService.appsiteconfig.ipSecurityRestriction.id 13.1.8
+azure.subscription.webService.appsiteconfig.ipSecurityRestriction.ipAddress 13.1.8
+azure.subscription.webService.appsiteconfig.ipSecurityRestriction.name 13.1.8
+azure.subscription.webService.appsiteconfig.ipSecurityRestriction.priority 13.1.8
+azure.subscription.webService.appsiteconfig.ipSecurityRestriction.subnetMask 13.1.8
+azure.subscription.webService.appsiteconfig.ipSecurityRestriction.tag 13.1.8
+azure.subscription.webService.appsiteconfig.ipSecurityRestriction.vnetSubnetResourceId 13.1.8
 azure.subscription.webService.appsiteconfig.ipSecurityRestrictions 13.1.8
 azure.subscription.webService.appsiteconfig.ipSecurityRestrictionsDefaultAction 13.1.8
 azure.subscription.webService.appsiteconfig.kind 9.0.1
