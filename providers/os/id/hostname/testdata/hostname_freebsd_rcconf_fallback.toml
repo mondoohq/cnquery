@@ -1,0 +1,21 @@
+[commands."uname -s"]
+stdout = "FreeBSD"
+
+[commands."uname -m"]
+stdout = "amd64"
+
+[commands."uname -r"]
+stdout = "14.0-RELEASE"
+
+[commands."hostname"]
+stdout = ""
+
+[commands."sysctl -n kern.hostname"]
+stdout = ""
+
+[files."/etc/rc.conf"]
+content = """
+# FreeBSD rc.conf
+hostname="freebsd-vagrant.local"
+sshd_enable="YES"
+"""
