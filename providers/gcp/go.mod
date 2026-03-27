@@ -6,10 +6,10 @@ go 1.25.7
 
 require (
 	cloud.google.com/go/accessapproval v1.8.8
-	cloud.google.com/go/aiplatform v1.120.0
+	cloud.google.com/go/aiplatform v1.121.0
 	cloud.google.com/go/alloydb v1.21.0
 	cloud.google.com/go/artifactregistry v1.20.0
-	cloud.google.com/go/backupdr v1.8.0
+	cloud.google.com/go/backupdr v1.9.0
 	cloud.google.com/go/bigquery v1.74.0
 	cloud.google.com/go/bigtable v1.43.0
 	cloud.google.com/go/cloudtasks v1.13.7
@@ -19,7 +19,7 @@ require (
 	cloud.google.com/go/filestore v1.10.3
 	cloud.google.com/go/firestore v1.21.0
 	cloud.google.com/go/functions v1.19.7
-	cloud.google.com/go/iam v1.5.3
+	cloud.google.com/go/iam v1.6.0
 	cloud.google.com/go/kms v1.26.0
 	cloud.google.com/go/logging v1.13.2
 	cloud.google.com/go/longrunning v0.8.0
@@ -28,11 +28,11 @@ require (
 	cloud.google.com/go/pubsub v1.50.1
 	cloud.google.com/go/recommender v1.13.6
 	cloud.google.com/go/redis v1.18.3
-	cloud.google.com/go/run v1.15.0
+	cloud.google.com/go/run v1.16.0
 	cloud.google.com/go/scheduler v1.11.8
 	cloud.google.com/go/security v1.19.2
 	cloud.google.com/go/serviceusage v1.9.7
-	cloud.google.com/go/spanner v1.88.0
+	cloud.google.com/go/spanner v1.89.0
 	github.com/aws/smithy-go v1.24.2
 	github.com/cockroachdb/errors v1.12.0
 	github.com/google/go-containerregistry v0.21.3
@@ -43,7 +43,7 @@ require (
 	go.mondoo.com/mql/v13 v13.1.1
 	go.mondoo.com/ranger-rpc v0.8.0
 	golang.org/x/oauth2 v0.36.0
-	google.golang.org/api v0.272.0
+	google.golang.org/api v0.273.0
 	google.golang.org/genproto v0.0.0-20260319201613-d00831a3d3e7
 	google.golang.org/protobuf v1.36.11
 )
