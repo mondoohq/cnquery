@@ -461,6 +461,47 @@ func TestAlmaLinuxParser(t *testing.T) {
 	assert.Equal(t, p.PUrl, fPkg.PUrl)
 }
 
+func TestRedHatModularParser(t *testing.T) {
+	mock, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/packages_redhat8_modular.toml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	pf := &inventory.Platform{
+		Name:    "redhat",
+		Version: "8.10",
+		Arch:    "aarch64",
+		Family:  []string{"redhat", "linux", "unix", "os"},
+		Labels: map[string]string{
+			"distro-id": "rhel",
+		},
+	}
+
+	c, err := mock.RunCommand("rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH}__%{VENDOR}__%{SUMMARY}__%{MODULARITYLABEL}\\n'")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	m := ParseRpmPackages(pf, c.Stdout)
+	require.Equal(t, 4, len(m))
+
+	// Verify modular package has rpmmod qualifier
+	p := Package{
+		Name: "php-cli",
+		PUrl: "pkg:rpm/redhat/php-cli@7.4.33-3.module%2Bel8.10.0%2B23902%2Bd3c8dd8f?arch=aarch64&distro=rhel-8.10&rpmmod=php%3A7.4%3A8100020260119075152%3Af7998665",
+	}
+	fPkg := findPkg(m, p.Name)
+	assert.Equal(t, p.PUrl, fPkg.PUrl)
+
+	// Verify non-modular package does not have rpmmod qualifier
+	p = Package{
+		Name: "bash",
+		PUrl: "pkg:rpm/redhat/bash@4.4.20-1.el8_4?arch=x86_64&distro=rhel-8.10",
+	}
+	fPkg = findPkg(m, p.Name)
+	assert.Equal(t, p.PUrl, fPkg.PUrl)
+}
+
 func TestModularitySupportedByPlatform(t *testing.T) {
 	tests := []struct {
 		name     string
