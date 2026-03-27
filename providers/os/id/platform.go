@@ -53,10 +53,15 @@ func IdentifyPlatform(conn shared.Connection, req *plugin.ConnectReq, p *invento
 	var platformIds []string
 	var relatedIds []string
 
-	// Detect hypervisor early so we can use it for ID detection decisions
-	detectedHypervisor, isVM := hypervisor.Hypervisor(conn, p)
-	if isVM {
-		log.Debug().Str("hypervisor", detectedHypervisor).Msg("detected hypervisor for ID detection")
+	// Detect hypervisor for two purposes: auto-adding the BIOS UUID detector
+	// when no idDetectors are provided, and setting p.Kind at the bottom.
+	var detectedHypervisor string
+	var isVM bool
+	if len(idDetectors) == 0 || p.Kind == "" {
+		detectedHypervisor, isVM = hypervisor.Hypervisor(conn, p)
+		if isVM {
+			log.Debug().Str("hypervisor", detectedHypervisor).Msg("detected hypervisor for ID detection")
+		}
 	}
 
 	if len(idDetectors) == 0 {
@@ -78,8 +83,8 @@ func IdentifyPlatform(conn shared.Connection, req *plugin.ConnectReq, p *invento
 			}
 		case shared.Type_SSH:
 			idDetectors = []string{ids.IdDetector_CloudDetect, ids.IdDetector_Hostname}
-			// Also use BIOS UUID for SSH connections to VMs
-			if isVM {
+			// Use BIOS UUID for SSH connections when explicitly enabled or when VM is detected
+			if mql.Features(req.Features).IsActive(mql.BiosUUIDAsID) || isVM {
 				idDetectors = append(idDetectors, ids.IdDetector_BiosUUID)
 			}
 		case shared.Type_Tar, shared.Type_FileSystem, shared.Type_DockerSnapshot:

@@ -82,9 +82,7 @@ const (
 	// status: new
 	AutoUpdateEngine Feature = 14
 
-	// Use BIOS UUID as the asset ID. Preferred over SerialNumber for VMs
-	// since some hypervisors (e.g., OpenStack) pass through the host's
-	// serial number to VMs, making it non-unique.
+	// Use BIOS UUID as the asset ID. Preferred over SerialNumber for VMs since some hypervisors (e.g., OpenStack) pass through the host's serial number to VMs, making it non-unique. On detected VMs, the BIOS UUID detector is added automatically; this flag enables it on non-VM (bare metal) machines.
 	// start:  v13.x
 	// status: new
 	BiosUUIDAsID Feature = 15
