@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
-  "version": "13.2.1",
-  "generated_at": "2026-03-20T15:44:46-07:00",
+  "version": "13.3.0",
+  "generated_at": "2026-03-27T14:04:41-07:00",
   "permissions": [
     "accessapproval.accessApprovalSettings.get",
     "aiplatform.datasets.list",
@@ -24,6 +24,7 @@
     "clouddeploy.deliveryPipelines.list",
     "clouddeploy.targets.list",
     "cloudfunctions.functions.list",
+    "cloudkms.cryptoKey.get",
     "cloudkms.cryptoKeyVersions.list",
     "cloudkms.cryptoKeys.list",
     "cloudkms.iamPolicy.get",
@@ -240,6 +241,12 @@
       "service": "cloudfunctions",
       "action": "ListFunctions",
       "source_file": "cloud_functions.go"
+    },
+    {
+      "permission": "cloudkms.cryptoKey.get",
+      "service": "cloudkms",
+      "action": "GetCryptoKey",
+      "source_file": "kms.go"
     },
     {
       "permission": "cloudkms.cryptoKeyVersions.list",
