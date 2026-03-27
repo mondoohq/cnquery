@@ -5111,6 +5111,8 @@ private aws.ecr.repository @defaults("uri region") {
   createdAt time
   // Scanning frequency for the repository: SCAN_ON_PUSH, CONTINUOUS_SCAN, or MANUAL
   scanningFrequency() string
+  // Access policy for the repository (parsed JSON; private repositories only)
+  policy() dict
   // Lifecycle policy for the repository
   lifecyclePolicy() aws.ecr.lifecyclePolicy
   // About text from catalog data (public repositories only)
@@ -5624,6 +5626,8 @@ aws.ec2 {
   images() []aws.ec2.image
   // List of transit gateways
   transitGateways() []aws.ec2.transitgateway
+  // List of launch templates
+  launchTemplates() []aws.ec2.launchtemplate
 }
 
 // Amazon Elastic IP (EIP)
@@ -5871,6 +5875,30 @@ private aws.ec2.transitgateway @defaults("arn id state") {
   associationDefaultRouteTableId string
   // ID of the default propagation route table
   propagationDefaultRouteTableId string
+}
+
+// Amazon EC2 launch template
+private aws.ec2.launchtemplate @defaults("name region") {
+  // Launch template ID
+  id string
+  // ARN of the launch template
+  arn string
+  // Name of the launch template
+  name string
+  // Region for the launch template
+  region string
+  // Time the launch template was created
+  createdAt time
+  // Principal that created the launch template
+  createdBy string
+  // Default version number
+  defaultVersion int
+  // Latest version number
+  latestVersion int
+  // Tags for the launch template
+  tags map[string]string
+  // User data from the default version (base64-decoded)
+  userData() string
 }
 
 // Amazon EC2 (EBS) snapshot
@@ -6500,6 +6528,8 @@ aws.config {
   rules() []aws.config.rule
   // List of delivery channels for each region in the account
   deliveryChannels() []aws.config.deliverychannel
+  // List of configuration aggregators
+  aggregators() []aws.config.aggregator
 }
 
 // AWS Config rule
@@ -6554,6 +6584,44 @@ private aws.config.deliverychannel @defaults("name region") {
   snsTopicARN string
   // Region for the delivery channel
   region string
+}
+
+// AWS Config aggregator
+private aws.config.aggregator @defaults("name region") {
+  // ARN of the configuration aggregator
+  arn string
+  // Name of the configuration aggregator
+  name string
+  // Region for the configuration aggregator
+  region string
+  // Account aggregation sources
+  accountAggregationSources []aws.config.aggregator.accountAggregationSource
+  // Organization aggregation source
+  organizationAggregationSource() aws.config.aggregator.organizationAggregationSource
+  // Time the aggregator was created
+  createdAt time
+  // Time the aggregator was last updated
+  lastUpdatedAt time
+}
+
+// AWS Config aggregator account aggregation source
+private aws.config.aggregator.accountAggregationSource {
+  // List of account IDs included in the aggregation
+  accountIds []string
+  // Whether all AWS regions are included
+  allAwsRegions bool
+  // List of AWS regions included in the aggregation
+  awsRegions []string
+}
+
+// AWS Config aggregator organization aggregation source
+private aws.config.aggregator.organizationAggregationSource {
+  // IAM role used for organization aggregation
+  iamRole() aws.iam.role
+  // Whether all AWS regions are included
+  allAwsRegions bool
+  // List of AWS regions included in the aggregation
+  awsRegions []string
 }
 
 // Amazon Elastic Kubernetes Service (EKS)

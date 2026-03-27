@@ -1,7 +1,7 @@
 {
   "provider": "aws",
-  "version": "13.3.0",
-  "generated_at": "2026-03-25T10:56:42-07:00",
+  "version": "13.4.1",
+  "generated_at": "2026-03-27T09:44:53+01:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -63,6 +63,7 @@
     "cognito-idp:GetUserPoolMfaConfig",
     "cognito-idp:ListUserPools",
     "config:DescribeConfigRules",
+    "config:DescribeConfigurationAggregators",
     "config:DescribeConfigurationRecorders",
     "config:DescribeDeliveryChannels",
     "dms:DescribeReplicationInstances",
@@ -91,6 +92,8 @@
     "ec2:DescribeInstances",
     "ec2:DescribeInternetGateways",
     "ec2:DescribeKeyPairs",
+    "ec2:DescribeLaunchTemplateVersions",
+    "ec2:DescribeLaunchTemplates",
     "ec2:DescribeNatGateways",
     "ec2:DescribeNetworkAcls",
     "ec2:DescribeNetworkInterfaces",
@@ -112,6 +115,7 @@
     "ecr:DescribeImages",
     "ecr:DescribeRepositories",
     "ecr:GetLifecyclePolicy",
+    "ecr:GetRepositoryPolicy",
     "ecrpublic:DescribeImages",
     "ecrpublic:DescribeRepositories",
     "ecrpublic:GetRepositoryCatalogData",
@@ -140,6 +144,7 @@
     "eks:ListClusters",
     "eks:ListNodegroups",
     "elasticache:DescribeCacheClusters",
+    "elasticache:DescribeReplicationGroups",
     "elasticache:DescribeServerlessCaches",
     "elasticbeanstalk:DescribeApplications",
     "elasticbeanstalk:DescribeEnvironments",
@@ -739,6 +744,12 @@
       "source_file": "aws_config.go"
     },
     {
+      "permission": "config:DescribeConfigurationAggregators",
+      "service": "config",
+      "action": "DescribeConfigurationAggregators",
+      "source_file": "aws_config.go"
+    },
+    {
       "permission": "config:DescribeConfigurationRecorders",
       "service": "config",
       "action": "DescribeConfigurationRecorders",
@@ -913,6 +924,18 @@
       "source_file": "aws_ec2.go"
     },
     {
+      "permission": "ec2:DescribeLaunchTemplateVersions",
+      "service": "ec2",
+      "action": "DescribeLaunchTemplateVersions",
+      "source_file": "aws_ec2.go"
+    },
+    {
+      "permission": "ec2:DescribeLaunchTemplates",
+      "service": "ec2",
+      "action": "DescribeLaunchTemplates",
+      "source_file": "aws_ec2.go"
+    },
+    {
       "permission": "ec2:DescribeNatGateways",
       "service": "ec2",
       "action": "DescribeNatGateways",
@@ -1060,6 +1083,12 @@
       "permission": "ecr:GetLifecyclePolicy",
       "service": "ecr",
       "action": "GetLifecyclePolicy",
+      "source_file": "aws_ecr.go"
+    },
+    {
+      "permission": "ecr:GetRepositoryPolicy",
+      "service": "ecr",
+      "action": "GetRepositoryPolicy",
       "source_file": "aws_ecr.go"
     },
     {
@@ -1228,6 +1257,12 @@
       "permission": "elasticache:DescribeCacheClusters",
       "service": "elasticache",
       "action": "DescribeCacheClusters",
+      "source_file": "aws_elasticache.go"
+    },
+    {
+      "permission": "elasticache:DescribeReplicationGroups",
+      "service": "elasticache",
+      "action": "DescribeReplicationGroups",
       "source_file": "aws_elasticache.go"
     },
     {
@@ -1702,6 +1737,12 @@
       "permission": "kinesis:ListTagsForStream",
       "service": "kinesis",
       "action": "ListTagsForStream",
+      "source_file": "aws_kinesis.go"
+    },
+    {
+      "permission": "kms:DescribeKey",
+      "service": "kms",
+      "action": "DescribeKey",
       "source_file": "aws_kinesis.go"
     },
     {

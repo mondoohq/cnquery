@@ -291,6 +291,7 @@ const (
 	ResourceAwsEc2Vgwtelemetry                                                  string = "aws.ec2.vgwtelemetry"
 	ResourceAwsEc2Internetgateway                                               string = "aws.ec2.internetgateway"
 	ResourceAwsEc2Transitgateway                                                string = "aws.ec2.transitgateway"
+	ResourceAwsEc2Launchtemplate                                                string = "aws.ec2.launchtemplate"
 	ResourceAwsEc2Snapshot                                                      string = "aws.ec2.snapshot"
 	ResourceAwsEc2Volume                                                        string = "aws.ec2.volume"
 	ResourceAwsInspector                                                        string = "aws.inspector"
@@ -319,6 +320,9 @@ const (
 	ResourceAwsConfigRule                                                       string = "aws.config.rule"
 	ResourceAwsConfigRecorder                                                   string = "aws.config.recorder"
 	ResourceAwsConfigDeliverychannel                                            string = "aws.config.deliverychannel"
+	ResourceAwsConfigAggregator                                                 string = "aws.config.aggregator"
+	ResourceAwsConfigAggregatorAccountAggregationSource                         string = "aws.config.aggregator.accountAggregationSource"
+	ResourceAwsConfigAggregatorOrganizationAggregationSource                    string = "aws.config.aggregator.organizationAggregationSource"
 	ResourceAwsEks                                                              string = "aws.eks"
 	ResourceAwsEksNodegroup                                                     string = "aws.eks.nodegroup"
 	ResourceAwsEksAddon                                                         string = "aws.eks.addon"
@@ -1515,6 +1519,10 @@ func init() {
 			// to override args, implement: initAwsEc2Transitgateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEc2Transitgateway,
 		},
+		"aws.ec2.launchtemplate": {
+			// to override args, implement: initAwsEc2Launchtemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEc2Launchtemplate,
+		},
 		"aws.ec2.snapshot": {
 			Init:   initAwsEc2Snapshot,
 			Create: createAwsEc2Snapshot,
@@ -1626,6 +1634,18 @@ func init() {
 		"aws.config.deliverychannel": {
 			// to override args, implement: initAwsConfigDeliverychannel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsConfigDeliverychannel,
+		},
+		"aws.config.aggregator": {
+			// to override args, implement: initAwsConfigAggregator(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsConfigAggregator,
+		},
+		"aws.config.aggregator.accountAggregationSource": {
+			// to override args, implement: initAwsConfigAggregatorAccountAggregationSource(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsConfigAggregatorAccountAggregationSource,
+		},
+		"aws.config.aggregator.organizationAggregationSource": {
+			// to override args, implement: initAwsConfigAggregatorOrganizationAggregationSource(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsConfigAggregatorOrganizationAggregationSource,
 		},
 		"aws.eks": {
 			// to override args, implement: initAwsEks(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -8272,6 +8292,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ecr.repository.scanningFrequency": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcrRepository).GetScanningFrequency()).ToDataRes(types.String)
 	},
+	"aws.ecr.repository.policy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrRepository).GetPolicy()).ToDataRes(types.Dict)
+	},
 	"aws.ecr.repository.lifecyclePolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcrRepository).GetLifecyclePolicy()).ToDataRes(types.Resource("aws.ecr.lifecyclePolicy"))
 	},
@@ -8911,6 +8934,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.transitGateways": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2).GetTransitGateways()).ToDataRes(types.Array(types.Resource("aws.ec2.transitgateway")))
 	},
+	"aws.ec2.launchTemplates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2).GetLaunchTemplates()).ToDataRes(types.Array(types.Resource("aws.ec2.launchtemplate")))
+	},
 	"aws.ec2.eip.publicIp": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Eip).GetPublicIp()).ToDataRes(types.String)
 	},
@@ -9198,6 +9224,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.transitgateway.propagationDefaultRouteTableId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Transitgateway).GetPropagationDefaultRouteTableId()).ToDataRes(types.String)
+	},
+	"aws.ec2.launchtemplate.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Launchtemplate).GetId()).ToDataRes(types.String)
+	},
+	"aws.ec2.launchtemplate.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Launchtemplate).GetArn()).ToDataRes(types.String)
+	},
+	"aws.ec2.launchtemplate.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Launchtemplate).GetName()).ToDataRes(types.String)
+	},
+	"aws.ec2.launchtemplate.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Launchtemplate).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.ec2.launchtemplate.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Launchtemplate).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.ec2.launchtemplate.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Launchtemplate).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"aws.ec2.launchtemplate.defaultVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Launchtemplate).GetDefaultVersion()).ToDataRes(types.Int)
+	},
+	"aws.ec2.launchtemplate.latestVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Launchtemplate).GetLatestVersion()).ToDataRes(types.Int)
+	},
+	"aws.ec2.launchtemplate.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Launchtemplate).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.ec2.launchtemplate.userData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Launchtemplate).GetUserData()).ToDataRes(types.String)
 	},
 	"aws.ec2.snapshot.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Snapshot).GetArn()).ToDataRes(types.String)
@@ -9991,6 +10047,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.config.deliveryChannels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsConfig).GetDeliveryChannels()).ToDataRes(types.Array(types.Resource("aws.config.deliverychannel")))
 	},
+	"aws.config.aggregators": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsConfig).GetAggregators()).ToDataRes(types.Array(types.Resource("aws.config.aggregator")))
+	},
 	"aws.config.rule.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsConfigRule).GetArn()).ToDataRes(types.String)
 	},
@@ -10053,6 +10112,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.config.deliverychannel.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsConfigDeliverychannel).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.config.aggregator.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsConfigAggregator).GetArn()).ToDataRes(types.String)
+	},
+	"aws.config.aggregator.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsConfigAggregator).GetName()).ToDataRes(types.String)
+	},
+	"aws.config.aggregator.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsConfigAggregator).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.config.aggregator.accountAggregationSources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsConfigAggregator).GetAccountAggregationSources()).ToDataRes(types.Array(types.Resource("aws.config.aggregator.accountAggregationSource")))
+	},
+	"aws.config.aggregator.organizationAggregationSource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsConfigAggregator).GetOrganizationAggregationSource()).ToDataRes(types.Resource("aws.config.aggregator.organizationAggregationSource"))
+	},
+	"aws.config.aggregator.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsConfigAggregator).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.config.aggregator.lastUpdatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsConfigAggregator).GetLastUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.config.aggregator.accountAggregationSource.accountIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsConfigAggregatorAccountAggregationSource).GetAccountIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.config.aggregator.accountAggregationSource.allAwsRegions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsConfigAggregatorAccountAggregationSource).GetAllAwsRegions()).ToDataRes(types.Bool)
+	},
+	"aws.config.aggregator.accountAggregationSource.awsRegions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsConfigAggregatorAccountAggregationSource).GetAwsRegions()).ToDataRes(types.Array(types.String))
+	},
+	"aws.config.aggregator.organizationAggregationSource.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsConfigAggregatorOrganizationAggregationSource).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.config.aggregator.organizationAggregationSource.allAwsRegions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsConfigAggregatorOrganizationAggregationSource).GetAllAwsRegions()).ToDataRes(types.Bool)
+	},
+	"aws.config.aggregator.organizationAggregationSource.awsRegions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsConfigAggregatorOrganizationAggregationSource).GetAwsRegions()).ToDataRes(types.Array(types.String))
 	},
 	"aws.eks.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEks).GetClusters()).ToDataRes(types.Array(types.Resource("aws.eks.cluster")))
@@ -22454,6 +22552,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEcrRepository).ScanningFrequency, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.ecr.repository.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrRepository).Policy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"aws.ecr.repository.lifecyclePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcrRepository).LifecyclePolicy, ok = plugin.RawToTValue[*mqlAwsEcrLifecyclePolicy](v.Value, v.Error)
 		return
@@ -23390,6 +23492,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2).TransitGateways, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.launchTemplates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2).LaunchTemplates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.eip.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Eip).__id, ok = v.Value.(string)
 		return
@@ -23828,6 +23934,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.transitgateway.propagationDefaultRouteTableId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Transitgateway).PropagationDefaultRouteTableId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchtemplate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchtemplate).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ec2.launchtemplate.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchtemplate).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchtemplate.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchtemplate).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchtemplate.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchtemplate).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchtemplate.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchtemplate).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchtemplate.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchtemplate).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchtemplate.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchtemplate).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchtemplate.defaultVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchtemplate).DefaultVersion, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchtemplate.latestVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchtemplate).LatestVersion, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchtemplate.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchtemplate).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchtemplate.userData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchtemplate).UserData, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24986,6 +25136,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsConfig).DeliveryChannels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.config.aggregators": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsConfig).Aggregators, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.config.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsConfigRule).__id, ok = v.Value.(string)
 		return
@@ -25080,6 +25234,70 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.config.deliverychannel.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsConfigDeliverychannel).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.config.aggregator.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsConfigAggregator).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.config.aggregator.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsConfigAggregator).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.config.aggregator.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsConfigAggregator).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.config.aggregator.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsConfigAggregator).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.config.aggregator.accountAggregationSources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsConfigAggregator).AccountAggregationSources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.config.aggregator.organizationAggregationSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsConfigAggregator).OrganizationAggregationSource, ok = plugin.RawToTValue[*mqlAwsConfigAggregatorOrganizationAggregationSource](v.Value, v.Error)
+		return
+	},
+	"aws.config.aggregator.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsConfigAggregator).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.config.aggregator.lastUpdatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsConfigAggregator).LastUpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.config.aggregator.accountAggregationSource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsConfigAggregatorAccountAggregationSource).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.config.aggregator.accountAggregationSource.accountIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsConfigAggregatorAccountAggregationSource).AccountIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.config.aggregator.accountAggregationSource.allAwsRegions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsConfigAggregatorAccountAggregationSource).AllAwsRegions, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.config.aggregator.accountAggregationSource.awsRegions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsConfigAggregatorAccountAggregationSource).AwsRegions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.config.aggregator.organizationAggregationSource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsConfigAggregatorOrganizationAggregationSource).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.config.aggregator.organizationAggregationSource.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsConfigAggregatorOrganizationAggregationSource).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.config.aggregator.organizationAggregationSource.allAwsRegions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsConfigAggregatorOrganizationAggregationSource).AllAwsRegions, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.config.aggregator.organizationAggregationSource.awsRegions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsConfigAggregatorOrganizationAggregationSource).AwsRegions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.eks.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -53952,6 +54170,7 @@ type mqlAwsEcrRepository struct {
 	EncryptionType     plugin.TValue[string]
 	CreatedAt          plugin.TValue[*time.Time]
 	ScanningFrequency  plugin.TValue[string]
+	Policy             plugin.TValue[any]
 	LifecyclePolicy    plugin.TValue[*mqlAwsEcrLifecyclePolicy]
 	AboutText          plugin.TValue[string]
 	UsageText          plugin.TValue[string]
@@ -54056,6 +54275,12 @@ func (c *mqlAwsEcrRepository) GetCreatedAt() *plugin.TValue[*time.Time] {
 func (c *mqlAwsEcrRepository) GetScanningFrequency() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.ScanningFrequency, func() (string, error) {
 		return c.scanningFrequency()
+	})
+}
+
+func (c *mqlAwsEcrRepository) GetPolicy() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Policy, func() (any, error) {
+		return c.policy()
 	})
 }
 
@@ -56203,6 +56428,7 @@ type mqlAwsEc2 struct {
 	Eips                   plugin.TValue[[]any]
 	Images                 plugin.TValue[[]any]
 	TransitGateways        plugin.TValue[[]any]
+	LaunchTemplates        plugin.TValue[[]any]
 }
 
 // createAwsEc2 creates a new instance of this resource
@@ -56421,6 +56647,22 @@ func (c *mqlAwsEc2) GetTransitGateways() *plugin.TValue[[]any] {
 		}
 
 		return c.transitGateways()
+	})
+}
+
+func (c *mqlAwsEc2) GetLaunchTemplates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LaunchTemplates, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2", c.__id, "launchTemplates")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.launchTemplates()
 	})
 }
 
@@ -57635,6 +57877,102 @@ func (c *mqlAwsEc2Transitgateway) GetAssociationDefaultRouteTableId() *plugin.TV
 
 func (c *mqlAwsEc2Transitgateway) GetPropagationDefaultRouteTableId() *plugin.TValue[string] {
 	return &c.PropagationDefaultRouteTableId
+}
+
+// mqlAwsEc2Launchtemplate for the aws.ec2.launchtemplate resource
+type mqlAwsEc2Launchtemplate struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEc2LaunchtemplateInternal
+	Id             plugin.TValue[string]
+	Arn            plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Region         plugin.TValue[string]
+	CreatedAt      plugin.TValue[*time.Time]
+	CreatedBy      plugin.TValue[string]
+	DefaultVersion plugin.TValue[int64]
+	LatestVersion  plugin.TValue[int64]
+	Tags           plugin.TValue[map[string]any]
+	UserData       plugin.TValue[string]
+}
+
+// createAwsEc2Launchtemplate creates a new instance of this resource
+func createAwsEc2Launchtemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEc2Launchtemplate{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ec2.launchtemplate", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEc2Launchtemplate) MqlName() string {
+	return "aws.ec2.launchtemplate"
+}
+
+func (c *mqlAwsEc2Launchtemplate) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEc2Launchtemplate) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsEc2Launchtemplate) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsEc2Launchtemplate) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsEc2Launchtemplate) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsEc2Launchtemplate) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsEc2Launchtemplate) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+func (c *mqlAwsEc2Launchtemplate) GetDefaultVersion() *plugin.TValue[int64] {
+	return &c.DefaultVersion
+}
+
+func (c *mqlAwsEc2Launchtemplate) GetLatestVersion() *plugin.TValue[int64] {
+	return &c.LatestVersion
+}
+
+func (c *mqlAwsEc2Launchtemplate) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAwsEc2Launchtemplate) GetUserData() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.UserData, func() (string, error) {
+		return c.userData()
+	})
 }
 
 // mqlAwsEc2Snapshot for the aws.ec2.snapshot resource
@@ -60299,6 +60637,7 @@ type mqlAwsConfig struct {
 	Recorders        plugin.TValue[[]any]
 	Rules            plugin.TValue[[]any]
 	DeliveryChannels plugin.TValue[[]any]
+	Aggregators      plugin.TValue[[]any]
 }
 
 // createAwsConfig creates a new instance of this resource
@@ -60383,6 +60722,22 @@ func (c *mqlAwsConfig) GetDeliveryChannels() *plugin.TValue[[]any] {
 		}
 
 		return c.deliveryChannels()
+	})
+}
+
+func (c *mqlAwsConfig) GetAggregators() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Aggregators, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.config", c.__id, "aggregators")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.aggregators()
 	})
 }
 
@@ -60628,6 +60983,227 @@ func (c *mqlAwsConfigDeliverychannel) GetSnsTopicARN() *plugin.TValue[string] {
 
 func (c *mqlAwsConfigDeliverychannel) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+// mqlAwsConfigAggregator for the aws.config.aggregator resource
+type mqlAwsConfigAggregator struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsConfigAggregatorInternal
+	Arn                           plugin.TValue[string]
+	Name                          plugin.TValue[string]
+	Region                        plugin.TValue[string]
+	AccountAggregationSources     plugin.TValue[[]any]
+	OrganizationAggregationSource plugin.TValue[*mqlAwsConfigAggregatorOrganizationAggregationSource]
+	CreatedAt                     plugin.TValue[*time.Time]
+	LastUpdatedAt                 plugin.TValue[*time.Time]
+}
+
+// createAwsConfigAggregator creates a new instance of this resource
+func createAwsConfigAggregator(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsConfigAggregator{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.config.aggregator", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsConfigAggregator) MqlName() string {
+	return "aws.config.aggregator"
+}
+
+func (c *mqlAwsConfigAggregator) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsConfigAggregator) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsConfigAggregator) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsConfigAggregator) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsConfigAggregator) GetAccountAggregationSources() *plugin.TValue[[]any] {
+	return &c.AccountAggregationSources
+}
+
+func (c *mqlAwsConfigAggregator) GetOrganizationAggregationSource() *plugin.TValue[*mqlAwsConfigAggregatorOrganizationAggregationSource] {
+	return plugin.GetOrCompute[*mqlAwsConfigAggregatorOrganizationAggregationSource](&c.OrganizationAggregationSource, func() (*mqlAwsConfigAggregatorOrganizationAggregationSource, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.config.aggregator", c.__id, "organizationAggregationSource")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsConfigAggregatorOrganizationAggregationSource), nil
+			}
+		}
+
+		return c.organizationAggregationSource()
+	})
+}
+
+func (c *mqlAwsConfigAggregator) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsConfigAggregator) GetLastUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.LastUpdatedAt
+}
+
+// mqlAwsConfigAggregatorAccountAggregationSource for the aws.config.aggregator.accountAggregationSource resource
+type mqlAwsConfigAggregatorAccountAggregationSource struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsConfigAggregatorAccountAggregationSourceInternal it will be used here
+	AccountIds    plugin.TValue[[]any]
+	AllAwsRegions plugin.TValue[bool]
+	AwsRegions    plugin.TValue[[]any]
+}
+
+// createAwsConfigAggregatorAccountAggregationSource creates a new instance of this resource
+func createAwsConfigAggregatorAccountAggregationSource(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsConfigAggregatorAccountAggregationSource{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.config.aggregator.accountAggregationSource", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsConfigAggregatorAccountAggregationSource) MqlName() string {
+	return "aws.config.aggregator.accountAggregationSource"
+}
+
+func (c *mqlAwsConfigAggregatorAccountAggregationSource) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsConfigAggregatorAccountAggregationSource) GetAccountIds() *plugin.TValue[[]any] {
+	return &c.AccountIds
+}
+
+func (c *mqlAwsConfigAggregatorAccountAggregationSource) GetAllAwsRegions() *plugin.TValue[bool] {
+	return &c.AllAwsRegions
+}
+
+func (c *mqlAwsConfigAggregatorAccountAggregationSource) GetAwsRegions() *plugin.TValue[[]any] {
+	return &c.AwsRegions
+}
+
+// mqlAwsConfigAggregatorOrganizationAggregationSource for the aws.config.aggregator.organizationAggregationSource resource
+type mqlAwsConfigAggregatorOrganizationAggregationSource struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsConfigAggregatorOrganizationAggregationSourceInternal
+	IamRole       plugin.TValue[*mqlAwsIamRole]
+	AllAwsRegions plugin.TValue[bool]
+	AwsRegions    plugin.TValue[[]any]
+}
+
+// createAwsConfigAggregatorOrganizationAggregationSource creates a new instance of this resource
+func createAwsConfigAggregatorOrganizationAggregationSource(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsConfigAggregatorOrganizationAggregationSource{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.config.aggregator.organizationAggregationSource", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsConfigAggregatorOrganizationAggregationSource) MqlName() string {
+	return "aws.config.aggregator.organizationAggregationSource"
+}
+
+func (c *mqlAwsConfigAggregatorOrganizationAggregationSource) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsConfigAggregatorOrganizationAggregationSource) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.config.aggregator.organizationAggregationSource", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsConfigAggregatorOrganizationAggregationSource) GetAllAwsRegions() *plugin.TValue[bool] {
+	return &c.AllAwsRegions
+}
+
+func (c *mqlAwsConfigAggregatorOrganizationAggregationSource) GetAwsRegions() *plugin.TValue[[]any] {
+	return &c.AwsRegions
 }
 
 // mqlAwsEks for the aws.eks resource

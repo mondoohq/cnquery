@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -2463,4 +2464,119 @@ func ec2TagsToMap(tags []ec2types.Tag) map[string]string {
 		}
 	}
 	return result
+}
+
+const launchTemplateArnPattern = "arn:aws:ec2:%s:%s:launch-template/%s"
+
+func (a *mqlAwsEc2) launchTemplates() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getLaunchTemplates(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsEc2) getLaunchTemplates(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			svc := conn.Ec2(region)
+			ctx := context.Background()
+			res := []any{}
+
+			paginator := ec2.NewDescribeLaunchTemplatesPaginator(svc, &ec2.DescribeLaunchTemplatesInput{})
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, lt := range page.LaunchTemplates {
+					ltId := convert.ToValue(lt.LaunchTemplateId)
+					ltArn := fmt.Sprintf(launchTemplateArnPattern, region, conn.AccountId(), ltId)
+
+					mqlLt, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Launchtemplate,
+						map[string]*llx.RawData{
+							"id":             llx.StringData(ltId),
+							"arn":            llx.StringData(ltArn),
+							"name":           llx.StringDataPtr(lt.LaunchTemplateName),
+							"region":         llx.StringData(region),
+							"createdAt":      llx.TimeDataPtr(lt.CreateTime),
+							"createdBy":      llx.StringDataPtr(lt.CreatedBy),
+							"defaultVersion": llx.IntData(convert.ToValue(lt.DefaultVersionNumber)),
+							"latestVersion":  llx.IntData(convert.ToValue(lt.LatestVersionNumber)),
+							"tags":           llx.MapData(toInterfaceMap(ec2TagsToMap(lt.Tags)), types.String),
+						})
+					if err != nil {
+						return nil, err
+					}
+					mqlLtRes := mqlLt.(*mqlAwsEc2Launchtemplate)
+					mqlLtRes.region = region
+					mqlLtRes.launchTemplateId = ltId
+					res = append(res, mqlLtRes)
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+type mqlAwsEc2LaunchtemplateInternal struct {
+	region           string
+	launchTemplateId string
+}
+
+func (a *mqlAwsEc2Launchtemplate) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsEc2Launchtemplate) userData() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Ec2(a.region)
+	ctx := context.Background()
+
+	ltId := a.launchTemplateId
+	resp, err := svc.DescribeLaunchTemplateVersions(ctx, &ec2.DescribeLaunchTemplateVersionsInput{
+		LaunchTemplateId: &ltId,
+		Versions:         []string{"$Default"},
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return "", nil
+		}
+		return "", err
+	}
+
+	if len(resp.LaunchTemplateVersions) == 0 || resp.LaunchTemplateVersions[0].LaunchTemplateData == nil {
+		return "", nil
+	}
+
+	ud := resp.LaunchTemplateVersions[0].LaunchTemplateData.UserData
+	if ud == nil || *ud == "" {
+		return "", nil
+	}
+
+	decoded, err := base64.StdEncoding.DecodeString(*ud)
+	if err != nil {
+		return "", err
+	}
+	return string(decoded), nil
 }

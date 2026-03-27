@@ -334,6 +334,46 @@ func newMqlEcrLifecyclePolicyRule(runtime *plugin.Runtime, repoArn string, rule 
 	return resource.(*mqlAwsEcrLifecyclePolicyRule), nil
 }
 
+func (a *mqlAwsEcrRepository) policy() (any, error) {
+	if a.Public.Data {
+		a.Policy.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	name := a.Name.Data
+	region := a.Region.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Ecr(region)
+	ctx := context.Background()
+
+	resp, err := svc.GetRepositoryPolicy(ctx, &ecr.GetRepositoryPolicyInput{
+		RepositoryName: &name,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			a.Policy.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
+		var notFoundErr *ecrtypes.RepositoryPolicyNotFoundException
+		if errors.As(err, &notFoundErr) {
+			a.Policy.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	if resp.PolicyText == nil {
+		a.Policy.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	var policyDoc any
+	if jsonErr := json.Unmarshal([]byte(*resp.PolicyText), &policyDoc); jsonErr != nil {
+		return nil, jsonErr
+	}
+	return policyDoc, nil
+}
+
 func (a *mqlAwsEcrRepository) lifecyclePolicy() (*mqlAwsEcrLifecyclePolicy, error) {
 	if a.Public.Data {
 		a.LifecyclePolicy.State = plugin.StateIsNull | plugin.StateIsSet

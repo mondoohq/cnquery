@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/rs/zerolog/log"
@@ -283,4 +284,169 @@ func (a *mqlAwsConfig) getRules(conn *connection.AwsConnection) []*jobpool.Job {
 
 func (a *mqlAwsConfigRule) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsConfig) aggregators() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getAggregators(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for _, job := range poolOfJobs.Jobs {
+		res = append(res, job.Result.([]any)...)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsConfig) getAggregators(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("config>getAggregators>calling aws with region %s", region)
+
+			svc := conn.ConfigService(region)
+			ctx := context.Background()
+			res := []any{}
+
+			var nextToken *string
+			for {
+				resp, err := svc.DescribeConfigurationAggregators(ctx, &configservice.DescribeConfigurationAggregatorsInput{
+					NextToken: nextToken,
+				})
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, err
+				}
+
+				for _, agg := range resp.ConfigurationAggregators {
+					// Build account aggregation sources
+					accountSources := []any{}
+					for i, src := range agg.AccountAggregationSources {
+						accountIds := make([]any, len(src.AccountIds))
+						for j, id := range src.AccountIds {
+							accountIds[j] = id
+						}
+						awsRegions := make([]any, len(src.AwsRegions))
+						for j, r := range src.AwsRegions {
+							awsRegions[j] = r
+						}
+						mqlSrc, err := CreateResource(a.MqlRuntime, ResourceAwsConfigAggregatorAccountAggregationSource,
+							map[string]*llx.RawData{
+								"__id":          llx.StringData(convert.ToValue(agg.ConfigurationAggregatorArn) + "/accountSource/" + fmt.Sprintf("%d", i)),
+								"accountIds":    llx.ArrayData(accountIds, types.String),
+								"allAwsRegions": llx.BoolData(src.AllAwsRegions),
+								"awsRegions":    llx.ArrayData(awsRegions, types.String),
+							})
+						if err != nil {
+							return nil, err
+						}
+						accountSources = append(accountSources, mqlSrc)
+					}
+
+					mqlAgg, err := CreateResource(a.MqlRuntime, "aws.config.aggregator",
+						map[string]*llx.RawData{
+							"arn":                       llx.StringDataPtr(agg.ConfigurationAggregatorArn),
+							"name":                      llx.StringDataPtr(agg.ConfigurationAggregatorName),
+							"region":                    llx.StringData(region),
+							"accountAggregationSources": llx.ArrayData(accountSources, types.Resource("aws.config.aggregator.accountAggregationSource")),
+							"createdAt":                 llx.TimeDataPtr(agg.CreationTime),
+							"lastUpdatedAt":             llx.TimeDataPtr(agg.LastUpdatedTime),
+						})
+					if err != nil {
+						return nil, err
+					}
+
+					// Cache the org source role ARN for lazy loading
+					mqlAggRes := mqlAgg.(*mqlAwsConfigAggregator)
+					if agg.OrganizationAggregationSource != nil {
+						mqlAggRes.cacheOrgRoleArn = agg.OrganizationAggregationSource.RoleArn
+						mqlAggRes.cacheOrgAllAwsRegions = agg.OrganizationAggregationSource.AllAwsRegions
+						mqlAggRes.cacheOrgAwsRegions = agg.OrganizationAggregationSource.AwsRegions
+					}
+
+					res = append(res, mqlAggRes)
+				}
+
+				if resp.NextToken == nil {
+					break
+				}
+				nextToken = resp.NextToken
+			}
+
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+type mqlAwsConfigAggregatorInternal struct {
+	cacheOrgRoleArn       *string
+	cacheOrgAllAwsRegions bool
+	cacheOrgAwsRegions    []string
+}
+
+func (a *mqlAwsConfigAggregator) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsConfigAggregator) organizationAggregationSource() (*mqlAwsConfigAggregatorOrganizationAggregationSource, error) {
+	if a.cacheOrgRoleArn == nil {
+		a.OrganizationAggregationSource.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	awsRegions := make([]any, len(a.cacheOrgAwsRegions))
+	for i, r := range a.cacheOrgAwsRegions {
+		awsRegions[i] = r
+	}
+
+	mqlSrc, err := CreateResource(a.MqlRuntime, ResourceAwsConfigAggregatorOrganizationAggregationSource,
+		map[string]*llx.RawData{
+			"__id":          llx.StringData(a.Arn.Data + "/orgSource"),
+			"allAwsRegions": llx.BoolData(a.cacheOrgAllAwsRegions),
+			"awsRegions":    llx.ArrayData(awsRegions, types.String),
+		})
+	if err != nil {
+		return nil, err
+	}
+	mqlSrcRes := mqlSrc.(*mqlAwsConfigAggregatorOrganizationAggregationSource)
+	mqlSrcRes.cacheRoleArn = a.cacheOrgRoleArn
+	return mqlSrcRes, nil
+}
+
+type mqlAwsConfigAggregatorOrganizationAggregationSourceInternal struct {
+	cacheRoleArn *string
+}
+
+func (a *mqlAwsConfigAggregatorOrganizationAggregationSource) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAwsConfigAggregatorOrganizationAggregationSource) iamRole() (*mqlAwsIamRole, error) {
+	if a.cacheRoleArn == nil || *a.cacheRoleArn == "" {
+		a.IamRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.iam.role",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheRoleArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsIamRole), nil
+}
+
+func (a *mqlAwsConfigAggregatorAccountAggregationSource) id() (string, error) {
+	return a.__id, nil
 }
