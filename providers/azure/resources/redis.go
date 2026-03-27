@@ -26,7 +26,8 @@ type mqlAzureSubscriptionCacheServiceRedisInstanceInternal struct {
 	// cacheEncryptionKeyURI stores the customer-managed key URI for encryption.
 	// Note: armredis/v3 does not expose encryption fields on Properties.
 	// This will be populated when the SDK adds support for CMK encryption configuration.
-	cacheEncryptionKeyURI string
+	cacheEncryptionKeyURI           string
+	cachePrivateEndpointConnections []*armredis.PrivateEndpointConnection
 }
 
 func (a *mqlAzureSubscriptionCacheServiceRedisInstance) id() (string, error) {
@@ -211,10 +212,6 @@ func createRedisInstanceRawData(runtime *plugin.Runtime, cache *armredis.Resourc
 		"zones":               llx.ArrayData(zones, types.String),
 		"identity":            llx.DictData(identity),
 	}, nil
-}
-
-type mqlAzureSubscriptionCacheServiceRedisInstanceInternal struct {
-	cachePrivateEndpointConnections []*armredis.PrivateEndpointConnection
 }
 
 func (a *mqlAzureSubscriptionCacheServiceRedisInstance) privateEndpointConnections() ([]any, error) {

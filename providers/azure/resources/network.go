@@ -387,14 +387,19 @@ func (a *mqlAzureSubscriptionNetworkService) loadBalancers() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			var lbSkuName, lbSkuTier *string
+			if lb.SKU != nil {
+				lbSkuName = (*string)(lb.SKU.Name)
+				lbSkuTier = (*string)(lb.SKU.Tier)
+			}
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.loadBalancer",
 				map[string]*llx.RawData{
 					"id":         llx.StringDataPtr(lb.ID),
 					"name":       llx.StringDataPtr(lb.Name),
 					"location":   llx.StringDataPtr(lb.Location),
 					"etag":       llx.StringDataPtr(lb.Etag),
-					"sku":        llx.StringDataPtr((*string)(lb.SKU.Name)),
-					"skuTier":    llx.StringDataPtr((*string)(lb.SKU.Tier)),
+					"sku":        llx.StringDataPtr(lbSkuName),
+					"skuTier":    llx.StringDataPtr(lbSkuTier),
 					"tags":       llx.MapData(convert.PtrMapStrToInterface(lb.Tags), types.String),
 					"type":       llx.StringDataPtr(lb.Type),
 					"properties": llx.DictData(lbProps),
@@ -2277,6 +2282,15 @@ func azureFirewallToMql(runtime *plugin.Runtime, fw network.AzureFirewall) (*mql
 	if err != nil {
 		return nil, err
 	}
+	var fwSkuTier, fwSkuName, fwProvisioningState, fwThreatIntelMode *string
+	if fw.Properties != nil {
+		fwProvisioningState = (*string)(fw.Properties.ProvisioningState)
+		fwThreatIntelMode = (*string)(fw.Properties.ThreatIntelMode)
+		if fw.Properties.SKU != nil {
+			fwSkuTier = (*string)(fw.Properties.SKU.Tier)
+			fwSkuName = (*string)(fw.Properties.SKU.Name)
+		}
+	}
 	args := map[string]*llx.RawData{
 		"id":                llx.StringDataPtr(fw.ID),
 		"name":              llx.StringDataPtr(fw.Name),
@@ -2285,10 +2299,10 @@ func azureFirewallToMql(runtime *plugin.Runtime, fw network.AzureFirewall) (*mql
 		"tags":              llx.MapData(convert.PtrMapStrToInterface(fw.Tags), types.String),
 		"etag":              llx.StringDataPtr(fw.Etag),
 		"properties":        llx.DictData(props),
-		"skuTier":           llx.StringDataPtr((*string)(fw.Properties.SKU.Tier)),
-		"skuName":           llx.StringDataPtr((*string)(fw.Properties.SKU.Name)),
-		"provisioningState": llx.StringDataPtr((*string)(fw.Properties.ProvisioningState)),
-		"threatIntelMode":   llx.StringDataPtr((*string)(fw.Properties.ThreatIntelMode)),
+		"skuTier":           llx.StringDataPtr(fwSkuTier),
+		"skuName":           llx.StringDataPtr(fwSkuName),
+		"provisioningState": llx.StringDataPtr(fwProvisioningState),
+		"threatIntelMode":   llx.StringDataPtr(fwThreatIntelMode),
 	}
 	mqlFw, err := CreateResource(runtime, "azure.subscription.networkService.firewall", args)
 	if err != nil {

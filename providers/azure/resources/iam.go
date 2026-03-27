@@ -105,6 +105,9 @@ type mqlAzureSubscriptionAuthorizationServiceRoleDefinitionInternal struct {
 func (a *mqlAzureSubscriptionAuthorizationServiceRoleDefinition) permissions() ([]any, error) {
 	res := []any{}
 	for idx, p := range a.cachePermissions {
+		if p == nil {
+			continue
+		}
 		id := fmt.Sprintf("%s/azure.subscription.authorizationService.roleDefinition.permission/%d", a.Id.Data, idx)
 		permission, err := newMqlRolePermission(a.MqlRuntime, id, p)
 		if err != nil {
