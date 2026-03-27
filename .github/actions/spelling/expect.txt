@@ -126,6 +126,7 @@ junos
 kqueue
 KSK
 labelmatchstatement
+launchtemplate
 lfs
 limitrange
 linuxefi
