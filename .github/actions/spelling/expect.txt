@@ -275,6 +275,7 @@ wil
 workdir
 WORKSPACESUSER
 workspacesweb
+Xff
 xssmatchstatement
 yara
 zerolog
