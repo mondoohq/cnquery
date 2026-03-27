@@ -69,14 +69,14 @@ func Hostname(conn shared.Connection, pf *inventory.Platform) (string, bool) {
 		}
 		log.Debug().Err(err).Msg("could not detect hostname via `sysctl -n kern.hostname`")
 
-		// Try /etc/rc.conf which is the standard BSD hostname configuration file.
+		// Try /etc/rc.conf (FreeBSD, NetBSD, DragonFlyBSD) or /etc/myname (OpenBSD).
 		// This handles the case where the hostname is configured but not yet applied
 		// (e.g., fresh vagrant VMs that haven't been rebooted after provisioning).
-		hn, err := parseRcConfHostname(conn)
+		hn, err := parseBSDHostnameConfig(conn)
 		if err == nil && hn != "" {
 			return hn, true
 		}
-		log.Debug().Err(err).Msg("could not detect hostname from /etc/rc.conf")
+		log.Debug().Err(err).Msg("could not detect hostname from BSD config files")
 	}
 
 	// Fallback to for unix systems to /etc/hostname, since hostname command is not available on all systems
@@ -186,37 +186,47 @@ func isLocalhostVariant(host string) bool {
 		lh == "ip6-loopback"
 }
 
-// parseRcConfHostname reads the hostname from /etc/rc.conf, which is the standard
-// configuration file on BSD systems (FreeBSD, NetBSD, OpenBSD, DragonFlyBSD).
-// It looks for a line like: hostname="myhost.example.com"
-func parseRcConfHostname(conn shared.Connection) (string, error) {
+// parseBSDHostnameConfig tries to read the hostname from BSD configuration files.
+// FreeBSD, NetBSD, and DragonFlyBSD use /etc/rc.conf (hostname="myhost.example.com").
+// OpenBSD uses /etc/myname (a single line containing the hostname).
+func parseBSDHostnameConfig(conn shared.Connection) (string, error) {
 	afs := &afero.Afero{Fs: conn.FileSystem()}
-	ok, err := afs.Exists("/etc/rc.conf")
-	if err != nil || !ok {
-		return "", fmt.Errorf("could not find /etc/rc.conf")
-	}
 
-	content, err := afs.ReadFile("/etc/rc.conf")
-	if err != nil {
-		return "", err
-	}
-
-	for _, line := range strings.Split(string(content), "\n") {
-		line = strings.TrimSpace(line)
-		if strings.HasPrefix(line, "#") {
-			continue
-		}
-		if strings.HasPrefix(line, "hostname=") {
-			value := strings.TrimPrefix(line, "hostname=")
-			value = strings.Trim(value, `"'`)
-			value = strings.TrimSpace(value)
-			if value != "" {
-				return value, nil
+	// Try /etc/myname first (OpenBSD)
+	if ok, err := afs.Exists("/etc/myname"); err == nil && ok {
+		content, err := afs.ReadFile("/etc/myname")
+		if err == nil {
+			hn := strings.TrimSpace(string(content))
+			if hn != "" {
+				return hn, nil
 			}
 		}
 	}
 
-	return "", fmt.Errorf("no hostname found in /etc/rc.conf")
+	// Try /etc/rc.conf (FreeBSD, NetBSD, DragonFlyBSD)
+	if ok, err := afs.Exists("/etc/rc.conf"); err == nil && ok {
+		content, err := afs.ReadFile("/etc/rc.conf")
+		if err != nil {
+			return "", err
+		}
+
+		for _, line := range strings.Split(string(content), "\n") {
+			line = strings.TrimSpace(line)
+			if strings.HasPrefix(line, "#") {
+				continue
+			}
+			if strings.HasPrefix(line, "hostname=") {
+				value := strings.TrimPrefix(line, "hostname=")
+				value = strings.Trim(value, `"'`)
+				value = strings.TrimSpace(value)
+				if value != "" {
+					return value, nil
+				}
+			}
+		}
+	}
+
+	return "", fmt.Errorf("no hostname found in BSD config files")
 }
 
 // isBSDWithoutDarwin returns true if the platform is a BSD system but not Darwin/macOS.

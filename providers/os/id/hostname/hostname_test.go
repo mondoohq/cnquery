@@ -158,6 +158,18 @@ func TestHostnameFreeBSDRcConfFallback(t *testing.T) {
 	assert.Equal(t, "freebsd-vagrant.local", hn)
 }
 
+func TestHostnameOpenBSDMynameFallback(t *testing.T) {
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/hostname_openbsd_myname_fallback.toml"))
+	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
+
+	hn, ok := hostname.Hostname(conn, platform)
+	require.True(t, ok)
+
+	assert.Equal(t, "openbsd-vagrant.local", hn)
+}
+
 func TestHostnameFreeBSDSysctlFallback(t *testing.T) {
 	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/hostname_freebsd_sysctl_fallback.toml"))
 	require.NoError(t, err)
