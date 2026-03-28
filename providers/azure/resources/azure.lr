@@ -70,6 +70,10 @@ azure.subscription @defaults ("name") {
   iot() azure.subscription.iotService
   // Cache resources in the subscription
   cache() azure.subscription.cacheService
+  // Data Factory resources in the subscription
+  dataFactory() azure.subscription.dataFactoryService
+  // Synapse Analytics resources in the subscription
+  synapse() azure.subscription.synapseService
 }
 
 // Azure function
@@ -3731,4 +3735,84 @@ private azure.subscription.cacheService.redisInstance.privateEndpointConnection 
   description string
   // Provisioning state. Possible values: "Succeeded", "Creating", "Deleting", "Failed", "Updating"
   provisioningState string
+}
+
+// Azure Data Factory service
+private azure.subscription.dataFactoryService {
+  // Subscription identifier
+  subscriptionId string
+  // List of Data Factory instances
+  factories() []azure.subscription.dataFactoryService.factory
+}
+
+// Azure Data Factory instance
+azure.subscription.dataFactoryService.factory @defaults("name location") {
+  // Full resource ID
+  id string
+  // Name of the factory
+  name string
+  // Location of the factory
+  location string
+  // Tags for the factory
+  tags map[string]string
+  // Resource type
+  type string
+  // Raw properties
+  properties dict
+  // Whether public network access is enabled ("Enabled" or "Disabled")
+  publicNetworkAccess string
+  // Identity configuration
+  identity dict
+  // Provisioning state
+  provisioningState string
+  // Version of the factory
+  version string
+  // Repository configuration for source control
+  repoConfiguration dict
+  // Encryption configuration
+  encryption dict
+  // Time the factory was created
+  created time
+}
+
+// Azure Synapse Analytics service
+private azure.subscription.synapseService {
+  // Subscription identifier
+  subscriptionId string
+  // List of Synapse workspaces
+  workspaces() []azure.subscription.synapseService.workspace
+}
+
+// Azure Synapse Analytics workspace
+azure.subscription.synapseService.workspace @defaults("name location") {
+  // Full resource ID
+  id string
+  // Name of the workspace
+  name string
+  // Location of the workspace
+  location string
+  // Tags for the workspace
+  tags map[string]string
+  // Resource type
+  type string
+  // Raw properties
+  properties dict
+  // Identity configuration
+  identity dict
+  // Whether managed virtual network is enabled (set to "default" when enabled)
+  managedVirtualNetwork string
+  // Public network access setting ("Enabled" or "Disabled")
+  publicNetworkAccess string
+  // Encryption configuration
+  encryption dict
+  // Name of the managed resource group
+  managedResourceGroupName string
+  // SQL administrator login
+  sqlAdministratorLogin string
+  // Provisioning state
+  provisioningState string
+  // Whether trusted service bypass is enabled
+  trustedServiceBypassEnabled bool
+  // Whether Azure AD-only authentication is enabled
+  azureADOnlyAuthentication bool
 }

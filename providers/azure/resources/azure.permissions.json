@@ -1,7 +1,7 @@
 {
   "provider": "azure",
-  "version": "13.2.0",
-  "generated_at": "2026-03-27T14:04:41-07:00",
+  "version": "13.3.0",
+  "generated_at": "2026-03-27T23:23:56-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Authorization/roleAssignments/read",
@@ -23,6 +23,7 @@
     "Microsoft.DBforPostgreSQL/firewallRules/read",
     "Microsoft.DBforPostgreSQL/servers/read",
     "Microsoft.Databricks/workspaces/read",
+    "Microsoft.Datafactory/factories/read",
     "Microsoft.DocumentDB/databaseAccounts/read",
     "Microsoft.Insights/activityLogAlerts/read",
     "Microsoft.Insights/components/read",
@@ -75,6 +76,7 @@
     "Microsoft.Sql/virtualNetworkRules/read",
     "Microsoft.Storage/accounts/read",
     "Microsoft.Storage/blobContainers/read",
+    "Microsoft.Synapse/workspaces/read",
     "Microsoft.Web/certificates/read",
     "Microsoft.Web/environments/read",
     "Microsoft.Web/plans/read",
@@ -126,7 +128,7 @@
     {
       "permission": "Microsoft.Compute/disks/read",
       "service": "Microsoft.Compute",
-      "action": "NewListPager",
+      "action": "Get",
       "source_file": "compute.go"
     },
     {
@@ -150,7 +152,7 @@
     {
       "permission": "Microsoft.DBforMySQL/configurations/read",
       "service": "Microsoft.DBforMySQL",
-      "action": "Get",
+      "action": "NewListByServerPager",
       "source_file": "mysql.go"
     },
     {
@@ -200,6 +202,12 @@
       "service": "Microsoft.Databricks",
       "action": "NewListBySubscriptionPager",
       "source_file": "databricks.go"
+    },
+    {
+      "permission": "Microsoft.Datafactory/factories/read",
+      "service": "Microsoft.Datafactory",
+      "action": "NewListPager",
+      "source_file": "datafactory.go"
     },
     {
       "permission": "Microsoft.DocumentDB/databaseAccounts/read",
@@ -258,7 +266,7 @@
     {
       "permission": "Microsoft.Network/azureFirewalls/read",
       "service": "Microsoft.Network",
-      "action": "NewListAllPager",
+      "action": "Get",
       "source_file": "network.go"
     },
     {
@@ -318,7 +326,7 @@
     {
       "permission": "Microsoft.Network/publicIPAddresses/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListAllPager",
       "source_file": "network.go"
     },
     {
@@ -372,7 +380,7 @@
     {
       "permission": "Microsoft.Network/webApplicationFirewallPolicies/read",
       "service": "Microsoft.Network",
-      "action": "NewListAllPager",
+      "action": "Get",
       "source_file": "network.go"
     },
     {
@@ -530,6 +538,12 @@
       "service": "Microsoft.Storage",
       "action": "NewListPager",
       "source_file": "storage.go"
+    },
+    {
+      "permission": "Microsoft.Synapse/workspaces/read",
+      "service": "Microsoft.Synapse",
+      "action": "NewListPager",
+      "source_file": "synapse.go"
     },
     {
       "permission": "Microsoft.Web/certificates/read",

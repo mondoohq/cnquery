@@ -263,3 +263,25 @@ func (a *mqlAzureSubscription) cache() (*mqlAzureSubscriptionCacheService, error
 	cacheSvc := svc.(*mqlAzureSubscriptionCacheService)
 	return cacheSvc, nil
 }
+
+func (a *mqlAzureSubscription) dataFactory() (*mqlAzureSubscriptionDataFactoryService, error) {
+	svc, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionDataFactoryService, map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	dataFactorySvc := svc.(*mqlAzureSubscriptionDataFactoryService)
+	return dataFactorySvc, nil
+}
+
+func (a *mqlAzureSubscription) synapse() (*mqlAzureSubscriptionSynapseService, error) {
+	svc, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionSynapseService, map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	synapseSvc := svc.(*mqlAzureSubscriptionSynapseService)
+	return synapseSvc, nil
+}
