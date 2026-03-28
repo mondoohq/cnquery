@@ -842,6 +842,7 @@ func (a *mqlAwsEcs) createContainerDefinitionResource(taskDefArn string, cd *ecs
 		memory = int64(*cd.Memory)
 	}
 	cpu := int64(cd.Cpu)
+	// AWS defaults initProcessEnabled to false when LinuxParameters is nil
 	initProcessEnabled := false
 	if cd.LinuxParameters != nil && cd.LinuxParameters.InitProcessEnabled != nil {
 		initProcessEnabled = *cd.LinuxParameters.InitProcessEnabled
