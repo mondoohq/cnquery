@@ -5685,6 +5685,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ecs.taskDefinition.containerDefinition.portMappings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinition).GetPortMappings()).ToDataRes(types.Array(types.Resource("aws.ecs.taskDefinition.containerDefinition.portMapping")))
 	},
+	"aws.ecs.taskDefinition.containerDefinition.initProcessEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinition).GetInitProcessEnabled()).ToDataRes(types.Bool)
+	},
 	"aws.ecs.taskDefinition.containerDefinition.environmentVariable.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsTaskDefinitionContainerDefinitionEnvironmentVariable).GetName()).ToDataRes(types.String)
 	},
@@ -18694,6 +18697,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ecs.taskDefinition.containerDefinition.portMappings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsTaskDefinitionContainerDefinition).PortMappings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.containerDefinition.initProcessEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionContainerDefinition).InitProcessEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.taskDefinition.containerDefinition.environmentVariable.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -44186,6 +44193,7 @@ type mqlAwsEcsTaskDefinitionContainerDefinition struct {
 	Memory                 plugin.TValue[int64]
 	Cpu                    plugin.TValue[int64]
 	PortMappings           plugin.TValue[[]any]
+	InitProcessEnabled     plugin.TValue[bool]
 }
 
 // createAwsEcsTaskDefinitionContainerDefinition creates a new instance of this resource
@@ -44315,6 +44323,10 @@ func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetPortMappings() *plugin.T
 
 		return c.portMappings()
 	})
+}
+
+func (c *mqlAwsEcsTaskDefinitionContainerDefinition) GetInitProcessEnabled() *plugin.TValue[bool] {
+	return &c.InitProcessEnabled
 }
 
 // mqlAwsEcsTaskDefinitionContainerDefinitionEnvironmentVariable for the aws.ecs.taskDefinition.containerDefinition.environmentVariable resource

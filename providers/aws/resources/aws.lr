@@ -2994,6 +2994,8 @@ private aws.ecs.taskDefinition.containerDefinition @defaults("name image") {
   cpu int
   // Port mappings for the container
   portMappings() []aws.ecs.taskDefinition.containerDefinition.portMapping
+  // Whether the container uses an init process (from linuxParameters)
+  initProcessEnabled bool
 }
 
 // Amazon ECS Task Definition Container Environment Variable

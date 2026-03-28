@@ -1319,6 +1319,7 @@ aws.ecs.taskDefinition.containerDefinition.environmentVariable 11.15.2
 aws.ecs.taskDefinition.containerDefinition.environmentVariable.name 11.15.2
 aws.ecs.taskDefinition.containerDefinition.environmentVariable.value 11.15.2
 aws.ecs.taskDefinition.containerDefinition.image 11.15.2
+aws.ecs.taskDefinition.containerDefinition.initProcessEnabled 13.5.1
 aws.ecs.taskDefinition.containerDefinition.logConfiguration 11.15.2
 aws.ecs.taskDefinition.containerDefinition.logConfiguration.logDriver 11.15.2
 aws.ecs.taskDefinition.containerDefinition.logConfiguration.options 11.15.2
