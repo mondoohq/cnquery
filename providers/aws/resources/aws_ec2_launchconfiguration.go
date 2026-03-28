@@ -34,11 +34,11 @@ func (a *mqlAwsEc2LaunchconfigurationBlockDeviceMapping) id() (string, error) {
 }
 
 func (a *mqlAwsEc2LaunchconfigurationEbsBlockDevice) id() (string, error) {
-	return a.SnapshotId.Data, nil
+	return a.__id, nil
 }
 
 func (a *mqlAwsEc2LaunchconfigurationMetadataOptions) id() (string, error) {
-	return a.HttpTokens.Data, nil
+	return a.__id, nil
 }
 
 func (a *mqlAwsEc2Launchconfiguration) securityGroups() ([]any, error) {

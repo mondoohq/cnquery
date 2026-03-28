@@ -1,7 +1,7 @@
 {
   "provider": "aws",
-  "version": "13.5.0",
-  "generated_at": "2026-03-27T14:04:41-07:00",
+  "version": "13.6.0",
+  "generated_at": "2026-03-27T21:47:16-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -28,6 +28,7 @@
     "athena:ListTagsForResource",
     "athena:ListWorkGroups",
     "autoscaling:DescribeAutoScalingGroups",
+    "autoscaling:DescribeLaunchConfigurations",
     "backup:GetBackupPlan",
     "backup:ListBackupPlans",
     "backup:ListBackupVaults",
@@ -38,6 +39,7 @@
     "cloudformation:DescribeStackSet",
     "cloudformation:DescribeStacks",
     "cloudformation:ListStackSets",
+    "cloudfront:GetDistribution",
     "cloudfront:ListDistributions",
     "cloudfront:ListFunctions",
     "cloudtrail:DescribeTrails",
@@ -534,6 +536,12 @@
       "source_file": "aws_autoscaling.go"
     },
     {
+      "permission": "autoscaling:DescribeLaunchConfigurations",
+      "service": "autoscaling",
+      "action": "DescribeLaunchConfigurations",
+      "source_file": "aws_ec2_launchconfiguration.go"
+    },
+    {
       "permission": "backup:GetBackupPlan",
       "service": "backup",
       "action": "GetBackupPlan",
@@ -592,6 +600,12 @@
       "service": "cloudformation",
       "action": "ListStackSets",
       "source_file": "aws_cloudformation.go"
+    },
+    {
+      "permission": "cloudfront:GetDistribution",
+      "service": "cloudfront",
+      "action": "GetDistribution",
+      "source_file": "aws_cloudfront.go"
     },
     {
       "permission": "cloudfront:ListDistributions",

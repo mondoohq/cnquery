@@ -47124,7 +47124,12 @@ func createAwsCloudfrontDistributionLoggingConfig(runtime *plugin.Runtime, args 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aws.cloudfront.distribution.loggingConfig", res.__id)
@@ -58559,7 +58564,12 @@ func createAwsEc2LaunchconfigurationBlockDeviceMapping(runtime *plugin.Runtime, 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aws.ec2.launchconfiguration.blockDeviceMapping", res.__id)
@@ -58621,7 +58631,12 @@ func createAwsEc2LaunchconfigurationEbsBlockDevice(runtime *plugin.Runtime, args
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aws.ec2.launchconfiguration.ebsBlockDevice", res.__id)
@@ -58691,7 +58706,12 @@ func createAwsEc2LaunchconfigurationMetadataOptions(runtime *plugin.Runtime, arg
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aws.ec2.launchconfiguration.metadataOptions", res.__id)
