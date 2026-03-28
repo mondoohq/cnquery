@@ -842,6 +842,10 @@ func (a *mqlAwsEcs) createContainerDefinitionResource(taskDefArn string, cd *ecs
 		memory = int64(*cd.Memory)
 	}
 	cpu := int64(cd.Cpu)
+	initProcessEnabled := false
+	if cd.LinuxParameters != nil && cd.LinuxParameters.InitProcessEnabled != nil {
+		initProcessEnabled = *cd.LinuxParameters.InitProcessEnabled
+	}
 
 	// Create environment variables
 	envVars := []any{}
@@ -974,6 +978,7 @@ func (a *mqlAwsEcs) createContainerDefinitionResource(taskDefArn string, cd *ecs
 			"memory":                 llx.IntData(memory),
 			"cpu":                    llx.IntData(cpu),
 			"portMappings":           llx.ArrayData(portMappings, types.Resource("aws.ecs.taskDefinition.containerDefinition.portMapping")),
+			"initProcessEnabled":     llx.BoolData(initProcessEnabled),
 		})
 }
 
