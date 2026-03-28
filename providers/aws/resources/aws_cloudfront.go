@@ -135,7 +135,7 @@ func (a *mqlAwsCloudfront) distributions() ([]any, error) {
 }
 
 func (a *mqlAwsCloudfrontDistributionLoggingConfig) id() (string, error) {
-	return a.Bucket.Data + "/" + a.Prefix.Data, nil
+	return a.__id, nil
 }
 
 func (a *mqlAwsCloudfrontDistribution) logging() (*mqlAwsCloudfrontDistributionLoggingConfig, error) {
