@@ -190,6 +190,7 @@ const (
 	ResourceAwsCloudwatchLoggroupMetricsfilter                                  string = "aws.cloudwatch.loggroup.metricsfilter"
 	ResourceAwsCloudfront                                                       string = "aws.cloudfront"
 	ResourceAwsCloudfrontDistribution                                           string = "aws.cloudfront.distribution"
+	ResourceAwsCloudfrontDistributionLoggingConfig                              string = "aws.cloudfront.distribution.loggingConfig"
 	ResourceAwsCloudfrontDistributionOrigin                                     string = "aws.cloudfront.distribution.origin"
 	ResourceAwsCloudfrontFunction                                               string = "aws.cloudfront.function"
 	ResourceAwsCloudtrail                                                       string = "aws.cloudtrail"
@@ -292,6 +293,10 @@ const (
 	ResourceAwsEc2Internetgateway                                               string = "aws.ec2.internetgateway"
 	ResourceAwsEc2Transitgateway                                                string = "aws.ec2.transitgateway"
 	ResourceAwsEc2Launchtemplate                                                string = "aws.ec2.launchtemplate"
+	ResourceAwsEc2Launchconfiguration                                           string = "aws.ec2.launchconfiguration"
+	ResourceAwsEc2LaunchconfigurationBlockDeviceMapping                         string = "aws.ec2.launchconfiguration.blockDeviceMapping"
+	ResourceAwsEc2LaunchconfigurationEbsBlockDevice                             string = "aws.ec2.launchconfiguration.ebsBlockDevice"
+	ResourceAwsEc2LaunchconfigurationMetadataOptions                            string = "aws.ec2.launchconfiguration.metadataOptions"
 	ResourceAwsEc2Snapshot                                                      string = "aws.ec2.snapshot"
 	ResourceAwsEc2Volume                                                        string = "aws.ec2.volume"
 	ResourceAwsInspector                                                        string = "aws.inspector"
@@ -1115,6 +1120,10 @@ func init() {
 			Init:   initAwsCloudfrontDistribution,
 			Create: createAwsCloudfrontDistribution,
 		},
+		"aws.cloudfront.distribution.loggingConfig": {
+			// to override args, implement: initAwsCloudfrontDistributionLoggingConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCloudfrontDistributionLoggingConfig,
+		},
 		"aws.cloudfront.distribution.origin": {
 			// to override args, implement: initAwsCloudfrontDistributionOrigin(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsCloudfrontDistributionOrigin,
@@ -1522,6 +1531,22 @@ func init() {
 		"aws.ec2.launchtemplate": {
 			// to override args, implement: initAwsEc2Launchtemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEc2Launchtemplate,
+		},
+		"aws.ec2.launchconfiguration": {
+			Init:   initAwsEc2Launchconfiguration,
+			Create: createAwsEc2Launchconfiguration,
+		},
+		"aws.ec2.launchconfiguration.blockDeviceMapping": {
+			// to override args, implement: initAwsEc2LaunchconfigurationBlockDeviceMapping(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEc2LaunchconfigurationBlockDeviceMapping,
+		},
+		"aws.ec2.launchconfiguration.ebsBlockDevice": {
+			// to override args, implement: initAwsEc2LaunchconfigurationEbsBlockDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEc2LaunchconfigurationEbsBlockDevice,
+		},
+		"aws.ec2.launchconfiguration.metadataOptions": {
+			// to override args, implement: initAwsEc2LaunchconfigurationMetadataOptions(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEc2LaunchconfigurationMetadataOptions,
 		},
 		"aws.ec2.snapshot": {
 			Init:   initAwsEc2Snapshot,
@@ -4536,6 +4561,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.autoscaling.group.launchConfigurationName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAutoscalingGroup).GetLaunchConfigurationName()).ToDataRes(types.String)
 	},
+	"aws.autoscaling.group.launchConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetLaunchConfiguration()).ToDataRes(types.Resource("aws.ec2.launchconfiguration"))
+	},
 	"aws.autoscaling.group.healthCheckGracePeriod": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAutoscalingGroup).GetHealthCheckGracePeriod()).ToDataRes(types.Int)
 	},
@@ -6188,6 +6216,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.cloudfront.distribution.comment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfrontDistribution).GetComment()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.distribution.logging": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistribution).GetLogging()).ToDataRes(types.Resource("aws.cloudfront.distribution.loggingConfig"))
+	},
+	"aws.cloudfront.distribution.loggingConfig.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistributionLoggingConfig).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.cloudfront.distribution.loggingConfig.bucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistributionLoggingConfig).GetBucket()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.distribution.loggingConfig.prefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistributionLoggingConfig).GetPrefix()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.distribution.loggingConfig.includeCookies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistributionLoggingConfig).GetIncludeCookies()).ToDataRes(types.Bool)
 	},
 	"aws.cloudfront.distribution.origin.domainName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfrontDistributionOrigin).GetDomainName()).ToDataRes(types.String)
@@ -8940,6 +8983,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.launchTemplates": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2).GetLaunchTemplates()).ToDataRes(types.Array(types.Resource("aws.ec2.launchtemplate")))
 	},
+	"aws.ec2.launchConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2).GetLaunchConfigurations()).ToDataRes(types.Array(types.Resource("aws.ec2.launchconfiguration")))
+	},
 	"aws.ec2.eip.publicIp": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Eip).GetPublicIp()).ToDataRes(types.String)
 	},
@@ -9257,6 +9303,96 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.launchtemplate.userData": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Launchtemplate).GetUserData()).ToDataRes(types.String)
+	},
+	"aws.ec2.launchconfiguration.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Launchconfiguration).GetArn()).ToDataRes(types.String)
+	},
+	"aws.ec2.launchconfiguration.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Launchconfiguration).GetName()).ToDataRes(types.String)
+	},
+	"aws.ec2.launchconfiguration.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Launchconfiguration).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.ec2.launchconfiguration.imageId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Launchconfiguration).GetImageId()).ToDataRes(types.String)
+	},
+	"aws.ec2.launchconfiguration.instanceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Launchconfiguration).GetInstanceType()).ToDataRes(types.String)
+	},
+	"aws.ec2.launchconfiguration.keyName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Launchconfiguration).GetKeyName()).ToDataRes(types.String)
+	},
+	"aws.ec2.launchconfiguration.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Launchconfiguration).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.ec2.launchconfiguration.associatePublicIpAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Launchconfiguration).GetAssociatePublicIpAddress()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.launchconfiguration.ebsOptimized": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Launchconfiguration).GetEbsOptimized()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.launchconfiguration.blockDeviceMappings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Launchconfiguration).GetBlockDeviceMappings()).ToDataRes(types.Array(types.Resource("aws.ec2.launchconfiguration.blockDeviceMapping")))
+	},
+	"aws.ec2.launchconfiguration.detailedMonitoringEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Launchconfiguration).GetDetailedMonitoringEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.launchconfiguration.iamInstanceProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Launchconfiguration).GetIamInstanceProfile()).ToDataRes(types.String)
+	},
+	"aws.ec2.launchconfiguration.spotPrice": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Launchconfiguration).GetSpotPrice()).ToDataRes(types.String)
+	},
+	"aws.ec2.launchconfiguration.placementTenancy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Launchconfiguration).GetPlacementTenancy()).ToDataRes(types.String)
+	},
+	"aws.ec2.launchconfiguration.metadataOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Launchconfiguration).GetMetadataOptions()).ToDataRes(types.Resource("aws.ec2.launchconfiguration.metadataOptions"))
+	},
+	"aws.ec2.launchconfiguration.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Launchconfiguration).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.ec2.launchconfiguration.blockDeviceMapping.deviceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2LaunchconfigurationBlockDeviceMapping).GetDeviceName()).ToDataRes(types.String)
+	},
+	"aws.ec2.launchconfiguration.blockDeviceMapping.virtualName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2LaunchconfigurationBlockDeviceMapping).GetVirtualName()).ToDataRes(types.String)
+	},
+	"aws.ec2.launchconfiguration.blockDeviceMapping.noDevice": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2LaunchconfigurationBlockDeviceMapping).GetNoDevice()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.launchconfiguration.blockDeviceMapping.ebs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2LaunchconfigurationBlockDeviceMapping).GetEbs()).ToDataRes(types.Resource("aws.ec2.launchconfiguration.ebsBlockDevice"))
+	},
+	"aws.ec2.launchconfiguration.ebsBlockDevice.encrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2LaunchconfigurationEbsBlockDevice).GetEncrypted()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.launchconfiguration.ebsBlockDevice.snapshotId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2LaunchconfigurationEbsBlockDevice).GetSnapshotId()).ToDataRes(types.String)
+	},
+	"aws.ec2.launchconfiguration.ebsBlockDevice.volumeSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2LaunchconfigurationEbsBlockDevice).GetVolumeSize()).ToDataRes(types.Int)
+	},
+	"aws.ec2.launchconfiguration.ebsBlockDevice.volumeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2LaunchconfigurationEbsBlockDevice).GetVolumeType()).ToDataRes(types.String)
+	},
+	"aws.ec2.launchconfiguration.ebsBlockDevice.iops": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2LaunchconfigurationEbsBlockDevice).GetIops()).ToDataRes(types.Int)
+	},
+	"aws.ec2.launchconfiguration.ebsBlockDevice.throughput": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2LaunchconfigurationEbsBlockDevice).GetThroughput()).ToDataRes(types.Int)
+	},
+	"aws.ec2.launchconfiguration.ebsBlockDevice.deleteOnTermination": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2LaunchconfigurationEbsBlockDevice).GetDeleteOnTermination()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.launchconfiguration.metadataOptions.httpTokens": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2LaunchconfigurationMetadataOptions).GetHttpTokens()).ToDataRes(types.String)
+	},
+	"aws.ec2.launchconfiguration.metadataOptions.httpEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2LaunchconfigurationMetadataOptions).GetHttpEndpoint()).ToDataRes(types.String)
+	},
+	"aws.ec2.launchconfiguration.metadataOptions.httpPutResponseHopLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2LaunchconfigurationMetadataOptions).GetHttpPutResponseHopLimit()).ToDataRes(types.Int)
 	},
 	"aws.ec2.snapshot.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Snapshot).GetArn()).ToDataRes(types.String)
@@ -16995,6 +17131,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsAutoscalingGroup).LaunchConfigurationName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.autoscaling.group.launchConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).LaunchConfiguration, ok = plugin.RawToTValue[*mqlAwsEc2Launchconfiguration](v.Value, v.Error)
+		return
+	},
 	"aws.autoscaling.group.healthCheckGracePeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAutoscalingGroup).HealthCheckGracePeriod, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -19485,6 +19625,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.cloudfront.distribution.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudfrontDistribution).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.logging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistribution).Logging, ok = plugin.RawToTValue[*mqlAwsCloudfrontDistributionLoggingConfig](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.loggingConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistributionLoggingConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.cloudfront.distribution.loggingConfig.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistributionLoggingConfig).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.loggingConfig.bucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistributionLoggingConfig).Bucket, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.loggingConfig.prefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistributionLoggingConfig).Prefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.loggingConfig.includeCookies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistributionLoggingConfig).IncludeCookies, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.cloudfront.distribution.origin.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -23503,6 +23667,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2).LaunchTemplates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.launchConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2).LaunchConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.eip.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Eip).__id, ok = v.Value.(string)
 		return
@@ -23985,6 +24153,142 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.launchtemplate.userData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Launchtemplate).UserData, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchconfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchconfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ec2.launchconfiguration.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchconfiguration).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchconfiguration.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchconfiguration).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchconfiguration.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchconfiguration).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchconfiguration.imageId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchconfiguration).ImageId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchconfiguration.instanceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchconfiguration).InstanceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchconfiguration.keyName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchconfiguration).KeyName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchconfiguration.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchconfiguration).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchconfiguration.associatePublicIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchconfiguration).AssociatePublicIpAddress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchconfiguration.ebsOptimized": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchconfiguration).EbsOptimized, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchconfiguration.blockDeviceMappings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchconfiguration).BlockDeviceMappings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchconfiguration.detailedMonitoringEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchconfiguration).DetailedMonitoringEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchconfiguration.iamInstanceProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchconfiguration).IamInstanceProfile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchconfiguration.spotPrice": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchconfiguration).SpotPrice, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchconfiguration.placementTenancy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchconfiguration).PlacementTenancy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchconfiguration.metadataOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchconfiguration).MetadataOptions, ok = plugin.RawToTValue[*mqlAwsEc2LaunchconfigurationMetadataOptions](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchconfiguration.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchconfiguration).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchconfiguration.blockDeviceMapping.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2LaunchconfigurationBlockDeviceMapping).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ec2.launchconfiguration.blockDeviceMapping.deviceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2LaunchconfigurationBlockDeviceMapping).DeviceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchconfiguration.blockDeviceMapping.virtualName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2LaunchconfigurationBlockDeviceMapping).VirtualName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchconfiguration.blockDeviceMapping.noDevice": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2LaunchconfigurationBlockDeviceMapping).NoDevice, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchconfiguration.blockDeviceMapping.ebs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2LaunchconfigurationBlockDeviceMapping).Ebs, ok = plugin.RawToTValue[*mqlAwsEc2LaunchconfigurationEbsBlockDevice](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchconfiguration.ebsBlockDevice.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2LaunchconfigurationEbsBlockDevice).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ec2.launchconfiguration.ebsBlockDevice.encrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2LaunchconfigurationEbsBlockDevice).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchconfiguration.ebsBlockDevice.snapshotId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2LaunchconfigurationEbsBlockDevice).SnapshotId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchconfiguration.ebsBlockDevice.volumeSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2LaunchconfigurationEbsBlockDevice).VolumeSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchconfiguration.ebsBlockDevice.volumeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2LaunchconfigurationEbsBlockDevice).VolumeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchconfiguration.ebsBlockDevice.iops": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2LaunchconfigurationEbsBlockDevice).Iops, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchconfiguration.ebsBlockDevice.throughput": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2LaunchconfigurationEbsBlockDevice).Throughput, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchconfiguration.ebsBlockDevice.deleteOnTermination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2LaunchconfigurationEbsBlockDevice).DeleteOnTermination, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchconfiguration.metadataOptions.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2LaunchconfigurationMetadataOptions).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ec2.launchconfiguration.metadataOptions.httpTokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2LaunchconfigurationMetadataOptions).HttpTokens, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchconfiguration.metadataOptions.httpEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2LaunchconfigurationMetadataOptions).HttpEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchconfiguration.metadataOptions.httpPutResponseHopLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2LaunchconfigurationMetadataOptions).HttpPutResponseHopLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -39774,6 +40078,7 @@ type mqlAwsAutoscalingGroup struct {
 	MaxSize                          plugin.TValue[int64]
 	DefaultCooldown                  plugin.TValue[int64]
 	LaunchConfigurationName          plugin.TValue[string]
+	LaunchConfiguration              plugin.TValue[*mqlAwsEc2Launchconfiguration]
 	HealthCheckGracePeriod           plugin.TValue[int64]
 	CreatedAt                        plugin.TValue[*time.Time]
 	MaxInstanceLifetime              plugin.TValue[int64]
@@ -39869,6 +40174,22 @@ func (c *mqlAwsAutoscalingGroup) GetDefaultCooldown() *plugin.TValue[int64] {
 
 func (c *mqlAwsAutoscalingGroup) GetLaunchConfigurationName() *plugin.TValue[string] {
 	return &c.LaunchConfigurationName
+}
+
+func (c *mqlAwsAutoscalingGroup) GetLaunchConfiguration() *plugin.TValue[*mqlAwsEc2Launchconfiguration] {
+	return plugin.GetOrCompute[*mqlAwsEc2Launchconfiguration](&c.LaunchConfiguration, func() (*mqlAwsEc2Launchconfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.autoscaling.group", c.__id, "launchConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Launchconfiguration), nil
+			}
+		}
+
+		return c.launchConfiguration()
+	})
 }
 
 func (c *mqlAwsAutoscalingGroup) GetHealthCheckGracePeriod() *plugin.TValue[int64] {
@@ -46653,6 +46974,7 @@ type mqlAwsCloudfrontDistribution struct {
 	GeoRestrictionType     plugin.TValue[string]
 	LastModifiedAt         plugin.TValue[*time.Time]
 	Comment                plugin.TValue[string]
+	Logging                plugin.TValue[*mqlAwsCloudfrontDistributionLoggingConfig]
 }
 
 // createAwsCloudfrontDistribution creates a new instance of this resource
@@ -46762,6 +47084,81 @@ func (c *mqlAwsCloudfrontDistribution) GetLastModifiedAt() *plugin.TValue[*time.
 
 func (c *mqlAwsCloudfrontDistribution) GetComment() *plugin.TValue[string] {
 	return &c.Comment
+}
+
+func (c *mqlAwsCloudfrontDistribution) GetLogging() *plugin.TValue[*mqlAwsCloudfrontDistributionLoggingConfig] {
+	return plugin.GetOrCompute[*mqlAwsCloudfrontDistributionLoggingConfig](&c.Logging, func() (*mqlAwsCloudfrontDistributionLoggingConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudfront.distribution", c.__id, "logging")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCloudfrontDistributionLoggingConfig), nil
+			}
+		}
+
+		return c.logging()
+	})
+}
+
+// mqlAwsCloudfrontDistributionLoggingConfig for the aws.cloudfront.distribution.loggingConfig resource
+type mqlAwsCloudfrontDistributionLoggingConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsCloudfrontDistributionLoggingConfigInternal it will be used here
+	Enabled        plugin.TValue[bool]
+	Bucket         plugin.TValue[string]
+	Prefix         plugin.TValue[string]
+	IncludeCookies plugin.TValue[bool]
+}
+
+// createAwsCloudfrontDistributionLoggingConfig creates a new instance of this resource
+func createAwsCloudfrontDistributionLoggingConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCloudfrontDistributionLoggingConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.cloudfront.distribution.loggingConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCloudfrontDistributionLoggingConfig) MqlName() string {
+	return "aws.cloudfront.distribution.loggingConfig"
+}
+
+func (c *mqlAwsCloudfrontDistributionLoggingConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCloudfrontDistributionLoggingConfig) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAwsCloudfrontDistributionLoggingConfig) GetBucket() *plugin.TValue[string] {
+	return &c.Bucket
+}
+
+func (c *mqlAwsCloudfrontDistributionLoggingConfig) GetPrefix() *plugin.TValue[string] {
+	return &c.Prefix
+}
+
+func (c *mqlAwsCloudfrontDistributionLoggingConfig) GetIncludeCookies() *plugin.TValue[bool] {
+	return &c.IncludeCookies
 }
 
 // mqlAwsCloudfrontDistributionOrigin for the aws.cloudfront.distribution.origin resource
@@ -56441,6 +56838,7 @@ type mqlAwsEc2 struct {
 	Images                 plugin.TValue[[]any]
 	TransitGateways        plugin.TValue[[]any]
 	LaunchTemplates        plugin.TValue[[]any]
+	LaunchConfigurations   plugin.TValue[[]any]
 }
 
 // createAwsEc2 creates a new instance of this resource
@@ -56675,6 +57073,22 @@ func (c *mqlAwsEc2) GetLaunchTemplates() *plugin.TValue[[]any] {
 		}
 
 		return c.launchTemplates()
+	})
+}
+
+func (c *mqlAwsEc2) GetLaunchConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LaunchConfigurations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2", c.__id, "launchConfigurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.launchConfigurations()
 	})
 }
 
@@ -57985,6 +58399,329 @@ func (c *mqlAwsEc2Launchtemplate) GetUserData() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.UserData, func() (string, error) {
 		return c.userData()
 	})
+}
+
+// mqlAwsEc2Launchconfiguration for the aws.ec2.launchconfiguration resource
+type mqlAwsEc2Launchconfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEc2LaunchconfigurationInternal
+	Arn                       plugin.TValue[string]
+	Name                      plugin.TValue[string]
+	Region                    plugin.TValue[string]
+	ImageId                   plugin.TValue[string]
+	InstanceType              plugin.TValue[string]
+	KeyName                   plugin.TValue[string]
+	SecurityGroups            plugin.TValue[[]any]
+	AssociatePublicIpAddress  plugin.TValue[bool]
+	EbsOptimized              plugin.TValue[bool]
+	BlockDeviceMappings       plugin.TValue[[]any]
+	DetailedMonitoringEnabled plugin.TValue[bool]
+	IamInstanceProfile        plugin.TValue[string]
+	SpotPrice                 plugin.TValue[string]
+	PlacementTenancy          plugin.TValue[string]
+	MetadataOptions           plugin.TValue[*mqlAwsEc2LaunchconfigurationMetadataOptions]
+	CreatedAt                 plugin.TValue[*time.Time]
+}
+
+// createAwsEc2Launchconfiguration creates a new instance of this resource
+func createAwsEc2Launchconfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEc2Launchconfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ec2.launchconfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEc2Launchconfiguration) MqlName() string {
+	return "aws.ec2.launchconfiguration"
+}
+
+func (c *mqlAwsEc2Launchconfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEc2Launchconfiguration) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsEc2Launchconfiguration) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsEc2Launchconfiguration) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsEc2Launchconfiguration) GetImageId() *plugin.TValue[string] {
+	return &c.ImageId
+}
+
+func (c *mqlAwsEc2Launchconfiguration) GetInstanceType() *plugin.TValue[string] {
+	return &c.InstanceType
+}
+
+func (c *mqlAwsEc2Launchconfiguration) GetKeyName() *plugin.TValue[string] {
+	return &c.KeyName
+}
+
+func (c *mqlAwsEc2Launchconfiguration) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.launchconfiguration", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsEc2Launchconfiguration) GetAssociatePublicIpAddress() *plugin.TValue[bool] {
+	return &c.AssociatePublicIpAddress
+}
+
+func (c *mqlAwsEc2Launchconfiguration) GetEbsOptimized() *plugin.TValue[bool] {
+	return &c.EbsOptimized
+}
+
+func (c *mqlAwsEc2Launchconfiguration) GetBlockDeviceMappings() *plugin.TValue[[]any] {
+	return &c.BlockDeviceMappings
+}
+
+func (c *mqlAwsEc2Launchconfiguration) GetDetailedMonitoringEnabled() *plugin.TValue[bool] {
+	return &c.DetailedMonitoringEnabled
+}
+
+func (c *mqlAwsEc2Launchconfiguration) GetIamInstanceProfile() *plugin.TValue[string] {
+	return &c.IamInstanceProfile
+}
+
+func (c *mqlAwsEc2Launchconfiguration) GetSpotPrice() *plugin.TValue[string] {
+	return &c.SpotPrice
+}
+
+func (c *mqlAwsEc2Launchconfiguration) GetPlacementTenancy() *plugin.TValue[string] {
+	return &c.PlacementTenancy
+}
+
+func (c *mqlAwsEc2Launchconfiguration) GetMetadataOptions() *plugin.TValue[*mqlAwsEc2LaunchconfigurationMetadataOptions] {
+	return &c.MetadataOptions
+}
+
+func (c *mqlAwsEc2Launchconfiguration) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+// mqlAwsEc2LaunchconfigurationBlockDeviceMapping for the aws.ec2.launchconfiguration.blockDeviceMapping resource
+type mqlAwsEc2LaunchconfigurationBlockDeviceMapping struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEc2LaunchconfigurationBlockDeviceMappingInternal it will be used here
+	DeviceName  plugin.TValue[string]
+	VirtualName plugin.TValue[string]
+	NoDevice    plugin.TValue[bool]
+	Ebs         plugin.TValue[*mqlAwsEc2LaunchconfigurationEbsBlockDevice]
+}
+
+// createAwsEc2LaunchconfigurationBlockDeviceMapping creates a new instance of this resource
+func createAwsEc2LaunchconfigurationBlockDeviceMapping(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEc2LaunchconfigurationBlockDeviceMapping{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ec2.launchconfiguration.blockDeviceMapping", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEc2LaunchconfigurationBlockDeviceMapping) MqlName() string {
+	return "aws.ec2.launchconfiguration.blockDeviceMapping"
+}
+
+func (c *mqlAwsEc2LaunchconfigurationBlockDeviceMapping) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEc2LaunchconfigurationBlockDeviceMapping) GetDeviceName() *plugin.TValue[string] {
+	return &c.DeviceName
+}
+
+func (c *mqlAwsEc2LaunchconfigurationBlockDeviceMapping) GetVirtualName() *plugin.TValue[string] {
+	return &c.VirtualName
+}
+
+func (c *mqlAwsEc2LaunchconfigurationBlockDeviceMapping) GetNoDevice() *plugin.TValue[bool] {
+	return &c.NoDevice
+}
+
+func (c *mqlAwsEc2LaunchconfigurationBlockDeviceMapping) GetEbs() *plugin.TValue[*mqlAwsEc2LaunchconfigurationEbsBlockDevice] {
+	return &c.Ebs
+}
+
+// mqlAwsEc2LaunchconfigurationEbsBlockDevice for the aws.ec2.launchconfiguration.ebsBlockDevice resource
+type mqlAwsEc2LaunchconfigurationEbsBlockDevice struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEc2LaunchconfigurationEbsBlockDeviceInternal it will be used here
+	Encrypted           plugin.TValue[bool]
+	SnapshotId          plugin.TValue[string]
+	VolumeSize          plugin.TValue[int64]
+	VolumeType          plugin.TValue[string]
+	Iops                plugin.TValue[int64]
+	Throughput          plugin.TValue[int64]
+	DeleteOnTermination plugin.TValue[bool]
+}
+
+// createAwsEc2LaunchconfigurationEbsBlockDevice creates a new instance of this resource
+func createAwsEc2LaunchconfigurationEbsBlockDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEc2LaunchconfigurationEbsBlockDevice{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ec2.launchconfiguration.ebsBlockDevice", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEc2LaunchconfigurationEbsBlockDevice) MqlName() string {
+	return "aws.ec2.launchconfiguration.ebsBlockDevice"
+}
+
+func (c *mqlAwsEc2LaunchconfigurationEbsBlockDevice) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEc2LaunchconfigurationEbsBlockDevice) GetEncrypted() *plugin.TValue[bool] {
+	return &c.Encrypted
+}
+
+func (c *mqlAwsEc2LaunchconfigurationEbsBlockDevice) GetSnapshotId() *plugin.TValue[string] {
+	return &c.SnapshotId
+}
+
+func (c *mqlAwsEc2LaunchconfigurationEbsBlockDevice) GetVolumeSize() *plugin.TValue[int64] {
+	return &c.VolumeSize
+}
+
+func (c *mqlAwsEc2LaunchconfigurationEbsBlockDevice) GetVolumeType() *plugin.TValue[string] {
+	return &c.VolumeType
+}
+
+func (c *mqlAwsEc2LaunchconfigurationEbsBlockDevice) GetIops() *plugin.TValue[int64] {
+	return &c.Iops
+}
+
+func (c *mqlAwsEc2LaunchconfigurationEbsBlockDevice) GetThroughput() *plugin.TValue[int64] {
+	return &c.Throughput
+}
+
+func (c *mqlAwsEc2LaunchconfigurationEbsBlockDevice) GetDeleteOnTermination() *plugin.TValue[bool] {
+	return &c.DeleteOnTermination
+}
+
+// mqlAwsEc2LaunchconfigurationMetadataOptions for the aws.ec2.launchconfiguration.metadataOptions resource
+type mqlAwsEc2LaunchconfigurationMetadataOptions struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEc2LaunchconfigurationMetadataOptionsInternal it will be used here
+	HttpTokens              plugin.TValue[string]
+	HttpEndpoint            plugin.TValue[string]
+	HttpPutResponseHopLimit plugin.TValue[int64]
+}
+
+// createAwsEc2LaunchconfigurationMetadataOptions creates a new instance of this resource
+func createAwsEc2LaunchconfigurationMetadataOptions(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEc2LaunchconfigurationMetadataOptions{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ec2.launchconfiguration.metadataOptions", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEc2LaunchconfigurationMetadataOptions) MqlName() string {
+	return "aws.ec2.launchconfiguration.metadataOptions"
+}
+
+func (c *mqlAwsEc2LaunchconfigurationMetadataOptions) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEc2LaunchconfigurationMetadataOptions) GetHttpTokens() *plugin.TValue[string] {
+	return &c.HttpTokens
+}
+
+func (c *mqlAwsEc2LaunchconfigurationMetadataOptions) GetHttpEndpoint() *plugin.TValue[string] {
+	return &c.HttpEndpoint
+}
+
+func (c *mqlAwsEc2LaunchconfigurationMetadataOptions) GetHttpPutResponseHopLimit() *plugin.TValue[int64] {
+	return &c.HttpPutResponseHopLimit
 }
 
 // mqlAwsEc2Snapshot for the aws.ec2.snapshot resource

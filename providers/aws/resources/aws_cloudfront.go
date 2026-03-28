@@ -6,8 +6,10 @@ package resources
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	"github.com/cockroachdb/errors"
 	"go.mondoo.com/mql/v13/llx"
@@ -130,6 +132,55 @@ func (a *mqlAwsCloudfront) distributions() ([]any, error) {
 	}
 
 	return res, nil
+}
+
+func (a *mqlAwsCloudfrontDistributionLoggingConfig) id() (string, error) {
+	return a.Bucket.Data + "/" + a.Prefix.Data, nil
+}
+
+func (a *mqlAwsCloudfrontDistribution) logging() (*mqlAwsCloudfrontDistributionLoggingConfig, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Cloudfront("") // global service
+	ctx := context.Background()
+
+	// Extract distribution ID from ARN: arn:aws:cloudfront::ACCOUNT:distribution/DIST_ID
+	distArn := a.Arn.Data
+	parsedArn, err := arn.Parse(distArn)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not parse cloudfront distribution ARN")
+	}
+	// Resource is "distribution/DIST_ID"
+	parts := strings.SplitN(parsedArn.Resource, "/", 2)
+	if len(parts) < 2 {
+		return nil, fmt.Errorf("unexpected cloudfront distribution ARN resource format: %s", parsedArn.Resource)
+	}
+	distID := parts[1]
+
+	resp, err := svc.GetDistribution(ctx, &cloudfront.GetDistributionInput{
+		Id: &distID,
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "could not get cloudfront distribution details")
+	}
+
+	if resp.Distribution == nil || resp.Distribution.DistributionConfig == nil || resp.Distribution.DistributionConfig.Logging == nil {
+		a.Logging.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	logging := resp.Distribution.DistributionConfig.Logging
+	mqlLogging, err := CreateResource(a.MqlRuntime, ResourceAwsCloudfrontDistributionLoggingConfig,
+		map[string]*llx.RawData{
+			"__id":           llx.StringData(distArn + "/logging"),
+			"enabled":        llx.BoolDataPtr(logging.Enabled),
+			"bucket":         llx.StringDataPtr(logging.Bucket),
+			"prefix":         llx.StringDataPtr(logging.Prefix),
+			"includeCookies": llx.BoolDataPtr(logging.IncludeCookies),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlLogging.(*mqlAwsCloudfrontDistributionLoggingConfig), nil
 }
 
 func (a *mqlAwsCloudfrontFunction) id() (string, error) {

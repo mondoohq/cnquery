@@ -271,3 +271,20 @@ func createTagSpecifications(runtime *plugin.Runtime, tags []ec2types.TagDescrip
 
 	return tagSpecs, nil
 }
+
+func (a *mqlAwsAutoscalingGroup) launchConfiguration() (*mqlAwsEc2Launchconfiguration, error) {
+	lcName := a.LaunchConfigurationName.Data
+	if lcName == "" {
+		a.LaunchConfiguration.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	mqlLc, err := NewResource(a.MqlRuntime, "aws.ec2.launchconfiguration",
+		map[string]*llx.RawData{
+			"name":   llx.StringData(lcName),
+			"region": llx.StringData(a.region),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlLc.(*mqlAwsEc2Launchconfiguration), nil
+}

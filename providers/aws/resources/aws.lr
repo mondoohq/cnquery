@@ -2054,6 +2054,8 @@ private aws.autoscaling.group @defaults("name region minSize maxSize") {
   defaultCooldown int
   // Launch configuration name
   launchConfigurationName string
+  // Launch configuration associated with the group
+  launchConfiguration() aws.ec2.launchconfiguration
   // Grace period in seconds before an instance with a failing health check is replaced
   healthCheckGracePeriod int
   // Time when the autoscaling group was created
@@ -3447,6 +3449,20 @@ private aws.cloudfront.distribution @defaults("domainName status") {
   lastModifiedAt time
   // User-provided comment or description for the distribution
   comment string
+  // Logging configuration for the distribution
+  logging() aws.cloudfront.distribution.loggingConfig
+}
+
+// Amazon CloudFront distribution logging configuration
+private aws.cloudfront.distribution.loggingConfig {
+  // Whether logging is enabled
+  enabled bool
+  // S3 bucket for storing access logs
+  bucket string
+  // Optional prefix for log filenames
+  prefix string
+  // Whether cookies are included in access logs
+  includeCookies bool
 }
 
 // Amazon CloudFront distribution origin
@@ -5630,6 +5646,8 @@ aws.ec2 {
   transitGateways() []aws.ec2.transitgateway
   // List of launch templates
   launchTemplates() []aws.ec2.launchtemplate
+  // List of launch configurations (legacy, used by Auto Scaling)
+  launchConfigurations() []aws.ec2.launchconfiguration
 }
 
 // Amazon Elastic IP (EIP)
@@ -5901,6 +5919,82 @@ private aws.ec2.launchtemplate @defaults("name region") {
   tags map[string]string
   // User data from the default version (base64-decoded)
   userData() string
+}
+
+// Amazon EC2 launch configuration (legacy, used by Auto Scaling)
+private aws.ec2.launchconfiguration @defaults("name region") {
+  // ARN of the launch configuration
+  arn string
+  // Name of the launch configuration
+  name string
+  // Region for the launch configuration
+  region string
+  // AMI ID used by the launch configuration
+  imageId string
+  // Instance type
+  instanceType string
+  // Name of the key pair
+  keyName string
+  // Security groups associated with the launch configuration
+  securityGroups() []aws.ec2.securitygroup
+  // Whether instances are launched with a public IP address
+  associatePublicIpAddress bool
+  // Whether EBS volumes are optimized
+  ebsOptimized bool
+  // Block device mappings
+  blockDeviceMappings []aws.ec2.launchconfiguration.blockDeviceMapping
+  // Whether detailed monitoring is enabled
+  detailedMonitoringEnabled bool
+  // IAM instance profile ARN or name
+  iamInstanceProfile string
+  // Spot price for instances
+  spotPrice string
+  // Placement tenancy
+  placementTenancy string
+  // Instance metadata options (for IMDSv2 checks)
+  metadataOptions aws.ec2.launchconfiguration.metadataOptions
+  // Time the launch configuration was created
+  createdAt time
+}
+
+// Block device mapping for a launch configuration
+private aws.ec2.launchconfiguration.blockDeviceMapping @defaults("deviceName") {
+  // Device name (e.g., /dev/sda1, /dev/xvda)
+  deviceName string
+  // Virtual device name for instance store (ephemeral0, ephemeral1, etc.)
+  virtualName string
+  // Whether to suppress this device mapping
+  noDevice bool
+  // EBS volume configuration (null for instance store volumes)
+  ebs aws.ec2.launchconfiguration.ebsBlockDevice
+}
+
+// EBS block device configuration for a launch configuration
+private aws.ec2.launchconfiguration.ebsBlockDevice @defaults("volumeSize volumeType encrypted") {
+  // Whether the volume is encrypted
+  encrypted bool
+  // ID of the snapshot used to create the volume
+  snapshotId string
+  // Size of the volume in GiB
+  volumeSize int
+  // Volume type (gp2, gp3, io1, io2, etc.)
+  volumeType string
+  // IOPS for the volume
+  iops int
+  // Throughput in MiB/s
+  throughput int
+  // Whether to delete on instance termination
+  deleteOnTermination bool
+}
+
+// Instance metadata options for a launch configuration (IMDSv2 settings)
+private aws.ec2.launchconfiguration.metadataOptions {
+  // Whether IMDSv2 is required ("optional" or "required")
+  httpTokens string
+  // Whether the metadata service is enabled ("enabled" or "disabled")
+  httpEndpoint string
+  // Maximum number of hops for the metadata token
+  httpPutResponseHopLimit int
 }
 
 // Amazon EC2 (EBS) snapshot
