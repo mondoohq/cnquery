@@ -2263,6 +2263,30 @@ private macos.firewall.app @defaults("name state") {
   state int
 }
 
+// macOS FileVault full-disk encryption
+macos.filevault @defaults("enabled status") {
+  // Whether FileVault is enabled
+  enabled() bool
+  // FileVault status (On, Off, Encryption in progress, Decryption in progress)
+  status() string
+}
+
+// macOS Gatekeeper application execution policy
+macos.gatekeeper @defaults("enabled") {
+  // Whether Gatekeeper assessments are enabled
+  enabled() bool
+  // Gatekeeper assessment status (assessments enabled, assessments disabled)
+  status() string
+}
+
+// macOS System Integrity Protection (SIP)
+macos.sip @defaults("enabled") {
+  // Whether System Integrity Protection is enabled
+  enabled() bool
+  // SIP status message
+  status() string
+}
+
 // macOS Time Machine
 macos.timemachine {
   // macOS Time Machine preferences

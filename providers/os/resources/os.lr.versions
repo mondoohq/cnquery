@@ -524,6 +524,9 @@ macos.alf.loggingOption 9.0.1
 macos.alf.stealthEnabled 9.0.1
 macos.alf.version 9.0.1
 macos.computerName 11.4.68
+macos.filevault 13.5.1
+macos.filevault.enabled 13.5.1
+macos.filevault.status 13.5.1
 macos.firewall 13.3.1
 macos.firewall.allowDownloadSignedApps 13.3.1
 macos.firewall.allowSignedApps 13.3.1
@@ -540,6 +543,9 @@ macos.firewall.loggingDetail 13.3.1
 macos.firewall.loggingEnabled 13.3.1
 macos.firewall.stealthEnabled 13.3.1
 macos.firewall.version 13.3.1
+macos.gatekeeper 13.5.1
+macos.gatekeeper.enabled 13.5.1
+macos.gatekeeper.status 13.5.1
 macos.globalAccountPolicies 9.0.1
 macos.hardware 11.4.68
 macos.hardware.activationLockStatus 11.4.68
@@ -554,6 +560,9 @@ macos.hardware.physicalMemory 11.4.68
 macos.hardware.platformUUID 11.4.68
 macos.hardware.provisioningUDID 11.4.68
 macos.hardware.serialNumber 11.4.68
+macos.sip 13.5.1
+macos.sip.enabled 13.5.1
+macos.sip.status 13.5.1
 macos.systemExtension 11.2.20
 macos.systemExtension.active 11.2.20
 macos.systemExtension.bundlePath 11.2.20

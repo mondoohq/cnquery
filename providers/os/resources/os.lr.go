@@ -179,6 +179,9 @@ const (
 	ResourceMacosAlf                   string = "macos.alf"
 	ResourceMacosFirewall              string = "macos.firewall"
 	ResourceMacosFirewallApp           string = "macos.firewall.app"
+	ResourceMacosFilevault             string = "macos.filevault"
+	ResourceMacosGatekeeper            string = "macos.gatekeeper"
+	ResourceMacosSip                   string = "macos.sip"
 	ResourceMacosTimemachine           string = "macos.timemachine"
 	ResourceMacosSystemsetup           string = "macos.systemsetup"
 	ResourceOpenBSMAudit               string = "openBSMAudit"
@@ -878,6 +881,18 @@ func init() {
 		"macos.firewall.app": {
 			// to override args, implement: initMacosFirewallApp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMacosFirewallApp,
+		},
+		"macos.filevault": {
+			// to override args, implement: initMacosFilevault(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMacosFilevault,
+		},
+		"macos.gatekeeper": {
+			// to override args, implement: initMacosGatekeeper(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMacosGatekeeper,
+		},
+		"macos.sip": {
+			// to override args, implement: initMacosSip(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMacosSip,
 		},
 		"macos.timemachine": {
 			// to override args, implement: initMacosTimemachine(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3497,6 +3512,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"macos.firewall.app.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacosFirewallApp).GetState()).ToDataRes(types.Int)
+	},
+	"macos.filevault.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosFilevault).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"macos.filevault.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosFilevault).GetStatus()).ToDataRes(types.String)
+	},
+	"macos.gatekeeper.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosGatekeeper).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"macos.gatekeeper.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosGatekeeper).GetStatus()).ToDataRes(types.String)
+	},
+	"macos.sip.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSip).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"macos.sip.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSip).GetStatus()).ToDataRes(types.String)
 	},
 	"macos.timemachine.preferences": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacosTimemachine).GetPreferences()).ToDataRes(types.Dict)
@@ -8259,6 +8292,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"macos.firewall.app.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMacosFirewallApp).State, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"macos.filevault.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosFilevault).__id, ok = v.Value.(string)
+		return
+	},
+	"macos.filevault.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosFilevault).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"macos.filevault.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosFilevault).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.gatekeeper.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosGatekeeper).__id, ok = v.Value.(string)
+		return
+	},
+	"macos.gatekeeper.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosGatekeeper).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"macos.gatekeeper.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosGatekeeper).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.sip.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSip).__id, ok = v.Value.(string)
+		return
+	},
+	"macos.sip.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSip).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"macos.sip.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSip).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"macos.timemachine.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -22832,6 +22901,165 @@ func (c *mqlMacosFirewallApp) GetBundleId() *plugin.TValue[string] {
 
 func (c *mqlMacosFirewallApp) GetState() *plugin.TValue[int64] {
 	return &c.State
+}
+
+// mqlMacosFilevault for the macos.filevault resource
+type mqlMacosFilevault struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMacosFilevaultInternal it will be used here
+	Enabled plugin.TValue[bool]
+	Status  plugin.TValue[string]
+}
+
+// createMacosFilevault creates a new instance of this resource
+func createMacosFilevault(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMacosFilevault{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("macos.filevault", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMacosFilevault) MqlName() string {
+	return "macos.filevault"
+}
+
+func (c *mqlMacosFilevault) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMacosFilevault) GetEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Enabled, func() (bool, error) {
+		return c.enabled()
+	})
+}
+
+func (c *mqlMacosFilevault) GetStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
+		return c.status()
+	})
+}
+
+// mqlMacosGatekeeper for the macos.gatekeeper resource
+type mqlMacosGatekeeper struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMacosGatekeeperInternal it will be used here
+	Enabled plugin.TValue[bool]
+	Status  plugin.TValue[string]
+}
+
+// createMacosGatekeeper creates a new instance of this resource
+func createMacosGatekeeper(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMacosGatekeeper{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("macos.gatekeeper", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMacosGatekeeper) MqlName() string {
+	return "macos.gatekeeper"
+}
+
+func (c *mqlMacosGatekeeper) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMacosGatekeeper) GetEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Enabled, func() (bool, error) {
+		return c.enabled()
+	})
+}
+
+func (c *mqlMacosGatekeeper) GetStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
+		return c.status()
+	})
+}
+
+// mqlMacosSip for the macos.sip resource
+type mqlMacosSip struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMacosSipInternal it will be used here
+	Enabled plugin.TValue[bool]
+	Status  plugin.TValue[string]
+}
+
+// createMacosSip creates a new instance of this resource
+func createMacosSip(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMacosSip{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("macos.sip", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMacosSip) MqlName() string {
+	return "macos.sip"
+}
+
+func (c *mqlMacosSip) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMacosSip) GetEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Enabled, func() (bool, error) {
+		return c.enabled()
+	})
+}
+
+func (c *mqlMacosSip) GetStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
+		return c.status()
+	})
 }
 
 // mqlMacosTimemachine for the macos.timemachine resource
