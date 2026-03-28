@@ -2269,10 +2269,16 @@ macos.filevault @defaults("enabled status") {
   enabled() bool
   // FileVault status (On, Off, Encryption in progress, Decryption in progress)
   status() string
+  // Whether a personal recovery key exists
+  hasPersonalRecoveryKey() bool
+  // Whether an institutional recovery key exists
+  hasInstitutionalRecoveryKey() bool
+  // Users that can unlock the FileVault encrypted drive
+  users() []string
 }
 
 // macOS Gatekeeper application execution policy
-macos.gatekeeper @defaults("enabled") {
+macos.gatekeeper @defaults("enabled status") {
   // Whether Gatekeeper assessments are enabled
   enabled() bool
   // Gatekeeper assessment status (assessments enabled, assessments disabled)
@@ -2280,7 +2286,7 @@ macos.gatekeeper @defaults("enabled") {
 }
 
 // macOS System Integrity Protection (SIP)
-macos.sip @defaults("enabled") {
+macos.sip @defaults("enabled status") {
   // Whether System Integrity Protection is enabled
   enabled() bool
   // SIP status message

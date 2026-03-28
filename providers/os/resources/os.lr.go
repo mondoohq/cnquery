@@ -3519,6 +3519,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"macos.filevault.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacosFilevault).GetStatus()).ToDataRes(types.String)
 	},
+	"macos.filevault.hasPersonalRecoveryKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosFilevault).GetHasPersonalRecoveryKey()).ToDataRes(types.Bool)
+	},
+	"macos.filevault.hasInstitutionalRecoveryKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosFilevault).GetHasInstitutionalRecoveryKey()).ToDataRes(types.Bool)
+	},
+	"macos.filevault.users": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosFilevault).GetUsers()).ToDataRes(types.Array(types.String))
+	},
 	"macos.gatekeeper.enabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacosGatekeeper).GetEnabled()).ToDataRes(types.Bool)
 	},
@@ -8304,6 +8313,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"macos.filevault.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMacosFilevault).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.filevault.hasPersonalRecoveryKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosFilevault).HasPersonalRecoveryKey, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"macos.filevault.hasInstitutionalRecoveryKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosFilevault).HasInstitutionalRecoveryKey, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"macos.filevault.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosFilevault).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"macos.gatekeeper.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -22907,9 +22928,12 @@ func (c *mqlMacosFirewallApp) GetState() *plugin.TValue[int64] {
 type mqlMacosFilevault struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMacosFilevaultInternal it will be used here
-	Enabled plugin.TValue[bool]
-	Status  plugin.TValue[string]
+	mqlMacosFilevaultInternal
+	Enabled                     plugin.TValue[bool]
+	Status                      plugin.TValue[string]
+	HasPersonalRecoveryKey      plugin.TValue[bool]
+	HasInstitutionalRecoveryKey plugin.TValue[bool]
+	Users                       plugin.TValue[[]any]
 }
 
 // createMacosFilevault creates a new instance of this resource
@@ -22956,11 +22980,29 @@ func (c *mqlMacosFilevault) GetStatus() *plugin.TValue[string] {
 	})
 }
 
+func (c *mqlMacosFilevault) GetHasPersonalRecoveryKey() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasPersonalRecoveryKey, func() (bool, error) {
+		return c.hasPersonalRecoveryKey()
+	})
+}
+
+func (c *mqlMacosFilevault) GetHasInstitutionalRecoveryKey() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasInstitutionalRecoveryKey, func() (bool, error) {
+		return c.hasInstitutionalRecoveryKey()
+	})
+}
+
+func (c *mqlMacosFilevault) GetUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Users, func() ([]any, error) {
+		return c.users()
+	})
+}
+
 // mqlMacosGatekeeper for the macos.gatekeeper resource
 type mqlMacosGatekeeper struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMacosGatekeeperInternal it will be used here
+	mqlMacosGatekeeperInternal
 	Enabled plugin.TValue[bool]
 	Status  plugin.TValue[string]
 }
@@ -23013,7 +23055,7 @@ func (c *mqlMacosGatekeeper) GetStatus() *plugin.TValue[string] {
 type mqlMacosSip struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMacosSipInternal it will be used here
+	mqlMacosSipInternal
 	Enabled plugin.TValue[bool]
 	Status  plugin.TValue[string]
 }
