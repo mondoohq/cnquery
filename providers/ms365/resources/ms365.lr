@@ -1031,7 +1031,7 @@ private microsoft.domaindnsrecord @defaults("id label") {
 }
 
 // Microsoft Entra ID application registration
-microsoft.application @defaults("id displayName hasExpiredCredentials") {
+microsoft.application @defaults("id name hasExpiredCredentials") {
   init(name string, id string)
   // Object ID
   id string
