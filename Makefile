@@ -138,7 +138,7 @@ define bundleProvider
 	tar -cf ${$@_DST} --no-same-owner \
 		--use-compress-program='xz -9v' \
 		-C ${$@_DIST} \
-		${$@_NAME} ${$@_NAME}.json ${$@_NAME}.resources.json
+		${$@_NAME}${BIN_SUFFIX} ${$@_NAME}.json ${$@_NAME}.resources.json
 	ls -lha ${$@_DST}
 endef
 
