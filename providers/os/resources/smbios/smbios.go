@@ -5,6 +5,7 @@ package smbios
 
 import (
 	"errors"
+	"sync"
 
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
@@ -60,7 +61,24 @@ type SmBiosManager interface {
 	Info() (*SmBiosInfo, error)
 }
 
+// managerCache caches SmBiosManager instances per connection ID so that repeated
+// calls to ResolveManager (from machine subresources, platform ID detectors,
+// cloud detectors, etc.) reuse the same manager and its cached SMBIOS data
+// instead of spawning a new heavy command (e.g. PowerShell on Windows) each time.
+//
+// The cache lives for the process lifetime. Entries are not evicted on disconnect
+// because the os provider has no Disconnect lifecycle hook. In practice this is
+// fine: connections are short-lived (one per scan) and the process exits after.
+var managerCache sync.Map // map[uint32]SmBiosManager
+
 func ResolveManager(conn shared.Connection, pf *inventory.Platform) (SmBiosManager, error) {
+	connID := conn.ID()
+
+	// Fast path: return cached manager without allocating a new one.
+	if mgr, ok := managerCache.Load(connID); ok {
+		return mgr.(SmBiosManager), nil
+	}
+
 	var biosM SmBiosManager
 
 	// check darwin before unix since darwin is also a unix
@@ -80,5 +98,6 @@ func ResolveManager(conn shared.Connection, pf *inventory.Platform) (SmBiosManag
 		return nil, errors.New("could not detect suitable smbios manager for platform: " + pf.Name)
 	}
 
-	return biosM, nil
+	mgr, _ := managerCache.LoadOrStore(connID, biosM)
+	return mgr.(SmBiosManager), nil
 }

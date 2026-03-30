@@ -17,7 +17,7 @@ import (
 // The testdata files live in providers/os/resources/smbios/testdata/.
 
 func TestBiosUUID_Linux(t *testing.T) {
-	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("../../resources/smbios/testdata/centos.toml"))
+	conn, err := mock.New(1, &inventory.Asset{}, mock.WithPath("../../resources/smbios/testdata/centos.toml"))
 	require.NoError(t, err)
 
 	platform, ok := detector.DetectOS(conn)
@@ -29,7 +29,7 @@ func TestBiosUUID_Linux(t *testing.T) {
 }
 
 func TestBiosUUID_Windows(t *testing.T) {
-	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("../../resources/smbios/testdata/windows.toml"))
+	conn, err := mock.New(2, &inventory.Asset{}, mock.WithPath("../../resources/smbios/testdata/windows.toml"))
 	require.NoError(t, err)
 
 	platform, ok := detector.DetectOS(conn)
@@ -41,7 +41,7 @@ func TestBiosUUID_Windows(t *testing.T) {
 }
 
 func TestBiosUUID_macOS(t *testing.T) {
-	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("../../resources/smbios/testdata/macos.toml"))
+	conn, err := mock.New(3, &inventory.Asset{}, mock.WithPath("../../resources/smbios/testdata/macos.toml"))
 	require.NoError(t, err)
 
 	platform, ok := detector.DetectOS(conn)
