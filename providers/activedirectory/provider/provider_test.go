@@ -4,9 +4,12 @@
 package provider
 
 import (
+	"os"
 	"testing"
 
+	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/activedirectory/connection"
 )
 
 func TestSetBoolOpt(t *testing.T) {
@@ -83,7 +86,75 @@ func TestParseCLINilFlagsDoesNotPanic(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected missing dc error")
 	}
-	if got, want := err.Error(), "dc flag is required: specify the domain controller hostname or IP address"; got != want {
+	if got, want := err.Error(), "dc flag is required: specify the domain controller hostname or IP address (or set LOGONSERVER)"; got != want {
 		t.Fatalf("ParseCLI() error = %q, want %q", got, want)
 	}
+}
+
+func TestParseCLIEnvFallbacks(t *testing.T) {
+	setEnv := func(t *testing.T, key, value string) {
+		t.Helper()
+		old, existed := os.LookupEnv(key)
+		t.Cleanup(func() {
+			if existed {
+				os.Setenv(key, old)
+			} else {
+				os.Unsetenv(key)
+			}
+		})
+		os.Setenv(key, value)
+	}
+
+	t.Run("LOGONSERVER provides dc", func(t *testing.T) {
+		setEnv(t, "LOGONSERVER", `\\DC01`)
+		setEnv(t, "USERDNSDOMAIN", "CORP.EXAMPLE.COM")
+		setEnv(t, "USERNAME", "alice")
+		svc := Init()
+		res, err := svc.ParseCLI(&plugin.ParseCLIReq{
+			Flags: map[string]*llx.Primitive{
+				"password": {Value: []byte("secret")},
+			},
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		opts := res.Asset.Connections[0].Options
+		if got := opts[connection.OptionDC]; got != "DC01" {
+			t.Errorf("dc = %q, want %q", got, "DC01")
+		}
+		if got := opts[connection.OptionDomain]; got != "CORP.EXAMPLE.COM" {
+			t.Errorf("domain = %q, want %q", got, "CORP.EXAMPLE.COM")
+		}
+		if got := opts[connection.OptionUser]; got != "alice@CORP.EXAMPLE.COM" {
+			t.Errorf("user = %q, want %q", got, "alice@CORP.EXAMPLE.COM")
+		}
+	})
+
+	t.Run("explicit flags override env", func(t *testing.T) {
+		setEnv(t, "LOGONSERVER", `\\DC01`)
+		setEnv(t, "USERDNSDOMAIN", "CORP.EXAMPLE.COM")
+		setEnv(t, "USERNAME", "alice")
+		svc := Init()
+		res, err := svc.ParseCLI(&plugin.ParseCLIReq{
+			Flags: map[string]*llx.Primitive{
+				"dc":       {Value: []byte("MYDC")},
+				"user":     {Value: []byte("bob@OTHER.COM")},
+				"domain":   {Value: []byte("OTHER.COM")},
+				"password": {Value: []byte("secret")},
+			},
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		opts := res.Asset.Connections[0].Options
+		if got := opts[connection.OptionDC]; got != "MYDC" {
+			t.Errorf("dc = %q, want %q", got, "MYDC")
+		}
+		if got := opts[connection.OptionDomain]; got != "OTHER.COM" {
+			t.Errorf("domain = %q, want %q", got, "OTHER.COM")
+		}
+		if got := opts[connection.OptionUser]; got != "bob@OTHER.COM" {
+			t.Errorf("user = %q, want %q", got, "bob@OTHER.COM")
+		}
+	})
 }

@@ -363,6 +363,21 @@ func TestGetDuplicates(t *testing.T) {
 	assert.Equal(t, []string{"res1.res2"}, dups)
 }
 
+// TestGetDuplicatesIgnoresSelfAliasedResourceField verifies that a field whose
+// fully-qualified path equals its own type is not reported as a duplicate.
+//
+// In LR this looks like:
+//
+//	activedirectory {
+//	  passwordPolicy() activedirectory.passwordPolicy   // field path = type
+//	}
+//	activedirectory.passwordPolicy {
+//	  minPasswordLength int
+//	}
+//
+// The field "activedirectory.passwordPolicy" collides with the resource name
+// "activedirectory.passwordPolicy". Because the field resolves to that exact
+// resource type, the collision is intentional and must not be flagged.
 func TestGetDuplicatesIgnoresSelfAliasedResourceField(t *testing.T) {
 	res1 := &Resource{
 		ID: "res1",

@@ -6,6 +6,7 @@ package provider
 import (
 	"context"
 	"errors"
+	"os"
 	"strconv"
 	"strings"
 
@@ -57,8 +58,20 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	ccache := flagValue("ccache")
 	backend := flagValue("backend")
 
+	// Fall back to Windows domain-joined environment variables when
+	// flags are not explicitly provided.
 	if len(dc) == 0 {
-		return nil, errors.New("dc flag is required: specify the domain controller hostname or IP address")
+		if logonServer := os.Getenv("LOGONSERVER"); logonServer != "" {
+			dc = []byte(strings.TrimLeft(logonServer, `\`))
+		}
+	}
+	if len(dc) == 0 {
+		return nil, errors.New("dc flag is required: specify the domain controller hostname or IP address (or set LOGONSERVER)")
+	}
+
+	dnsDomain := os.Getenv("USERDNSDOMAIN")
+	if len(domain) == 0 && dnsDomain != "" {
+		domain = []byte(dnsDomain)
 	}
 
 	opts := map[string]string{}
@@ -90,6 +103,12 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	// Always store user in options so Kerberos keytab/ccache paths can
 	// read it even when --password is not provided.
 	userStr := strVal(user)
+	if userStr == "" {
+		// Infer UPN from Windows environment: USERNAME@USERDNSDOMAIN.
+		if winUser := os.Getenv("USERNAME"); winUser != "" && dnsDomain != "" {
+			userStr = winUser + "@" + dnsDomain
+		}
+	}
 	if userStr != "" {
 		opts[connection.OptionUser] = userStr
 	}
