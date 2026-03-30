@@ -135,7 +135,7 @@ define bundleProvider
 	$(eval $@_DIST = "${$@_HOME}"/dist)
 	$(eval $@_DST = "${$@_DIST}/${$@_NAME}.tar.xz")
 	echo "--> bundle ${$@_NAME} to ${$@_DST} (this may take a while)"
-	tar -cf ${$@_DST} --no-same-owner \
+	COPYFILE_DISABLE=1 tar -cf ${$@_DST} --no-same-owner \
 		--use-compress-program='xz -9v' \
 		-C ${$@_DIST} \
 		${$@_NAME}${BIN_SUFFIX} ${$@_NAME}.json ${$@_NAME}.resources.json
