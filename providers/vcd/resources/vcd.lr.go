@@ -8,7 +8,6 @@ package resources
 import (
 	"errors"
 
-	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/types"
@@ -102,9 +101,6 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 
 		if res != nil {
 			mqlId := res.MqlID()
-			if mqlId == "" {
-				log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/mql/issues", name)
-			}
 			id := name + "\x00" + mqlId
 			if x, ok := runtime.Resources.Get(id); ok {
 				return x, nil
@@ -122,9 +118,6 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 	}
 
 	mqlId := res.MqlID()
-	if mqlId == "" {
-		log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/mql/issues", name)
-	}
 	id := name + "\x00" + mqlId
 	if x, ok := runtime.Resources.Get(id); ok {
 		return x, nil
@@ -149,9 +142,6 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 	}
 
 	mqlId := res.MqlID()
-	if mqlId == "" {
-		log.Debug().Msgf("resource %s has no MQL ID defined, this is usually an issue with the resource, please open a GitHub issue at https://github.com/mondoohq/mql/issues", name)
-	}
 	id := name + "\x00" + mqlId
 	if x, ok := runtime.Resources.Get(id); ok {
 		return x, nil
