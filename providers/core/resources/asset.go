@@ -4,3 +4,7 @@
 package resources
 
 // Look into provider/providers.go for how asset information is attached.
+
+func (a *mqlAsset) id() (string, error) {
+	return "asset", nil
+}
