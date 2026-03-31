@@ -1377,6 +1377,11 @@ var azureServiceToARMMap = map[string]string{
 	"logic":                 "Microsoft.Logic",
 	"msi":                   "Microsoft.ManagedIdentity",
 	"frontdoor":             "Microsoft.Network",
+	"datafactory":           "Microsoft.DataFactory",
+	"cosmosforpostgresql":   "Microsoft.DBforPostgreSQL",
+	"batch":                 "Microsoft.Batch",
+	"databricks":            "Microsoft.Databricks",
+	"synapse":               "Microsoft.Synapse",
 }
 
 func azureServiceToARM(service string) string {
@@ -1390,11 +1395,81 @@ func azureServiceToARM(service string) string {
 	return "Microsoft." + strings.ToUpper(service[:1]) + service[1:]
 }
 
+// azurePermissionOverrides maps generated permission strings to the correct
+// Azure RBAC permission. Many Azure SDK client names don't include parent
+// resource paths (e.g., servers/) or use different names than the ARM API.
+var azurePermissionOverrides = map[string]string{
+	// Batch: client names don't match ARM resource types
+	"Microsoft.Batch/account/read": "Microsoft.Batch/batchAccounts/read",
+	"Microsoft.Batch/pool/read":    "Microsoft.Batch/batchAccounts/pools/read",
+
+	// Cache (Redis): sub-resources need redis/ parent path
+	"Microsoft.Cache/firewallRules/read":  "Microsoft.Cache/redis/firewallRules/read",
+	"Microsoft.Cache/patchSchedules/read": "Microsoft.Cache/redis/patchSchedules/read",
+
+	// Cosmos DB for PostgreSQL: SDK package maps to different ARM resource type
+	"Microsoft.DBforPostgreSQL/clusters/read": "Microsoft.DBforPostgreSQL/serverGroupsv2/read",
+
+	// MySQL: sub-resources need servers/ parent path
+	"Microsoft.DBforMySQL/configurations/read": "Microsoft.DBforMySQL/servers/configurations/read",
+	"Microsoft.DBforMySQL/databases/read":      "Microsoft.DBforMySQL/servers/databases/read",
+	"Microsoft.DBforMySQL/firewallRules/read":  "Microsoft.DBforMySQL/servers/firewallRules/read",
+
+	// PostgreSQL: sub-resources need servers/ parent path
+	"Microsoft.DBforPostgreSQL/configurations/read": "Microsoft.DBforPostgreSQL/servers/configurations/read",
+	"Microsoft.DBforPostgreSQL/databases/read":      "Microsoft.DBforPostgreSQL/servers/databases/read",
+	"Microsoft.DBforPostgreSQL/firewallRules/read":  "Microsoft.DBforPostgreSQL/servers/firewallRules/read",
+
+	// Network: client names don't match ARM resource types
+	"Microsoft.Network/interfaces/read":                        "Microsoft.Network/networkInterfaces/read",
+	"Microsoft.Network/securityGroups/read":                    "Microsoft.Network/networkSecurityGroups/read",
+	"Microsoft.Network/subnets/read":                           "Microsoft.Network/virtualNetworks/subnets/read",
+	"Microsoft.Network/flowLogs/read":                          "Microsoft.Network/networkWatchers/flowLogs/read",
+	"Microsoft.Network/watchers/read":                          "Microsoft.Network/networkWatchers/read",
+	"Microsoft.Network/virtualNetworkPeerings/read":            "Microsoft.Network/virtualNetworks/virtualNetworkPeerings/read",
+	"Microsoft.Network/virtualNetworkGatewayConnections/read":  "Microsoft.Network/connections/read",
+
+	// SQL: sub-resources need servers/ or servers/databases/ parent paths
+	"Microsoft.Sql/databases/read":                              "Microsoft.Sql/servers/databases/read",
+	"Microsoft.Sql/firewallRules/read":                          "Microsoft.Sql/servers/firewallRules/read",
+	"Microsoft.Sql/virtualNetworkRules/read":                    "Microsoft.Sql/servers/virtualNetworkRules/read",
+	"Microsoft.Sql/encryptionProtectors/read":                   "Microsoft.Sql/servers/encryptionProtector/read",
+	"Microsoft.Sql/backupShortTermRetentionPolicies/read":       "Microsoft.Sql/servers/databases/backupShortTermRetentionPolicies/read",
+	"Microsoft.Sql/longTermRetentionPolicies/read":              "Microsoft.Sql/servers/databases/backupLongTermRetentionPolicies/read",
+	"Microsoft.Sql/transparentDataEncryptions/read":             "Microsoft.Sql/servers/databases/transparentDataEncryption/read",
+	"Microsoft.Sql/databaseAdvancedThreatProtectionSettings/read": "Microsoft.Sql/servers/databases/advancedThreatProtectionSettings/read",
+	"Microsoft.Sql/databaseBlobAuditingPolicies/read":           "Microsoft.Sql/servers/databases/auditingSettings/read",
+	"Microsoft.Sql/databaseSecurityAlertPolicies/read":          "Microsoft.Sql/servers/databases/securityAlertPolicies/read",
+	"Microsoft.Sql/databaseUsages/read":                         "Microsoft.Sql/servers/databases/usages/read",
+	"Microsoft.Sql/serverAdvancedThreatProtectionSettings/read": "Microsoft.Sql/servers/advancedThreatProtectionSettings/read",
+	"Microsoft.Sql/serverAzureADAdministrators/read":            "Microsoft.Sql/servers/administrators/read",
+	"Microsoft.Sql/serverAzureADOnlyAuthentications/read":       "Microsoft.Sql/servers/azureADOnlyAuthentications/read",
+	"Microsoft.Sql/serverBlobAuditingPolicies/read":             "Microsoft.Sql/servers/auditingSettings/read",
+	"Microsoft.Sql/serverConnectionPolicies/read":               "Microsoft.Sql/servers/connectionPolicies/read",
+	"Microsoft.Sql/serverSecurityAlertPolicies/read":            "Microsoft.Sql/servers/securityAlertPolicies/read",
+	"Microsoft.Sql/serverVulnerabilityAssessments/read":         "Microsoft.Sql/servers/vulnerabilityAssessments/read",
+
+	// Storage: client names don't match ARM resource types
+	"Microsoft.Storage/accounts/read":       "Microsoft.Storage/storageAccounts/read",
+	"Microsoft.Storage/blobContainers/read": "Microsoft.Storage/storageAccounts/blobServices/containers/read",
+
+	// Web: client names don't match ARM resource types
+	"Microsoft.Web/environments/read": "Microsoft.Web/hostingEnvironments/read",
+	"Microsoft.Web/plans/read":        "Microsoft.Web/serverfarms/read",
+	"Microsoft.Web/webApps/read":      "Microsoft.Web/sites/read",
+}
+
 // azurePermission constructs the RBAC permission string.
 func azurePermission(armProvider, resourceType string) string {
 	// Convert PascalCase to camelCase for the resource type
 	rt := pascalToCamelCase(resourceType)
-	return armProvider + "/" + rt + "/read"
+	perm := armProvider + "/" + rt + "/read"
+
+	// Check for overrides where SDK names don't match ARM resource types
+	if override, ok := azurePermissionOverrides[perm]; ok {
+		return override
+	}
+	return perm
 }
 
 func pascalToCamelCase(s string) string {
