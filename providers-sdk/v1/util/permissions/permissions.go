@@ -1002,7 +1002,7 @@ func gcpRESTToPermission(service, resource, method string) string {
 	}
 	verb := ""
 	switch method {
-	case "List", "AggregatedList", "Aggregated", "Pages":
+	case "List", "AggregatedList", "Aggregated", "Pages", "Search":
 		verb = "list"
 	case "Get", "Do":
 		verb = "get"
