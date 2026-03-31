@@ -18,14 +18,6 @@ import (
 var mapFunctions map[string]chunkHandlerV2 //nolint:unused
 
 func mapGetIndex(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return _mapGetIndex(e, bind, chunk, ref)
-}
-
-func mapGetConditionalIndex(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return _mapGetIndex(e, bind, chunk, ref)
-}
-
-func _mapGetIndex(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	args := chunk.Function.Args
 	// TODO: all this needs to go into the compile phase
 	if len(args) < 1 {
@@ -36,9 +28,10 @@ func _mapGetIndex(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 	}
 	// ^^ TODO
 
+	childType := bind.Type.Child()
 	if bind.Value == nil {
 		// Propagate null through map access chains instead of erroring.
-		return &RawData{Type: bind.Type.Child()}, 0, nil
+		return &RawData{Type: childType}, 0, nil
 	}
 
 	var key string
@@ -59,15 +52,6 @@ func _mapGetIndex(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 		key = string(args[0].Value)
 	default:
 		return nil, 0, errors.New("Called [] with wrong type " + t.Label())
-	}
-
-	childType := bind.Type.Child()
-
-	if bind.Value == nil {
-		return &RawData{
-			Type:  childType,
-			Value: nil,
-		}, 0, nil
 	}
 
 	m, ok := bind.Value.(map[string]any)
@@ -368,14 +352,6 @@ func mapValuesV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Ra
 }
 
 func dictGetIndex(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return _dictGetIndex(e, bind, chunk, ref)
-}
-
-func dictGetConditionalIndex(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return _dictGetIndex(e, bind, chunk, ref)
-}
-
-func _dictGetIndex(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	args := chunk.Function.Args
 	// TODO: all this needs to go into the compile phase
 	if len(args) < 1 {

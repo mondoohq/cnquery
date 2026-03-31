@@ -539,7 +539,7 @@ func init() {
 			string("*" + types.Time):                 {f: dictTimesTimeV2, Label: "*"},
 			// fields
 			"[]":                              {f: dictGetIndex},
-			"[]?":                             {f: dictGetConditionalIndex},
+			"[]?":                             {f: dictGetIndex},
 			"first":                           {f: dictGetFirstIndexV2},
 			"last":                            {f: dictGetLastIndexV2},
 			"{}":                              {f: dictBlockCallV2},
@@ -724,7 +724,7 @@ func init() {
 		},
 		types.MapLike: {
 			"[]":                       {f: mapGetIndex},
-			"[]?":                      {f: mapGetConditionalIndex},
+			"[]?":                      {f: mapGetIndex},
 			"length":                   {f: mapLengthV2},
 			"where":                    {f: mapWhereV2},
 			"$whereNot":                {f: mapWhereNotV2},
