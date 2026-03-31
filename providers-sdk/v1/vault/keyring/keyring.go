@@ -125,3 +125,7 @@ func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, err
 		Encoding: vault.SecretEncoding_encoding_json,
 	}, nil
 }
+
+func (v *Vault) Delete(ctx context.Context, id *vault.SecretID) (*vault.Empty, error) {
+	return nil, vault.NotImplementedError
+}

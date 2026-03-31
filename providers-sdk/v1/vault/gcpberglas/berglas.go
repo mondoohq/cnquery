@@ -114,6 +114,28 @@ func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, err
 	}, nil
 }
 
+func (v *Vault) Delete(ctx context.Context, id *vault.SecretID) (*vault.Empty, error) {
+	c, err := v.client(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	berglasInfo, err := getBerglasStorageInfo(id.Key)
+	if err != nil {
+		return nil, err
+	}
+
+	err = c.Delete(ctx, &berglas.StorageDeleteRequest{
+		Bucket: berglasInfo.bucket,
+		Object: berglasInfo.object,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &vault.Empty{}, nil
+}
+
 func (v *Vault) Set(ctx context.Context, cred *vault.Secret) (*vault.SecretID, error) {
 	if len(v.kmsKeyID) == 0 {
 		return nil, errors.New("specified KMS key id is empty")

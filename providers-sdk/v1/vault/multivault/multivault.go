@@ -56,3 +56,7 @@ func (m *multiVault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret
 
 	return nil, vault.NotFoundError
 }
+
+func (m *multiVault) Delete(ctx context.Context, id *vault.SecretID) (*vault.Empty, error) {
+	return nil, vault.NotImplementedError
+}

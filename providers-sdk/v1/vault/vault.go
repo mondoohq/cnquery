@@ -24,6 +24,7 @@ func EscapeSecretID(key string) string {
 }
 
 var NotFoundError = status.Error(codes.NotFound, "secret not found")
+var NotImplementedError = status.Error(codes.Unimplemented, "delete not implemented")
 
 // Credential parses the secret data and creates a credential
 func (x *Secret) Credential() (*Credential, error) {

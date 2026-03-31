@@ -70,3 +70,7 @@ func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, err
 func (v *Vault) Set(ctx context.Context, cred *vault.Secret) (*vault.SecretID, error) {
 	return nil, errors.New("not implemented")
 }
+
+func (v *Vault) Delete(ctx context.Context, id *vault.SecretID) (*vault.Empty, error) {
+	return nil, vault.NotImplementedError
+}

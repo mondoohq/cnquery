@@ -21,6 +21,7 @@ service Vault {
   rpc About(Empty) returns (VaultInfo);
   rpc Get(SecretID) returns (Secret);
   rpc Set(Secret) returns (SecretID);
+  rpc Delete(SecretID) returns (Empty);
 }
 
 // protolint:disable:next ENUM_FIELD_NAMES_PREFIX 

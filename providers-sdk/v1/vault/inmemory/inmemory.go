@@ -60,3 +60,7 @@ func (v *inmemoryVault) Get(ctx context.Context, id *vault.SecretID) (*vault.Sec
 	}
 	return s, nil
 }
+
+func (v *inmemoryVault) Delete(ctx context.Context, id *vault.SecretID) (*vault.Empty, error) {
+	return nil, vault.NotImplementedError
+}

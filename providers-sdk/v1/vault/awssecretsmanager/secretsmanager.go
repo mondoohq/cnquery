@@ -102,6 +102,10 @@ func (v *Vault) Set(ctx context.Context, cred *vault.Secret) (*vault.SecretID, e
 	return &vault.SecretID{Key: *o.ARN}, err
 }
 
+func (v *Vault) Delete(ctx context.Context, id *vault.SecretID) (*vault.Empty, error) {
+	return nil, vault.NotImplementedError
+}
+
 func (v *Vault) updateSecret(ctx context.Context, cred *vault.Secret) (*vault.SecretID, error) {
 	var kmsKeyID *string
 	if len(v.kmsKeyID) > 0 {

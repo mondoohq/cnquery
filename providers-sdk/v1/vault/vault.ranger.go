@@ -22,6 +22,7 @@ type Vault interface {
 	About(context.Context, *Empty) (*VaultInfo, error)
 	Get(context.Context, *SecretID) (*Secret, error)
 	Set(context.Context, *Secret) (*SecretID, error)
+	Delete(context.Context, *SecretID) (*Empty, error)
 }
 
 // client implementation
@@ -65,6 +66,11 @@ func (c *VaultClient) Set(ctx context.Context, in *Secret) (*SecretID, error) {
 	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/Set"}, ""), in, out)
 	return out, err
 }
+func (c *VaultClient) Delete(ctx context.Context, in *SecretID) (*Empty, error) {
+	out := new(Empty)
+	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/Delete"}, ""), in, out)
+	return out, err
+}
 
 // server implementation
 
@@ -88,9 +94,10 @@ func NewVaultServer(handler Vault, opts ...VaultServerOption) http.Handler {
 	service := ranger.Service{
 		Name: "Vault",
 		Methods: map[string]ranger.Method{
-			"About": srv.About,
-			"Get":   srv.Get,
-			"Set":   srv.Set,
+			"About":  srv.About,
+			"Get":    srv.Get,
+			"Set":    srv.Set,
+			"Delete": srv.Delete,
 		},
 	}
 	return ranger.NewRPCServer(&service)
@@ -172,4 +179,28 @@ func (p *VaultServer) Set(ctx context.Context, reqBytes *[]byte) (pb.Message, er
 		return nil, err
 	}
 	return p.handler.Set(ctx, &req)
+}
+func (p *VaultServer) Delete(ctx context.Context, reqBytes *[]byte) (pb.Message, error) {
+	var req SecretID
+	var err error
+
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, errors.New("could not access header")
+	}
+
+	switch md.First("Content-Type") {
+	case "application/protobuf", "application/octet-stream", "application/grpc+proto":
+		err = pb.Unmarshal(*reqBytes, &req)
+	default:
+		// handle case of empty object
+		if len(*reqBytes) > 0 {
+			err = jsonpb.UnmarshalOptions{DiscardUnknown: true}.Unmarshal(*reqBytes, &req)
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	return p.handler.Delete(ctx, &req)
 }
