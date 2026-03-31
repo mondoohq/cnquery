@@ -44,6 +44,10 @@ func (c *cachedVault) Set(ctx context.Context, s *vault.Secret) (*vault.SecretID
 }
 
 func (c *cachedVault) Delete(ctx context.Context, id *vault.SecretID) (*vault.Empty, error) {
+	res, err := c.vault.Delete(ctx, id)
+	if err != nil {
+		return nil, err
+	}
 	delete(c.secrets, id.Key)
-	return c.vault.Delete(ctx, id)
+	return res, nil
 }
