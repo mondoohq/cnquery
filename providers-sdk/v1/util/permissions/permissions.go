@@ -635,7 +635,7 @@ func classifyGCPImport(path string) *gcpImportInfo {
 // gcpServiceName normalizes GCP service names.
 var gcpServiceNameMap = map[string]string{
 	"compute":              "compute",
-	"cloudresourcemanager": "cloudresourcemanager",
+	"cloudresourcemanager": "resourcemanager",
 	"iam":                  "iam",
 	"dns":                  "dns",
 	"bigquery":             "bigquery",
@@ -643,7 +643,7 @@ var gcpServiceNameMap = map[string]string{
 	"monitoring":           "monitoring",
 	"container":            "container",
 	"storage":              "storage",
-	"sqladmin":             "sqladmin",
+	"sqladmin":             "cloudsql",
 	"serviceusage":         "serviceusage",
 	"apikeys":              "apikeys",
 	"kms":                  "cloudkms",
@@ -653,6 +653,7 @@ var gcpServiceNameMap = map[string]string{
 	"alloydb":              "alloydb",
 	"aiplatform":           "aiplatform",
 	"privateca":            "privateca",
+	"security":             "privateca",
 	"binaryauthorization":  "binaryauthorization",
 	"spanner":              "spanner",
 	"redis":                "redis",
@@ -892,8 +893,57 @@ func isGCPAPIMethod(name string) bool {
 	return false
 }
 
+// gcpPermissionOverrides maps (service, method) to the correct IAM permission
+// for cases where the automatic derivation produces incorrect results.
+var gcpPermissionOverrides = map[string]map[string]string{
+	"accessapproval": {
+		"GetAccessApprovalSettings": "accessapproval.settings.get",
+	},
+	"binaryauthorization": {
+		"GetSystemPolicy": "binaryauthorization.policy.get",
+	},
+	"cloudkms": {
+		"GetCryptoKey": "cloudkms.cryptoKeys.get",
+		"GetIamPolicy": "cloudkms.cryptoKeys.getIamPolicy",
+	},
+	"secretmanager": {
+		"ListSecretVersions": "secretmanager.versions.list",
+		"GetIamPolicy":       "secretmanager.secrets.getIamPolicy",
+	},
+	"artifactregistry": {
+		"GetIamPolicy": "artifactregistry.repositories.getIamPolicy",
+	},
+	"serviceusage": {
+		"GetService": "serviceusage.services.get",
+	},
+}
+
+// gcpSkipMethods lists method names that match isGCPAPIMethod patterns but are
+// actually protobuf getter methods or internal helpers, not real API calls.
+var gcpSkipMethods = map[string]bool{
+	"GetConditionAbsent":                  true,
+	"GetConditionThreshold":               true,
+	"GetConditionMatchedLog":              true,
+	"GetConditionMonitoringQueryLanguage": true,
+}
+
 // gcpMethodToPermission maps a gRPC method to a GCP IAM permission.
 func gcpMethodToPermission(service, method string) string {
+	// Skip known non-API methods
+	if gcpSkipMethods[method] {
+		return ""
+	}
+
+	// Strip "Iter" suffix from iterator helper methods (e.g., ListRolesIter -> ListRoles)
+	method = strings.TrimSuffix(method, "Iter")
+
+	// Check for explicit overrides
+	if overrides, ok := gcpPermissionOverrides[service]; ok {
+		if perm, ok := overrides[method]; ok {
+			return perm
+		}
+	}
+
 	// gRPC methods: ListKeyRings -> cloudkms.keyRings.list
 	// ListServiceAccounts -> iam.serviceAccounts.list
 	// GetKeyRotationStatus -> cloudkms.cryptoKeys.get
@@ -911,7 +961,7 @@ func gcpMethodToPermission(service, method string) string {
 		verb = "get"
 		resource = strings.TrimPrefix(method, "Get")
 		if resource == "" {
-			resource = service
+			return "" // bare Get without resource name is ambiguous
 		}
 	} else if strings.HasPrefix(method, "Create") {
 		verb = "create"
@@ -952,7 +1002,7 @@ func gcpRESTToPermission(service, resource, method string) string {
 	}
 	verb := ""
 	switch method {
-	case "List", "AggregatedList", "Pages":
+	case "List", "AggregatedList", "Aggregated", "Pages":
 		verb = "list"
 	case "Get", "Do":
 		verb = "get"

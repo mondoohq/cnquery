@@ -30,21 +30,16 @@
     "cloudkms.iamPolicy.get",
     "cloudkms.keyRings.list",
     "cloudkms.locations.list",
-    "cloudresourcemanager.folders.get",
-    "cloudresourcemanager.folders.list",
-    "cloudresourcemanager.folders.search",
-    "cloudresourcemanager.organizations.get",
-    "cloudresourcemanager.organizations.getIamPolicy",
     "cloudresourcemanager.projects.get",
     "cloudresourcemanager.projects.getIamPolicy",
-    "cloudresourcemanager.projects.list",
-    "cloudresourcemanager.projects.search",
     "cloudscheduler.jobs.list",
     "cloudtasks.queues.list",
     "compute.addresses.list",
     "compute.backendServices.list",
     "compute.compute.get",
     "compute.disks.list",
+    "compute.firewallPolicies.get",
+    "compute.firewallPolicies.list",
     "compute.firewalls.list",
     "compute.healthChecks.list",
     "compute.images.list",
@@ -53,8 +48,6 @@
     "compute.instances.list",
     "compute.machineTypes.get",
     "compute.machineTypes.list",
-    "compute.networkFirewallPolicies.get",
-    "compute.networkFirewallPolicies.list",
     "compute.networks.get",
     "compute.networks.list",
     "compute.projects.get",
@@ -282,31 +275,36 @@
       "permission": "cloudresourcemanager.folders.get",
       "service": "cloudresourcemanager",
       "action": "Folders.Get",
-      "source_file": "folder.go"
+      "source_file": "folder.go",
+      "scope": "org"
     },
     {
       "permission": "cloudresourcemanager.folders.list",
       "service": "cloudresourcemanager",
       "action": "Folders.List",
-      "source_file": "folder.go"
+      "source_file": "folder.go",
+      "scope": "org"
     },
     {
       "permission": "cloudresourcemanager.folders.search",
       "service": "cloudresourcemanager",
       "action": "Folders.Search",
-      "source_file": "folder.go"
+      "source_file": "folder.go",
+      "scope": "org"
     },
     {
       "permission": "cloudresourcemanager.organizations.get",
       "service": "cloudresourcemanager",
       "action": "Organizations.Get",
-      "source_file": "organization.go"
+      "source_file": "organization.go",
+      "scope": "org"
     },
     {
       "permission": "cloudresourcemanager.organizations.getIamPolicy",
       "service": "cloudresourcemanager",
       "action": "Organizations.GetIamPolicy",
-      "source_file": "organization.go"
+      "source_file": "organization.go",
+      "scope": "org"
     },
     {
       "permission": "cloudresourcemanager.projects.get",
@@ -324,19 +322,22 @@
       "permission": "cloudresourcemanager.projects.list",
       "service": "cloudresourcemanager",
       "action": "Projects.List",
-      "source_file": "discovery.go"
+      "source_file": "discovery.go",
+      "scope": "org"
     },
     {
       "permission": "cloudresourcemanager.projects.list",
       "service": "cloudresourcemanager",
       "action": "Projects.List",
-      "source_file": "project.go"
+      "source_file": "project.go",
+      "scope": "org"
     },
     {
       "permission": "cloudresourcemanager.projects.search",
       "service": "cloudresourcemanager",
       "action": "Projects.Search",
-      "source_file": "project.go"
+      "source_file": "project.go",
+      "scope": "org"
     },
     {
       "permission": "cloudscheduler.jobs.list",
@@ -423,13 +424,13 @@
       "source_file": "compute.go"
     },
     {
-      "permission": "compute.networkFirewallPolicies.get",
+      "permission": "compute.firewallPolicies.get",
       "service": "compute",
       "action": "NetworkFirewallPolicies.Get",
       "source_file": "compute_instance_groups_firewall_policies.go"
     },
     {
-      "permission": "compute.networkFirewallPolicies.list",
+      "permission": "compute.firewallPolicies.list",
       "service": "compute",
       "action": "NetworkFirewallPolicies.List",
       "source_file": "compute_instance_groups_firewall_policies.go"
@@ -806,5 +807,14 @@
       "action": "Buckets.List",
       "source_file": "storage.go"
     }
+  ],
+  "org_level_permissions": [
+    "cloudresourcemanager.folders.get",
+    "cloudresourcemanager.folders.list",
+    "cloudresourcemanager.folders.search",
+    "cloudresourcemanager.organizations.get",
+    "cloudresourcemanager.organizations.getIamPolicy",
+    "cloudresourcemanager.projects.list",
+    "cloudresourcemanager.projects.search"
   ]
 }
