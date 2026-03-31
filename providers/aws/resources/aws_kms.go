@@ -331,6 +331,17 @@ func initAwsKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid ARN %q: %w", a, err)
 	}
+	// Guard against non-KMS ARNs being passed in. This happens when scanning
+	// individual assets (e.g., S3 buckets or CloudTrail trails) and a policy
+	// includes a bare `aws.kms.key { ... }` query: initAwsKmsKey is called with
+	// no args, falls back to getAssetIdentifier, and the asset's own ARN (which
+	// is not a KMS ARN) ends up here. Without this check those ARNs hit the
+	// cross-account code path below (S3 ARNs have no account ID, trail ARNs
+	// belong to the org account) and produce misleading "cross-account KMS keys
+	// are not supported yet" warnings.
+	if arnVal.Service != "kms" {
+		return nil, nil, fmt.Errorf("expected a KMS key ARN but got %q (service=%q)", a, arnVal.Service)
+	}
 	if arnVal.AccountID != runtime.Connection.(*connection.AwsConnection).AccountId() {
 		// Cross-account key: we can't fetch details, but we should still return the ARN
 		// so security tools can see which KMS key is referenced
