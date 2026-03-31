@@ -12,8 +12,6 @@ package providers
 
 import (
 	_ "embed"
-	"maps"
-	"slices"
 
 	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
 	coreconf "go.mondoo.com/mql/v13/providers/core/config"
@@ -66,5 +64,10 @@ var builtinProviders = map[string]*builtinProvider{
 }
 
 func GetBuiltinProviderNames() []string {
-	return slices.Collect(maps.Keys(builtinProviders))
+	names := []string{}
+	for _, v := range builtinProviders {
+		names = append(names, v.Config.Name)
+	}
+
+	return names
 }
