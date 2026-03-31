@@ -916,6 +916,15 @@ var gcpPermissionOverrides = map[string]map[string]string{
 	"serviceusage": {
 		"GetService": "serviceusage.services.get",
 	},
+	"backupdr": {
+		"ListDataSources": "backupdr.bvdataSources.list",
+	},
+	"recommender": {
+		// recommender.recommendations.list is not a real permission; the Recommender
+		// API uses type-specific permissions (e.g., recommender.iamPolicyRecommendations.list).
+		// These can't be auto-derived from the code, so skip the generic form.
+		"ListRecommendations": "",
+	},
 }
 
 // gcpSkipMethods lists method names that match isGCPAPIMethod patterns but are
