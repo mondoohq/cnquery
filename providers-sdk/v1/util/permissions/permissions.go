@@ -110,16 +110,28 @@ func main() {
 		Details:     details,
 	}
 
+	if outputPath == "" {
+		outputPath = filepath.Join(providerPath, "resources", providerName+".permissions.json")
+	}
+
+	// Skip writing if only the timestamp changed.
+	if existing, err := os.ReadFile(outputPath); err == nil {
+		var old PermissionManifest
+		if json.Unmarshal(existing, &old) == nil {
+			old.GeneratedAt = manifest.GeneratedAt
+			if manifestsEqual(old, manifest) {
+				fmt.Printf("  %s: %d permissions (unchanged) → %s\n", providerName, len(permissions), outputPath)
+				return
+			}
+		}
+	}
+
 	data, err := json.MarshalIndent(manifest, "", "  ")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error marshaling JSON: %v\n", err)
 		os.Exit(1)
 	}
 	data = append(data, '\n')
-
-	if outputPath == "" {
-		outputPath = filepath.Join(providerPath, "resources", providerName+".permissions.json")
-	}
 
 	if err := os.MkdirAll(filepath.Dir(outputPath), 0o755); err != nil {
 		fmt.Fprintf(os.Stderr, "error creating output directory: %v\n", err)
@@ -170,6 +182,30 @@ func deterministicTimestamp() string {
 	}
 
 	return "unknown"
+}
+
+// manifestsEqual reports whether two manifests are identical in all fields.
+func manifestsEqual(a, b PermissionManifest) bool {
+	if a.Provider != b.Provider || a.Version != b.Version || a.GeneratedAt != b.GeneratedAt {
+		return false
+	}
+	if len(a.Permissions) != len(b.Permissions) {
+		return false
+	}
+	for i := range a.Permissions {
+		if a.Permissions[i] != b.Permissions[i] {
+			return false
+		}
+	}
+	if len(a.Details) != len(b.Details) {
+		return false
+	}
+	for i := range a.Details {
+		if a.Details[i] != b.Details[i] {
+			return false
+		}
+	}
+	return true
 }
 
 // listGoFiles returns all non-test, non-generated .go files in a directory tree.
