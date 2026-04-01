@@ -11,6 +11,7 @@ import (
 	"strconv"
 
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers/grafana/connection"
 )
 
 // grafanaServiceAccountJSON mirrors one element of the /api/serviceaccounts/search response.
@@ -26,10 +27,10 @@ type grafanaServiceAccountJSON struct {
 
 // grafanaServiceAccountsResponse wraps the paginated service accounts endpoint.
 type grafanaServiceAccountsResponse struct {
-	TotalCount      int                             `json:"totalCount"`
-	ServiceAccounts []grafanaServiceAccountJSON      `json:"serviceAccounts"`
-	Page            int                             `json:"page"`
-	PerPage         int                             `json:"perPage"`
+	TotalCount      int                         `json:"totalCount"`
+	ServiceAccounts []grafanaServiceAccountJSON `json:"serviceAccounts"`
+	Page            int                         `json:"page"`
+	PerPage         int                         `json:"perPage"`
 }
 
 // grafanaTokenJSON mirrors one element of the /api/serviceaccounts/{id}/tokens response.
@@ -45,6 +46,27 @@ type grafanaTokenJSON struct {
 
 const serviceAccountPageSize = 1000
 
+// fetchServiceAccountPage fetches a single page of service accounts and closes
+// the response body before returning, avoiding FD leaks in pagination loops.
+func fetchServiceAccountPage(conn *connection.GrafanaConnection, page int) (*grafanaServiceAccountsResponse, error) {
+	path := fmt.Sprintf("/api/serviceaccounts/search?perpage=%d&page=%d", serviceAccountPageSize, page)
+	resp, err := conn.Get(context.Background(), path)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("grafana: GET /api/serviceaccounts/search returned status %d", resp.StatusCode)
+	}
+
+	var result grafanaServiceAccountsResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, fmt.Errorf("grafana: decoding /api/serviceaccounts/search response: %w", err)
+	}
+	return &result, nil
+}
+
 func (g *mqlGrafana) serviceAccounts() ([]interface{}, error) {
 	conn, err := grafanaConnection(g.MqlRuntime)
 	if err != nil {
@@ -56,19 +78,9 @@ func (g *mqlGrafana) serviceAccounts() ([]interface{}, error) {
 	// page returns fewer results than requested.
 	var allSAs []grafanaServiceAccountJSON
 	for page := 1; ; page++ {
-		path := fmt.Sprintf("/api/serviceaccounts/search?perpage=%d&page=%d", serviceAccountPageSize, page)
-		resp, err := conn.Get(context.Background(), path)
+		result, err := fetchServiceAccountPage(conn, page)
 		if err != nil {
 			return nil, err
-		}
-		defer resp.Body.Close()
-		if resp.StatusCode != http.StatusOK {
-			return nil, fmt.Errorf("grafana: GET /api/serviceaccounts/search returned status %d", resp.StatusCode)
-		}
-
-		var result grafanaServiceAccountsResponse
-		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-			return nil, fmt.Errorf("grafana: decoding /api/serviceaccounts/search response: %w", err)
 		}
 
 		allSAs = append(allSAs, result.ServiceAccounts...)
