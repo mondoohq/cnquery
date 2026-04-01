@@ -11,7 +11,6 @@ import (
 	"strconv"
 
 	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers/grafana/connection"
 )
 
 // grafanaServiceAccountJSON mirrors one element of the /api/serviceaccounts/search response.
@@ -27,38 +26,61 @@ type grafanaServiceAccountJSON struct {
 
 // grafanaServiceAccountsResponse wraps the paginated service accounts endpoint.
 type grafanaServiceAccountsResponse struct {
-	ServiceAccounts []grafanaServiceAccountJSON `json:"serviceAccounts"`
+	TotalCount      int                             `json:"totalCount"`
+	ServiceAccounts []grafanaServiceAccountJSON      `json:"serviceAccounts"`
+	Page            int                             `json:"page"`
+	PerPage         int                             `json:"perPage"`
 }
 
 // grafanaTokenJSON mirrors one element of the /api/serviceaccounts/{id}/tokens response.
 type grafanaTokenJSON struct {
-	ID                     int     `json:"id"`
-	Name                   string  `json:"name"`
-	Created                string  `json:"created"`
-	Expiration             string  `json:"expiration"`
-	HasExpired             bool    `json:"hasExpired"`
-	SecondsTillExpiration  float64 `json:"secondsUntilExpiration"`
-	IsRevoked              bool    `json:"isRevoked"`
+	ID                    int     `json:"id"`
+	Name                  string  `json:"name"`
+	Created               string  `json:"created"`
+	Expiration            string  `json:"expiration"`
+	HasExpired            bool    `json:"hasExpired"`
+	SecondsTillExpiration float64 `json:"secondsUntilExpiration"`
+	IsRevoked             bool    `json:"isRevoked"`
 }
 
+const serviceAccountPageSize = 1000
+
 func (g *mqlGrafana) serviceAccounts() ([]interface{}, error) {
-	conn := g.MqlRuntime.Connection.(*connection.GrafanaConnection)
-	resp, err := conn.Get(context.Background(), "/api/serviceaccounts/search?perpage=1000&page=1")
+	conn, err := grafanaConnection(g.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("grafana: GET /api/serviceaccounts/search returned status %d", resp.StatusCode)
+
+	// Paginate through all service accounts. The API returns at most perpage
+	// results per request; we stop when we've collected totalCount or the
+	// page returns fewer results than requested.
+	var allSAs []grafanaServiceAccountJSON
+	for page := 1; ; page++ {
+		path := fmt.Sprintf("/api/serviceaccounts/search?perpage=%d&page=%d", serviceAccountPageSize, page)
+		resp, err := conn.Get(context.Background(), path)
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("grafana: GET /api/serviceaccounts/search returned status %d", resp.StatusCode)
+		}
+
+		var result grafanaServiceAccountsResponse
+		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+			return nil, fmt.Errorf("grafana: decoding /api/serviceaccounts/search response: %w", err)
+		}
+
+		allSAs = append(allSAs, result.ServiceAccounts...)
+
+		// Stop when we've fetched everything or the page was not full.
+		if len(allSAs) >= result.TotalCount || len(result.ServiceAccounts) < serviceAccountPageSize {
+			break
+		}
 	}
 
-	var result grafanaServiceAccountsResponse
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return nil, fmt.Errorf("grafana: decoding /api/serviceaccounts/search response: %w", err)
-	}
-
-	list := make([]interface{}, 0, len(result.ServiceAccounts))
-	for _, sa := range result.ServiceAccounts {
+	list := make([]interface{}, 0, len(allSAs))
+	for _, sa := range allSAs {
 		res, err := CreateResource(g.MqlRuntime, "grafana.serviceAccount", map[string]*llx.RawData{
 			"id":         llx.IntData(int64(sa.ID)),
 			"orgId":      llx.IntData(int64(sa.OrgID)),
@@ -81,7 +103,10 @@ func (g *mqlGrafanaServiceAccount) id() (string, error) {
 }
 
 func (g *mqlGrafanaServiceAccount) tokens() ([]interface{}, error) {
-	conn := g.MqlRuntime.Connection.(*connection.GrafanaConnection)
+	conn, err := grafanaConnection(g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
 	saID := g.Id.Data
 	path := "/api/serviceaccounts/" + strconv.FormatInt(saID, 10) + "/tokens"
 

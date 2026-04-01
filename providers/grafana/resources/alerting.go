@@ -11,7 +11,6 @@ import (
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
-	"go.mondoo.com/mql/v13/providers/grafana/connection"
 	"go.mondoo.com/mql/v13/types"
 )
 
@@ -33,7 +32,10 @@ type grafanaNotificationPolicyJSON struct {
 }
 
 func (g *mqlGrafana) contactPoints() ([]interface{}, error) {
-	conn := g.MqlRuntime.Connection.(*connection.GrafanaConnection)
+	conn, err := grafanaConnection(g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
 	resp, err := conn.Get(context.Background(), "/api/v1/provisioning/contact-points")
 	if err != nil {
 		return nil, err
@@ -82,7 +84,10 @@ func (c *mqlGrafanaContactPoint) id() (string, error) {
 }
 
 func (g *mqlGrafana) notificationPolicy() (*mqlGrafanaNotificationPolicy, error) {
-	conn := g.MqlRuntime.Connection.(*connection.GrafanaConnection)
+	conn, err := grafanaConnection(g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
 	resp, err := conn.Get(context.Background(), "/api/v1/provisioning/policies")
 	if err != nil {
 		return nil, err

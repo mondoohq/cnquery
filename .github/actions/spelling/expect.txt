@@ -55,6 +55,7 @@ cyclonedx
 dast
 databricks
 datapath
+datasource
 DATAUSER
 datetime
 ddos
@@ -99,6 +100,7 @@ geomatchstatement
 gistfile
 gotestsum
 gpu
+grafana
 groupname
 gvnic
 HADOOP
@@ -189,6 +191,7 @@ ospf
 panos
 parallelquery
 PAYG
+pagerduty
 persistentvolume
 persistentvolumeclaim
 Pids

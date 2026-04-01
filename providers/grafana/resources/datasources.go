@@ -11,7 +11,6 @@ import (
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
-	"go.mondoo.com/mql/v13/providers/grafana/connection"
 )
 
 // grafanaDatasourceJSON mirrors one element of the /api/datasources response.
@@ -30,7 +29,10 @@ type grafanaDatasourceJSON struct {
 }
 
 func (g *mqlGrafana) datasources() ([]interface{}, error) {
-	conn := g.MqlRuntime.Connection.(*connection.GrafanaConnection)
+	conn, err := grafanaConnection(g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
 	resp, err := conn.Get(context.Background(), "/api/datasources")
 	if err != nil {
 		return nil, err

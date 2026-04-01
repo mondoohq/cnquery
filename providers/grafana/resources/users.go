@@ -17,9 +17,14 @@ import (
 )
 
 // grafanaConnection is a helper that type-asserts the runtime connection to
-// *connection.GrafanaConnection. All resource methods use this to obtain the client.
-func grafanaConnection(runtime *plugin.Runtime) *connection.GrafanaConnection {
-	return runtime.Connection.(*connection.GrafanaConnection)
+// *connection.GrafanaConnection. All resource methods must use this instead of
+// raw type assertions to get a clear error on misconfigured runtimes.
+func grafanaConnection(runtime *plugin.Runtime) (*connection.GrafanaConnection, error) {
+	conn, ok := runtime.Connection.(*connection.GrafanaConnection)
+	if !ok {
+		return nil, fmt.Errorf("grafana: unexpected connection type %T", runtime.Connection)
+	}
+	return conn, nil
 }
 
 // parseGrafanaTime parses a Grafana RFC3339 timestamp, returning the zero
@@ -51,7 +56,10 @@ type grafanaOrgUserJSON struct {
 }
 
 func (g *mqlGrafana) organization() (*mqlGrafanaOrganization, error) {
-	conn := grafanaConnection(g.MqlRuntime)
+	conn, err := grafanaConnection(g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
 	resp, err := conn.Get(context.Background(), "/api/org")
 	if err != nil {
 		return nil, err
@@ -77,7 +85,10 @@ func (g *mqlGrafana) organization() (*mqlGrafanaOrganization, error) {
 }
 
 func (g *mqlGrafana) users() ([]interface{}, error) {
-	conn := grafanaConnection(g.MqlRuntime)
+	conn, err := grafanaConnection(g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
 	resp, err := conn.Get(context.Background(), "/api/org/users")
 	if err != nil {
 		return nil, err

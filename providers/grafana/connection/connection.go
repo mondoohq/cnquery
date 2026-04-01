@@ -115,6 +115,9 @@ func (c *GrafanaConnection) Get(ctx context.Context, path string) (*http.Respons
 	req.Header.Set("Authorization", "Bearer "+c.token)
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
+	if orgID := c.OrgID(); orgID != "" {
+		req.Header.Set("X-Grafana-Org-Id", orgID)
+	}
 	return c.client.Do(req)
 }
 
