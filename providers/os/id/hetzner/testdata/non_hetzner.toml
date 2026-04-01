@@ -1,0 +1,13 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "5.15.0-91-generic"
+
+[files."/sys/class/dmi/id/sys_vendor"]
+  path = "/sys/class/dmi/id/sys_vendor"
+  enoent = false
+  content = "Microsoft Corporation"

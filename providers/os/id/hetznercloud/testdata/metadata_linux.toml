@@ -1,0 +1,19 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "5.15.0-91-generic"
+
+[commands.d4923e3c7f9c8dec0409fddee98da395085699bbb2cc9cfc8c3527e02f746c41]
+  command = "curl --retry 3 --retry-delay 1 --connect-timeout 1 --retry-max-time 5 --max-time 10 --noproxy '*' http://169.254.169.254/hetzner/v1/metadata"
+  exit_status = 0
+  stdout = """
+instance-id: 110512417
+hostname: ubuntu-8gb-hil-1
+region: us-west
+availability-zone: hil-dc1
+local-ipv4: ""
+"""
