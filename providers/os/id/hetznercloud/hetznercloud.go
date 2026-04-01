@@ -98,6 +98,9 @@ func (m *commandInstanceMetadata) fetchMetadata() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	if cmd.ExitStatus != 0 {
+		return nil, fmt.Errorf("hetzner metadata request failed with exit status %d", cmd.ExitStatus)
+	}
 
 	data, err := io.ReadAll(cmd.Stdout)
 	if err != nil {
