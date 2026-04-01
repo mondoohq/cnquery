@@ -70,6 +70,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	dnsDomain := os.Getenv("USERDNSDOMAIN")
+	userDomain := os.Getenv("USERDOMAIN")
 	if len(domain) == 0 && dnsDomain != "" {
 		domain = []byte(dnsDomain)
 	}
@@ -104,9 +105,13 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	// read it even when --password is not provided.
 	userStr := strVal(user)
 	if userStr == "" {
-		// Infer UPN from Windows environment: USERNAME@USERDNSDOMAIN.
-		if winUser := os.Getenv("USERNAME"); winUser != "" && dnsDomain != "" {
-			userStr = winUser + "@" + dnsDomain
+		// Infer a default UPN only from Windows account environment variables.
+		// USERNAME is commonly set on Unix too, so require USERDOMAIN as a
+		// Windows-specific guard before treating it as an AD username.
+		if userDomain != "" && dnsDomain != "" {
+			if winUser := os.Getenv("USERNAME"); winUser != "" {
+				userStr = winUser + "@" + dnsDomain
+			}
 		}
 	}
 	if userStr != "" {

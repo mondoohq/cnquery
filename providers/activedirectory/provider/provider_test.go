@@ -4,7 +4,6 @@
 package provider
 
 import (
-	"os"
 	"testing"
 
 	"go.mondoo.com/mql/v13/llx"
@@ -92,23 +91,11 @@ func TestParseCLINilFlagsDoesNotPanic(t *testing.T) {
 }
 
 func TestParseCLIEnvFallbacks(t *testing.T) {
-	setEnv := func(t *testing.T, key, value string) {
-		t.Helper()
-		old, existed := os.LookupEnv(key)
-		t.Cleanup(func() {
-			if existed {
-				os.Setenv(key, old)
-			} else {
-				os.Unsetenv(key)
-			}
-		})
-		os.Setenv(key, value)
-	}
-
 	t.Run("LOGONSERVER provides dc", func(t *testing.T) {
-		setEnv(t, "LOGONSERVER", `\\DC01`)
-		setEnv(t, "USERDNSDOMAIN", "CORP.EXAMPLE.COM")
-		setEnv(t, "USERNAME", "alice")
+		t.Setenv("LOGONSERVER", `\\DC01`)
+		t.Setenv("USERDNSDOMAIN", "CORP.EXAMPLE.COM")
+		t.Setenv("USERDOMAIN", "CORP")
+		t.Setenv("USERNAME", "alice")
 		svc := Init()
 		res, err := svc.ParseCLI(&plugin.ParseCLIReq{
 			Flags: map[string]*llx.Primitive{
@@ -130,10 +117,33 @@ func TestParseCLIEnvFallbacks(t *testing.T) {
 		}
 	})
 
+	t.Run("USERDNSDOMAIN without USERDOMAIN does not infer user", func(t *testing.T) {
+		t.Setenv("LOGONSERVER", `\\DC01`)
+		t.Setenv("USERDNSDOMAIN", "CORP.EXAMPLE.COM")
+		t.Setenv("USERDOMAIN", "")
+		t.Setenv("USERNAME", "alice")
+		svc := Init()
+		res, err := svc.ParseCLI(&plugin.ParseCLIReq{})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		opts := res.Asset.Connections[0].Options
+		if got := opts[connection.OptionDC]; got != "DC01" {
+			t.Errorf("dc = %q, want %q", got, "DC01")
+		}
+		if got := opts[connection.OptionDomain]; got != "CORP.EXAMPLE.COM" {
+			t.Errorf("domain = %q, want %q", got, "CORP.EXAMPLE.COM")
+		}
+		if _, ok := opts[connection.OptionUser]; ok {
+			t.Fatalf("user should not be inferred without USERDOMAIN: got %q", opts[connection.OptionUser])
+		}
+	})
+
 	t.Run("explicit flags override env", func(t *testing.T) {
-		setEnv(t, "LOGONSERVER", `\\DC01`)
-		setEnv(t, "USERDNSDOMAIN", "CORP.EXAMPLE.COM")
-		setEnv(t, "USERNAME", "alice")
+		t.Setenv("LOGONSERVER", `\\DC01`)
+		t.Setenv("USERDNSDOMAIN", "CORP.EXAMPLE.COM")
+		t.Setenv("USERDOMAIN", "CORP")
+		t.Setenv("USERNAME", "alice")
 		svc := Init()
 		res, err := svc.ParseCLI(&plugin.ParseCLIReq{
 			Flags: map[string]*llx.Primitive{
