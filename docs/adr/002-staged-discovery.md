@@ -115,6 +115,62 @@ Stage 2 — Region scope:
     API clients — when the region is closed, all its resource data is freed
 ```
 
+### Traversal-Only Assets (Discovery Target Filtering)
+
+Staged discovery introduces a second concern: **not every intermediate asset should be scanned**. When a user specifies discovery targets like `--discover pods`, they want only pods as scannable assets. Namespaces are still needed for traversal (connecting to a namespace triggers Stage 2 which discovers pods), but namespaces themselves should not appear in the scan results.
+
+This is solved with `OptionTraversalOnly` — an inventory connection option that providers set on intermediate assets when those assets don't match the requested discovery targets. `AssetExplorer` treats traversal-only assets normally for connection and child discovery, but excludes them from scan results via `ScannableAssets()`.
+
+**Provider side** — the provider already knows the discovery targets from `invConfig.Discover.Targets`. When emitting intermediate assets, check whether that level is a target:
+
+```go
+// In discoverClusterStage, when emitting namespace assets:
+for _, ns := range nss {
+    nsConfig := invConfig.Clone()
+    nsConfig.Options[shared.OPTION_NAMESPACE] = ns.Name
+
+    // Namespaces are only scannable if explicitly targeted.
+    // Otherwise they're traversal-only: AssetExplorer connects to them
+    // (triggering Stage 2) but excludes them from scan results.
+    if !stringx.ContainsAnyOf(invConfig.Discover.Targets,
+        DiscoveryNamespaces, DiscoveryAuto, DiscoveryAll) {
+        nsConfig.Options[plugin.OptionTraversalOnly] = ""
+    }
+
+    ns.Connections = []*inventory.Config{nsConfig}
+    in.Spec.Assets = append(in.Spec.Assets, ns)
+}
+```
+
+**AssetExplorer side** — `TrackedAsset` exposes a `TraversalOnly` field, populated from the connection option when the asset is connected. Callers use `ScannableAssets()` to get only assets that should be scanned:
+
+```go
+// In AssetExplorer
+func (e *AssetExplorer) ScannableAssets() []*TrackedAsset {
+    var result []*TrackedAsset
+    for _, a := range e.Connected() {
+        if !a.TraversalOnly {
+            result = append(result, a)
+        }
+    }
+    return result
+}
+```
+
+**Caller side** — scan loops use `ScannableAssets()` instead of `Connected()`. The depth-first traversal still connects everything (traversal-only and scannable), but only scannable assets are sent to `SynchronizeAssets` / query execution / scan jobs.
+
+**How this generalizes:**
+
+| Command | Traversal-only | Scannable |
+|---|---|---|
+| `k8s --discover pods` | namespaces | pods |
+| `k8s --discover namespaces` | (none) | cluster + namespaces |
+| `k8s --discover all` | (none) | cluster + namespaces + all workloads |
+| `gcp --discover compute-instances` | org, projects, service groups | compute instances |
+| `aws --discover ec2-instances` | accounts, regions | EC2 instances |
+
+**Mixed targets** (`--discover pods,namespaces`): namespaces are both scannable AND traversal nodes. The provider simply doesn't set `OptionTraversalOnly`. They get scanned and their children get discovered. No special handling needed.
+
 ### Provider Implementation Guide
 
 To add staged discovery to a provider:
@@ -172,6 +228,7 @@ Have `AssetExplorer` automatically infer hierarchy from platform IDs or asset me
 - **Bounded memory per branch:** Each scope boundary creates a separate runtime with its own MQL resource cache. When a scope is closed (`CloseAsset`), its entire cache — all MQL resource objects, API responses, and connection state — is released. Only one branch of the hierarchy is in memory at a time. A 1000-namespace cluster uses the same peak memory as a 5-namespace cluster.
 - **No root cache accumulation:** In single-pass discovery, all resources attach to the root runtime's cache and are never released until the scan completes. Staged discovery breaks this by giving each scope its own cache — pods in namespace A are cached in namespace A's runtime, not the cluster root's. When namespace A is closed, those pods are gone from memory.
 - **Reduced API pressure:** Each stage only queries the APIs needed for its scope. No cluster-wide enumeration of every resource type.
+- **Discovery target filtering without hierarchy knowledge:** Callers specify what to scan (e.g., `--discover pods`), and providers mark intermediate levels as traversal-only. `AssetExplorer.ScannableAssets()` returns only the targeted assets. The caller doesn't need to know which levels are intermediate — it just connects everything and filters at the end.
 - **Composable with AssetExplorer:** Callers don't need to understand stages — they just connect discovered children as usual. The staging is entirely provider-internal.
 - **Backward compatible:** The `OptionStagedDiscovery` flag is opt-in. Providers without staged discovery and callers that don't set the flag continue working unchanged.
 - **Cache sharing within scope:** `WithParentConnectionId` lets leaf assets within a scope (e.g., pods within a namespace) share that scope's API client cache, avoiding redundant API calls — while keeping the cache isolated from other scopes.

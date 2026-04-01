@@ -230,6 +230,12 @@ func discoverClusterStage(runtime *plugin.Runtime, conn shared.Connection, invCo
 		return nil, err
 	}
 
+	// Namespaces are only scannable if explicitly targeted. Otherwise they
+	// are traversal-only: AssetExplorer connects to them (triggering stage 2
+	// workload discovery) but excludes them from scan results.
+	nsIsScannable := stringx.ContainsAnyOf(invConfig.Discover.Targets,
+		DiscoveryNamespaces, DiscoveryAuto, DiscoveryAll)
+
 	for _, ns := range nss {
 		// Clone without WithParentConnectionId so each namespace gets its own
 		// resource cache. With a shared parent cache, the k8s MQL resource would
@@ -237,6 +243,10 @@ func discoverClusterStage(runtime *plugin.Runtime, conn shared.Connection, invCo
 		// by all other namespaces, returning stale data.
 		nsConfig := invConfig.Clone() // Clone() copies Options, propagating OPTION_STAGED_DISCOVERY
 		nsConfig.Options[shared.OPTION_NAMESPACE] = ns.Name
+
+		if !nsIsScannable {
+			nsConfig.Options[plugin.OptionTraversalOnly] = ""
+		}
 
 		// Override the connection config to route to stage 2, but keep the
 		// namespace's platform IDs, platform, and labels from discoverNamespaces().

@@ -153,7 +153,46 @@ func discoverScopedStage(runtime *plugin.Runtime, conn YourConnection, invConfig
 }
 ```
 
-### Step 5: Gate resource methods at higher scopes (if needed)
+### Step 5: Mark intermediate assets as traversal-only
+
+When users specify discovery targets (e.g., `--discover pods`), intermediate assets that don't match the targets must still be traversed (to discover children) but should NOT appear in scan results. Set `OptionTraversalOnly` on their connection config.
+
+The provider already knows the discovery targets from `invConfig.Discover.Targets`. When emitting intermediate scope assets in Stage 1, check whether that scope level is targeted:
+
+```go
+import "go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+
+// In your root stage, when emitting child scope assets:
+for _, child := range children {
+    childConfig := invConfig.Clone()
+    childConfig.Options["your-scope-option"] = child.ID
+
+    // Only mark as scannable if this level is explicitly targeted.
+    // Otherwise it's traversal-only: AssetExplorer connects to it
+    // (triggering the next stage) but excludes it from scan results.
+    if !isTargeted(invConfig.Discover.Targets, YourScopeDiscoveryTarget) {
+        childConfig.Options[plugin.OptionTraversalOnly] = ""
+    }
+
+    childAsset := &inventory.Asset{
+        PlatformIds: []string{child.PlatformId},
+        Name:        child.Name,
+        Platform:    child.Platform,
+        Connections: []*inventory.Config{childConfig},
+    }
+    in.Spec.Assets = append(in.Spec.Assets, childAsset)
+}
+```
+
+**Key rules:**
+- `OptionTraversalOnly` is set per-asset on the connection config, not globally
+- Leaf assets (the bottom of the hierarchy) are never traversal-only — they're always scannable if they match targets
+- Mixed targets (e.g., `--discover pods,namespaces`) — if the intermediate level IS a target, don't set `OptionTraversalOnly`. It gets scanned AND traversed.
+- `DiscoveryAuto` and `DiscoveryAll` targets mean everything is scannable — never set `OptionTraversalOnly`
+
+Callers use `explorer.ScannableAssets()` instead of `explorer.Connected()` to get only assets that should be scanned. The depth-first traversal still connects everything.
+
+### Step 6: Gate resource methods at higher scopes
 
 When the root scope is scanned, resource methods that load lower-scope data should return empty results to avoid loading everything into the root's cache. This is optional but important for large providers.
 
@@ -176,9 +215,9 @@ func (r *mqlYourProvider) childScopedResources() ([]interface{}, error) {
 }
 ```
 
-### Step 6: Verify both paths produce the same assets
+### Step 7: Verify both paths and discovery targets
 
-Both the legacy and staged paths must discover the same final set of assets (same platform IDs, same names). They differ only in how discovery is chunked.
+Both the legacy and staged paths must discover the same final set of assets (same platform IDs, same names). They differ only in how discovery is chunked. Also verify that discovery targets correctly filter scannable assets.
 
 ```bash
 # Build and install
@@ -192,11 +231,15 @@ mql shell <provider-args>
 # Verify the same assets appear
 mql shell <provider-args>
 
+# Test discovery target filtering (e.g., only pods, only instances)
+# Verify that intermediate assets are traversed but not scanned
+mql shell <provider-args> --discover <specific-target>
+
 # Run existing tests
 go test ./providers/<name>/...
 ```
 
-### Step 7: Update .lr.versions if new resources were added
+### Step 8: Update .lr.versions if new resources were added
 
 If you added any new resources or fields to support staged discovery, update the `.lr.versions` file:
 
@@ -214,7 +257,10 @@ make providers/mqlr
 - [ ] Child connection configs include the scope option that triggers the next stage
 - [ ] `OptionStagedDiscovery` is propagated via `Clone()` to all child configs
 - [ ] Resource methods at root scope are gated to avoid loading child-scope data into root cache
+- [ ] Intermediate assets set `OptionTraversalOnly` when they don't match discovery targets
+- [ ] `DiscoveryAuto` / `DiscoveryAll` targets never set `OptionTraversalOnly`
 - [ ] Both legacy and staged paths produce the same set of assets
+- [ ] Discovery target filtering works (e.g., `--discover pods` only scans pods, not namespaces)
 - [ ] `go build ./providers/<name>/...` compiles
 - [ ] `go test ./providers/<name>/...` passes
 - [ ] `make test/lint` passes

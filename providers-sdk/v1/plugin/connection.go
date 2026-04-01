@@ -12,6 +12,13 @@ const (
 	// workloads per namespace later). When absent, legacy single-pass
 	// discovery runs unchanged for backward compatibility.
 	OptionStagedDiscovery = "staged-discovery"
+
+	// OptionTraversalOnly marks an asset as a traversal node that should not
+	// be scanned. AssetExplorer still connects to it (to discover children)
+	// but excludes it from ScannableAssets(). Providers set this on
+	// intermediate hierarchy levels (e.g. namespaces) when those levels are
+	// not in the requested discovery targets.
+	OptionTraversalOnly = "traversal-only"
 )
 
 type Connection interface {

@@ -16,6 +16,7 @@ import (
 	"go.mondoo.com/mql/v13/providers"
 	inventory "go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory/manager"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream"
 	"go.mondoo.com/mql/v13/utils/slicesx"
 )
@@ -42,11 +43,12 @@ const (
 // tree relationships. Callers receive pointers to TrackedAsset and pass them
 // back to AssetExplorer methods.
 type TrackedAsset struct {
-	Asset    *inventory.Asset
-	Runtime  *providers.Runtime // nil when Discovered or Closed
-	State    AssetState
-	Parent   *TrackedAsset   // nil for root assets
-	Children []*TrackedAsset // populated when this asset is Connected
+	Asset         *inventory.Asset
+	Runtime       *providers.Runtime // nil when Discovered or Closed
+	State         AssetState
+	Parent        *TrackedAsset   // nil for root assets
+	Children      []*TrackedAsset // populated when this asset is Connected
+	TraversalOnly bool            // true if this asset is only for traversal (not scannable)
 }
 
 // Display implements the SelectableItem interface from cli/components,
@@ -162,6 +164,23 @@ func (e *AssetExplorer) Connected() []*TrackedAsset {
 	var result []*TrackedAsset
 	for _, a := range e.allAssets {
 		if a.State == AssetConnected {
+			result = append(result, a)
+		}
+	}
+	return result
+}
+
+// ScannableAssets returns all connected assets that are not marked as
+// traversal-only. Use this instead of Connected() when building the list
+// of assets to scan or query — traversal-only assets exist only to discover
+// their children and should not appear in scan results.
+func (e *AssetExplorer) ScannableAssets() []*TrackedAsset {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	var result []*TrackedAsset
+	for _, a := range e.allAssets {
+		if a.State == AssetConnected && !a.TraversalOnly {
 			result = append(result, a)
 		}
 	}
@@ -292,9 +311,10 @@ func (e *AssetExplorer) discoverChildren(parent *TrackedAsset) {
 		}
 
 		child := &TrackedAsset{
-			Asset:  childAsset,
-			State:  AssetDiscovered,
-			Parent: parent,
+			Asset:         childAsset,
+			State:         AssetDiscovered,
+			Parent:        parent,
+			TraversalOnly: hasOption(childAsset, plugin.OptionTraversalOnly),
 		}
 		e.allAssets = append(e.allAssets, child)
 		parent.Children = append(parent.Children, child)
@@ -368,6 +388,16 @@ func (e *AssetExplorer) findByPlatformIDs(ids []string) *TrackedAsset {
 		}
 	}
 	return nil
+}
+
+// hasOption returns true if the asset has the given option key set in its
+// first connection config.
+func hasOption(asset *inventory.Asset, key string) bool {
+	if len(asset.Connections) == 0 || asset.Connections[0].Options == nil {
+		return false
+	}
+	_, ok := asset.Connections[0].Options[key]
+	return ok
 }
 
 // findRootAsset walks up the parent chain to find the root asset for
