@@ -115,6 +115,9 @@ func TestParseCLIEnvFallbacks(t *testing.T) {
 		if got := opts[connection.OptionUser]; got != "alice@CORP.EXAMPLE.COM" {
 			t.Errorf("user = %q, want %q", got, "alice@CORP.EXAMPLE.COM")
 		}
+		if got := opts[connection.OptionLDAPS]; got != "true" {
+			t.Fatalf("ldaps = %q, want %q", got, "true")
+		}
 	})
 
 	t.Run("USERDNSDOMAIN without USERDOMAIN does not infer user", func(t *testing.T) {
@@ -136,6 +139,9 @@ func TestParseCLIEnvFallbacks(t *testing.T) {
 		}
 		if _, ok := opts[connection.OptionUser]; ok {
 			t.Fatalf("user should not be inferred without USERDOMAIN: got %q", opts[connection.OptionUser])
+		}
+		if got := opts[connection.OptionLDAPS]; got != "true" {
+			t.Fatalf("ldaps = %q, want %q", got, "true")
 		}
 	})
 
@@ -166,5 +172,124 @@ func TestParseCLIEnvFallbacks(t *testing.T) {
 		if got := opts[connection.OptionUser]; got != "bob@OTHER.COM" {
 			t.Errorf("user = %q, want %q", got, "bob@OTHER.COM")
 		}
+		if got := opts[connection.OptionLDAPS]; got != "true" {
+			t.Fatalf("ldaps = %q, want %q", got, "true")
+		}
 	})
+
+	t.Run("kerberos without explicit credentials leaves user unset for current session auth", func(t *testing.T) {
+		t.Setenv("LOGONSERVER", `\\DC01`)
+		t.Setenv("USERDNSDOMAIN", "CORP.EXAMPLE.COM")
+		t.Setenv("USERDOMAIN", "CORP")
+		t.Setenv("USERNAME", "alice")
+		svc := Init()
+		res, err := svc.ParseCLI(&plugin.ParseCLIReq{
+			Flags: map[string]*llx.Primitive{
+				"kerberos": {Value: []byte{0x01}},
+			},
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		opts := res.Asset.Connections[0].Options
+		if _, ok := opts[connection.OptionUser]; ok {
+			t.Fatalf("user should stay unset for implicit Windows session auth: got %q", opts[connection.OptionUser])
+		}
+		if got := opts[connection.OptionKerberos]; got != "true" {
+			t.Fatalf("kerberos = %q, want %q", got, "true")
+		}
+		if got := opts[connection.OptionLDAPS]; got != "true" {
+			t.Fatalf("ldaps = %q, want %q", got, "true")
+		}
+	})
+
+	t.Run("keytab still infers a Windows UPN when user is omitted", func(t *testing.T) {
+		t.Setenv("LOGONSERVER", `\\DC01`)
+		t.Setenv("USERDNSDOMAIN", "CORP.EXAMPLE.COM")
+		t.Setenv("USERDOMAIN", "CORP")
+		t.Setenv("USERNAME", "alice")
+		svc := Init()
+		res, err := svc.ParseCLI(&plugin.ParseCLIReq{
+			Flags: map[string]*llx.Primitive{
+				"kerberos": {Value: []byte{0x01}},
+				"keytab":   {Value: []byte("/tmp/test.keytab")},
+			},
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		opts := res.Asset.Connections[0].Options
+		if got := opts[connection.OptionUser]; got != "alice@CORP.EXAMPLE.COM" {
+			t.Fatalf("user = %q, want %q", got, "alice@CORP.EXAMPLE.COM")
+		}
+	})
+}
+
+func TestParseCLITransportSelection(t *testing.T) {
+	svc := Init()
+	boolFlag := func() *llx.Primitive {
+		return &llx.Primitive{Value: []byte{0x01}}
+	}
+
+	tests := []struct {
+		name             string
+		flags            map[string]*llx.Primitive
+		wantTransportKey string
+		wantErr          string
+	}{
+		{
+			name:             "default transport is ldaps",
+			flags:            map[string]*llx.Primitive{"dc": {Value: []byte("dc01")}},
+			wantTransportKey: connection.OptionLDAPS,
+		},
+		{
+			name:             "explicit ldaps stays ldaps",
+			flags:            map[string]*llx.Primitive{"dc": {Value: []byte("dc01")}, "ldaps": boolFlag()},
+			wantTransportKey: connection.OptionLDAPS,
+		},
+		{
+			name:             "starttls overrides default ldaps",
+			flags:            map[string]*llx.Primitive{"dc": {Value: []byte("dc01")}, "starttls": boolFlag()},
+			wantTransportKey: connection.OptionStartTLS,
+		},
+		{
+			name:             "plain ldap is explicit opt in",
+			flags:            map[string]*llx.Primitive{"dc": {Value: []byte("dc01")}, "plain-ldap": boolFlag()},
+			wantTransportKey: connection.OptionPlainLDAP,
+		},
+		{
+			name:    "conflicting transport flags are rejected",
+			flags:   map[string]*llx.Primitive{"dc": {Value: []byte("dc01")}, "starttls": boolFlag(), "plain-ldap": boolFlag()},
+			wantErr: "--ldaps, --plain-ldap, and --starttls are mutually exclusive; use one transport override or rely on the default LDAPS transport",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			res, err := svc.ParseCLI(&plugin.ParseCLIReq{Flags: tt.flags})
+			if tt.wantErr != "" {
+				if err == nil {
+					t.Fatalf("expected error %q", tt.wantErr)
+				}
+				if got := err.Error(); got != tt.wantErr {
+					t.Fatalf("error = %q, want %q", got, tt.wantErr)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			opts := res.Asset.Connections[0].Options
+			if got := opts[tt.wantTransportKey]; got != "true" {
+				t.Fatalf("%s = %q, want %q", tt.wantTransportKey, got, "true")
+			}
+			for _, other := range []string{connection.OptionLDAPS, connection.OptionStartTLS, connection.OptionPlainLDAP} {
+				if other != tt.wantTransportKey {
+					if _, ok := opts[other]; ok {
+						t.Fatalf("unexpected transport option %s=%q", other, opts[other])
+					}
+				}
+			}
+		})
+	}
 }

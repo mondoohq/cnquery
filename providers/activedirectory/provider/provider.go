@@ -49,6 +49,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	domain := flagValue("domain")
 	baseDN := flagValue("base-dn")
 	ldaps := flagValue("ldaps")
+	plainLDAP := flagValue("plain-ldap")
 	starttls := flagValue("starttls")
 	port := flagValue("port")
 	insecure := flagValue("insecure")
@@ -75,13 +76,33 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		domain = []byte(dnsDomain)
 	}
 
+	transportSelections := 0
+	if isTrueFlagValue(ldaps) {
+		transportSelections++
+	}
+	if isTrueFlagValue(plainLDAP) {
+		transportSelections++
+	}
+	if isTrueFlagValue(starttls) {
+		transportSelections++
+	}
+	if transportSelections > 1 {
+		return nil, errors.New("--ldaps, --plain-ldap, and --starttls are mutually exclusive; use one transport override or rely on the default LDAPS transport")
+	}
+
 	opts := map[string]string{}
 	opts[connection.OptionDC] = strVal(dc)
+	switch {
+	case isTrueFlagValue(plainLDAP):
+		opts[connection.OptionPlainLDAP] = "true"
+	case isTrueFlagValue(starttls):
+		opts[connection.OptionStartTLS] = "true"
+	default:
+		opts[connection.OptionLDAPS] = "true"
+	}
 
 	setStrOpt(opts, connection.OptionDomain, domain)
 	setStrOpt(opts, connection.OptionBaseDN, baseDN)
-	setBoolOpt(opts, connection.OptionLDAPS, ldaps)
-	setBoolOpt(opts, connection.OptionStartTLS, starttls)
 	portStr := strVal(port)
 	if portStr != "" && portStr != "0" {
 		if _, err := strconv.Atoi(portStr); err != nil {
@@ -101,10 +122,13 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		opts[connection.OptionBackend] = b
 	}
 
-	// Always store user in options so Kerberos keytab/ccache paths can
-	// read it even when --password is not provided.
+	// Always store user in options when we need an explicit principal, for example
+	// simple bind or Kerberos keytab/ccache/password flows. On Windows current-
+	// session Kerberos we deliberately leave it empty so the connection layer can
+	// select SSPI-backed single sign-on.
 	userStr := strVal(user)
-	if userStr == "" {
+	hasExplicitSecretMaterial := strVal(password) != "" || strVal(keytab) != "" || strVal(ccache) != ""
+	if userStr == "" && hasExplicitSecretMaterial {
 		// Infer a default UPN only from Windows account environment variables.
 		// USERNAME is commonly set on Unix too, so require USERDOMAIN as a
 		// Windows-specific guard before treating it as an AD username.
@@ -221,11 +245,17 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.ActiveDirector
 	return nil
 }
 
+// isTrueFlagValue interprets the plugin framework's bool encoding, where a
+// non-zero first byte means true and false/unset values should be omitted.
+func isTrueFlagValue(value []byte) bool {
+	return len(value) > 0 && value[0] != 0
+}
+
 // setBoolOpt converts a plugin bool flag value (which may be \x01 for true
 // or \x00 for false) to the string "true" and stores it in the options map.
 // Only "true" values are stored; false/unset flags are omitted.
 func setBoolOpt(opts map[string]string, key string, value []byte) {
-	if len(value) > 0 && value[0] != 0 {
+	if isTrueFlagValue(value) {
 		opts[key] = "true"
 	}
 }

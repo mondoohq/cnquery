@@ -4,10 +4,9 @@
 package resources
 
 import (
-	"crypto/tls"
 	"fmt"
-	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-ldap/ldap/v3"
 	"go.mondoo.com/mql/v13/providers/activedirectory/connection"
@@ -21,16 +20,7 @@ type currentGCState struct {
 }
 
 func ldapPortForConnection(conn *connection.ActiveDirectoryConnection) int {
-	port := 389
-	if strings.EqualFold(conn.Conf.Options[connection.OptionLDAPS], "true") {
-		port = 636
-	}
-	if p := conn.Conf.Options[connection.OptionPort]; p != "" {
-		if parsed, err := strconv.Atoi(p); err == nil {
-			port = parsed
-		}
-	}
-	return port
+	return conn.LDAPPort()
 }
 
 func queryNTDSSettingsGC(conn *connection.ActiveDirectoryConnection, serverRef string) (bool, error) {
@@ -96,36 +86,11 @@ func queryRootDSEGC(conn *connection.ActiveDirectoryConnection, host string) (bo
 	}
 
 	port := ldapPortForConnection(conn)
-	useTLS := strings.EqualFold(conn.Conf.Options[connection.OptionLDAPS], "true")
-	useStartTLS := strings.EqualFold(conn.Conf.Options[connection.OptionStartTLS], "true")
-	insecure := strings.EqualFold(conn.Conf.Options[connection.OptionInsecure], "true")
-	addr := fmt.Sprintf("%s:%d", host, port)
-
-	var ldapConn *ldap.Conn
-	var err error
-	if useTLS {
-		ldapConn, err = ldap.DialURL("ldaps://"+addr, ldap.DialWithTLSConfig(&tls.Config{
-			MinVersion:         tls.VersionTLS12,
-			ServerName:         host,
-			InsecureSkipVerify: insecure, //nolint:gosec
-		}))
-	} else {
-		ldapConn, err = ldap.DialURL("ldap://" + addr)
-	}
+	ldapConn, err := conn.DialLDAPHost(host, port, 5*time.Second)
 	if err != nil {
 		return false, err
 	}
 	defer ldapConn.Close()
-
-	if useStartTLS {
-		if err := ldapConn.StartTLS(&tls.Config{
-			MinVersion:         tls.VersionTLS12,
-			ServerName:         host,
-			InsecureSkipVerify: insecure, //nolint:gosec
-		}); err != nil {
-			return false, err
-		}
-	}
 
 	resp, err := ldapConn.Search(ldap.NewSearchRequest(
 		"",

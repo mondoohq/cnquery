@@ -87,3 +87,152 @@ func TestNewLDAPTLSConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestResolveLDAPTransport(t *testing.T) {
+	tests := []struct {
+		name          string
+		opts          map[string]string
+		wantTransport ldapTransport
+		wantPort      int
+		wantTLS       bool
+		wantStartTLS  bool
+		wantErr       string
+	}{
+		{
+			name:          "default transport is ldaps",
+			opts:          map[string]string{},
+			wantTransport: ldapTransportLDAPS,
+			wantPort:      636,
+			wantTLS:       true,
+		},
+		{
+			name:          "explicit ldaps stays ldaps",
+			opts:          map[string]string{OptionLDAPS: "true"},
+			wantTransport: ldapTransportLDAPS,
+			wantPort:      636,
+			wantTLS:       true,
+		},
+		{
+			name:          "starttls uses ldap port with TLS upgrade",
+			opts:          map[string]string{OptionStartTLS: "true"},
+			wantTransport: ldapTransportStartTLS,
+			wantPort:      389,
+			wantTLS:       true,
+			wantStartTLS:  true,
+		},
+		{
+			name:          "plain ldap is explicit",
+			opts:          map[string]string{OptionPlainLDAP: "true"},
+			wantTransport: ldapTransportPlain,
+			wantPort:      389,
+		},
+		{
+			name:    "conflicting transport options error",
+			opts:    map[string]string{OptionLDAPS: "true", OptionPlainLDAP: "true"},
+			wantErr: "LDAP transport options are mutually exclusive: choose one of ldaps, plain-ldap, or starttls",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			transport, err := resolveLDAPTransport(tt.opts)
+			if tt.wantErr != "" {
+				if err == nil {
+					t.Fatalf("expected error %q", tt.wantErr)
+				}
+				if got := err.Error(); got != tt.wantErr {
+					t.Fatalf("error = %q, want %q", got, tt.wantErr)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if transport != tt.wantTransport {
+				t.Fatalf("transport = %q, want %q", transport, tt.wantTransport)
+			}
+			if got := defaultPort(transport); got != tt.wantPort {
+				t.Fatalf("defaultPort(%q) = %d, want %d", transport, got, tt.wantPort)
+			}
+			if got := transport.usesTLS(); got != tt.wantTLS {
+				t.Fatalf("usesTLS(%q) = %v, want %v", transport, got, tt.wantTLS)
+			}
+			if got := transport.usesStartTLS(); got != tt.wantStartTLS {
+				t.Fatalf("usesStartTLS(%q) = %v, want %v", transport, got, tt.wantStartTLS)
+			}
+		})
+	}
+}
+
+func TestSelectKerberosAuthSource(t *testing.T) {
+	tests := []struct {
+		name       string
+		user       string
+		password   string
+		opts       map[string]string
+		wantSource kerberosAuthSource
+		wantErr    string
+	}{
+		{
+			name:    "keytab requires user",
+			opts:    map[string]string{OptionKeytab: "/tmp/test.keytab"},
+			wantErr: "--user is required with --keytab to identify the principal",
+		},
+		{
+			name:       "keytab with user",
+			user:       "alice@CORP.EXAMPLE.COM",
+			opts:       map[string]string{OptionKeytab: "/tmp/test.keytab"},
+			wantSource: kerberosAuthSourceKeytab,
+		},
+		{
+			name:       "ccache without user is fine",
+			opts:       map[string]string{OptionCCache: "/tmp/krb5cc"},
+			wantSource: kerberosAuthSourceCCache,
+		},
+		{
+			name:     "password requires user",
+			password: "secret",
+			opts:     map[string]string{},
+			wantErr:  "--user is required with --password for Kerberos authentication",
+		},
+		{
+			name:       "password with user",
+			user:       "alice@CORP.EXAMPLE.COM",
+			password:   "secret",
+			opts:       map[string]string{},
+			wantSource: kerberosAuthSourcePassword,
+		},
+		{
+			name:       "implicit current session without explicit creds",
+			opts:       map[string]string{},
+			wantSource: kerberosAuthSourceCurrentSession,
+		},
+		{
+			name:    "explicit user without kerberos material is rejected",
+			user:    "alice@CORP.EXAMPLE.COM",
+			opts:    map[string]string{},
+			wantErr: "--kerberos with --user also requires --password, --keytab, or --ccache; omit --user to use the current Windows session",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			source, err := selectKerberosAuthSource(tt.user, tt.password, tt.opts)
+			if tt.wantErr != "" {
+				if err == nil {
+					t.Fatalf("expected error %q", tt.wantErr)
+				}
+				if got := err.Error(); got != tt.wantErr {
+					t.Fatalf("error = %q, want %q", got, tt.wantErr)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if source != tt.wantSource {
+				t.Fatalf("source = %q, want %q", source, tt.wantSource)
+			}
+		})
+	}
+}

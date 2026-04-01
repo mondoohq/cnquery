@@ -26,27 +26,154 @@ import (
 
 const (
 	// Option keys for inventory.Config.Options
-	OptionDC       = "dc"
-	OptionUser     = "user"
-	OptionPassword = "password"
-	OptionDomain   = "domain"
-	OptionBaseDN   = "base-dn"
-	OptionLDAPS    = "ldaps"
-	OptionPort     = "port"
-	OptionInsecure = "insecure"
-	OptionBackend  = "backend"
-	OptionStartTLS = "starttls"
-	OptionKerberos = "kerberos"
-	OptionKeytab   = "keytab"
-	OptionKrb5Conf = "krb5conf"
-	OptionCCache   = "ccache"
+	OptionDC        = "dc"
+	OptionUser      = "user"
+	OptionPassword  = "password"
+	OptionDomain    = "domain"
+	OptionBaseDN    = "base-dn"
+	OptionLDAPS     = "ldaps"
+	OptionPlainLDAP = "plain-ldap"
+	OptionPort      = "port"
+	OptionInsecure  = "insecure"
+	OptionBackend   = "backend"
+	OptionStartTLS  = "starttls"
+	OptionKerberos  = "kerberos"
+	OptionKeytab    = "keytab"
+	OptionKrb5Conf  = "krb5conf"
+	OptionCCache    = "ccache"
 	// dialTimeout caps how long we wait for TCP connection to the DC.
 	dialTimeout = 30 * time.Second
 	// Probe with non-sensitive invalid credentials so we never expose real
 	// secrets on plaintext LDAP while checking signing enforcement.
 	ldapSigningProbeUser     = "invalid-probe-user"
 	ldapSigningProbePassword = "invalid-probe-password"
+	// Global Catalog defaults track the chosen LDAP transport: LDAPS uses 3269,
+	// while LDAP and StartTLS use 3268.
+	globalCatalogLDAPS = 3269
+	globalCatalogLDAP  = 3268
 )
+
+type ldapTransport string
+
+const (
+	ldapTransportLDAPS    ldapTransport = "ldaps"
+	ldapTransportStartTLS ldapTransport = "starttls"
+	ldapTransportPlain    ldapTransport = "ldap"
+)
+
+type kerberosAuthSource string
+
+const (
+	kerberosAuthSourceKeytab         kerberosAuthSource = "keytab"
+	kerberosAuthSourceCCache         kerberosAuthSource = "ccache"
+	kerberosAuthSourcePassword       kerberosAuthSource = "password"
+	kerberosAuthSourceCurrentSession kerberosAuthSource = "current-session"
+)
+
+func isTrueOption(value string) bool {
+	return strings.EqualFold(value, "true")
+}
+
+func resolveLDAPTransport(opts map[string]string) (ldapTransport, error) {
+	useLDAPS := isTrueOption(opts[OptionLDAPS])
+	usePlainLDAP := isTrueOption(opts[OptionPlainLDAP])
+	useStartTLS := isTrueOption(opts[OptionStartTLS])
+
+	enabled := 0
+	if useLDAPS {
+		enabled++
+	}
+	if usePlainLDAP {
+		enabled++
+	}
+	if useStartTLS {
+		enabled++
+	}
+	if enabled > 1 {
+		return "", errors.New("LDAP transport options are mutually exclusive: choose one of ldaps, plain-ldap, or starttls")
+	}
+
+	switch {
+	case usePlainLDAP:
+		return ldapTransportPlain, nil
+	case useStartTLS:
+		return ldapTransportStartTLS, nil
+	default:
+		return ldapTransportLDAPS, nil
+	}
+}
+
+func (t ldapTransport) defaultPort() int {
+	if t == ldapTransportLDAPS {
+		return 636
+	}
+	return 389
+}
+
+func (t ldapTransport) dialScheme() string {
+	if t == ldapTransportLDAPS {
+		return "ldaps"
+	}
+	return "ldap"
+}
+
+func (t ldapTransport) usesTLS() bool {
+	return t != ldapTransportPlain
+}
+
+func (t ldapTransport) usesStartTLS() bool {
+	return t == ldapTransportStartTLS
+}
+
+func (t ldapTransport) globalCatalogPort() int {
+	if t == ldapTransportLDAPS {
+		return globalCatalogLDAPS
+	}
+	return globalCatalogLDAP
+}
+
+func selectKerberosAuthSource(user, password string, opts map[string]string) (kerberosAuthSource, error) {
+	switch {
+	case opts[OptionKeytab] != "":
+		if user == "" {
+			return "", errors.New("--user is required with --keytab to identify the principal")
+		}
+		return kerberosAuthSourceKeytab, nil
+	case opts[OptionCCache] != "":
+		return kerberosAuthSourceCCache, nil
+	case password != "":
+		if user == "" {
+			return "", errors.New("--user is required with --password for Kerberos authentication")
+		}
+		return kerberosAuthSourcePassword, nil
+	default:
+		if user != "" {
+			return "", errors.New("--kerberos with --user also requires --password, --keytab, or --ccache; omit --user to use the current Windows session")
+		}
+		return kerberosAuthSourceCurrentSession, nil
+	}
+}
+
+func dialLDAPHost(host string, port int, transport ldapTransport, insecure bool, timeout time.Duration) (*ldap.Conn, error) {
+	addr := net.JoinHostPort(host, strconv.Itoa(port))
+	dialer := &net.Dialer{Timeout: timeout}
+	opts := []ldap.DialOpt{ldap.DialWithDialer(dialer)}
+	if transport == ldapTransportLDAPS {
+		opts = append(opts, ldap.DialWithTLSConfig(newLDAPTLSConfig(host, insecure)))
+	}
+
+	ldapConn, err := ldap.DialURL(transport.dialScheme()+"://"+addr, opts...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to dial LDAP at %s: %w", addr, err)
+	}
+	if transport.usesStartTLS() {
+		if err := ldapConn.StartTLS(newLDAPTLSConfig(host, insecure)); err != nil {
+			ldapConn.Close()
+			return nil, fmt.Errorf("StartTLS upgrade failed for %s: %w", addr, err)
+		}
+	}
+	return ldapConn, nil
+}
 
 // ActiveDirectoryConnection manages a single LDAP connection to an
 // Active Directory Domain Services domain controller.
@@ -55,9 +182,9 @@ type ActiveDirectoryConnection struct {
 	Conf  *inventory.Config
 	asset *inventory.Asset
 
-	ldapConn *ldap.Conn
-	dcHost   string
-	useTLS   bool
+	ldapConn  *ldap.Conn
+	dcHost    string
+	transport ldapTransport
 
 	baseDN string
 	// domainDN is always the domain root DN from RootDSE, used for SID/metadata.
@@ -108,15 +235,12 @@ func NewActiveDirectoryConnection(id uint32, asset *inventory.Asset, conf *inven
 		return nil, errors.New("backend 'rsat' is not yet implemented; use --backend=ldap (the default)")
 	}
 
-	useTLS := strings.EqualFold(conf.Options[OptionLDAPS], "true")
-	useStartTLS := strings.EqualFold(conf.Options[OptionStartTLS], "true")
-	useKerberos := strings.EqualFold(conf.Options[OptionKerberos], "true")
-	insecure := strings.EqualFold(conf.Options[OptionInsecure], "true")
-
-	// Validate mutually exclusive TLS options.
-	if useTLS && useStartTLS {
-		return nil, errors.New("--ldaps and --starttls are mutually exclusive; use one or the other")
+	transport, err := resolveLDAPTransport(conf.Options)
+	if err != nil {
+		return nil, err
 	}
+	useKerberos := isTrueOption(conf.Options[OptionKerberos])
+	insecure := isTrueOption(conf.Options[OptionInsecure])
 
 	// Kerberos auth doesn't require a password (keytab or ccache can substitute),
 	// but simple bind always does.
@@ -129,7 +253,7 @@ func NewActiveDirectoryConnection(id uint32, asset *inventory.Asset, conf *inven
 		}
 	}
 
-	port := defaultPort(useTLS)
+	port := defaultPort(transport)
 	if p := conf.Options[OptionPort]; p != "" {
 		parsed, err := strconv.Atoi(p)
 		if err != nil {
@@ -138,43 +262,14 @@ func NewActiveDirectoryConnection(id uint32, asset *inventory.Asset, conf *inven
 		port = parsed
 	}
 
-	addr := net.JoinHostPort(dcHost, strconv.Itoa(port))
-
-	// --- Dial ---
-	var ldapConn *ldap.Conn
-	var err error
-	dialer := &net.Dialer{Timeout: dialTimeout}
-	if useTLS {
-		ldapConn, err = ldap.DialURL("ldaps://"+addr, ldap.DialWithDialer(dialer), ldap.DialWithTLSConfig(newLDAPTLSConfig(dcHost, insecure)))
-	} else {
-		ldapConn, err = ldap.DialURL("ldap://"+addr, ldap.DialWithDialer(dialer))
-	}
+	ldapConn, err := dialLDAPHost(dcHost, port, transport, insecure, dialTimeout)
 	if err != nil {
-		return nil, fmt.Errorf("failed to dial LDAP at %s: %w", addr, err)
+		return nil, err
 	}
 
-	// --- StartTLS: upgrade plaintext connection to TLS before bind ---
-	if useStartTLS {
-		if err := ldapConn.StartTLS(newLDAPTLSConfig(dcHost, insecure)); err != nil {
-			ldapConn.Close()
-			return nil, fmt.Errorf("StartTLS upgrade failed for %s: %w", addr, err)
-		}
-	}
-
-	// --- Bind: Kerberos/GSSAPI or simple bind ---
-	if useKerberos {
-		if err := kerberosGSSAPIBind(ldapConn, dcHost, user, password, conf.Options); err != nil {
-			ldapConn.Close()
-			return nil, err
-		}
-	} else {
-		if !useTLS && !useStartTLS {
-			log.Warn().Str("dc", dcHost).Msg("LDAP simple bind over plaintext connection — credentials are transmitted in the clear; use --ldaps or --starttls to encrypt")
-		}
-		if err := ldapConn.Bind(user, password); err != nil {
-			ldapConn.Close()
-			return nil, fmt.Errorf("LDAP bind failed for %s: %w", user, err)
-		}
+	if err := bindLDAPConn(ldapConn, dcHost, user, password, conf.Options, transport, true); err != nil {
+		ldapConn.Close()
+		return nil, err
 	}
 
 	c := &ActiveDirectoryConnection{
@@ -183,7 +278,7 @@ func NewActiveDirectoryConnection(id uint32, asset *inventory.Asset, conf *inven
 		asset:      asset,
 		ldapConn:   ldapConn,
 		dcHost:     dcHost,
-		useTLS:     useTLS,
+		transport:  transport,
 		cache:      make(map[string]interface{}),
 	}
 
@@ -215,6 +310,7 @@ func NewActiveDirectoryConnection(id uint32, asset *inventory.Asset, conf *inven
 	}
 	log.Info().
 		Str("dc", dcHost).
+		Str("transport", string(transport)).
 		Str("baseDN", c.baseDN).
 		Str("domainSID", c.domainSID).
 		Str("forestRootSID", c.rootDomainSID).
@@ -244,67 +340,95 @@ func newLDAPTLSConfig(serverName string, insecure bool) *tls.Config {
 	}
 }
 
+// bindLDAPConn authenticates an already-established LDAP transport using either
+// Kerberos/GSSAPI or simple bind.
+func bindLDAPConn(conn *ldap.Conn, dcHost, user, password string, opts map[string]string, transport ldapTransport, warnOnPlaintext bool) error {
+	if isTrueOption(opts[OptionKerberos]) {
+		return kerberosGSSAPIBind(conn, dcHost, user, password, opts)
+	}
+	if warnOnPlaintext && !transport.usesTLS() {
+		log.Warn().Str("dc", dcHost).Msg("LDAP simple bind over plaintext connection — credentials are transmitted in the clear; use LDAPS (the default transport) or --starttls unless you explicitly opt into --plain-ldap for a lab")
+	}
+	if err := conn.Bind(user, password); err != nil {
+		return fmt.Errorf("LDAP bind failed for %s: %w", user, err)
+	}
+	return nil
+}
+
+func newKerberosClient(user, password string, opts map[string]string) (ldap.GSSAPIClient, func() error, kerberosAuthSource, string, error) {
+	source, err := selectKerberosAuthSource(user, password, opts)
+	if err != nil {
+		return nil, nil, "", "", err
+	}
+
+	switch source {
+	case kerberosAuthSourceKeytab:
+		krb5confPath := resolveKrb5Conf(opts[OptionKrb5Conf])
+		principal, realm := splitPrincipal(user)
+		gssClient, err := gssapi.NewClientWithKeytab(principal, realm, opts[OptionKeytab], krb5confPath, client.DisablePAFXFAST(true))
+		if err != nil {
+			return nil, nil, "", "", fmt.Errorf("kerberos keytab client: %w", err)
+		}
+		return gssClient, gssClient.Close, source, krb5confPath, nil
+	case kerberosAuthSourceCCache:
+		krb5confPath := resolveKrb5Conf(opts[OptionKrb5Conf])
+		gssClient, err := gssapi.NewClientFromCCache(opts[OptionCCache], krb5confPath, client.DisablePAFXFAST(true))
+		if err != nil {
+			return nil, nil, "", "", fmt.Errorf("kerberos ccache client: %w", err)
+		}
+		return gssClient, gssClient.Close, source, krb5confPath, nil
+	case kerberosAuthSourcePassword:
+		krb5confPath := resolveKrb5Conf(opts[OptionKrb5Conf])
+		principal, realm := splitPrincipal(user)
+		gssClient, err := gssapi.NewClientWithPassword(principal, realm, password, krb5confPath, client.DisablePAFXFAST(true))
+		if err != nil {
+			return nil, nil, "", "", fmt.Errorf("kerberos password client: %w", err)
+		}
+		return gssClient, gssClient.Close, source, krb5confPath, nil
+	default:
+		gssClient, cleanup, err := newImplicitKerberosClient()
+		if err != nil {
+			return nil, nil, "", "", err
+		}
+		return gssClient, cleanup, source, "", nil
+	}
+}
+
 // kerberosGSSAPIBind performs a Kerberos/GSSAPI SASL bind on the connection.
-// It supports three credential sources, tried in order:
+// It supports four credential sources, tried in order:
 //  1. --keytab: service keytab file
 //  2. --ccache: existing Kerberos credential cache (e.g. from kinit)
 //  3. --user + --password: password-based Kerberos AS exchange
-//
-// The krb5.conf location is taken from --krb5conf, KRB5_CONFIG env, or
-// the platform default /etc/krb5.conf.
+//  4. On Windows only, the current logon session when no explicit credential
+//     material is supplied.
 func kerberosGSSAPIBind(conn *ldap.Conn, dcHost, user, password string, opts map[string]string) error {
-	krb5confPath := resolveKrb5Conf(opts[OptionKrb5Conf])
-
 	// LDAP service principal: ldap/<dc_hostname>
 	servicePrincipal := "ldap/" + dcHost
 
-	var gssClient *gssapi.Client
-	var err error
-
-	switch {
-	case opts[OptionKeytab] != "":
-		if user == "" {
-			return errors.New("--user is required with --keytab to identify the principal")
-		}
-		// Extract realm from user@REALM or use empty string for default realm.
-		principal, realm := splitPrincipal(user)
-		gssClient, err = gssapi.NewClientWithKeytab(principal, realm, opts[OptionKeytab], krb5confPath, client.DisablePAFXFAST(true))
-		if err != nil {
-			return fmt.Errorf("kerberos keytab client: %w", err)
-		}
-
-	case opts[OptionCCache] != "":
-		gssClient, err = gssapi.NewClientFromCCache(opts[OptionCCache], krb5confPath, client.DisablePAFXFAST(true))
-		if err != nil {
-			return fmt.Errorf("kerberos ccache client: %w", err)
-		}
-
-	default:
-		if user == "" || password == "" {
-			return errors.New("--kerberos requires either --keytab, --ccache, or both --user and --password")
-		}
-		principal, realm := splitPrincipal(user)
-		gssClient, err = gssapi.NewClientWithPassword(principal, realm, password, krb5confPath, client.DisablePAFXFAST(true))
-		if err != nil {
-			return fmt.Errorf("kerberos password client: %w", err)
-		}
+	gssClient, cleanup, source, krb5confPath, err := newKerberosClient(user, password, opts)
+	if err != nil {
+		return err
 	}
+	defer cleanup()
 
-	log.Debug().
+	authLogger := log.Debug().
 		Str("servicePrincipal", servicePrincipal).
-		Str("krb5conf", krb5confPath).
-		Msg("performing GSSAPI/Kerberos bind")
+		Str("credentialSource", string(source))
+	if krb5confPath != "" {
+		authLogger = authLogger.Str("krb5conf", krb5confPath)
+	}
+	authLogger.Msg("performing GSSAPI/Kerberos bind")
 
 	if err := conn.GSSAPIBind(gssClient, servicePrincipal, ""); err != nil {
-		gssClient.Close()
 		// AD error 80090308 (SEC_E_INVALID_TOKEN) with data 57 typically means
 		// the DC requires LDAP signing/sealing for SASL binds but the go-ldap
 		// GSSAPI client does not negotiate SASL security layers (upstream
-		// issue: https://github.com/go-ldap/ldap/issues/552). Advise the user
-		// to use LDAPS/StartTLS or fall back to simple bind.
+		// issue: https://github.com/go-ldap/ldap/issues/552). SSPI-backed
+		// current-session auth changes how we source tickets on Windows, but it
+		// does not change this SASL-layer limitation.
 		if strings.Contains(err.Error(), "80090308") {
 			return fmt.Errorf("GSSAPI bind to %s failed (the domain controller likely requires "+
-				"LDAP signing for SASL binds; use --ldaps or --starttls, or fall back to "+
+				"LDAP signing for SASL binds; use LDAPS (the default transport) or --starttls, or fall back to "+
 				"simple bind with --user/--password without --kerberos): %w", servicePrincipal, err)
 		}
 		return fmt.Errorf("GSSAPI bind to %s failed: %w", servicePrincipal, err)
@@ -464,27 +588,21 @@ func (c *ActiveDirectoryConnection) discoverRootDomainSID() error {
 }
 
 // fetchRootDomainSIDViaGC connects to the Global Catalog on the current DC
-// and reads the forest root domain's objectSid. Uses port 3269 (LDAPS) when
-// the main connection uses TLS, otherwise port 3268 (plaintext).
+// and reads the forest root domain's objectSid using the same effective LDAP
+// transport as the primary connection: LDAPS uses 3269, while LDAP and
+// StartTLS use 3268.
 func (c *ActiveDirectoryConnection) fetchRootDomainSIDViaGC() (string, error) {
-	gcPort := "3268"
-	gcScheme := "ldap"
-	opts := []ldap.DialOpt{ldap.DialWithDialer(&net.Dialer{Timeout: 5 * time.Second})}
-	if c.useTLS {
-		gcPort = "3269"
-		gcScheme = "ldaps"
-		opts = append(opts, ldap.DialWithTLSConfig(newLDAPTLSConfig(c.dcHost, strings.EqualFold(c.Conf.Options[OptionInsecure], "true"))))
-	}
-	gcAddr := net.JoinHostPort(c.dcHost, gcPort)
-	gcConn, err := ldap.DialURL(gcScheme+"://"+gcAddr, opts...)
+	transport := c.effectiveLDAPTransport()
+	gcPort := transport.globalCatalogPort()
+	gcConn, err := dialLDAPHost(c.dcHost, gcPort, transport, isTrueOption(c.Conf.Options[OptionInsecure]), 5*time.Second)
 	if err != nil {
-		return "", fmt.Errorf("GC port %s unreachable on %s: %w", gcPort, c.dcHost, err)
+		return "", fmt.Errorf("GC port %d unreachable on %s: %w", gcPort, c.dcHost, err)
 	}
 	defer gcConn.Close()
 
 	// Re-bind with the same credentials on the GC connection.
 	user, password := c.resolveCredentials()
-	if err := gcConn.Bind(user, password); err != nil {
+	if err := bindLDAPConn(gcConn, c.dcHost, user, password, c.Conf.Options, transport, false); err != nil {
 		return "", fmt.Errorf("GC bind failed: %w", err)
 	}
 
@@ -537,11 +655,49 @@ func (c *ActiveDirectoryConnection) fetchObjectSID(dn string) (string, error) {
 	return DecodeSID(raw)
 }
 
-func defaultPort(useTLS bool) int {
-	if useTLS {
-		return 636
+func defaultPort(transport ldapTransport) int {
+	return transport.defaultPort()
+}
+
+func (c *ActiveDirectoryConnection) effectiveLDAPTransport() ldapTransport {
+	if c != nil && c.transport != "" {
+		return c.transport
 	}
-	return 389
+	if c == nil || c.Conf == nil {
+		return ldapTransportLDAPS
+	}
+	transport, err := resolveLDAPTransport(c.Conf.Options)
+	if err != nil {
+		return ldapTransportLDAPS
+	}
+	return transport
+}
+
+func (c *ActiveDirectoryConnection) LDAPPort() int {
+	if c != nil && c.Conf != nil {
+		if p := c.Conf.Options[OptionPort]; p != "" {
+			if parsed, err := strconv.Atoi(p); err == nil {
+				return parsed
+			}
+		}
+	}
+	return c.effectiveLDAPTransport().defaultPort()
+}
+
+func (c *ActiveDirectoryConnection) LDAPUsesTLS() bool {
+	return c.effectiveLDAPTransport().usesTLS()
+}
+
+func (c *ActiveDirectoryConnection) LDAPUsesStartTLS() bool {
+	return c.effectiveLDAPTransport().usesStartTLS()
+}
+
+func (c *ActiveDirectoryConnection) DialLDAPHost(host string, port int, timeout time.Duration) (*ldap.Conn, error) {
+	var insecure bool
+	if c != nil && c.Conf != nil {
+		insecure = isTrueOption(c.Conf.Options[OptionInsecure])
+	}
+	return dialLDAPHost(host, port, c.effectiveLDAPTransport(), insecure, timeout)
 }
 
 // ---------------------------------------------------------------------------
