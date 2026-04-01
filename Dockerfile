@@ -1,4 +1,4 @@
-# Copyright (c) Mondoo, Inc.
+# Copyright Mondoo, Inc. 2024, 2026
 # SPDX-License-Identifier: BUSL-1.1
 
 FROM alpine:3.23 AS root

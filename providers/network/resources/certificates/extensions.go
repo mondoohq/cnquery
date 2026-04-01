@@ -1,5 +1,5 @@
 // Copyright 2021 The Go Authors. All rights reserved.
-// Copyright (c) Mondoo, Inc.
+// Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BSD-3-Clause
 //
 // This code is based on the x509 parser from the Go standard library:

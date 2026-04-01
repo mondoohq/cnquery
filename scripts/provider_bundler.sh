@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (c) Mondoo, Inc.
+# Copyright Mondoo, Inc. 2024, 2026
 # SPDX-License-Identifier: BUSL-1.1
 
 ## Build the provider and bundle it into a single file

@@ -1,4 +1,4 @@
-// Copyright (c) Mondoo, Inc.
+// Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 //
 // Note for unit tests: We are currently using `mql_test.go` in core tests

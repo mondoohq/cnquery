@@ -1,4 +1,4 @@
-# Copyright (c) Mondoo, Inc.
+# Copyright Mondoo, Inc. 2024, 2026
 # SPDX-License-Identifier: BUSL-1.1
 
 # See here for image contents: https://github.com/microsoft/vscode-dev-containers/tree/v0.245.2/containers/go/.devcontainer/base.Dockerfile
