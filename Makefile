@@ -207,6 +207,7 @@ PROVIDERS := \
 	gcp \
 	github \
 	gitlab \
+	grafana \
 	google-workspace \
 	ipinfo \
 	ipmi \
@@ -273,6 +274,7 @@ providers/test:
 	@$(call testGoModProvider, providers/equinix)
 	@$(call testGoModProvider, providers/gcp)
 	@$(call testGoModProvider, providers/github)
+	@$(call testGoModProvider, providers/grafana)
 	@$(call testGoModProvider, providers/gitlab)
 	@$(call testGoModProvider, providers/google-workspace)
 	@$(call testGoModProvider, providers/ipinfo)

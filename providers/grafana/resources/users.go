@@ -1,0 +1,121 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
+package resources
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"strconv"
+	"time"
+
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/grafana/connection"
+)
+
+// grafanaConnection is a helper that type-asserts the runtime connection to
+// *connection.GrafanaConnection. All resource methods use this to obtain the client.
+func grafanaConnection(runtime *plugin.Runtime) *connection.GrafanaConnection {
+	return runtime.Connection.(*connection.GrafanaConnection)
+}
+
+// parseGrafanaTime parses a Grafana RFC3339 timestamp, returning the zero
+// time.Time on any parse error (e.g. missing or invalid value).
+func parseGrafanaTime(s string) time.Time {
+	t, err := time.Parse(time.RFC3339, s)
+	if err != nil {
+		return time.Time{}
+	}
+	return t
+}
+
+// grafanaOrgJSON mirrors the /api/org response.
+type grafanaOrgJSON struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+}
+
+// grafanaOrgUserJSON mirrors one element of the /api/org/users response.
+type grafanaOrgUserJSON struct {
+	OrgID         int    `json:"orgId"`
+	UserID        int    `json:"userId"`
+	Email         string `json:"email"`
+	Name          string `json:"name"`
+	Login         string `json:"login"`
+	Role          string `json:"role"`
+	LastSeenAt    string `json:"lastSeenAt"`
+	LastSeenAtAge string `json:"lastSeenAtAge"`
+}
+
+func (g *mqlGrafana) organization() (*mqlGrafanaOrganization, error) {
+	conn := grafanaConnection(g.MqlRuntime)
+	resp, err := conn.Get(context.Background(), "/api/org")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("grafana: GET /api/org returned status %d", resp.StatusCode)
+	}
+
+	var org grafanaOrgJSON
+	if err := json.NewDecoder(resp.Body).Decode(&org); err != nil {
+		return nil, fmt.Errorf("grafana: decoding /api/org response: %w", err)
+	}
+
+	res, err := CreateResource(g.MqlRuntime, "grafana.organization", map[string]*llx.RawData{
+		"id":   llx.IntData(int64(org.ID)),
+		"name": llx.StringData(org.Name),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGrafanaOrganization), nil
+}
+
+func (g *mqlGrafana) users() ([]interface{}, error) {
+	conn := grafanaConnection(g.MqlRuntime)
+	resp, err := conn.Get(context.Background(), "/api/org/users")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("grafana: GET /api/org/users returned status %d", resp.StatusCode)
+	}
+
+	var raw []grafanaOrgUserJSON
+	if err := json.NewDecoder(resp.Body).Decode(&raw); err != nil {
+		return nil, fmt.Errorf("grafana: decoding /api/org/users response: %w", err)
+	}
+
+	list := make([]interface{}, 0, len(raw))
+	for _, u := range raw {
+		res, err := CreateResource(g.MqlRuntime, "grafana.user", map[string]*llx.RawData{
+			"userId":        llx.IntData(int64(u.UserID)),
+			"orgId":         llx.IntData(int64(u.OrgID)),
+			"email":         llx.StringData(u.Email),
+			"name":          llx.StringData(u.Name),
+			"login":         llx.StringData(u.Login),
+			"role":          llx.StringData(u.Role),
+			"lastSeenAt":    llx.TimeData(parseGrafanaTime(u.LastSeenAt)),
+			"lastSeenAtAge": llx.StringData(u.LastSeenAtAge),
+		})
+		if err != nil {
+			return nil, err
+		}
+		list = append(list, res)
+	}
+	return list, nil
+}
+
+func (o *mqlGrafanaOrganization) id() (string, error) {
+	return "grafana-org/" + strconv.FormatInt(o.Id.Data, 10), nil
+}
+
+func (u *mqlGrafanaUser) id() (string, error) {
+	return "grafana-user/" + strconv.FormatInt(u.UserId.Data, 10), nil
+}

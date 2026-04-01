@@ -1,0 +1,136 @@
+option provider = "go.mondoo.com/mql/v13/providers/grafana"
+option go_package = "go.mondoo.com/mql/v13/providers/grafana/resources"
+
+// Grafana
+grafana {
+  // Organization details
+  organization() grafana.organization
+  // Users in the organization
+  users() []grafana.user
+  // Service accounts
+  serviceAccounts() []grafana.serviceAccount
+  // Datasources configured in the organization
+  datasources() []grafana.datasource
+  // Alerting contact points
+  contactPoints() []grafana.contactPoint
+  // Notification policy tree
+  notificationPolicy() grafana.notificationPolicy
+}
+
+// Grafana organization
+grafana.organization @defaults("id name") {
+  // Organization ID
+  id int
+  // Organization name
+  name string
+}
+
+// Grafana organization user
+grafana.user @defaults("login role") {
+  // User ID
+  userId int
+  // Organization ID
+  orgId int
+  // User email address
+  email string
+  // User display name
+  name string
+  // User login handle
+  login string
+  // User role in the organization (Admin, Editor, Viewer)
+  role string
+  // Timestamp when the user was last seen
+  lastSeenAt time
+  // Human-readable last seen age
+  lastSeenAtAge string
+}
+
+// Grafana service account
+grafana.serviceAccount @defaults("id name role") {
+  // Service account ID
+  id int
+  // Organization ID
+  orgId int
+  // Service account name
+  name string
+  // Service account login
+  login string
+  // Service account role (Admin, Editor, Viewer)
+  role string
+  // Whether the service account is disabled
+  isDisabled bool
+  // Whether the service account is externally managed
+  isExternal bool
+  // Tokens associated with this service account
+  tokens() []grafana.serviceAccountToken
+}
+
+// Grafana service account token
+grafana.serviceAccountToken @defaults("id name") {
+  // Token ID
+  id int
+  // Service account ID this token belongs to
+  serviceAccountId int
+  // Token name
+  name string
+  // Timestamp when the token was created
+  created time
+  // Timestamp when the token expires (zero if no expiration)
+  expiration time
+  // Whether the token has an expiration date set
+  hasExpiration bool
+  // Seconds until expiration (negative if expired, 0 if no expiration)
+  secondsUntilExpiration float
+  // Whether the token is expired
+  isExpired bool
+}
+
+// Grafana datasource
+grafana.datasource @defaults("id name type") {
+  // Datasource ID
+  id int
+  // Datasource UID
+  uid string
+  // Organization ID
+  orgId int
+  // Datasource name
+  name string
+  // Datasource type (e.g., prometheus, loki, mysql)
+  type string
+  // Access mode (proxy or direct)
+  access string
+  // Datasource URL
+  url string
+  // Whether this is the default datasource
+  isDefault bool
+  // Whether this datasource is read-only
+  readOnly bool
+  // Whether basic auth is enabled for this datasource
+  basicAuth bool
+  // JSON data configuration (non-secret fields)
+  jsonData dict
+}
+
+// Grafana alerting contact point
+grafana.contactPoint @defaults("uid name type") {
+  // Contact point UID
+  uid string
+  // Contact point name
+  name string
+  // Contact point type (e.g., email, slack, webhook, pagerduty)
+  type string
+  // Whether resolve messages are disabled
+  disableResolveMessage bool
+  // Contact point settings (non-secret fields)
+  settings dict
+}
+
+// Grafana notification policy tree
+grafana.notificationPolicy {
+  // Default receiver name
+  receiver string
+  // Labels to group alerts by
+  groupBy []string
+  // Nested routing rules
+  routes []dict
+}
