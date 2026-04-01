@@ -36,4 +36,23 @@ hostname: ubuntu-8gb-hil-1
 region: us-west
 availability-zone: hil-dc1
 local-ipv4: ""
+public-ipv4: 5.78.107.208
+public-keys:
+- ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAwjdTGb2Brk8c99PdqDHgOIjmHBQfE4tT9MGXTsfkss
+network-config:
+  config:
+  - mac_address: "92:00:06:96:49:21"
+    name: eth0
+    subnets:
+    - ipv4: true
+      type: dhcp
+    - address: "2a01:4ff:1f0:4c7b::1/64"
+      dns_nameservers:
+      - "2a01:4ff:ff00::add:2"
+      - "2a01:4ff:ff00::add:1"
+      gateway: "fe80::1"
+      ipv6: true
+      type: static
+    type: physical
+  version: 1
 """

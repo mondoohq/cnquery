@@ -50,6 +50,7 @@ type hetznerMetadata struct {
 	Region           string `yaml:"region"`
 	AvailabilityZone string `yaml:"availability-zone"`
 	LocalIPv4        string `yaml:"local-ipv4"`
+	PublicIPv4       string `yaml:"public-ipv4"`
 }
 
 type commandInstanceMetadata struct {

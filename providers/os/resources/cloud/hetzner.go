@@ -18,6 +18,11 @@ type hetznerCloud struct {
 	conn shared.Connection
 }
 
+// NewHetznerCloud creates a new Hetzner cloud instance.
+func NewHetznerCloud(conn shared.Connection) (OSCloud, error) {
+	return &hetznerCloud{conn: conn}, nil
+}
+
 func (h *hetznerCloud) Provider() Provider {
 	return HETZNER
 }
@@ -54,6 +59,12 @@ func (h *hetznerCloud) Instance() (*InstanceMetadata, error) {
 	if value, ok := m["local-ipv4"]; ok {
 		if localIP, ok := value.(string); ok && localIP != "" {
 			instanceMd.PrivateIpv4 = []Ipv4Address{{IP: localIP}}
+		}
+	}
+
+	if value, ok := m["public-ipv4"]; ok {
+		if publicIP, ok := value.(string); ok && publicIP != "" {
+			instanceMd.PublicIpv4 = []Ipv4Address{{IP: publicIP}}
 		}
 	}
 

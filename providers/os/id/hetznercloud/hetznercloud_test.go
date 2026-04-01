@@ -50,4 +50,5 @@ func TestRawMetadataLinux(t *testing.T) {
 	assert.Equal(t, "ubuntu-8gb-hil-1", m["hostname"])
 	assert.Equal(t, "us-west", m["region"])
 	assert.Equal(t, "hil-dc1", m["availability-zone"])
+	assert.Equal(t, "5.78.107.208", m["public-ipv4"])
 }

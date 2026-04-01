@@ -15,7 +15,7 @@ instance-id: 110512417
 hostname: ubuntu-8gb-hil-1
 region: us-west
 availability-zone: hil-dc1
-local-ipv4: ""
+local-ipv4: 10.0.0.5
 public-ipv4: 5.78.107.208
 public-keys:
 - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAwjdTGb2Brk8c99PdqDHgOIjmHBQfE4tT9MGXTsfkss
