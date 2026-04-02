@@ -44,11 +44,7 @@ func initSystemdTimer(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 	}
 
 	conn := runtime.Connection.(shared.Connection)
-	if !conn.Capabilities().Has(shared.Capability_RunCommand) {
-		return nil, nil, errors.New("systemd.timer requires command execution capability")
-	}
-
-	mgr := services.NewSystemdTimerManager(conn)
+	mgr := services.ResolveSystemdTimerManager(conn)
 	timer, err := mgr.Get(name)
 	if err != nil {
 		return nil, nil, err
@@ -85,7 +81,7 @@ func (t *mqlSystemdTimer) fetchProperties() (map[string]string, error) {
 	}
 
 	conn := t.MqlRuntime.Connection.(shared.Connection)
-	mgr := services.NewSystemdTimerManager(conn)
+	mgr := services.ResolveSystemdTimerManager(conn)
 	props, err := mgr.ShowTimerProperties(t.Name.Data)
 	if err != nil {
 		return nil, err
@@ -129,11 +125,7 @@ func (x *mqlSystemdTimers) id() (string, error) {
 
 func (x *mqlSystemdTimers) list() ([]any, error) {
 	conn := x.MqlRuntime.Connection.(shared.Connection)
-	if !conn.Capabilities().Has(shared.Capability_RunCommand) {
-		return nil, errors.New("systemd.timers requires command execution capability")
-	}
-
-	mgr := services.NewSystemdTimerManager(conn)
+	mgr := services.ResolveSystemdTimerManager(conn)
 	timers, err := mgr.List()
 	if err != nil {
 		log.Debug().Err(err).Msg("mql[systemd.timers]> could not retrieve timer list")
@@ -183,11 +175,7 @@ func initSystemdSocket(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	}
 
 	conn := runtime.Connection.(shared.Connection)
-	if !conn.Capabilities().Has(shared.Capability_RunCommand) {
-		return nil, nil, errors.New("systemd.socket requires command execution capability")
-	}
-
-	mgr := services.NewSystemdSocketManager(conn)
+	mgr := services.ResolveSystemdSocketManager(conn)
 	socket, err := mgr.Get(name)
 	if err != nil {
 		return nil, nil, err
@@ -224,7 +212,7 @@ func (s *mqlSystemdSocket) fetchProperties() (map[string]string, error) {
 	}
 
 	conn := s.MqlRuntime.Connection.(shared.Connection)
-	mgr := services.NewSystemdSocketManager(conn)
+	mgr := services.ResolveSystemdSocketManager(conn)
 	props, err := mgr.ShowSocketProperties(s.Name.Data)
 	if err != nil {
 		return nil, err
@@ -274,11 +262,7 @@ func (x *mqlSystemdSockets) id() (string, error) {
 
 func (x *mqlSystemdSockets) list() ([]any, error) {
 	conn := x.MqlRuntime.Connection.(shared.Connection)
-	if !conn.Capabilities().Has(shared.Capability_RunCommand) {
-		return nil, errors.New("systemd.sockets requires command execution capability")
-	}
-
-	mgr := services.NewSystemdSocketManager(conn)
+	mgr := services.ResolveSystemdSocketManager(conn)
 	sockets, err := mgr.List()
 	if err != nil {
 		log.Debug().Err(err).Msg("mql[systemd.sockets]> could not retrieve socket list")

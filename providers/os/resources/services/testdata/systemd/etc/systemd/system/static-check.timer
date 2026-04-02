@@ -1,0 +1,5 @@
+[Unit]
+Description=Static timer without Install section
+
+[Timer]
+OnCalendar=hourly

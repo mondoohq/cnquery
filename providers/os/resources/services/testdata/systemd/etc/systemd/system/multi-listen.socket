@@ -1,0 +1,10 @@
+[Unit]
+Description=Multi-listen socket
+
+[Socket]
+ListenStream=/run/multi/a.sock
+ListenStream=/run/multi/b.sock
+Accept=yes
+
+[Install]
+WantedBy=sockets.target

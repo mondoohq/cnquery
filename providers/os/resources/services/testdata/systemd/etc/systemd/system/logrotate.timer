@@ -1,0 +1,9 @@
+[Unit]
+Description=Daily rotation of log files
+
+[Timer]
+OnCalendar=daily
+Persistent=yes
+
+[Install]
+WantedBy=timers.target

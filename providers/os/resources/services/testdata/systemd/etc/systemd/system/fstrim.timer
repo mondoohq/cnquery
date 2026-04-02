@@ -1,0 +1,10 @@
+[Unit]
+Description=Discard unused blocks once a week
+
+[Timer]
+OnCalendar=weekly
+Persistent=yes
+Unit=fstrim.service
+
+[Install]
+WantedBy=timers.target

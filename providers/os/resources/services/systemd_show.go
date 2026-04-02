@@ -52,3 +52,35 @@ func applyUnitFileState(enabled, masked, static *bool, unitFileState string) {
 	*masked = strings.HasPrefix(unitFileState, "masked")
 	*static = unitFileState == "static"
 }
+
+// SystemdTimerLister can list and look up systemd timers.
+type SystemdTimerLister interface {
+	List() ([]*SystemdTimer, error)
+	Get(name string) (*SystemdTimer, error)
+	ShowTimerProperties(name string) (map[string]string, error)
+}
+
+// SystemdSocketLister can list and look up systemd sockets.
+type SystemdSocketLister interface {
+	List() ([]*SystemdSocket, error)
+	Get(name string) (*SystemdSocket, error)
+	ShowSocketProperties(name string) (map[string]string, error)
+}
+
+// ResolveSystemdTimerManager returns a command-based manager when the
+// connection supports command execution, otherwise a filesystem-based manager.
+func ResolveSystemdTimerManager(conn shared.Connection) SystemdTimerLister {
+	if !conn.Capabilities().Has(shared.Capability_RunCommand) {
+		return &SystemdFSTimerManager{Fs: conn.FileSystem()}
+	}
+	return NewSystemdTimerManager(conn)
+}
+
+// ResolveSystemdSocketManager returns a command-based manager when the
+// connection supports command execution, otherwise a filesystem-based manager.
+func ResolveSystemdSocketManager(conn shared.Connection) SystemdSocketLister {
+	if !conn.Capabilities().Has(shared.Capability_RunCommand) {
+		return &SystemdFSSocketManager{Fs: conn.FileSystem()}
+	}
+	return NewSystemdSocketManager(conn)
+}
