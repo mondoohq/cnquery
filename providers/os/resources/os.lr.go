@@ -1753,6 +1753,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"user.group": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlUser).GetGroup()).ToDataRes(types.Resource("group"))
 	},
+	"user.loggedIn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUser).GetLoggedIn()).ToDataRes(types.Bool)
+	},
 	"privatekey.pem": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPrivatekey).GetPem()).ToDataRes(types.String)
 	},
@@ -5481,6 +5484,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"user.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlUser).Group, ok = plugin.RawToTValue[*mqlGroup](v.Value, v.Error)
+		return
+	},
+	"user.loggedIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUser).LoggedIn, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"privatekey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13185,6 +13192,7 @@ type mqlUser struct {
 	Authorizedkeys plugin.TValue[*mqlAuthorizedkeys]
 	Sshkeys        plugin.TValue[[]any]
 	Group          plugin.TValue[*mqlGroup]
+	LoggedIn       plugin.TValue[bool]
 }
 
 // createUser creates a new instance of this resource
@@ -13307,6 +13315,12 @@ func (c *mqlUser) GetGroup() *plugin.TValue[*mqlGroup] {
 		}
 
 		return c.group(vargGid.Data)
+	})
+}
+
+func (c *mqlUser) GetLoggedIn() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LoggedIn, func() (bool, error) {
+		return c.loggedIn()
 	})
 }
 

@@ -186,6 +186,38 @@ func (x *mqlUsers) findID(id int64) (*mqlUser, error) {
 	return res, nil
 }
 
+func (u *mqlUser) loggedIn() (bool, error) {
+	conn := u.MqlRuntime.Connection.(shared.Connection)
+
+	// Use "who" on Unix/macOS, "query user" on Windows
+	cmdStr := "who"
+	if pf := conn.Asset().Platform; pf != nil && pf.IsFamily("windows") {
+		cmdStr = "query user"
+	}
+
+	o, err := CreateResource(u.MqlRuntime, "command", map[string]*llx.RawData{
+		"command": llx.StringData(cmdStr),
+	})
+	if err != nil {
+		return false, err
+	}
+	cmd := o.(*mqlCommand)
+	if exit := cmd.GetExitcode(); exit.Data != 0 {
+		// If the command fails (e.g., no users logged in on Windows), treat as not logged in
+		return false, nil
+	}
+
+	username := u.Name.Data
+	for _, line := range strings.Split(cmd.Stdout.Data, "\n") {
+		fields := strings.Fields(line)
+		if len(fields) > 0 && fields[0] == username {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
 func (u *mqlUser) sshkeys() ([]any, error) {
 	res := []any{}
 

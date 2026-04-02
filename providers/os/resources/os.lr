@@ -572,6 +572,8 @@ user @defaults("name uid gid") {
   sshkeys() []privatekey
   // Group of which user is a member
   group(gid) group
+  // Whether the user is currently logged in
+  loggedIn() bool
 }
 
 // Private key resource

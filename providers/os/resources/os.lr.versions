@@ -1125,6 +1125,7 @@ user.enabled 9.0.0
 user.gid 9.0.0
 user.group 9.0.0
 user.home 9.0.0
+user.loggedIn 13.7.1
 user.name 9.0.0
 user.shell 9.0.0
 user.sid 9.0.0
