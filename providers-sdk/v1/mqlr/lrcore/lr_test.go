@@ -303,7 +303,7 @@ func TestParseLR(t *testing.T) {
 				t.Fatal("failed to go-convert " + lrPath + ":" + err.Error())
 			}
 			assert.NotEmpty(t, godata)
-			assert.Equal(t, godata[:68], "// Copyright (c) Mondoo, Inc.\n// SPDX-License-Identifier: BUSL-1.1\n\n")
+			assert.Equal(t, godata[:68], "// Copyright Mondoo, Inc. 2024, 2026\n// SPDX-License-Identifier: BUSL-1.1\n\n")
 
 			schema, err := Schema(res)
 			if err != nil {
