@@ -186,36 +186,65 @@ func (x *mqlUsers) findID(id int64) (*mqlUser, error) {
 	return res, nil
 }
 
-func (u *mqlUser) loggedIn() (bool, error) {
-	conn := u.MqlRuntime.Connection.(shared.Connection)
-
-	// Use "who" on Unix/macOS, "query user" on Windows
-	cmdStr := "who"
+// loggedInUsers returns the set of currently logged-in usernames. The result
+// is cached via the command resource so repeated calls (e.g. iterating
+// users.list { loggedIn }) only execute the command once.
+func loggedInUsers(runtime *plugin.Runtime, conn shared.Connection) (map[string]bool, error) {
+	isWindows := false
 	if pf := conn.Asset().Platform; pf != nil && pf.IsFamily("windows") {
+		isWindows = true
+	}
+
+	cmdStr := "who"
+	if isWindows {
 		cmdStr = "query user"
 	}
 
-	o, err := CreateResource(u.MqlRuntime, "command", map[string]*llx.RawData{
+	o, err := CreateResource(runtime, "command", map[string]*llx.RawData{
 		"command": llx.StringData(cmdStr),
 	})
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 	cmd := o.(*mqlCommand)
 	if exit := cmd.GetExitcode(); exit.Data != 0 {
-		// If the command fails (e.g., no users logged in on Windows), treat as not logged in
-		return false, nil
+		return map[string]bool{}, nil
 	}
 
-	username := u.Name.Data
-	for _, line := range strings.Split(cmd.Stdout.Data, "\n") {
+	users := map[string]bool{}
+	for i, line := range strings.Split(cmd.Stdout.Data, "\n") {
+		// Skip header row from "query user" on Windows
+		if isWindows && i == 0 {
+			continue
+		}
 		fields := strings.Fields(line)
-		if len(fields) > 0 && fields[0] == username {
-			return true, nil
+		if len(fields) == 0 {
+			continue
+		}
+		name := fields[0]
+		if isWindows {
+			// Active session is prefixed with ">" (e.g., ">username")
+			name = strings.TrimLeft(name, "> ")
+		}
+		if name != "" {
+			users[name] = true
 		}
 	}
+	return users, nil
+}
 
-	return false, nil
+func (u *mqlUser) loggedIn() (bool, error) {
+	if u.Name.Error != nil {
+		return false, u.Name.Error
+	}
+
+	conn := u.MqlRuntime.Connection.(shared.Connection)
+	users, err := loggedInUsers(u.MqlRuntime, conn)
+	if err != nil {
+		return false, err
+	}
+
+	return users[u.Name.Data], nil
 }
 
 func (u *mqlUser) sshkeys() ([]any, error) {
