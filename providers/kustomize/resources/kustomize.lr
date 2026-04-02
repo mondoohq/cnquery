@@ -1,0 +1,139 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "kustomize"
+option go_package = "go.mondoo.com/mql/v13/providers/kustomize/resources"
+
+// Kustomize overlay analysis
+kustomize {
+  // List of all parsed kustomizations
+  kustomizations() []kustomize.kustomization
+}
+
+// A kustomization.yaml configuration
+kustomize.kustomization @defaults("path") {
+  // Path to the kustomization directory
+  path string
+  // API version
+  apiVersion string
+  // Kind (Kustomization or Component)
+  kind string
+  // Namespace override applied to all resources
+  namespace string
+  // Name prefix applied to all resources
+  namePrefix string
+  // Name suffix applied to all resources
+  nameSuffix string
+  // Common labels added to all resources
+  commonLabels map[string]string
+  // Common annotations added to all resources
+  commonAnnotations map[string]string
+  // Raw resource file references
+  resourceRefs []string
+  // Component references
+  componentRefs []string
+  // Patches (strategic merge and JSON)
+  patches() []kustomize.patch
+  // ConfigMap generators
+  configMapGenerators() []kustomize.generator
+  // Secret generators
+  secretGenerators() []kustomize.generator
+  // Image overrides
+  images() []kustomize.image
+  // Rendered Kubernetes resources (kustomize build output)
+  resources() []kustomize.resource
+  // Replacements (var-free field substitution)
+  replacements() []kustomize.replacement
+}
+
+// A patch definition (strategic merge or JSON patch)
+kustomize.patch @defaults("path") {
+  // Patch content (inline YAML or file content)
+  content string
+  // Patch file path (empty if inline)
+  path string
+  // Target group
+  targetGroup string
+  // Target version
+  targetVersion string
+  // Target kind
+  targetKind string
+  // Target name
+  targetName string
+  // Target namespace
+  targetNamespace string
+  // Target label selector
+  targetLabelSelector string
+  // Target annotation selector
+  targetAnnotationSelector string
+}
+
+// A ConfigMap or Secret generator
+kustomize.generator @defaults("name type") {
+  // Generator name
+  name string
+  // Type: "configmap" or "secret"
+  type string
+  // Literal key=value pairs
+  literals []string
+  // Files to include
+  files []string
+  // Env file sources
+  envs []string
+  // Behavior: "create", "replace", or "merge"
+  behavior string
+  // Namespace
+  namespace string
+}
+
+// An image override
+kustomize.image @defaults("name newTag") {
+  // Original image name
+  name string
+  // New image name (empty if unchanged)
+  newName string
+  // New tag
+  newTag string
+  // New digest (mutually exclusive with newTag)
+  digest string
+}
+
+// A rendered Kubernetes resource from kustomize build
+kustomize.resource @defaults("kind name") {
+  // Kubernetes API version
+  apiVersion string
+  // Resource kind
+  kind string
+  // Resource name (after transformations)
+  name string
+  // Resource namespace (after transformations)
+  namespace string
+  // Labels (after transformations)
+  labels map[string]string
+  // Annotations (after transformations)
+  annotations map[string]string
+  // Full resource manifest as dict
+  manifest dict
+}
+
+// A replacement (var-free field substitution)
+kustomize.replacement @defaults("sourcePath") {
+  // Source field path (e.g., ".metadata.name")
+  sourcePath string
+  // Source resource kind
+  sourceKind string
+  // Source resource name
+  sourceName string
+  // Target field paths
+  targets() []kustomize.replacementTarget
+}
+
+// A replacement target selector
+kustomize.replacementTarget @defaults("fieldPath") {
+  // Target field path to replace
+  fieldPath string
+  // Target resource kind selector
+  kind string
+  // Target resource name selector
+  name string
+}

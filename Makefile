@@ -215,6 +215,7 @@ PROVIDERS := \
 	ipinfo \
 	ipmi \
 	k8s \
+	kustomize \
 	mondoo \
 	ms365 \
 	network \
@@ -286,6 +287,7 @@ providers/test:
 	@$(call testGoModProvider, providers/ipinfo)
 	@$(call testGoModProvider, providers/ipmi)
 	@$(call testGoModProvider, providers/k8s)
+	@$(call testGoModProvider, providers/kustomize)
 	@$(call testGoModProvider, providers/mondoo)
 	@$(call testGoModProvider, providers/ms365)
 	@$(call testGoModProvider, providers/nmap)
