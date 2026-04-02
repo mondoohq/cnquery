@@ -1,4 +1,4 @@
-// Copyright Mondoo, Inc. 2026
+// Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
 package services
@@ -71,40 +71,37 @@ func (m *SystemdTimerManager) List() ([]*SystemdTimer, error) {
 }
 
 func (m *SystemdTimerManager) Get(name string) (*SystemdTimer, error) {
-	name = ensureSystemdTimerUnit(name)
-	cmd, err := m.conn.RunCommand(buildSystemdShowCommand([]string{name}))
+	unit := ensureSystemdTimerUnit(name)
+	cmd, err := m.conn.RunCommand(buildSystemdShowCommand([]string{unit}))
 	if err != nil {
 		return nil, err
 	}
 
-	services, err := ParseServiceSystemDShow(cmd.Stdout)
+	props, err := parseShowProperties(cmd.Stdout)
 	if err != nil {
 		return nil, err
 	}
 
-	normalized := normalizeSystemdTimerName(name)
-	svc, ok := services[normalized]
-	if !ok || !svc.Installed {
-		return nil, fmt.Errorf("%w: %s", ErrServiceNotFound, normalized)
+	id := props["Id"]
+	if id == "" || props["LoadState"] == "not-found" || props["LoadState"] == "" {
+		return nil, fmt.Errorf("%w: %s", ErrServiceNotFound, name)
 	}
 
-	return &SystemdTimer{
-		Name:        normalized,
-		Description: svc.Description,
-		Installed:   svc.Installed,
-		Enabled:     svc.Enabled,
-		Masked:      svc.Masked,
-		Static:      svc.Static,
-		Running:     svc.Running,
-	}, nil
+	timer := &SystemdTimer{
+		Name:        normalizeSystemdTimerName(id),
+		Description: props["Description"],
+		Installed:   true,
+		Running:     props["ActiveState"] == "active",
+	}
+	applyUnitFileState(&timer.Enabled, &timer.Masked, &timer.Static, props["UnitFileState"])
+
+	return timer, nil
 }
 
 // ShowTimerProperties runs systemctl show for timer-specific properties.
 func (m *SystemdTimerManager) ShowTimerProperties(name string) (map[string]string, error) {
 	unit := ensureSystemdTimerUnit(name)
-	cmd, err := m.conn.RunCommand(
-		"systemctl show " + shared.ShellEscape(unit) + " --property=Unit,OnCalendar,Persistent",
-	)
+	cmd, err := m.conn.RunCommand(buildShowPropertyCommand("Unit,OnCalendar,Persistent", unit))
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +121,7 @@ func ParseSystemdTimerUnitFiles(input io.Reader) ([]*SystemdTimer, error) {
 		return timers, nil
 	}
 
-	for _, line := range lines[1 : len(lines)-1] {
+	for _, line := range lines[1:] {
 		fields := strings.Fields(line)
 		if len(fields) < 2 {
 			continue
@@ -137,7 +134,7 @@ func ParseSystemdTimerUnitFiles(input io.Reader) ([]*SystemdTimer, error) {
 			Name:      normalizeSystemdTimerName(fields[0]),
 			Installed: true,
 		}
-		applySystemdUnitFileState2(timer, fields[1])
+		applyUnitFileState(&timer.Enabled, &timer.Masked, &timer.Static, fields[1])
 		timers = append(timers, timer)
 	}
 
@@ -179,10 +176,4 @@ func ensureSystemdTimerUnit(name string) string {
 		return name
 	}
 	return name + ".timer"
-}
-
-func applySystemdUnitFileState2(timer *SystemdTimer, unitFileState string) {
-	timer.Enabled = unitFileState == "enabled" || unitFileState == "enabled-runtime"
-	timer.Masked = strings.HasPrefix(unitFileState, "masked")
-	timer.Static = unitFileState == "static"
 }

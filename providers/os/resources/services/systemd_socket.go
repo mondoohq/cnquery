@@ -1,4 +1,4 @@
-// Copyright Mondoo, Inc. 2026
+// Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
 package services
@@ -71,59 +71,43 @@ func (m *SystemdSocketManager) List() ([]*SystemdSocket, error) {
 }
 
 func (m *SystemdSocketManager) Get(name string) (*SystemdSocket, error) {
-	name = ensureSystemdSocketUnit(name)
-	cmd, err := m.conn.RunCommand(buildSystemdShowCommand([]string{name}))
+	unit := ensureSystemdSocketUnit(name)
+	cmd, err := m.conn.RunCommand(buildSystemdShowCommand([]string{unit}))
 	if err != nil {
 		return nil, err
 	}
 
-	services, err := ParseServiceSystemDShow(cmd.Stdout)
+	props, err := parseShowProperties(cmd.Stdout)
 	if err != nil {
 		return nil, err
 	}
 
-	normalized := normalizeSystemdSocketName(name)
-	svc, ok := services[normalized]
-	if !ok || !svc.Installed {
-		return nil, fmt.Errorf("%w: %s", ErrServiceNotFound, normalized)
+	id := props["Id"]
+	if id == "" || props["LoadState"] == "not-found" || props["LoadState"] == "" {
+		return nil, fmt.Errorf("%w: %s", ErrServiceNotFound, name)
 	}
 
-	return &SystemdSocket{
-		Name:        normalized,
-		Description: svc.Description,
-		Installed:   svc.Installed,
-		Enabled:     svc.Enabled,
-		Masked:      svc.Masked,
-		Static:      svc.Static,
-		Running:     svc.Running,
-	}, nil
+	socket := &SystemdSocket{
+		Name:        normalizeSystemdSocketName(id),
+		Description: props["Description"],
+		Installed:   true,
+		Running:     props["ActiveState"] == "active",
+	}
+	applyUnitFileState(&socket.Enabled, &socket.Masked, &socket.Static, props["UnitFileState"])
+
+	return socket, nil
 }
 
-// ShowSocketProperties runs systemctl show for socket-specific properties.
+// ShowSocketProperties runs systemctl show for socket-specific properties
+// including Listen for addresses, Triggers for the activated unit, and Accept.
 func (m *SystemdSocketManager) ShowSocketProperties(name string) (map[string]string, error) {
 	unit := ensureSystemdSocketUnit(name)
-	cmd, err := m.conn.RunCommand(
-		"systemctl show " + shared.ShellEscape(unit) + " --property=Triggers,Accept",
-	)
+	cmd, err := m.conn.RunCommand(buildShowPropertyCommand("Triggers,Accept,Listen", unit))
 	if err != nil {
 		return nil, err
 	}
 
 	return parseShowProperties(cmd.Stdout)
-}
-
-// ShowSocketListenAddresses gets listen addresses from systemctl show Listen property.
-// The Listen property has a complex format, so we parse it separately.
-func (m *SystemdSocketManager) ShowSocketListenAddresses(name string) ([]string, error) {
-	unit := ensureSystemdSocketUnit(name)
-	cmd, err := m.conn.RunCommand(
-		"systemctl show " + shared.ShellEscape(unit) + " --property=Listen",
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return parseListenProperty(cmd.Stdout)
 }
 
 func ParseSystemdSocketUnitFiles(input io.Reader) ([]*SystemdSocket, error) {
@@ -138,7 +122,7 @@ func ParseSystemdSocketUnitFiles(input io.Reader) ([]*SystemdSocket, error) {
 		return sockets, nil
 	}
 
-	for _, line := range lines[1 : len(lines)-1] {
+	for _, line := range lines[1:] {
 		fields := strings.Fields(line)
 		if len(fields) < 2 {
 			continue
@@ -151,7 +135,7 @@ func ParseSystemdSocketUnitFiles(input io.Reader) ([]*SystemdSocket, error) {
 			Name:      normalizeSystemdSocketName(fields[0]),
 			Installed: true,
 		}
-		applySystemdSocketUnitFileState(socket, fields[1])
+		applyUnitFileState(&socket.Enabled, &socket.Masked, &socket.Static, fields[1])
 		sockets = append(sockets, socket)
 	}
 
@@ -195,53 +179,45 @@ func ensureSystemdSocketUnit(name string) string {
 	return name + ".socket"
 }
 
-func applySystemdSocketUnitFileState(socket *SystemdSocket, unitFileState string) {
-	socket.Enabled = unitFileState == "enabled" || unitFileState == "enabled-runtime"
-	socket.Masked = strings.HasPrefix(unitFileState, "masked")
-	socket.Static = unitFileState == "static"
-}
-
-// parseListenProperty parses the Listen= output from systemctl show.
-// The format is: Listen=<path> (<type>)\nListen=<path> (<type>)...
-// or on some systems: Listen={ path=<path> ; type=<type> }
-func parseListenProperty(input io.Reader) ([]string, error) {
-	content, err := io.ReadAll(input)
-	if err != nil {
-		return nil, err
+// ParseListenProperty parses the Listen= value from systemctl show output.
+// Multi-listen sockets produce multiple Listen= lines which are joined with "\n"
+// by parseShowProperties. Each line is one of:
+//   - "/run/dbus/system_bus_socket (Stream)" — simple format
+//   - "{ path=/run/...; type=Stream }" — structured format
+func ParseListenProperty(listen string) []string {
+	if listen == "" {
+		return nil
 	}
 
 	var addresses []string
-	for _, line := range strings.Split(strings.TrimSpace(string(content)), "\n") {
+	for _, line := range strings.Split(listen, "\n") {
 		line = strings.TrimSpace(line)
-		if line == "" || line == "Listen=" {
-			continue
-		}
-
-		// Strip "Listen=" prefix if present
-		line = strings.TrimPrefix(line, "Listen=")
 		if line == "" {
 			continue
 		}
 
-		// Format: "/run/dbus/system_bus_socket (Stream)" or "{ path=/run/...; type=Stream }"
+		// Structured format: "{ path=<path> ; type=<type> }"
 		if strings.HasPrefix(line, "{") {
-			// Parse structured format: { path=<path> ; type=<type> }
-			line = strings.Trim(line, "{ }")
-			for _, part := range strings.Split(line, ";") {
+			inner := strings.Trim(line, "{ }")
+			for _, part := range strings.Split(inner, ";") {
 				part = strings.TrimSpace(part)
-				if strings.HasPrefix(part, "path=") {
-					addresses = append(addresses, strings.TrimPrefix(part, "path="))
+				if after, ok := strings.CutPrefix(part, "path="); ok {
+					addresses = append(addresses, after)
 				}
 			}
+			continue
+		}
+
+		// Simple format: "<address> (<type>)"
+		if idx := strings.LastIndex(line, " ("); idx > 0 {
+			addresses = append(addresses, strings.TrimSpace(line[:idx]))
 		} else {
-			// Parse simple format: <address> (<type>)
-			if idx := strings.LastIndex(line, " ("); idx > 0 {
-				addresses = append(addresses, strings.TrimSpace(line[:idx]))
-			} else if line != "" {
-				addresses = append(addresses, line)
-			}
+			addresses = append(addresses, line)
 		}
 	}
 
-	return addresses, nil
+	if len(addresses) == 0 {
+		return nil
+	}
+	return addresses
 }

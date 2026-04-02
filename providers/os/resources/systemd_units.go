@@ -1,4 +1,4 @@
-// Copyright Mondoo, Inc. 2026
+// Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
 package resources
@@ -251,13 +251,12 @@ func (s *mqlSystemdSocket) accept() (bool, error) {
 }
 
 func (s *mqlSystemdSocket) listenAddresses() ([]any, error) {
-	conn := s.MqlRuntime.Connection.(shared.Connection)
-	mgr := services.NewSystemdSocketManager(conn)
-	addrs, err := mgr.ShowSocketListenAddresses(s.Name.Data)
+	props, err := s.fetchProperties()
 	if err != nil {
 		return nil, err
 	}
 
+	addrs := services.ParseListenProperty(props["Listen"])
 	result := make([]any, len(addrs))
 	for i, addr := range addrs {
 		result[i] = addr

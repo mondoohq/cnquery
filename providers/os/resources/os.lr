@@ -950,7 +950,7 @@ services {
   []service
 }
 
-// Systemd timer unit on this system
+// systemd timer unit on this system
 systemd.timer @defaults("name enabled running") {
   init(name string)
   // Name of the timer unit (without .timer suffix)
@@ -980,7 +980,7 @@ systemd.timers {
   []systemd.timer
 }
 
-// Systemd socket unit on this system
+// systemd socket unit on this system
 systemd.socket @defaults("name enabled running") {
   init(name string)
   // Name of the socket unit (without .socket suffix)
