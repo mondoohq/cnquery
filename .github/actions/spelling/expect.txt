@@ -74,6 +74,7 @@ draid
 dsse
 eas
 Ecmp
+efi
 eip
 ekm
 ekus
@@ -228,6 +229,7 @@ Sas
 sbom
 scim
 scm
+secureboot
 SECRETID
 secretmanager
 SECRETVALUE

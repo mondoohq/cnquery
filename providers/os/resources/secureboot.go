@@ -14,11 +14,11 @@ import (
 const efiGlobalVariable = "8be4df61-93ca-11d2-aa0d-00e098032b8c"
 
 type mqlMachineSecurebootInternal struct {
-	statusFetched  bool
+	once           sync.Once
 	cacheEfi       bool
 	cacheEnabled   bool
 	cacheSetupMode bool
-	lock           sync.Mutex
+	fetchErr       error
 }
 
 func (s *mqlMachineSecureboot) id() (string, error) {
@@ -26,34 +26,23 @@ func (s *mqlMachineSecureboot) id() (string, error) {
 }
 
 // fetchStatus reads the EFI firmware variables once and caches the result.
-// Uses double-checked locking to avoid redundant filesystem reads.
 func (s *mqlMachineSecureboot) fetchStatus() error {
-	if s.statusFetched {
-		return nil
-	}
-	s.lock.Lock()
-	defer s.lock.Unlock()
-	if s.statusFetched {
-		return nil
-	}
+	s.once.Do(func() {
+		conn := s.MqlRuntime.Connection.(shared.Connection)
+		fs := conn.FileSystem()
 
-	conn := s.MqlRuntime.Connection.(shared.Connection)
-	fs := conn.FileSystem()
+		// Check if the system is booted in EFI mode by looking for /sys/firmware/efi.
+		_, err := fs.Stat("/sys/firmware/efi")
+		if err != nil {
+			// No EFI directory means legacy BIOS boot — no Secure Boot possible.
+			return
+		}
+		s.cacheEfi = true
 
-	// Check if the system is booted in EFI mode by looking for /sys/firmware/efi.
-	_, err := fs.Stat("/sys/firmware/efi")
-	if err != nil {
-		// No EFI directory means legacy BIOS boot — no Secure Boot possible.
-		s.statusFetched = true
-		return nil
-	}
-	s.cacheEfi = true
-
-	s.cacheEnabled = readEfiVarBool(fs, "SecureBoot-"+efiGlobalVariable)
-	s.cacheSetupMode = readEfiVarBool(fs, "SetupMode-"+efiGlobalVariable)
-
-	s.statusFetched = true
-	return nil
+		s.cacheEnabled = readEfiVarBool(fs, "SecureBoot-"+efiGlobalVariable)
+		s.cacheSetupMode = readEfiVarBool(fs, "SetupMode-"+efiGlobalVariable)
+	})
+	return s.fetchErr
 }
 
 // readEfiVarBool reads an EFI variable from /sys/firmware/efi/efivars/ and
