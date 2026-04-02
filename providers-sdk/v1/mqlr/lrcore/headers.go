@@ -5,7 +5,7 @@ import (
 	"text/template"
 )
 
-const defaultLicenseHeaderTpl = `{{.LineStarter}} Copyright (c) Mondoo, Inc.
+const defaultLicenseHeaderTpl = `{{.LineStarter}} Copyright Mondoo, Inc. 2024, 2026
 {{.LineStarter}} SPDX-License-Identifier: BUSL-1.1
 `
 
