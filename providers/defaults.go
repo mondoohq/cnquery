@@ -200,6 +200,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"grafana": {
+		Provider: &plugin.Provider{
+			Name:            "grafana",
+			ID:              "go.mondoo.com/mql/v13/providers/grafana",
+			ConnectionTypes: []string{"grafana"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "grafana",
+					Use:   "grafana",
+					Short: "a Grafana organization",
+				},
+			},
+		},
+	},
+
 	"github": {
 		Provider: &plugin.Provider{
 			Name:            "github",

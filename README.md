@@ -122,6 +122,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | GitLab groups                 | `gitlab`                   | `mql shell gitlab --group mondoohq`                                                                                                             |
 | Google Cloud projects         | `gcp`                      | `mql shell gcp`                                                                                                                                 |
 | Google Workspace              | `google-workspace`         | `mql shell google-workspace --customer-id CUSTOMER_ID --impersonated-user-email EMAIL --credentials-path JSON_FILE`                             |
+| Grafana organizations         | `grafana`                  | `mql shell grafana --url https://myorg.grafana.net --token TOKEN`                                                                               |
 | OPC UA IoT devices            | `opcua`                    | `mql shell opcua`                                                                                                                               |
 | IP address information        | `ipinfo`                   | `mql shell ipinfo`                                                                                                                              |
 | IPMI-enabled devices          | `ipmi`                     | `mql shell ipmi user@HOST`                                                                                                                      |
