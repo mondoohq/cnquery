@@ -6,7 +6,6 @@ package services
 import (
 	"bufio"
 	"io"
-	"os"
 	"path"
 	"strings"
 
@@ -112,7 +111,7 @@ func buildEnabledSet(fs afero.Fs) map[string]bool {
 				continue
 			}
 			for _, link := range links {
-				if _, err := fs.Stat(path.Join(searchPath, dirName, link.Name())); !os.IsNotExist(err) {
+				if _, err := fs.Stat(path.Join(searchPath, dirName, link.Name())); err == nil {
 					enabled[link.Name()] = true
 				}
 			}
