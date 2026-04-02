@@ -34,6 +34,7 @@ const (
 	ResourceMachineBaseboard           string = "machine.baseboard"
 	ResourceMachineChassis             string = "machine.chassis"
 	ResourceMachineCpu                 string = "machine.cpu"
+	ResourceMachineSecureboot          string = "machine.secureboot"
 	ResourceOs                         string = "os"
 	ResourceOsDate                     string = "os.date"
 	ResourceOsUpdate                   string = "os.update"
@@ -304,6 +305,10 @@ func init() {
 		"machine.cpu": {
 			Init:   initMachineCpu,
 			Create: createMachineCpu,
+		},
+		"machine.secureboot": {
+			// to override args, implement: initMachineSecureboot(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMachineSecureboot,
 		},
 		"os": {
 			// to override args, implement: initOs(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1378,6 +1383,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"machine.cpu.coreCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMachineCpu).GetCoreCount()).ToDataRes(types.Int)
+	},
+	"machine.secureboot.efi": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMachineSecureboot).GetEfi()).ToDataRes(types.Bool)
+	},
+	"machine.secureboot.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMachineSecureboot).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"machine.secureboot.setupMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMachineSecureboot).GetSetupMode()).ToDataRes(types.Bool)
 	},
 	"os.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOs).GetName()).ToDataRes(types.String)
@@ -4883,6 +4897,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"machine.cpu.coreCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMachineCpu).CoreCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"machine.secureboot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMachineSecureboot).__id, ok = v.Value.(string)
+		return
+	},
+	"machine.secureboot.efi": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMachineSecureboot).Efi, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"machine.secureboot.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMachineSecureboot).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"machine.secureboot.setupMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMachineSecureboot).SetupMode, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"os.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11068,6 +11098,71 @@ func (c *mqlMachineCpu) GetProcessorCount() *plugin.TValue[int64] {
 
 func (c *mqlMachineCpu) GetCoreCount() *plugin.TValue[int64] {
 	return &c.CoreCount
+}
+
+// mqlMachineSecureboot for the machine.secureboot resource
+type mqlMachineSecureboot struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlMachineSecurebootInternal
+	Efi       plugin.TValue[bool]
+	Enabled   plugin.TValue[bool]
+	SetupMode plugin.TValue[bool]
+}
+
+// createMachineSecureboot creates a new instance of this resource
+func createMachineSecureboot(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMachineSecureboot{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("machine.secureboot", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMachineSecureboot) MqlName() string {
+	return "machine.secureboot"
+}
+
+func (c *mqlMachineSecureboot) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMachineSecureboot) GetEfi() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Efi, func() (bool, error) {
+		return c.efi()
+	})
+}
+
+func (c *mqlMachineSecureboot) GetEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Enabled, func() (bool, error) {
+		return c.enabled()
+	})
+}
+
+func (c *mqlMachineSecureboot) GetSetupMode() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SetupMode, func() (bool, error) {
+		return c.setupMode()
+	})
 }
 
 // mqlOs for the os resource

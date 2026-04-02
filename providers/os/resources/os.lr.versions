@@ -1,4 +1,4 @@
-# Copyright Mondoo, Inc. 2024, 2026
+# Copyright (c) Mondoo, Inc.
 # SPDX-License-Identifier: BUSL-1.1
 
 apache2 11.8.14
@@ -502,6 +502,10 @@ machine.cpu.coreCount 13.2.3
 machine.cpu.manufacturer 13.2.3
 machine.cpu.model 13.2.3
 machine.cpu.processorCount 13.2.3
+machine.secureboot 13.6.2
+machine.secureboot.efi 13.6.2
+machine.secureboot.enabled 13.6.2
+machine.secureboot.setupMode 13.6.2
 machine.system 9.0.0
 machine.system.family 9.0.0
 machine.system.manufacturer 9.0.0
