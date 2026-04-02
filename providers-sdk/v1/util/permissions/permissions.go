@@ -21,11 +21,12 @@ import (
 
 // PermissionManifest is the JSON output for a provider's permissions.
 type PermissionManifest struct {
-	Provider    string             `json:"provider"`
-	Version     string             `json:"version"`
-	GeneratedAt string             `json:"generated_at"`
-	Permissions []string           `json:"permissions"`
-	Details     []PermissionDetail `json:"details"`
+	Provider            string             `json:"provider"`
+	Version             string             `json:"version"`
+	GeneratedAt         string             `json:"generated_at"`
+	Permissions         []string           `json:"permissions"`
+	Details             []PermissionDetail `json:"details"`
+	OrgLevelPermissions []string           `json:"org_level_permissions,omitempty"`
 }
 
 // PermissionDetail describes a single extracted API call and its mapped permission.
@@ -34,6 +35,7 @@ type PermissionDetail struct {
 	Service    string `json:"service"`
 	Action     string `json:"action"`
 	SourceFile string `json:"source_file"`
+	Scope      string `json:"scope,omitempty"`
 }
 
 func main() {
@@ -71,16 +73,35 @@ func main() {
 		os.Exit(0)
 	}
 
-	// Deduplicate and sort permissions
+	// Mark org-level permissions (GCP only)
+	if providerName == "gcp" {
+		for i := range details {
+			if gcpOrgLevelPermissions[details[i].Permission] {
+				details[i].Scope = "org"
+			}
+		}
+	}
+
+	// Deduplicate and sort permissions, separating org-level ones
 	permSet := map[string]bool{}
+	orgPermSet := map[string]bool{}
 	for _, d := range details {
-		permSet[d.Permission] = true
+		if d.Scope == "org" {
+			orgPermSet[d.Permission] = true
+		} else {
+			permSet[d.Permission] = true
+		}
 	}
 	permissions := make([]string, 0, len(permSet))
 	for p := range permSet {
 		permissions = append(permissions, p)
 	}
 	sort.Strings(permissions)
+	orgPermissions := make([]string, 0, len(orgPermSet))
+	for p := range orgPermSet {
+		orgPermissions = append(orgPermissions, p)
+	}
+	sort.Strings(orgPermissions)
 
 	// Sort details for stable output
 	sort.Slice(details, func(i, j int) bool {
@@ -103,11 +124,12 @@ func main() {
 	}
 
 	manifest := PermissionManifest{
-		Provider:    providerName,
-		Version:     version,
-		GeneratedAt: deterministicTimestamp(),
-		Permissions: permissions,
-		Details:     details,
+		Provider:            providerName,
+		Version:             version,
+		GeneratedAt:         deterministicTimestamp(),
+		Permissions:         permissions,
+		Details:             details,
+		OrgLevelPermissions: orgPermissions,
 	}
 
 	if outputPath == "" {
@@ -919,12 +941,29 @@ var gcpPermissionOverrides = map[string]map[string]string{
 	"backupdr": {
 		"ListDataSources": "backupdr.bvdataSources.list",
 	},
+	"compute": {
+		"NetworkFirewallPolicies.Get":  "compute.firewallPolicies.get",
+		"NetworkFirewallPolicies.List": "compute.firewallPolicies.list",
+	},
 	"recommender": {
 		// recommender.recommendations.list is not a real permission; the Recommender
 		// API uses type-specific permissions (e.g., recommender.iamPolicyRecommendations.list).
 		// These can't be auto-derived from the code, so skip the generic form.
 		"ListRecommendations": "",
 	},
+}
+
+// gcpOrgLevelPermissions are permissions that only apply at the organization
+// level, not the project level. They are placed in the org_level_permissions
+// section of the manifest instead of the main permissions list.
+var gcpOrgLevelPermissions = map[string]bool{
+	"resourcemanager.folders.get":                true,
+	"resourcemanager.folders.list":               true,
+	"resourcemanager.folders.search":             true,
+	"resourcemanager.organizations.get":          true,
+	"resourcemanager.organizations.getIamPolicy": true,
+	"resourcemanager.projects.list":              true,
+	"resourcemanager.projects.search":            true,
 }
 
 // gcpSkipMethods lists method names that match isGCPAPIMethod patterns but are
@@ -1009,6 +1048,14 @@ func gcpRESTToPermission(service, resource, method string) string {
 	if resource == "" {
 		return ""
 	}
+
+	// Check for explicit overrides using "Resource.Method" as the key
+	if overrides, ok := gcpPermissionOverrides[service]; ok {
+		if perm, ok := overrides[resource+"."+method]; ok {
+			return perm
+		}
+	}
+
 	verb := ""
 	switch method {
 	case "List", "AggregatedList", "Aggregated", "Pages", "Search":

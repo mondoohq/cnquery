@@ -1,9 +1,9 @@
 {
   "provider": "gcp",
-  "version": "13.3.1",
-  "generated_at": "2026-04-02T10:52:46+03:00",
+  "version": "13.3.2",
+  "generated_at": "2026-04-02T12:55:25-07:00",
   "permissions": [
-    "accessapproval.accessApprovalSettings.get",
+    "accessapproval.settings.get",
     "aiplatform.datasets.list",
     "aiplatform.endpoints.list",
     "aiplatform.featureOnlineStores.list",
@@ -13,30 +13,29 @@
     "alloydb.clusters.list",
     "alloydb.instances.list",
     "apikeys.keys.list",
-    "artifactregistry.iamPolicy.get",
+    "artifactregistry.repositories.getIamPolicy",
     "artifactregistry.repositories.list",
     "backupdr.backupPlans.list",
     "backupdr.backupVaults.list",
-    "backupdr.dataSources.list",
+    "backupdr.bvdataSources.list",
     "backupdr.managementServers.list",
     "bigtable.appProfiles.list",
-    "binaryauthorization.systemPolicy.get",
+    "binaryauthorization.policy.get",
     "clouddeploy.deliveryPipelines.list",
     "clouddeploy.targets.list",
     "cloudfunctions.functions.list",
-    "cloudkms.cryptoKey.get",
     "cloudkms.cryptoKeyVersions.list",
+    "cloudkms.cryptoKeys.get",
+    "cloudkms.cryptoKeys.getIamPolicy",
     "cloudkms.cryptoKeys.list",
-    "cloudkms.iamPolicy.get",
     "cloudkms.keyRings.list",
     "cloudkms.locations.list",
-    "cloudresourcemanager.projects.get",
-    "cloudresourcemanager.projects.getIamPolicy",
     "cloudscheduler.jobs.list",
+    "cloudsql.databases.list",
+    "cloudsql.instances.list",
     "cloudtasks.queues.list",
     "compute.addresses.list",
     "compute.backendServices.list",
-    "compute.compute.get",
     "compute.disks.list",
     "compute.firewallPolicies.get",
     "compute.firewallPolicies.list",
@@ -67,7 +66,7 @@
     "compute.zones.get",
     "compute.zones.list",
     "container.clusters.list",
-    "dataflow.jobs.aggregated",
+    "dataflow.jobs.list",
     "dataproc.clusters.list",
     "datastore.databases.list",
     "dns.managedZones.list",
@@ -75,42 +74,37 @@
     "dns.resourceRecordSets.list",
     "essentialcontacts.contacts.list",
     "file.instances.list",
-    "iam.rolesIter.list",
+    "iam.roles.list",
     "iam.serviceAccountKeys.list",
     "iam.serviceAccounts.list",
     "logging.buckets.list",
     "monitoring.alertPolicies.list",
-    "monitoring.conditionAbsent.get",
-    "monitoring.conditionMatchedLog.get",
-    "monitoring.conditionMonitoringQueryLanguage.get",
-    "monitoring.conditionThreshold.get",
     "orgpolicy.policies.list",
-    "recommender.recommendations.list",
+    "privateca.caPools.list",
+    "privateca.certificateAuthorities.list",
+    "privateca.certificates.list",
     "redis.backups.list",
     "redis.clusters.list",
     "redis.instances.list",
+    "resourcemanager.projects.get",
+    "resourcemanager.projects.getIamPolicy",
     "run.jobs.list",
     "run.operations.list",
     "run.services.list",
-    "secretmanager.iamPolicy.get",
-    "secretmanager.secretVersions.list",
+    "secretmanager.secrets.getIamPolicy",
     "secretmanager.secrets.list",
-    "security.caPools.list",
-    "security.certificateAuthorities.list",
-    "security.certificates.list",
-    "serviceusage.service.get",
+    "secretmanager.versions.list",
+    "serviceusage.services.get",
     "serviceusage.services.list",
     "spanner.backups.list",
     "spanner.databases.list",
     "spanner.instances.list",
-    "sqladmin.databases.list",
-    "sqladmin.instances.list",
     "storage.buckets.getIamPolicy",
     "storage.buckets.list"
   ],
   "details": [
     {
-      "permission": "accessapproval.accessApprovalSettings.get",
+      "permission": "accessapproval.settings.get",
       "service": "accessapproval",
       "action": "GetAccessApprovalSettings",
       "source_file": "access_approval.go"
@@ -170,7 +164,7 @@
       "source_file": "apikeys.go"
     },
     {
-      "permission": "artifactregistry.iamPolicy.get",
+      "permission": "artifactregistry.repositories.getIamPolicy",
       "service": "artifactregistry",
       "action": "GetIamPolicy",
       "source_file": "artifactregistry.go"
@@ -194,7 +188,7 @@
       "source_file": "backupdr.go"
     },
     {
-      "permission": "backupdr.dataSources.list",
+      "permission": "backupdr.bvdataSources.list",
       "service": "backupdr",
       "action": "ListDataSources",
       "source_file": "backupdr.go"
@@ -212,7 +206,7 @@
       "source_file": "bigtable.go"
     },
     {
-      "permission": "binaryauthorization.systemPolicy.get",
+      "permission": "binaryauthorization.policy.get",
       "service": "binaryauthorization",
       "action": "GetSystemPolicy",
       "source_file": "binary_authorization.go"
@@ -236,27 +230,27 @@
       "source_file": "cloud_functions.go"
     },
     {
-      "permission": "cloudkms.cryptoKey.get",
-      "service": "cloudkms",
-      "action": "GetCryptoKey",
-      "source_file": "kms.go"
-    },
-    {
       "permission": "cloudkms.cryptoKeyVersions.list",
       "service": "cloudkms",
       "action": "ListCryptoKeyVersions",
       "source_file": "kms.go"
     },
     {
-      "permission": "cloudkms.cryptoKeys.list",
+      "permission": "cloudkms.cryptoKeys.get",
       "service": "cloudkms",
-      "action": "ListCryptoKeys",
+      "action": "GetCryptoKey",
       "source_file": "kms.go"
     },
     {
-      "permission": "cloudkms.iamPolicy.get",
+      "permission": "cloudkms.cryptoKeys.getIamPolicy",
       "service": "cloudkms",
       "action": "GetIamPolicy",
+      "source_file": "kms.go"
+    },
+    {
+      "permission": "cloudkms.cryptoKeys.list",
+      "service": "cloudkms",
+      "action": "ListCryptoKeys",
       "source_file": "kms.go"
     },
     {
@@ -272,78 +266,22 @@
       "source_file": "kms.go"
     },
     {
-      "permission": "cloudresourcemanager.folders.get",
-      "service": "cloudresourcemanager",
-      "action": "Folders.Get",
-      "source_file": "folder.go",
-      "scope": "org"
-    },
-    {
-      "permission": "cloudresourcemanager.folders.list",
-      "service": "cloudresourcemanager",
-      "action": "Folders.List",
-      "source_file": "folder.go",
-      "scope": "org"
-    },
-    {
-      "permission": "cloudresourcemanager.folders.search",
-      "service": "cloudresourcemanager",
-      "action": "Folders.Search",
-      "source_file": "folder.go",
-      "scope": "org"
-    },
-    {
-      "permission": "cloudresourcemanager.organizations.get",
-      "service": "cloudresourcemanager",
-      "action": "Organizations.Get",
-      "source_file": "organization.go",
-      "scope": "org"
-    },
-    {
-      "permission": "cloudresourcemanager.organizations.getIamPolicy",
-      "service": "cloudresourcemanager",
-      "action": "Organizations.GetIamPolicy",
-      "source_file": "organization.go",
-      "scope": "org"
-    },
-    {
-      "permission": "cloudresourcemanager.projects.get",
-      "service": "cloudresourcemanager",
-      "action": "Projects.Get",
-      "source_file": "project.go"
-    },
-    {
-      "permission": "cloudresourcemanager.projects.getIamPolicy",
-      "service": "cloudresourcemanager",
-      "action": "Projects.GetIamPolicy",
-      "source_file": "project.go"
-    },
-    {
-      "permission": "cloudresourcemanager.projects.list",
-      "service": "cloudresourcemanager",
-      "action": "Projects.List",
-      "source_file": "discovery.go",
-      "scope": "org"
-    },
-    {
-      "permission": "cloudresourcemanager.projects.list",
-      "service": "cloudresourcemanager",
-      "action": "Projects.List",
-      "source_file": "project.go",
-      "scope": "org"
-    },
-    {
-      "permission": "cloudresourcemanager.projects.search",
-      "service": "cloudresourcemanager",
-      "action": "Projects.Search",
-      "source_file": "project.go",
-      "scope": "org"
-    },
-    {
       "permission": "cloudscheduler.jobs.list",
       "service": "cloudscheduler",
       "action": "ListJobs",
       "source_file": "cloudscheduler.go"
+    },
+    {
+      "permission": "cloudsql.databases.list",
+      "service": "cloudsql",
+      "action": "Databases.List",
+      "source_file": "sql.go"
+    },
+    {
+      "permission": "cloudsql.instances.list",
+      "service": "cloudsql",
+      "action": "Instances.List",
+      "source_file": "sql.go"
     },
     {
       "permission": "cloudtasks.queues.list",
@@ -364,16 +302,22 @@
       "source_file": "compute.go"
     },
     {
-      "permission": "compute.compute.get",
-      "service": "compute",
-      "action": "Get",
-      "source_file": "compute.go"
-    },
-    {
       "permission": "compute.disks.list",
       "service": "compute",
       "action": "Disks.List",
       "source_file": "compute.go"
+    },
+    {
+      "permission": "compute.firewallPolicies.get",
+      "service": "compute",
+      "action": "NetworkFirewallPolicies.Get",
+      "source_file": "compute_instance_groups_firewall_policies.go"
+    },
+    {
+      "permission": "compute.firewallPolicies.list",
+      "service": "compute",
+      "action": "NetworkFirewallPolicies.List",
+      "source_file": "compute_instance_groups_firewall_policies.go"
     },
     {
       "permission": "compute.firewalls.list",
@@ -422,18 +366,6 @@
       "service": "compute",
       "action": "MachineTypes.List",
       "source_file": "compute.go"
-    },
-    {
-      "permission": "compute.firewallPolicies.get",
-      "service": "compute",
-      "action": "NetworkFirewallPolicies.Get",
-      "source_file": "compute_instance_groups_firewall_policies.go"
-    },
-    {
-      "permission": "compute.firewallPolicies.list",
-      "service": "compute",
-      "action": "NetworkFirewallPolicies.List",
-      "source_file": "compute_instance_groups_firewall_policies.go"
     },
     {
       "permission": "compute.networks.get",
@@ -568,7 +500,7 @@
       "source_file": "gke.go"
     },
     {
-      "permission": "dataflow.jobs.aggregated",
+      "permission": "dataflow.jobs.list",
       "service": "dataflow",
       "action": "Jobs.Aggregated",
       "source_file": "dataflow.go"
@@ -616,7 +548,7 @@
       "source_file": "filestore.go"
     },
     {
-      "permission": "iam.rolesIter.list",
+      "permission": "iam.roles.list",
       "service": "iam",
       "action": "ListRolesIter",
       "source_file": "iam_roles.go"
@@ -646,40 +578,28 @@
       "source_file": "monitoring.go"
     },
     {
-      "permission": "monitoring.conditionAbsent.get",
-      "service": "monitoring",
-      "action": "GetConditionAbsent",
-      "source_file": "monitoring.go"
-    },
-    {
-      "permission": "monitoring.conditionMatchedLog.get",
-      "service": "monitoring",
-      "action": "GetConditionMatchedLog",
-      "source_file": "monitoring.go"
-    },
-    {
-      "permission": "monitoring.conditionMonitoringQueryLanguage.get",
-      "service": "monitoring",
-      "action": "GetConditionMonitoringQueryLanguage",
-      "source_file": "monitoring.go"
-    },
-    {
-      "permission": "monitoring.conditionThreshold.get",
-      "service": "monitoring",
-      "action": "GetConditionThreshold",
-      "source_file": "monitoring.go"
-    },
-    {
       "permission": "orgpolicy.policies.list",
       "service": "orgpolicy",
       "action": "ListPolicies",
       "source_file": "orgpolicy.go"
     },
     {
-      "permission": "recommender.recommendations.list",
-      "service": "recommender",
-      "action": "ListRecommendations",
-      "source_file": "recommendations.go"
+      "permission": "privateca.caPools.list",
+      "service": "privateca",
+      "action": "ListCaPools",
+      "source_file": "privateca.go"
+    },
+    {
+      "permission": "privateca.certificateAuthorities.list",
+      "service": "privateca",
+      "action": "ListCertificateAuthorities",
+      "source_file": "privateca.go"
+    },
+    {
+      "permission": "privateca.certificates.list",
+      "service": "privateca",
+      "action": "ListCertificates",
+      "source_file": "privateca.go"
     },
     {
       "permission": "redis.backups.list",
@@ -700,6 +620,60 @@
       "source_file": "redis.go"
     },
     {
+      "permission": "resourcemanager.folders.get",
+      "service": "resourcemanager",
+      "action": "Folders.Get",
+      "source_file": "folder.go",
+      "scope": "org"
+    },
+    {
+      "permission": "resourcemanager.folders.list",
+      "service": "resourcemanager",
+      "action": "Folders.Search",
+      "source_file": "folder.go",
+      "scope": "org"
+    },
+    {
+      "permission": "resourcemanager.organizations.get",
+      "service": "resourcemanager",
+      "action": "Organizations.Get",
+      "source_file": "organization.go",
+      "scope": "org"
+    },
+    {
+      "permission": "resourcemanager.organizations.getIamPolicy",
+      "service": "resourcemanager",
+      "action": "Organizations.GetIamPolicy",
+      "source_file": "organization.go",
+      "scope": "org"
+    },
+    {
+      "permission": "resourcemanager.projects.get",
+      "service": "resourcemanager",
+      "action": "Projects.Get",
+      "source_file": "project.go"
+    },
+    {
+      "permission": "resourcemanager.projects.getIamPolicy",
+      "service": "resourcemanager",
+      "action": "Projects.GetIamPolicy",
+      "source_file": "project.go"
+    },
+    {
+      "permission": "resourcemanager.projects.list",
+      "service": "resourcemanager",
+      "action": "Projects.List",
+      "source_file": "discovery.go",
+      "scope": "org"
+    },
+    {
+      "permission": "resourcemanager.projects.list",
+      "service": "resourcemanager",
+      "action": "Projects.Search",
+      "source_file": "project.go",
+      "scope": "org"
+    },
+    {
       "permission": "run.jobs.list",
       "service": "run",
       "action": "ListJobs",
@@ -718,15 +692,9 @@
       "source_file": "cloudrun.go"
     },
     {
-      "permission": "secretmanager.iamPolicy.get",
+      "permission": "secretmanager.secrets.getIamPolicy",
       "service": "secretmanager",
       "action": "GetIamPolicy",
-      "source_file": "secretmanager.go"
-    },
-    {
-      "permission": "secretmanager.secretVersions.list",
-      "service": "secretmanager",
-      "action": "ListSecretVersions",
       "source_file": "secretmanager.go"
     },
     {
@@ -736,25 +704,13 @@
       "source_file": "secretmanager.go"
     },
     {
-      "permission": "security.caPools.list",
-      "service": "security",
-      "action": "ListCaPools",
-      "source_file": "privateca.go"
+      "permission": "secretmanager.versions.list",
+      "service": "secretmanager",
+      "action": "ListSecretVersions",
+      "source_file": "secretmanager.go"
     },
     {
-      "permission": "security.certificateAuthorities.list",
-      "service": "security",
-      "action": "ListCertificateAuthorities",
-      "source_file": "privateca.go"
-    },
-    {
-      "permission": "security.certificates.list",
-      "service": "security",
-      "action": "ListCertificates",
-      "source_file": "privateca.go"
-    },
-    {
-      "permission": "serviceusage.service.get",
+      "permission": "serviceusage.services.get",
       "service": "serviceusage",
       "action": "GetService",
       "source_file": "services.go"
@@ -784,18 +740,6 @@
       "source_file": "spanner.go"
     },
     {
-      "permission": "sqladmin.databases.list",
-      "service": "sqladmin",
-      "action": "Databases.List",
-      "source_file": "sql.go"
-    },
-    {
-      "permission": "sqladmin.instances.list",
-      "service": "sqladmin",
-      "action": "Instances.List",
-      "source_file": "sql.go"
-    },
-    {
       "permission": "storage.buckets.getIamPolicy",
       "service": "storage",
       "action": "Buckets.GetIamPolicy",
@@ -809,12 +753,10 @@
     }
   ],
   "org_level_permissions": [
-    "cloudresourcemanager.folders.get",
-    "cloudresourcemanager.folders.list",
-    "cloudresourcemanager.folders.search",
-    "cloudresourcemanager.organizations.get",
-    "cloudresourcemanager.organizations.getIamPolicy",
-    "cloudresourcemanager.projects.list",
-    "cloudresourcemanager.projects.search"
+    "resourcemanager.folders.get",
+    "resourcemanager.folders.list",
+    "resourcemanager.organizations.get",
+    "resourcemanager.organizations.getIamPolicy",
+    "resourcemanager.projects.list"
   ]
 }
