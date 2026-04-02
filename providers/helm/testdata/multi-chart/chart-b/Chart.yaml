@@ -1,0 +1,5 @@
+apiVersion: v2
+name: chart-b
+version: 0.2.0
+description: Second chart
+type: library

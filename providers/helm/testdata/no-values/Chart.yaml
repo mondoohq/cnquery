@@ -1,0 +1,4 @@
+apiVersion: v2
+name: no-values
+version: 0.1.0
+description: A chart with no values file

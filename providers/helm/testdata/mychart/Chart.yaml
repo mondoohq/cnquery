@@ -1,0 +1,23 @@
+apiVersion: v2
+name: mychart
+version: 1.2.3
+appVersion: "4.5.6"
+description: A test Helm chart
+type: application
+keywords:
+  - test
+  - helm
+home: https://example.com
+sources:
+  - https://github.com/example/mychart
+icon: https://example.com/icon.png
+deprecated: false
+maintainers:
+  - name: Test User
+    email: test@example.com
+    url: https://example.com/testuser
+dependencies:
+  - name: redis
+    version: ">=17.0.0"
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled

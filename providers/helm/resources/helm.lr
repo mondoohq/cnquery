@@ -1,0 +1,129 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "helm"
+option go_package = "go.mondoo.com/mql/v13/providers/helm/resources"
+
+// Helm chart analysis
+helm {
+  // List of all parsed Helm charts
+  charts() []helm.chart
+}
+
+// A Helm chart
+helm.chart @defaults("name version") {
+  // Chart name from Chart.yaml
+  name string
+  // Chart version
+  version string
+  // API version (v1 or v2)
+  apiVersion string
+  // Chart type (application or library)
+  type string
+  // Application version
+  appVersion string
+  // Chart description
+  description string
+  // Chart dependencies
+  dependencies() []helm.dependency
+  // Maintainers
+  maintainers() []helm.maintainer
+  // Keywords
+  keywords []string
+  // Home URL
+  home string
+  // Source URLs
+  sources []string
+  // Icon URL
+  icon string
+  // Whether the chart is deprecated
+  deprecated bool
+  // Parsed templates
+  templates() []helm.template
+  // Default values from values.yaml
+  values() dict
+  // All Kubernetes resources across all templates (rendered with values)
+  resources() []helm.resource
+  // Files in the chart
+  files() []helm.file
+}
+
+// A Helm chart dependency
+helm.dependency @defaults("name version") {
+  // Dependency name
+  name string
+  // Version constraint
+  version string
+  // Repository URL
+  repository string
+  // Condition for enabling
+  condition string
+  // Tags for grouping
+  tags []string
+  // Whether dependency is enabled
+  enabled bool
+  // Alias for the dependency
+  alias string
+}
+
+// A Helm chart maintainer
+helm.maintainer @defaults("name email") {
+  // Maintainer name
+  name string
+  // Maintainer email
+  email string
+  // Maintainer URL
+  url string
+}
+
+// A Helm template file
+helm.template @defaults("name") {
+  // Template file name (e.g., templates/deployment.yaml)
+  name string
+  // Raw Go template content before rendering
+  raw string
+  // Rendered YAML content (using chart values)
+  rendered() string
+  // Kubernetes resources produced by rendering this template
+  resources() []helm.resource
+  // Template directives found in raw content (include, tpl, range, if, etc.)
+  directives() []helm.directive
+}
+
+// A Go template directive found in a raw template
+helm.directive @defaults("type expression") {
+  // Directive type (if, range, include, tpl, define, with, block)
+  type string
+  // Full expression (e.g., ".Values.replicaCount", "include \"mychart.labels\" .")
+  expression string
+  // Line number in the template
+  line int
+}
+
+// A Kubernetes resource defined in a Helm template
+helm.resource @defaults("kind name") {
+  // Kubernetes API version
+  apiVersion string
+  // Resource kind (Deployment, Service, etc.)
+  kind string
+  // Resource name (after rendering)
+  name string
+  // Resource namespace
+  namespace string
+  // Labels
+  labels map[string]string
+  // Annotations
+  annotations map[string]string
+  // Full resource manifest as dict
+  manifest dict
+  // The template that produced this resource
+  template() helm.template
+}
+
+// A file within the Helm chart
+helm.file @defaults("path") {
+  // File path relative to chart root
+  path string
+  // File content
+  content() string
+}

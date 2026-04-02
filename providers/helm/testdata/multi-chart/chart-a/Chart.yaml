@@ -1,0 +1,5 @@
+apiVersion: v2
+name: chart-a
+version: 0.1.0
+description: First chart
+type: application
