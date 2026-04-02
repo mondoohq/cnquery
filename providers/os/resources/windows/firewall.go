@@ -10,7 +10,7 @@ import (
 
 const (
 	FIREWALL_PROFILES = "Get-NetFirewallProfile | ConvertTo-Json"
-	FIREWALL_RULES    = "Get-NetFirewallRule | ConvertTo-Json"
+	FIREWALL_RULES    = "Get-NetFirewallRule | Select-Object ID,InstanceID,Name,DisplayName,Description,Group,DisplayGroup,Enabled,Profile,Profiles,Direction,Action,EdgeTraversalPolicy,LSM,LocalOnlyMapping,LooseSourceMapping,PrimaryStatus,Status,EnforcementStatus,StatusCode,PolicyStoreSource,PolicyStoreSourceType,Caption,ElementName,PolicyDecisionStrategy,ConditionListType,CreationClassName,ExecutionStrategy,PolicyRuleName,SequencedActions,SystemCreationClassName,SystemName,RuleGroup | ConvertTo-Json"
 	FIREWALL_SETTINGS = "Get-NetFirewallSetting | ConvertTo-Json"
 )
 
