@@ -230,6 +230,14 @@ func discoverClusterStage(runtime *plugin.Runtime, conn shared.Connection, invCo
 		return nil, err
 	}
 
+	// Namespaces are only scannable if explicitly targeted. When they are
+	// not a target, strip their platform IDs so the existing "no platform
+	// IDs → skip" logic in AssetExplorer/scanner prevents them from being
+	// scanned or added to the progress bar. They are still emitted so that
+	// AssetExplorer connects to them (triggering stage 2 workload discovery).
+	nsIsScannable := stringx.ContainsAnyOf(invConfig.Discover.Targets,
+		DiscoveryNamespaces, DiscoveryAuto, DiscoveryAll)
+
 	for _, ns := range nss {
 		// Clone without WithParentConnectionId so each namespace gets its own
 		// resource cache. With a shared parent cache, the k8s MQL resource would
@@ -238,8 +246,12 @@ func discoverClusterStage(runtime *plugin.Runtime, conn shared.Connection, invCo
 		nsConfig := invConfig.Clone() // Clone() copies Options, propagating OPTION_STAGED_DISCOVERY
 		nsConfig.Options[shared.OPTION_NAMESPACE] = ns.Name
 
+		if !nsIsScannable {
+			ns.PlatformIds = nil
+		}
+
 		// Override the connection config to route to stage 2, but keep the
-		// namespace's platform IDs, platform, and labels from discoverNamespaces().
+		// namespace's platform, and labels from discoverNamespaces().
 		ns.Connections = []*inventory.Config{nsConfig}
 		in.Spec.Assets = append(in.Spec.Assets, ns)
 	}

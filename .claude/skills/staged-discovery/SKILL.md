@@ -153,7 +153,41 @@ func discoverScopedStage(runtime *plugin.Runtime, conn YourConnection, invConfig
 }
 ```
 
-### Step 5: Gate resource methods at higher scopes (if needed)
+### Step 5: Strip platform IDs from non-targeted intermediate assets
+
+When users specify discovery targets (e.g., `--discover pods`), intermediate assets that don't match the targets must still be emitted (so `AssetExplorer` connects to them and discovers their children), but should NOT be scanned. The simplest way: **strip their platform IDs**. The existing "no platform IDs → skip" logic in `AssetExplorer` and the scanner already handles this — no caller-side changes needed.
+
+```go
+// In your root stage, when emitting child scope assets:
+isScopeTargeted := isTargeted(invConfig.Discover.Targets, YourScopeDiscoveryTarget)
+
+for _, child := range children {
+    childConfig := invConfig.Clone()
+    childConfig.Options["your-scope-option"] = child.ID
+
+    childAsset := &inventory.Asset{
+        Name:        child.Name,
+        Platform:    child.Platform,
+        Connections: []*inventory.Config{childConfig},
+    }
+
+    // Only give platform IDs to assets that should be scanned.
+    // Without platform IDs, the scanner skips them but AssetExplorer
+    // still connects to trigger the next discovery stage.
+    if isScopeTargeted {
+        childAsset.PlatformIds = []string{child.PlatformId}
+    }
+
+    in.Spec.Assets = append(in.Spec.Assets, childAsset)
+}
+```
+
+**Key rules:**
+- `DiscoveryAuto` and `DiscoveryAll` targets mean everything is scannable — always keep platform IDs
+- Mixed targets (e.g., `--discover pods,namespaces`) — if the intermediate level IS a target, keep its platform IDs
+- Leaf assets at the bottom of the hierarchy always keep their platform IDs if they match targets
+
+### Step 6: Gate resource methods at higher scopes (if needed)
 
 When the root scope is scanned, resource methods that load lower-scope data should return empty results to avoid loading everything into the root's cache. This is optional but important for large providers.
 
@@ -176,9 +210,9 @@ func (r *mqlYourProvider) childScopedResources() ([]interface{}, error) {
 }
 ```
 
-### Step 6: Verify both paths produce the same assets
+### Step 7: Verify both paths and discovery targets
 
-Both the legacy and staged paths must discover the same final set of assets (same platform IDs, same names). They differ only in how discovery is chunked.
+Both the legacy and staged paths must discover the same final set of assets (same platform IDs, same names). They differ only in how discovery is chunked. Also verify that discovery targets correctly filter scannable assets.
 
 ```bash
 # Build and install
@@ -192,11 +226,15 @@ mql shell <provider-args>
 # Verify the same assets appear
 mql shell <provider-args>
 
+# Test discovery target filtering (e.g., only pods, only instances)
+# Verify that intermediate assets are traversed but not scanned
+mql shell <provider-args> --discover <specific-target>
+
 # Run existing tests
 go test ./providers/<name>/...
 ```
 
-### Step 7: Update .lr.versions if new resources were added
+### Step 8: Update .lr.versions if new resources were added
 
 If you added any new resources or fields to support staged discovery, update the `.lr.versions` file:
 
@@ -214,7 +252,10 @@ make providers/mqlr
 - [ ] Child connection configs include the scope option that triggers the next stage
 - [ ] `OptionStagedDiscovery` is propagated via `Clone()` to all child configs
 - [ ] Resource methods at root scope are gated to avoid loading child-scope data into root cache
+- [ ] Intermediate assets have platform IDs stripped when not in discovery targets
+- [ ] `DiscoveryAuto` / `DiscoveryAll` targets always keep platform IDs on all assets
 - [ ] Both legacy and staged paths produce the same set of assets
+- [ ] Discovery target filtering works (e.g., `--discover pods` only scans pods, not namespaces)
 - [ ] `go build ./providers/<name>/...` compiles
 - [ ] `go test ./providers/<name>/...` passes
 - [ ] `make test/lint` passes

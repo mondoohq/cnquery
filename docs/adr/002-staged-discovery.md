@@ -77,6 +77,52 @@ When scanning the cluster asset (Stage 1), namespace-scoped resource methods (e.
 - If `OPTION_NAMESPACE` is set → namespace scope → return resources filtered to that namespace
 - If `OptionStagedDiscovery` is absent → legacy path → load everything (backward compatible)
 
+### Traversal-Only Assets (Discovery Target Filtering)
+
+Staged discovery introduces a second concern: **not every intermediate asset should be scanned**. When a user specifies discovery targets like `--discover pods`, they want only pods as scannable assets. Namespaces are still needed for traversal (connecting to a namespace triggers Stage 2 which discovers pods), but namespaces themselves should not appear in scan results.
+
+This is solved by **stripping platform IDs** from intermediate assets that don't match the requested discovery targets. `AssetExplorer` and the scanner already skip assets without platform IDs (they log a warning, close the asset, and continue). By emitting these assets without platform IDs, they serve purely as traversal nodes — `AssetExplorer` connects to them (triggering the next discovery stage and populating their children), but the scanner never adds them to the progress bar or sends them for scanning.
+
+**Provider side** — the provider already knows the discovery targets from `invConfig.Discover.Targets`. When emitting intermediate assets, check whether that level is a target and strip platform IDs if not:
+
+```go
+// In discoverClusterStage, when emitting namespace assets:
+nsIsScannable := stringx.ContainsAnyOf(invConfig.Discover.Targets,
+    DiscoveryNamespaces, DiscoveryAuto, DiscoveryAll)
+
+for _, ns := range nss {
+    nsConfig := invConfig.Clone()
+    nsConfig.Options[shared.OPTION_NAMESPACE] = ns.Name
+
+    // Namespaces that aren't a discovery target get their platform IDs
+    // stripped. AssetExplorer still connects to them (triggering stage 2)
+    // but the scanner skips them because they have no platform IDs.
+    if !nsIsScannable {
+        ns.PlatformIds = nil
+    }
+
+    ns.Connections = []*inventory.Config{nsConfig}
+    in.Spec.Assets = append(in.Spec.Assets, ns)
+}
+```
+
+**No caller-side changes needed.** The existing "no platform IDs → skip" logic in `AssetExplorer` and the scanner handles everything:
+- Assets without platform IDs are not added to the progress bar
+- Assets without platform IDs are not sent for scanning
+- Assets without platform IDs are still connected (to discover children), then closed
+
+**How this generalizes:**
+
+| Command | No platform IDs (traversal only) | With platform IDs (scannable) |
+|---|---|---|
+| `k8s --discover pods` | namespaces | pods |
+| `k8s --discover namespaces` | (none) | cluster + namespaces |
+| `k8s --discover all` | (none) | cluster + namespaces + all workloads |
+| `gcp --discover compute-instances` | org, projects, service groups | compute instances |
+| `aws --discover ec2-instances` | accounts, regions | EC2 instances |
+
+**Mixed targets** (`--discover pods,namespaces`): namespaces are both scannable AND traversal nodes. The provider keeps their platform IDs intact. They get scanned and their children get discovered. No special handling needed.
+
 ### Applying to Other Providers
 
 The pattern generalizes to any provider with a hierarchical resource model. The key insight: **each level of the hierarchy becomes a discovery stage, and the connection config for child assets encodes which stage to run next.** Crucially, each stage boundary creates a new runtime with its own MQL resource cache — when that scope is closed, all cached resources under it are released.
@@ -172,6 +218,7 @@ Have `AssetExplorer` automatically infer hierarchy from platform IDs or asset me
 - **Bounded memory per branch:** Each scope boundary creates a separate runtime with its own MQL resource cache. When a scope is closed (`CloseAsset`), its entire cache — all MQL resource objects, API responses, and connection state — is released. Only one branch of the hierarchy is in memory at a time. A 1000-namespace cluster uses the same peak memory as a 5-namespace cluster.
 - **No root cache accumulation:** In single-pass discovery, all resources attach to the root runtime's cache and are never released until the scan completes. Staged discovery breaks this by giving each scope its own cache — pods in namespace A are cached in namespace A's runtime, not the cluster root's. When namespace A is closed, those pods are gone from memory.
 - **Reduced API pressure:** Each stage only queries the APIs needed for its scope. No cluster-wide enumeration of every resource type.
+- **Discovery target filtering with zero caller changes:** Providers strip platform IDs from intermediate assets that don't match discovery targets. The existing "no platform IDs → skip" logic in `AssetExplorer` and the scanner handles the rest — no new flags, fields, or methods needed on the caller side.
 - **Composable with AssetExplorer:** Callers don't need to understand stages — they just connect discovered children as usual. The staging is entirely provider-internal.
 - **Backward compatible:** The `OptionStagedDiscovery` flag is opt-in. Providers without staged discovery and callers that don't set the flag continue working unchanged.
 - **Cache sharing within scope:** `WithParentConnectionId` lets leaf assets within a scope (e.g., pods within a namespace) share that scope's API client cache, avoiding redundant API calls — while keeping the cache isolated from other scopes.
