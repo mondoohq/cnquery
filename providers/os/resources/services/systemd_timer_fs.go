@@ -21,6 +21,7 @@ type SystemdFSTimerManager struct {
 }
 
 func (m *SystemdFSTimerManager) List() ([]*SystemdTimer, error) {
+	enabledSet := buildEnabledSet(m.Fs)
 	seen := map[string]bool{}
 	var timers []*SystemdTimer
 
@@ -48,7 +49,7 @@ func (m *SystemdFSTimerManager) List() ([]*SystemdTimer, error) {
 			if err != nil {
 				continue
 			}
-			timer.Enabled = m.isEnabled(entry.Name())
+			timer.Enabled = enabledSet[entry.Name()]
 			timers = append(timers, timer)
 		}
 	}
@@ -152,29 +153,4 @@ func (m *SystemdFSTimerManager) readTimerProperties(unitPath string) (map[string
 	}
 
 	return props, nil
-}
-
-// isEnabled checks whether a timer unit is pulled in by any target's
-// .wants or .requires directories.
-func (m *SystemdFSTimerManager) isEnabled(unitName string) bool {
-	for _, searchPath := range systemdUnitSearchPath {
-		entries, err := afero.ReadDir(m.Fs, searchPath)
-		if err != nil {
-			continue
-		}
-		for _, entry := range entries {
-			if !entry.IsDir() {
-				continue
-			}
-			dirName := entry.Name()
-			if !strings.HasSuffix(dirName, ".wants") && !strings.HasSuffix(dirName, ".requires") {
-				continue
-			}
-			wantPath := path.Join(searchPath, dirName, unitName)
-			if _, err := m.Fs.Stat(wantPath); err == nil {
-				return true
-			}
-		}
-	}
-	return false
 }
