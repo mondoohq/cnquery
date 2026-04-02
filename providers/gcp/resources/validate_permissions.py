@@ -1,3 +1,6 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
 #!/usr/bin/env python3
 """Validate GCP permissions in a permissions JSON file against the IAM API.
 
