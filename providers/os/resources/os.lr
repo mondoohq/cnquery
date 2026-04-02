@@ -950,6 +950,66 @@ services {
   []service
 }
 
+// Systemd timer unit on this system
+systemd.timer @defaults("name enabled running") {
+  init(name string)
+  // Name of the timer unit (without .timer suffix)
+  name string
+  // Timer unit description
+  description string
+  // Whether the timer unit file is installed
+  installed bool
+  // Whether the timer is enabled (starts at boot)
+  enabled bool
+  // Whether the timer is masked
+  masked bool
+  // Whether the timer is static (unit file has no [Install] section)
+  static bool
+  // Whether the timer is currently active
+  running bool
+  // The unit that this timer activates (e.g., "apt-daily.service")
+  activates() string
+  // Calendar expression for the timer schedule (empty for monotonic timers)
+  onCalendar() string
+  // Whether missed runs are triggered on next start
+  persistent() bool
+}
+
+// All systemd timer units on this system
+systemd.timers {
+  []systemd.timer
+}
+
+// Systemd socket unit on this system
+systemd.socket @defaults("name enabled running") {
+  init(name string)
+  // Name of the socket unit (without .socket suffix)
+  name string
+  // Socket unit description
+  description string
+  // Whether the socket unit file is installed
+  installed bool
+  // Whether the socket is enabled (starts at boot)
+  enabled bool
+  // Whether the socket is masked
+  masked bool
+  // Whether the socket is static (unit file has no [Install] section)
+  static bool
+  // Whether the socket is currently active
+  running bool
+  // The unit that this socket activates (e.g., "dbus.service")
+  activates() string
+  // Addresses, paths, or ports this socket listens on
+  listenAddresses() []string
+  // Whether the socket accepts connections (inetd-style)
+  accept() bool
+}
+
+// All systemd socket units on this system
+systemd.sockets {
+  []systemd.socket
+}
+
 // System kernel information
 kernel @defaults("info") {
   // Active kernel information

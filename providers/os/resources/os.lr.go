@@ -87,6 +87,10 @@ const (
 	ResourceJournaldConfigSectionParam string = "journald.config.section.param"
 	ResourceService                    string = "service"
 	ResourceServices                   string = "services"
+	ResourceSystemdTimer               string = "systemd.timer"
+	ResourceSystemdTimers              string = "systemd.timers"
+	ResourceSystemdSocket              string = "systemd.socket"
+	ResourceSystemdSockets             string = "systemd.sockets"
 	ResourceKernel                     string = "kernel"
 	ResourceKernelModule               string = "kernel.module"
 	ResourceDocker                     string = "docker"
@@ -517,6 +521,22 @@ func init() {
 		"services": {
 			// to override args, implement: initServices(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createServices,
+		},
+		"systemd.timer": {
+			Init:   initSystemdTimer,
+			Create: createSystemdTimer,
+		},
+		"systemd.timers": {
+			// to override args, implement: initSystemdTimers(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSystemdTimers,
+		},
+		"systemd.socket": {
+			Init:   initSystemdSocket,
+			Create: createSystemdSocket,
+		},
+		"systemd.sockets": {
+			// to override args, implement: initSystemdSockets(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSystemdSockets,
 		},
 		"kernel": {
 			Init:   initKernel,
@@ -2100,6 +2120,72 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"services.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlServices).GetList()).ToDataRes(types.Array(types.Resource("service")))
+	},
+	"systemd.timer.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdTimer).GetName()).ToDataRes(types.String)
+	},
+	"systemd.timer.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdTimer).GetDescription()).ToDataRes(types.String)
+	},
+	"systemd.timer.installed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdTimer).GetInstalled()).ToDataRes(types.Bool)
+	},
+	"systemd.timer.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdTimer).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"systemd.timer.masked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdTimer).GetMasked()).ToDataRes(types.Bool)
+	},
+	"systemd.timer.static": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdTimer).GetStatic()).ToDataRes(types.Bool)
+	},
+	"systemd.timer.running": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdTimer).GetRunning()).ToDataRes(types.Bool)
+	},
+	"systemd.timer.activates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdTimer).GetActivates()).ToDataRes(types.String)
+	},
+	"systemd.timer.onCalendar": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdTimer).GetOnCalendar()).ToDataRes(types.String)
+	},
+	"systemd.timer.persistent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdTimer).GetPersistent()).ToDataRes(types.Bool)
+	},
+	"systemd.timers.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdTimers).GetList()).ToDataRes(types.Array(types.Resource("systemd.timer")))
+	},
+	"systemd.socket.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdSocket).GetName()).ToDataRes(types.String)
+	},
+	"systemd.socket.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdSocket).GetDescription()).ToDataRes(types.String)
+	},
+	"systemd.socket.installed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdSocket).GetInstalled()).ToDataRes(types.Bool)
+	},
+	"systemd.socket.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdSocket).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"systemd.socket.masked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdSocket).GetMasked()).ToDataRes(types.Bool)
+	},
+	"systemd.socket.static": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdSocket).GetStatic()).ToDataRes(types.Bool)
+	},
+	"systemd.socket.running": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdSocket).GetRunning()).ToDataRes(types.Bool)
+	},
+	"systemd.socket.activates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdSocket).GetActivates()).ToDataRes(types.String)
+	},
+	"systemd.socket.listenAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdSocket).GetListenAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"systemd.socket.accept": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdSocket).GetAccept()).ToDataRes(types.Bool)
+	},
+	"systemd.sockets.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSystemdSockets).GetList()).ToDataRes(types.Array(types.Resource("systemd.socket")))
 	},
 	"kernel.info": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKernel).GetInfo()).ToDataRes(types.Dict)
@@ -6065,6 +6151,110 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"services.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlServices).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"systemd.timer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTimer).__id, ok = v.Value.(string)
+		return
+	},
+	"systemd.timer.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTimer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.timer.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTimer).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.timer.installed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTimer).Installed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"systemd.timer.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTimer).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"systemd.timer.masked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTimer).Masked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"systemd.timer.static": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTimer).Static, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"systemd.timer.running": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTimer).Running, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"systemd.timer.activates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTimer).Activates, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.timer.onCalendar": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTimer).OnCalendar, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.timer.persistent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTimer).Persistent, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"systemd.timers.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTimers).__id, ok = v.Value.(string)
+		return
+	},
+	"systemd.timers.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdTimers).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"systemd.socket.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdSocket).__id, ok = v.Value.(string)
+		return
+	},
+	"systemd.socket.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdSocket).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.socket.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdSocket).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.socket.installed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdSocket).Installed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"systemd.socket.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdSocket).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"systemd.socket.masked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdSocket).Masked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"systemd.socket.static": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdSocket).Static, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"systemd.socket.running": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdSocket).Running, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"systemd.socket.activates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdSocket).Activates, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"systemd.socket.listenAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdSocket).ListenAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"systemd.socket.accept": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdSocket).Accept, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"systemd.sockets.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdSockets).__id, ok = v.Value.(string)
+		return
+	},
+	"systemd.sockets.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSystemdSockets).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"kernel.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15627,6 +15817,328 @@ func (c *mqlServices) GetList() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("services", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlSystemdTimer for the systemd.timer resource
+type mqlSystemdTimer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlSystemdTimerInternal
+	Name        plugin.TValue[string]
+	Description plugin.TValue[string]
+	Installed   plugin.TValue[bool]
+	Enabled     plugin.TValue[bool]
+	Masked      plugin.TValue[bool]
+	Static      plugin.TValue[bool]
+	Running     plugin.TValue[bool]
+	Activates   plugin.TValue[string]
+	OnCalendar  plugin.TValue[string]
+	Persistent  plugin.TValue[bool]
+}
+
+// createSystemdTimer creates a new instance of this resource
+func createSystemdTimer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSystemdTimer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("systemd.timer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSystemdTimer) MqlName() string {
+	return "systemd.timer"
+}
+
+func (c *mqlSystemdTimer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSystemdTimer) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlSystemdTimer) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlSystemdTimer) GetInstalled() *plugin.TValue[bool] {
+	return &c.Installed
+}
+
+func (c *mqlSystemdTimer) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlSystemdTimer) GetMasked() *plugin.TValue[bool] {
+	return &c.Masked
+}
+
+func (c *mqlSystemdTimer) GetStatic() *plugin.TValue[bool] {
+	return &c.Static
+}
+
+func (c *mqlSystemdTimer) GetRunning() *plugin.TValue[bool] {
+	return &c.Running
+}
+
+func (c *mqlSystemdTimer) GetActivates() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Activates, func() (string, error) {
+		return c.activates()
+	})
+}
+
+func (c *mqlSystemdTimer) GetOnCalendar() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.OnCalendar, func() (string, error) {
+		return c.onCalendar()
+	})
+}
+
+func (c *mqlSystemdTimer) GetPersistent() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Persistent, func() (bool, error) {
+		return c.persistent()
+	})
+}
+
+// mqlSystemdTimers for the systemd.timers resource
+type mqlSystemdTimers struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSystemdTimersInternal it will be used here
+	List plugin.TValue[[]any]
+}
+
+// createSystemdTimers creates a new instance of this resource
+func createSystemdTimers(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSystemdTimers{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("systemd.timers", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSystemdTimers) MqlName() string {
+	return "systemd.timers"
+}
+
+func (c *mqlSystemdTimers) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSystemdTimers) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("systemd.timers", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlSystemdSocket for the systemd.socket resource
+type mqlSystemdSocket struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlSystemdSocketInternal
+	Name            plugin.TValue[string]
+	Description     plugin.TValue[string]
+	Installed       plugin.TValue[bool]
+	Enabled         plugin.TValue[bool]
+	Masked          plugin.TValue[bool]
+	Static          plugin.TValue[bool]
+	Running         plugin.TValue[bool]
+	Activates       plugin.TValue[string]
+	ListenAddresses plugin.TValue[[]any]
+	Accept          plugin.TValue[bool]
+}
+
+// createSystemdSocket creates a new instance of this resource
+func createSystemdSocket(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSystemdSocket{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("systemd.socket", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSystemdSocket) MqlName() string {
+	return "systemd.socket"
+}
+
+func (c *mqlSystemdSocket) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSystemdSocket) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlSystemdSocket) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlSystemdSocket) GetInstalled() *plugin.TValue[bool] {
+	return &c.Installed
+}
+
+func (c *mqlSystemdSocket) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlSystemdSocket) GetMasked() *plugin.TValue[bool] {
+	return &c.Masked
+}
+
+func (c *mqlSystemdSocket) GetStatic() *plugin.TValue[bool] {
+	return &c.Static
+}
+
+func (c *mqlSystemdSocket) GetRunning() *plugin.TValue[bool] {
+	return &c.Running
+}
+
+func (c *mqlSystemdSocket) GetActivates() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Activates, func() (string, error) {
+		return c.activates()
+	})
+}
+
+func (c *mqlSystemdSocket) GetListenAddresses() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ListenAddresses, func() ([]any, error) {
+		return c.listenAddresses()
+	})
+}
+
+func (c *mqlSystemdSocket) GetAccept() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Accept, func() (bool, error) {
+		return c.accept()
+	})
+}
+
+// mqlSystemdSockets for the systemd.sockets resource
+type mqlSystemdSockets struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSystemdSocketsInternal it will be used here
+	List plugin.TValue[[]any]
+}
+
+// createSystemdSockets creates a new instance of this resource
+func createSystemdSockets(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSystemdSockets{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("systemd.sockets", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSystemdSockets) MqlName() string {
+	return "systemd.sockets"
+}
+
+func (c *mqlSystemdSockets) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSystemdSockets) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("systemd.sockets", c.__id, "list")
 			if err != nil {
 				return nil, err
 			}
