@@ -59,23 +59,54 @@ type WindowsFirewallRule struct {
 }
 
 func ParseWindowsFirewallRules(input io.Reader) ([]WindowsFirewallRule, error) {
-	data, err := io.ReadAll(input)
-	if err != nil {
-		return nil, err
-	}
+	dec := json.NewDecoder(input)
 
-	// for empty result set do not get the '{}', therefore lets abort here
-	if len(data) == 0 {
+	// Read the opening bracket of the JSON array.
+	tok, err := dec.Token()
+	if err == io.EOF {
+		// Empty input — no rules.
 		return []WindowsFirewallRule{}, nil
 	}
-
-	var winFirewallRules []WindowsFirewallRule
-	err = json.Unmarshal(data, &winFirewallRules)
 	if err != nil {
 		return nil, err
 	}
 
-	return winFirewallRules, nil
+	// PowerShell emits a bare object when there is exactly one rule.
+	// Detect this and handle it separately.
+	if delim, ok := tok.(json.Delim); !ok || delim != '[' {
+		// Not an array — re-parse as a single object. We already consumed
+		// the opening token so we need to read the rest and prepend it.
+		// Simplest approach: buffer just this one object.
+		remainder, err := io.ReadAll(dec.Buffered())
+		if err != nil {
+			return nil, err
+		}
+		trailing, err := io.ReadAll(input)
+		if err != nil {
+			return nil, err
+		}
+		// Reconstruct the full object: opening brace + buffered + remaining.
+		full := append([]byte{'{'}, remainder...)
+		full = append(full, trailing...)
+
+		var rule WindowsFirewallRule
+		if err := json.Unmarshal(full, &rule); err != nil {
+			return nil, err
+		}
+		return []WindowsFirewallRule{rule}, nil
+	}
+
+	// Stream-decode array elements one at a time.
+	var rules []WindowsFirewallRule
+	for dec.More() {
+		var rule WindowsFirewallRule
+		if err := dec.Decode(&rule); err != nil {
+			return nil, err
+		}
+		rules = append(rules, rule)
+	}
+
+	return rules, nil
 }
 
 type WindowsFirewallSettings struct {
@@ -144,21 +175,50 @@ type WindowsFirewallProfile struct {
 }
 
 func ParseWindowsFirewallProfiles(input io.Reader) ([]WindowsFirewallProfile, error) {
-	data, err := io.ReadAll(input)
-	if err != nil {
-		return nil, err
-	}
+	dec := json.NewDecoder(input)
 
-	// for empty result set do not get the '{}', therefore lets abort here
-	if len(data) == 0 {
+	// Read the opening bracket of the JSON array.
+	tok, err := dec.Token()
+	if err == io.EOF {
+		// Empty input — no profiles.
 		return []WindowsFirewallProfile{}, nil
 	}
-
-	var winFirewallProfiles []WindowsFirewallProfile
-	err = json.Unmarshal(data, &winFirewallProfiles)
 	if err != nil {
 		return nil, err
 	}
 
-	return winFirewallProfiles, nil
+	// PowerShell emits a bare object when there is exactly one profile.
+	// Detect this and handle it separately.
+	if delim, ok := tok.(json.Delim); !ok || delim != '[' {
+		// Not an array — re-parse as a single object.
+		remainder, err := io.ReadAll(dec.Buffered())
+		if err != nil {
+			return nil, err
+		}
+		trailing, err := io.ReadAll(input)
+		if err != nil {
+			return nil, err
+		}
+		// Reconstruct the full object: opening brace + buffered + remaining.
+		full := append([]byte{'{'}, remainder...)
+		full = append(full, trailing...)
+
+		var profile WindowsFirewallProfile
+		if err := json.Unmarshal(full, &profile); err != nil {
+			return nil, err
+		}
+		return []WindowsFirewallProfile{profile}, nil
+	}
+
+	// Stream-decode array elements one at a time.
+	var profiles []WindowsFirewallProfile
+	for dec.More() {
+		var profile WindowsFirewallProfile
+		if err := dec.Decode(&profile); err != nil {
+			return nil, err
+		}
+		profiles = append(profiles, profile)
+	}
+
+	return profiles, nil
 }
