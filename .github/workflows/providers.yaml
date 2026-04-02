@@ -196,8 +196,8 @@ jobs:
             echo "Publishing $pkg to gs://${BUCKET}/providers/${PROVIDER}/${VERSION}/"
             gsutil -m cp -c dist/${pkg}*.xz gs://${BUCKET}/providers/${PROVIDER}/${VERSION}/
             gsutil -m cp -c dist/${pkg}_SHA256SUMS gs://${BUCKET}/providers/${PROVIDER}/${VERSION}/
-            gsutil -m cp -c providers/${PROVIDER}/dist/${PROVIDER}.resources.json gs://${BUCKET}/providers/${PROVIDER}/${VERSION}/schema.json
-            gsutil -m cp -c providers/${PROVIDER}/dist/${PROVIDER}.json gs://${BUCKET}/providers/${PROVIDER}/${VERSION}/provider.json
+            gsutil -m cp -c dist/${pkg}_schema.json gs://${BUCKET}/providers/${PROVIDER}/${VERSION}/schema.json
+            gsutil -m cp -c dist/${pkg}_provider.json gs://${BUCKET}/providers/${PROVIDER}/${VERSION}/provider.json
           done
 
       - name: "Save Artifacts"

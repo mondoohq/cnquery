@@ -161,6 +161,11 @@ if [ $FAILED -ne 0 ]; then
   exit 1
 fi
 
+# Copy schema files to bundle dist for publishing
+echo "  - Copying schema files..."
+cp ${PROVIDER_DIST}/${PROVIDER_NAME}.resources.json ${BUNDLE_DIST}/${PROVIDER_NAME}_${PROVIDER_VERSION}_schema.json
+cp ${PROVIDER_DIST}/${PROVIDER_NAME}.json ${BUNDLE_DIST}/${PROVIDER_NAME}_${PROVIDER_VERSION}_provider.json
+
 # Generate SHA256 checksums
 echo "  - Generating SHA256 checksums..."
 cd $BUNDLE_DIST
