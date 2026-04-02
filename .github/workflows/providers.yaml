@@ -196,13 +196,9 @@ jobs:
             echo "Publishing $pkg to gs://${BUCKET}/providers/${PROVIDER}/${VERSION}/"
             gsutil -m cp -c dist/${pkg}*.xz gs://${BUCKET}/providers/${PROVIDER}/${VERSION}/
             gsutil -m cp -c dist/${pkg}_SHA256SUMS gs://${BUCKET}/providers/${PROVIDER}/${VERSION}/
+            gsutil -m cp -c providers/${PROVIDER}/dist/${PROVIDER}.resources.json gs://${BUCKET}/providers/${PROVIDER}/${VERSION}/schema.json
+            gsutil -m cp -c providers/${PROVIDER}/dist/${PROVIDER}.json gs://${BUCKET}/providers/${PROVIDER}/${VERSION}/provider.json
           done
-
-          PROVIDER=${{ matrix.provider }}
-          VERSION=$(grep "Version:" providers/${PROVIDER}/config/config.go | cut -f2 -d\")
-          echo "Publishing schema files for ${PROVIDER} ${VERSION}"
-          gsutil -m cp -c providers/${PROVIDER}/dist/${PROVIDER}.resources.json gs://${BUCKET}/providers/${PROVIDER}/${VERSION}/schema.json
-          gsutil -m cp -c providers/${PROVIDER}/dist/${PROVIDER}.json gs://${BUCKET}/providers/${PROVIDER}/${VERSION}/provider.json
 
       - name: "Save Artifacts"
         if: ${{ inputs.skip_publish }}
