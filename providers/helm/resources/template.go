@@ -1,0 +1,254 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+package resources
+
+import (
+	"strconv"
+	"strings"
+	"text/template"
+	"text/template/parse"
+
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"helm.sh/helm/v3/pkg/chart"
+)
+
+// helmStubFuncs provides no-op stubs for common Helm/Sprig template functions
+// so the Go template AST parser succeeds instead of falling back to regex.
+var helmStubFuncs = template.FuncMap{
+	// Helm built-ins
+	"include":  func(string, ...any) string { return "" },
+	"toYaml":   func(any) string { return "" },
+	"fromYaml": func(string) map[string]any { return nil },
+	"toJson":   func(any) string { return "" },
+	"fromJson": func(string) map[string]any { return nil },
+	"tpl":      func(string, any) string { return "" },
+	"required": func(string, any) any { return nil },
+	"lookup":   func(string, string, string, string) map[string]any { return nil },
+	// Sprig: strings
+	"default":    func(any, ...any) any { return nil },
+	"empty":      func(any) bool { return false },
+	"coalesce":   func(...any) any { return nil },
+	"ternary":    func(any, any, bool) any { return nil },
+	"nindent":    func(int, string) string { return "" },
+	"indent":     func(int, string) string { return "" },
+	"trim":       func(string) string { return "" },
+	"trimSuffix": func(string, string) string { return "" },
+	"trimPrefix": func(string, string) string { return "" },
+	"upper":      func(string) string { return "" },
+	"lower":      func(string) string { return "" },
+	"title":      func(string) string { return "" },
+	"quote":      func(string) string { return "" },
+	"replace":    func(string, string, string) string { return "" },
+	"contains":   func(string, string) bool { return false },
+	"hasPrefix":  func(string, string) bool { return false },
+	"hasSuffix":  func(string, string) bool { return false },
+	"b64enc":     func(string) string { return "" },
+	"b64dec":     func(string) string { return "" },
+	// Sprig: collections
+	"list":      func(...any) []any { return nil },
+	"dict":      func(...any) map[string]any { return nil },
+	"get":       func(map[string]any, string) any { return nil },
+	"set":       func(map[string]any, string, any) map[string]any { return nil },
+	"hasKey":    func(map[string]any, string) bool { return false },
+	"keys":      func(map[string]any) []string { return nil },
+	"values":    func(map[string]any) []any { return nil },
+	"merge":     func(...map[string]any) map[string]any { return nil },
+	"splitList": func(string, string) []string { return nil },
+	"join":      func(string, []string) string { return "" },
+	"sortAlpha": func([]string) []string { return nil },
+	// Sprig: type conversion and math
+	"int":      func(any) int { return 0 },
+	"int64":    func(any) int64 { return 0 },
+	"float64":  func(any) float64 { return 0 },
+	"toString": func(any) string { return "" },
+	"atoi":     func(string) int { return 0 },
+	// Sprig: misc
+	"fail":            func(string) (string, error) { return "", nil },
+	"printf":          func(string, ...any) string { return "" },
+	"typeOf":          func(any) string { return "" },
+	"kindOf":          func(any) string { return "" },
+	"deepEqual":       func(any, any) bool { return false },
+	"semverCompare":   func(string, string) bool { return false },
+	"sha256sum":       func(string) string { return "" },
+	"regexMatch":      func(string, string) bool { return false },
+	"regexReplaceAll": func(string, string, string) string { return "" },
+}
+
+type mqlHelmTemplateInternal struct {
+	chartName       string
+	rawContent      string
+	renderedContent string
+}
+
+func newMqlHelmTemplate(runtime *plugin.Runtime, chartName string, t *chart.File, renderedContent string) (*mqlHelmTemplate, error) {
+	rawContent := string(t.Data)
+
+	res, err := CreateResource(runtime, "helm.template", map[string]*llx.RawData{
+		"__id": llx.StringData("helm.template:" + chartName + ":" + t.Name),
+		"name": llx.StringData(t.Name),
+		"raw":  llx.StringData(rawContent),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlT := res.(*mqlHelmTemplate)
+	mqlT.chartName = chartName
+	mqlT.rawContent = rawContent
+	mqlT.renderedContent = renderedContent
+	return mqlT, nil
+}
+
+func (t *mqlHelmTemplate) rendered() (string, error) {
+	return t.renderedContent, nil
+}
+
+func (t *mqlHelmTemplate) resources() ([]any, error) {
+	if t.renderedContent == "" {
+		return []any{}, nil
+	}
+	templateKey := t.chartName + "/" + t.Name.Data
+	return parseK8sResources(t.MqlRuntime, templateKey, t.renderedContent)
+}
+
+func (t *mqlHelmTemplate) directives() ([]any, error) {
+	return extractDirectives(t.MqlRuntime, t.Name.Data, t.rawContent)
+}
+
+// extractDirectives parses Go template directives from raw template content.
+func extractDirectives(runtime *plugin.Runtime, templateName string, rawContent string) ([]any, error) {
+	var mqlDirectives []any
+
+	// Use the Go template parser with Helm/Sprig stub functions so the
+	// AST parser succeeds on most real-world charts.
+	tmpl, err := template.New(templateName).Funcs(helmStubFuncs).Parse(rawContent)
+	if err != nil {
+		// If parsing still fails, fall back to regex-like extraction
+		return extractDirectivesFallback(runtime, templateName, rawContent)
+	}
+
+	for _, t := range tmpl.Templates() {
+		if t.Tree == nil || t.Tree.Root == nil {
+			continue
+		}
+		walkNodes(runtime, t.Name(), t.Tree.Root, &mqlDirectives)
+	}
+
+	return mqlDirectives, nil
+}
+
+func walkNodes(runtime *plugin.Runtime, templateName string, node parse.Node, directives *[]any) {
+	switch n := node.(type) {
+	case *parse.ListNode:
+		if n == nil {
+			return
+		}
+		for _, child := range n.Nodes {
+			walkNodes(runtime, templateName, child, directives)
+		}
+	case *parse.IfNode:
+		addDirective(runtime, templateName, "if", n.String(), n.Line, directives)
+		walkNodes(runtime, templateName, n.List, directives)
+		walkNodes(runtime, templateName, n.ElseList, directives)
+	case *parse.RangeNode:
+		addDirective(runtime, templateName, "range", n.String(), n.Line, directives)
+		walkNodes(runtime, templateName, n.List, directives)
+		walkNodes(runtime, templateName, n.ElseList, directives)
+	case *parse.WithNode:
+		addDirective(runtime, templateName, "with", n.String(), n.Line, directives)
+		walkNodes(runtime, templateName, n.List, directives)
+		walkNodes(runtime, templateName, n.ElseList, directives)
+	case *parse.TemplateNode:
+		addDirective(runtime, templateName, "include", n.Name, n.Line, directives)
+	case *parse.ActionNode:
+		if n.Pipe != nil {
+			pipeStr := n.Pipe.String()
+			if strings.Contains(pipeStr, "include ") || strings.Contains(pipeStr, "tpl ") {
+				directiveType := "include"
+				if strings.Contains(pipeStr, "tpl ") {
+					directiveType = "tpl"
+				}
+				addDirective(runtime, templateName, directiveType, pipeStr, n.Line, directives)
+			}
+		}
+	}
+}
+
+func addDirective(runtime *plugin.Runtime, templateName string, directiveType string, expression string, line int, directives *[]any) {
+	id := "helm.directive:" + templateName + ":" + directiveType + ":" + strconv.Itoa(line)
+	res, err := CreateResource(runtime, "helm.directive", map[string]*llx.RawData{
+		"__id":       llx.StringData(id),
+		"type":       llx.StringData(directiveType),
+		"expression": llx.StringData(expression),
+		"line":       llx.IntData(int64(line)),
+	})
+	if err != nil {
+		return
+	}
+	*directives = append(*directives, res)
+}
+
+// extractDirectivesFallback handles templates that can't be parsed by the standard Go
+// template parser (e.g., those using Helm-specific functions like `include`, `toYaml`).
+func extractDirectivesFallback(runtime *plugin.Runtime, templateName string, rawContent string) ([]any, error) {
+	var mqlDirectives []any
+
+	lines := strings.Split(rawContent, "\n")
+	for i, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if !strings.Contains(trimmed, "{{") {
+			continue
+		}
+
+		// Extract content between {{ and }}
+		for {
+			start := strings.Index(trimmed, "{{")
+			if start == -1 {
+				break
+			}
+			end := strings.Index(trimmed[start:], "}}")
+			if end == -1 {
+				break
+			}
+			expr := strings.TrimSpace(trimmed[start+2 : start+end])
+			expr = strings.TrimPrefix(expr, "-")
+			expr = strings.TrimSuffix(expr, "-")
+			expr = strings.TrimSpace(expr)
+
+			directiveType := classifyDirective(expr)
+			if directiveType != "" {
+				addDirective(runtime, templateName, directiveType, expr, i+1, &mqlDirectives)
+			}
+
+			trimmed = trimmed[start+end+2:]
+		}
+	}
+
+	return mqlDirectives, nil
+}
+
+func classifyDirective(expr string) string {
+	switch {
+	case strings.HasPrefix(expr, "if "):
+		return "if"
+	case strings.HasPrefix(expr, "else if "):
+		return "if"
+	case strings.HasPrefix(expr, "range "):
+		return "range"
+	case strings.HasPrefix(expr, "with "):
+		return "with"
+	case strings.HasPrefix(expr, "define "):
+		return "define"
+	case strings.HasPrefix(expr, "block "):
+		return "block"
+	case strings.HasPrefix(expr, "template "):
+		return "include"
+	case strings.HasPrefix(expr, "include "):
+		return "include"
+	case strings.HasPrefix(expr, "tpl "):
+		return "tpl"
+	default:
+		return ""
+	}
+}
