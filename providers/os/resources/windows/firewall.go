@@ -10,52 +10,27 @@ import (
 
 const (
 	FIREWALL_PROFILES = "Get-NetFirewallProfile | ConvertTo-Json"
-	FIREWALL_RULES    = "Get-NetFirewallRule | Select-Object ID,InstanceID,Name,DisplayName,Description,Group,DisplayGroup,Enabled,Profile,Profiles,Direction,Action,EdgeTraversalPolicy,LSM,LocalOnlyMapping,LooseSourceMapping,PrimaryStatus,Status,EnforcementStatus,StatusCode,PolicyStoreSource,PolicyStoreSourceType,Caption,ElementName,PolicyDecisionStrategy,ConditionListType,CreationClassName,ExecutionStrategy,PolicyRuleName,SequencedActions,SystemCreationClassName,SystemName,RuleGroup | ConvertTo-Json"
+	FIREWALL_RULES    = "Get-NetFirewallRule | Select-Object InstanceID,Name,DisplayName,Description,DisplayGroup,Enabled,Direction,Action,EdgeTraversalPolicy,LooseSourceMapping,LocalOnlyMapping,PrimaryStatus,Status,EnforcementStatus,PolicyStoreSource,PolicyStoreSourceType | ConvertTo-Json"
 	FIREWALL_SETTINGS = "Get-NetFirewallSetting | ConvertTo-Json"
 )
 
 type WindowsFirewallRule struct {
-	ID                      string  `json:"ID"`
-	Name                    string  `json:"Name"`
-	DisplayName             string  `json:"DisplayName"`
-	Group                   string  `json:"Group"`
-	Enabled                 int64   `json:"Enabled"`
-	Profile                 int64   `json:"Profile"`
-	Direction               int64   `json:"Direction"`
-	Action                  int64   `json:"Action"`
-	EdgeTraversalPolicy     int64   `json:"EdgeTraversalPolicy"`
-	LSM                     bool    `json:"LSM"`
-	PrimaryStatus           int64   `json:"PrimaryStatus"`
-	Status                  string  `json:"Status"`
-	EnforcementStatus       string  `json:"EnforcementStatus"`
-	PolicyStoreSourceType   int64   `json:"PolicyStoreSourceType"`
-	Caption                 *string `json:"Caption"`
-	Description             string  `json:"Description"`
-	ElementName             string  `json:"ElementName"`
-	InstanceID              string  `json:"InstanceID"`
-	PolicyDecisionStrategy  int64   `json:"PolicyDecisionStrategy"`
-	ConditionListType       int64   `json:"ConditionListType"`
-	CreationClassName       string  `json:"CreationClassName"`
-	ExecutionStrategy       int64   `json:"ExecutionStrategy"`
-	PolicyRuleName          string  `json:"PolicyRuleName"`
-	SequencedActions        int64   `json:"SequencedActions"`
-	SystemCreationClassName string  `json:"SystemCreationClassName"`
-	SystemName              string  `json:"SystemName"`
-	DisplayGroup            string  `json:"DisplayGroup"`
-	LocalOnlyMapping        bool    `json:"LocalOnlyMapping"`
-	LooseSourceMapping      bool    `json:"LooseSourceMapping"`
-	PolicyStoreSource       string  `json:"PolicyStoreSource"`
-	Profiles                int64   `json:"Profiles"`
-	RuleGroup               string  `json:"RuleGroup"`
-	StatusCode              int64   `json:"StatusCode"`
-	// Platform    dict     `json:"Platform"`
-	// CommonName            string  `json:"CommonName"`
-	// PolicyKeywords            string  `json:"PolicyKeywords"`
-	// PolicyRoles            string  `json:"PolicyRoles"`
-	// Mandatory int64 `json:"Mandatory"`
-	// Priority string `json:"Priority"`
-	// RuleUsage string `json:"RuleUsage"`
-	// Owner          string `json:"Owner"`
+	InstanceID            string `json:"InstanceID"`
+	Name                  string `json:"Name"`
+	DisplayName           string `json:"DisplayName"`
+	Description           string `json:"Description"`
+	DisplayGroup          string `json:"DisplayGroup"`
+	Enabled               int64  `json:"Enabled"`
+	Direction             int64  `json:"Direction"`
+	Action                int64  `json:"Action"`
+	EdgeTraversalPolicy   int64  `json:"EdgeTraversalPolicy"`
+	LooseSourceMapping    bool   `json:"LooseSourceMapping"`
+	LocalOnlyMapping      bool   `json:"LocalOnlyMapping"`
+	PrimaryStatus         int64  `json:"PrimaryStatus"`
+	Status                string `json:"Status"`
+	EnforcementStatus     string `json:"EnforcementStatus"`
+	PolicyStoreSource     string `json:"PolicyStoreSource"`
+	PolicyStoreSourceType int64  `json:"PolicyStoreSourceType"`
 }
 
 func ParseWindowsFirewallRules(input io.Reader) ([]WindowsFirewallRule, error) {
