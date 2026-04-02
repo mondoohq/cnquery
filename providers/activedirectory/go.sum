@@ -352,8 +352,8 @@ github.com/jfjallid/gofork v1.7.6 h1:OYyS2HH597860gkDxxjNsl+NZRxoAnuRI6ZsP++kYKE
 github.com/jfjallid/gofork v1.7.6/go.mod h1:r1EH4W9KY5iqtiGhAupnbzMRONsLDApdJ9EZH5NWFSc=
 github.com/jfjallid/gokrb5/v8 v8.5.1 h1:6Mt7/s5Am1ygDWDoglP/9VH+k1io8ln7hmMF7BiEPFA=
 github.com/jfjallid/gokrb5/v8 v8.5.1/go.mod h1:B/NiCy81HOor1RSqAd6f1a81u5lPdRxq7vWpbf/KSKU=
-github.com/jfjallid/golog v0.3.3 h1:dY6qf8wTxJ9OwBPVTadVRDmt/6MVXSWwXrxaGMMyXsU=
-github.com/jfjallid/golog v0.3.3/go.mod h1:19Q/zg5OgPPd0xhFllokPnMzthzhFPZmiAGAokE7k58=
+github.com/jfjallid/golog v0.3.5 h1:4fmbGSRFujsxlVN1T9ZNvvRpKO2JjtF/6duZvzQpuo0=
+github.com/jfjallid/golog v0.3.5/go.mod h1:19Q/zg5OgPPd0xhFllokPnMzthzhFPZmiAGAokE7k58=
 github.com/jfjallid/mstypes v0.0.1 h1:/USSXByO5ZMYDmc6mwcK+azKNVwym5vzrAv5uIxXy+U=
 github.com/jfjallid/mstypes v0.0.1/go.mod h1:a3RS3XrUS/+1FbmUNDHB2cJ878Z//brwfxBTG9PB9/M=
 github.com/jfjallid/ndr v0.0.2 h1:KOATfG1aoLcxXvE4v6tqDBlxB+f23cObNed+zrhizRw=
