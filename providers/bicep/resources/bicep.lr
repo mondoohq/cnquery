@@ -1,0 +1,151 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "bicep"
+option go_package = "go.mondoo.com/mql/v13/providers/bicep/resources"
+
+// Bicep/ARM template analysis
+bicep {
+  // All Bicep source files found
+  files() []bicep.file
+  // Compiled ARM template (if available via JSON or bicep build)
+  template() bicep.template
+}
+
+// A Bicep source file
+bicep.file @defaults("path") {
+  // File path
+  path string
+  // Target scope (resourceGroup, subscription, managementGroup, tenant)
+  targetScope string
+  // Parameter declarations
+  parameters() []bicep.parameter
+  // Variable declarations
+  variables() []bicep.variable
+  // Resource declarations
+  resources() []bicep.resource
+  // Module references
+  modules() []bicep.module
+  // Output declarations
+  outputs() []bicep.output
+  // Raw file content
+  content string
+}
+
+// A parameter declaration
+bicep.parameter @defaults("name type") {
+  // Parameter name
+  name string
+  // Type (string, int, bool, object, array, or user-defined)
+  type string
+  // Default value expression (empty if required)
+  defaultValue string
+  // Description from @description decorator
+  description string
+  // Whether @secure decorator is present
+  secure bool
+  // Allowed values from @allowed decorator
+  allowed []string
+  // All decorators as raw strings
+  decorators []string
+}
+
+// A variable declaration
+bicep.variable @defaults("name") {
+  // Variable name
+  name string
+  // Value expression (raw Bicep expression)
+  expression string
+  // Description from @description decorator
+  description string
+}
+
+// A resource declaration in Bicep source
+bicep.resource @defaults("type symbolicName") {
+  // Symbolic name in the Bicep file
+  symbolicName string
+  // Azure resource type (e.g., "Microsoft.Storage/storageAccounts")
+  type string
+  // API version (e.g., "2023-01-01")
+  apiVersion string
+  // Resource name expression
+  name string
+  // Resource location expression
+  location string
+  // Whether this is an existing resource reference
+  existing bool
+  // Condition expression (empty if unconditional)
+  condition string
+  // Parent resource symbolic name
+  parent string
+  // Resource body as dict
+  properties dict
+  // Dependencies (symbolic names from dependsOn)
+  dependsOn []string
+  // Decorators
+  decorators []string
+}
+
+// A module reference
+bicep.module @defaults("name source") {
+  // Symbolic name
+  name string
+  // Module source path or registry reference
+  source string
+  // Scope expression
+  scope string
+  // Parameter values as dict
+  params dict
+  // Condition expression
+  condition string
+  // Whether this references a Bicep registry (br:)
+  isRegistry bool
+  // Whether this references a template spec (ts:)
+  isTemplateSpec bool
+}
+
+// An output declaration
+bicep.output @defaults("name type") {
+  // Output name
+  name string
+  // Output type
+  type string
+  // Value expression
+  expression string
+  // Description from @description decorator
+  description string
+}
+
+// Compiled ARM template (from ARM JSON input)
+bicep.template @defaults("schema") {
+  // ARM schema URL
+  schema string
+  // Content version
+  contentVersion string
+  // Compiled parameters
+  parameters() map[string]dict
+  // Compiled variables
+  variables() map[string]dict
+  // Compiled Azure resources
+  resources() []bicep.template.resource
+  // Compiled outputs
+  outputs() map[string]dict
+}
+
+// A resource in the compiled ARM template
+bicep.template.resource @defaults("type name") {
+  // Azure resource type
+  type string
+  // API version
+  apiVersion string
+  // Resource name (resolved)
+  name string
+  // Resource location (resolved)
+  location string
+  // Full resource properties as dict
+  properties dict
+  // Dependencies
+  dependsOn []string
+  // Full manifest
+  manifest dict
+}

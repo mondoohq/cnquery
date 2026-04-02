@@ -201,6 +201,7 @@ PROVIDERS := \
 	atlassian \
 	aws \
 	azure \
+	bicep \
 	cloudflare \
 	cloudformation \
 	depsdev \
@@ -270,6 +271,7 @@ providers/test:
 	@$(call testGoModProvider, providers/atlassian)
 	@$(call testGoModProvider, providers/aws)
 	@$(call testGoModProvider, providers/azure)
+	@$(call testGoModProvider, providers/bicep)
 	@$(call testGoModProvider, providers/cloudflare)
 	@$(call testGoModProvider, providers/cloudformation)
 	@$(call testGoModProvider, providers/depsdev)
