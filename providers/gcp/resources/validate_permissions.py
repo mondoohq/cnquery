@@ -129,10 +129,10 @@ def fetch_all_permissions(project_id, org_id=None):
 
 
 def load_permissions_json(path):
-    """Load the permissions JSON file and return the permissions list."""
+    """Load the permissions JSON file and return project and org permissions."""
     with open(path) as f:
         data = json.load(f)
-    return data.get("permissions", [])
+    return data.get("permissions", []), data.get("org_level_permissions", [])
 
 
 def find_suggestions(permission, valid_set, n=3):
@@ -195,8 +195,9 @@ def main():
 
     # Load our permissions
     print(f"Loading permissions from {args.permissions_file}...")
-    our_permissions = load_permissions_json(args.permissions_file)
-    print(f"  Found {len(our_permissions)} permissions in file.")
+    project_permissions, org_permissions = load_permissions_json(args.permissions_file)
+    print(f"  Found {len(project_permissions)} project-level permissions")
+    print(f"  Found {len(org_permissions)} org-level permissions")
 
     # Fetch all valid GCP permissions
     print(f"Fetching all testable GCP permissions...")
@@ -210,35 +211,57 @@ def main():
                 f.write(p + "\n")
         print(f"  Wrote valid permissions to {args.dump_valid}")
 
-    # Compare
-    invalid = []
-    valid = []
-    for perm in our_permissions:
-        if perm in valid_set:
-            valid.append(perm)
-        else:
-            invalid.append(perm)
+    # Validate project-level permissions
+    has_errors = False
+    invalid_project = [p for p in project_permissions if p not in valid_set]
+    valid_project = [p for p in project_permissions if p in valid_set]
 
-    # Report
     print()
-    print(f"Results: {len(valid)} valid, {len(invalid)} invalid out of {len(our_permissions)} total")
-    print()
+    print(f"Project-level: {len(valid_project)} valid, {len(invalid_project)} invalid out of {len(project_permissions)} total")
 
-    if invalid:
-        print("INVALID PERMISSIONS:")
+    if invalid_project:
+        has_errors = True
+        print()
+        print("INVALID PROJECT-LEVEL PERMISSIONS:")
         print("-" * 70)
-        for perm in invalid:
+        for perm in invalid_project:
             suggestions = find_suggestions(perm, valid_set)
             print(f"  {perm}")
             if suggestions:
                 print(f"    Did you mean: {', '.join(suggestions)}")
             else:
                 print(f"    No close matches found")
+
+    # Validate org-level permissions
+    invalid_org = [p for p in org_permissions if p not in valid_set]
+    valid_org = [p for p in org_permissions if p in valid_set]
+
+    print()
+    print(f"Org-level: {len(valid_org)} valid, {len(invalid_org)} invalid out of {len(org_permissions)} total")
+
+    if invalid_org:
+        has_errors = True
         print()
-    else:
+        print("INVALID ORG-LEVEL PERMISSIONS:")
+        print("-" * 70)
+        for perm in invalid_org:
+            suggestions = find_suggestions(perm, valid_set)
+            print(f"  {perm}")
+            if suggestions:
+                print(f"    Did you mean: {', '.join(suggestions)}")
+            else:
+                print(f"    No close matches found")
+        if not org_id:
+            print()
+            print("  Note: No organization was queried. Org-level permissions may appear")
+            print("  invalid because they are not testable at the project level.")
+            print("  Re-run with --org ORG_ID to validate these.")
+
+    if not has_errors:
+        print()
         print("All permissions are valid!")
 
-    return 1 if invalid else 0
+    return 1 if has_errors else 0
 
 
 if __name__ == "__main__":
