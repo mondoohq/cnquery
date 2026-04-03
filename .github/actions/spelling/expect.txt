@@ -43,6 +43,7 @@ cloudflare
 Clusterwide
 cmdline
 cmek
+cmk
 cmnd
 cname
 compressratio
@@ -117,6 +118,7 @@ hostedzone
 hostkeys
 hotlink
 hvm
+iaa
 iana
 iap
 iccid

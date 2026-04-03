@@ -6,8 +6,10 @@ package resources
 import (
 	"context"
 	"errors"
+	"net/http"
 	"strings"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservices/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
@@ -436,8 +438,12 @@ func (a *mqlAzureSubscriptionRecoveryServicesServiceVault) backupConfig() (*mqlA
 
 	resp, err := client.Get(ctx, vaultName, resourceID.ResourceGroup, nil)
 	if err != nil {
-		a.BackupConfig.State = plugin.StateIsNull | plugin.StateIsSet
-		return nil, nil
+		var respErr *azcore.ResponseError
+		if errors.As(err, &respErr) && (respErr.StatusCode == http.StatusForbidden || respErr.StatusCode == http.StatusNotFound) {
+			a.BackupConfig.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
+		return nil, err
 	}
 
 	props := resp.Properties
