@@ -427,6 +427,11 @@ const (
 	ResourceAwsCloudformation                                                   string = "aws.cloudformation"
 	ResourceAwsCloudformationStack                                              string = "aws.cloudformation.stack"
 	ResourceAwsCloudformationStackSet                                           string = "aws.cloudformation.stackSet"
+	ResourceAwsKeyspaces                                                        string = "aws.keyspaces"
+	ResourceAwsKeyspacesKeyspace                                                string = "aws.keyspaces.keyspace"
+	ResourceAwsKeyspacesTable                                                   string = "aws.keyspaces.table"
+	ResourceAwsKeyspacesTableColumn                                             string = "aws.keyspaces.table.column"
+	ResourceAwsKeyspacesTableClusteringKey                                      string = "aws.keyspaces.table.clusteringKey"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -2076,6 +2081,26 @@ func init() {
 		"aws.cloudformation.stackSet": {
 			// to override args, implement: initAwsCloudformationStackSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsCloudformationStackSet,
+		},
+		"aws.keyspaces": {
+			// to override args, implement: initAwsKeyspaces(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsKeyspaces,
+		},
+		"aws.keyspaces.keyspace": {
+			// to override args, implement: initAwsKeyspacesKeyspace(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsKeyspacesKeyspace,
+		},
+		"aws.keyspaces.table": {
+			// to override args, implement: initAwsKeyspacesTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsKeyspacesTable,
+		},
+		"aws.keyspaces.table.column": {
+			// to override args, implement: initAwsKeyspacesTableColumn(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsKeyspacesTableColumn,
+		},
+		"aws.keyspaces.table.clusteringKey": {
+			// to override args, implement: initAwsKeyspacesTableClusteringKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsKeyspacesTableClusteringKey,
 		},
 	}
 }
@@ -13643,6 +13668,111 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.cloudformation.stackSet.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudformationStackSet).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.keyspaces.keyspaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspaces).GetKeyspaces()).ToDataRes(types.Array(types.Resource("aws.keyspaces.keyspace")))
+	},
+	"aws.keyspaces.keyspace.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesKeyspace).GetArn()).ToDataRes(types.String)
+	},
+	"aws.keyspaces.keyspace.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesKeyspace).GetName()).ToDataRes(types.String)
+	},
+	"aws.keyspaces.keyspace.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesKeyspace).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.keyspaces.keyspace.replicationStrategy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesKeyspace).GetReplicationStrategy()).ToDataRes(types.String)
+	},
+	"aws.keyspaces.keyspace.replicationRegions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesKeyspace).GetReplicationRegions()).ToDataRes(types.Array(types.String))
+	},
+	"aws.keyspaces.keyspace.tables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesKeyspace).GetTables()).ToDataRes(types.Array(types.Resource("aws.keyspaces.table")))
+	},
+	"aws.keyspaces.keyspace.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesKeyspace).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.keyspaces.table.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetArn()).ToDataRes(types.String)
+	},
+	"aws.keyspaces.table.keyspaceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetKeyspaceName()).ToDataRes(types.String)
+	},
+	"aws.keyspaces.table.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetName()).ToDataRes(types.String)
+	},
+	"aws.keyspaces.table.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.keyspaces.table.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.keyspaces.table.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.keyspaces.table.columns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetColumns()).ToDataRes(types.Array(types.Resource("aws.keyspaces.table.column")))
+	},
+	"aws.keyspaces.table.partitionKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetPartitionKeys()).ToDataRes(types.Array(types.Resource("aws.keyspaces.table.column")))
+	},
+	"aws.keyspaces.table.clusteringKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetClusteringKeys()).ToDataRes(types.Array(types.Resource("aws.keyspaces.table.clusteringKey")))
+	},
+	"aws.keyspaces.table.staticColumns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetStaticColumns()).ToDataRes(types.Array(types.Resource("aws.keyspaces.table.column")))
+	},
+	"aws.keyspaces.table.throughputMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetThroughputMode()).ToDataRes(types.String)
+	},
+	"aws.keyspaces.table.readCapacityUnits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetReadCapacityUnits()).ToDataRes(types.Int)
+	},
+	"aws.keyspaces.table.writeCapacityUnits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetWriteCapacityUnits()).ToDataRes(types.Int)
+	},
+	"aws.keyspaces.table.encryptionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetEncryptionType()).ToDataRes(types.String)
+	},
+	"aws.keyspaces.table.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.keyspaces.table.pointInTimeRecoveryEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetPointInTimeRecoveryEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.keyspaces.table.earliestRestorableTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetEarliestRestorableTimestamp()).ToDataRes(types.Time)
+	},
+	"aws.keyspaces.table.ttlEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetTtlEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.keyspaces.table.defaultTimeToLive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetDefaultTimeToLive()).ToDataRes(types.Int)
+	},
+	"aws.keyspaces.table.clientSideTimestampsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetClientSideTimestampsEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.keyspaces.table.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.keyspaces.table.column.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTableColumn).GetId()).ToDataRes(types.String)
+	},
+	"aws.keyspaces.table.column.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTableColumn).GetName()).ToDataRes(types.String)
+	},
+	"aws.keyspaces.table.column.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTableColumn).GetType()).ToDataRes(types.String)
+	},
+	"aws.keyspaces.table.clusteringKey.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTableClusteringKey).GetId()).ToDataRes(types.String)
+	},
+	"aws.keyspaces.table.clusteringKey.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTableClusteringKey).GetName()).ToDataRes(types.String)
+	},
+	"aws.keyspaces.table.clusteringKey.orderBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTableClusteringKey).GetOrderBy()).ToDataRes(types.String)
 	},
 }
 
@@ -30626,6 +30756,166 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.cloudformation.stackSet.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudformationStackSet).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspaces).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.keyspaces.keyspaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspaces).Keyspaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.keyspace.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesKeyspace).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.keyspaces.keyspace.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesKeyspace).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.keyspace.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesKeyspace).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.keyspace.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesKeyspace).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.keyspace.replicationStrategy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesKeyspace).ReplicationStrategy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.keyspace.replicationRegions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesKeyspace).ReplicationRegions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.keyspace.tables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesKeyspace).Tables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.keyspace.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesKeyspace).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.keyspaces.table.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.keyspaceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).KeyspaceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.columns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).Columns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.partitionKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).PartitionKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.clusteringKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).ClusteringKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.staticColumns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).StaticColumns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.throughputMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).ThroughputMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.readCapacityUnits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).ReadCapacityUnits, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.writeCapacityUnits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).WriteCapacityUnits, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.encryptionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).EncryptionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.pointInTimeRecoveryEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).PointInTimeRecoveryEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.earliestRestorableTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).EarliestRestorableTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.ttlEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).TtlEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.defaultTimeToLive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).DefaultTimeToLive, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.clientSideTimestampsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).ClientSideTimestampsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.column.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTableColumn).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.keyspaces.table.column.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTableColumn).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.column.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTableColumn).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.column.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTableColumn).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.clusteringKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTableClusteringKey).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.keyspaces.table.clusteringKey.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTableClusteringKey).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.clusteringKey.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTableClusteringKey).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.clusteringKey.orderBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTableClusteringKey).OrderBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -73980,4 +74270,509 @@ func (c *mqlAwsCloudformationStackSet) GetTags() *plugin.TValue[map[string]any] 
 	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
 	})
+}
+
+// mqlAwsKeyspaces for the aws.keyspaces resource
+type mqlAwsKeyspaces struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsKeyspacesInternal it will be used here
+	Keyspaces plugin.TValue[[]any]
+}
+
+// createAwsKeyspaces creates a new instance of this resource
+func createAwsKeyspaces(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsKeyspaces{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.keyspaces", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsKeyspaces) MqlName() string {
+	return "aws.keyspaces"
+}
+
+func (c *mqlAwsKeyspaces) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsKeyspaces) GetKeyspaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Keyspaces, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.keyspaces", c.__id, "keyspaces")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.keyspaces()
+	})
+}
+
+// mqlAwsKeyspacesKeyspace for the aws.keyspaces.keyspace resource
+type mqlAwsKeyspacesKeyspace struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsKeyspacesKeyspaceInternal it will be used here
+	Arn                 plugin.TValue[string]
+	Name                plugin.TValue[string]
+	Region              plugin.TValue[string]
+	ReplicationStrategy plugin.TValue[string]
+	ReplicationRegions  plugin.TValue[[]any]
+	Tables              plugin.TValue[[]any]
+	Tags                plugin.TValue[map[string]any]
+}
+
+// createAwsKeyspacesKeyspace creates a new instance of this resource
+func createAwsKeyspacesKeyspace(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsKeyspacesKeyspace{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.keyspaces.keyspace", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsKeyspacesKeyspace) MqlName() string {
+	return "aws.keyspaces.keyspace"
+}
+
+func (c *mqlAwsKeyspacesKeyspace) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsKeyspacesKeyspace) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsKeyspacesKeyspace) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsKeyspacesKeyspace) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsKeyspacesKeyspace) GetReplicationStrategy() *plugin.TValue[string] {
+	return &c.ReplicationStrategy
+}
+
+func (c *mqlAwsKeyspacesKeyspace) GetReplicationRegions() *plugin.TValue[[]any] {
+	return &c.ReplicationRegions
+}
+
+func (c *mqlAwsKeyspacesKeyspace) GetTables() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tables, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.keyspaces.keyspace", c.__id, "tables")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tables()
+	})
+}
+
+func (c *mqlAwsKeyspacesKeyspace) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsKeyspacesTable for the aws.keyspaces.table resource
+type mqlAwsKeyspacesTable struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsKeyspacesTableInternal
+	Arn                         plugin.TValue[string]
+	KeyspaceName                plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	Region                      plugin.TValue[string]
+	Status                      plugin.TValue[string]
+	CreatedAt                   plugin.TValue[*time.Time]
+	Columns                     plugin.TValue[[]any]
+	PartitionKeys               plugin.TValue[[]any]
+	ClusteringKeys              plugin.TValue[[]any]
+	StaticColumns               plugin.TValue[[]any]
+	ThroughputMode              plugin.TValue[string]
+	ReadCapacityUnits           plugin.TValue[int64]
+	WriteCapacityUnits          plugin.TValue[int64]
+	EncryptionType              plugin.TValue[string]
+	KmsKey                      plugin.TValue[*mqlAwsKmsKey]
+	PointInTimeRecoveryEnabled  plugin.TValue[bool]
+	EarliestRestorableTimestamp plugin.TValue[*time.Time]
+	TtlEnabled                  plugin.TValue[bool]
+	DefaultTimeToLive           plugin.TValue[int64]
+	ClientSideTimestampsEnabled plugin.TValue[bool]
+	Tags                        plugin.TValue[map[string]any]
+}
+
+// createAwsKeyspacesTable creates a new instance of this resource
+func createAwsKeyspacesTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsKeyspacesTable{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.keyspaces.table", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsKeyspacesTable) MqlName() string {
+	return "aws.keyspaces.table"
+}
+
+func (c *mqlAwsKeyspacesTable) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsKeyspacesTable) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsKeyspacesTable) GetKeyspaceName() *plugin.TValue[string] {
+	return &c.KeyspaceName
+}
+
+func (c *mqlAwsKeyspacesTable) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsKeyspacesTable) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsKeyspacesTable) GetStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
+		return c.status()
+	})
+}
+
+func (c *mqlAwsKeyspacesTable) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
+		return c.createdAt()
+	})
+}
+
+func (c *mqlAwsKeyspacesTable) GetColumns() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Columns, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.keyspaces.table", c.__id, "columns")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.columns()
+	})
+}
+
+func (c *mqlAwsKeyspacesTable) GetPartitionKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PartitionKeys, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.keyspaces.table", c.__id, "partitionKeys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.partitionKeys()
+	})
+}
+
+func (c *mqlAwsKeyspacesTable) GetClusteringKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ClusteringKeys, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.keyspaces.table", c.__id, "clusteringKeys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.clusteringKeys()
+	})
+}
+
+func (c *mqlAwsKeyspacesTable) GetStaticColumns() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.StaticColumns, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.keyspaces.table", c.__id, "staticColumns")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.staticColumns()
+	})
+}
+
+func (c *mqlAwsKeyspacesTable) GetThroughputMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ThroughputMode, func() (string, error) {
+		return c.throughputMode()
+	})
+}
+
+func (c *mqlAwsKeyspacesTable) GetReadCapacityUnits() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ReadCapacityUnits, func() (int64, error) {
+		return c.readCapacityUnits()
+	})
+}
+
+func (c *mqlAwsKeyspacesTable) GetWriteCapacityUnits() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.WriteCapacityUnits, func() (int64, error) {
+		return c.writeCapacityUnits()
+	})
+}
+
+func (c *mqlAwsKeyspacesTable) GetEncryptionType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.EncryptionType, func() (string, error) {
+		return c.encryptionType()
+	})
+}
+
+func (c *mqlAwsKeyspacesTable) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.keyspaces.table", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsKeyspacesTable) GetPointInTimeRecoveryEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PointInTimeRecoveryEnabled, func() (bool, error) {
+		return c.pointInTimeRecoveryEnabled()
+	})
+}
+
+func (c *mqlAwsKeyspacesTable) GetEarliestRestorableTimestamp() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.EarliestRestorableTimestamp, func() (*time.Time, error) {
+		return c.earliestRestorableTimestamp()
+	})
+}
+
+func (c *mqlAwsKeyspacesTable) GetTtlEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.TtlEnabled, func() (bool, error) {
+		return c.ttlEnabled()
+	})
+}
+
+func (c *mqlAwsKeyspacesTable) GetDefaultTimeToLive() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.DefaultTimeToLive, func() (int64, error) {
+		return c.defaultTimeToLive()
+	})
+}
+
+func (c *mqlAwsKeyspacesTable) GetClientSideTimestampsEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ClientSideTimestampsEnabled, func() (bool, error) {
+		return c.clientSideTimestampsEnabled()
+	})
+}
+
+func (c *mqlAwsKeyspacesTable) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsKeyspacesTableColumn for the aws.keyspaces.table.column resource
+type mqlAwsKeyspacesTableColumn struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsKeyspacesTableColumnInternal it will be used here
+	Id   plugin.TValue[string]
+	Name plugin.TValue[string]
+	Type plugin.TValue[string]
+}
+
+// createAwsKeyspacesTableColumn creates a new instance of this resource
+func createAwsKeyspacesTableColumn(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsKeyspacesTableColumn{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.keyspaces.table.column", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsKeyspacesTableColumn) MqlName() string {
+	return "aws.keyspaces.table.column"
+}
+
+func (c *mqlAwsKeyspacesTableColumn) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsKeyspacesTableColumn) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsKeyspacesTableColumn) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsKeyspacesTableColumn) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+// mqlAwsKeyspacesTableClusteringKey for the aws.keyspaces.table.clusteringKey resource
+type mqlAwsKeyspacesTableClusteringKey struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsKeyspacesTableClusteringKeyInternal it will be used here
+	Id      plugin.TValue[string]
+	Name    plugin.TValue[string]
+	OrderBy plugin.TValue[string]
+}
+
+// createAwsKeyspacesTableClusteringKey creates a new instance of this resource
+func createAwsKeyspacesTableClusteringKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsKeyspacesTableClusteringKey{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.keyspaces.table.clusteringKey", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsKeyspacesTableClusteringKey) MqlName() string {
+	return "aws.keyspaces.table.clusteringKey"
+}
+
+func (c *mqlAwsKeyspacesTableClusteringKey) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsKeyspacesTableClusteringKey) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsKeyspacesTableClusteringKey) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsKeyspacesTableClusteringKey) GetOrderBy() *plugin.TValue[string] {
+	return &c.OrderBy
 }

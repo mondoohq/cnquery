@@ -9346,3 +9346,93 @@ private aws.cloudformation.stackSet @defaults("name status") {
   // Tags for the stack set
   tags() map[string]string
 }
+
+// Amazon Keyspaces (Managed Apache Cassandra)
+aws.keyspaces {
+  // List of keyspaces
+  keyspaces() []aws.keyspaces.keyspace
+}
+
+// Amazon Keyspaces keyspace
+private aws.keyspaces.keyspace @defaults("arn name replicationStrategy") {
+  // ARN for the keyspace
+  arn string
+  // Name of the keyspace
+  name string
+  // Region where the keyspace exists
+  region string
+  // Replication strategy: SINGLE_REGION or MULTI_REGION
+  replicationStrategy string
+  // Regions where the keyspace is replicated (multi-region only)
+  replicationRegions []string
+  // Tables in this keyspace
+  tables() []aws.keyspaces.table
+  // Tags for the keyspace
+  tags() map[string]string
+}
+
+// Amazon Keyspaces table
+private aws.keyspaces.table @defaults("arn keyspaceName name status") {
+  // ARN for the table
+  arn string
+  // Name of the keyspace this table belongs to
+  keyspaceName string
+  // Name of the table
+  name string
+  // Region where the table exists
+  region string
+  // Status of the table: ACTIVE, CREATING, UPDATING, DELETING, DELETED, RESTORING, or INACCESSIBLE_ENCRYPTION_CREDENTIALS
+  status() string
+  // Date and time the table was created
+  createdAt() time
+  // List of all columns in the table
+  columns() []aws.keyspaces.table.column
+  // Partition key columns
+  partitionKeys() []aws.keyspaces.table.column
+  // Clustering key columns with sort order
+  clusteringKeys() []aws.keyspaces.table.clusteringKey
+  // Static columns
+  staticColumns() []aws.keyspaces.table.column
+  // Throughput mode: PAY_PER_REQUEST or PROVISIONED
+  throughputMode() string
+  // Provisioned read capacity units (0 if PAY_PER_REQUEST)
+  readCapacityUnits() int
+  // Provisioned write capacity units (0 if PAY_PER_REQUEST)
+  writeCapacityUnits() int
+  // Encryption type: AWS_OWNED_KMS_KEY or CUSTOMER_MANAGED_KMS_KEY
+  encryptionType() string
+  // KMS key used for encryption (null if AWS_OWNED_KMS_KEY)
+  kmsKey() aws.kms.key
+  // Whether point-in-time recovery is enabled
+  pointInTimeRecoveryEnabled() bool
+  // Earliest restorable timestamp (if point-in-time recovery is enabled)
+  earliestRestorableTimestamp() time
+  // Whether TTL is enabled
+  ttlEnabled() bool
+  // Default time to live in seconds
+  defaultTimeToLive() int
+  // Whether client-side timestamps are enabled
+  clientSideTimestampsEnabled() bool
+  // Tags for the table
+  tags() map[string]string
+}
+
+// Amazon Keyspaces table column definition
+private aws.keyspaces.table.column @defaults("name type") {
+  // Unique identifier for this column
+  id string
+  // Column name
+  name string
+  // Cassandra data type (e.g., text, int, uuid, map<text,text>)
+  type string
+}
+
+// Amazon Keyspaces table clustering key with sort order
+private aws.keyspaces.table.clusteringKey @defaults("name orderBy") {
+  // Unique identifier for this clustering key
+  id string
+  // Column name
+  name string
+  // Sort order: ASC or DESC
+  orderBy string
+}
