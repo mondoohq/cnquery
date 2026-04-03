@@ -2,7 +2,6 @@ aad
 ACCOUNTADMIN
 activedirectory
 ACTIVEMQ
-ADCS
 adr
 advancedthreatprotection
 alloydb
@@ -31,6 +30,7 @@ backupsetting
 backupshorttermretentionpolicy
 bigquery
 bigtable
+BINPACK
 blackhole
 BYOS
 bytematchstatement
@@ -54,7 +54,6 @@ ctx
 customresources
 cwes
 cyclonedx
-DACL
 dast
 databricks
 datapath
@@ -259,7 +258,6 @@ softdep
 spdx
 sph
 splunk
-SPN
 spo
 sqli
 sqlimatchstatement

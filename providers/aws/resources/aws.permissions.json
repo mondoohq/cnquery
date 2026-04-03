@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.6.2",
-  "generated_at": "2026-04-03T10:57:06-07:00",
+  "generated_at": "2026-04-03T11:27:13-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -274,6 +274,7 @@
     "network-firewall:ListFirewallPolicies",
     "network-firewall:ListFirewalls",
     "network-firewall:ListRuleGroups",
+    "organizations:DescribeAccount",
     "organizations:DescribeOrganization",
     "organizations:ListAccounts",
     "organizations:ListDelegatedAdministrators",
@@ -2060,6 +2061,12 @@
       "service": "network-firewall",
       "action": "ListRuleGroups",
       "source_file": "aws_networkfirewall.go"
+    },
+    {
+      "permission": "organizations:DescribeAccount",
+      "service": "organizations",
+      "action": "DescribeAccount",
+      "source_file": "aws_account.go"
     },
     {
       "permission": "organizations:DescribeOrganization",
