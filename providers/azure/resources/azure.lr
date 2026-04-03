@@ -4452,9 +4452,9 @@ private azure.subscription.monitorService.workspace.dataExport @defaults("id nam
   // Destination resource ID
   destinationResourceId string
   // Creation date
-  createdDate string
+  createdDate time
   // Last modified date
-  lastModifiedDate string
+  lastModifiedDate time
 }
 
 // Linked service for a Log Analytics workspace

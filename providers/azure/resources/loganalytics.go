@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	"github.com/rs/zerolog/log"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -312,8 +312,9 @@ func (a *mqlAzureSubscriptionMonitorServiceWorkspace) dataExports() ([]any, erro
 			}
 
 			var enabled bool
-			var destinationResourceId, createdDate, lastModifiedDate string
+			var destinationResourceId string
 			var tableNames []any
+			var createdDate, lastModifiedDate *string
 			if de.Properties != nil {
 				if de.Properties.Enable != nil {
 					enabled = *de.Properties.Enable
@@ -321,12 +322,8 @@ func (a *mqlAzureSubscriptionMonitorServiceWorkspace) dataExports() ([]any, erro
 				if de.Properties.Destination != nil && de.Properties.Destination.ResourceID != nil {
 					destinationResourceId = *de.Properties.Destination.ResourceID
 				}
-				if de.Properties.CreatedDate != nil {
-					createdDate = *de.Properties.CreatedDate
-				}
-				if de.Properties.LastModifiedDate != nil {
-					lastModifiedDate = *de.Properties.LastModifiedDate
-				}
+				createdDate = de.Properties.CreatedDate
+				lastModifiedDate = de.Properties.LastModifiedDate
 				for _, tn := range de.Properties.TableNames {
 					if tn != nil {
 						tableNames = append(tableNames, *tn)
@@ -342,8 +339,8 @@ func (a *mqlAzureSubscriptionMonitorServiceWorkspace) dataExports() ([]any, erro
 					"enabled":               llx.BoolData(enabled),
 					"tableNames":            llx.ArrayData(tableNames, types.String),
 					"destinationResourceId": llx.StringData(destinationResourceId),
-					"createdDate":           llx.StringData(createdDate),
-					"lastModifiedDate":      llx.StringData(lastModifiedDate),
+					"createdDate":           parseAzureDateString(createdDate),
+					"lastModifiedDate":      parseAzureDateString(lastModifiedDate),
 				})
 			if err != nil {
 				return nil, err

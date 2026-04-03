@@ -6643,10 +6643,10 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceDataExport).GetDestinationResourceId()).ToDataRes(types.String)
 	},
 	"azure.subscription.monitorService.workspace.dataExport.createdDate": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceDataExport).GetCreatedDate()).ToDataRes(types.String)
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceDataExport).GetCreatedDate()).ToDataRes(types.Time)
 	},
 	"azure.subscription.monitorService.workspace.dataExport.lastModifiedDate": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceDataExport).GetLastModifiedDate()).ToDataRes(types.String)
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceDataExport).GetLastModifiedDate()).ToDataRes(types.Time)
 	},
 	"azure.subscription.monitorService.workspace.linkedService.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService).GetId()).ToDataRes(types.String)
@@ -14984,11 +14984,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"azure.subscription.monitorService.workspace.dataExport.createdDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceDataExport).CreatedDate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceDataExport).CreatedDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.monitorService.workspace.dataExport.lastModifiedDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceDataExport).LastModifiedDate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceDataExport).LastModifiedDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.monitorService.workspace.linkedService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -36014,8 +36014,8 @@ type mqlAzureSubscriptionMonitorServiceWorkspaceDataExport struct {
 	Enabled               plugin.TValue[bool]
 	TableNames            plugin.TValue[[]any]
 	DestinationResourceId plugin.TValue[string]
-	CreatedDate           plugin.TValue[string]
-	LastModifiedDate      plugin.TValue[string]
+	CreatedDate           plugin.TValue[*time.Time]
+	LastModifiedDate      plugin.TValue[*time.Time]
 }
 
 // createAzureSubscriptionMonitorServiceWorkspaceDataExport creates a new instance of this resource
@@ -36079,11 +36079,11 @@ func (c *mqlAzureSubscriptionMonitorServiceWorkspaceDataExport) GetDestinationRe
 	return &c.DestinationResourceId
 }
 
-func (c *mqlAzureSubscriptionMonitorServiceWorkspaceDataExport) GetCreatedDate() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceDataExport) GetCreatedDate() *plugin.TValue[*time.Time] {
 	return &c.CreatedDate
 }
 
-func (c *mqlAzureSubscriptionMonitorServiceWorkspaceDataExport) GetLastModifiedDate() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceDataExport) GetLastModifiedDate() *plugin.TValue[*time.Time] {
 	return &c.LastModifiedDate
 }
 
