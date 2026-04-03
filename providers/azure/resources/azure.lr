@@ -1494,7 +1494,7 @@ private azure.subscription.storageService.account @defaults("id name location") 
   largeFileSharesState string
   // When the last geo-failover occurred
   lastGeoFailoverTime time
-  // Encryption key source for the storage account ("Microsoft.Storage" or "Microsoft.Keyvault")
+  // Encryption key source for the storage account ("Microsoft.Storage" or "Microsoft.KeyVault")
   encryptionKeySource() string
   // Key Vault key used for customer-managed encryption (null if platform-managed)
   encryptionKey() azure.subscription.keyVaultService.key
@@ -1572,13 +1572,13 @@ private azure.subscription.storageService.account.encryptionScope @defaults("nam
   name string
   // Encryption scope type
   type string
-  // Encryption source ("Microsoft.Storage" or "Microsoft.Keyvault")
+  // Encryption source ("Microsoft.Storage" or "Microsoft.KeyVault")
   source string
   // State of the encryption scope (Enabled or Disabled)
   state string
   // Whether infrastructure encryption is required
   requireInfrastructureEncryption bool
-  // Key Vault key URI (if source is Microsoft.Keyvault)
+  // Key Vault key URI (if source is Microsoft.KeyVault)
   keyVaultKeyUri string
   // Current versioned key identifier
   currentVersionedKeyIdentifier string

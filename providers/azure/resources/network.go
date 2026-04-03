@@ -874,6 +874,82 @@ func (a *mqlAzureSubscriptionNetworkService) firewallPolicies() ([]any, error) {
 	return res, nil
 }
 
+func azureVirtualNetworkToMql(runtime *plugin.Runtime, vn network.VirtualNetwork) (*mqlAzureSubscriptionNetworkServiceVirtualNetwork, error) {
+	props, err := convert.JsonToDict(vn.Properties)
+	if err != nil {
+		return nil, err
+	}
+	subnets := []any{}
+	if vn.Properties != nil {
+		for _, s := range vn.Properties.Subnets {
+			if s != nil {
+				mqlSubnet, err := azureSubnetToMql(runtime, *s)
+				if err != nil {
+					return nil, err
+				}
+				subnets = append(subnets, mqlSubnet)
+			}
+		}
+	}
+	args := map[string]*llx.RawData{
+		"id":         llx.StringDataPtr(vn.ID),
+		"name":       llx.StringDataPtr(vn.Name),
+		"type":       llx.StringDataPtr(vn.Type),
+		"location":   llx.StringDataPtr(vn.Location),
+		"tags":       llx.MapData(convert.PtrMapStrToInterface(vn.Tags), types.String),
+		"etag":       llx.StringDataPtr(vn.Etag),
+		"properties": llx.DictData(props),
+		"subnets":    llx.ArrayData(subnets, types.ResourceLike),
+	}
+	if vn.Properties != nil {
+		args["enableDdosProtection"] = llx.BoolDataPtr(vn.Properties.EnableDdosProtection)
+		args["enableVmProtection"] = llx.BoolDataPtr(vn.Properties.EnableVMProtection)
+		args["provisioningState"] = llx.StringDataPtr((*string)(vn.Properties.ProvisioningState))
+		args["flowTimeoutInMinutes"] = llx.IntDataPtr(vn.Properties.FlowTimeoutInMinutes)
+		if vn.Properties.AddressSpace != nil {
+			args["addressPrefixes"] = llx.ArrayData(convert.SliceStrPtrToInterface(vn.Properties.AddressSpace.AddressPrefixes), types.String)
+		} else {
+			args["addressPrefixes"] = llx.ArrayData([]any{}, types.String)
+		}
+		if vn.Properties.Encryption != nil {
+			args["encryptionEnabled"] = llx.BoolDataPtr(vn.Properties.Encryption.Enabled)
+			args["encryptionEnforcement"] = llx.StringDataPtr((*string)(vn.Properties.Encryption.Enforcement))
+		} else {
+			args["encryptionEnabled"] = llx.BoolData(false)
+			args["encryptionEnforcement"] = llx.StringData("")
+		}
+		if vn.Properties.DhcpOptions != nil {
+			id := convert.ToValue(vn.ID) + "/dhcpOptions"
+			dhcpOpts, err := CreateResource(runtime, "azure.subscription.networkService.virtualNetwork.dhcpOptions",
+				map[string]*llx.RawData{
+					"id":         llx.StringData(id),
+					"dnsServers": llx.ArrayData(convert.SliceStrPtrToInterface(vn.Properties.DhcpOptions.DNSServers), types.String),
+				})
+			if err != nil {
+				return nil, err
+			}
+			args["dhcpOptions"] = llx.ResourceData(dhcpOpts, dhcpOpts.MqlName())
+		} else {
+			args["dhcpOptions"] = llx.NilData
+		}
+	} else {
+		args["enableDdosProtection"] = llx.BoolData(false)
+		args["enableVmProtection"] = llx.BoolData(false)
+		args["provisioningState"] = llx.StringData("")
+		args["flowTimeoutInMinutes"] = llx.IntData(0)
+		args["addressPrefixes"] = llx.ArrayData([]any{}, types.String)
+		args["encryptionEnabled"] = llx.BoolData(false)
+		args["encryptionEnforcement"] = llx.StringData("")
+		args["dhcpOptions"] = llx.NilData
+	}
+
+	mqlVn, err := CreateResource(runtime, ResourceAzureSubscriptionNetworkServiceVirtualNetwork, args)
+	if err != nil {
+		return nil, err
+	}
+	return mqlVn.(*mqlAzureSubscriptionNetworkServiceVirtualNetwork), nil
+}
+
 func (a *mqlAzureSubscriptionNetworkService) virtualNetworks() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
@@ -895,62 +971,7 @@ func (a *mqlAzureSubscriptionNetworkService) virtualNetworks() ([]any, error) {
 			return nil, err
 		}
 		for _, vn := range page.Value {
-			props, err := convert.JsonToDict(vn.Properties)
-			if err != nil {
-				return nil, err
-			}
-			subnets := []any{}
-			for _, s := range vn.Properties.Subnets {
-				if s != nil {
-					mqlSubnet, err := azureSubnetToMql(a.MqlRuntime, *s)
-					if err != nil {
-						return nil, err
-					}
-					subnets = append(subnets, mqlSubnet)
-				}
-			}
-			args := map[string]*llx.RawData{
-				"id":                   llx.StringDataPtr(vn.ID),
-				"name":                 llx.StringDataPtr(vn.Name),
-				"type":                 llx.StringDataPtr(vn.Type),
-				"location":             llx.StringDataPtr(vn.Location),
-				"tags":                 llx.MapData(convert.PtrMapStrToInterface(vn.Tags), types.String),
-				"etag":                 llx.StringDataPtr(vn.Etag),
-				"properties":           llx.DictData(props),
-				"enableDdosProtection": llx.BoolDataPtr(vn.Properties.EnableDdosProtection),
-				"enableVmProtection":   llx.BoolDataPtr(vn.Properties.EnableVMProtection),
-				"subnets":              llx.ArrayData(subnets, types.ResourceLike),
-				"provisioningState":    llx.StringDataPtr((*string)(vn.Properties.ProvisioningState)),
-				"flowTimeoutInMinutes": llx.IntDataPtr(vn.Properties.FlowTimeoutInMinutes),
-			}
-			if vn.Properties.AddressSpace != nil {
-				args["addressPrefixes"] = llx.ArrayData(convert.SliceStrPtrToInterface(vn.Properties.AddressSpace.AddressPrefixes), types.String)
-			} else {
-				args["addressPrefixes"] = llx.ArrayData([]any{}, types.String)
-			}
-			if vn.Properties.Encryption != nil {
-				args["encryptionEnabled"] = llx.BoolDataPtr(vn.Properties.Encryption.Enabled)
-				args["encryptionEnforcement"] = llx.StringDataPtr((*string)(vn.Properties.Encryption.Enforcement))
-			} else {
-				args["encryptionEnabled"] = llx.BoolData(false)
-				args["encryptionEnforcement"] = llx.StringData("")
-			}
-			if vn.Properties.DhcpOptions != nil {
-				id := convert.ToValue(vn.ID) + "/dhcpOptions"
-				dhcpOpts, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.virtualNetwork.dhcpOptions",
-					map[string]*llx.RawData{
-						"id":         llx.StringData(id),
-						"dnsServers": llx.ArrayData(convert.SliceStrPtrToInterface(vn.Properties.DhcpOptions.DNSServers), types.String),
-					})
-				if err != nil {
-					return nil, err
-				}
-				args["dhcpOptions"] = llx.ResourceData(dhcpOpts, dhcpOpts.MqlName())
-			} else {
-				args["dhcpOptions"] = llx.NilData
-			}
-
-			mqlVn, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.virtualNetwork", args)
+			mqlVn, err := azureVirtualNetworkToMql(a.MqlRuntime, *vn)
 			if err != nil {
 				return nil, err
 			}
@@ -2978,103 +2999,48 @@ func (a *mqlAzureSubscriptionNetworkServiceDdosProtectionPlan) virtualNetworks()
 	ctx := context.Background()
 	token := conn.Token()
 
-	res := []any{}
+	// Group VNet IDs by subscription to reuse clients.
+	type vnetRef struct {
+		rgName   string
+		vnetName string
+		id       string
+	}
+	bySubscription := map[string][]vnetRef{}
 	for _, vnetId := range a.cacheVnetIds {
 		resourceID, err := ParseResourceID(vnetId)
 		if err != nil {
 			log.Warn().Err(err).Str("id", vnetId).Msg("could not parse virtual network resource ID")
 			continue
 		}
-		rgName := resourceID.ResourceGroup
-		vnetName := resourceID.Path["virtualnetworks"]
+		bySubscription[resourceID.SubscriptionID] = append(bySubscription[resourceID.SubscriptionID], vnetRef{
+			rgName:   resourceID.ResourceGroup,
+			vnetName: resourceID.Path["virtualnetworks"],
+			id:       vnetId,
+		})
+	}
 
-		client, err := network.NewVirtualNetworksClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+	res := []any{}
+	for subId, refs := range bySubscription {
+		client, err := network.NewVirtualNetworksClient(subId, token, &arm.ClientOptions{
 			ClientOptions: conn.ClientOptions(),
 		})
 		if err != nil {
 			return nil, err
 		}
 
-		resp, err := client.Get(ctx, rgName, vnetName, nil)
-		if err != nil {
-			log.Warn().Err(err).Str("id", vnetId).Msg("could not get virtual network for DDoS protection plan")
-			continue
-		}
+		for _, ref := range refs {
+			resp, err := client.Get(ctx, ref.rgName, ref.vnetName, nil)
+			if err != nil {
+				log.Warn().Err(err).Str("id", ref.id).Msg("could not get virtual network for DDoS protection plan")
+				continue
+			}
 
-		vn := resp.VirtualNetwork
-		props, err := convert.JsonToDict(vn.Properties)
-		if err != nil {
-			return nil, err
-		}
-		subnets := []any{}
-		if vn.Properties != nil {
-			for _, s := range vn.Properties.Subnets {
-				if s != nil {
-					mqlSubnet, err := azureSubnetToMql(a.MqlRuntime, *s)
-					if err != nil {
-						return nil, err
-					}
-					subnets = append(subnets, mqlSubnet)
-				}
+			mqlVn, err := azureVirtualNetworkToMql(a.MqlRuntime, resp.VirtualNetwork)
+			if err != nil {
+				return nil, err
 			}
+			res = append(res, mqlVn)
 		}
-		args := map[string]*llx.RawData{
-			"id":         llx.StringDataPtr(vn.ID),
-			"name":       llx.StringDataPtr(vn.Name),
-			"type":       llx.StringDataPtr(vn.Type),
-			"location":   llx.StringDataPtr(vn.Location),
-			"tags":       llx.MapData(convert.PtrMapStrToInterface(vn.Tags), types.String),
-			"etag":       llx.StringDataPtr(vn.Etag),
-			"properties": llx.DictData(props),
-			"subnets":    llx.ArrayData(subnets, types.ResourceLike),
-		}
-		if vn.Properties != nil {
-			args["enableDdosProtection"] = llx.BoolDataPtr(vn.Properties.EnableDdosProtection)
-			args["enableVmProtection"] = llx.BoolDataPtr(vn.Properties.EnableVMProtection)
-			args["provisioningState"] = llx.StringDataPtr((*string)(vn.Properties.ProvisioningState))
-			args["flowTimeoutInMinutes"] = llx.IntDataPtr(vn.Properties.FlowTimeoutInMinutes)
-			if vn.Properties.AddressSpace != nil {
-				args["addressPrefixes"] = llx.ArrayData(convert.SliceStrPtrToInterface(vn.Properties.AddressSpace.AddressPrefixes), types.String)
-			} else {
-				args["addressPrefixes"] = llx.ArrayData([]any{}, types.String)
-			}
-			if vn.Properties.Encryption != nil {
-				args["encryptionEnabled"] = llx.BoolDataPtr(vn.Properties.Encryption.Enabled)
-				args["encryptionEnforcement"] = llx.StringDataPtr((*string)(vn.Properties.Encryption.Enforcement))
-			} else {
-				args["encryptionEnabled"] = llx.BoolData(false)
-				args["encryptionEnforcement"] = llx.StringData("")
-			}
-			if vn.Properties.DhcpOptions != nil {
-				id := convert.ToValue(vn.ID) + "/dhcpOptions"
-				dhcpOpts, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.virtualNetwork.dhcpOptions",
-					map[string]*llx.RawData{
-						"id":         llx.StringData(id),
-						"dnsServers": llx.ArrayData(convert.SliceStrPtrToInterface(vn.Properties.DhcpOptions.DNSServers), types.String),
-					})
-				if err != nil {
-					return nil, err
-				}
-				args["dhcpOptions"] = llx.ResourceData(dhcpOpts, dhcpOpts.MqlName())
-			} else {
-				args["dhcpOptions"] = llx.NilData
-			}
-		} else {
-			args["enableDdosProtection"] = llx.BoolData(false)
-			args["enableVmProtection"] = llx.BoolData(false)
-			args["provisioningState"] = llx.StringData("")
-			args["flowTimeoutInMinutes"] = llx.IntData(0)
-			args["addressPrefixes"] = llx.ArrayData([]any{}, types.String)
-			args["encryptionEnabled"] = llx.BoolData(false)
-			args["encryptionEnforcement"] = llx.StringData("")
-			args["dhcpOptions"] = llx.NilData
-		}
-
-		mqlVn, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionNetworkServiceVirtualNetwork, args)
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, mqlVn)
 	}
 	return res, nil
 }
