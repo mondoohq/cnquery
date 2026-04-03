@@ -1577,6 +1577,8 @@ aws.sagemaker {
   pipelines() []aws.sagemaker.pipeline
   // List of SageMaker domains
   domains() []aws.sagemaker.domain
+  // List of SageMaker inference components
+  inferenceComponents() []aws.sagemaker.inferenceComponent
 }
 
 // AWS SageMaker notebook instance
@@ -1799,6 +1801,40 @@ private aws.sagemaker.domain @defaults("arn name status") {
   homeEfsFileSystemId() string
   // Default user settings
   defaultUserSettings() dict
+}
+
+// AWS SageMaker inference component
+private aws.sagemaker.inferenceComponent @defaults("arn name status") {
+  // ARN of the inference component
+  arn string
+  // Name of the inference component
+  name string
+  // Name of the parent endpoint
+  endpointName string
+  // ARN of the parent endpoint
+  endpointArn string
+  // Typed reference to the parent endpoint
+  endpoint() aws.sagemaker.endpoint
+  // Production variant name
+  variantName string
+  // Status: InService, Creating, Updating, Failed, Deleting
+  status string
+  // Time when the inference component was created
+  createdAt time
+  // Time when the inference component was last modified
+  lastModifiedAt time
+  // Deployment region
+  region string
+  // Tags associated with the inference component
+  tags() map[string]string
+  // Placement strategy: SPREAD or BINPACK
+  placementStrategy() string
+  // Desired number of copies
+  copyCount() int
+  // Runtime configuration details
+  runtimeConfig() dict
+  // Compute resource requirements specification
+  specification() dict
 }
 
 // AWS Simple Notification Service (SNS)
@@ -3426,6 +3462,30 @@ aws.cloudfront @defaults("distributions functions") {
   distributions() []aws.cloudfront.distribution
   // List of CloudFront functions
   functions() []aws.cloudfront.function
+  // List of CloudFront Anycast static IP lists
+  anycastIpLists() []aws.cloudfront.anycastIpList
+}
+
+// Amazon CloudFront Anycast static IP list
+private aws.cloudfront.anycastIpList @defaults("name status ipCount") {
+  // ARN of the Anycast IP list
+  arn string
+  // Unique identifier of the Anycast IP list
+  id string
+  // Name of the Anycast IP list
+  name string
+  // Deployment status: Deployed, Deploying, or Failed
+  status string
+  // Number of IP addresses in the list
+  ipCount int
+  // Static IP addresses allocated to the list
+  anycastIps() []string
+  // Last modification time
+  lastModifiedAt time
+  // Tags associated with the Anycast IP list
+  tags() map[string]string
+  // Region
+  region string
 }
 
 // Amazon CloudFront distribution
@@ -3619,6 +3679,8 @@ private aws.s3.bucket @defaults("name location public") {
   publicAccessBlock() dict
   // Whether Object Lock is enabled on the bucket (prevents deletion/overwrite for ransomware protection)
   objectLockEnabled() bool
+  // Bucket metrics configurations for request metrics
+  metricsConfigurations() []aws.s3.bucket.metricsConfiguration
   // Whether the bucket still exists (stale reference)
   exists bool
   // Date and time the bucket was created
@@ -3685,6 +3747,14 @@ private aws.s3.bucket.replicationRule @defaults("id status") {
   deleteMarkerReplicationEnabled bool
   // Prefix filter (deprecated, but still used)
   prefix string
+}
+
+// Amazon S3 bucket metrics configuration
+private aws.s3.bucket.metricsConfiguration @defaults("id") {
+  // Unique identifier of the metrics configuration
+  id string
+  // Metrics filter configuration
+  filter dict
 }
 
 // Amazon S3 bucket policy

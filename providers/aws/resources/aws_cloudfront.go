@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	"github.com/cockroachdb/errors"
@@ -245,6 +246,108 @@ func (a *mqlAwsCloudfront) functions() ([]any, error) {
 	}
 
 	return res, nil
+}
+
+func (a *mqlAwsCloudfrontAnycastIpList) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+type mqlAwsCloudfrontAnycastIpListInternal struct {
+	cacheId string
+}
+
+func (a *mqlAwsCloudfront) anycastIpLists() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Cloudfront("") // global service
+	ctx := context.Background()
+
+	res := []any{}
+	var marker *string
+	for {
+		resp, err := svc.ListAnycastIpLists(ctx, &cloudfront.ListAnycastIpListsInput{
+			Marker:   marker,
+			MaxItems: aws.Int32(100),
+		})
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return []any{}, nil
+			}
+			return nil, errors.Wrap(err, "could not list cloudfront anycast ip lists")
+		}
+
+		if resp.AnycastIpLists == nil {
+			break
+		}
+
+		for _, item := range resp.AnycastIpLists.Items {
+			mqlResource, err := CreateResource(a.MqlRuntime, "aws.cloudfront.anycastIpList",
+				map[string]*llx.RawData{
+					"arn":            llx.StringDataPtr(item.Arn),
+					"id":             llx.StringDataPtr(item.Id),
+					"name":           llx.StringDataPtr(item.Name),
+					"status":         llx.StringDataPtr(item.Status),
+					"ipCount":        llx.IntDataDefault(item.IpCount, 0),
+					"lastModifiedAt": llx.TimeDataPtr(item.LastModifiedTime),
+					"region":         llx.StringData("global"),
+				})
+			if err != nil {
+				return nil, err
+			}
+			typed := mqlResource.(*mqlAwsCloudfrontAnycastIpList)
+			typed.cacheId = aws.ToString(item.Id)
+			res = append(res, typed)
+		}
+
+		if resp.AnycastIpLists.NextMarker == nil {
+			break
+		}
+		marker = resp.AnycastIpLists.NextMarker
+	}
+	return res, nil
+}
+
+func (a *mqlAwsCloudfrontAnycastIpList) anycastIps() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Cloudfront("")
+	ctx := context.Background()
+
+	id := a.cacheId
+	resp, err := svc.GetAnycastIpList(ctx, &cloudfront.GetAnycastIpListInput{
+		Id: &id,
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "could not get cloudfront anycast ip list")
+	}
+	if resp.AnycastIpList == nil {
+		return []any{}, nil
+	}
+	return toInterfaceArr(resp.AnycastIpList.AnycastIps), nil
+}
+
+func (a *mqlAwsCloudfrontAnycastIpList) tags() (map[string]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Cloudfront("")
+	ctx := context.Background()
+
+	resp, err := svc.ListTagsForResource(ctx, &cloudfront.ListTagsForResourceInput{
+		Resource: &a.Arn.Data,
+	})
+	if err != nil {
+		return nil, err
+	}
+	tags := make(map[string]any)
+	if resp.Tags != nil {
+		for _, tag := range resp.Tags.Items {
+			if tag.Key != nil {
+				val := ""
+				if tag.Value != nil {
+					val = *tag.Value
+				}
+				tags[*tag.Key] = val
+			}
+		}
+	}
+	return tags, nil
 }
 
 const cloudfrontFunctionPattern = "arn:aws:cloudfront:%s:%s::/functions/%s"

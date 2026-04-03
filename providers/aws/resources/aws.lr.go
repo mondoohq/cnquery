@@ -107,6 +107,7 @@ const (
 	ResourceAwsSagemakerProcessingjob                                           string = "aws.sagemaker.processingjob"
 	ResourceAwsSagemakerPipeline                                                string = "aws.sagemaker.pipeline"
 	ResourceAwsSagemakerDomain                                                  string = "aws.sagemaker.domain"
+	ResourceAwsSagemakerInferenceComponent                                      string = "aws.sagemaker.inferenceComponent"
 	ResourceAwsSns                                                              string = "aws.sns"
 	ResourceAwsSnsTopic                                                         string = "aws.sns.topic"
 	ResourceAwsSnsSubscription                                                  string = "aws.sns.subscription"
@@ -189,6 +190,7 @@ const (
 	ResourceAwsCloudwatchLoggroup                                               string = "aws.cloudwatch.loggroup"
 	ResourceAwsCloudwatchLoggroupMetricsfilter                                  string = "aws.cloudwatch.loggroup.metricsfilter"
 	ResourceAwsCloudfront                                                       string = "aws.cloudfront"
+	ResourceAwsCloudfrontAnycastIpList                                          string = "aws.cloudfront.anycastIpList"
 	ResourceAwsCloudfrontDistribution                                           string = "aws.cloudfront.distribution"
 	ResourceAwsCloudfrontDistributionLoggingConfig                              string = "aws.cloudfront.distribution.loggingConfig"
 	ResourceAwsCloudfrontDistributionOrigin                                     string = "aws.cloudfront.distribution.origin"
@@ -202,6 +204,7 @@ const (
 	ResourceAwsS3BucketCorsrule                                                 string = "aws.s3.bucket.corsrule"
 	ResourceAwsS3BucketEncryptionRule                                           string = "aws.s3.bucket.encryptionRule"
 	ResourceAwsS3BucketReplicationRule                                          string = "aws.s3.bucket.replicationRule"
+	ResourceAwsS3BucketMetricsConfiguration                                     string = "aws.s3.bucket.metricsConfiguration"
 	ResourceAwsS3BucketPolicy                                                   string = "aws.s3.bucket.policy"
 	ResourceAwsS3BucketWebsiteConfiguration                                     string = "aws.s3.bucket.websiteConfiguration"
 	ResourceAwsS3BucketWebsiteConfigurationRedirectAllRequestsToConf            string = "aws.s3.bucket.websiteConfiguration.redirectAllRequestsToConf"
@@ -794,6 +797,10 @@ func init() {
 			// to override args, implement: initAwsSagemakerDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsSagemakerDomain,
 		},
+		"aws.sagemaker.inferenceComponent": {
+			// to override args, implement: initAwsSagemakerInferenceComponent(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerInferenceComponent,
+		},
 		"aws.sns": {
 			// to override args, implement: initAwsSns(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsSns,
@@ -1122,6 +1129,10 @@ func init() {
 			// to override args, implement: initAwsCloudfront(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsCloudfront,
 		},
+		"aws.cloudfront.anycastIpList": {
+			// to override args, implement: initAwsCloudfrontAnycastIpList(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCloudfrontAnycastIpList,
+		},
 		"aws.cloudfront.distribution": {
 			Init:   initAwsCloudfrontDistribution,
 			Create: createAwsCloudfrontDistribution,
@@ -1173,6 +1184,10 @@ func init() {
 		"aws.s3.bucket.replicationRule": {
 			// to override args, implement: initAwsS3BucketReplicationRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsS3BucketReplicationRule,
+		},
+		"aws.s3.bucket.metricsConfiguration": {
+			// to override args, implement: initAwsS3BucketMetricsConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsS3BucketMetricsConfiguration,
 		},
 		"aws.s3.bucket.policy": {
 			Init:   initAwsS3BucketPolicy,
@@ -3960,6 +3975,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.sagemaker.domains": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemaker).GetDomains()).ToDataRes(types.Array(types.Resource("aws.sagemaker.domain")))
 	},
+	"aws.sagemaker.inferenceComponents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemaker).GetInferenceComponents()).ToDataRes(types.Array(types.Resource("aws.sagemaker.inferenceComponent")))
+	},
 	"aws.sagemaker.notebookinstance.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerNotebookinstance).GetArn()).ToDataRes(types.String)
 	},
@@ -4244,6 +4262,51 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.sagemaker.domain.defaultUserSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerDomain).GetDefaultUserSettings()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.inferenceComponent.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerInferenceComponent).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.inferenceComponent.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerInferenceComponent).GetName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.inferenceComponent.endpointName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerInferenceComponent).GetEndpointName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.inferenceComponent.endpointArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerInferenceComponent).GetEndpointArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.inferenceComponent.endpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerInferenceComponent).GetEndpoint()).ToDataRes(types.Resource("aws.sagemaker.endpoint"))
+	},
+	"aws.sagemaker.inferenceComponent.variantName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerInferenceComponent).GetVariantName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.inferenceComponent.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerInferenceComponent).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.inferenceComponent.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerInferenceComponent).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.inferenceComponent.lastModifiedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerInferenceComponent).GetLastModifiedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.inferenceComponent.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerInferenceComponent).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.inferenceComponent.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerInferenceComponent).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.sagemaker.inferenceComponent.placementStrategy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerInferenceComponent).GetPlacementStrategy()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.inferenceComponent.copyCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerInferenceComponent).GetCopyCount()).ToDataRes(types.Int)
+	},
+	"aws.sagemaker.inferenceComponent.runtimeConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerInferenceComponent).GetRuntimeConfig()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.inferenceComponent.specification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerInferenceComponent).GetSpecification()).ToDataRes(types.Dict)
 	},
 	"aws.sns.topics": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSns).GetTopics()).ToDataRes(types.Array(types.Resource("aws.sns.topic")))
@@ -6186,6 +6249,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cloudfront.functions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfront).GetFunctions()).ToDataRes(types.Array(types.Resource("aws.cloudfront.function")))
 	},
+	"aws.cloudfront.anycastIpLists": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfront).GetAnycastIpLists()).ToDataRes(types.Array(types.Resource("aws.cloudfront.anycastIpList")))
+	},
+	"aws.cloudfront.anycastIpList.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontAnycastIpList).GetArn()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.anycastIpList.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontAnycastIpList).GetId()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.anycastIpList.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontAnycastIpList).GetName()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.anycastIpList.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontAnycastIpList).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.anycastIpList.ipCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontAnycastIpList).GetIpCount()).ToDataRes(types.Int)
+	},
+	"aws.cloudfront.anycastIpList.anycastIps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontAnycastIpList).GetAnycastIps()).ToDataRes(types.Array(types.String))
+	},
+	"aws.cloudfront.anycastIpList.lastModifiedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontAnycastIpList).GetLastModifiedAt()).ToDataRes(types.Time)
+	},
+	"aws.cloudfront.anycastIpList.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontAnycastIpList).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.cloudfront.anycastIpList.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontAnycastIpList).GetRegion()).ToDataRes(types.String)
+	},
 	"aws.cloudfront.distribution.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfrontDistribution).GetArn()).ToDataRes(types.String)
 	},
@@ -6420,6 +6513,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.s3.bucket.objectLockEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3Bucket).GetObjectLockEnabled()).ToDataRes(types.Bool)
 	},
+	"aws.s3.bucket.metricsConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetMetricsConfigurations()).ToDataRes(types.Array(types.Resource("aws.s3.bucket.metricsConfiguration")))
+	},
 	"aws.s3.bucket.exists": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3Bucket).GetExists()).ToDataRes(types.Bool)
 	},
@@ -6494,6 +6590,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.s3.bucket.replicationRule.prefix": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3BucketReplicationRule).GetPrefix()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.metricsConfiguration.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketMetricsConfiguration).GetId()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.metricsConfiguration.filter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketMetricsConfiguration).GetFilter()).ToDataRes(types.Dict)
 	},
 	"aws.s3.bucket.policy.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3BucketPolicy).GetName()).ToDataRes(types.String)
@@ -16322,6 +16424,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSagemaker).Domains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.sagemaker.inferenceComponents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemaker).InferenceComponents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.sagemaker.notebookinstance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerNotebookinstance).__id, ok = v.Value.(string)
 		return
@@ -16732,6 +16838,70 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.sagemaker.domain.defaultUserSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerDomain).DefaultUserSettings, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.inferenceComponent.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerInferenceComponent).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.inferenceComponent.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerInferenceComponent).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.inferenceComponent.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerInferenceComponent).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.inferenceComponent.endpointName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerInferenceComponent).EndpointName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.inferenceComponent.endpointArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerInferenceComponent).EndpointArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.inferenceComponent.endpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerInferenceComponent).Endpoint, ok = plugin.RawToTValue[*mqlAwsSagemakerEndpoint](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.inferenceComponent.variantName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerInferenceComponent).VariantName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.inferenceComponent.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerInferenceComponent).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.inferenceComponent.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerInferenceComponent).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.inferenceComponent.lastModifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerInferenceComponent).LastModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.inferenceComponent.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerInferenceComponent).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.inferenceComponent.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerInferenceComponent).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.inferenceComponent.placementStrategy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerInferenceComponent).PlacementStrategy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.inferenceComponent.copyCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerInferenceComponent).CopyCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.inferenceComponent.runtimeConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerInferenceComponent).RuntimeConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.inferenceComponent.specification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerInferenceComponent).Specification, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.sns.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19650,6 +19820,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsCloudfront).Functions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.cloudfront.anycastIpLists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfront).AnycastIpLists, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.anycastIpList.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontAnycastIpList).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.cloudfront.anycastIpList.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontAnycastIpList).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.anycastIpList.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontAnycastIpList).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.anycastIpList.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontAnycastIpList).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.anycastIpList.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontAnycastIpList).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.anycastIpList.ipCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontAnycastIpList).IpCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.anycastIpList.anycastIps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontAnycastIpList).AnycastIps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.anycastIpList.lastModifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontAnycastIpList).LastModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.anycastIpList.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontAnycastIpList).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.anycastIpList.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontAnycastIpList).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.cloudfront.distribution.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudfrontDistribution).__id, ok = v.Value.(string)
 		return
@@ -19998,6 +20212,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsS3Bucket).ObjectLockEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"aws.s3.bucket.metricsConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).MetricsConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.s3.bucket.exists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsS3Bucket).Exists, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -20112,6 +20330,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.s3.bucket.replicationRule.prefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsS3BucketReplicationRule).Prefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.metricsConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketMetricsConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.s3.bucket.metricsConfiguration.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketMetricsConfiguration).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.metricsConfiguration.filter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketMetricsConfiguration).Filter, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.s3.bucket.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -38032,13 +38262,14 @@ type mqlAwsSagemaker struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsSagemakerInternal it will be used here
-	Endpoints         plugin.TValue[[]any]
-	NotebookInstances plugin.TValue[[]any]
-	Models            plugin.TValue[[]any]
-	TrainingJobs      plugin.TValue[[]any]
-	ProcessingJobs    plugin.TValue[[]any]
-	Pipelines         plugin.TValue[[]any]
-	Domains           plugin.TValue[[]any]
+	Endpoints           plugin.TValue[[]any]
+	NotebookInstances   plugin.TValue[[]any]
+	Models              plugin.TValue[[]any]
+	TrainingJobs        plugin.TValue[[]any]
+	ProcessingJobs      plugin.TValue[[]any]
+	Pipelines           plugin.TValue[[]any]
+	Domains             plugin.TValue[[]any]
+	InferenceComponents plugin.TValue[[]any]
 }
 
 // createAwsSagemaker creates a new instance of this resource
@@ -38187,6 +38418,22 @@ func (c *mqlAwsSagemaker) GetDomains() *plugin.TValue[[]any] {
 		}
 
 		return c.domains()
+	})
+}
+
+func (c *mqlAwsSagemaker) GetInferenceComponents() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InferenceComponents, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker", c.__id, "inferenceComponents")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.inferenceComponents()
 	})
 }
 
@@ -39188,6 +39435,147 @@ func (c *mqlAwsSagemakerDomain) GetHomeEfsFileSystemId() *plugin.TValue[string] 
 func (c *mqlAwsSagemakerDomain) GetDefaultUserSettings() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.DefaultUserSettings, func() (any, error) {
 		return c.defaultUserSettings()
+	})
+}
+
+// mqlAwsSagemakerInferenceComponent for the aws.sagemaker.inferenceComponent resource
+type mqlAwsSagemakerInferenceComponent struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerInferenceComponentInternal
+	Arn               plugin.TValue[string]
+	Name              plugin.TValue[string]
+	EndpointName      plugin.TValue[string]
+	EndpointArn       plugin.TValue[string]
+	Endpoint          plugin.TValue[*mqlAwsSagemakerEndpoint]
+	VariantName       plugin.TValue[string]
+	Status            plugin.TValue[string]
+	CreatedAt         plugin.TValue[*time.Time]
+	LastModifiedAt    plugin.TValue[*time.Time]
+	Region            plugin.TValue[string]
+	Tags              plugin.TValue[map[string]any]
+	PlacementStrategy plugin.TValue[string]
+	CopyCount         plugin.TValue[int64]
+	RuntimeConfig     plugin.TValue[any]
+	Specification     plugin.TValue[any]
+}
+
+// createAwsSagemakerInferenceComponent creates a new instance of this resource
+func createAwsSagemakerInferenceComponent(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerInferenceComponent{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.inferenceComponent", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerInferenceComponent) MqlName() string {
+	return "aws.sagemaker.inferenceComponent"
+}
+
+func (c *mqlAwsSagemakerInferenceComponent) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerInferenceComponent) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSagemakerInferenceComponent) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSagemakerInferenceComponent) GetEndpointName() *plugin.TValue[string] {
+	return &c.EndpointName
+}
+
+func (c *mqlAwsSagemakerInferenceComponent) GetEndpointArn() *plugin.TValue[string] {
+	return &c.EndpointArn
+}
+
+func (c *mqlAwsSagemakerInferenceComponent) GetEndpoint() *plugin.TValue[*mqlAwsSagemakerEndpoint] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerEndpoint](&c.Endpoint, func() (*mqlAwsSagemakerEndpoint, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.inferenceComponent", c.__id, "endpoint")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerEndpoint), nil
+			}
+		}
+
+		return c.endpoint()
+	})
+}
+
+func (c *mqlAwsSagemakerInferenceComponent) GetVariantName() *plugin.TValue[string] {
+	return &c.VariantName
+}
+
+func (c *mqlAwsSagemakerInferenceComponent) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsSagemakerInferenceComponent) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSagemakerInferenceComponent) GetLastModifiedAt() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedAt
+}
+
+func (c *mqlAwsSagemakerInferenceComponent) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSagemakerInferenceComponent) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsSagemakerInferenceComponent) GetPlacementStrategy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PlacementStrategy, func() (string, error) {
+		return c.placementStrategy()
+	})
+}
+
+func (c *mqlAwsSagemakerInferenceComponent) GetCopyCount() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.CopyCount, func() (int64, error) {
+		return c.copyCount()
+	})
+}
+
+func (c *mqlAwsSagemakerInferenceComponent) GetRuntimeConfig() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.RuntimeConfig, func() (any, error) {
+		return c.runtimeConfig()
+	})
+}
+
+func (c *mqlAwsSagemakerInferenceComponent) GetSpecification() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Specification, func() (any, error) {
+		return c.specification()
 	})
 }
 
@@ -47137,8 +47525,9 @@ type mqlAwsCloudfront struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsCloudfrontInternal it will be used here
-	Distributions plugin.TValue[[]any]
-	Functions     plugin.TValue[[]any]
+	Distributions  plugin.TValue[[]any]
+	Functions      plugin.TValue[[]any]
+	AnycastIpLists plugin.TValue[[]any]
 }
 
 // createAwsCloudfront creates a new instance of this resource
@@ -47208,6 +47597,115 @@ func (c *mqlAwsCloudfront) GetFunctions() *plugin.TValue[[]any] {
 
 		return c.functions()
 	})
+}
+
+func (c *mqlAwsCloudfront) GetAnycastIpLists() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AnycastIpLists, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudfront", c.__id, "anycastIpLists")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.anycastIpLists()
+	})
+}
+
+// mqlAwsCloudfrontAnycastIpList for the aws.cloudfront.anycastIpList resource
+type mqlAwsCloudfrontAnycastIpList struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsCloudfrontAnycastIpListInternal
+	Arn            plugin.TValue[string]
+	Id             plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Status         plugin.TValue[string]
+	IpCount        plugin.TValue[int64]
+	AnycastIps     plugin.TValue[[]any]
+	LastModifiedAt plugin.TValue[*time.Time]
+	Tags           plugin.TValue[map[string]any]
+	Region         plugin.TValue[string]
+}
+
+// createAwsCloudfrontAnycastIpList creates a new instance of this resource
+func createAwsCloudfrontAnycastIpList(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCloudfrontAnycastIpList{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.cloudfront.anycastIpList", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCloudfrontAnycastIpList) MqlName() string {
+	return "aws.cloudfront.anycastIpList"
+}
+
+func (c *mqlAwsCloudfrontAnycastIpList) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCloudfrontAnycastIpList) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsCloudfrontAnycastIpList) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsCloudfrontAnycastIpList) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsCloudfrontAnycastIpList) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsCloudfrontAnycastIpList) GetIpCount() *plugin.TValue[int64] {
+	return &c.IpCount
+}
+
+func (c *mqlAwsCloudfrontAnycastIpList) GetAnycastIps() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AnycastIps, func() ([]any, error) {
+		return c.anycastIps()
+	})
+}
+
+func (c *mqlAwsCloudfrontAnycastIpList) GetLastModifiedAt() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedAt
+}
+
+func (c *mqlAwsCloudfrontAnycastIpList) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsCloudfrontAnycastIpList) GetRegion() *plugin.TValue[string] {
+	return &c.Region
 }
 
 // mqlAwsCloudfrontDistribution for the aws.cloudfront.distribution resource
@@ -47937,28 +48435,29 @@ type mqlAwsS3Bucket struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsS3BucketInternal
-	Arn                  plugin.TValue[string]
-	Name                 plugin.TValue[string]
-	Policy               plugin.TValue[*mqlAwsS3BucketPolicy]
-	Tags                 plugin.TValue[map[string]any]
-	Acl                  plugin.TValue[[]any]
-	Owner                plugin.TValue[map[string]any]
-	Public               plugin.TValue[bool]
-	Cors                 plugin.TValue[[]any]
-	Location             plugin.TValue[string]
-	Versioning           plugin.TValue[map[string]any]
-	Logging              plugin.TValue[map[string]any]
-	StaticWebsiteHosting plugin.TValue[map[string]any]
-	Website              plugin.TValue[*mqlAwsS3BucketWebsiteConfiguration]
-	DefaultLock          plugin.TValue[string]
-	Replication          plugin.TValue[any]
-	Encryption           plugin.TValue[any]
-	EncryptionRules      plugin.TValue[[]any]
-	ReplicationRules     plugin.TValue[[]any]
-	PublicAccessBlock    plugin.TValue[any]
-	ObjectLockEnabled    plugin.TValue[bool]
-	Exists               plugin.TValue[bool]
-	CreatedAt            plugin.TValue[*time.Time]
+	Arn                   plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Policy                plugin.TValue[*mqlAwsS3BucketPolicy]
+	Tags                  plugin.TValue[map[string]any]
+	Acl                   plugin.TValue[[]any]
+	Owner                 plugin.TValue[map[string]any]
+	Public                plugin.TValue[bool]
+	Cors                  plugin.TValue[[]any]
+	Location              plugin.TValue[string]
+	Versioning            plugin.TValue[map[string]any]
+	Logging               plugin.TValue[map[string]any]
+	StaticWebsiteHosting  plugin.TValue[map[string]any]
+	Website               plugin.TValue[*mqlAwsS3BucketWebsiteConfiguration]
+	DefaultLock           plugin.TValue[string]
+	Replication           plugin.TValue[any]
+	Encryption            plugin.TValue[any]
+	EncryptionRules       plugin.TValue[[]any]
+	ReplicationRules      plugin.TValue[[]any]
+	PublicAccessBlock     plugin.TValue[any]
+	ObjectLockEnabled     plugin.TValue[bool]
+	MetricsConfigurations plugin.TValue[[]any]
+	Exists                plugin.TValue[bool]
+	CreatedAt             plugin.TValue[*time.Time]
 }
 
 // createAwsS3Bucket creates a new instance of this resource
@@ -48171,6 +48670,22 @@ func (c *mqlAwsS3Bucket) GetPublicAccessBlock() *plugin.TValue[any] {
 func (c *mqlAwsS3Bucket) GetObjectLockEnabled() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.ObjectLockEnabled, func() (bool, error) {
 		return c.objectLockEnabled()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetMetricsConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MetricsConfigurations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.s3.bucket", c.__id, "metricsConfigurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.metricsConfigurations()
 	})
 }
 
@@ -48471,6 +48986,60 @@ func (c *mqlAwsS3BucketReplicationRule) GetDeleteMarkerReplicationEnabled() *plu
 
 func (c *mqlAwsS3BucketReplicationRule) GetPrefix() *plugin.TValue[string] {
 	return &c.Prefix
+}
+
+// mqlAwsS3BucketMetricsConfiguration for the aws.s3.bucket.metricsConfiguration resource
+type mqlAwsS3BucketMetricsConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsS3BucketMetricsConfigurationInternal it will be used here
+	Id     plugin.TValue[string]
+	Filter plugin.TValue[any]
+}
+
+// createAwsS3BucketMetricsConfiguration creates a new instance of this resource
+func createAwsS3BucketMetricsConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsS3BucketMetricsConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.s3.bucket.metricsConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsS3BucketMetricsConfiguration) MqlName() string {
+	return "aws.s3.bucket.metricsConfiguration"
+}
+
+func (c *mqlAwsS3BucketMetricsConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsS3BucketMetricsConfiguration) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsS3BucketMetricsConfiguration) GetFilter() *plugin.TValue[any] {
+	return &c.Filter
 }
 
 // mqlAwsS3BucketPolicy for the aws.s3.bucket.policy resource

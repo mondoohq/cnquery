@@ -1389,6 +1389,168 @@ func (a *mqlAwsSagemakerDomain) defaultUserSettings() (map[string]any, error) {
 	return a.cacheDefaultUserSettings.(map[string]any), nil
 }
 
+// ---- Inference Components ----
+
+func (a *mqlAwsSagemaker) inferenceComponents() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getInferenceComponents(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+	}
+
+	return res, nil
+}
+
+func (a *mqlAwsSagemaker) getInferenceComponents(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			svc := conn.Sagemaker(region)
+			ctx := context.Background()
+			res := []any{}
+
+			paginator := sagemaker.NewListInferenceComponentsPaginator(svc, &sagemaker.ListInferenceComponentsInput{})
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS SageMaker inference components")
+						return res, nil
+					}
+					return nil, err
+				}
+
+				for _, ic := range page.InferenceComponents {
+					mqlIC, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerInferenceComponent,
+						map[string]*llx.RawData{
+							"arn":            llx.StringDataPtr(ic.InferenceComponentArn),
+							"name":           llx.StringDataPtr(ic.InferenceComponentName),
+							"endpointName":   llx.StringDataPtr(ic.EndpointName),
+							"endpointArn":    llx.StringDataPtr(ic.EndpointArn),
+							"variantName":    llx.StringDataPtr(ic.VariantName),
+							"status":         llx.StringData(string(ic.InferenceComponentStatus)),
+							"createdAt":      llx.TimeDataPtr(ic.CreationTime),
+							"lastModifiedAt": llx.TimeDataPtr(ic.LastModifiedTime),
+							"region":         llx.StringData(region),
+						})
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlIC)
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+type mqlAwsSagemakerInferenceComponentInternal struct {
+	sagemakerTagsCache
+	fetched       bool
+	fetchErr      error
+	fetchLock     sync.Mutex
+	cacheDescribe *sagemaker.DescribeInferenceComponentOutput
+}
+
+func (a *mqlAwsSagemakerInferenceComponent) fetchDetails() (*sagemaker.DescribeInferenceComponentOutput, error) {
+	if a.fetched {
+		return a.cacheDescribe, a.fetchErr
+	}
+	a.fetchLock.Lock()
+	defer a.fetchLock.Unlock()
+	if a.fetched {
+		return a.cacheDescribe, a.fetchErr
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Sagemaker(a.Region.Data)
+	ctx := context.Background()
+	name := a.Name.Data
+
+	resp, err := svc.DescribeInferenceComponent(ctx, &sagemaker.DescribeInferenceComponentInput{
+		InferenceComponentName: &name,
+	})
+	a.fetched = true
+	a.cacheDescribe = resp
+	a.fetchErr = err
+	return resp, err
+}
+
+func (a *mqlAwsSagemakerInferenceComponent) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsSagemakerInferenceComponent) tags() (map[string]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return a.fetchTags(conn, a.Region.Data, a.Arn.Data)
+}
+
+func (a *mqlAwsSagemakerInferenceComponent) endpoint() (*mqlAwsSagemakerEndpoint, error) {
+	endpointArn := a.EndpointArn.Data
+	if endpointArn == "" {
+		a.Endpoint.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, ResourceAwsSagemakerEndpoint,
+		map[string]*llx.RawData{"arn": llx.StringData(endpointArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsSagemakerEndpoint), nil
+}
+
+func (a *mqlAwsSagemakerInferenceComponent) placementStrategy() (string, error) {
+	resp, err := a.fetchDetails()
+	if err != nil {
+		return "", err
+	}
+	if resp.Specification != nil && resp.Specification.SchedulingConfig != nil {
+		return string(resp.Specification.SchedulingConfig.PlacementStrategy), nil
+	}
+	return "", nil
+}
+
+func (a *mqlAwsSagemakerInferenceComponent) copyCount() (int64, error) {
+	resp, err := a.fetchDetails()
+	if err != nil {
+		return 0, err
+	}
+	if resp.RuntimeConfig != nil && resp.RuntimeConfig.CurrentCopyCount != nil {
+		return int64(*resp.RuntimeConfig.CurrentCopyCount), nil
+	}
+	return 0, nil
+}
+
+func (a *mqlAwsSagemakerInferenceComponent) runtimeConfig() (map[string]any, error) {
+	resp, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(resp.RuntimeConfig)
+}
+
+func (a *mqlAwsSagemakerInferenceComponent) specification() (map[string]any, error) {
+	resp, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(resp.Specification)
+}
+
 func getSagemakerTags(ctx context.Context, svc *sagemaker.Client, arn *string) (map[string]any, error) {
 	tags := make(map[string]any)
 	paginator := sagemaker.NewListTagsPaginator(svc, &sagemaker.ListTagsInput{ResourceArn: arn})

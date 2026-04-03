@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.6.2",
-  "generated_at": "2026-04-03T10:48:28-07:00",
+  "generated_at": "2026-04-03T10:57:06-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -39,9 +39,12 @@
     "cloudformation:DescribeStackSet",
     "cloudformation:DescribeStacks",
     "cloudformation:ListStackSets",
+    "cloudfront:GetAnycastIpList",
     "cloudfront:GetDistribution",
+    "cloudfront:ListAnycastIpLists",
     "cloudfront:ListDistributions",
     "cloudfront:ListFunctions",
+    "cloudfront:ListTagsForResource",
     "cloudtrail:DescribeTrails",
     "cloudtrail:GetEventSelectors",
     "cloudtrail:GetTrailStatus",
@@ -322,9 +325,11 @@
     "s3:GetBucketWebsite",
     "s3:GetObjectLockConfiguration",
     "s3:GetPublicAccessBlock",
+    "s3:ListBucketMetricsConfigurations",
     "s3:ListBuckets",
     "sagemaker:DescribeDomain",
     "sagemaker:DescribeEndpointConfig",
+    "sagemaker:DescribeInferenceComponent",
     "sagemaker:DescribeModel",
     "sagemaker:DescribeNotebookInstance",
     "sagemaker:DescribePipeline",
@@ -332,6 +337,7 @@
     "sagemaker:DescribeTrainingJob",
     "sagemaker:ListDomains",
     "sagemaker:ListEndpoints",
+    "sagemaker:ListInferenceComponents",
     "sagemaker:ListModels",
     "sagemaker:ListNotebookInstances",
     "sagemaker:ListPipelines",
@@ -604,9 +610,21 @@
       "source_file": "aws_cloudformation.go"
     },
     {
+      "permission": "cloudfront:GetAnycastIpList",
+      "service": "cloudfront",
+      "action": "GetAnycastIpList",
+      "source_file": "aws_cloudfront.go"
+    },
+    {
       "permission": "cloudfront:GetDistribution",
       "service": "cloudfront",
       "action": "GetDistribution",
+      "source_file": "aws_cloudfront.go"
+    },
+    {
+      "permission": "cloudfront:ListAnycastIpLists",
+      "service": "cloudfront",
+      "action": "ListAnycastIpLists",
       "source_file": "aws_cloudfront.go"
     },
     {
@@ -619,6 +637,12 @@
       "permission": "cloudfront:ListFunctions",
       "service": "cloudfront",
       "action": "ListFunctions",
+      "source_file": "aws_cloudfront.go"
+    },
+    {
+      "permission": "cloudfront:ListTagsForResource",
+      "service": "cloudfront",
+      "action": "ListTagsForResource",
       "source_file": "aws_cloudfront.go"
     },
     {
@@ -2380,6 +2404,12 @@
       "source_file": "aws_s3.go"
     },
     {
+      "permission": "s3:ListBucketMetricsConfigurations",
+      "service": "s3",
+      "action": "ListBucketMetricsConfigurations",
+      "source_file": "aws_s3.go"
+    },
+    {
       "permission": "s3:ListBuckets",
       "service": "s3",
       "action": "ListBuckets",
@@ -2395,6 +2425,12 @@
       "permission": "sagemaker:DescribeEndpointConfig",
       "service": "sagemaker",
       "action": "DescribeEndpointConfig",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:DescribeInferenceComponent",
+      "service": "sagemaker",
+      "action": "DescribeInferenceComponent",
       "source_file": "aws_sagemaker.go"
     },
     {
@@ -2437,6 +2473,12 @@
       "permission": "sagemaker:ListEndpoints",
       "service": "sagemaker",
       "action": "ListEndpoints",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:ListInferenceComponents",
+      "service": "sagemaker",
+      "action": "ListInferenceComponents",
       "source_file": "aws_sagemaker.go"
     },
     {

@@ -833,6 +833,55 @@ func (a *mqlAwsS3Bucket) encryptionRules() ([]any, error) {
 	return res, nil
 }
 
+func (a *mqlAwsS3BucketMetricsConfiguration) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAwsS3Bucket) metricsConfigurations() ([]any, error) {
+	bucketName := a.Name.Data
+	region := a.Location.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.S3(region)
+	ctx := context.Background()
+
+	res := []any{}
+	var token *string
+	for {
+		resp, err := svc.ListBucketMetricsConfigurations(ctx, &s3.ListBucketMetricsConfigurationsInput{
+			Bucket:            &bucketName,
+			ContinuationToken: token,
+		})
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return []any{}, nil
+			}
+			return nil, err
+		}
+
+		for _, mc := range resp.MetricsConfigurationList {
+			filterDict, err := convert.JsonToDict(mc.Filter)
+			if err != nil {
+				return nil, err
+			}
+			mqlMC, err := CreateResource(a.MqlRuntime, "aws.s3.bucket.metricsConfiguration",
+				map[string]*llx.RawData{
+					"id":     llx.StringDataPtr(mc.Id),
+					"filter": llx.MapData(filterDict, types.Any),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlMC)
+		}
+
+		if resp.IsTruncated == nil || !*resp.IsTruncated {
+			break
+		}
+		token = resp.NextContinuationToken
+	}
+	return res, nil
+}
+
 func (a *mqlAwsS3Bucket) fetchObjectLockConfig() (*s3types.ObjectLockConfiguration, error) {
 	a.objectLockOnce.Do(func() {
 		bucketname := a.Name.Data
