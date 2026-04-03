@@ -1,7 +1,7 @@
 {
   "provider": "aws",
-  "version": "13.6.1",
-  "generated_at": "2026-04-02T10:52:46+03:00",
+  "version": "13.6.2",
+  "generated_at": "2026-04-03T10:48:28-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -275,6 +275,8 @@
     "organizations:ListAccounts",
     "organizations:ListDelegatedAdministrators",
     "organizations:ListDelegatedServicesForAccount",
+    "organizations:ListOrganizationalUnitsForParent",
+    "organizations:ListRoots",
     "organizations:ListTagsForResource",
     "pipes:DescribePipe",
     "pipes:ListPipes",
@@ -2057,6 +2059,18 @@
       "permission": "organizations:ListDelegatedServicesForAccount",
       "service": "organizations",
       "action": "ListDelegatedServicesForAccount",
+      "source_file": "aws_account.go"
+    },
+    {
+      "permission": "organizations:ListOrganizationalUnitsForParent",
+      "service": "organizations",
+      "action": "ListOrganizationalUnitsForParent",
+      "source_file": "aws_account.go"
+    },
+    {
+      "permission": "organizations:ListRoots",
+      "service": "organizations",
+      "action": "ListRoots",
       "source_file": "aws_account.go"
     },
     {

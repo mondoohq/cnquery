@@ -22,6 +22,7 @@ const (
 	ResourceAwsOrganization                                                     string = "aws.organization"
 	ResourceAwsOrganizationDelegatedAdministrator                               string = "aws.organization.delegatedAdministrator"
 	ResourceAwsOrganizationDelegatedService                                     string = "aws.organization.delegatedService"
+	ResourceAwsOrganizationOrganizationalUnit                                   string = "aws.organization.organizationalUnit"
 	ResourceAwsVpc                                                              string = "aws.vpc"
 	ResourceAwsVpcRoutetable                                                    string = "aws.vpc.routetable"
 	ResourceAwsVpcRoutetableRoute                                               string = "aws.vpc.routetable.route"
@@ -353,7 +354,9 @@ const (
 	ResourceAwsWorkdocsUser                                                     string = "aws.workdocs.user"
 	ResourceAwsAppstream                                                        string = "aws.appstream"
 	ResourceAwsAppstreamFleet                                                   string = "aws.appstream.fleet"
+	ResourceAwsAppstreamFleetComputeCapacityStatus                              string = "aws.appstream.fleet.computeCapacityStatus"
 	ResourceAwsAppstreamStack                                                   string = "aws.appstream.stack"
+	ResourceAwsAppstreamStackContentRedirection                                 string = "aws.appstream.stack.contentRedirection"
 	ResourceAwsAppstreamImageBuilder                                            string = "aws.appstream.imageBuilder"
 	ResourceAwsAthena                                                           string = "aws.athena"
 	ResourceAwsAthenaWorkgroup                                                  string = "aws.athena.workgroup"
@@ -450,6 +453,10 @@ func init() {
 		"aws.organization.delegatedService": {
 			// to override args, implement: initAwsOrganizationDelegatedService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsOrganizationDelegatedService,
+		},
+		"aws.organization.organizationalUnit": {
+			// to override args, implement: initAwsOrganizationOrganizationalUnit(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsOrganizationOrganizationalUnit,
 		},
 		"aws.vpc": {
 			Init:   initAwsVpc,
@@ -1775,9 +1782,17 @@ func init() {
 			// to override args, implement: initAwsAppstreamFleet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsAppstreamFleet,
 		},
+		"aws.appstream.fleet.computeCapacityStatus": {
+			// to override args, implement: initAwsAppstreamFleetComputeCapacityStatus(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsAppstreamFleetComputeCapacityStatus,
+		},
 		"aws.appstream.stack": {
 			// to override args, implement: initAwsAppstreamStack(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsAppstreamStack,
+		},
+		"aws.appstream.stack.contentRedirection": {
+			// to override args, implement: initAwsAppstreamStackContentRedirection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsAppstreamStackContentRedirection,
 		},
 		"aws.appstream.imageBuilder": {
 			// to override args, implement: initAwsAppstreamImageBuilder(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2151,6 +2166,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.account.operationsContact": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAccount).GetOperationsContact()).ToDataRes(types.Resource("aws.account.alternateContact"))
 	},
+	"aws.account.paths": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccount).GetPaths()).ToDataRes(types.Array(types.String))
+	},
 	"aws.account.alternateContact.accountId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAccountAlternateContact).GetAccountId()).ToDataRes(types.String)
 	},
@@ -2193,6 +2211,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.organization.delegatedAdministrators": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOrganization).GetDelegatedAdministrators()).ToDataRes(types.Array(types.Resource("aws.organization.delegatedAdministrator")))
 	},
+	"aws.organization.organizationalUnits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOrganization).GetOrganizationalUnits()).ToDataRes(types.Array(types.Resource("aws.organization.organizationalUnit")))
+	},
 	"aws.organization.delegatedAdministrator.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOrganizationDelegatedAdministrator).GetArn()).ToDataRes(types.String)
 	},
@@ -2228,6 +2249,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.organization.delegatedService.delegationEnabledDate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOrganizationDelegatedService).GetDelegationEnabledDate()).ToDataRes(types.Time)
+	},
+	"aws.organization.organizationalUnit.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOrganizationOrganizationalUnit).GetArn()).ToDataRes(types.String)
+	},
+	"aws.organization.organizationalUnit.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOrganizationOrganizationalUnit).GetId()).ToDataRes(types.String)
+	},
+	"aws.organization.organizationalUnit.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOrganizationOrganizationalUnit).GetName()).ToDataRes(types.String)
+	},
+	"aws.organization.organizationalUnit.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOrganizationOrganizationalUnit).GetPath()).ToDataRes(types.String)
 	},
 	"aws.vpc.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpc).GetArn()).ToDataRes(types.String)
@@ -11280,11 +11313,47 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.appstream.fleet.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppstreamFleet).GetCreatedAt()).ToDataRes(types.Time)
 	},
+	"aws.appstream.fleet.computeCapacityStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleet).GetComputeCapacityStatus()).ToDataRes(types.Resource("aws.appstream.fleet.computeCapacityStatus"))
+	},
 	"aws.appstream.fleet.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppstreamFleet).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.appstream.fleet.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppstreamFleet).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.appstream.fleet.computeCapacityStatus.desired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleetComputeCapacityStatus).GetDesired()).ToDataRes(types.Int)
+	},
+	"aws.appstream.fleet.computeCapacityStatus.running": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleetComputeCapacityStatus).GetRunning()).ToDataRes(types.Int)
+	},
+	"aws.appstream.fleet.computeCapacityStatus.inUse": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleetComputeCapacityStatus).GetInUse()).ToDataRes(types.Int)
+	},
+	"aws.appstream.fleet.computeCapacityStatus.available": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleetComputeCapacityStatus).GetAvailable()).ToDataRes(types.Int)
+	},
+	"aws.appstream.fleet.computeCapacityStatus.activeUserSessions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleetComputeCapacityStatus).GetActiveUserSessions()).ToDataRes(types.Int)
+	},
+	"aws.appstream.fleet.computeCapacityStatus.actualUserSessions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleetComputeCapacityStatus).GetActualUserSessions()).ToDataRes(types.Int)
+	},
+	"aws.appstream.fleet.computeCapacityStatus.availableUserSessions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleetComputeCapacityStatus).GetAvailableUserSessions()).ToDataRes(types.Int)
+	},
+	"aws.appstream.fleet.computeCapacityStatus.desiredUserSessions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleetComputeCapacityStatus).GetDesiredUserSessions()).ToDataRes(types.Int)
+	},
+	"aws.appstream.fleet.computeCapacityStatus.draining": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleetComputeCapacityStatus).GetDraining()).ToDataRes(types.Int)
+	},
+	"aws.appstream.fleet.computeCapacityStatus.drainModeActiveUserSessions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleetComputeCapacityStatus).GetDrainModeActiveUserSessions()).ToDataRes(types.Int)
+	},
+	"aws.appstream.fleet.computeCapacityStatus.drainModeUnusedUserSessions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleetComputeCapacityStatus).GetDrainModeUnusedUserSessions()).ToDataRes(types.Int)
 	},
 	"aws.appstream.stack.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppstreamStack).GetArn()).ToDataRes(types.String)
@@ -11313,11 +11382,23 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.appstream.stack.embedHostDomains": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppstreamStack).GetEmbedHostDomains()).ToDataRes(types.Array(types.String))
 	},
+	"aws.appstream.stack.contentRedirection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamStack).GetContentRedirection()).ToDataRes(types.Resource("aws.appstream.stack.contentRedirection"))
+	},
 	"aws.appstream.stack.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppstreamStack).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.appstream.stack.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppstreamStack).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.appstream.stack.contentRedirection.hostToClientEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamStackContentRedirection).GetHostToClientEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.appstream.stack.contentRedirection.hostToClientAllowedUrls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamStackContentRedirection).GetHostToClientAllowedUrls()).ToDataRes(types.Array(types.String))
+	},
+	"aws.appstream.stack.contentRedirection.hostToClientDeniedUrls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamStackContentRedirection).GetHostToClientDeniedUrls()).ToDataRes(types.Array(types.String))
 	},
 	"aws.appstream.imageBuilder.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppstreamImageBuilder).GetArn()).ToDataRes(types.String)
@@ -13525,6 +13606,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsAccount).OperationsContact, ok = plugin.RawToTValue[*mqlAwsAccountAlternateContact](v.Value, v.Error)
 		return
 	},
+	"aws.account.paths": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccount).Paths, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.account.alternateContact.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAccountAlternateContact).__id, ok = v.Value.(string)
 		return
@@ -13589,6 +13674,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsOrganization).DelegatedAdministrators, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.organization.organizationalUnits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganization).OrganizationalUnits, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.organization.delegatedAdministrator.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsOrganizationDelegatedAdministrator).__id, ok = v.Value.(string)
 		return
@@ -13643,6 +13732,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.organization.delegatedService.delegationEnabledDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsOrganizationDelegatedService).DelegationEnabledDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.organization.organizationalUnit.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganizationOrganizationalUnit).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.organization.organizationalUnit.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganizationOrganizationalUnit).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.organization.organizationalUnit.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganizationOrganizationalUnit).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.organization.organizationalUnit.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganizationOrganizationalUnit).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.organization.organizationalUnit.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganizationOrganizationalUnit).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -27037,12 +27146,64 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsAppstreamFleet).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"aws.appstream.fleet.computeCapacityStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleet).ComputeCapacityStatus, ok = plugin.RawToTValue[*mqlAwsAppstreamFleetComputeCapacityStatus](v.Value, v.Error)
+		return
+	},
 	"aws.appstream.fleet.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAppstreamFleet).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.appstream.fleet.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAppstreamFleet).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.computeCapacityStatus.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleetComputeCapacityStatus).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.appstream.fleet.computeCapacityStatus.desired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleetComputeCapacityStatus).Desired, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.computeCapacityStatus.running": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleetComputeCapacityStatus).Running, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.computeCapacityStatus.inUse": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleetComputeCapacityStatus).InUse, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.computeCapacityStatus.available": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleetComputeCapacityStatus).Available, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.computeCapacityStatus.activeUserSessions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleetComputeCapacityStatus).ActiveUserSessions, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.computeCapacityStatus.actualUserSessions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleetComputeCapacityStatus).ActualUserSessions, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.computeCapacityStatus.availableUserSessions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleetComputeCapacityStatus).AvailableUserSessions, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.computeCapacityStatus.desiredUserSessions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleetComputeCapacityStatus).DesiredUserSessions, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.computeCapacityStatus.draining": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleetComputeCapacityStatus).Draining, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.computeCapacityStatus.drainModeActiveUserSessions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleetComputeCapacityStatus).DrainModeActiveUserSessions, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.fleet.computeCapacityStatus.drainModeUnusedUserSessions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleetComputeCapacityStatus).DrainModeUnusedUserSessions, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.appstream.stack.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -27085,12 +27246,32 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsAppstreamStack).EmbedHostDomains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.appstream.stack.contentRedirection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamStack).ContentRedirection, ok = plugin.RawToTValue[*mqlAwsAppstreamStackContentRedirection](v.Value, v.Error)
+		return
+	},
 	"aws.appstream.stack.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAppstreamStack).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.appstream.stack.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAppstreamStack).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.stack.contentRedirection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamStackContentRedirection).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.appstream.stack.contentRedirection.hostToClientEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamStackContentRedirection).HostToClientEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.stack.contentRedirection.hostToClientAllowedUrls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamStackContentRedirection).HostToClientAllowedUrls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.stack.contentRedirection.hostToClientDeniedUrls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamStackContentRedirection).HostToClientDeniedUrls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.appstream.imageBuilder.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -30318,6 +30499,7 @@ type mqlAwsAccount struct {
 	SecurityContact    plugin.TValue[*mqlAwsAccountAlternateContact]
 	BillingContact     plugin.TValue[*mqlAwsAccountAlternateContact]
 	OperationsContact  plugin.TValue[*mqlAwsAccountAlternateContact]
+	Paths              plugin.TValue[[]any]
 }
 
 // createAwsAccount creates a new instance of this resource
@@ -30459,6 +30641,12 @@ func (c *mqlAwsAccount) GetOperationsContact() *plugin.TValue[*mqlAwsAccountAlte
 	})
 }
 
+func (c *mqlAwsAccount) GetPaths() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Paths, func() ([]any, error) {
+		return c.paths()
+	})
+}
+
 // mqlAwsAccountAlternateContact for the aws.account.alternateContact resource
 type mqlAwsAccountAlternateContact struct {
 	MqlRuntime *plugin.Runtime
@@ -30550,6 +30738,7 @@ type mqlAwsOrganization struct {
 	Accounts                plugin.TValue[[]any]
 	Id                      plugin.TValue[string]
 	DelegatedAdministrators plugin.TValue[[]any]
+	OrganizationalUnits     plugin.TValue[[]any]
 }
 
 // createAwsOrganization creates a new instance of this resource
@@ -30633,6 +30822,22 @@ func (c *mqlAwsOrganization) GetDelegatedAdministrators() *plugin.TValue[[]any] 
 		}
 
 		return c.delegatedAdministrators()
+	})
+}
+
+func (c *mqlAwsOrganization) GetOrganizationalUnits() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OrganizationalUnits, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.organization", c.__id, "organizationalUnits")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.organizationalUnits()
 	})
 }
 
@@ -30806,6 +31011,70 @@ func (c *mqlAwsOrganizationDelegatedService) GetServicePrincipal() *plugin.TValu
 
 func (c *mqlAwsOrganizationDelegatedService) GetDelegationEnabledDate() *plugin.TValue[*time.Time] {
 	return &c.DelegationEnabledDate
+}
+
+// mqlAwsOrganizationOrganizationalUnit for the aws.organization.organizationalUnit resource
+type mqlAwsOrganizationOrganizationalUnit struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsOrganizationOrganizationalUnitInternal it will be used here
+	Arn  plugin.TValue[string]
+	Id   plugin.TValue[string]
+	Name plugin.TValue[string]
+	Path plugin.TValue[string]
+}
+
+// createAwsOrganizationOrganizationalUnit creates a new instance of this resource
+func createAwsOrganizationOrganizationalUnit(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsOrganizationOrganizationalUnit{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.organization.organizationalUnit", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsOrganizationOrganizationalUnit) MqlName() string {
+	return "aws.organization.organizationalUnit"
+}
+
+func (c *mqlAwsOrganizationOrganizationalUnit) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsOrganizationOrganizationalUnit) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsOrganizationOrganizationalUnit) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsOrganizationOrganizationalUnit) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsOrganizationOrganizationalUnit) GetPath() *plugin.TValue[string] {
+	return &c.Path
 }
 
 // mqlAwsVpc for the aws.vpc resource
@@ -65139,7 +65408,7 @@ func (c *mqlAwsAppstream) GetImageBuilders() *plugin.TValue[[]any] {
 type mqlAwsAppstreamFleet struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsAppstreamFleetInternal it will be used here
+	mqlAwsAppstreamFleetInternal
 	Arn                            plugin.TValue[string]
 	Name                           plugin.TValue[string]
 	State                          plugin.TValue[string]
@@ -65158,6 +65427,7 @@ type mqlAwsAppstreamFleet struct {
 	ImageArn                       plugin.TValue[string]
 	Platform                       plugin.TValue[string]
 	CreatedAt                      plugin.TValue[*time.Time]
+	ComputeCapacityStatus          plugin.TValue[*mqlAwsAppstreamFleetComputeCapacityStatus]
 	Tags                           plugin.TValue[map[string]any]
 	Region                         plugin.TValue[string]
 }
@@ -65271,6 +65541,22 @@ func (c *mqlAwsAppstreamFleet) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
 
+func (c *mqlAwsAppstreamFleet) GetComputeCapacityStatus() *plugin.TValue[*mqlAwsAppstreamFleetComputeCapacityStatus] {
+	return plugin.GetOrCompute[*mqlAwsAppstreamFleetComputeCapacityStatus](&c.ComputeCapacityStatus, func() (*mqlAwsAppstreamFleetComputeCapacityStatus, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.appstream.fleet", c.__id, "computeCapacityStatus")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsAppstreamFleetComputeCapacityStatus), nil
+			}
+		}
+
+		return c.computeCapacityStatus()
+	})
+}
+
 func (c *mqlAwsAppstreamFleet) GetTags() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
@@ -65281,11 +65567,110 @@ func (c *mqlAwsAppstreamFleet) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
+// mqlAwsAppstreamFleetComputeCapacityStatus for the aws.appstream.fleet.computeCapacityStatus resource
+type mqlAwsAppstreamFleetComputeCapacityStatus struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsAppstreamFleetComputeCapacityStatusInternal it will be used here
+	Desired                     plugin.TValue[int64]
+	Running                     plugin.TValue[int64]
+	InUse                       plugin.TValue[int64]
+	Available                   plugin.TValue[int64]
+	ActiveUserSessions          plugin.TValue[int64]
+	ActualUserSessions          plugin.TValue[int64]
+	AvailableUserSessions       plugin.TValue[int64]
+	DesiredUserSessions         plugin.TValue[int64]
+	Draining                    plugin.TValue[int64]
+	DrainModeActiveUserSessions plugin.TValue[int64]
+	DrainModeUnusedUserSessions plugin.TValue[int64]
+}
+
+// createAwsAppstreamFleetComputeCapacityStatus creates a new instance of this resource
+func createAwsAppstreamFleetComputeCapacityStatus(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsAppstreamFleetComputeCapacityStatus{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.appstream.fleet.computeCapacityStatus", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsAppstreamFleetComputeCapacityStatus) MqlName() string {
+	return "aws.appstream.fleet.computeCapacityStatus"
+}
+
+func (c *mqlAwsAppstreamFleetComputeCapacityStatus) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsAppstreamFleetComputeCapacityStatus) GetDesired() *plugin.TValue[int64] {
+	return &c.Desired
+}
+
+func (c *mqlAwsAppstreamFleetComputeCapacityStatus) GetRunning() *plugin.TValue[int64] {
+	return &c.Running
+}
+
+func (c *mqlAwsAppstreamFleetComputeCapacityStatus) GetInUse() *plugin.TValue[int64] {
+	return &c.InUse
+}
+
+func (c *mqlAwsAppstreamFleetComputeCapacityStatus) GetAvailable() *plugin.TValue[int64] {
+	return &c.Available
+}
+
+func (c *mqlAwsAppstreamFleetComputeCapacityStatus) GetActiveUserSessions() *plugin.TValue[int64] {
+	return &c.ActiveUserSessions
+}
+
+func (c *mqlAwsAppstreamFleetComputeCapacityStatus) GetActualUserSessions() *plugin.TValue[int64] {
+	return &c.ActualUserSessions
+}
+
+func (c *mqlAwsAppstreamFleetComputeCapacityStatus) GetAvailableUserSessions() *plugin.TValue[int64] {
+	return &c.AvailableUserSessions
+}
+
+func (c *mqlAwsAppstreamFleetComputeCapacityStatus) GetDesiredUserSessions() *plugin.TValue[int64] {
+	return &c.DesiredUserSessions
+}
+
+func (c *mqlAwsAppstreamFleetComputeCapacityStatus) GetDraining() *plugin.TValue[int64] {
+	return &c.Draining
+}
+
+func (c *mqlAwsAppstreamFleetComputeCapacityStatus) GetDrainModeActiveUserSessions() *plugin.TValue[int64] {
+	return &c.DrainModeActiveUserSessions
+}
+
+func (c *mqlAwsAppstreamFleetComputeCapacityStatus) GetDrainModeUnusedUserSessions() *plugin.TValue[int64] {
+	return &c.DrainModeUnusedUserSessions
+}
+
 // mqlAwsAppstreamStack for the aws.appstream.stack resource
 type mqlAwsAppstreamStack struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsAppstreamStackInternal it will be used here
+	mqlAwsAppstreamStackInternal
 	Arn                 plugin.TValue[string]
 	Name                plugin.TValue[string]
 	Description         plugin.TValue[string]
@@ -65295,6 +65680,7 @@ type mqlAwsAppstreamStack struct {
 	StorageConnectors   plugin.TValue[[]any]
 	UserSettings        plugin.TValue[[]any]
 	EmbedHostDomains    plugin.TValue[[]any]
+	ContentRedirection  plugin.TValue[*mqlAwsAppstreamStackContentRedirection]
 	Tags                plugin.TValue[map[string]any]
 	Region              plugin.TValue[string]
 }
@@ -65372,6 +65758,22 @@ func (c *mqlAwsAppstreamStack) GetEmbedHostDomains() *plugin.TValue[[]any] {
 	return &c.EmbedHostDomains
 }
 
+func (c *mqlAwsAppstreamStack) GetContentRedirection() *plugin.TValue[*mqlAwsAppstreamStackContentRedirection] {
+	return plugin.GetOrCompute[*mqlAwsAppstreamStackContentRedirection](&c.ContentRedirection, func() (*mqlAwsAppstreamStackContentRedirection, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.appstream.stack", c.__id, "contentRedirection")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsAppstreamStackContentRedirection), nil
+			}
+		}
+
+		return c.contentRedirection()
+	})
+}
+
 func (c *mqlAwsAppstreamStack) GetTags() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
@@ -65380,6 +65782,65 @@ func (c *mqlAwsAppstreamStack) GetTags() *plugin.TValue[map[string]any] {
 
 func (c *mqlAwsAppstreamStack) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+// mqlAwsAppstreamStackContentRedirection for the aws.appstream.stack.contentRedirection resource
+type mqlAwsAppstreamStackContentRedirection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsAppstreamStackContentRedirectionInternal it will be used here
+	HostToClientEnabled     plugin.TValue[bool]
+	HostToClientAllowedUrls plugin.TValue[[]any]
+	HostToClientDeniedUrls  plugin.TValue[[]any]
+}
+
+// createAwsAppstreamStackContentRedirection creates a new instance of this resource
+func createAwsAppstreamStackContentRedirection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsAppstreamStackContentRedirection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.appstream.stack.contentRedirection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsAppstreamStackContentRedirection) MqlName() string {
+	return "aws.appstream.stack.contentRedirection"
+}
+
+func (c *mqlAwsAppstreamStackContentRedirection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsAppstreamStackContentRedirection) GetHostToClientEnabled() *plugin.TValue[bool] {
+	return &c.HostToClientEnabled
+}
+
+func (c *mqlAwsAppstreamStackContentRedirection) GetHostToClientAllowedUrls() *plugin.TValue[[]any] {
+	return &c.HostToClientAllowedUrls
+}
+
+func (c *mqlAwsAppstreamStackContentRedirection) GetHostToClientDeniedUrls() *plugin.TValue[[]any] {
+	return &c.HostToClientDeniedUrls
 }
 
 // mqlAwsAppstreamImageBuilder for the aws.appstream.imageBuilder resource

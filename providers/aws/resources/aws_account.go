@@ -58,22 +58,28 @@ func (a *mqlAwsAccount) organization() (*mqlAwsOrganization, error) {
 func (a *mqlAwsOrganization) accounts() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	client := conn.Organizations("") // no region for orgs, use configured region
+	ctx := context.Background()
 
-	orgAccounts, err := client.ListAccounts(context.TODO(), &organizations.ListAccountsInput{})
-	if err != nil {
-		return nil, err
-	}
 	accounts := []any{}
-	for i := range orgAccounts.Accounts {
-		account := orgAccounts.Accounts[i]
-		res, err := CreateResource(a.MqlRuntime, ResourceAwsAccount,
-			map[string]*llx.RawData{
-				"id": llx.StringDataPtr(account.Id),
-			})
+	paginator := organizations.NewListAccountsPaginator(client, &organizations.ListAccountsInput{})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
 		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return []any{}, nil
+			}
 			return nil, err
 		}
-		accounts = append(accounts, res.(*mqlAwsAccount))
+		for _, account := range page.Accounts {
+			res, err := CreateResource(a.MqlRuntime, ResourceAwsAccount,
+				map[string]*llx.RawData{
+					"id": llx.StringDataPtr(account.Id),
+				})
+			if err != nil {
+				return nil, err
+			}
+			accounts = append(accounts, res.(*mqlAwsAccount))
+		}
 	}
 	return accounts, nil
 }
@@ -386,6 +392,95 @@ func (a *mqlAwsOrganizationDelegatedAdministrator) delegatedServices() ([]any, e
 
 func (a *mqlAwsOrganizationDelegatedService) id() (string, error) {
 	return a.ServicePrincipal.Data + "/" + a.DelegationEnabledDate.Data.String(), nil
+}
+
+func (a *mqlAwsAccount) paths() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	client := conn.Organizations("")
+	ctx := context.Background()
+
+	paginator := organizations.NewListAccountsPaginator(client, &organizations.ListAccountsInput{})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return []any{}, nil
+			}
+			return nil, err
+		}
+		for _, account := range page.Accounts {
+			if aws.ToString(account.Id) == a.Id.Data {
+				return toInterfaceArr(account.Paths), nil
+			}
+		}
+	}
+	return []any{}, nil
+}
+
+func (a *mqlAwsOrganization) organizationalUnits() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	client := conn.Organizations("")
+	ctx := context.Background()
+
+	var ous []any
+
+	// Recursive function to list all OUs under a given parent
+	var listOUs func(parentId string) error
+	listOUs = func(parentId string) error {
+		paginator := organizations.NewListOrganizationalUnitsForParentPaginator(client, &organizations.ListOrganizationalUnitsForParentInput{
+			ParentId: &parentId,
+		})
+		for paginator.HasMorePages() {
+			page, err := paginator.NextPage(ctx)
+			if err != nil {
+				if Is400AccessDeniedError(err) {
+					return nil
+				}
+				return err
+			}
+			for _, ou := range page.OrganizationalUnits {
+				mqlOU, err := CreateResource(a.MqlRuntime, "aws.organization.organizationalUnit",
+					map[string]*llx.RawData{
+						"arn":  llx.StringDataPtr(ou.Arn),
+						"id":   llx.StringDataPtr(ou.Id),
+						"name": llx.StringDataPtr(ou.Name),
+						"path": llx.StringDataPtr(ou.Path),
+					})
+				if err != nil {
+					return err
+				}
+				ous = append(ous, mqlOU)
+				// Recurse into child OUs
+				if err := listOUs(aws.ToString(ou.Id)); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	}
+
+	// Start from the organization roots
+	rootsPaginator := organizations.NewListRootsPaginator(client, &organizations.ListRootsInput{})
+	for rootsPaginator.HasMorePages() {
+		page, err := rootsPaginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return []any{}, nil
+			}
+			return nil, err
+		}
+		for _, root := range page.Roots {
+			if err := listOUs(aws.ToString(root.Id)); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return ous, nil
+}
+
+func (a *mqlAwsOrganizationOrganizationalUnit) id() (string, error) {
+	return a.Arn.Data, a.Arn.Error
 }
 
 func (a *mqlAwsOrganizationDelegatedAdministrator) account() (*mqlAwsAccount, error) {

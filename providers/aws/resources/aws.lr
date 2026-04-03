@@ -45,6 +45,9 @@ aws.account @defaults("id aliases.first organization.id") {
 
   // Operations alternate contact for the account
   operationsContact() aws.account.alternateContact
+
+  // Paths in the organization where the account exists
+  paths() []string
 }
 
 // AWS Account alternate contact
@@ -81,6 +84,8 @@ aws.organization @defaults("id masterAccountEmail") {
   id string
   // List of delegated administrator accounts in the organization
   delegatedAdministrators() []aws.organization.delegatedAdministrator
+  // List of organizational units in the organization
+  organizationalUnits() []aws.organization.organizationalUnit
 }
 
 // AWS Organization delegated administrator
@@ -113,6 +118,18 @@ private aws.organization.delegatedService @defaults("servicePrincipal") {
   servicePrincipal string
   // Date the account became a delegated administrator for this service
   delegationEnabledDate time
+}
+
+// AWS Organization organizational unit (OU)
+private aws.organization.organizationalUnit @defaults("id name path") {
+  // ARN of the organizational unit
+  arn string
+  // Unique identifier of the organizational unit
+  id string
+  // Friendly name of the organizational unit
+  name string
+  // Path in the organization where this OU exists
+  path string
 }
 
 // Amazon Virtual Private Cloud (VPC)
@@ -7491,10 +7508,38 @@ private aws.appstream.fleet @defaults("name state fleetType region") {
   platform string
   // Time when the fleet was created
   createdAt time
+  // Compute capacity status including desired, running, in-use, available counts and drain mode info
+  computeCapacityStatus() aws.appstream.fleet.computeCapacityStatus
   // Tags associated with the fleet
   tags() map[string]string
   // Region where the fleet exists
   region string
+}
+
+// Amazon AppStream 2.0 fleet compute capacity status
+private aws.appstream.fleet.computeCapacityStatus @defaults("desired running available") {
+  // Desired number of streaming instances
+  desired int
+  // Number of currently running instances
+  running int
+  // Number of instances in use for streaming
+  inUse int
+  // Number of currently available instances
+  available int
+  // Number of active user sessions (multi-session fleets only)
+  activeUserSessions int
+  // Total session slots available or streaming (multi-session fleets only)
+  actualUserSessions int
+  // Number of idle session slots available (multi-session fleets only)
+  availableUserSessions int
+  // Total concurrent streaming sessions supported in steady state (multi-session fleets only)
+  desiredUserSessions int
+  // Number of instances in drain mode (multi-session fleets only)
+  draining int
+  // Number of active user sessions on drain mode instances (multi-session fleets only)
+  drainModeActiveUserSessions int
+  // Number of unused session slots on drain mode instances (multi-session fleets only)
+  drainModeUnusedUserSessions int
 }
 
 // Amazon AppStream 2.0 stack
@@ -7517,10 +7562,22 @@ private aws.appstream.stack @defaults("name region") {
   userSettings []dict
   // Domains where AppStream streaming sessions can be embedded
   embedHostDomains []string
+  // Content redirection configuration for URL redirection between streaming session and local client
+  contentRedirection() aws.appstream.stack.contentRedirection
   // Tags associated with the stack
   tags() map[string]string
   // Region where the stack exists
   region string
+}
+
+// Amazon AppStream 2.0 stack content redirection configuration
+private aws.appstream.stack.contentRedirection @defaults("hostToClientEnabled") {
+  // Whether URL redirection from remote desktop to local browser is enabled
+  hostToClientEnabled bool
+  // URL patterns allowed for redirection from remote desktop to local browser
+  hostToClientAllowedUrls []string
+  // URL patterns denied from redirection (takes precedence over allowed list)
+  hostToClientDeniedUrls []string
 }
 
 // Amazon AppStream 2.0 image builder

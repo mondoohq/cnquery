@@ -111,7 +111,6 @@ func newMqlAwsAppstreamFleet(runtime *plugin.Runtime, region string, fleet appst
 	if err != nil {
 		return nil, err
 	}
-
 	resource, err := CreateResource(runtime, "aws.appstream.fleet",
 		map[string]*llx.RawData{
 			"__id":                           llx.StringDataPtr(fleet.Arn),
@@ -138,11 +137,50 @@ func newMqlAwsAppstreamFleet(runtime *plugin.Runtime, region string, fleet appst
 	if err != nil {
 		return nil, err
 	}
-	return resource.(*mqlAwsAppstreamFleet), nil
+	mqlFleet := resource.(*mqlAwsAppstreamFleet)
+	mqlFleet.cacheComputeCapacityStatus = fleet.ComputeCapacityStatus
+	return mqlFleet, nil
+}
+
+type mqlAwsAppstreamFleetInternal struct {
+	cacheComputeCapacityStatus *appstreamtypes.ComputeCapacityStatus
 }
 
 func (a *mqlAwsAppstreamFleet) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsAppstreamFleet) computeCapacityStatus() (*mqlAwsAppstreamFleetComputeCapacityStatus, error) {
+	ccs := a.cacheComputeCapacityStatus
+	if ccs == nil {
+		a.ComputeCapacityStatus.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	res, err := CreateResource(a.MqlRuntime, "aws.appstream.fleet.computeCapacityStatus",
+		map[string]*llx.RawData{
+			"__id":                        llx.StringData(a.Arn.Data + "/computeCapacityStatus"),
+			"desired":                     llx.IntDataDefault(ccs.Desired, 0),
+			"running":                     llx.IntDataDefault(ccs.Running, 0),
+			"inUse":                       llx.IntDataDefault(ccs.InUse, 0),
+			"available":                   llx.IntDataDefault(ccs.Available, 0),
+			"activeUserSessions":          llx.IntDataDefault(ccs.ActiveUserSessions, 0),
+			"actualUserSessions":          llx.IntDataDefault(ccs.ActualUserSessions, 0),
+			"availableUserSessions":       llx.IntDataDefault(ccs.AvailableUserSessions, 0),
+			"desiredUserSessions":         llx.IntDataDefault(ccs.DesiredUserSessions, 0),
+			"draining":                    llx.IntDataDefault(ccs.Draining, 0),
+			"drainModeActiveUserSessions": llx.IntDataDefault(ccs.DrainModeActiveUserSessions, 0),
+			"drainModeUnusedUserSessions": llx.IntDataDefault(ccs.DrainModeUnusedUserSessions, 0),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsAppstreamFleetComputeCapacityStatus), nil
+}
+
+func (a *mqlAwsAppstreamFleetComputeCapacityStatus) id() (string, error) {
+	// This is a singleton per fleet, use parent fleet ARN as a namespace
+	return "computeCapacityStatus", nil
 }
 
 func (a *mqlAwsAppstreamFleet) tags() (map[string]any, error) {
@@ -243,7 +281,6 @@ func newMqlAwsAppstreamStack(runtime *plugin.Runtime, region string, stack appst
 	if err != nil {
 		return nil, err
 	}
-
 	resource, err := CreateResource(runtime, "aws.appstream.stack",
 		map[string]*llx.RawData{
 			"__id":                llx.StringDataPtr(stack.Arn),
@@ -261,11 +298,50 @@ func newMqlAwsAppstreamStack(runtime *plugin.Runtime, region string, stack appst
 	if err != nil {
 		return nil, err
 	}
-	return resource.(*mqlAwsAppstreamStack), nil
+	mqlStack := resource.(*mqlAwsAppstreamStack)
+	mqlStack.cacheContentRedirection = stack.ContentRedirection
+	return mqlStack, nil
+}
+
+type mqlAwsAppstreamStackInternal struct {
+	cacheContentRedirection *appstreamtypes.ContentRedirection
 }
 
 func (a *mqlAwsAppstreamStack) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsAppstreamStack) contentRedirection() (*mqlAwsAppstreamStackContentRedirection, error) {
+	cr := a.cacheContentRedirection
+	if cr == nil {
+		a.ContentRedirection.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	var enabled bool
+	var allowedUrls []string
+	var deniedUrls []string
+	if cr.HostToClient != nil {
+		enabled = aws.ToBool(cr.HostToClient.Enabled)
+		allowedUrls = cr.HostToClient.AllowedUrls
+		deniedUrls = cr.HostToClient.DeniedUrls
+	}
+
+	res, err := CreateResource(a.MqlRuntime, "aws.appstream.stack.contentRedirection",
+		map[string]*llx.RawData{
+			"__id":                    llx.StringData(a.Arn.Data + "/contentRedirection"),
+			"hostToClientEnabled":     llx.BoolData(enabled),
+			"hostToClientAllowedUrls": llx.ArrayData(toInterfaceArr(allowedUrls), types.String),
+			"hostToClientDeniedUrls":  llx.ArrayData(toInterfaceArr(deniedUrls), types.String),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsAppstreamStackContentRedirection), nil
+}
+
+func (a *mqlAwsAppstreamStackContentRedirection) id() (string, error) {
+	return "contentRedirection", nil
 }
 
 func (a *mqlAwsAppstreamStack) tags() (map[string]any, error) {
