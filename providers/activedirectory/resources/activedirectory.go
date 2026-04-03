@@ -41,7 +41,7 @@ func initActivedirectory(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 	return args, nil, nil
 }
-func initActivedirectoryPasswordPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+func initActivedirectoryDomainPasswordPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	root, err := CreateResource(runtime, ResourceActivedirectory, nil)
 	if err != nil {
 		return nil, nil, err

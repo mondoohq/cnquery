@@ -18,7 +18,7 @@ import (
 const (
 	ResourceActivedirectory                          string = "activedirectory"
 	ResourceActivedirectoryDomainController          string = "activedirectory.domainController"
-	ResourceActivedirectoryPasswordPolicy            string = "activedirectory.passwordPolicy"
+	ResourceActivedirectoryDomainPasswordPolicy      string = "activedirectory.domainPasswordPolicy"
 	ResourceActivedirectoryFineGrainedPasswordPolicy string = "activedirectory.fineGrainedPasswordPolicy"
 	ResourceActivedirectoryUser                      string = "activedirectory.user"
 	ResourceActivedirectoryGroup                     string = "activedirectory.group"
@@ -47,9 +47,9 @@ func init() {
 			// to override args, implement: initActivedirectoryDomainController(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createActivedirectoryDomainController,
 		},
-		"activedirectory.passwordPolicy": {
-			Init:   initActivedirectoryPasswordPolicy,
-			Create: createActivedirectoryPasswordPolicy,
+		"activedirectory.domainPasswordPolicy": {
+			Init:   initActivedirectoryDomainPasswordPolicy,
+			Create: createActivedirectoryDomainPasswordPolicy,
 		},
 		"activedirectory.fineGrainedPasswordPolicy": {
 			// to override args, implement: initActivedirectoryFineGrainedPasswordPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -221,7 +221,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlActivedirectory).GetTrusts()).ToDataRes(types.Array(types.Resource("activedirectory.trust")))
 	},
 	"activedirectory.passwordPolicy": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlActivedirectory).GetPasswordPolicy()).ToDataRes(types.Resource("activedirectory.passwordPolicy"))
+		return (r.(*mqlActivedirectory).GetPasswordPolicy()).ToDataRes(types.Resource("activedirectory.domainPasswordPolicy"))
 	},
 	"activedirectory.fineGrainedPasswordPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectory).GetFineGrainedPasswordPolicies()).ToDataRes(types.Array(types.Resource("activedirectory.fineGrainedPasswordPolicy")))
@@ -304,32 +304,32 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"activedirectory.domainController.site": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryDomainController).GetSite()).ToDataRes(types.String)
 	},
-	"activedirectory.passwordPolicy.minPasswordLength": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlActivedirectoryPasswordPolicy).GetMinPasswordLength()).ToDataRes(types.Int)
+	"activedirectory.domainPasswordPolicy.minPasswordLength": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryDomainPasswordPolicy).GetMinPasswordLength()).ToDataRes(types.Int)
 	},
-	"activedirectory.passwordPolicy.maxPasswordAge": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlActivedirectoryPasswordPolicy).GetMaxPasswordAge()).ToDataRes(types.Int)
+	"activedirectory.domainPasswordPolicy.maxPasswordAge": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryDomainPasswordPolicy).GetMaxPasswordAge()).ToDataRes(types.Int)
 	},
-	"activedirectory.passwordPolicy.minPasswordAge": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlActivedirectoryPasswordPolicy).GetMinPasswordAge()).ToDataRes(types.Int)
+	"activedirectory.domainPasswordPolicy.minPasswordAge": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryDomainPasswordPolicy).GetMinPasswordAge()).ToDataRes(types.Int)
 	},
-	"activedirectory.passwordPolicy.passwordHistoryCount": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlActivedirectoryPasswordPolicy).GetPasswordHistoryCount()).ToDataRes(types.Int)
+	"activedirectory.domainPasswordPolicy.passwordHistoryCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryDomainPasswordPolicy).GetPasswordHistoryCount()).ToDataRes(types.Int)
 	},
-	"activedirectory.passwordPolicy.complexityEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlActivedirectoryPasswordPolicy).GetComplexityEnabled()).ToDataRes(types.Bool)
+	"activedirectory.domainPasswordPolicy.complexityEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryDomainPasswordPolicy).GetComplexityEnabled()).ToDataRes(types.Bool)
 	},
-	"activedirectory.passwordPolicy.reversibleEncryption": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlActivedirectoryPasswordPolicy).GetReversibleEncryption()).ToDataRes(types.Bool)
+	"activedirectory.domainPasswordPolicy.reversibleEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryDomainPasswordPolicy).GetReversibleEncryption()).ToDataRes(types.Bool)
 	},
-	"activedirectory.passwordPolicy.lockoutThreshold": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlActivedirectoryPasswordPolicy).GetLockoutThreshold()).ToDataRes(types.Int)
+	"activedirectory.domainPasswordPolicy.lockoutThreshold": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryDomainPasswordPolicy).GetLockoutThreshold()).ToDataRes(types.Int)
 	},
-	"activedirectory.passwordPolicy.lockoutDuration": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlActivedirectoryPasswordPolicy).GetLockoutDuration()).ToDataRes(types.Int)
+	"activedirectory.domainPasswordPolicy.lockoutDuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryDomainPasswordPolicy).GetLockoutDuration()).ToDataRes(types.Int)
 	},
-	"activedirectory.passwordPolicy.lockoutObservationWindow": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlActivedirectoryPasswordPolicy).GetLockoutObservationWindow()).ToDataRes(types.Int)
+	"activedirectory.domainPasswordPolicy.lockoutObservationWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlActivedirectoryDomainPasswordPolicy).GetLockoutObservationWindow()).ToDataRes(types.Int)
 	},
 	"activedirectory.fineGrainedPasswordPolicy.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlActivedirectoryFineGrainedPasswordPolicy).GetName()).ToDataRes(types.String)
@@ -947,7 +947,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"activedirectory.passwordPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlActivedirectory).PasswordPolicy, ok = plugin.RawToTValue[*mqlActivedirectoryPasswordPolicy](v.Value, v.Error)
+		r.(*mqlActivedirectory).PasswordPolicy, ok = plugin.RawToTValue[*mqlActivedirectoryDomainPasswordPolicy](v.Value, v.Error)
 		return
 	},
 	"activedirectory.fineGrainedPasswordPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1062,44 +1062,44 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlActivedirectoryDomainController).Site, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"activedirectory.passwordPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlActivedirectoryPasswordPolicy).__id, ok = v.Value.(string)
+	"activedirectory.domainPasswordPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryDomainPasswordPolicy).__id, ok = v.Value.(string)
 		return
 	},
-	"activedirectory.passwordPolicy.minPasswordLength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlActivedirectoryPasswordPolicy).MinPasswordLength, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"activedirectory.domainPasswordPolicy.minPasswordLength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryDomainPasswordPolicy).MinPasswordLength, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"activedirectory.passwordPolicy.maxPasswordAge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlActivedirectoryPasswordPolicy).MaxPasswordAge, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"activedirectory.domainPasswordPolicy.maxPasswordAge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryDomainPasswordPolicy).MaxPasswordAge, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"activedirectory.passwordPolicy.minPasswordAge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlActivedirectoryPasswordPolicy).MinPasswordAge, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"activedirectory.domainPasswordPolicy.minPasswordAge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryDomainPasswordPolicy).MinPasswordAge, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"activedirectory.passwordPolicy.passwordHistoryCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlActivedirectoryPasswordPolicy).PasswordHistoryCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"activedirectory.domainPasswordPolicy.passwordHistoryCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryDomainPasswordPolicy).PasswordHistoryCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"activedirectory.passwordPolicy.complexityEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlActivedirectoryPasswordPolicy).ComplexityEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"activedirectory.domainPasswordPolicy.complexityEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryDomainPasswordPolicy).ComplexityEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"activedirectory.passwordPolicy.reversibleEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlActivedirectoryPasswordPolicy).ReversibleEncryption, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"activedirectory.domainPasswordPolicy.reversibleEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryDomainPasswordPolicy).ReversibleEncryption, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"activedirectory.passwordPolicy.lockoutThreshold": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlActivedirectoryPasswordPolicy).LockoutThreshold, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"activedirectory.domainPasswordPolicy.lockoutThreshold": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryDomainPasswordPolicy).LockoutThreshold, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"activedirectory.passwordPolicy.lockoutDuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlActivedirectoryPasswordPolicy).LockoutDuration, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"activedirectory.domainPasswordPolicy.lockoutDuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryDomainPasswordPolicy).LockoutDuration, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"activedirectory.passwordPolicy.lockoutObservationWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlActivedirectoryPasswordPolicy).LockoutObservationWindow, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"activedirectory.domainPasswordPolicy.lockoutObservationWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlActivedirectoryDomainPasswordPolicy).LockoutObservationWindow, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"activedirectory.fineGrainedPasswordPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1925,7 +1925,7 @@ type mqlActivedirectory struct {
 	OrganizationalUnits         plugin.TValue[[]any]
 	Gpos                        plugin.TValue[[]any]
 	Trusts                      plugin.TValue[[]any]
-	PasswordPolicy              plugin.TValue[*mqlActivedirectoryPasswordPolicy]
+	PasswordPolicy              plugin.TValue[*mqlActivedirectoryDomainPasswordPolicy]
 	FineGrainedPasswordPolicies plugin.TValue[[]any]
 	CertificateTemplates        plugin.TValue[[]any]
 	CertificateAuthorities      plugin.TValue[[]any]
@@ -2125,15 +2125,15 @@ func (c *mqlActivedirectory) GetTrusts() *plugin.TValue[[]any] {
 	})
 }
 
-func (c *mqlActivedirectory) GetPasswordPolicy() *plugin.TValue[*mqlActivedirectoryPasswordPolicy] {
-	return plugin.GetOrCompute[*mqlActivedirectoryPasswordPolicy](&c.PasswordPolicy, func() (*mqlActivedirectoryPasswordPolicy, error) {
+func (c *mqlActivedirectory) GetPasswordPolicy() *plugin.TValue[*mqlActivedirectoryDomainPasswordPolicy] {
+	return plugin.GetOrCompute[*mqlActivedirectoryDomainPasswordPolicy](&c.PasswordPolicy, func() (*mqlActivedirectoryDomainPasswordPolicy, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("activedirectory", c.__id, "passwordPolicy")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.(*mqlActivedirectoryPasswordPolicy), nil
+				return d.Value.(*mqlActivedirectoryDomainPasswordPolicy), nil
 			}
 		}
 
@@ -2398,11 +2398,11 @@ func (c *mqlActivedirectoryDomainController) GetSite() *plugin.TValue[string] {
 	return &c.Site
 }
 
-// mqlActivedirectoryPasswordPolicy for the activedirectory.passwordPolicy resource
-type mqlActivedirectoryPasswordPolicy struct {
+// mqlActivedirectoryDomainPasswordPolicy for the activedirectory.domainPasswordPolicy resource
+type mqlActivedirectoryDomainPasswordPolicy struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlActivedirectoryPasswordPolicyInternal it will be used here
+	// optional: if you define mqlActivedirectoryDomainPasswordPolicyInternal it will be used here
 	MinPasswordLength        plugin.TValue[int64]
 	MaxPasswordAge           plugin.TValue[int64]
 	MinPasswordAge           plugin.TValue[int64]
@@ -2414,9 +2414,9 @@ type mqlActivedirectoryPasswordPolicy struct {
 	LockoutObservationWindow plugin.TValue[int64]
 }
 
-// createActivedirectoryPasswordPolicy creates a new instance of this resource
-func createActivedirectoryPasswordPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlActivedirectoryPasswordPolicy{
+// createActivedirectoryDomainPasswordPolicy creates a new instance of this resource
+func createActivedirectoryDomainPasswordPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlActivedirectoryDomainPasswordPolicy{
 		MqlRuntime: runtime,
 	}
 
@@ -2433,7 +2433,7 @@ func createActivedirectoryPasswordPolicy(runtime *plugin.Runtime, args map[strin
 	}
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("activedirectory.passwordPolicy", res.__id)
+		args, err = runtime.ResourceFromRecording("activedirectory.domainPasswordPolicy", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -2443,47 +2443,47 @@ func createActivedirectoryPasswordPolicy(runtime *plugin.Runtime, args map[strin
 	return res, nil
 }
 
-func (c *mqlActivedirectoryPasswordPolicy) MqlName() string {
-	return "activedirectory.passwordPolicy"
+func (c *mqlActivedirectoryDomainPasswordPolicy) MqlName() string {
+	return "activedirectory.domainPasswordPolicy"
 }
 
-func (c *mqlActivedirectoryPasswordPolicy) MqlID() string {
+func (c *mqlActivedirectoryDomainPasswordPolicy) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlActivedirectoryPasswordPolicy) GetMinPasswordLength() *plugin.TValue[int64] {
+func (c *mqlActivedirectoryDomainPasswordPolicy) GetMinPasswordLength() *plugin.TValue[int64] {
 	return &c.MinPasswordLength
 }
 
-func (c *mqlActivedirectoryPasswordPolicy) GetMaxPasswordAge() *plugin.TValue[int64] {
+func (c *mqlActivedirectoryDomainPasswordPolicy) GetMaxPasswordAge() *plugin.TValue[int64] {
 	return &c.MaxPasswordAge
 }
 
-func (c *mqlActivedirectoryPasswordPolicy) GetMinPasswordAge() *plugin.TValue[int64] {
+func (c *mqlActivedirectoryDomainPasswordPolicy) GetMinPasswordAge() *plugin.TValue[int64] {
 	return &c.MinPasswordAge
 }
 
-func (c *mqlActivedirectoryPasswordPolicy) GetPasswordHistoryCount() *plugin.TValue[int64] {
+func (c *mqlActivedirectoryDomainPasswordPolicy) GetPasswordHistoryCount() *plugin.TValue[int64] {
 	return &c.PasswordHistoryCount
 }
 
-func (c *mqlActivedirectoryPasswordPolicy) GetComplexityEnabled() *plugin.TValue[bool] {
+func (c *mqlActivedirectoryDomainPasswordPolicy) GetComplexityEnabled() *plugin.TValue[bool] {
 	return &c.ComplexityEnabled
 }
 
-func (c *mqlActivedirectoryPasswordPolicy) GetReversibleEncryption() *plugin.TValue[bool] {
+func (c *mqlActivedirectoryDomainPasswordPolicy) GetReversibleEncryption() *plugin.TValue[bool] {
 	return &c.ReversibleEncryption
 }
 
-func (c *mqlActivedirectoryPasswordPolicy) GetLockoutThreshold() *plugin.TValue[int64] {
+func (c *mqlActivedirectoryDomainPasswordPolicy) GetLockoutThreshold() *plugin.TValue[int64] {
 	return &c.LockoutThreshold
 }
 
-func (c *mqlActivedirectoryPasswordPolicy) GetLockoutDuration() *plugin.TValue[int64] {
+func (c *mqlActivedirectoryDomainPasswordPolicy) GetLockoutDuration() *plugin.TValue[int64] {
 	return &c.LockoutDuration
 }
 
-func (c *mqlActivedirectoryPasswordPolicy) GetLockoutObservationWindow() *plugin.TValue[int64] {
+func (c *mqlActivedirectoryDomainPasswordPolicy) GetLockoutObservationWindow() *plugin.TValue[int64] {
 	return &c.LockoutObservationWindow
 }
 

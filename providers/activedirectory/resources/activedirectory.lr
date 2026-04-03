@@ -35,7 +35,7 @@ activedirectory @defaults("domain functionalLevel") {
   // Domain trusts
   trusts() []activedirectory.trust
   // Password policy (default domain policy)
-  passwordPolicy() activedirectory.passwordPolicy
+  passwordPolicy() activedirectory.domainPasswordPolicy
   // Fine-Grained Password Policies
   fineGrainedPasswordPolicies() []activedirectory.fineGrainedPasswordPolicy
   // Certificate templates (ADCS)
@@ -97,7 +97,7 @@ activedirectory.domainController @defaults("name operatingSystem") {
 }
 
 // Active Directory default domain password policy
-activedirectory.passwordPolicy @defaults("minPasswordLength maxPasswordAge lockoutThreshold") {
+activedirectory.domainPasswordPolicy @defaults("minPasswordLength maxPasswordAge lockoutThreshold") {
   // Minimum password length
   minPasswordLength int
   // Maximum password age in days

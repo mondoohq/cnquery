@@ -57,11 +57,11 @@ func parseInt64Attr(s string) int64 {
 	return v
 }
 
-func (a *mqlActivedirectoryPasswordPolicy) id() (string, error) {
-	return "activedirectory/passwordPolicy", nil
+func (a *mqlActivedirectoryDomainPasswordPolicy) id() (string, error) {
+	return "activedirectory/domainPasswordPolicy", nil
 }
 
-func (a *mqlActivedirectory) passwordPolicy() (*mqlActivedirectoryPasswordPolicy, error) {
+func (a *mqlActivedirectory) passwordPolicy() (*mqlActivedirectoryDomainPasswordPolicy, error) {
 	conn := a.MqlRuntime.Connection.(*connection.ActiveDirectoryConnection)
 	baseDN := conn.BaseDN()
 
@@ -109,7 +109,7 @@ func (a *mqlActivedirectory) passwordPolicy() (*mqlActivedirectoryPasswordPolicy
 	complexityEnabled := (pwdProperties & 1) != 0
 	reversibleEncryption := (pwdProperties & 16) != 0
 
-	resource, err := CreateResource(a.MqlRuntime, "activedirectory.passwordPolicy",
+	resource, err := CreateResource(a.MqlRuntime, "activedirectory.domainPasswordPolicy",
 		map[string]*llx.RawData{
 			"minPasswordLength":        llx.IntData(minPwdLength),
 			"maxPasswordAge":           llx.IntData(maxPwdAge),
@@ -125,7 +125,7 @@ func (a *mqlActivedirectory) passwordPolicy() (*mqlActivedirectoryPasswordPolicy
 		return nil, err
 	}
 
-	return resource.(*mqlActivedirectoryPasswordPolicy), nil
+	return resource.(*mqlActivedirectoryDomainPasswordPolicy), nil
 }
 
 func (a *mqlActivedirectoryFineGrainedPasswordPolicy) id() (string, error) {
