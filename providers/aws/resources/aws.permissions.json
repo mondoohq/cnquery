@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.6.2",
-  "generated_at": "2026-04-03T15:28:45-07:00",
+  "generated_at": "2026-04-03T15:31:40-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -224,6 +224,7 @@
     "inspector2:ListCoverage",
     "inspector2:ListFindings",
     "kafka:ListClustersV2",
+    "keyspaces:GetTable",
     "keyspaces:ListKeyspaces",
     "keyspaces:ListTables",
     "keyspaces:ListTagsForResource",
@@ -1758,6 +1759,12 @@
       "service": "kafka",
       "action": "ListClustersV2",
       "source_file": "aws_msk.go"
+    },
+    {
+      "permission": "keyspaces:GetTable",
+      "service": "keyspaces",
+      "action": "GetTable",
+      "source_file": "aws_keyspaces.go"
     },
     {
       "permission": "keyspaces:ListKeyspaces",

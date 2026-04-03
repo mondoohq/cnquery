@@ -497,6 +497,7 @@ func awsConnectionMethodToService(method string) string {
 		"firehose":                 "firehose",
 		"inspector2":               "inspector2",
 		"kafka":                    "kafka",
+		"keyspaces":                "keyspaces",
 		"lightsail":                "lightsail",
 		"macie2":                   "macie2",
 		"memorydb":                 "memorydb",
