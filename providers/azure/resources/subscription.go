@@ -285,3 +285,13 @@ func (a *mqlAzureSubscription) synapse() (*mqlAzureSubscriptionSynapseService, e
 	synapseSvc := svc.(*mqlAzureSubscriptionSynapseService)
 	return synapseSvc, nil
 }
+
+func (a *mqlAzureSubscription) containerRegistry() (*mqlAzureSubscriptionContainerRegistryService, error) {
+	svc, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionContainerRegistryService, map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return svc.(*mqlAzureSubscriptionContainerRegistryService), nil
+}

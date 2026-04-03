@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.3.2",
-  "generated_at": "2026-04-03T13:14:20-07:00",
+  "generated_at": "2026-04-03T14:21:27-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Authorization/roleAssignments/read",
@@ -14,6 +14,10 @@
     "Microsoft.Compute/diskEncryptionSets/read",
     "Microsoft.Compute/disks/read",
     "Microsoft.Compute/virtualMachines/read",
+    "Microsoft.ContainerRegistry/replications/read",
+    "Microsoft.ContainerRegistry/scopeMaps/read",
+    "Microsoft.ContainerRegistry/tokens/read",
+    "Microsoft.ContainerRegistry/webhooks/read",
     "Microsoft.ContainerService/managedClusters/read",
     "Microsoft.Cosmosforpostgresql/clusters/read",
     "Microsoft.DBforMySQL/configurations/read",
@@ -157,6 +161,30 @@
       "source_file": "compute.go"
     },
     {
+      "permission": "Microsoft.ContainerRegistry/replications/read",
+      "service": "Microsoft.ContainerRegistry",
+      "action": "NewListPager",
+      "source_file": "containerregistry.go"
+    },
+    {
+      "permission": "Microsoft.ContainerRegistry/scopeMaps/read",
+      "service": "Microsoft.ContainerRegistry",
+      "action": "NewListPager",
+      "source_file": "containerregistry.go"
+    },
+    {
+      "permission": "Microsoft.ContainerRegistry/tokens/read",
+      "service": "Microsoft.ContainerRegistry",
+      "action": "NewListPager",
+      "source_file": "containerregistry.go"
+    },
+    {
+      "permission": "Microsoft.ContainerRegistry/webhooks/read",
+      "service": "Microsoft.ContainerRegistry",
+      "action": "NewListPager",
+      "source_file": "containerregistry.go"
+    },
+    {
       "permission": "Microsoft.ContainerService/managedClusters/read",
       "service": "Microsoft.ContainerService",
       "action": "NewListPager",
@@ -213,7 +241,7 @@
     {
       "permission": "Microsoft.DBforPostgreSQL/servers/read",
       "service": "Microsoft.DBforPostgreSQL",
-      "action": "NewListBySubscriptionPager",
+      "action": "NewListPager",
       "source_file": "postgresql.go"
     },
     {
@@ -405,7 +433,7 @@
     {
       "permission": "Microsoft.Network/virtualNetworks/read",
       "service": "Microsoft.Network",
-      "action": "NewListAllPager",
+      "action": "Get",
       "source_file": "network.go"
     },
     {
@@ -417,7 +445,7 @@
     {
       "permission": "Microsoft.Network/webApplicationFirewallPolicies/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListAllPager",
       "source_file": "network.go"
     },
     {

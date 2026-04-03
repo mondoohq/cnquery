@@ -74,6 +74,8 @@ azure.subscription @defaults ("name") {
   dataFactory() azure.subscription.dataFactoryService
   // Synapse Analytics resources in the subscription
   synapse() azure.subscription.synapseService
+  // Container Registry resources in the subscription
+  containerRegistry() azure.subscription.containerRegistryService
 }
 
 // Azure function
@@ -4163,4 +4165,196 @@ azure.subscription.synapseService.workspace @defaults("name location") {
   trustedServiceBypassEnabled bool
   // Whether Azure AD-only authentication is enabled
   azureADOnlyAuthentication bool
+}
+
+// Azure Container Registry service
+private azure.subscription.containerRegistryService {
+  // Subscription identifier
+  subscriptionId string
+  // List of container registries
+  registries() []azure.subscription.containerRegistryService.registry
+}
+
+// Azure Container Registry
+azure.subscription.containerRegistryService.registry @defaults("id name location skuName") {
+  // Registry resource ID
+  id string
+  // Registry name
+  name string
+  // Registry location
+  location string
+  // Resource type
+  type string
+  // Registry tags
+  tags map[string]string
+  // SKU name ("Basic", "Standard", or "Premium")
+  skuName string
+  // Identity configuration
+  identity dict
+  // Whether admin user is enabled
+  adminUserEnabled bool
+  // Public network access setting ("Enabled" or "Disabled")
+  publicNetworkAccess string
+  // Network rule bypass options ("AzureServices" or "None")
+  networkRuleBypassOptions string
+  // Zone redundancy setting ("Enabled" or "Disabled")
+  zoneRedundancy string
+  // Whether data endpoint is enabled
+  dataEndpointEnabled bool
+  // Login server URL
+  loginServer string
+  // Registry creation date
+  creationDate time
+  // Provisioning state
+  provisioningState string
+  // Network rule set configuration
+  networkRuleSet() azure.subscription.containerRegistryService.registry.networkRuleSet
+  // Registry policies (trust, retention, quarantine, export)
+  policies() azure.subscription.containerRegistryService.registry.policies
+  // Encryption configuration
+  encryption() azure.subscription.containerRegistryService.registry.encryption
+  // Private endpoint connections
+  privateEndpointConnections() []azure.subscription.privateEndpointConnection
+  // Webhooks configured on the registry
+  webhooks() []azure.subscription.containerRegistryService.registry.webhook
+  // Geo-replications
+  replications() []azure.subscription.containerRegistryService.registry.replication
+  // Scope maps for token-based access
+  scopeMaps() []azure.subscription.containerRegistryService.registry.scopeMap
+  // Repository-scoped access tokens
+  tokens() []azure.subscription.containerRegistryService.registry.token
+}
+
+// Network rule set for an Azure Container Registry
+private azure.subscription.containerRegistryService.registry.networkRuleSet @defaults("defaultAction") {
+  // Network rule set identifier
+  id string
+  // Default action ("Allow" or "Deny")
+  defaultAction string
+  // IP rules
+  ipRules() []azure.subscription.containerRegistryService.registry.networkRuleSet.ipRule
+}
+
+// IP rule in a container registry network rule set
+private azure.subscription.containerRegistryService.registry.networkRuleSet.ipRule @defaults("ipAddressOrRange action") {
+  // IP rule identifier
+  id string
+  // IP address or CIDR range
+  ipAddressOrRange string
+  // Action ("Allow")
+  action string
+}
+
+// Policies for an Azure Container Registry
+private azure.subscription.containerRegistryService.registry.policies @defaults("trustPolicyEnabled retentionPolicyEnabled") {
+  // Policies identifier
+  id string
+  // Whether content trust (Notary) is enabled
+  trustPolicyEnabled bool
+  // Trust policy type ("Notary")
+  trustPolicyType string
+  // Whether untagged manifest retention is enabled
+  retentionPolicyEnabled bool
+  // Number of days to retain untagged manifests
+  retentionPolicyDays int
+  // Whether quarantine policy is enabled
+  quarantinePolicyEnabled bool
+  // Whether export policy is enabled
+  exportPolicyEnabled bool
+}
+
+// Encryption configuration for an Azure Container Registry
+private azure.subscription.containerRegistryService.registry.encryption @defaults("status") {
+  // Encryption identifier
+  id string
+  // Encryption status ("enabled" or "disabled")
+  status string
+  // Key Vault key identifier URI
+  keyVaultKeyIdentifier string
+  // Whether automatic key rotation is enabled
+  keyRotationEnabled bool
+  // Timestamp of last key rotation
+  lastKeyRotationTimestamp time
+  // Key Vault key used for encryption
+  key() azure.subscription.keyVaultService.key
+}
+
+// Webhook for an Azure Container Registry
+private azure.subscription.containerRegistryService.registry.webhook @defaults("id name status") {
+  // Webhook resource ID
+  id string
+  // Webhook name
+  name string
+  // Webhook location
+  location string
+  // Resource type
+  type string
+  // Webhook tags
+  tags map[string]string
+  // Webhook status ("enabled" or "disabled")
+  status string
+  // Repository scope filter
+  scope string
+  // Actions that trigger the webhook (e.g., "push", "delete", "quarantine", "chart_push", "chart_delete")
+  actions []string
+  // Provisioning state
+  provisioningState string
+}
+
+// Geo-replication for an Azure Container Registry
+private azure.subscription.containerRegistryService.registry.replication @defaults("id name location") {
+  // Replication resource ID
+  id string
+  // Replication name
+  name string
+  // Replication location
+  location string
+  // Resource type
+  type string
+  // Replication tags
+  tags map[string]string
+  // Whether regional endpoint is enabled
+  regionEndpointEnabled bool
+  // Zone redundancy setting ("Enabled" or "Disabled")
+  zoneRedundancy string
+  // Provisioning state
+  provisioningState string
+}
+
+// Scope map for token-based access in an Azure Container Registry
+private azure.subscription.containerRegistryService.registry.scopeMap @defaults("id name") {
+  // Scope map resource ID
+  id string
+  // Scope map name
+  name string
+  // Resource type
+  type string
+  // Description of the scope map
+  description string
+  // List of allowed actions (e.g., "repositories/repo/content/read")
+  actions []string
+  // Scope map creation date
+  creationDate time
+  // Provisioning state
+  provisioningState string
+}
+
+// Repository-scoped access token for an Azure Container Registry
+private azure.subscription.containerRegistryService.registry.token @defaults("id name status") {
+  // Token resource ID
+  id string
+  // Token name
+  name string
+  // Resource type
+  type string
+  // Token status ("enabled" or "disabled")
+  status string
+  // Token creation date
+  creationDate time
+  // Provisioning state
+  provisioningState string
+  // Scope map that defines token permissions
+  scopeMap() azure.subscription.containerRegistryService.registry.scopeMap
+  // Token certificates
+  certificates []dict
 }
