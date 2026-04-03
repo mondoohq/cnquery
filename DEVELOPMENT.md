@@ -197,28 +197,35 @@ go 1.25
 
 use (
    ./mql
+   ./mql/providers/activedirectory
    ./mql/providers/ansible
    ./mql/providers/arista
    ./mql/providers/atlassian
    ./mql/providers/aws
    ./mql/providers/azure
+   ./mql/providers/cloudflare
    ./mql/providers/cloudformation
+   ./mql/providers/depsdev
    ./mql/providers/equinix
    ./mql/providers/gcp
    ./mql/providers/github
    ./mql/providers/gitlab
    ./mql/providers/google-workspace
+   ./mql/providers/grafana
+   ./mql/providers/ipinfo
    ./mql/providers/ipmi
    ./mql/providers/k8s
+   ./mql/providers/mondoo
    ./mql/providers/ms365
+   ./mql/providers/nmap
    ./mql/providers/oci
    ./mql/providers/okta
    ./mql/providers/opcua
    ./mql/providers/shodan
-   ./mql/providers/snowflake
    ./mql/providers/slack
-   ./mql/providers/terraform
+   ./mql/providers/snowflake
    ./mql/providers/tailscale
+   ./mql/providers/terraform
    ./mql/providers/vcd
    ./mql/providers/vsphere
    ./cnspec

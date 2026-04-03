@@ -11,6 +11,22 @@ import "go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 // to tell users what providers are used for common connections, when there
 // is no other way to find out.
 var DefaultProviders Providers = map[string]*Provider{
+	"activedirectory": {
+		Provider: &plugin.Provider{
+			Name:            "activedirectory",
+			ID:              "go.mondoo.com/mql/v13/providers/activedirectory",
+			ConnectionTypes: []string{"activedirectory"},
+			Connectors: []plugin.Connector{
+				{
+					Name:    "activedirectory",
+					Use:     "activedirectory",
+					Aliases: []string{"ad"},
+					Short:   "an Active Directory domain",
+				},
+			},
+		},
+	},
+
 	"ai": {
 		Provider: &plugin.Provider{
 			Name:            "ai",
