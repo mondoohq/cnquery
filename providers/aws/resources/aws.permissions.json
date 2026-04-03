@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.6.2",
-  "generated_at": "2026-04-03T15:31:40-07:00",
+  "generated_at": "2026-04-03T15:35:46-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -71,6 +71,8 @@
     "config:DescribeConfigurationAggregators",
     "config:DescribeConfigurationRecorders",
     "config:DescribeDeliveryChannels",
+    "dax:DescribeClusters",
+    "dax:ListTags",
     "dms:DescribeReplicationInstances",
     "drs:DescribeJobs",
     "drs:DescribeSourceServers",
@@ -805,6 +807,18 @@
       "service": "config",
       "action": "DescribeDeliveryChannels",
       "source_file": "aws_config.go"
+    },
+    {
+      "permission": "dax:DescribeClusters",
+      "service": "dax",
+      "action": "DescribeClusters",
+      "source_file": "aws_dax.go"
+    },
+    {
+      "permission": "dax:ListTags",
+      "service": "dax",
+      "action": "ListTags",
+      "source_file": "aws_dax.go"
     },
     {
       "permission": "dms:DescribeReplicationInstances",
@@ -2269,6 +2283,12 @@
       "service": "rds",
       "action": "DescribePendingMaintenanceActions",
       "source_file": "aws_rds.go"
+    },
+    {
+      "permission": "rds:ListTagsForResource",
+      "service": "rds",
+      "action": "ListTagsForResource",
+      "source_file": "aws_documentdb.go"
     },
     {
       "permission": "rds:ListTagsForResource",
