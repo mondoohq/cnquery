@@ -64,6 +64,10 @@ func (a *mqlAwsKeyspaces) getKeyspaces(conn *connection.AwsConnection) []*jobpoo
 						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
+					if IsServiceNotAvailableInRegionError(err) {
+						log.Debug().Str("region", region).Msg("keyspaces service not available in region")
+						return res, nil
+					}
 					return nil, err
 				}
 				for _, ks := range page.Keyspaces {
