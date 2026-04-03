@@ -7,10 +7,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -932,4 +934,230 @@ func initAzureSubscriptionStorageServiceAccountContainer(runtime *plugin.Runtime
 	}
 
 	return nil, nil, errors.New("azure storage container does not exist")
+}
+
+func (a *mqlAzureSubscriptionStorageServiceAccountEncryptionScope) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionStorageServiceAccountManagementPolicy) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionStorageServiceAccountManagementPolicyRule) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionStorageServiceAccount) encryptionScopes() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	id := a.Id.Data
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	account, err := resourceID.Component("storageAccounts")
+	if err != nil {
+		return nil, err
+	}
+
+	subId := resourceID.SubscriptionID
+	client, err := storage.NewEncryptionScopesClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListPager(resourceID.ResourceGroup, account, nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && (respErr.StatusCode == http.StatusForbidden || isFeatureNotSupportedForAccountError(err)) {
+				log.Warn().Err(err).Msg("could not list encryption scopes due to access denied or feature not supported")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, scope := range page.Value {
+			if scope == nil {
+				continue
+			}
+
+			var source, state string
+			var requireInfrastructureEncryption *bool
+			var keyVaultProperties map[string]any
+			var creationTime, lastModifiedTime *time.Time
+
+			if scope.EncryptionScopeProperties != nil {
+				props := scope.EncryptionScopeProperties
+				if props.Source != nil {
+					source = string(*props.Source)
+				}
+				if props.State != nil {
+					state = string(*props.State)
+				}
+				requireInfrastructureEncryption = props.RequireInfrastructureEncryption
+				creationTime = props.CreationTime
+				lastModifiedTime = props.LastModifiedTime
+				if props.KeyVaultProperties != nil {
+					kvProps, err := convert.JsonToDict(props.KeyVaultProperties)
+					if err != nil {
+						return nil, err
+					}
+					keyVaultProperties = kvProps
+				}
+			}
+
+			mqlScope, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionStorageServiceAccountEncryptionScope,
+				map[string]*llx.RawData{
+					"id":                              llx.StringDataPtr(scope.ID),
+					"name":                            llx.StringDataPtr(scope.Name),
+					"type":                            llx.StringDataPtr(scope.Type),
+					"source":                          llx.StringData(source),
+					"state":                           llx.StringData(state),
+					"requireInfrastructureEncryption": llx.BoolDataPtr(requireInfrastructureEncryption),
+					"keyVaultProperties":              llx.DictData(keyVaultProperties),
+					"creationTime":                    llx.TimeDataPtr(creationTime),
+					"lastModifiedTime":                llx.TimeDataPtr(lastModifiedTime),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlScope)
+		}
+	}
+
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionStorageServiceAccount) managementPolicy() (*mqlAzureSubscriptionStorageServiceAccountManagementPolicy, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	id := a.Id.Data
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	account, err := resourceID.Component("storageAccounts")
+	if err != nil {
+		return nil, err
+	}
+
+	subId := resourceID.SubscriptionID
+	client, err := storage.NewManagementPoliciesClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.Get(ctx, resourceID.ResourceGroup, account, storage.ManagementPolicyNameDefault, nil)
+	if err != nil {
+		var respErr *azcore.ResponseError
+		if errors.As(err, &respErr) && respErr.StatusCode == http.StatusNotFound {
+			a.ManagementPolicy.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	policy := resp.ManagementPolicy
+
+	var lastModifiedTime *time.Time
+	var rules []any
+	if policy.Properties != nil {
+		lastModifiedTime = policy.Properties.LastModifiedTime
+		if policy.Properties.Policy != nil && policy.Properties.Policy.Rules != nil {
+			for _, rule := range policy.Properties.Policy.Rules {
+				if rule == nil {
+					continue
+				}
+
+				var ruleType string
+				if rule.Type != nil {
+					ruleType = string(*rule.Type)
+				}
+
+				var blobTypes, prefixMatch []any
+				var baseBlobActions, snapshotActions, versionActions map[string]any
+				if rule.Definition != nil {
+					if rule.Definition.Filters != nil {
+						for _, bt := range rule.Definition.Filters.BlobTypes {
+							if bt != nil {
+								blobTypes = append(blobTypes, *bt)
+							}
+						}
+						for _, pm := range rule.Definition.Filters.PrefixMatch {
+							if pm != nil {
+								prefixMatch = append(prefixMatch, *pm)
+							}
+						}
+					}
+					if rule.Definition.Actions != nil {
+						if rule.Definition.Actions.BaseBlob != nil {
+							baseBlobActions, err = convert.JsonToDict(rule.Definition.Actions.BaseBlob)
+							if err != nil {
+								return nil, err
+							}
+						}
+						if rule.Definition.Actions.Snapshot != nil {
+							snapshotActions, err = convert.JsonToDict(rule.Definition.Actions.Snapshot)
+							if err != nil {
+								return nil, err
+							}
+						}
+						if rule.Definition.Actions.Version != nil {
+							versionActions, err = convert.JsonToDict(rule.Definition.Actions.Version)
+							if err != nil {
+								return nil, err
+							}
+						}
+					}
+				}
+
+				ruleId := fmt.Sprintf("%s/managementPolicy/rules/%s", id, convert.ToValue(rule.Name))
+				mqlRule, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionStorageServiceAccountManagementPolicyRule,
+					map[string]*llx.RawData{
+						"id":              llx.StringData(ruleId),
+						"name":            llx.StringDataPtr(rule.Name),
+						"enabled":         llx.BoolDataPtr(rule.Enabled),
+						"type":            llx.StringData(ruleType),
+						"blobTypes":       llx.ArrayData(blobTypes, types.String),
+						"prefixMatch":     llx.ArrayData(prefixMatch, types.String),
+						"baseBlobActions": llx.DictData(baseBlobActions),
+						"snapshotActions": llx.DictData(snapshotActions),
+						"versionActions":  llx.DictData(versionActions),
+					})
+				if err != nil {
+					return nil, err
+				}
+				rules = append(rules, mqlRule)
+			}
+		}
+	}
+
+	policyId := fmt.Sprintf("%s/managementPolicy", id)
+	if policy.ID != nil {
+		policyId = *policy.ID
+	}
+
+	res, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionStorageServiceAccountManagementPolicy,
+		map[string]*llx.RawData{
+			"id":               llx.StringData(policyId),
+			"name":             llx.StringDataPtr(policy.Name),
+			"type":             llx.StringDataPtr(policy.Type),
+			"lastModifiedTime": llx.TimeDataPtr(lastModifiedTime),
+			"rules":            llx.ArrayData(rules, types.Resource(ResourceAzureSubscriptionStorageServiceAccountManagementPolicyRule)),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionStorageServiceAccountManagementPolicy), nil
 }

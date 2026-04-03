@@ -7,9 +7,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -2466,7 +2469,12 @@ func azureFirewallPolicyToMql(runtime *plugin.Runtime, fwp network.FirewallPolic
 		return nil, err
 	}
 
-	return mqlFw.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy), nil
+	mqlFwPolicy := mqlFw.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy)
+	if fwp.Properties != nil {
+		mqlFwPolicy.cacheIntrusionDetection = fwp.Properties.IntrusionDetection
+	}
+
+	return mqlFwPolicy, nil
 }
 
 func azureIpToMql(runtime *plugin.Runtime, ip network.PublicIPAddress) (*mqlAzureSubscriptionNetworkServiceIpAddress, error) {
@@ -2881,4 +2889,440 @@ func initAzureSubscriptionNetworkServiceSecurityGroup(runtime *plugin.Runtime, a
 	}
 
 	return nil, nil, errors.New("azure network security group does not exist")
+}
+
+// --- DDoS Protection Plans ---
+
+type mqlAzureSubscriptionNetworkServiceDdosProtectionPlanInternal struct {
+	cacheVnetIds     []string
+	cachePublicIpIds []string
+}
+
+func (a *mqlAzureSubscriptionNetworkService) ddosProtectionPlans() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	client, err := network.NewDdosProtectionPlansClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListPager(nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not list DDoS protection plans due to access denied")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, plan := range page.Value {
+			if plan == nil {
+				continue
+			}
+
+			var provisioningState string
+			var vnetIds []string
+			var publicIpIds []string
+			if plan.Properties != nil {
+				if plan.Properties.ProvisioningState != nil {
+					provisioningState = string(*plan.Properties.ProvisioningState)
+				}
+				for _, vn := range plan.Properties.VirtualNetworks {
+					if vn != nil && vn.ID != nil {
+						vnetIds = append(vnetIds, *vn.ID)
+					}
+				}
+				for _, pip := range plan.Properties.PublicIPAddresses {
+					if pip != nil && pip.ID != nil {
+						publicIpIds = append(publicIpIds, *pip.ID)
+					}
+				}
+			}
+
+			mqlPlan, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionNetworkServiceDdosProtectionPlan,
+				map[string]*llx.RawData{
+					"id":                llx.StringDataPtr(plan.ID),
+					"name":              llx.StringDataPtr(plan.Name),
+					"location":          llx.StringDataPtr(plan.Location),
+					"tags":              llx.MapData(convert.PtrMapStrToInterface(plan.Tags), types.String),
+					"type":              llx.StringDataPtr(plan.Type),
+					"etag":              llx.StringDataPtr(plan.Etag),
+					"provisioningState": llx.StringData(provisioningState),
+				})
+			if err != nil {
+				return nil, err
+			}
+			mqlDdos := mqlPlan.(*mqlAzureSubscriptionNetworkServiceDdosProtectionPlan)
+			mqlDdos.cacheVnetIds = vnetIds
+			mqlDdos.cachePublicIpIds = publicIpIds
+			res = append(res, mqlDdos)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceDdosProtectionPlan) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceDdosProtectionPlan) virtualNetworks() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+
+	res := []any{}
+	for _, vnetId := range a.cacheVnetIds {
+		resourceID, err := ParseResourceID(vnetId)
+		if err != nil {
+			log.Warn().Err(err).Str("id", vnetId).Msg("could not parse virtual network resource ID")
+			continue
+		}
+		rgName := resourceID.ResourceGroup
+		vnetName := resourceID.Path["virtualnetworks"]
+
+		client, err := network.NewVirtualNetworksClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+			ClientOptions: conn.ClientOptions(),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		resp, err := client.Get(ctx, rgName, vnetName, nil)
+		if err != nil {
+			log.Warn().Err(err).Str("id", vnetId).Msg("could not get virtual network for DDoS protection plan")
+			continue
+		}
+
+		vn := resp.VirtualNetwork
+		props, err := convert.JsonToDict(vn.Properties)
+		if err != nil {
+			return nil, err
+		}
+		subnets := []any{}
+		if vn.Properties != nil {
+			for _, s := range vn.Properties.Subnets {
+				if s != nil {
+					mqlSubnet, err := azureSubnetToMql(a.MqlRuntime, *s)
+					if err != nil {
+						return nil, err
+					}
+					subnets = append(subnets, mqlSubnet)
+				}
+			}
+		}
+		args := map[string]*llx.RawData{
+			"id":         llx.StringDataPtr(vn.ID),
+			"name":       llx.StringDataPtr(vn.Name),
+			"type":       llx.StringDataPtr(vn.Type),
+			"location":   llx.StringDataPtr(vn.Location),
+			"tags":       llx.MapData(convert.PtrMapStrToInterface(vn.Tags), types.String),
+			"etag":       llx.StringDataPtr(vn.Etag),
+			"properties": llx.DictData(props),
+			"subnets":    llx.ArrayData(subnets, types.ResourceLike),
+		}
+		if vn.Properties != nil {
+			args["enableDdosProtection"] = llx.BoolDataPtr(vn.Properties.EnableDdosProtection)
+			args["enableVmProtection"] = llx.BoolDataPtr(vn.Properties.EnableVMProtection)
+			args["provisioningState"] = llx.StringDataPtr((*string)(vn.Properties.ProvisioningState))
+			args["flowTimeoutInMinutes"] = llx.IntDataPtr(vn.Properties.FlowTimeoutInMinutes)
+			if vn.Properties.AddressSpace != nil {
+				args["addressPrefixes"] = llx.ArrayData(convert.SliceStrPtrToInterface(vn.Properties.AddressSpace.AddressPrefixes), types.String)
+			} else {
+				args["addressPrefixes"] = llx.ArrayData([]any{}, types.String)
+			}
+			if vn.Properties.Encryption != nil {
+				args["encryptionEnabled"] = llx.BoolDataPtr(vn.Properties.Encryption.Enabled)
+				args["encryptionEnforcement"] = llx.StringDataPtr((*string)(vn.Properties.Encryption.Enforcement))
+			} else {
+				args["encryptionEnabled"] = llx.BoolData(false)
+				args["encryptionEnforcement"] = llx.StringData("")
+			}
+			if vn.Properties.DhcpOptions != nil {
+				id := convert.ToValue(vn.ID) + "/dhcpOptions"
+				dhcpOpts, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.virtualNetwork.dhcpOptions",
+					map[string]*llx.RawData{
+						"id":         llx.StringData(id),
+						"dnsServers": llx.ArrayData(convert.SliceStrPtrToInterface(vn.Properties.DhcpOptions.DNSServers), types.String),
+					})
+				if err != nil {
+					return nil, err
+				}
+				args["dhcpOptions"] = llx.ResourceData(dhcpOpts, dhcpOpts.MqlName())
+			} else {
+				args["dhcpOptions"] = llx.NilData
+			}
+		} else {
+			args["enableDdosProtection"] = llx.BoolData(false)
+			args["enableVmProtection"] = llx.BoolData(false)
+			args["provisioningState"] = llx.StringData("")
+			args["flowTimeoutInMinutes"] = llx.IntData(0)
+			args["addressPrefixes"] = llx.ArrayData([]any{}, types.String)
+			args["encryptionEnabled"] = llx.BoolData(false)
+			args["encryptionEnforcement"] = llx.StringData("")
+			args["dhcpOptions"] = llx.NilData
+		}
+
+		mqlVn, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionNetworkServiceVirtualNetwork, args)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlVn)
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceDdosProtectionPlan) publicIpAddresses() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+
+	res := []any{}
+	for _, pipId := range a.cachePublicIpIds {
+		resourceID, err := ParseResourceID(pipId)
+		if err != nil {
+			log.Warn().Err(err).Str("id", pipId).Msg("could not parse public IP address resource ID")
+			continue
+		}
+		rgName := resourceID.ResourceGroup
+		ipName := resourceID.Path["publicipaddresses"]
+
+		client, err := network.NewPublicIPAddressesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+			ClientOptions: conn.ClientOptions(),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		resp, err := client.Get(ctx, rgName, ipName, nil)
+		if err != nil {
+			log.Warn().Err(err).Str("id", pipId).Msg("could not get public IP address for DDoS protection plan")
+			continue
+		}
+
+		mqlIp, err := azureIpToMql(a.MqlRuntime, resp.PublicIPAddress)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlIp)
+	}
+	return res, nil
+}
+
+// --- Service Endpoint Policies ---
+
+type mqlAzureSubscriptionNetworkServiceServiceEndpointPolicyInternal struct {
+	cacheSubnets []network.Subnet
+}
+
+func (a *mqlAzureSubscriptionNetworkService) serviceEndpointPolicies() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	client, err := network.NewServiceEndpointPoliciesClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListPager(nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not list service endpoint policies due to access denied")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, policy := range page.Value {
+			if policy == nil {
+				continue
+			}
+
+			var provisioningState, serviceAlias string
+			definitions := []any{}
+			var cachedSubnets []network.Subnet
+			if policy.Properties != nil {
+				if policy.Properties.ProvisioningState != nil {
+					provisioningState = string(*policy.Properties.ProvisioningState)
+				}
+				if policy.Properties.ServiceAlias != nil {
+					serviceAlias = *policy.Properties.ServiceAlias
+				}
+				for _, def := range policy.Properties.ServiceEndpointPolicyDefinitions {
+					if def == nil {
+						continue
+					}
+					var defDescription, defService, defProvisioningState string
+					var defServiceResources []any
+					if def.Properties != nil {
+						if def.Properties.Description != nil {
+							defDescription = *def.Properties.Description
+						}
+						if def.Properties.Service != nil {
+							defService = *def.Properties.Service
+						}
+						if def.Properties.ProvisioningState != nil {
+							defProvisioningState = string(*def.Properties.ProvisioningState)
+						}
+						defServiceResources = convert.SliceStrPtrToInterface(def.Properties.ServiceResources)
+					}
+					mqlDef, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition,
+						map[string]*llx.RawData{
+							"id":                llx.StringDataPtr(def.ID),
+							"name":              llx.StringDataPtr(def.Name),
+							"type":              llx.StringDataPtr(def.Type),
+							"etag":              llx.StringDataPtr(def.Etag),
+							"description":       llx.StringData(defDescription),
+							"service":           llx.StringData(defService),
+							"serviceResources":  llx.ArrayData(defServiceResources, types.String),
+							"provisioningState": llx.StringData(defProvisioningState),
+						})
+					if err != nil {
+						return nil, err
+					}
+					definitions = append(definitions, mqlDef)
+				}
+				for _, subnet := range policy.Properties.Subnets {
+					if subnet != nil {
+						cachedSubnets = append(cachedSubnets, *subnet)
+					}
+				}
+			}
+
+			mqlPolicy, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionNetworkServiceServiceEndpointPolicy,
+				map[string]*llx.RawData{
+					"id":                llx.StringDataPtr(policy.ID),
+					"name":              llx.StringDataPtr(policy.Name),
+					"location":          llx.StringDataPtr(policy.Location),
+					"tags":              llx.MapData(convert.PtrMapStrToInterface(policy.Tags), types.String),
+					"type":              llx.StringDataPtr(policy.Type),
+					"etag":              llx.StringDataPtr(policy.Etag),
+					"kind":              llx.StringDataPtr(policy.Kind),
+					"provisioningState": llx.StringData(provisioningState),
+					"serviceAlias":      llx.StringData(serviceAlias),
+					"definitions":       llx.ArrayData(definitions, types.ResourceLike),
+				})
+			if err != nil {
+				return nil, err
+			}
+			mqlSep := mqlPolicy.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy)
+			mqlSep.cacheSubnets = cachedSubnets
+			res = append(res, mqlSep)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy) subnets() ([]any, error) {
+	res := []any{}
+	for _, subnet := range a.cacheSubnets {
+		mqlSubnet, err := azureSubnetToMql(a.MqlRuntime, subnet)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlSubnet)
+	}
+	return res, nil
+}
+
+// --- Firewall Policy IDPS ---
+
+type mqlAzureSubscriptionNetworkServiceFirewallPolicyInternal struct {
+	cacheIntrusionDetection *network.FirewallPolicyIntrusionDetection
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicy) intrusionDetectionMode() (string, error) {
+	if a.cacheIntrusionDetection == nil || a.cacheIntrusionDetection.Mode == nil {
+		return "", nil
+	}
+	return string(*a.cacheIntrusionDetection.Mode), nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicy) intrusionDetectionProfile() (string, error) {
+	if a.cacheIntrusionDetection == nil || a.cacheIntrusionDetection.Profile == nil {
+		return "", nil
+	}
+	return string(*a.cacheIntrusionDetection.Profile), nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicy) intrusionDetectionSignatureOverrides() ([]any, error) {
+	if a.cacheIntrusionDetection == nil || a.cacheIntrusionDetection.Configuration == nil {
+		return []any{}, nil
+	}
+	res := []any{}
+	for _, sig := range a.cacheIntrusionDetection.Configuration.SignatureOverrides {
+		if sig == nil {
+			continue
+		}
+		entry := map[string]any{}
+		if sig.ID != nil {
+			entry["id"] = *sig.ID
+		}
+		if sig.Mode != nil {
+			entry["mode"] = string(*sig.Mode)
+		}
+		res = append(res, entry)
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicy) intrusionDetectionBypassRules() ([]any, error) {
+	if a.cacheIntrusionDetection == nil || a.cacheIntrusionDetection.Configuration == nil {
+		return []any{}, nil
+	}
+	res := []any{}
+	for _, rule := range a.cacheIntrusionDetection.Configuration.BypassTrafficSettings {
+		if rule == nil {
+			continue
+		}
+		var protocol string
+		if rule.Protocol != nil {
+			protocol = string(*rule.Protocol)
+		}
+
+		id := a.Id.Data + "/intrusionDetection/bypassRules/" + convert.ToValue(rule.Name)
+		mqlRule, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule,
+			map[string]*llx.RawData{
+				"id":                   llx.StringData(id),
+				"name":                 llx.StringDataPtr(rule.Name),
+				"description":          llx.StringDataPtr(rule.Description),
+				"protocol":             llx.StringData(protocol),
+				"sourceAddresses":      llx.ArrayData(convert.SliceStrPtrToInterface(rule.SourceAddresses), types.String),
+				"sourceIpGroups":       llx.ArrayData(convert.SliceStrPtrToInterface(rule.SourceIPGroups), types.String),
+				"destinationAddresses": llx.ArrayData(convert.SliceStrPtrToInterface(rule.DestinationAddresses), types.String),
+				"destinationIpGroups":  llx.ArrayData(convert.SliceStrPtrToInterface(rule.DestinationIPGroups), types.String),
+				"destinationPorts":     llx.ArrayData(convert.SliceStrPtrToInterface(rule.DestinationPorts), types.String),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlRule)
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule) id() (string, error) {
+	return a.Id.Data, nil
 }

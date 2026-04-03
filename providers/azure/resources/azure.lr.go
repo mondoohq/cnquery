@@ -24,6 +24,8 @@ const (
 	ResourceAzureSubscriptionComputeService                                                      string = "azure.subscription.computeService"
 	ResourceAzureSubscriptionComputeServiceVm                                                    string = "azure.subscription.computeService.vm"
 	ResourceAzureSubscriptionComputeServiceDisk                                                  string = "azure.subscription.computeService.disk"
+	ResourceAzureSubscriptionComputeServiceDiskEncryptionSet                                     string = "azure.subscription.computeService.diskEncryptionSet"
+	ResourceAzureSubscriptionComputeServiceDiskAccess                                            string = "azure.subscription.computeService.diskAccess"
 	ResourceAzureSubscriptionBatchService                                                        string = "azure.subscription.batchService"
 	ResourceAzureSubscriptionBatchServiceAccount                                                 string = "azure.subscription.batchService.account"
 	ResourceAzureSubscriptionBatchServiceAccountPool                                             string = "azure.subscription.batchService.account.pool"
@@ -38,6 +40,10 @@ const (
 	ResourceAzureSubscriptionNetworkServiceFirewallApplicationRule                               string = "azure.subscription.networkService.firewall.applicationRule"
 	ResourceAzureSubscriptionNetworkServiceFirewallNatRule                                       string = "azure.subscription.networkService.firewall.natRule"
 	ResourceAzureSubscriptionNetworkServiceFirewallPolicy                                        string = "azure.subscription.networkService.firewallPolicy"
+	ResourceAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule                          string = "azure.subscription.networkService.firewallPolicy.idpsBypassRule"
+	ResourceAzureSubscriptionNetworkServiceDdosProtectionPlan                                    string = "azure.subscription.networkService.ddosProtectionPlan"
+	ResourceAzureSubscriptionNetworkServiceServiceEndpointPolicy                                 string = "azure.subscription.networkService.serviceEndpointPolicy"
+	ResourceAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition                       string = "azure.subscription.networkService.serviceEndpointPolicy.definition"
 	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig                         string = "azure.subscription.networkService.virtualNetworkGateway.ipConfig"
 	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection                       string = "azure.subscription.networkService.virtualNetworkGateway.connection"
 	ResourceAzureSubscriptionNetworkServiceBgpSettings                                           string = "azure.subscription.networkService.bgpSettings"
@@ -76,6 +82,9 @@ const (
 	ResourceAzureSubscriptionStorageServiceAccountFilePropertiesShareDeleteRetentionPolicyConfig string = "azure.subscription.storageService.account.fileProperties.shareDeleteRetentionPolicyConfig"
 	ResourceAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsConfig           string = "azure.subscription.storageService.account.fileProperties.protocolSettingsConfig"
 	ResourceAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig        string = "azure.subscription.storageService.account.fileProperties.protocolSettings.smbConfig"
+	ResourceAzureSubscriptionStorageServiceAccountEncryptionScope                                string = "azure.subscription.storageService.account.encryptionScope"
+	ResourceAzureSubscriptionStorageServiceAccountManagementPolicy                               string = "azure.subscription.storageService.account.managementPolicy"
+	ResourceAzureSubscriptionStorageServiceAccountManagementPolicyRule                           string = "azure.subscription.storageService.account.managementPolicy.rule"
 	ResourceAzureSubscriptionStorageServiceAccountServiceProperties                              string = "azure.subscription.storageService.account.service.properties"
 	ResourceAzureSubscriptionStorageServiceAccountServiceBlobProperties                          string = "azure.subscription.storageService.account.service.blobProperties"
 	ResourceAzureSubscriptionStorageServiceAccountServicePropertiesMetrics                       string = "azure.subscription.storageService.account.service.properties.metrics"
@@ -123,6 +132,7 @@ const (
 	ResourceAzureSubscriptionCosmosDbServiceAccount                                              string = "azure.subscription.cosmosDbService.account"
 	ResourceAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule                            string = "azure.subscription.cosmosDbService.account.virtualNetworkRule"
 	ResourceAzureSubscriptionKeyVaultService                                                     string = "azure.subscription.keyVaultService"
+	ResourceAzureSubscriptionKeyVaultServiceManagedHsm                                           string = "azure.subscription.keyVaultService.managedHsm"
 	ResourceAzureSubscriptionKeyVaultServiceVault                                                string = "azure.subscription.keyVaultService.vault"
 	ResourceAzureSubscriptionKeyVaultServiceVaultAccessPolicy                                    string = "azure.subscription.keyVaultService.vault.accessPolicy"
 	ResourceAzureSubscriptionKeyVaultServiceVaultNetworkAcls                                     string = "azure.subscription.keyVaultService.vault.networkAcls"
@@ -142,6 +152,10 @@ const (
 	ResourceAzureSubscriptionMonitorServiceLogprofile                                            string = "azure.subscription.monitorService.logprofile"
 	ResourceAzureSubscriptionMonitorServiceDiagnosticsetting                                     string = "azure.subscription.monitorService.diagnosticsetting"
 	ResourceAzureSubscriptionCloudDefenderService                                                string = "azure.subscription.cloudDefenderService"
+	ResourceAzureSubscriptionCloudDefenderServiceSecureScore                                     string = "azure.subscription.cloudDefenderService.secureScore"
+	ResourceAzureSubscriptionCloudDefenderServiceSecureScoreControl                              string = "azure.subscription.cloudDefenderService.secureScoreControl"
+	ResourceAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard                    string = "azure.subscription.cloudDefenderService.regulatoryComplianceStandard"
+	ResourceAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl                     string = "azure.subscription.cloudDefenderService.regulatoryComplianceControl"
 	ResourceAzureSubscriptionCloudDefenderServiceSettings                                        string = "azure.subscription.cloudDefenderService.settings"
 	ResourceAzureSubscriptionCloudDefenderServiceDefenderForApis                                 string = "azure.subscription.cloudDefenderService.defenderForApis"
 	ResourceAzureSubscriptionCloudDefenderServiceDefenderCSPM                                    string = "azure.subscription.cloudDefenderService.defenderCSPM"
@@ -223,6 +237,14 @@ func init() {
 			// to override args, implement: initAzureSubscriptionComputeServiceDisk(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionComputeServiceDisk,
 		},
+		"azure.subscription.computeService.diskEncryptionSet": {
+			// to override args, implement: initAzureSubscriptionComputeServiceDiskEncryptionSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionComputeServiceDiskEncryptionSet,
+		},
+		"azure.subscription.computeService.diskAccess": {
+			// to override args, implement: initAzureSubscriptionComputeServiceDiskAccess(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionComputeServiceDiskAccess,
+		},
 		"azure.subscription.batchService": {
 			Init:   initAzureSubscriptionBatchService,
 			Create: createAzureSubscriptionBatchService,
@@ -278,6 +300,22 @@ func init() {
 		"azure.subscription.networkService.firewallPolicy": {
 			// to override args, implement: initAzureSubscriptionNetworkServiceFirewallPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionNetworkServiceFirewallPolicy,
+		},
+		"azure.subscription.networkService.firewallPolicy.idpsBypassRule": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule,
+		},
+		"azure.subscription.networkService.ddosProtectionPlan": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceDdosProtectionPlan(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceDdosProtectionPlan,
+		},
+		"azure.subscription.networkService.serviceEndpointPolicy": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceServiceEndpointPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceServiceEndpointPolicy,
+		},
+		"azure.subscription.networkService.serviceEndpointPolicy.definition": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition,
 		},
 		"azure.subscription.networkService.virtualNetworkGateway.ipConfig": {
 			// to override args, implement: initAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -430,6 +468,18 @@ func init() {
 		"azure.subscription.storageService.account.fileProperties.protocolSettings.smbConfig": {
 			// to override args, implement: initAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig,
+		},
+		"azure.subscription.storageService.account.encryptionScope": {
+			// to override args, implement: initAzureSubscriptionStorageServiceAccountEncryptionScope(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionStorageServiceAccountEncryptionScope,
+		},
+		"azure.subscription.storageService.account.managementPolicy": {
+			// to override args, implement: initAzureSubscriptionStorageServiceAccountManagementPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionStorageServiceAccountManagementPolicy,
+		},
+		"azure.subscription.storageService.account.managementPolicy.rule": {
+			// to override args, implement: initAzureSubscriptionStorageServiceAccountManagementPolicyRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionStorageServiceAccountManagementPolicyRule,
 		},
 		"azure.subscription.storageService.account.service.properties": {
 			// to override args, implement: initAzureSubscriptionStorageServiceAccountServiceProperties(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -619,6 +669,10 @@ func init() {
 			Init:   initAzureSubscriptionKeyVaultService,
 			Create: createAzureSubscriptionKeyVaultService,
 		},
+		"azure.subscription.keyVaultService.managedHsm": {
+			// to override args, implement: initAzureSubscriptionKeyVaultServiceManagedHsm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionKeyVaultServiceManagedHsm,
+		},
 		"azure.subscription.keyVaultService.vault": {
 			Init:   initAzureSubscriptionKeyVaultServiceVault,
 			Create: createAzureSubscriptionKeyVaultServiceVault,
@@ -694,6 +748,22 @@ func init() {
 		"azure.subscription.cloudDefenderService": {
 			Init:   initAzureSubscriptionCloudDefenderService,
 			Create: createAzureSubscriptionCloudDefenderService,
+		},
+		"azure.subscription.cloudDefenderService.secureScore": {
+			// to override args, implement: initAzureSubscriptionCloudDefenderServiceSecureScore(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCloudDefenderServiceSecureScore,
+		},
+		"azure.subscription.cloudDefenderService.secureScoreControl": {
+			// to override args, implement: initAzureSubscriptionCloudDefenderServiceSecureScoreControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCloudDefenderServiceSecureScoreControl,
+		},
+		"azure.subscription.cloudDefenderService.regulatoryComplianceStandard": {
+			// to override args, implement: initAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard,
+		},
+		"azure.subscription.cloudDefenderService.regulatoryComplianceControl": {
+			// to override args, implement: initAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl,
 		},
 		"azure.subscription.cloudDefenderService.settings": {
 			// to override args, implement: initAzureSubscriptionCloudDefenderServiceSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1118,6 +1188,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.computeService.disks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeService).GetDisks()).ToDataRes(types.Array(types.Resource("azure.subscription.computeService.disk")))
 	},
+	"azure.subscription.computeService.diskEncryptionSets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeService).GetDiskEncryptionSets()).ToDataRes(types.Array(types.Resource("azure.subscription.computeService.diskEncryptionSet")))
+	},
+	"azure.subscription.computeService.diskAccesses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeService).GetDiskAccesses()).ToDataRes(types.Array(types.Resource("azure.subscription.computeService.diskAccess")))
+	},
 	"azure.subscription.computeService.vm.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetId()).ToDataRes(types.String)
 	},
@@ -1282,6 +1358,66 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.computeService.disk.diskAccessId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceDisk).GetDiskAccessId()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.diskEncryptionSet.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.diskEncryptionSet.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.diskEncryptionSet.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.diskEncryptionSet.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.computeService.diskEncryptionSet.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.diskEncryptionSet.encryptionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).GetEncryptionType()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.diskEncryptionSet.activeKeyUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).GetActiveKeyUrl()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.diskEncryptionSet.activeKeySourceVaultId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).GetActiveKeySourceVaultId()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.diskEncryptionSet.rotationToLatestKeyVersionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).GetRotationToLatestKeyVersionEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.computeService.diskEncryptionSet.lastKeyRotationTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).GetLastKeyRotationTimestamp()).ToDataRes(types.Time)
+	},
+	"azure.subscription.computeService.diskEncryptionSet.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.diskEncryptionSet.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).GetIdentity()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.diskAccess.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDiskAccess).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.diskAccess.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDiskAccess).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.diskAccess.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDiskAccess).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.diskAccess.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDiskAccess).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.computeService.diskAccess.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDiskAccess).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.diskAccess.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDiskAccess).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.diskAccess.timeCreated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDiskAccess).GetTimeCreated()).ToDataRes(types.Time)
+	},
+	"azure.subscription.computeService.diskAccess.privateEndpointConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDiskAccess).GetPrivateEndpointConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.privateEndpointConnection")))
 	},
 	"azure.subscription.batchService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionBatchService).GetSubscriptionId()).ToDataRes(types.String)
@@ -1489,6 +1625,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.networkService.routeTables": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkService).GetRouteTables()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.routeTable")))
+	},
+	"azure.subscription.networkService.ddosProtectionPlans": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkService).GetDdosProtectionPlans()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.ddosProtectionPlan")))
+	},
+	"azure.subscription.networkService.serviceEndpointPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkService).GetServiceEndpointPolicies()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.serviceEndpointPolicy")))
 	},
 	"azure.subscription.networkService.virtualNetworkGateway.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway).GetId()).ToDataRes(types.String)
@@ -1729,6 +1871,129 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.networkService.firewallPolicy.firewalls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).GetFirewalls()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.firewall")))
+	},
+	"azure.subscription.networkService.firewallPolicy.intrusionDetectionMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).GetIntrusionDetectionMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewallPolicy.intrusionDetectionProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).GetIntrusionDetectionProfile()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewallPolicy.intrusionDetectionSignatureOverrides": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).GetIntrusionDetectionSignatureOverrides()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.networkService.firewallPolicy.intrusionDetectionBypassRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).GetIntrusionDetectionBypassRules()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.firewallPolicy.idpsBypassRule")))
+	},
+	"azure.subscription.networkService.firewallPolicy.idpsBypassRule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewallPolicy.idpsBypassRule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewallPolicy.idpsBypassRule.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewallPolicy.idpsBypassRule.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule).GetProtocol()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewallPolicy.idpsBypassRule.sourceAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule).GetSourceAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.firewallPolicy.idpsBypassRule.sourceIpGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule).GetSourceIpGroups()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.firewallPolicy.idpsBypassRule.destinationAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule).GetDestinationAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.firewallPolicy.idpsBypassRule.destinationIpGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule).GetDestinationIpGroups()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.firewallPolicy.idpsBypassRule.destinationPorts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule).GetDestinationPorts()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.ddosProtectionPlan.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceDdosProtectionPlan).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.ddosProtectionPlan.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceDdosProtectionPlan).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.ddosProtectionPlan.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceDdosProtectionPlan).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.ddosProtectionPlan.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceDdosProtectionPlan).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.networkService.ddosProtectionPlan.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceDdosProtectionPlan).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.ddosProtectionPlan.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceDdosProtectionPlan).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.ddosProtectionPlan.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceDdosProtectionPlan).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.ddosProtectionPlan.virtualNetworks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceDdosProtectionPlan).GetVirtualNetworks()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.virtualNetwork")))
+	},
+	"azure.subscription.networkService.ddosProtectionPlan.publicIpAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceDdosProtectionPlan).GetPublicIpAddresses()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.ipAddress")))
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy).GetKind()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.serviceAlias": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy).GetServiceAlias()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.definitions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy).GetDefinitions()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.serviceEndpointPolicy.definition")))
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy).GetSubnets()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.subnet")))
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.definition.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.definition.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.definition.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.definition.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.definition.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.definition.service": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition).GetService()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.definition.serviceResources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition).GetServiceResources()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.definition.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition).GetProvisioningState()).ToDataRes(types.String)
 	},
 	"azure.subscription.networkService.virtualNetworkGateway.ipConfig.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig).GetId()).ToDataRes(types.String)
@@ -2639,6 +2904,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.storageService.account.fileProperties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetFileProperties()).ToDataRes(types.Resource("azure.subscription.storageService.account.filePropertiesConfig"))
 	},
+	"azure.subscription.storageService.account.encryptionScopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetEncryptionScopes()).ToDataRes(types.Array(types.Resource("azure.subscription.storageService.account.encryptionScope")))
+	},
+	"azure.subscription.storageService.account.managementPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetManagementPolicy()).ToDataRes(types.Resource("azure.subscription.storageService.account.managementPolicy"))
+	},
 	"azure.subscription.storageService.account.dataProtection.storageAccountId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountDataProtection).GetStorageAccountId()).ToDataRes(types.String)
 	},
@@ -2680,6 +2951,81 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.storageService.account.fileProperties.protocolSettings.smbConfig.kerberosTicketEncryption": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig).GetKerberosTicketEncryption()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.encryptionScope.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountEncryptionScope).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.encryptionScope.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountEncryptionScope).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.encryptionScope.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountEncryptionScope).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.encryptionScope.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountEncryptionScope).GetSource()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.encryptionScope.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountEncryptionScope).GetState()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.encryptionScope.requireInfrastructureEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountEncryptionScope).GetRequireInfrastructureEncryption()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.storageService.account.encryptionScope.keyVaultKeyUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountEncryptionScope).GetKeyVaultKeyUri()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.encryptionScope.currentVersionedKeyIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountEncryptionScope).GetCurrentVersionedKeyIdentifier()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.encryptionScope.lastKeyRotationTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountEncryptionScope).GetLastKeyRotationTimestamp()).ToDataRes(types.Time)
+	},
+	"azure.subscription.storageService.account.encryptionScope.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountEncryptionScope).GetCreationTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.storageService.account.encryptionScope.lastModifiedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountEncryptionScope).GetLastModifiedTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.storageService.account.managementPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountManagementPolicy).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.managementPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountManagementPolicy).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.managementPolicy.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountManagementPolicy).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.managementPolicy.lastModifiedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountManagementPolicy).GetLastModifiedTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.storageService.account.managementPolicy.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountManagementPolicy).GetRules()).ToDataRes(types.Array(types.Resource("azure.subscription.storageService.account.managementPolicy.rule")))
+	},
+	"azure.subscription.storageService.account.managementPolicy.rule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountManagementPolicyRule).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.managementPolicy.rule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountManagementPolicyRule).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.managementPolicy.rule.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountManagementPolicyRule).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.managementPolicy.rule.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountManagementPolicyRule).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.storageService.account.managementPolicy.rule.filterBlobTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountManagementPolicyRule).GetFilterBlobTypes()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.storageService.account.managementPolicy.rule.filterPrefixMatch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountManagementPolicyRule).GetFilterPrefixMatch()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.storageService.account.managementPolicy.rule.baseBlobActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountManagementPolicyRule).GetBaseBlobActions()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.storageService.account.managementPolicy.rule.snapshotActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountManagementPolicyRule).GetSnapshotActions()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.storageService.account.managementPolicy.rule.versionActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountManagementPolicyRule).GetVersionActions()).ToDataRes(types.Dict)
 	},
 	"azure.subscription.storageService.account.service.properties.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountServiceProperties).GetId()).ToDataRes(types.String)
@@ -4025,6 +4371,63 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.keyVaultService.vaults": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultService).GetVaults()).ToDataRes(types.Array(types.Resource("azure.subscription.keyVaultService.vault")))
 	},
+	"azure.subscription.keyVaultService.managedHsms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultService).GetManagedHsms()).ToDataRes(types.Array(types.Resource("azure.subscription.keyVaultService.managedHsm")))
+	},
+	"azure.subscription.keyVaultService.managedHsm.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.keyVaultService.managedHsm.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.keyVaultService.managedHsm.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.keyVaultService.managedHsm.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.keyVaultService.managedHsm.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.keyVaultService.managedHsm.skuName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).GetSkuName()).ToDataRes(types.String)
+	},
+	"azure.subscription.keyVaultService.managedHsm.hsmUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).GetHsmUri()).ToDataRes(types.String)
+	},
+	"azure.subscription.keyVaultService.managedHsm.tenantId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).GetTenantId()).ToDataRes(types.String)
+	},
+	"azure.subscription.keyVaultService.managedHsm.initialAdminObjectIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).GetInitialAdminObjectIds()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.keyVaultService.managedHsm.enableSoftDelete": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).GetEnableSoftDelete()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.keyVaultService.managedHsm.enablePurgeProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).GetEnablePurgeProtection()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.keyVaultService.managedHsm.softDeleteRetentionInDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).GetSoftDeleteRetentionInDays()).ToDataRes(types.Int)
+	},
+	"azure.subscription.keyVaultService.managedHsm.publicNetworkAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).GetPublicNetworkAccess()).ToDataRes(types.String)
+	},
+	"azure.subscription.keyVaultService.managedHsm.networkAcls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).GetNetworkAcls()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.keyVaultService.managedHsm.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.keyVaultService.managedHsm.scheduledPurgeDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).GetScheduledPurgeDate()).ToDataRes(types.Time)
+	},
+	"azure.subscription.keyVaultService.managedHsm.regions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).GetRegions()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.keyVaultService.managedHsm.privateEndpointConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).GetPrivateEndpointConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.privateEndpointConnection")))
+	},
 	"azure.subscription.keyVaultService.vault.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultServiceVault).GetId()).ToDataRes(types.String)
 	},
@@ -4531,6 +4934,111 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.cloudDefenderService.settingsSentinel": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetSettingsSentinel()).ToDataRes(types.Resource("azure.subscription.cloudDefenderService.settings"))
+	},
+	"azure.subscription.cloudDefenderService.secureScores": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetSecureScores()).ToDataRes(types.Array(types.Resource("azure.subscription.cloudDefenderService.secureScore")))
+	},
+	"azure.subscription.cloudDefenderService.secureScoreControls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetSecureScoreControls()).ToDataRes(types.Array(types.Resource("azure.subscription.cloudDefenderService.secureScoreControl")))
+	},
+	"azure.subscription.cloudDefenderService.regulatoryComplianceStandards": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetRegulatoryComplianceStandards()).ToDataRes(types.Array(types.Resource("azure.subscription.cloudDefenderService.regulatoryComplianceStandard")))
+	},
+	"azure.subscription.cloudDefenderService.secureScore.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScore).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.secureScore.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScore).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.secureScore.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScore).GetDisplayName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.secureScore.currentScore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScore).GetCurrentScore()).ToDataRes(types.Float)
+	},
+	"azure.subscription.cloudDefenderService.secureScore.maxScore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScore).GetMaxScore()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cloudDefenderService.secureScore.percentage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScore).GetPercentage()).ToDataRes(types.Float)
+	},
+	"azure.subscription.cloudDefenderService.secureScore.weight": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScore).GetWeight()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cloudDefenderService.secureScoreControl.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.secureScoreControl.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.secureScoreControl.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl).GetDisplayName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.secureScoreControl.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.secureScoreControl.currentScore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl).GetCurrentScore()).ToDataRes(types.Float)
+	},
+	"azure.subscription.cloudDefenderService.secureScoreControl.maxScore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl).GetMaxScore()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cloudDefenderService.secureScoreControl.percentage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl).GetPercentage()).ToDataRes(types.Float)
+	},
+	"azure.subscription.cloudDefenderService.secureScoreControl.weight": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl).GetWeight()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cloudDefenderService.secureScoreControl.healthyResourceCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl).GetHealthyResourceCount()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cloudDefenderService.secureScoreControl.unhealthyResourceCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl).GetUnhealthyResourceCount()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cloudDefenderService.secureScoreControl.notApplicableResourceCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl).GetNotApplicableResourceCount()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cloudDefenderService.regulatoryComplianceStandard.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.regulatoryComplianceStandard.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.regulatoryComplianceStandard.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard).GetState()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.regulatoryComplianceStandard.passedControls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard).GetPassedControls()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cloudDefenderService.regulatoryComplianceStandard.failedControls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard).GetFailedControls()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cloudDefenderService.regulatoryComplianceStandard.skippedControls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard).GetSkippedControls()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cloudDefenderService.regulatoryComplianceStandard.controls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard).GetControls()).ToDataRes(types.Array(types.Resource("azure.subscription.cloudDefenderService.regulatoryComplianceControl")))
+	},
+	"azure.subscription.cloudDefenderService.regulatoryComplianceControl.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.regulatoryComplianceControl.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.regulatoryComplianceControl.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.regulatoryComplianceControl.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl).GetState()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.regulatoryComplianceControl.passedAssessments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl).GetPassedAssessments()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cloudDefenderService.regulatoryComplianceControl.failedAssessments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl).GetFailedAssessments()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cloudDefenderService.regulatoryComplianceControl.skippedAssessments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl).GetSkippedAssessments()).ToDataRes(types.Int)
 	},
 	"azure.subscription.cloudDefenderService.settings.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSettings).GetId()).ToDataRes(types.String)
@@ -5942,6 +6450,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionComputeService).Disks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.computeService.diskEncryptionSets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeService).DiskEncryptionSets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.diskAccesses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeService).DiskAccesses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.computeService.vm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionComputeServiceVm).__id, ok = v.Value.(string)
 		return
@@ -6168,6 +6684,94 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.computeService.disk.diskAccessId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionComputeServiceDisk).DiskAccessId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.diskEncryptionSet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.computeService.diskEncryptionSet.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.diskEncryptionSet.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.diskEncryptionSet.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.diskEncryptionSet.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.diskEncryptionSet.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.diskEncryptionSet.encryptionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).EncryptionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.diskEncryptionSet.activeKeyUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).ActiveKeyUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.diskEncryptionSet.activeKeySourceVaultId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).ActiveKeySourceVaultId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.diskEncryptionSet.rotationToLatestKeyVersionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).RotationToLatestKeyVersionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.diskEncryptionSet.lastKeyRotationTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).LastKeyRotationTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.diskEncryptionSet.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.diskEncryptionSet.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.diskAccess.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDiskAccess).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.computeService.diskAccess.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDiskAccess).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.diskAccess.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDiskAccess).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.diskAccess.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDiskAccess).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.diskAccess.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDiskAccess).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.diskAccess.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDiskAccess).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.diskAccess.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDiskAccess).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.diskAccess.timeCreated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDiskAccess).TimeCreated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.diskAccess.privateEndpointConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDiskAccess).PrivateEndpointConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.batchService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6468,6 +7072,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.networkService.routeTables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkService).RouteTables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ddosProtectionPlans": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkService).DdosProtectionPlans, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.serviceEndpointPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkService).ServiceEndpointPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.virtualNetworkGateway.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6820,6 +7432,186 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.networkService.firewallPolicy.firewalls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).Firewalls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewallPolicy.intrusionDetectionMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).IntrusionDetectionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewallPolicy.intrusionDetectionProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).IntrusionDetectionProfile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewallPolicy.intrusionDetectionSignatureOverrides": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).IntrusionDetectionSignatureOverrides, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewallPolicy.intrusionDetectionBypassRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).IntrusionDetectionBypassRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewallPolicy.idpsBypassRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.firewallPolicy.idpsBypassRule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewallPolicy.idpsBypassRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewallPolicy.idpsBypassRule.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewallPolicy.idpsBypassRule.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewallPolicy.idpsBypassRule.sourceAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule).SourceAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewallPolicy.idpsBypassRule.sourceIpGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule).SourceIpGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewallPolicy.idpsBypassRule.destinationAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule).DestinationAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewallPolicy.idpsBypassRule.destinationIpGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule).DestinationIpGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewallPolicy.idpsBypassRule.destinationPorts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule).DestinationPorts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ddosProtectionPlan.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosProtectionPlan).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.ddosProtectionPlan.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosProtectionPlan).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ddosProtectionPlan.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosProtectionPlan).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ddosProtectionPlan.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosProtectionPlan).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ddosProtectionPlan.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosProtectionPlan).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ddosProtectionPlan.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosProtectionPlan).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ddosProtectionPlan.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosProtectionPlan).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ddosProtectionPlan.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosProtectionPlan).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ddosProtectionPlan.virtualNetworks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosProtectionPlan).VirtualNetworks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.ddosProtectionPlan.publicIpAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceDdosProtectionPlan).PublicIpAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.serviceAlias": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy).ServiceAlias, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.definitions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy).Definitions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.definition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.definition.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.definition.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.definition.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.definition.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.definition.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.definition.service": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition).Service, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.definition.serviceResources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition).ServiceResources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.serviceEndpointPolicy.definition.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.virtualNetworkGateway.ipConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8166,6 +8958,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionStorageServiceAccount).FileProperties, ok = plugin.RawToTValue[*mqlAzureSubscriptionStorageServiceAccountFilePropertiesConfig](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.storageService.account.encryptionScopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccount).EncryptionScopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.managementPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccount).ManagementPolicy, ok = plugin.RawToTValue[*mqlAzureSubscriptionStorageServiceAccountManagementPolicy](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.storageService.account.dataProtection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionStorageServiceAccountDataProtection).__id, ok = v.Value.(string)
 		return
@@ -8240,6 +9040,118 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.storageService.account.fileProperties.protocolSettings.smbConfig.kerberosTicketEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig).KerberosTicketEncryption, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.encryptionScope.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountEncryptionScope).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.storageService.account.encryptionScope.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountEncryptionScope).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.encryptionScope.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountEncryptionScope).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.encryptionScope.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountEncryptionScope).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.encryptionScope.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountEncryptionScope).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.encryptionScope.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountEncryptionScope).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.encryptionScope.requireInfrastructureEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountEncryptionScope).RequireInfrastructureEncryption, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.encryptionScope.keyVaultKeyUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountEncryptionScope).KeyVaultKeyUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.encryptionScope.currentVersionedKeyIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountEncryptionScope).CurrentVersionedKeyIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.encryptionScope.lastKeyRotationTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountEncryptionScope).LastKeyRotationTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.encryptionScope.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountEncryptionScope).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.encryptionScope.lastModifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountEncryptionScope).LastModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.managementPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountManagementPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.storageService.account.managementPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountManagementPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.managementPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountManagementPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.managementPolicy.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountManagementPolicy).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.managementPolicy.lastModifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountManagementPolicy).LastModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.managementPolicy.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountManagementPolicy).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.managementPolicy.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountManagementPolicyRule).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.storageService.account.managementPolicy.rule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountManagementPolicyRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.managementPolicy.rule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountManagementPolicyRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.managementPolicy.rule.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountManagementPolicyRule).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.managementPolicy.rule.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountManagementPolicyRule).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.managementPolicy.rule.filterBlobTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountManagementPolicyRule).FilterBlobTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.managementPolicy.rule.filterPrefixMatch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountManagementPolicyRule).FilterPrefixMatch, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.managementPolicy.rule.baseBlobActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountManagementPolicyRule).BaseBlobActions, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.managementPolicy.rule.snapshotActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountManagementPolicyRule).SnapshotActions, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.managementPolicy.rule.versionActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountManagementPolicyRule).VersionActions, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.storageService.account.service.properties.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10222,6 +11134,86 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionKeyVaultService).Vaults, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.keyVaultService.managedHsms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultService).ManagedHsms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.managedHsm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.keyVaultService.managedHsm.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.managedHsm.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.managedHsm.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.managedHsm.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.managedHsm.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.managedHsm.skuName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).SkuName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.managedHsm.hsmUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).HsmUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.managedHsm.tenantId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).TenantId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.managedHsm.initialAdminObjectIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).InitialAdminObjectIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.managedHsm.enableSoftDelete": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).EnableSoftDelete, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.managedHsm.enablePurgeProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).EnablePurgeProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.managedHsm.softDeleteRetentionInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).SoftDeleteRetentionInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.managedHsm.publicNetworkAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).PublicNetworkAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.managedHsm.networkAcls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).NetworkAcls, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.managedHsm.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.managedHsm.scheduledPurgeDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).ScheduledPurgeDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.managedHsm.regions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).Regions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.managedHsm.privateEndpointConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).PrivateEndpointConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.keyVaultService.vault.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionKeyVaultServiceVault).__id, ok = v.Value.(string)
 		return
@@ -10972,6 +11964,162 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cloudDefenderService.settingsSentinel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCloudDefenderService).SettingsSentinel, ok = plugin.RawToTValue[*mqlAzureSubscriptionCloudDefenderServiceSettings](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.secureScores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderService).SecureScores, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.secureScoreControls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderService).SecureScoreControls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.regulatoryComplianceStandards": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderService).RegulatoryComplianceStandards, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.secureScore.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScore).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cloudDefenderService.secureScore.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScore).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.secureScore.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScore).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.secureScore.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScore).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.secureScore.currentScore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScore).CurrentScore, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.secureScore.maxScore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScore).MaxScore, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.secureScore.percentage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScore).Percentage, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.secureScore.weight": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScore).Weight, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.secureScoreControl.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cloudDefenderService.secureScoreControl.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.secureScoreControl.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.secureScoreControl.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.secureScoreControl.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.secureScoreControl.currentScore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl).CurrentScore, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.secureScoreControl.maxScore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl).MaxScore, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.secureScoreControl.percentage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl).Percentage, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.secureScoreControl.weight": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl).Weight, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.secureScoreControl.healthyResourceCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl).HealthyResourceCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.secureScoreControl.unhealthyResourceCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl).UnhealthyResourceCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.secureScoreControl.notApplicableResourceCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl).NotApplicableResourceCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.regulatoryComplianceStandard.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cloudDefenderService.regulatoryComplianceStandard.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.regulatoryComplianceStandard.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.regulatoryComplianceStandard.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.regulatoryComplianceStandard.passedControls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard).PassedControls, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.regulatoryComplianceStandard.failedControls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard).FailedControls, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.regulatoryComplianceStandard.skippedControls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard).SkippedControls, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.regulatoryComplianceStandard.controls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard).Controls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.regulatoryComplianceControl.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cloudDefenderService.regulatoryComplianceControl.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.regulatoryComplianceControl.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.regulatoryComplianceControl.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.regulatoryComplianceControl.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.regulatoryComplianceControl.passedAssessments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl).PassedAssessments, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.regulatoryComplianceControl.failedAssessments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl).FailedAssessments, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.regulatoryComplianceControl.skippedAssessments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl).SkippedAssessments, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cloudDefenderService.settings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13451,9 +14599,11 @@ type mqlAzureSubscriptionComputeService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAzureSubscriptionComputeServiceInternal it will be used here
-	SubscriptionId plugin.TValue[string]
-	Vms            plugin.TValue[[]any]
-	Disks          plugin.TValue[[]any]
+	SubscriptionId     plugin.TValue[string]
+	Vms                plugin.TValue[[]any]
+	Disks              plugin.TValue[[]any]
+	DiskEncryptionSets plugin.TValue[[]any]
+	DiskAccesses       plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionComputeService creates a new instance of this resource
@@ -13526,6 +14676,38 @@ func (c *mqlAzureSubscriptionComputeService) GetDisks() *plugin.TValue[[]any] {
 		}
 
 		return c.disks()
+	})
+}
+
+func (c *mqlAzureSubscriptionComputeService) GetDiskEncryptionSets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DiskEncryptionSets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.computeService", c.__id, "diskEncryptionSets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.diskEncryptionSets()
+	})
+}
+
+func (c *mqlAzureSubscriptionComputeService) GetDiskAccesses() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DiskAccesses, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.computeService", c.__id, "diskAccesses")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.diskAccesses()
 	})
 }
 
@@ -13932,6 +15114,206 @@ func (c *mqlAzureSubscriptionComputeServiceDisk) GetSupportsHibernation() *plugi
 
 func (c *mqlAzureSubscriptionComputeServiceDisk) GetDiskAccessId() *plugin.TValue[string] {
 	return &c.DiskAccessId
+}
+
+// mqlAzureSubscriptionComputeServiceDiskEncryptionSet for the azure.subscription.computeService.diskEncryptionSet resource
+type mqlAzureSubscriptionComputeServiceDiskEncryptionSet struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionComputeServiceDiskEncryptionSetInternal it will be used here
+	Id                                plugin.TValue[string]
+	Name                              plugin.TValue[string]
+	Location                          plugin.TValue[string]
+	Tags                              plugin.TValue[map[string]any]
+	Type                              plugin.TValue[string]
+	EncryptionType                    plugin.TValue[string]
+	ActiveKeyUrl                      plugin.TValue[string]
+	ActiveKeySourceVaultId            plugin.TValue[string]
+	RotationToLatestKeyVersionEnabled plugin.TValue[bool]
+	LastKeyRotationTimestamp          plugin.TValue[*time.Time]
+	ProvisioningState                 plugin.TValue[string]
+	Identity                          plugin.TValue[any]
+}
+
+// createAzureSubscriptionComputeServiceDiskEncryptionSet creates a new instance of this resource
+func createAzureSubscriptionComputeServiceDiskEncryptionSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionComputeServiceDiskEncryptionSet{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.computeService.diskEncryptionSet", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDiskEncryptionSet) MqlName() string {
+	return "azure.subscription.computeService.diskEncryptionSet"
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDiskEncryptionSet) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDiskEncryptionSet) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDiskEncryptionSet) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDiskEncryptionSet) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDiskEncryptionSet) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDiskEncryptionSet) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDiskEncryptionSet) GetEncryptionType() *plugin.TValue[string] {
+	return &c.EncryptionType
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDiskEncryptionSet) GetActiveKeyUrl() *plugin.TValue[string] {
+	return &c.ActiveKeyUrl
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDiskEncryptionSet) GetActiveKeySourceVaultId() *plugin.TValue[string] {
+	return &c.ActiveKeySourceVaultId
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDiskEncryptionSet) GetRotationToLatestKeyVersionEnabled() *plugin.TValue[bool] {
+	return &c.RotationToLatestKeyVersionEnabled
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDiskEncryptionSet) GetLastKeyRotationTimestamp() *plugin.TValue[*time.Time] {
+	return &c.LastKeyRotationTimestamp
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDiskEncryptionSet) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDiskEncryptionSet) GetIdentity() *plugin.TValue[any] {
+	return &c.Identity
+}
+
+// mqlAzureSubscriptionComputeServiceDiskAccess for the azure.subscription.computeService.diskAccess resource
+type mqlAzureSubscriptionComputeServiceDiskAccess struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionComputeServiceDiskAccessInternal
+	Id                         plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	Location                   plugin.TValue[string]
+	Tags                       plugin.TValue[map[string]any]
+	Type                       plugin.TValue[string]
+	ProvisioningState          plugin.TValue[string]
+	TimeCreated                plugin.TValue[*time.Time]
+	PrivateEndpointConnections plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionComputeServiceDiskAccess creates a new instance of this resource
+func createAzureSubscriptionComputeServiceDiskAccess(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionComputeServiceDiskAccess{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.computeService.diskAccess", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDiskAccess) MqlName() string {
+	return "azure.subscription.computeService.diskAccess"
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDiskAccess) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDiskAccess) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDiskAccess) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDiskAccess) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDiskAccess) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDiskAccess) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDiskAccess) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDiskAccess) GetTimeCreated() *plugin.TValue[*time.Time] {
+	return &c.TimeCreated
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDiskAccess) GetPrivateEndpointConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PrivateEndpointConnections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.computeService.diskAccess", c.__id, "privateEndpointConnections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.privateEndpointConnections()
+	})
 }
 
 // mqlAzureSubscriptionBatchService for the azure.subscription.batchService resource
@@ -14484,6 +15866,8 @@ type mqlAzureSubscriptionNetworkService struct {
 	ApplicationFirewallPolicies plugin.TValue[[]any]
 	PrivateEndpoints            plugin.TValue[[]any]
 	RouteTables                 plugin.TValue[[]any]
+	DdosProtectionPlans         plugin.TValue[[]any]
+	ServiceEndpointPolicies     plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionNetworkService creates a new instance of this resource
@@ -14780,6 +16164,38 @@ func (c *mqlAzureSubscriptionNetworkService) GetRouteTables() *plugin.TValue[[]a
 		}
 
 		return c.routeTables()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkService) GetDdosProtectionPlans() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DdosProtectionPlans, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService", c.__id, "ddosProtectionPlans")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ddosProtectionPlans()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkService) GetServiceEndpointPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ServiceEndpointPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService", c.__id, "serviceEndpointPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.serviceEndpointPolicies()
 	})
 }
 
@@ -15584,18 +17000,22 @@ func (c *mqlAzureSubscriptionNetworkServiceFirewallNatRule) GetProperties() *plu
 type mqlAzureSubscriptionNetworkServiceFirewallPolicy struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionNetworkServiceFirewallPolicyInternal it will be used here
-	Id                plugin.TValue[string]
-	Name              plugin.TValue[string]
-	Location          plugin.TValue[string]
-	Tags              plugin.TValue[map[string]any]
-	Type              plugin.TValue[string]
-	Etag              plugin.TValue[string]
-	Properties        plugin.TValue[any]
-	ProvisioningState plugin.TValue[string]
-	BasePolicy        plugin.TValue[*mqlAzureSubscriptionNetworkServiceFirewallPolicy]
-	ChildPolicies     plugin.TValue[[]any]
-	Firewalls         plugin.TValue[[]any]
+	mqlAzureSubscriptionNetworkServiceFirewallPolicyInternal
+	Id                                   plugin.TValue[string]
+	Name                                 plugin.TValue[string]
+	Location                             plugin.TValue[string]
+	Tags                                 plugin.TValue[map[string]any]
+	Type                                 plugin.TValue[string]
+	Etag                                 plugin.TValue[string]
+	Properties                           plugin.TValue[any]
+	ProvisioningState                    plugin.TValue[string]
+	BasePolicy                           plugin.TValue[*mqlAzureSubscriptionNetworkServiceFirewallPolicy]
+	ChildPolicies                        plugin.TValue[[]any]
+	Firewalls                            plugin.TValue[[]any]
+	IntrusionDetectionMode               plugin.TValue[string]
+	IntrusionDetectionProfile            plugin.TValue[string]
+	IntrusionDetectionSignatureOverrides plugin.TValue[[]any]
+	IntrusionDetectionBypassRules        plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionNetworkServiceFirewallPolicy creates a new instance of this resource
@@ -15713,6 +17133,437 @@ func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicy) GetFirewalls() *plugi
 
 		return c.firewalls()
 	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicy) GetIntrusionDetectionMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.IntrusionDetectionMode, func() (string, error) {
+		return c.intrusionDetectionMode()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicy) GetIntrusionDetectionProfile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.IntrusionDetectionProfile, func() (string, error) {
+		return c.intrusionDetectionProfile()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicy) GetIntrusionDetectionSignatureOverrides() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IntrusionDetectionSignatureOverrides, func() ([]any, error) {
+		return c.intrusionDetectionSignatureOverrides()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicy) GetIntrusionDetectionBypassRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IntrusionDetectionBypassRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.firewallPolicy", c.__id, "intrusionDetectionBypassRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.intrusionDetectionBypassRules()
+	})
+}
+
+// mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule for the azure.subscription.networkService.firewallPolicy.idpsBypassRule resource
+type mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRuleInternal it will be used here
+	Id                   plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Description          plugin.TValue[string]
+	Protocol             plugin.TValue[string]
+	SourceAddresses      plugin.TValue[[]any]
+	SourceIpGroups       plugin.TValue[[]any]
+	DestinationAddresses plugin.TValue[[]any]
+	DestinationIpGroups  plugin.TValue[[]any]
+	DestinationPorts     plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.firewallPolicy.idpsBypassRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule) MqlName() string {
+	return "azure.subscription.networkService.firewallPolicy.idpsBypassRule"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule) GetSourceAddresses() *plugin.TValue[[]any] {
+	return &c.SourceAddresses
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule) GetSourceIpGroups() *plugin.TValue[[]any] {
+	return &c.SourceIpGroups
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule) GetDestinationAddresses() *plugin.TValue[[]any] {
+	return &c.DestinationAddresses
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule) GetDestinationIpGroups() *plugin.TValue[[]any] {
+	return &c.DestinationIpGroups
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule) GetDestinationPorts() *plugin.TValue[[]any] {
+	return &c.DestinationPorts
+}
+
+// mqlAzureSubscriptionNetworkServiceDdosProtectionPlan for the azure.subscription.networkService.ddosProtectionPlan resource
+type mqlAzureSubscriptionNetworkServiceDdosProtectionPlan struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionNetworkServiceDdosProtectionPlanInternal
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Location          plugin.TValue[string]
+	Tags              plugin.TValue[map[string]any]
+	Type              plugin.TValue[string]
+	Etag              plugin.TValue[string]
+	ProvisioningState plugin.TValue[string]
+	VirtualNetworks   plugin.TValue[[]any]
+	PublicIpAddresses plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionNetworkServiceDdosProtectionPlan creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceDdosProtectionPlan(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceDdosProtectionPlan{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.ddosProtectionPlan", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosProtectionPlan) MqlName() string {
+	return "azure.subscription.networkService.ddosProtectionPlan"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosProtectionPlan) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosProtectionPlan) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosProtectionPlan) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosProtectionPlan) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosProtectionPlan) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosProtectionPlan) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosProtectionPlan) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosProtectionPlan) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosProtectionPlan) GetVirtualNetworks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VirtualNetworks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.ddosProtectionPlan", c.__id, "virtualNetworks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.virtualNetworks()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceDdosProtectionPlan) GetPublicIpAddresses() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PublicIpAddresses, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.ddosProtectionPlan", c.__id, "publicIpAddresses")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.publicIpAddresses()
+	})
+}
+
+// mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy for the azure.subscription.networkService.serviceEndpointPolicy resource
+type mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionNetworkServiceServiceEndpointPolicyInternal
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Location          plugin.TValue[string]
+	Tags              plugin.TValue[map[string]any]
+	Type              plugin.TValue[string]
+	Etag              plugin.TValue[string]
+	Kind              plugin.TValue[string]
+	ProvisioningState plugin.TValue[string]
+	ServiceAlias      plugin.TValue[string]
+	Definitions       plugin.TValue[[]any]
+	Subnets           plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionNetworkServiceServiceEndpointPolicy creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceServiceEndpointPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.serviceEndpointPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy) MqlName() string {
+	return "azure.subscription.networkService.serviceEndpointPolicy"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy) GetServiceAlias() *plugin.TValue[string] {
+	return &c.ServiceAlias
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy) GetDefinitions() *plugin.TValue[[]any] {
+	return &c.Definitions
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceServiceEndpointPolicy) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.serviceEndpointPolicy", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
+}
+
+// mqlAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition for the azure.subscription.networkService.serviceEndpointPolicy.definition resource
+type mqlAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinitionInternal it will be used here
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Type              plugin.TValue[string]
+	Etag              plugin.TValue[string]
+	Description       plugin.TValue[string]
+	Service           plugin.TValue[string]
+	ServiceResources  plugin.TValue[[]any]
+	ProvisioningState plugin.TValue[string]
+}
+
+// createAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.serviceEndpointPolicy.definition", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition) MqlName() string {
+	return "azure.subscription.networkService.serviceEndpointPolicy.definition"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition) GetService() *plugin.TValue[string] {
+	return &c.Service
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition) GetServiceResources() *plugin.TValue[[]any] {
+	return &c.ServiceResources
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
 }
 
 // mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig for the azure.subscription.networkService.virtualNetworkGateway.ipConfig resource
@@ -18713,6 +20564,8 @@ type mqlAzureSubscriptionStorageServiceAccount struct {
 	BlobProperties                     plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties]
 	DataProtection                     plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountDataProtection]
 	FileProperties                     plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountFilePropertiesConfig]
+	EncryptionScopes                   plugin.TValue[[]any]
+	ManagementPolicy                   plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountManagementPolicy]
 }
 
 // createAzureSubscriptionStorageServiceAccount creates a new instance of this resource
@@ -19002,6 +20855,38 @@ func (c *mqlAzureSubscriptionStorageServiceAccount) GetFileProperties() *plugin.
 	})
 }
 
+func (c *mqlAzureSubscriptionStorageServiceAccount) GetEncryptionScopes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EncryptionScopes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.storageService.account", c.__id, "encryptionScopes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.encryptionScopes()
+	})
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccount) GetManagementPolicy() *plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountManagementPolicy] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionStorageServiceAccountManagementPolicy](&c.ManagementPolicy, func() (*mqlAzureSubscriptionStorageServiceAccountManagementPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.storageService.account", c.__id, "managementPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionStorageServiceAccountManagementPolicy), nil
+			}
+		}
+
+		return c.managementPolicy()
+	})
+}
+
 // mqlAzureSubscriptionStorageServiceAccountDataProtection for the azure.subscription.storageService.account.dataProtection resource
 type mqlAzureSubscriptionStorageServiceAccountDataProtection struct {
 	MqlRuntime *plugin.Runtime
@@ -19270,6 +21155,263 @@ func (c *mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettings
 
 func (c *mqlAzureSubscriptionStorageServiceAccountFilePropertiesProtocolSettingsSmbConfig) GetKerberosTicketEncryption() *plugin.TValue[string] {
 	return &c.KerberosTicketEncryption
+}
+
+// mqlAzureSubscriptionStorageServiceAccountEncryptionScope for the azure.subscription.storageService.account.encryptionScope resource
+type mqlAzureSubscriptionStorageServiceAccountEncryptionScope struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionStorageServiceAccountEncryptionScopeInternal it will be used here
+	Id                              plugin.TValue[string]
+	Name                            plugin.TValue[string]
+	Type                            plugin.TValue[string]
+	Source                          plugin.TValue[string]
+	State                           plugin.TValue[string]
+	RequireInfrastructureEncryption plugin.TValue[bool]
+	KeyVaultKeyUri                  plugin.TValue[string]
+	CurrentVersionedKeyIdentifier   plugin.TValue[string]
+	LastKeyRotationTimestamp        plugin.TValue[*time.Time]
+	CreationTime                    plugin.TValue[*time.Time]
+	LastModifiedTime                plugin.TValue[*time.Time]
+}
+
+// createAzureSubscriptionStorageServiceAccountEncryptionScope creates a new instance of this resource
+func createAzureSubscriptionStorageServiceAccountEncryptionScope(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionStorageServiceAccountEncryptionScope{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.storageService.account.encryptionScope", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountEncryptionScope) MqlName() string {
+	return "azure.subscription.storageService.account.encryptionScope"
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountEncryptionScope) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountEncryptionScope) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountEncryptionScope) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountEncryptionScope) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountEncryptionScope) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountEncryptionScope) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountEncryptionScope) GetRequireInfrastructureEncryption() *plugin.TValue[bool] {
+	return &c.RequireInfrastructureEncryption
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountEncryptionScope) GetKeyVaultKeyUri() *plugin.TValue[string] {
+	return &c.KeyVaultKeyUri
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountEncryptionScope) GetCurrentVersionedKeyIdentifier() *plugin.TValue[string] {
+	return &c.CurrentVersionedKeyIdentifier
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountEncryptionScope) GetLastKeyRotationTimestamp() *plugin.TValue[*time.Time] {
+	return &c.LastKeyRotationTimestamp
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountEncryptionScope) GetCreationTime() *plugin.TValue[*time.Time] {
+	return &c.CreationTime
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountEncryptionScope) GetLastModifiedTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedTime
+}
+
+// mqlAzureSubscriptionStorageServiceAccountManagementPolicy for the azure.subscription.storageService.account.managementPolicy resource
+type mqlAzureSubscriptionStorageServiceAccountManagementPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionStorageServiceAccountManagementPolicyInternal it will be used here
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Type             plugin.TValue[string]
+	LastModifiedTime plugin.TValue[*time.Time]
+	Rules            plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionStorageServiceAccountManagementPolicy creates a new instance of this resource
+func createAzureSubscriptionStorageServiceAccountManagementPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionStorageServiceAccountManagementPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.storageService.account.managementPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountManagementPolicy) MqlName() string {
+	return "azure.subscription.storageService.account.managementPolicy"
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountManagementPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountManagementPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountManagementPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountManagementPolicy) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountManagementPolicy) GetLastModifiedTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedTime
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountManagementPolicy) GetRules() *plugin.TValue[[]any] {
+	return &c.Rules
+}
+
+// mqlAzureSubscriptionStorageServiceAccountManagementPolicyRule for the azure.subscription.storageService.account.managementPolicy.rule resource
+type mqlAzureSubscriptionStorageServiceAccountManagementPolicyRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionStorageServiceAccountManagementPolicyRuleInternal it will be used here
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Type              plugin.TValue[string]
+	Enabled           plugin.TValue[bool]
+	FilterBlobTypes   plugin.TValue[[]any]
+	FilterPrefixMatch plugin.TValue[[]any]
+	BaseBlobActions   plugin.TValue[any]
+	SnapshotActions   plugin.TValue[any]
+	VersionActions    plugin.TValue[any]
+}
+
+// createAzureSubscriptionStorageServiceAccountManagementPolicyRule creates a new instance of this resource
+func createAzureSubscriptionStorageServiceAccountManagementPolicyRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionStorageServiceAccountManagementPolicyRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.storageService.account.managementPolicy.rule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountManagementPolicyRule) MqlName() string {
+	return "azure.subscription.storageService.account.managementPolicy.rule"
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountManagementPolicyRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountManagementPolicyRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountManagementPolicyRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountManagementPolicyRule) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountManagementPolicyRule) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountManagementPolicyRule) GetFilterBlobTypes() *plugin.TValue[[]any] {
+	return &c.FilterBlobTypes
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountManagementPolicyRule) GetFilterPrefixMatch() *plugin.TValue[[]any] {
+	return &c.FilterPrefixMatch
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountManagementPolicyRule) GetBaseBlobActions() *plugin.TValue[any] {
+	return &c.BaseBlobActions
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountManagementPolicyRule) GetSnapshotActions() *plugin.TValue[any] {
+	return &c.SnapshotActions
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountManagementPolicyRule) GetVersionActions() *plugin.TValue[any] {
+	return &c.VersionActions
 }
 
 // mqlAzureSubscriptionStorageServiceAccountServiceProperties for the azure.subscription.storageService.account.service.properties resource
@@ -24189,6 +26331,7 @@ type mqlAzureSubscriptionKeyVaultService struct {
 	// optional: if you define mqlAzureSubscriptionKeyVaultServiceInternal it will be used here
 	SubscriptionId plugin.TValue[string]
 	Vaults         plugin.TValue[[]any]
+	ManagedHsms    plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionKeyVaultService creates a new instance of this resource
@@ -24245,6 +26388,168 @@ func (c *mqlAzureSubscriptionKeyVaultService) GetVaults() *plugin.TValue[[]any] 
 		}
 
 		return c.vaults()
+	})
+}
+
+func (c *mqlAzureSubscriptionKeyVaultService) GetManagedHsms() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedHsms, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.keyVaultService", c.__id, "managedHsms")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedHsms()
+	})
+}
+
+// mqlAzureSubscriptionKeyVaultServiceManagedHsm for the azure.subscription.keyVaultService.managedHsm resource
+type mqlAzureSubscriptionKeyVaultServiceManagedHsm struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionKeyVaultServiceManagedHsmInternal
+	Id                         plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	Location                   plugin.TValue[string]
+	Tags                       plugin.TValue[map[string]any]
+	Type                       plugin.TValue[string]
+	SkuName                    plugin.TValue[string]
+	HsmUri                     plugin.TValue[string]
+	TenantId                   plugin.TValue[string]
+	InitialAdminObjectIds      plugin.TValue[[]any]
+	EnableSoftDelete           plugin.TValue[bool]
+	EnablePurgeProtection      plugin.TValue[bool]
+	SoftDeleteRetentionInDays  plugin.TValue[int64]
+	PublicNetworkAccess        plugin.TValue[string]
+	NetworkAcls                plugin.TValue[any]
+	ProvisioningState          plugin.TValue[string]
+	ScheduledPurgeDate         plugin.TValue[*time.Time]
+	Regions                    plugin.TValue[[]any]
+	PrivateEndpointConnections plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionKeyVaultServiceManagedHsm creates a new instance of this resource
+func createAzureSubscriptionKeyVaultServiceManagedHsm(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionKeyVaultServiceManagedHsm{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.keyVaultService.managedHsm", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsm) MqlName() string {
+	return "azure.subscription.keyVaultService.managedHsm"
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsm) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsm) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsm) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsm) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsm) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsm) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsm) GetSkuName() *plugin.TValue[string] {
+	return &c.SkuName
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsm) GetHsmUri() *plugin.TValue[string] {
+	return &c.HsmUri
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsm) GetTenantId() *plugin.TValue[string] {
+	return &c.TenantId
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsm) GetInitialAdminObjectIds() *plugin.TValue[[]any] {
+	return &c.InitialAdminObjectIds
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsm) GetEnableSoftDelete() *plugin.TValue[bool] {
+	return &c.EnableSoftDelete
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsm) GetEnablePurgeProtection() *plugin.TValue[bool] {
+	return &c.EnablePurgeProtection
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsm) GetSoftDeleteRetentionInDays() *plugin.TValue[int64] {
+	return &c.SoftDeleteRetentionInDays
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsm) GetPublicNetworkAccess() *plugin.TValue[string] {
+	return &c.PublicNetworkAccess
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsm) GetNetworkAcls() *plugin.TValue[any] {
+	return &c.NetworkAcls
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsm) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsm) GetScheduledPurgeDate() *plugin.TValue[*time.Time] {
+	return &c.ScheduledPurgeDate
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsm) GetRegions() *plugin.TValue[[]any] {
+	return &c.Regions
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsm) GetPrivateEndpointConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PrivateEndpointConnections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.keyVaultService.managedHsm", c.__id, "privateEndpointConnections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.privateEndpointConnections()
 	})
 }
 
@@ -26086,6 +28391,9 @@ type mqlAzureSubscriptionCloudDefenderService struct {
 	SettingsMCAS                    plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceSettings]
 	SettingsWDATP                   plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceSettings]
 	SettingsSentinel                plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceSettings]
+	SecureScores                    plugin.TValue[[]any]
+	SecureScoreControls             plugin.TValue[[]any]
+	RegulatoryComplianceStandards   plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionCloudDefenderService creates a new instance of this resource
@@ -26449,6 +28757,402 @@ func (c *mqlAzureSubscriptionCloudDefenderService) GetSettingsSentinel() *plugin
 
 		return c.settingsSentinel()
 	})
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderService) GetSecureScores() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecureScores, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService", c.__id, "secureScores")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.secureScores()
+	})
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderService) GetSecureScoreControls() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecureScoreControls, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService", c.__id, "secureScoreControls")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.secureScoreControls()
+	})
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderService) GetRegulatoryComplianceStandards() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RegulatoryComplianceStandards, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService", c.__id, "regulatoryComplianceStandards")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.regulatoryComplianceStandards()
+	})
+}
+
+// mqlAzureSubscriptionCloudDefenderServiceSecureScore for the azure.subscription.cloudDefenderService.secureScore resource
+type mqlAzureSubscriptionCloudDefenderServiceSecureScore struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCloudDefenderServiceSecureScoreInternal it will be used here
+	Id           plugin.TValue[string]
+	Name         plugin.TValue[string]
+	DisplayName  plugin.TValue[string]
+	CurrentScore plugin.TValue[float64]
+	MaxScore     plugin.TValue[int64]
+	Percentage   plugin.TValue[float64]
+	Weight       plugin.TValue[int64]
+}
+
+// createAzureSubscriptionCloudDefenderServiceSecureScore creates a new instance of this resource
+func createAzureSubscriptionCloudDefenderServiceSecureScore(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCloudDefenderServiceSecureScore{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cloudDefenderService.secureScore", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecureScore) MqlName() string {
+	return "azure.subscription.cloudDefenderService.secureScore"
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecureScore) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecureScore) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecureScore) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecureScore) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecureScore) GetCurrentScore() *plugin.TValue[float64] {
+	return &c.CurrentScore
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecureScore) GetMaxScore() *plugin.TValue[int64] {
+	return &c.MaxScore
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecureScore) GetPercentage() *plugin.TValue[float64] {
+	return &c.Percentage
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecureScore) GetWeight() *plugin.TValue[int64] {
+	return &c.Weight
+}
+
+// mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl for the azure.subscription.cloudDefenderService.secureScoreControl resource
+type mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCloudDefenderServiceSecureScoreControlInternal it will be used here
+	Id                         plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	DisplayName                plugin.TValue[string]
+	Description                plugin.TValue[string]
+	CurrentScore               plugin.TValue[float64]
+	MaxScore                   plugin.TValue[int64]
+	Percentage                 plugin.TValue[float64]
+	Weight                     plugin.TValue[int64]
+	HealthyResourceCount       plugin.TValue[int64]
+	UnhealthyResourceCount     plugin.TValue[int64]
+	NotApplicableResourceCount plugin.TValue[int64]
+}
+
+// createAzureSubscriptionCloudDefenderServiceSecureScoreControl creates a new instance of this resource
+func createAzureSubscriptionCloudDefenderServiceSecureScoreControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cloudDefenderService.secureScoreControl", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl) MqlName() string {
+	return "azure.subscription.cloudDefenderService.secureScoreControl"
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl) GetCurrentScore() *plugin.TValue[float64] {
+	return &c.CurrentScore
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl) GetMaxScore() *plugin.TValue[int64] {
+	return &c.MaxScore
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl) GetPercentage() *plugin.TValue[float64] {
+	return &c.Percentage
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl) GetWeight() *plugin.TValue[int64] {
+	return &c.Weight
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl) GetHealthyResourceCount() *plugin.TValue[int64] {
+	return &c.HealthyResourceCount
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl) GetUnhealthyResourceCount() *plugin.TValue[int64] {
+	return &c.UnhealthyResourceCount
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl) GetNotApplicableResourceCount() *plugin.TValue[int64] {
+	return &c.NotApplicableResourceCount
+}
+
+// mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard for the azure.subscription.cloudDefenderService.regulatoryComplianceStandard resource
+type mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandardInternal it will be used here
+	Id              plugin.TValue[string]
+	Name            plugin.TValue[string]
+	State           plugin.TValue[string]
+	PassedControls  plugin.TValue[int64]
+	FailedControls  plugin.TValue[int64]
+	SkippedControls plugin.TValue[int64]
+	Controls        plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard creates a new instance of this resource
+func createAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cloudDefenderService.regulatoryComplianceStandard", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard) MqlName() string {
+	return "azure.subscription.cloudDefenderService.regulatoryComplianceStandard"
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard) GetPassedControls() *plugin.TValue[int64] {
+	return &c.PassedControls
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard) GetFailedControls() *plugin.TValue[int64] {
+	return &c.FailedControls
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard) GetSkippedControls() *plugin.TValue[int64] {
+	return &c.SkippedControls
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard) GetControls() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Controls, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService.regulatoryComplianceStandard", c.__id, "controls")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.controls()
+	})
+}
+
+// mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl for the azure.subscription.cloudDefenderService.regulatoryComplianceControl resource
+type mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControlInternal it will be used here
+	Id                 plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Description        plugin.TValue[string]
+	State              plugin.TValue[string]
+	PassedAssessments  plugin.TValue[int64]
+	FailedAssessments  plugin.TValue[int64]
+	SkippedAssessments plugin.TValue[int64]
+}
+
+// createAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl creates a new instance of this resource
+func createAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cloudDefenderService.regulatoryComplianceControl", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl) MqlName() string {
+	return "azure.subscription.cloudDefenderService.regulatoryComplianceControl"
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl) GetPassedAssessments() *plugin.TValue[int64] {
+	return &c.PassedAssessments
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl) GetFailedAssessments() *plugin.TValue[int64] {
+	return &c.FailedAssessments
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl) GetSkippedAssessments() *plugin.TValue[int64] {
+	return &c.SkippedAssessments
 }
 
 // mqlAzureSubscriptionCloudDefenderServiceSettings for the azure.subscription.cloudDefenderService.settings resource

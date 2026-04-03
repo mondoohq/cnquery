@@ -7,12 +7,15 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"net/http"
 	"strings"
 	"time"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	compute "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
 	network "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -599,4 +602,256 @@ func initAzureSubscriptionComputeServiceVm(runtime *plugin.Runtime, args map[str
 	}
 
 	return nil, nil, errors.New("azure compute instance does not exist")
+}
+
+func (a *mqlAzureSubscriptionComputeServiceDiskEncryptionSet) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionComputeServiceDiskAccess) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionComputeService) diskEncryptionSets() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	client, err := compute.NewDiskEncryptionSetsClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListPager(nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not list disk encryption sets due to access denied")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, des := range page.Value {
+			if des == nil {
+				continue
+			}
+
+			identity, err := convert.JsonToDict(des.Identity)
+			if err != nil {
+				return nil, err
+			}
+
+			var encryptionType, provisioningState string
+			var activeKeyUrl, activeKeySourceVaultId string
+			var rotationToLatestKeyVersionEnabled *bool
+			var lastKeyRotationTimestamp *time.Time
+
+			if des.Properties != nil {
+				props := des.Properties
+				if props.EncryptionType != nil {
+					encryptionType = string(*props.EncryptionType)
+				}
+				if props.ActiveKey != nil {
+					if props.ActiveKey.KeyURL != nil {
+						activeKeyUrl = *props.ActiveKey.KeyURL
+					}
+					if props.ActiveKey.SourceVault != nil && props.ActiveKey.SourceVault.ID != nil {
+						activeKeySourceVaultId = *props.ActiveKey.SourceVault.ID
+					}
+				}
+				rotationToLatestKeyVersionEnabled = props.RotationToLatestKeyVersionEnabled
+				lastKeyRotationTimestamp = props.LastKeyRotationTimestamp
+				if props.ProvisioningState != nil {
+					provisioningState = *props.ProvisioningState
+				}
+			}
+
+			mqlDes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionComputeServiceDiskEncryptionSet,
+				map[string]*llx.RawData{
+					"id":                                llx.StringDataPtr(des.ID),
+					"name":                              llx.StringDataPtr(des.Name),
+					"location":                          llx.StringDataPtr(des.Location),
+					"tags":                              llx.MapData(convert.PtrMapStrToInterface(des.Tags), types.String),
+					"type":                              llx.StringDataPtr(des.Type),
+					"identity":                          llx.DictData(identity),
+					"encryptionType":                    llx.StringData(encryptionType),
+					"activeKeyUrl":                      llx.StringData(activeKeyUrl),
+					"activeKeySourceVaultId":            llx.StringData(activeKeySourceVaultId),
+					"rotationToLatestKeyVersionEnabled": llx.BoolDataPtr(rotationToLatestKeyVersionEnabled),
+					"lastKeyRotationTimestamp":          llx.TimeDataPtr(lastKeyRotationTimestamp),
+					"provisioningState":                 llx.StringData(provisioningState),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlDes)
+		}
+	}
+
+	return res, nil
+}
+
+type mqlAzureSubscriptionComputeServiceDiskAccessInternal struct {
+	cachePrivateEndpointConnections []*compute.PrivateEndpointConnection
+}
+
+func (a *mqlAzureSubscriptionComputeService) diskAccesses() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	client, err := compute.NewDiskAccessesClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListPager(nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not list disk accesses due to access denied")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, da := range page.Value {
+			if da == nil {
+				continue
+			}
+
+			var provisioningState string
+			var timeCreated *time.Time
+			var privateEndpointConns []*compute.PrivateEndpointConnection
+
+			if da.Properties != nil {
+				if da.Properties.ProvisioningState != nil {
+					provisioningState = *da.Properties.ProvisioningState
+				}
+				timeCreated = da.Properties.TimeCreated
+				privateEndpointConns = da.Properties.PrivateEndpointConnections
+			}
+
+			mqlDa, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionComputeServiceDiskAccess,
+				map[string]*llx.RawData{
+					"id":                llx.StringDataPtr(da.ID),
+					"name":              llx.StringDataPtr(da.Name),
+					"location":          llx.StringDataPtr(da.Location),
+					"tags":              llx.MapData(convert.PtrMapStrToInterface(da.Tags), types.String),
+					"type":              llx.StringDataPtr(da.Type),
+					"provisioningState": llx.StringData(provisioningState),
+					"timeCreated":       llx.TimeDataPtr(timeCreated),
+				})
+			if err != nil {
+				return nil, err
+			}
+
+			// Cache private endpoint connections for lazy loading
+			mqlDaTyped := mqlDa.(*mqlAzureSubscriptionComputeServiceDiskAccess)
+			mqlDaTyped.cachePrivateEndpointConnections = privateEndpointConns
+
+			res = append(res, mqlDa)
+		}
+	}
+
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionComputeServiceDiskAccess) privateEndpointConnections() ([]any, error) {
+	var res []any
+	if a.cachePrivateEndpointConnections == nil {
+		return res, nil
+	}
+
+	for _, entry := range a.cachePrivateEndpointConnections {
+		if entry == nil {
+			continue
+		}
+
+		// Extract name and type from ID
+		var name, resType string
+		if entry.ID != nil {
+			connResourceID, err := ParseResourceID(*entry.ID)
+			if err == nil {
+				if nameComp, err := connResourceID.Component("privateEndpointConnections"); err == nil {
+					name = nameComp
+				}
+				if connResourceID.Provider != "" {
+					resType = connResourceID.Provider + "/diskAccesses/privateEndpointConnections"
+				}
+			}
+			if name == "" {
+				parts := strings.Split(*entry.ID, "/")
+				if len(parts) > 0 {
+					name = parts[len(parts)-1]
+				}
+			}
+		}
+		if resType == "" {
+			resType = "Microsoft.Compute/diskAccesses/privateEndpointConnections"
+		}
+
+		privateEndpoint := map[string]*llx.RawData{
+			"__id": llx.StringDataPtr(entry.ID),
+			"id":   llx.StringDataPtr(entry.ID),
+		}
+		if name != "" {
+			privateEndpoint["name"] = llx.StringData(name)
+		}
+		privateEndpoint["type"] = llx.StringData(resType)
+
+		if entry.Properties != nil {
+			props := entry.Properties
+			propsMap, err := convert.JsonToDict(props)
+			if err != nil {
+				return nil, err
+			}
+
+			privateEndpoint["properties"] = llx.DictData(propsMap)
+
+			if props.PrivateEndpoint != nil {
+				privateEndpoint["privateEndpointId"] = llx.StringDataPtr(props.PrivateEndpoint.ID)
+			}
+			if props.PrivateLinkServiceConnectionState != nil {
+				stateArgs := map[string]*llx.RawData{}
+				if props.PrivateLinkServiceConnectionState.ActionsRequired != nil {
+					stateArgs["actionsRequired"] = llx.StringDataPtr(props.PrivateLinkServiceConnectionState.ActionsRequired)
+				}
+				if props.PrivateLinkServiceConnectionState.Description != nil {
+					stateArgs["description"] = llx.StringDataPtr(props.PrivateLinkServiceConnectionState.Description)
+				}
+				if props.PrivateLinkServiceConnectionState.Status != nil {
+					stateArgs["status"] = llx.StringData(string(*props.PrivateLinkServiceConnectionState.Status))
+				}
+				stateRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState, stateArgs)
+				if err != nil {
+					return nil, err
+				}
+				privateEndpoint["privateLinkServiceConnectionState"] = llx.ResourceData(stateRes, ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState)
+			}
+			if props.ProvisioningState != nil {
+				privateEndpoint["provisioningState"] = llx.StringData(string(*props.ProvisioningState))
+			}
+		}
+
+		mqlRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnection, privateEndpoint)
+		if err != nil {
+			return nil, err
+		}
+
+		res = append(res, mqlRes)
+	}
+
+	return res, nil
 }

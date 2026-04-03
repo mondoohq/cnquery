@@ -146,6 +146,10 @@ private azure.subscription.computeService {
   vms() []azure.subscription.computeService.vm
   // All the disks under a subscription
   disks() []azure.subscription.computeService.disk
+  // All disk encryption sets under a subscription
+  diskEncryptionSets() []azure.subscription.computeService.diskEncryptionSet
+  // All disk access resources under a subscription
+  diskAccesses() []azure.subscription.computeService.diskAccess
 }
 
 // Azure Compute virtual machine
@@ -264,6 +268,54 @@ azure.subscription.computeService.disk @defaults("name location properties.osTyp
   supportsHibernation bool
   // ARM ID of the DiskAccess resource for private endpoint access
   diskAccessId string
+}
+
+// Azure disk encryption set
+azure.subscription.computeService.diskEncryptionSet @defaults("name location encryptionType") {
+  // Disk encryption set ID
+  id string
+  // Disk encryption set name
+  name string
+  // Disk encryption set location
+  location string
+  // Disk encryption set tags
+  tags map[string]string
+  // Disk encryption set type
+  type string
+  // Encryption type (EncryptionAtRestWithCustomerKey, EncryptionAtRestWithPlatformAndCustomerKeys, ConfidentialVmEncryptedWithCustomerKey)
+  encryptionType string
+  // Active key vault key URL
+  activeKeyUrl string
+  // Active key source vault ID
+  activeKeySourceVaultId string
+  // Whether auto key rotation to latest key version is enabled
+  rotationToLatestKeyVersionEnabled bool
+  // Last key rotation timestamp
+  lastKeyRotationTimestamp time
+  // Provisioning state
+  provisioningState string
+  // Identity configuration
+  identity dict
+}
+
+// Azure disk access resource (private endpoint for managed disks)
+azure.subscription.computeService.diskAccess @defaults("name location") {
+  // Disk access ID
+  id string
+  // Disk access name
+  name string
+  // Disk access location
+  location string
+  // Disk access tags
+  tags map[string]string
+  // Disk access type
+  type string
+  // Provisioning state
+  provisioningState string
+  // When the disk access was created
+  timeCreated time
+  // Private endpoint connections
+  privateEndpointConnections() []azure.subscription.privateEndpointConnection
 }
 
 // Azure Batch
@@ -426,6 +478,10 @@ private azure.subscription.networkService {
   privateEndpoints() []azure.subscription.networkService.privateEndpoint
   // List of route tables
   routeTables() []azure.subscription.networkService.routeTable
+  // List of DDoS protection plans
+  ddosProtectionPlans() []azure.subscription.networkService.ddosProtectionPlan
+  // List of service endpoint policies
+  serviceEndpointPolicies() []azure.subscription.networkService.serviceEndpointPolicy
 }
 
 // Azure Virtual Network (VNet) gateway
@@ -618,6 +674,104 @@ azure.subscription.networkService.firewallPolicy @defaults("id name location") {
   childPolicies() []azure.subscription.networkService.firewallPolicy
   // List of firewalls the policy is associated with
   firewalls() []azure.subscription.networkService.firewall
+  // Intrusion detection mode (Off, Alert, Deny)
+  intrusionDetectionMode() string
+  // Intrusion detection profile (Basic, Standard, Advanced)
+  intrusionDetectionProfile() string
+  // IDPS signature overrides (signatures with non-default modes)
+  intrusionDetectionSignatureOverrides() []dict
+  // IDPS bypass traffic rules
+  intrusionDetectionBypassRules() []azure.subscription.networkService.firewallPolicy.idpsBypassRule
+}
+
+// Azure Firewall Policy IDPS bypass traffic rule
+private azure.subscription.networkService.firewallPolicy.idpsBypassRule @defaults("name protocol") {
+  // Unique ID (firewallPolicyId + rule name)
+  id string
+  // Rule name
+  name string
+  // Description of the bypass rule
+  description string
+  // Protocol (TCP, UDP, ICMP, ANY)
+  protocol string
+  // Source IP addresses or ranges
+  sourceAddresses []string
+  // Source IP groups
+  sourceIpGroups []string
+  // Destination IP addresses or ranges
+  destinationAddresses []string
+  // Destination IP groups
+  destinationIpGroups []string
+  // Destination ports or ranges
+  destinationPorts []string
+}
+
+// Azure DDoS protection plan
+azure.subscription.networkService.ddosProtectionPlan @defaults("name location") {
+  // DDoS protection plan ID
+  id string
+  // DDoS protection plan name
+  name string
+  // DDoS protection plan location
+  location string
+  // DDoS protection plan tags
+  tags map[string]string
+  // DDoS protection plan type
+  type string
+  // DDoS protection plan etag
+  etag string
+  // Provisioning state
+  provisioningState string
+  // Associated virtual networks protected by this plan
+  virtualNetworks() []azure.subscription.networkService.virtualNetwork
+  // Associated public IP addresses
+  publicIpAddresses() []azure.subscription.networkService.ipAddress
+}
+
+// Azure service endpoint policy
+azure.subscription.networkService.serviceEndpointPolicy @defaults("name location") {
+  // Service endpoint policy ID
+  id string
+  // Service endpoint policy name
+  name string
+  // Service endpoint policy location
+  location string
+  // Service endpoint policy tags
+  tags map[string]string
+  // Service endpoint policy type
+  type string
+  // Service endpoint policy etag
+  etag string
+  // Service endpoint policy kind
+  kind string
+  // Provisioning state
+  provisioningState string
+  // Service alias the policy applies to
+  serviceAlias string
+  // Policy definitions restricting which resources are accessible
+  definitions []azure.subscription.networkService.serviceEndpointPolicy.definition
+  // Subnets associated with the policy
+  subnets() []azure.subscription.networkService.subnet
+}
+
+// Azure service endpoint policy definition
+private azure.subscription.networkService.serviceEndpointPolicy.definition @defaults("name service") {
+  // Service endpoint policy definition ID
+  id string
+  // Service endpoint policy definition name
+  name string
+  // Service endpoint policy definition type
+  type string
+  // Service endpoint policy definition etag
+  etag string
+  // Description (max 140 chars)
+  description string
+  // Service endpoint name (e.g. "Microsoft.Storage")
+  service string
+  // List of service resources allowed by this definition
+  serviceResources []string
+  // Provisioning state
+  provisioningState string
 }
 
 // Azure Virtual Network (VNet) gateway IP configuration
@@ -1356,6 +1510,10 @@ private azure.subscription.storageService.account @defaults("id name location") 
   dataProtection() azure.subscription.storageService.account.dataProtection
   // Storage account file properties
   fileProperties() azure.subscription.storageService.account.filePropertiesConfig
+  // Storage account encryption scopes
+  encryptionScopes() []azure.subscription.storageService.account.encryptionScope
+  // Storage account lifecycle management policy
+  managementPolicy() azure.subscription.storageService.account.managementPolicy
 }
 
 // Azure Storage account data protection
@@ -1404,6 +1562,68 @@ private azure.subscription.storageService.account.fileProperties.protocolSetting
   authenticationMethods string
   // Supported Kerberos ticket encryption methods (e.g., "RC4-HMAC;AES-256")
   kerberosTicketEncryption string
+}
+
+// Azure Storage encryption scope
+private azure.subscription.storageService.account.encryptionScope @defaults("name source state") {
+  // Encryption scope ID
+  id string
+  // Encryption scope name
+  name string
+  // Encryption scope type
+  type string
+  // Encryption source ("Microsoft.Storage" or "Microsoft.KeyVault")
+  source string
+  // State of the encryption scope (Enabled or Disabled)
+  state string
+  // Whether infrastructure encryption is required
+  requireInfrastructureEncryption bool
+  // Key Vault key URI (if source is Microsoft.KeyVault)
+  keyVaultKeyUri string
+  // Current versioned key identifier
+  currentVersionedKeyIdentifier string
+  // When the key was last rotated
+  lastKeyRotationTimestamp time
+  // When the encryption scope was created
+  creationTime time
+  // When the encryption scope was last modified
+  lastModifiedTime time
+}
+
+// Azure Storage lifecycle management policy
+private azure.subscription.storageService.account.managementPolicy @defaults("id") {
+  // Management policy ID
+  id string
+  // Management policy name
+  name string
+  // Management policy type
+  type string
+  // When the policy was last modified
+  lastModifiedTime time
+  // Lifecycle management rules
+  rules []azure.subscription.storageService.account.managementPolicy.rule
+}
+
+// Azure Storage lifecycle management policy rule
+private azure.subscription.storageService.account.managementPolicy.rule @defaults("name enabled") {
+  // Unique ID (policyId + rule name)
+  id string
+  // Rule name (case-sensitive, unique within policy)
+  name string
+  // Rule type (always "Lifecycle")
+  type string
+  // Whether the rule is enabled
+  enabled bool
+  // Blob types the rule applies to (blockBlob, appendBlob)
+  filterBlobTypes []string
+  // Prefix patterns for matching
+  filterPrefixMatch []string
+  // Base blob actions (tiering and deletion thresholds)
+  baseBlobActions dict
+  // Snapshot actions
+  snapshotActions dict
+  // Version actions
+  versionActions dict
 }
 
 // Azure Storage account service properties
@@ -2487,6 +2707,48 @@ private azure.subscription.keyVaultService {
   subscriptionId string
   // List of Azure key vaults
   vaults() []azure.subscription.keyVaultService.vault
+  // List of Azure Managed HSM pools
+  managedHsms() []azure.subscription.keyVaultService.managedHsm
+}
+
+// Azure Managed HSM pool
+azure.subscription.keyVaultService.managedHsm @defaults("name location") {
+  // Managed HSM ID
+  id string
+  // Managed HSM name
+  name string
+  // Managed HSM location
+  location string
+  // Managed HSM tags
+  tags map[string]string
+  // Managed HSM type
+  type string
+  // SKU name (Standard_B1, Custom_B32, Custom_B6)
+  skuName string
+  // HSM URI
+  hsmUri string
+  // Tenant ID
+  tenantId string
+  // Initial admin object IDs
+  initialAdminObjectIds []string
+  // Whether soft delete is enabled
+  enableSoftDelete bool
+  // Whether purge protection is enabled
+  enablePurgeProtection bool
+  // Soft delete retention in days (7-90)
+  softDeleteRetentionInDays int
+  // Public network access setting
+  publicNetworkAccess string
+  // Network ACLs
+  networkAcls dict
+  // Provisioning state
+  provisioningState string
+  // Scheduled purge date (if soft-deleted)
+  scheduledPurgeDate time
+  // Geo-replicated regions
+  regions []dict
+  // Private endpoint connections
+  privateEndpointConnections() []azure.subscription.privateEndpointConnection
 }
 
 // Azure Key Vault vault
@@ -2901,6 +3163,92 @@ private azure.subscription.cloudDefenderService @defaults("defenderForServers.en
   settingsWDATP() azure.subscription.cloudDefenderService.settings
   // Settings for Sentinel
   settingsSentinel() azure.subscription.cloudDefenderService.settings
+  // Secure scores for the subscription
+  secureScores() []azure.subscription.cloudDefenderService.secureScore
+  // Secure score controls with details
+  secureScoreControls() []azure.subscription.cloudDefenderService.secureScoreControl
+  // Regulatory compliance standards
+  regulatoryComplianceStandards() []azure.subscription.cloudDefenderService.regulatoryComplianceStandard
+}
+
+// Microsoft Defender secure score
+private azure.subscription.cloudDefenderService.secureScore @defaults("displayName currentScore maxScore percentage") {
+  // Secure score ID
+  id string
+  // Secure score name
+  name string
+  // Display name of the secure score
+  displayName string
+  // Current score
+  currentScore float
+  // Maximum possible score
+  maxScore int
+  // Score as a percentage (0.0-1.0)
+  percentage float
+  // Weight of the score
+  weight int
+}
+
+// Microsoft Defender secure score control
+private azure.subscription.cloudDefenderService.secureScoreControl @defaults("displayName currentScore maxScore") {
+  // Secure score control ID
+  id string
+  // Secure score control name
+  name string
+  // Control display name
+  displayName string
+  // Control description
+  description string
+  // Current score for this control
+  currentScore float
+  // Maximum possible score for this control
+  maxScore int
+  // Score as a percentage (0.0-1.0)
+  percentage float
+  // Weight of the control
+  weight int
+  // Number of healthy resources
+  healthyResourceCount int
+  // Number of unhealthy resources
+  unhealthyResourceCount int
+  // Number of not-applicable resources
+  notApplicableResourceCount int
+}
+
+// Microsoft Defender regulatory compliance standard
+private azure.subscription.cloudDefenderService.regulatoryComplianceStandard @defaults("name state passedControls failedControls") {
+  // Regulatory compliance standard ID
+  id string
+  // Standard name (e.g. "CIS Microsoft Azure Foundations Benchmark 1.4.0")
+  name string
+  // Aggregative state (Passed, Failed, Skipped, Unsupported)
+  state string
+  // Number of passed controls
+  passedControls int
+  // Number of failed controls
+  failedControls int
+  // Number of skipped controls
+  skippedControls int
+  // Controls within this standard
+  controls() []azure.subscription.cloudDefenderService.regulatoryComplianceControl
+}
+
+// Microsoft Defender regulatory compliance control
+private azure.subscription.cloudDefenderService.regulatoryComplianceControl @defaults("name state passedAssessments failedAssessments") {
+  // Regulatory compliance control ID
+  id string
+  // Control name/ID
+  name string
+  // Control description
+  description string
+  // Aggregative state (Passed, Failed, Skipped, Unsupported)
+  state string
+  // Number of passed assessments
+  passedAssessments int
+  // Number of failed assessments
+  failedAssessments int
+  // Number of skipped assessments
+  skippedAssessments int
 }
 
 // Microsoft Defender for Cloud security settings

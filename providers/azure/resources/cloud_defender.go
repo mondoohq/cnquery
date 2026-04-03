@@ -942,3 +942,310 @@ func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers) extensio
 func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension) id() (string, error) {
 	return a.__id, nil
 }
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceSecureScore) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceSecureScoreControl) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderService) secureScores() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	clientFactory, err := armsecurity.NewClientFactory(subId, token, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	pager := clientFactory.NewSecureScoresClient().NewListPager(nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, item := range page.Value {
+			var displayName string
+			var currentScore float64
+			var maxScore int64
+			var percentage float64
+			var weight int64
+
+			if item.Properties != nil {
+				if item.Properties.DisplayName != nil {
+					displayName = *item.Properties.DisplayName
+				}
+				if item.Properties.Score != nil {
+					if item.Properties.Score.Current != nil {
+						currentScore = *item.Properties.Score.Current
+					}
+					if item.Properties.Score.Max != nil {
+						maxScore = int64(*item.Properties.Score.Max)
+					}
+					if item.Properties.Score.Percentage != nil {
+						percentage = *item.Properties.Score.Percentage
+					}
+				}
+				if item.Properties.Weight != nil {
+					weight = *item.Properties.Weight
+				}
+			}
+
+			mqlResource, err := CreateResource(a.MqlRuntime,
+				ResourceAzureSubscriptionCloudDefenderServiceSecureScore,
+				map[string]*llx.RawData{
+					"__id":         llx.StringDataPtr(item.ID),
+					"id":           llx.StringDataPtr(item.ID),
+					"name":         llx.StringDataPtr(item.Name),
+					"displayName":  llx.StringData(displayName),
+					"currentScore": llx.FloatData(currentScore),
+					"maxScore":     llx.IntData(maxScore),
+					"percentage":   llx.FloatData(percentage),
+					"weight":       llx.IntData(weight),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlResource)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderService) secureScoreControls() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	clientFactory, err := armsecurity.NewClientFactory(subId, token, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	pager := clientFactory.NewSecureScoreControlsClient().NewListPager(nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, item := range page.Value {
+			var displayName string
+			var description string
+			var currentScore float64
+			var maxScore int64
+			var percentage float64
+			var weight int64
+			var healthyResourceCount int64
+			var unhealthyResourceCount int64
+			var notApplicableResourceCount int64
+
+			if item.Properties != nil {
+				if item.Properties.DisplayName != nil {
+					displayName = *item.Properties.DisplayName
+				}
+				if item.Properties.Score != nil {
+					if item.Properties.Score.Current != nil {
+						currentScore = *item.Properties.Score.Current
+					}
+					if item.Properties.Score.Max != nil {
+						maxScore = int64(*item.Properties.Score.Max)
+					}
+					if item.Properties.Score.Percentage != nil {
+						percentage = *item.Properties.Score.Percentage
+					}
+				}
+				if item.Properties.Weight != nil {
+					weight = int64(*item.Properties.Weight)
+				}
+				if item.Properties.HealthyResourceCount != nil {
+					healthyResourceCount = int64(*item.Properties.HealthyResourceCount)
+				}
+				if item.Properties.UnhealthyResourceCount != nil {
+					unhealthyResourceCount = int64(*item.Properties.UnhealthyResourceCount)
+				}
+				if item.Properties.NotApplicableResourceCount != nil {
+					notApplicableResourceCount = int64(*item.Properties.NotApplicableResourceCount)
+				}
+				if item.Properties.Definition != nil && item.Properties.Definition.Properties != nil && item.Properties.Definition.Properties.Description != nil {
+					description = *item.Properties.Definition.Properties.Description
+				}
+			}
+
+			mqlResource, err := CreateResource(a.MqlRuntime,
+				ResourceAzureSubscriptionCloudDefenderServiceSecureScoreControl,
+				map[string]*llx.RawData{
+					"__id":                       llx.StringDataPtr(item.ID),
+					"id":                         llx.StringDataPtr(item.ID),
+					"name":                       llx.StringDataPtr(item.Name),
+					"displayName":                llx.StringData(displayName),
+					"description":                llx.StringData(description),
+					"currentScore":               llx.FloatData(currentScore),
+					"maxScore":                   llx.IntData(maxScore),
+					"percentage":                 llx.FloatData(percentage),
+					"weight":                     llx.IntData(weight),
+					"healthyResourceCount":       llx.IntData(healthyResourceCount),
+					"unhealthyResourceCount":     llx.IntData(unhealthyResourceCount),
+					"notApplicableResourceCount": llx.IntData(notApplicableResourceCount),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlResource)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderService) regulatoryComplianceStandards() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	clientFactory, err := armsecurity.NewClientFactory(subId, token, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	pager := clientFactory.NewRegulatoryComplianceStandardsClient().NewListPager(nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, item := range page.Value {
+			var state string
+			var passedControls int64
+			var failedControls int64
+			var skippedControls int64
+
+			if item.Properties != nil {
+				if item.Properties.State != nil {
+					state = string(*item.Properties.State)
+				}
+				if item.Properties.PassedControls != nil {
+					passedControls = int64(*item.Properties.PassedControls)
+				}
+				if item.Properties.FailedControls != nil {
+					failedControls = int64(*item.Properties.FailedControls)
+				}
+				if item.Properties.SkippedControls != nil {
+					skippedControls = int64(*item.Properties.SkippedControls)
+				}
+			}
+
+			mqlResource, err := CreateResource(a.MqlRuntime,
+				ResourceAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard,
+				map[string]*llx.RawData{
+					"__id":            llx.StringDataPtr(item.ID),
+					"id":              llx.StringDataPtr(item.ID),
+					"name":            llx.StringDataPtr(item.Name),
+					"state":           llx.StringData(state),
+					"passedControls":  llx.IntData(passedControls),
+					"failedControls":  llx.IntData(failedControls),
+					"skippedControls": llx.IntData(skippedControls),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlResource)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard) controls() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+
+	// Extract subscription ID from the standard's ID path
+	// Format: /subscriptions/{subId}/providers/Microsoft.Security/regulatoryComplianceStandards/{standardName}
+	standardId := a.Id.Data
+	parts := strings.Split(standardId, "/")
+	var subId string
+	for i, p := range parts {
+		if strings.EqualFold(p, "subscriptions") && i+1 < len(parts) {
+			subId = parts[i+1]
+			break
+		}
+	}
+	if subId == "" {
+		subId = conn.SubId()
+	}
+
+	standardName := a.Name.Data
+
+	clientFactory, err := armsecurity.NewClientFactory(subId, token, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	pager := clientFactory.NewRegulatoryComplianceControlsClient().NewListPager(standardName, nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, item := range page.Value {
+			var state string
+			var description string
+			var passedAssessments int64
+			var failedAssessments int64
+			var skippedAssessments int64
+
+			if item.Properties != nil {
+				if item.Properties.State != nil {
+					state = string(*item.Properties.State)
+				}
+				if item.Properties.Description != nil {
+					description = *item.Properties.Description
+				}
+				if item.Properties.PassedAssessments != nil {
+					passedAssessments = int64(*item.Properties.PassedAssessments)
+				}
+				if item.Properties.FailedAssessments != nil {
+					failedAssessments = int64(*item.Properties.FailedAssessments)
+				}
+				if item.Properties.SkippedAssessments != nil {
+					skippedAssessments = int64(*item.Properties.SkippedAssessments)
+				}
+			}
+
+			mqlResource, err := CreateResource(a.MqlRuntime,
+				ResourceAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl,
+				map[string]*llx.RawData{
+					"__id":               llx.StringDataPtr(item.ID),
+					"id":                 llx.StringDataPtr(item.ID),
+					"name":               llx.StringDataPtr(item.Name),
+					"description":        llx.StringData(description),
+					"state":              llx.StringData(state),
+					"passedAssessments":  llx.IntData(passedAssessments),
+					"failedAssessments":  llx.IntData(failedAssessments),
+					"skippedAssessments": llx.IntData(skippedAssessments),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlResource)
+		}
+	}
+	return res, nil
+}

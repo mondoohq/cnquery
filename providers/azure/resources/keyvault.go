@@ -1473,3 +1473,206 @@ func initAzureSubscriptionKeyVaultServiceVault(runtime *plugin.Runtime, args map
 func (a *mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject) id() (string, error) {
 	return a.__id, nil
 }
+
+func (a *mqlAzureSubscriptionKeyVaultServiceManagedHsm) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+type mqlAzureSubscriptionKeyVaultServiceManagedHsmInternal struct {
+	cachePrivateEndpointConnections []*keyvault.MHSMPrivateEndpointConnectionItem
+}
+
+func (a *mqlAzureSubscriptionKeyVaultService) managedHsms() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	client, err := keyvault.NewManagedHsmsClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListBySubscriptionPager(nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not list managed HSMs due to access denied")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, hsm := range page.Value {
+			if hsm == nil {
+				continue
+			}
+
+			var skuName string
+			if hsm.SKU != nil && hsm.SKU.Name != nil {
+				skuName = string(*hsm.SKU.Name)
+			}
+
+			var hsmUri, provisioningState, tenantIdStr string
+			var enableSoftDelete, enablePurgeProtection *bool
+			var softDeleteRetentionInDays *int32
+			var publicNetworkAccess string
+			var initialAdminObjectIds []any
+			var networkAcls map[string]any
+			var privateEndpointConns []*keyvault.MHSMPrivateEndpointConnectionItem
+
+			if hsm.Properties != nil {
+				props := hsm.Properties
+				if props.HsmURI != nil {
+					hsmUri = *props.HsmURI
+				}
+				if props.ProvisioningState != nil {
+					provisioningState = string(*props.ProvisioningState)
+				}
+				enableSoftDelete = props.EnableSoftDelete
+				enablePurgeProtection = props.EnablePurgeProtection
+				softDeleteRetentionInDays = props.SoftDeleteRetentionInDays
+				if props.PublicNetworkAccess != nil {
+					publicNetworkAccess = string(*props.PublicNetworkAccess)
+				}
+				if props.TenantID != nil {
+					tenantIdStr = *props.TenantID
+				}
+				for _, adminId := range props.InitialAdminObjectIDs {
+					if adminId != nil {
+						initialAdminObjectIds = append(initialAdminObjectIds, *adminId)
+					}
+				}
+				if props.NetworkACLs != nil {
+					networkAcls, err = convert.JsonToDict(props.NetworkACLs)
+					if err != nil {
+						return nil, err
+					}
+				}
+				privateEndpointConns = props.PrivateEndpointConnections
+			}
+
+			mqlHsm, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionKeyVaultServiceManagedHsm,
+				map[string]*llx.RawData{
+					"id":                        llx.StringDataPtr(hsm.ID),
+					"name":                      llx.StringDataPtr(hsm.Name),
+					"location":                  llx.StringDataPtr(hsm.Location),
+					"tags":                      llx.MapData(convert.PtrMapStrToInterface(hsm.Tags), types.String),
+					"type":                      llx.StringDataPtr(hsm.Type),
+					"skuName":                   llx.StringData(skuName),
+					"hsmUri":                    llx.StringData(hsmUri),
+					"tenantId":                  llx.StringData(tenantIdStr),
+					"initialAdminObjectIds":     llx.ArrayData(initialAdminObjectIds, types.String),
+					"enableSoftDelete":          llx.BoolDataPtr(enableSoftDelete),
+					"enablePurgeProtection":     llx.BoolDataPtr(enablePurgeProtection),
+					"softDeleteRetentionInDays": llx.IntDataPtr(softDeleteRetentionInDays),
+					"publicNetworkAccess":       llx.StringData(publicNetworkAccess),
+					"provisioningState":         llx.StringData(provisioningState),
+					"networkAcls":               llx.DictData(networkAcls),
+				})
+			if err != nil {
+				return nil, err
+			}
+
+			// Cache private endpoint connections for lazy loading
+			mqlHsmTyped := mqlHsm.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm)
+			mqlHsmTyped.cachePrivateEndpointConnections = privateEndpointConns
+
+			res = append(res, mqlHsm)
+		}
+	}
+
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionKeyVaultServiceManagedHsm) privateEndpointConnections() ([]any, error) {
+	var res []any
+	if a.cachePrivateEndpointConnections == nil {
+		return res, nil
+	}
+
+	for _, entry := range a.cachePrivateEndpointConnections {
+		if entry == nil {
+			continue
+		}
+
+		// Extract name and type from ID
+		var name, resType string
+		if entry.ID != nil {
+			connResourceID, err := ParseResourceID(*entry.ID)
+			if err == nil {
+				if nameComp, err := connResourceID.Component("privateEndpointConnections"); err == nil {
+					name = nameComp
+				}
+				if connResourceID.Provider != "" {
+					resType = connResourceID.Provider + "/managedHSMs/privateEndpointConnections"
+				}
+			}
+			if name == "" {
+				parts := strings.Split(*entry.ID, "/")
+				if len(parts) > 0 {
+					name = parts[len(parts)-1]
+				}
+			}
+		}
+		if resType == "" {
+			resType = "Microsoft.KeyVault/managedHSMs/privateEndpointConnections"
+		}
+
+		privateEndpoint := map[string]*llx.RawData{
+			"__id": llx.StringDataPtr(entry.ID),
+			"id":   llx.StringDataPtr(entry.ID),
+		}
+		if name != "" {
+			privateEndpoint["name"] = llx.StringData(name)
+		}
+		privateEndpoint["type"] = llx.StringData(resType)
+
+		if entry.Properties != nil {
+			props := entry.Properties
+			propsMap, err := convert.JsonToDict(props)
+			if err != nil {
+				return nil, err
+			}
+
+			privateEndpoint["properties"] = llx.DictData(propsMap)
+
+			if props.PrivateEndpoint != nil {
+				privateEndpoint["privateEndpointId"] = llx.StringDataPtr(props.PrivateEndpoint.ID)
+			}
+			if props.PrivateLinkServiceConnectionState != nil {
+				stateArgs := map[string]*llx.RawData{}
+				if props.PrivateLinkServiceConnectionState.ActionsRequired != nil {
+					stateArgs["actionsRequired"] = llx.StringData(string(*props.PrivateLinkServiceConnectionState.ActionsRequired))
+				}
+				if props.PrivateLinkServiceConnectionState.Description != nil {
+					stateArgs["description"] = llx.StringDataPtr(props.PrivateLinkServiceConnectionState.Description)
+				}
+				if props.PrivateLinkServiceConnectionState.Status != nil {
+					stateArgs["status"] = llx.StringData(string(*props.PrivateLinkServiceConnectionState.Status))
+				}
+				stateRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState, stateArgs)
+				if err != nil {
+					return nil, err
+				}
+				privateEndpoint["privateLinkServiceConnectionState"] = llx.ResourceData(stateRes, ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState)
+			}
+			if props.ProvisioningState != nil {
+				privateEndpoint["provisioningState"] = llx.StringData(string(*props.ProvisioningState))
+			}
+		}
+
+		mqlRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnection, privateEndpoint)
+		if err != nil {
+			return nil, err
+		}
+
+		res = append(res, mqlRes)
+	}
+
+	return res, nil
+}

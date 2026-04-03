@@ -1,7 +1,7 @@
 {
   "provider": "azure",
-  "version": "13.3.1",
-  "generated_at": "2026-04-02T10:52:46+03:00",
+  "version": "13.3.2",
+  "generated_at": "2026-04-03T13:14:20-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Authorization/roleAssignments/read",
@@ -10,6 +10,8 @@
     "Microsoft.Batch/pool/read",
     "Microsoft.Cache/firewallRules/read",
     "Microsoft.Cache/patchSchedules/read",
+    "Microsoft.Compute/diskAccesses/read",
+    "Microsoft.Compute/diskEncryptionSets/read",
     "Microsoft.Compute/disks/read",
     "Microsoft.Compute/virtualMachines/read",
     "Microsoft.ContainerService/managedClusters/read",
@@ -29,12 +31,14 @@
     "Microsoft.Insights/components/read",
     "Microsoft.Insights/diagnosticSettings/read",
     "Microsoft.Insights/logProfiles/read",
+    "Microsoft.KeyVault/managedHsms/read",
     "Microsoft.KeyVault/vaults/read",
     "Microsoft.ManagedIdentity/userAssignedIdentities/read",
     "Microsoft.Network/applicationGateways/read",
     "Microsoft.Network/applicationSecurityGroups/read",
     "Microsoft.Network/azureFirewalls/read",
     "Microsoft.Network/bastionHosts/read",
+    "Microsoft.Network/ddosProtectionPlans/read",
     "Microsoft.Network/firewallPolicies/read",
     "Microsoft.Network/flowLogs/read",
     "Microsoft.Network/interfaces/read",
@@ -44,6 +48,7 @@
     "Microsoft.Network/publicIPAddresses/read",
     "Microsoft.Network/routeTables/read",
     "Microsoft.Network/securityGroups/read",
+    "Microsoft.Network/serviceEndpointPolicies/read",
     "Microsoft.Network/subnets/read",
     "Microsoft.Network/virtualNetworkGatewayConnections/read",
     "Microsoft.Network/virtualNetworkGateways/read",
@@ -76,6 +81,8 @@
     "Microsoft.Sql/virtualNetworkRules/read",
     "Microsoft.Storage/accounts/read",
     "Microsoft.Storage/blobContainers/read",
+    "Microsoft.Storage/encryptionScopes/read",
+    "Microsoft.Storage/managementPolicies/read",
     "Microsoft.Synapse/workspaces/read",
     "Microsoft.Web/certificates/read",
     "Microsoft.Web/environments/read",
@@ -126,9 +133,21 @@
       "source_file": "redis.go"
     },
     {
+      "permission": "Microsoft.Compute/diskAccesses/read",
+      "service": "Microsoft.Compute",
+      "action": "NewListPager",
+      "source_file": "compute.go"
+    },
+    {
+      "permission": "Microsoft.Compute/diskEncryptionSets/read",
+      "service": "Microsoft.Compute",
+      "action": "NewListPager",
+      "source_file": "compute.go"
+    },
+    {
       "permission": "Microsoft.Compute/disks/read",
       "service": "Microsoft.Compute",
-      "action": "Get",
+      "action": "NewListPager",
       "source_file": "compute.go"
     },
     {
@@ -240,6 +259,12 @@
       "source_file": "monitor.go"
     },
     {
+      "permission": "Microsoft.KeyVault/managedHsms/read",
+      "service": "Microsoft.KeyVault",
+      "action": "NewListBySubscriptionPager",
+      "source_file": "keyvault.go"
+    },
+    {
       "permission": "Microsoft.KeyVault/vaults/read",
       "service": "Microsoft.KeyVault",
       "action": "Get",
@@ -254,7 +279,7 @@
     {
       "permission": "Microsoft.Network/applicationGateways/read",
       "service": "Microsoft.Network",
-      "action": "NewListAllPager",
+      "action": "Get",
       "source_file": "network.go"
     },
     {
@@ -271,6 +296,12 @@
     },
     {
       "permission": "Microsoft.Network/bastionHosts/read",
+      "service": "Microsoft.Network",
+      "action": "NewListPager",
+      "source_file": "network.go"
+    },
+    {
+      "permission": "Microsoft.Network/ddosProtectionPlans/read",
       "service": "Microsoft.Network",
       "action": "NewListPager",
       "source_file": "network.go"
@@ -339,6 +370,12 @@
       "permission": "Microsoft.Network/securityGroups/read",
       "service": "Microsoft.Network",
       "action": "NewListAllPager",
+      "source_file": "network.go"
+    },
+    {
+      "permission": "Microsoft.Network/serviceEndpointPolicies/read",
+      "service": "Microsoft.Network",
+      "action": "NewListPager",
       "source_file": "network.go"
     },
     {
@@ -543,6 +580,18 @@
       "permission": "Microsoft.Storage/blobContainers/read",
       "service": "Microsoft.Storage",
       "action": "NewListPager",
+      "source_file": "storage.go"
+    },
+    {
+      "permission": "Microsoft.Storage/encryptionScopes/read",
+      "service": "Microsoft.Storage",
+      "action": "NewListPager",
+      "source_file": "storage.go"
+    },
+    {
+      "permission": "Microsoft.Storage/managementPolicies/read",
+      "service": "Microsoft.Storage",
+      "action": "Get",
       "source_file": "storage.go"
     },
     {
