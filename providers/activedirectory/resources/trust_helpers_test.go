@@ -51,7 +51,10 @@ func TestTrustAttributeHelpers(t *testing.T) {
 		t.Fatal("did not expect SID filtering")
 	}
 	if trustUsesRC4(trustTypeUplevel, attrs) {
-		t.Fatal("did not expect RC4 for uplevel trust without explicit MIT flag")
+		t.Fatal("did not expect RC4 for uplevel trust with AES enabled")
+	}
+	if !trustUsesRC4(trustTypeUplevel, int64(trustAttrWithinForest)) {
+		t.Fatal("expected RC4 for uplevel trust without AES keys")
 	}
 	if !trustUsesRC4(trustTypeMIT, int64(trustAttrUsesRC4Encryption)) {
 		t.Fatal("expected RC4 for MIT trust")

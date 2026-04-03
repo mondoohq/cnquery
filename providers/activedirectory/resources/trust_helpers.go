@@ -71,6 +71,10 @@ func trustUsesRC4(trustType, trustAttrs int64) bool {
 	if trustType == trustTypeMIT {
 		return trustAttrs&trustAttrUsesRC4Encryption != 0
 	}
+	// Windows trusts default to RC4 unless AES keys are negotiated.
+	if trustType == trustTypeUplevel {
+		return trustAttrs&trustAttrUsesAESKeys == 0
+	}
 	return false
 }
 
