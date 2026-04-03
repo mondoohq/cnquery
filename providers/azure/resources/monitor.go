@@ -196,7 +196,9 @@ func (a *mqlAzureSubscriptionMonitorService) applicationInsights() ([]any, error
 			if err != nil {
 				return nil, err
 			}
-			res = append(res, mqlAppInsight)
+			mqlAI := mqlAppInsight.(*mqlAzureSubscriptionMonitorServiceApplicationInsight)
+			mqlAI.cacheWorkspaceResourceId = workspaceResourceId
+			res = append(res, mqlAI)
 		}
 	}
 	return res, nil

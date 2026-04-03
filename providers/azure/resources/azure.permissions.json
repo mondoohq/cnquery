@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.3.2",
-  "generated_at": "2026-04-03T14:37:36-07:00",
+  "generated_at": "2026-04-03T16:02:19-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Authorization/roleAssignments/read",
@@ -60,6 +60,13 @@
     "Microsoft.Network/virtualNetworks/read",
     "Microsoft.Network/watchers/read",
     "Microsoft.Network/webApplicationFirewallPolicies/read",
+    "Microsoft.Operationalinsights/dataExports/read",
+    "Microsoft.Operationalinsights/linkedServices/read",
+    "Microsoft.Operationalinsights/workspaces/read",
+    "Microsoft.Recoveryservices/backupPolicies/read",
+    "Microsoft.Recoveryservices/backupProtectedItems/read",
+    "Microsoft.Recoveryservices/backupResourceVaultConfigs/read",
+    "Microsoft.Recoveryservices/vaults/read",
     "Microsoft.Resources/resourceGroups/read",
     "Microsoft.Resources/resources/read",
     "Microsoft.Resources/subscriptions/read",
@@ -241,7 +248,7 @@
     {
       "permission": "Microsoft.DBforPostgreSQL/servers/read",
       "service": "Microsoft.DBforPostgreSQL",
-      "action": "NewListBySubscriptionPager",
+      "action": "NewListPager",
       "source_file": "postgresql.go"
     },
     {
@@ -319,7 +326,7 @@
     {
       "permission": "Microsoft.Network/azureFirewalls/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListAllPager",
       "source_file": "network.go"
     },
     {
@@ -367,7 +374,7 @@
     {
       "permission": "Microsoft.Network/natGateways/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListAllPager",
       "source_file": "network.go"
     },
     {
@@ -433,7 +440,7 @@
     {
       "permission": "Microsoft.Network/virtualNetworks/read",
       "service": "Microsoft.Network",
-      "action": "NewListAllPager",
+      "action": "Get",
       "source_file": "network.go"
     },
     {
@@ -445,8 +452,50 @@
     {
       "permission": "Microsoft.Network/webApplicationFirewallPolicies/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListAllPager",
       "source_file": "network.go"
+    },
+    {
+      "permission": "Microsoft.Operationalinsights/dataExports/read",
+      "service": "Microsoft.Operationalinsights",
+      "action": "NewListByWorkspacePager",
+      "source_file": "loganalytics.go"
+    },
+    {
+      "permission": "Microsoft.Operationalinsights/linkedServices/read",
+      "service": "Microsoft.Operationalinsights",
+      "action": "NewListByWorkspacePager",
+      "source_file": "loganalytics.go"
+    },
+    {
+      "permission": "Microsoft.Operationalinsights/workspaces/read",
+      "service": "Microsoft.Operationalinsights",
+      "action": "NewListPager",
+      "source_file": "loganalytics.go"
+    },
+    {
+      "permission": "Microsoft.Recoveryservices/backupPolicies/read",
+      "service": "Microsoft.Recoveryservices",
+      "action": "NewListPager",
+      "source_file": "recoveryservices.go"
+    },
+    {
+      "permission": "Microsoft.Recoveryservices/backupProtectedItems/read",
+      "service": "Microsoft.Recoveryservices",
+      "action": "NewListPager",
+      "source_file": "recoveryservices.go"
+    },
+    {
+      "permission": "Microsoft.Recoveryservices/backupResourceVaultConfigs/read",
+      "service": "Microsoft.Recoveryservices",
+      "action": "Get",
+      "source_file": "recoveryservices.go"
+    },
+    {
+      "permission": "Microsoft.Recoveryservices/vaults/read",
+      "service": "Microsoft.Recoveryservices",
+      "action": "NewListBySubscriptionIDPager",
+      "source_file": "recoveryservices.go"
     },
     {
       "permission": "Microsoft.Resources/resourceGroups/read",

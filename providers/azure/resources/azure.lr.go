@@ -209,6 +209,20 @@ const (
 	ResourceAzureSubscriptionContainerRegistryServiceRegistryReplication                         string = "azure.subscription.containerRegistryService.registry.replication"
 	ResourceAzureSubscriptionContainerRegistryServiceRegistryScopeMap                            string = "azure.subscription.containerRegistryService.registry.scopeMap"
 	ResourceAzureSubscriptionContainerRegistryServiceRegistryToken                               string = "azure.subscription.containerRegistryService.registry.token"
+	ResourceAzureSubscriptionMonitorServiceWorkspace                                             string = "azure.subscription.monitorService.workspace"
+	ResourceAzureSubscriptionMonitorServiceWorkspaceCapping                                      string = "azure.subscription.monitorService.workspace.capping"
+	ResourceAzureSubscriptionMonitorServiceWorkspaceFeatures                                     string = "azure.subscription.monitorService.workspace.features"
+	ResourceAzureSubscriptionMonitorServiceWorkspaceDataExport                                   string = "azure.subscription.monitorService.workspace.dataExport"
+	ResourceAzureSubscriptionMonitorServiceWorkspaceLinkedService                                string = "azure.subscription.monitorService.workspace.linkedService"
+	ResourceAzureSubscriptionRecoveryServicesService                                             string = "azure.subscription.recoveryServicesService"
+	ResourceAzureSubscriptionRecoveryServicesServiceVault                                        string = "azure.subscription.recoveryServicesService.vault"
+	ResourceAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings                        string = "azure.subscription.recoveryServicesService.vault.securitySettings"
+	ResourceAzureSubscriptionRecoveryServicesServiceVaultEncryption                              string = "azure.subscription.recoveryServicesService.vault.encryption"
+	ResourceAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings                      string = "azure.subscription.recoveryServicesService.vault.monitoringSettings"
+	ResourceAzureSubscriptionRecoveryServicesServiceVaultRedundancySettings                      string = "azure.subscription.recoveryServicesService.vault.redundancySettings"
+	ResourceAzureSubscriptionRecoveryServicesServiceVaultBackupConfig                            string = "azure.subscription.recoveryServicesService.vault.backupConfig"
+	ResourceAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy                            string = "azure.subscription.recoveryServicesService.vault.backupPolicy"
+	ResourceAzureSubscriptionRecoveryServicesServiceVaultProtectedItem                           string = "azure.subscription.recoveryServicesService.vault.protectedItem"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -987,6 +1001,62 @@ func init() {
 			// to override args, implement: initAzureSubscriptionContainerRegistryServiceRegistryToken(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionContainerRegistryServiceRegistryToken,
 		},
+		"azure.subscription.monitorService.workspace": {
+			Init:   initAzureSubscriptionMonitorServiceWorkspace,
+			Create: createAzureSubscriptionMonitorServiceWorkspace,
+		},
+		"azure.subscription.monitorService.workspace.capping": {
+			// to override args, implement: initAzureSubscriptionMonitorServiceWorkspaceCapping(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionMonitorServiceWorkspaceCapping,
+		},
+		"azure.subscription.monitorService.workspace.features": {
+			// to override args, implement: initAzureSubscriptionMonitorServiceWorkspaceFeatures(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionMonitorServiceWorkspaceFeatures,
+		},
+		"azure.subscription.monitorService.workspace.dataExport": {
+			// to override args, implement: initAzureSubscriptionMonitorServiceWorkspaceDataExport(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionMonitorServiceWorkspaceDataExport,
+		},
+		"azure.subscription.monitorService.workspace.linkedService": {
+			// to override args, implement: initAzureSubscriptionMonitorServiceWorkspaceLinkedService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionMonitorServiceWorkspaceLinkedService,
+		},
+		"azure.subscription.recoveryServicesService": {
+			Init:   initAzureSubscriptionRecoveryServicesService,
+			Create: createAzureSubscriptionRecoveryServicesService,
+		},
+		"azure.subscription.recoveryServicesService.vault": {
+			// to override args, implement: initAzureSubscriptionRecoveryServicesServiceVault(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionRecoveryServicesServiceVault,
+		},
+		"azure.subscription.recoveryServicesService.vault.securitySettings": {
+			// to override args, implement: initAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings,
+		},
+		"azure.subscription.recoveryServicesService.vault.encryption": {
+			// to override args, implement: initAzureSubscriptionRecoveryServicesServiceVaultEncryption(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionRecoveryServicesServiceVaultEncryption,
+		},
+		"azure.subscription.recoveryServicesService.vault.monitoringSettings": {
+			// to override args, implement: initAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings,
+		},
+		"azure.subscription.recoveryServicesService.vault.redundancySettings": {
+			// to override args, implement: initAzureSubscriptionRecoveryServicesServiceVaultRedundancySettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionRecoveryServicesServiceVaultRedundancySettings,
+		},
+		"azure.subscription.recoveryServicesService.vault.backupConfig": {
+			// to override args, implement: initAzureSubscriptionRecoveryServicesServiceVaultBackupConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionRecoveryServicesServiceVaultBackupConfig,
+		},
+		"azure.subscription.recoveryServicesService.vault.backupPolicy": {
+			// to override args, implement: initAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy,
+		},
+		"azure.subscription.recoveryServicesService.vault.protectedItem": {
+			// to override args, implement: initAzureSubscriptionRecoveryServicesServiceVaultProtectedItem(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionRecoveryServicesServiceVaultProtectedItem,
+		},
 	}
 }
 
@@ -1156,6 +1226,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.containerRegistry": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscription).GetContainerRegistry()).ToDataRes(types.Resource("azure.subscription.containerRegistryService"))
+	},
+	"azure.subscription.recoveryServices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscription).GetRecoveryServices()).ToDataRes(types.Resource("azure.subscription.recoveryServicesService"))
 	},
 	"azure.subscription.webService.function.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceFunction).GetId()).ToDataRes(types.String)
@@ -4793,6 +4866,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.monitorService.activityLog": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMonitorService).GetActivityLog()).ToDataRes(types.Resource("azure.subscription.monitorService.activityLog"))
 	},
+	"azure.subscription.monitorService.workspaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorService).GetWorkspaces()).ToDataRes(types.Array(types.Resource("azure.subscription.monitorService.workspace")))
+	},
 	"azure.subscription.monitorService.activityLog.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMonitorServiceActivityLog).GetSubscriptionId()).ToDataRes(types.String)
 	},
@@ -4834,6 +4910,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.monitorService.applicationInsight.workspaceResourceId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMonitorServiceApplicationInsight).GetWorkspaceResourceId()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.applicationInsight.workspace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceApplicationInsight).GetWorkspace()).ToDataRes(types.Resource("azure.subscription.monitorService.workspace"))
 	},
 	"azure.subscription.monitorService.activityLog.alert.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMonitorServiceActivityLogAlert).GetId()).ToDataRes(types.String)
@@ -6455,6 +6534,303 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.containerRegistryService.registry.token.certificates": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionContainerRegistryServiceRegistryToken).GetCertificates()).ToDataRes(types.Array(types.Dict))
 	},
+	"azure.subscription.monitorService.workspace.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspace).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.workspace.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspace).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.workspace.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspace).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.workspace.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspace).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.workspace.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspace).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.monitorService.workspace.skuName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspace).GetSkuName()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.workspace.skuCapacityReservationLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspace).GetSkuCapacityReservationLevel()).ToDataRes(types.Int)
+	},
+	"azure.subscription.monitorService.workspace.retentionInDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspace).GetRetentionInDays()).ToDataRes(types.Int)
+	},
+	"azure.subscription.monitorService.workspace.publicNetworkAccessForIngestion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspace).GetPublicNetworkAccessForIngestion()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.workspace.publicNetworkAccessForQuery": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspace).GetPublicNetworkAccessForQuery()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.workspace.forceCmkForQuery": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspace).GetForceCmkForQuery()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.monitorService.workspace.createdDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspace).GetCreatedDate()).ToDataRes(types.Time)
+	},
+	"azure.subscription.monitorService.workspace.modifiedDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspace).GetModifiedDate()).ToDataRes(types.Time)
+	},
+	"azure.subscription.monitorService.workspace.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspace).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.workspace.customerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspace).GetCustomerId()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.workspace.capping": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspace).GetCapping()).ToDataRes(types.Resource("azure.subscription.monitorService.workspace.capping"))
+	},
+	"azure.subscription.monitorService.workspace.features": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspace).GetFeatures()).ToDataRes(types.Resource("azure.subscription.monitorService.workspace.features"))
+	},
+	"azure.subscription.monitorService.workspace.dataExports": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspace).GetDataExports()).ToDataRes(types.Array(types.Resource("azure.subscription.monitorService.workspace.dataExport")))
+	},
+	"azure.subscription.monitorService.workspace.linkedServices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspace).GetLinkedServices()).ToDataRes(types.Array(types.Resource("azure.subscription.monitorService.workspace.linkedService")))
+	},
+	"azure.subscription.monitorService.workspace.privateLinkScopedResources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspace).GetPrivateLinkScopedResources()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.monitorService.workspace.capping.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceCapping).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.workspace.capping.dailyQuotaGb": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceCapping).GetDailyQuotaGb()).ToDataRes(types.Float)
+	},
+	"azure.subscription.monitorService.workspace.capping.dataIngestionStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceCapping).GetDataIngestionStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.workspace.capping.quotaNextResetTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceCapping).GetQuotaNextResetTime()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.workspace.features.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceFeatures).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.workspace.features.disableLocalAuth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceFeatures).GetDisableLocalAuth()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.monitorService.workspace.features.enableDataExport": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceFeatures).GetEnableDataExport()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.monitorService.workspace.features.enableLogAccessUsingOnlyResourcePermissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceFeatures).GetEnableLogAccessUsingOnlyResourcePermissions()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.monitorService.workspace.features.immediatePurgeDataOn30Days": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceFeatures).GetImmediatePurgeDataOn30Days()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.monitorService.workspace.features.clusterResourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceFeatures).GetClusterResourceId()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.workspace.dataExport.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceDataExport).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.workspace.dataExport.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceDataExport).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.workspace.dataExport.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceDataExport).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.workspace.dataExport.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceDataExport).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.monitorService.workspace.dataExport.tableNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceDataExport).GetTableNames()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.monitorService.workspace.dataExport.destinationResourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceDataExport).GetDestinationResourceId()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.workspace.dataExport.createdDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceDataExport).GetCreatedDate()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.workspace.dataExport.lastModifiedDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceDataExport).GetLastModifiedDate()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.workspace.linkedService.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.workspace.linkedService.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.workspace.linkedService.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.workspace.linkedService.resourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService).GetResourceId()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.workspace.linkedService.writeAccessResourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService).GetWriteAccessResourceId()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.workspace.linkedService.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesService).GetSubscriptionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vaults": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesService).GetVaults()).ToDataRes(types.Array(types.Resource("azure.subscription.recoveryServicesService.vault")))
+	},
+	"azure.subscription.recoveryServicesService.vault.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.recoveryServicesService.vault.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).GetIdentity()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.recoveryServicesService.vault.skuName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).GetSkuName()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.publicNetworkAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).GetPublicNetworkAccess()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.backupStorageVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).GetBackupStorageVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.privateEndpointStateForBackup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).GetPrivateEndpointStateForBackup()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.privateEndpointStateForSiteRecovery": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).GetPrivateEndpointStateForSiteRecovery()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.secureScore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).GetSecureScore()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.securitySettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).GetSecuritySettings()).ToDataRes(types.Resource("azure.subscription.recoveryServicesService.vault.securitySettings"))
+	},
+	"azure.subscription.recoveryServicesService.vault.encryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).GetEncryption()).ToDataRes(types.Resource("azure.subscription.recoveryServicesService.vault.encryption"))
+	},
+	"azure.subscription.recoveryServicesService.vault.monitoringSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).GetMonitoringSettings()).ToDataRes(types.Resource("azure.subscription.recoveryServicesService.vault.monitoringSettings"))
+	},
+	"azure.subscription.recoveryServicesService.vault.redundancySettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).GetRedundancySettings()).ToDataRes(types.Resource("azure.subscription.recoveryServicesService.vault.redundancySettings"))
+	},
+	"azure.subscription.recoveryServicesService.vault.backupConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).GetBackupConfig()).ToDataRes(types.Resource("azure.subscription.recoveryServicesService.vault.backupConfig"))
+	},
+	"azure.subscription.recoveryServicesService.vault.privateEndpointConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).GetPrivateEndpointConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.privateEndpointConnection")))
+	},
+	"azure.subscription.recoveryServicesService.vault.backupPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).GetBackupPolicies()).ToDataRes(types.Array(types.Resource("azure.subscription.recoveryServicesService.vault.backupPolicy")))
+	},
+	"azure.subscription.recoveryServicesService.vault.protectedItems": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).GetProtectedItems()).ToDataRes(types.Array(types.Resource("azure.subscription.recoveryServicesService.vault.protectedItem")))
+	},
+	"azure.subscription.recoveryServicesService.vault.securitySettings.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.securitySettings.softDeleteState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings).GetSoftDeleteState()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.securitySettings.softDeleteRetentionPeriodInDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings).GetSoftDeleteRetentionPeriodInDays()).ToDataRes(types.Int)
+	},
+	"azure.subscription.recoveryServicesService.vault.securitySettings.enhancedSecurityState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings).GetEnhancedSecurityState()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.securitySettings.immutabilityState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings).GetImmutabilityState()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.encryption.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultEncryption).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.encryption.infrastructureEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultEncryption).GetInfrastructureEncryption()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.encryption.keyVaultKeyUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultEncryption).GetKeyVaultKeyUri()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.encryption.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultEncryption).GetKey()).ToDataRes(types.Resource("azure.subscription.keyVaultService.key"))
+	},
+	"azure.subscription.recoveryServicesService.vault.monitoringSettings.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.monitoringSettings.alertsForAllFailoverIssues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings).GetAlertsForAllFailoverIssues()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.monitoringSettings.alertsForAllJobFailures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings).GetAlertsForAllJobFailures()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.monitoringSettings.alertsForAllReplicationIssues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings).GetAlertsForAllReplicationIssues()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.monitoringSettings.alertsForCriticalOperations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings).GetAlertsForCriticalOperations()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.monitoringSettings.emailNotificationsForSiteRecovery": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings).GetEmailNotificationsForSiteRecovery()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.redundancySettings.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultRedundancySettings).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.redundancySettings.storageRedundancy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultRedundancySettings).GetStorageRedundancy()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.redundancySettings.crossRegionRestore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultRedundancySettings).GetCrossRegionRestore()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.backupConfig.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupConfig).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.backupConfig.softDeleteFeatureState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupConfig).GetSoftDeleteFeatureState()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.backupConfig.softDeleteRetentionPeriodInDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupConfig).GetSoftDeleteRetentionPeriodInDays()).ToDataRes(types.Int)
+	},
+	"azure.subscription.recoveryServicesService.vault.backupConfig.enhancedSecurityState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupConfig).GetEnhancedSecurityState()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.backupConfig.storageType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupConfig).GetStorageType()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.backupConfig.storageTypeState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupConfig).GetStorageTypeState()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.backupPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.backupPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.backupPolicy.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.backupPolicy.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.recoveryServicesService.vault.protectedItem.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultProtectedItem).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.protectedItem.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultProtectedItem).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.protectedItem.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultProtectedItem).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.recoveryServicesService.vault.protectedItem.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultProtectedItem).GetProperties()).ToDataRes(types.Dict)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -6605,6 +6981,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.containerRegistry": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscription).ContainerRegistry, ok = plugin.RawToTValue[*mqlAzureSubscriptionContainerRegistryService](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscription).RecoveryServices, ok = plugin.RawToTValue[*mqlAzureSubscriptionRecoveryServicesService](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.webService.function.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11967,6 +12347,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionMonitorService).ActivityLog, ok = plugin.RawToTValue[*mqlAzureSubscriptionMonitorServiceActivityLog](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.monitorService.workspaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorService).Workspaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.monitorService.activityLog.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionMonitorServiceActivityLog).__id, ok = v.Value.(string)
 		return
@@ -12029,6 +12413,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.monitorService.applicationInsight.workspaceResourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionMonitorServiceApplicationInsight).WorkspaceResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.applicationInsight.workspace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceApplicationInsight).Workspace, ok = plugin.RawToTValue[*mqlAzureSubscriptionMonitorServiceWorkspace](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.monitorService.activityLog.alert.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14435,6 +14823,458 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionContainerRegistryServiceRegistryToken).Certificates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.monitorService.workspace.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspace).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.monitorService.workspace.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspace).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspace).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspace).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspace).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspace).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.skuName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspace).SkuName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.skuCapacityReservationLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspace).SkuCapacityReservationLevel, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.retentionInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspace).RetentionInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.publicNetworkAccessForIngestion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspace).PublicNetworkAccessForIngestion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.publicNetworkAccessForQuery": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspace).PublicNetworkAccessForQuery, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.forceCmkForQuery": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspace).ForceCmkForQuery, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.createdDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspace).CreatedDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.modifiedDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspace).ModifiedDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspace).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.customerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspace).CustomerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.capping": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspace).Capping, ok = plugin.RawToTValue[*mqlAzureSubscriptionMonitorServiceWorkspaceCapping](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.features": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspace).Features, ok = plugin.RawToTValue[*mqlAzureSubscriptionMonitorServiceWorkspaceFeatures](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.dataExports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspace).DataExports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.linkedServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspace).LinkedServices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.privateLinkScopedResources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspace).PrivateLinkScopedResources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.capping.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceCapping).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.monitorService.workspace.capping.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceCapping).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.capping.dailyQuotaGb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceCapping).DailyQuotaGb, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.capping.dataIngestionStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceCapping).DataIngestionStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.capping.quotaNextResetTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceCapping).QuotaNextResetTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.features.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceFeatures).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.monitorService.workspace.features.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceFeatures).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.features.disableLocalAuth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceFeatures).DisableLocalAuth, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.features.enableDataExport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceFeatures).EnableDataExport, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.features.enableLogAccessUsingOnlyResourcePermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceFeatures).EnableLogAccessUsingOnlyResourcePermissions, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.features.immediatePurgeDataOn30Days": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceFeatures).ImmediatePurgeDataOn30Days, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.features.clusterResourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceFeatures).ClusterResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.dataExport.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceDataExport).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.monitorService.workspace.dataExport.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceDataExport).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.dataExport.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceDataExport).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.dataExport.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceDataExport).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.dataExport.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceDataExport).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.dataExport.tableNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceDataExport).TableNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.dataExport.destinationResourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceDataExport).DestinationResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.dataExport.createdDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceDataExport).CreatedDate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.dataExport.lastModifiedDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceDataExport).LastModifiedDate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.linkedService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.monitorService.workspace.linkedService.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.linkedService.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.linkedService.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.linkedService.resourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService).ResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.linkedService.writeAccessResourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService).WriteAccessResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.workspace.linkedService.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesService).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.recoveryServicesService.subscriptionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesService).SubscriptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vaults": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesService).Vaults, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.skuName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).SkuName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.publicNetworkAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).PublicNetworkAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.backupStorageVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).BackupStorageVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.privateEndpointStateForBackup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).PrivateEndpointStateForBackup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.privateEndpointStateForSiteRecovery": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).PrivateEndpointStateForSiteRecovery, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.secureScore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).SecureScore, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.securitySettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).SecuritySettings, ok = plugin.RawToTValue[*mqlAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.encryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).Encryption, ok = plugin.RawToTValue[*mqlAzureSubscriptionRecoveryServicesServiceVaultEncryption](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.monitoringSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).MonitoringSettings, ok = plugin.RawToTValue[*mqlAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.redundancySettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).RedundancySettings, ok = plugin.RawToTValue[*mqlAzureSubscriptionRecoveryServicesServiceVaultRedundancySettings](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.backupConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).BackupConfig, ok = plugin.RawToTValue[*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupConfig](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.privateEndpointConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).PrivateEndpointConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.backupPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).BackupPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.protectedItems": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).ProtectedItems, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.securitySettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.securitySettings.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.securitySettings.softDeleteState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings).SoftDeleteState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.securitySettings.softDeleteRetentionPeriodInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings).SoftDeleteRetentionPeriodInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.securitySettings.enhancedSecurityState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings).EnhancedSecurityState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.securitySettings.immutabilityState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings).ImmutabilityState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.encryption.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultEncryption).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.encryption.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultEncryption).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.encryption.infrastructureEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultEncryption).InfrastructureEncryption, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.encryption.keyVaultKeyUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultEncryption).KeyVaultKeyUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.encryption.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultEncryption).Key, ok = plugin.RawToTValue[*mqlAzureSubscriptionKeyVaultServiceKey](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.monitoringSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.monitoringSettings.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.monitoringSettings.alertsForAllFailoverIssues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings).AlertsForAllFailoverIssues, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.monitoringSettings.alertsForAllJobFailures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings).AlertsForAllJobFailures, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.monitoringSettings.alertsForAllReplicationIssues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings).AlertsForAllReplicationIssues, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.monitoringSettings.alertsForCriticalOperations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings).AlertsForCriticalOperations, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.monitoringSettings.emailNotificationsForSiteRecovery": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings).EmailNotificationsForSiteRecovery, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.redundancySettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultRedundancySettings).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.redundancySettings.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultRedundancySettings).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.redundancySettings.storageRedundancy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultRedundancySettings).StorageRedundancy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.redundancySettings.crossRegionRestore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultRedundancySettings).CrossRegionRestore, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.backupConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.backupConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.backupConfig.softDeleteFeatureState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupConfig).SoftDeleteFeatureState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.backupConfig.softDeleteRetentionPeriodInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupConfig).SoftDeleteRetentionPeriodInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.backupConfig.enhancedSecurityState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupConfig).EnhancedSecurityState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.backupConfig.storageType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupConfig).StorageType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.backupConfig.storageTypeState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupConfig).StorageTypeState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.backupPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.backupPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.backupPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.backupPolicy.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.backupPolicy.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.protectedItem.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultProtectedItem).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.protectedItem.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultProtectedItem).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.protectedItem.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultProtectedItem).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.protectedItem.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultProtectedItem).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.protectedItem.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVaultProtectedItem).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -14536,6 +15376,7 @@ type mqlAzureSubscription struct {
 	DataFactory           plugin.TValue[*mqlAzureSubscriptionDataFactoryService]
 	Synapse               plugin.TValue[*mqlAzureSubscriptionSynapseService]
 	ContainerRegistry     plugin.TValue[*mqlAzureSubscriptionContainerRegistryService]
+	RecoveryServices      plugin.TValue[*mqlAzureSubscriptionRecoveryServicesService]
 }
 
 // createAzureSubscription creates a new instance of this resource
@@ -14980,6 +15821,22 @@ func (c *mqlAzureSubscription) GetContainerRegistry() *plugin.TValue[*mqlAzureSu
 		}
 
 		return c.containerRegistry()
+	})
+}
+
+func (c *mqlAzureSubscription) GetRecoveryServices() *plugin.TValue[*mqlAzureSubscriptionRecoveryServicesService] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionRecoveryServicesService](&c.RecoveryServices, func() (*mqlAzureSubscriptionRecoveryServicesService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription", c.__id, "recoveryServices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionRecoveryServicesService), nil
+			}
+		}
+
+		return c.recoveryServices()
 	})
 }
 
@@ -28456,6 +29313,7 @@ type mqlAzureSubscriptionMonitorService struct {
 	DiagnosticSettings  plugin.TValue[[]any]
 	ApplicationInsights plugin.TValue[[]any]
 	ActivityLog         plugin.TValue[*mqlAzureSubscriptionMonitorServiceActivityLog]
+	Workspaces          plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionMonitorService creates a new instance of this resource
@@ -28563,6 +29421,22 @@ func (c *mqlAzureSubscriptionMonitorService) GetActivityLog() *plugin.TValue[*mq
 	})
 }
 
+func (c *mqlAzureSubscriptionMonitorService) GetWorkspaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Workspaces, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.monitorService", c.__id, "workspaces")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.workspaces()
+	})
+}
+
 // mqlAzureSubscriptionMonitorServiceActivityLog for the azure.subscription.monitorService.activityLog resource
 type mqlAzureSubscriptionMonitorServiceActivityLog struct {
 	MqlRuntime *plugin.Runtime
@@ -28633,7 +29507,7 @@ func (c *mqlAzureSubscriptionMonitorServiceActivityLog) GetAlerts() *plugin.TVal
 type mqlAzureSubscriptionMonitorServiceApplicationInsight struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionMonitorServiceApplicationInsightInternal it will be used here
+	mqlAzureSubscriptionMonitorServiceApplicationInsightInternal
 	Id                              plugin.TValue[string]
 	Name                            plugin.TValue[string]
 	Properties                      plugin.TValue[any]
@@ -28646,6 +29520,7 @@ type mqlAzureSubscriptionMonitorServiceApplicationInsight struct {
 	PublicNetworkAccessForQuery     plugin.TValue[string]
 	RetentionInDays                 plugin.TValue[int64]
 	WorkspaceResourceId             plugin.TValue[string]
+	Workspace                       plugin.TValue[*mqlAzureSubscriptionMonitorServiceWorkspace]
 }
 
 // createAzureSubscriptionMonitorServiceApplicationInsight creates a new instance of this resource
@@ -28731,6 +29606,22 @@ func (c *mqlAzureSubscriptionMonitorServiceApplicationInsight) GetRetentionInDay
 
 func (c *mqlAzureSubscriptionMonitorServiceApplicationInsight) GetWorkspaceResourceId() *plugin.TValue[string] {
 	return &c.WorkspaceResourceId
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceApplicationInsight) GetWorkspace() *plugin.TValue[*mqlAzureSubscriptionMonitorServiceWorkspace] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionMonitorServiceWorkspace](&c.Workspace, func() (*mqlAzureSubscriptionMonitorServiceWorkspace, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.monitorService.applicationInsight", c.__id, "workspace")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionMonitorServiceWorkspace), nil
+			}
+		}
+
+		return c.workspace()
+	})
 }
 
 // mqlAzureSubscriptionMonitorServiceActivityLogAlert for the azure.subscription.monitorService.activityLog.alert resource
@@ -34778,4 +35669,1285 @@ func (c *mqlAzureSubscriptionContainerRegistryServiceRegistryToken) GetScopeMap(
 
 func (c *mqlAzureSubscriptionContainerRegistryServiceRegistryToken) GetCertificates() *plugin.TValue[[]any] {
 	return &c.Certificates
+}
+
+// mqlAzureSubscriptionMonitorServiceWorkspace for the azure.subscription.monitorService.workspace resource
+type mqlAzureSubscriptionMonitorServiceWorkspace struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionMonitorServiceWorkspaceInternal
+	Id                              plugin.TValue[string]
+	Name                            plugin.TValue[string]
+	Location                        plugin.TValue[string]
+	Type                            plugin.TValue[string]
+	Tags                            plugin.TValue[map[string]any]
+	SkuName                         plugin.TValue[string]
+	SkuCapacityReservationLevel     plugin.TValue[int64]
+	RetentionInDays                 plugin.TValue[int64]
+	PublicNetworkAccessForIngestion plugin.TValue[string]
+	PublicNetworkAccessForQuery     plugin.TValue[string]
+	ForceCmkForQuery                plugin.TValue[bool]
+	CreatedDate                     plugin.TValue[*time.Time]
+	ModifiedDate                    plugin.TValue[*time.Time]
+	ProvisioningState               plugin.TValue[string]
+	CustomerId                      plugin.TValue[string]
+	Capping                         plugin.TValue[*mqlAzureSubscriptionMonitorServiceWorkspaceCapping]
+	Features                        plugin.TValue[*mqlAzureSubscriptionMonitorServiceWorkspaceFeatures]
+	DataExports                     plugin.TValue[[]any]
+	LinkedServices                  plugin.TValue[[]any]
+	PrivateLinkScopedResources      plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionMonitorServiceWorkspace creates a new instance of this resource
+func createAzureSubscriptionMonitorServiceWorkspace(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionMonitorServiceWorkspace{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.monitorService.workspace", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspace) MqlName() string {
+	return "azure.subscription.monitorService.workspace"
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspace) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspace) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspace) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspace) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspace) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspace) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspace) GetSkuName() *plugin.TValue[string] {
+	return &c.SkuName
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspace) GetSkuCapacityReservationLevel() *plugin.TValue[int64] {
+	return &c.SkuCapacityReservationLevel
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspace) GetRetentionInDays() *plugin.TValue[int64] {
+	return &c.RetentionInDays
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspace) GetPublicNetworkAccessForIngestion() *plugin.TValue[string] {
+	return &c.PublicNetworkAccessForIngestion
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspace) GetPublicNetworkAccessForQuery() *plugin.TValue[string] {
+	return &c.PublicNetworkAccessForQuery
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspace) GetForceCmkForQuery() *plugin.TValue[bool] {
+	return &c.ForceCmkForQuery
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspace) GetCreatedDate() *plugin.TValue[*time.Time] {
+	return &c.CreatedDate
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspace) GetModifiedDate() *plugin.TValue[*time.Time] {
+	return &c.ModifiedDate
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspace) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspace) GetCustomerId() *plugin.TValue[string] {
+	return &c.CustomerId
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspace) GetCapping() *plugin.TValue[*mqlAzureSubscriptionMonitorServiceWorkspaceCapping] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionMonitorServiceWorkspaceCapping](&c.Capping, func() (*mqlAzureSubscriptionMonitorServiceWorkspaceCapping, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.monitorService.workspace", c.__id, "capping")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionMonitorServiceWorkspaceCapping), nil
+			}
+		}
+
+		return c.capping()
+	})
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspace) GetFeatures() *plugin.TValue[*mqlAzureSubscriptionMonitorServiceWorkspaceFeatures] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionMonitorServiceWorkspaceFeatures](&c.Features, func() (*mqlAzureSubscriptionMonitorServiceWorkspaceFeatures, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.monitorService.workspace", c.__id, "features")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionMonitorServiceWorkspaceFeatures), nil
+			}
+		}
+
+		return c.features()
+	})
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspace) GetDataExports() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DataExports, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.monitorService.workspace", c.__id, "dataExports")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.dataExports()
+	})
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspace) GetLinkedServices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LinkedServices, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.monitorService.workspace", c.__id, "linkedServices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.linkedServices()
+	})
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspace) GetPrivateLinkScopedResources() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PrivateLinkScopedResources, func() ([]any, error) {
+		return c.privateLinkScopedResources()
+	})
+}
+
+// mqlAzureSubscriptionMonitorServiceWorkspaceCapping for the azure.subscription.monitorService.workspace.capping resource
+type mqlAzureSubscriptionMonitorServiceWorkspaceCapping struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionMonitorServiceWorkspaceCappingInternal it will be used here
+	Id                  plugin.TValue[string]
+	DailyQuotaGb        plugin.TValue[float64]
+	DataIngestionStatus plugin.TValue[string]
+	QuotaNextResetTime  plugin.TValue[string]
+}
+
+// createAzureSubscriptionMonitorServiceWorkspaceCapping creates a new instance of this resource
+func createAzureSubscriptionMonitorServiceWorkspaceCapping(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionMonitorServiceWorkspaceCapping{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.monitorService.workspace.capping", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceCapping) MqlName() string {
+	return "azure.subscription.monitorService.workspace.capping"
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceCapping) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceCapping) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceCapping) GetDailyQuotaGb() *plugin.TValue[float64] {
+	return &c.DailyQuotaGb
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceCapping) GetDataIngestionStatus() *plugin.TValue[string] {
+	return &c.DataIngestionStatus
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceCapping) GetQuotaNextResetTime() *plugin.TValue[string] {
+	return &c.QuotaNextResetTime
+}
+
+// mqlAzureSubscriptionMonitorServiceWorkspaceFeatures for the azure.subscription.monitorService.workspace.features resource
+type mqlAzureSubscriptionMonitorServiceWorkspaceFeatures struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionMonitorServiceWorkspaceFeaturesInternal it will be used here
+	Id                                          plugin.TValue[string]
+	DisableLocalAuth                            plugin.TValue[bool]
+	EnableDataExport                            plugin.TValue[bool]
+	EnableLogAccessUsingOnlyResourcePermissions plugin.TValue[bool]
+	ImmediatePurgeDataOn30Days                  plugin.TValue[bool]
+	ClusterResourceId                           plugin.TValue[string]
+}
+
+// createAzureSubscriptionMonitorServiceWorkspaceFeatures creates a new instance of this resource
+func createAzureSubscriptionMonitorServiceWorkspaceFeatures(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionMonitorServiceWorkspaceFeatures{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.monitorService.workspace.features", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceFeatures) MqlName() string {
+	return "azure.subscription.monitorService.workspace.features"
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceFeatures) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceFeatures) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceFeatures) GetDisableLocalAuth() *plugin.TValue[bool] {
+	return &c.DisableLocalAuth
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceFeatures) GetEnableDataExport() *plugin.TValue[bool] {
+	return &c.EnableDataExport
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceFeatures) GetEnableLogAccessUsingOnlyResourcePermissions() *plugin.TValue[bool] {
+	return &c.EnableLogAccessUsingOnlyResourcePermissions
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceFeatures) GetImmediatePurgeDataOn30Days() *plugin.TValue[bool] {
+	return &c.ImmediatePurgeDataOn30Days
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceFeatures) GetClusterResourceId() *plugin.TValue[string] {
+	return &c.ClusterResourceId
+}
+
+// mqlAzureSubscriptionMonitorServiceWorkspaceDataExport for the azure.subscription.monitorService.workspace.dataExport resource
+type mqlAzureSubscriptionMonitorServiceWorkspaceDataExport struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionMonitorServiceWorkspaceDataExportInternal it will be used here
+	Id                    plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Type                  plugin.TValue[string]
+	Enabled               plugin.TValue[bool]
+	TableNames            plugin.TValue[[]any]
+	DestinationResourceId plugin.TValue[string]
+	CreatedDate           plugin.TValue[string]
+	LastModifiedDate      plugin.TValue[string]
+}
+
+// createAzureSubscriptionMonitorServiceWorkspaceDataExport creates a new instance of this resource
+func createAzureSubscriptionMonitorServiceWorkspaceDataExport(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionMonitorServiceWorkspaceDataExport{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.monitorService.workspace.dataExport", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceDataExport) MqlName() string {
+	return "azure.subscription.monitorService.workspace.dataExport"
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceDataExport) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceDataExport) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceDataExport) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceDataExport) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceDataExport) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceDataExport) GetTableNames() *plugin.TValue[[]any] {
+	return &c.TableNames
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceDataExport) GetDestinationResourceId() *plugin.TValue[string] {
+	return &c.DestinationResourceId
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceDataExport) GetCreatedDate() *plugin.TValue[string] {
+	return &c.CreatedDate
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceDataExport) GetLastModifiedDate() *plugin.TValue[string] {
+	return &c.LastModifiedDate
+}
+
+// mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService for the azure.subscription.monitorService.workspace.linkedService resource
+type mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionMonitorServiceWorkspaceLinkedServiceInternal it will be used here
+	Id                    plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Type                  plugin.TValue[string]
+	ResourceId            plugin.TValue[string]
+	WriteAccessResourceId plugin.TValue[string]
+	ProvisioningState     plugin.TValue[string]
+}
+
+// createAzureSubscriptionMonitorServiceWorkspaceLinkedService creates a new instance of this resource
+func createAzureSubscriptionMonitorServiceWorkspaceLinkedService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.monitorService.workspace.linkedService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService) MqlName() string {
+	return "azure.subscription.monitorService.workspace.linkedService"
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService) GetResourceId() *plugin.TValue[string] {
+	return &c.ResourceId
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService) GetWriteAccessResourceId() *plugin.TValue[string] {
+	return &c.WriteAccessResourceId
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+// mqlAzureSubscriptionRecoveryServicesService for the azure.subscription.recoveryServicesService resource
+type mqlAzureSubscriptionRecoveryServicesService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionRecoveryServicesServiceInternal it will be used here
+	SubscriptionId plugin.TValue[string]
+	Vaults         plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionRecoveryServicesService creates a new instance of this resource
+func createAzureSubscriptionRecoveryServicesService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionRecoveryServicesService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.recoveryServicesService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesService) MqlName() string {
+	return "azure.subscription.recoveryServicesService"
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesService) GetSubscriptionId() *plugin.TValue[string] {
+	return &c.SubscriptionId
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesService) GetVaults() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Vaults, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.recoveryServicesService", c.__id, "vaults")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vaults()
+	})
+}
+
+// mqlAzureSubscriptionRecoveryServicesServiceVault for the azure.subscription.recoveryServicesService.vault resource
+type mqlAzureSubscriptionRecoveryServicesServiceVault struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionRecoveryServicesServiceVaultInternal
+	Id                                  plugin.TValue[string]
+	Name                                plugin.TValue[string]
+	Location                            plugin.TValue[string]
+	Type                                plugin.TValue[string]
+	Tags                                plugin.TValue[map[string]any]
+	Identity                            plugin.TValue[any]
+	SkuName                             plugin.TValue[string]
+	ProvisioningState                   plugin.TValue[string]
+	PublicNetworkAccess                 plugin.TValue[string]
+	BackupStorageVersion                plugin.TValue[string]
+	PrivateEndpointStateForBackup       plugin.TValue[string]
+	PrivateEndpointStateForSiteRecovery plugin.TValue[string]
+	SecureScore                         plugin.TValue[string]
+	SecuritySettings                    plugin.TValue[*mqlAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings]
+	Encryption                          plugin.TValue[*mqlAzureSubscriptionRecoveryServicesServiceVaultEncryption]
+	MonitoringSettings                  plugin.TValue[*mqlAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings]
+	RedundancySettings                  plugin.TValue[*mqlAzureSubscriptionRecoveryServicesServiceVaultRedundancySettings]
+	BackupConfig                        plugin.TValue[*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupConfig]
+	PrivateEndpointConnections          plugin.TValue[[]any]
+	BackupPolicies                      plugin.TValue[[]any]
+	ProtectedItems                      plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionRecoveryServicesServiceVault creates a new instance of this resource
+func createAzureSubscriptionRecoveryServicesServiceVault(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionRecoveryServicesServiceVault{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.recoveryServicesService.vault", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) MqlName() string {
+	return "azure.subscription.recoveryServicesService.vault"
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) GetIdentity() *plugin.TValue[any] {
+	return &c.Identity
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) GetSkuName() *plugin.TValue[string] {
+	return &c.SkuName
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) GetPublicNetworkAccess() *plugin.TValue[string] {
+	return &c.PublicNetworkAccess
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) GetBackupStorageVersion() *plugin.TValue[string] {
+	return &c.BackupStorageVersion
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) GetPrivateEndpointStateForBackup() *plugin.TValue[string] {
+	return &c.PrivateEndpointStateForBackup
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) GetPrivateEndpointStateForSiteRecovery() *plugin.TValue[string] {
+	return &c.PrivateEndpointStateForSiteRecovery
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) GetSecureScore() *plugin.TValue[string] {
+	return &c.SecureScore
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) GetSecuritySettings() *plugin.TValue[*mqlAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings](&c.SecuritySettings, func() (*mqlAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.recoveryServicesService.vault", c.__id, "securitySettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings), nil
+			}
+		}
+
+		return c.securitySettings()
+	})
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) GetEncryption() *plugin.TValue[*mqlAzureSubscriptionRecoveryServicesServiceVaultEncryption] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionRecoveryServicesServiceVaultEncryption](&c.Encryption, func() (*mqlAzureSubscriptionRecoveryServicesServiceVaultEncryption, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.recoveryServicesService.vault", c.__id, "encryption")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionRecoveryServicesServiceVaultEncryption), nil
+			}
+		}
+
+		return c.encryption()
+	})
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) GetMonitoringSettings() *plugin.TValue[*mqlAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings](&c.MonitoringSettings, func() (*mqlAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.recoveryServicesService.vault", c.__id, "monitoringSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings), nil
+			}
+		}
+
+		return c.monitoringSettings()
+	})
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) GetRedundancySettings() *plugin.TValue[*mqlAzureSubscriptionRecoveryServicesServiceVaultRedundancySettings] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionRecoveryServicesServiceVaultRedundancySettings](&c.RedundancySettings, func() (*mqlAzureSubscriptionRecoveryServicesServiceVaultRedundancySettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.recoveryServicesService.vault", c.__id, "redundancySettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionRecoveryServicesServiceVaultRedundancySettings), nil
+			}
+		}
+
+		return c.redundancySettings()
+	})
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) GetBackupConfig() *plugin.TValue[*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupConfig] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupConfig](&c.BackupConfig, func() (*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.recoveryServicesService.vault", c.__id, "backupConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionRecoveryServicesServiceVaultBackupConfig), nil
+			}
+		}
+
+		return c.backupConfig()
+	})
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) GetPrivateEndpointConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PrivateEndpointConnections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.recoveryServicesService.vault", c.__id, "privateEndpointConnections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.privateEndpointConnections()
+	})
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) GetBackupPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.BackupPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.recoveryServicesService.vault", c.__id, "backupPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.backupPolicies()
+	})
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) GetProtectedItems() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ProtectedItems, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.recoveryServicesService.vault", c.__id, "protectedItems")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.protectedItems()
+	})
+}
+
+// mqlAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings for the azure.subscription.recoveryServicesService.vault.securitySettings resource
+type mqlAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionRecoveryServicesServiceVaultSecuritySettingsInternal it will be used here
+	Id                              plugin.TValue[string]
+	SoftDeleteState                 plugin.TValue[string]
+	SoftDeleteRetentionPeriodInDays plugin.TValue[int64]
+	EnhancedSecurityState           plugin.TValue[string]
+	ImmutabilityState               plugin.TValue[string]
+}
+
+// createAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings creates a new instance of this resource
+func createAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.recoveryServicesService.vault.securitySettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings) MqlName() string {
+	return "azure.subscription.recoveryServicesService.vault.securitySettings"
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings) GetSoftDeleteState() *plugin.TValue[string] {
+	return &c.SoftDeleteState
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings) GetSoftDeleteRetentionPeriodInDays() *plugin.TValue[int64] {
+	return &c.SoftDeleteRetentionPeriodInDays
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings) GetEnhancedSecurityState() *plugin.TValue[string] {
+	return &c.EnhancedSecurityState
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings) GetImmutabilityState() *plugin.TValue[string] {
+	return &c.ImmutabilityState
+}
+
+// mqlAzureSubscriptionRecoveryServicesServiceVaultEncryption for the azure.subscription.recoveryServicesService.vault.encryption resource
+type mqlAzureSubscriptionRecoveryServicesServiceVaultEncryption struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionRecoveryServicesServiceVaultEncryptionInternal it will be used here
+	Id                       plugin.TValue[string]
+	InfrastructureEncryption plugin.TValue[string]
+	KeyVaultKeyUri           plugin.TValue[string]
+	Key                      plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey]
+}
+
+// createAzureSubscriptionRecoveryServicesServiceVaultEncryption creates a new instance of this resource
+func createAzureSubscriptionRecoveryServicesServiceVaultEncryption(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionRecoveryServicesServiceVaultEncryption{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.recoveryServicesService.vault.encryption", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultEncryption) MqlName() string {
+	return "azure.subscription.recoveryServicesService.vault.encryption"
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultEncryption) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultEncryption) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultEncryption) GetInfrastructureEncryption() *plugin.TValue[string] {
+	return &c.InfrastructureEncryption
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultEncryption) GetKeyVaultKeyUri() *plugin.TValue[string] {
+	return &c.KeyVaultKeyUri
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultEncryption) GetKey() *plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionKeyVaultServiceKey](&c.Key, func() (*mqlAzureSubscriptionKeyVaultServiceKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.recoveryServicesService.vault.encryption", c.__id, "key")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionKeyVaultServiceKey), nil
+			}
+		}
+
+		return c.key()
+	})
+}
+
+// mqlAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings for the azure.subscription.recoveryServicesService.vault.monitoringSettings resource
+type mqlAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettingsInternal it will be used here
+	Id                                plugin.TValue[string]
+	AlertsForAllFailoverIssues        plugin.TValue[string]
+	AlertsForAllJobFailures           plugin.TValue[string]
+	AlertsForAllReplicationIssues     plugin.TValue[string]
+	AlertsForCriticalOperations       plugin.TValue[string]
+	EmailNotificationsForSiteRecovery plugin.TValue[string]
+}
+
+// createAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings creates a new instance of this resource
+func createAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.recoveryServicesService.vault.monitoringSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings) MqlName() string {
+	return "azure.subscription.recoveryServicesService.vault.monitoringSettings"
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings) GetAlertsForAllFailoverIssues() *plugin.TValue[string] {
+	return &c.AlertsForAllFailoverIssues
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings) GetAlertsForAllJobFailures() *plugin.TValue[string] {
+	return &c.AlertsForAllJobFailures
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings) GetAlertsForAllReplicationIssues() *plugin.TValue[string] {
+	return &c.AlertsForAllReplicationIssues
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings) GetAlertsForCriticalOperations() *plugin.TValue[string] {
+	return &c.AlertsForCriticalOperations
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings) GetEmailNotificationsForSiteRecovery() *plugin.TValue[string] {
+	return &c.EmailNotificationsForSiteRecovery
+}
+
+// mqlAzureSubscriptionRecoveryServicesServiceVaultRedundancySettings for the azure.subscription.recoveryServicesService.vault.redundancySettings resource
+type mqlAzureSubscriptionRecoveryServicesServiceVaultRedundancySettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionRecoveryServicesServiceVaultRedundancySettingsInternal it will be used here
+	Id                 plugin.TValue[string]
+	StorageRedundancy  plugin.TValue[string]
+	CrossRegionRestore plugin.TValue[string]
+}
+
+// createAzureSubscriptionRecoveryServicesServiceVaultRedundancySettings creates a new instance of this resource
+func createAzureSubscriptionRecoveryServicesServiceVaultRedundancySettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionRecoveryServicesServiceVaultRedundancySettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.recoveryServicesService.vault.redundancySettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultRedundancySettings) MqlName() string {
+	return "azure.subscription.recoveryServicesService.vault.redundancySettings"
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultRedundancySettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultRedundancySettings) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultRedundancySettings) GetStorageRedundancy() *plugin.TValue[string] {
+	return &c.StorageRedundancy
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultRedundancySettings) GetCrossRegionRestore() *plugin.TValue[string] {
+	return &c.CrossRegionRestore
+}
+
+// mqlAzureSubscriptionRecoveryServicesServiceVaultBackupConfig for the azure.subscription.recoveryServicesService.vault.backupConfig resource
+type mqlAzureSubscriptionRecoveryServicesServiceVaultBackupConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionRecoveryServicesServiceVaultBackupConfigInternal it will be used here
+	Id                              plugin.TValue[string]
+	SoftDeleteFeatureState          plugin.TValue[string]
+	SoftDeleteRetentionPeriodInDays plugin.TValue[int64]
+	EnhancedSecurityState           plugin.TValue[string]
+	StorageType                     plugin.TValue[string]
+	StorageTypeState                plugin.TValue[string]
+}
+
+// createAzureSubscriptionRecoveryServicesServiceVaultBackupConfig creates a new instance of this resource
+func createAzureSubscriptionRecoveryServicesServiceVaultBackupConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionRecoveryServicesServiceVaultBackupConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.recoveryServicesService.vault.backupConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultBackupConfig) MqlName() string {
+	return "azure.subscription.recoveryServicesService.vault.backupConfig"
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultBackupConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultBackupConfig) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultBackupConfig) GetSoftDeleteFeatureState() *plugin.TValue[string] {
+	return &c.SoftDeleteFeatureState
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultBackupConfig) GetSoftDeleteRetentionPeriodInDays() *plugin.TValue[int64] {
+	return &c.SoftDeleteRetentionPeriodInDays
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultBackupConfig) GetEnhancedSecurityState() *plugin.TValue[string] {
+	return &c.EnhancedSecurityState
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultBackupConfig) GetStorageType() *plugin.TValue[string] {
+	return &c.StorageType
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultBackupConfig) GetStorageTypeState() *plugin.TValue[string] {
+	return &c.StorageTypeState
+}
+
+// mqlAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy for the azure.subscription.recoveryServicesService.vault.backupPolicy resource
+type mqlAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionRecoveryServicesServiceVaultBackupPolicyInternal it will be used here
+	Id         plugin.TValue[string]
+	Name       plugin.TValue[string]
+	Type       plugin.TValue[string]
+	Properties plugin.TValue[any]
+}
+
+// createAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy creates a new instance of this resource
+func createAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.recoveryServicesService.vault.backupPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy) MqlName() string {
+	return "azure.subscription.recoveryServicesService.vault.backupPolicy"
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultBackupPolicy) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
+}
+
+// mqlAzureSubscriptionRecoveryServicesServiceVaultProtectedItem for the azure.subscription.recoveryServicesService.vault.protectedItem resource
+type mqlAzureSubscriptionRecoveryServicesServiceVaultProtectedItem struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionRecoveryServicesServiceVaultProtectedItemInternal it will be used here
+	Id         plugin.TValue[string]
+	Name       plugin.TValue[string]
+	Type       plugin.TValue[string]
+	Properties plugin.TValue[any]
+}
+
+// createAzureSubscriptionRecoveryServicesServiceVaultProtectedItem creates a new instance of this resource
+func createAzureSubscriptionRecoveryServicesServiceVaultProtectedItem(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionRecoveryServicesServiceVaultProtectedItem{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.recoveryServicesService.vault.protectedItem", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultProtectedItem) MqlName() string {
+	return "azure.subscription.recoveryServicesService.vault.protectedItem"
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultProtectedItem) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultProtectedItem) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultProtectedItem) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultProtectedItem) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVaultProtectedItem) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
 }

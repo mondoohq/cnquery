@@ -130,10 +130,16 @@ github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mysql/armmysqlflexibleserv
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mysql/armmysqlflexibleservers v1.2.0/go.mod h1:0mKVz3WT8oNjBunT1zD/HPwMleQ72QClMa7Gmsm+6Kc=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9 v9.0.0 h1:CbHDMVJhcJSmXenq+UDWyIjumzVkZIb5pVUGzsCok5M=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9 v9.0.0/go.mod h1:raqbEXrok4aycS74XoU6p9Hne1dliAFpHLizlp+qJoM=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights v1.2.0 h1:4FlNvfcPu7tTvOgOzXxIbZLvwvmZq1OdhQUdIa9g2N4=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights v1.2.0/go.mod h1:A4nzEXwVd5pAyneR6KOvUAo72svUc5rmCzRHhAbP6lA=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresql v1.2.0 h1:0hXKrsbh2M6CQyW0TDC9Bsyd99vQmrOxiBTUfQHZjPA=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresql v1.2.0/go.mod h1:bvZZor36Jg9q9kouuMyfJ+ay77+qK+YUfThXH1FdXjU=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresqlflexibleservers/v5 v5.0.0 h1:S7K+MLPEYe+g9AX9dLKldBpYV03bPl7zeDaWhiNDqqs=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresqlflexibleservers/v5 v5.0.0/go.mod h1:EHRrmrnS2Q8fB3+DE30TTk04JLqjui5ZJEF7eMVQ2/M=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservices/v2 v2.1.0 h1:1JdyrPv/UPMSAm+As/+fRqyRU6IP1KqiIm3NHuURSlQ=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservices/v2 v2.1.0/go.mod h1:u+oD8BX3AzcZs4wo/geQg2BysfY1qjtJDSuzrBSll1Y=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4 v4.2.0 h1:GOtQKZTIc4/HnWIEqGqtkMHLXIlwa4GpT8BB5JGH+tc=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4 v4.2.0/go.mod h1:o1BW30aoyqKYcQKAMNWs0UAkT30Z2FZzmCNo7hrGHjM=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis/v3 v3.3.0 h1:EkL5dmUoy1OlzVfsbkcHayOvOJgheyRYL3wM/RHizzg=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis/v3 v3.3.0/go.mod h1:DiazWkJHUUKUZGpIdV7JhDTjebBxdfsJ386dE5w7G3o=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armdeployments v0.2.0 h1:bYq3jfB2x36hslKMHyge3+esWzROtJNk/4dCjsKlrl4=

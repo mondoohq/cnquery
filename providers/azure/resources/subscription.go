@@ -295,3 +295,13 @@ func (a *mqlAzureSubscription) containerRegistry() (*mqlAzureSubscriptionContain
 	}
 	return svc.(*mqlAzureSubscriptionContainerRegistryService), nil
 }
+
+func (a *mqlAzureSubscription) recoveryServices() (*mqlAzureSubscriptionRecoveryServicesService, error) {
+	svc, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionRecoveryServicesService, map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return svc.(*mqlAzureSubscriptionRecoveryServicesService), nil
+}

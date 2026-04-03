@@ -76,6 +76,8 @@ azure.subscription @defaults ("name") {
   synapse() azure.subscription.synapseService
   // Container Registry resources in the subscription
   containerRegistry() azure.subscription.containerRegistryService
+  // Recovery Services resources in the subscription
+  recoveryServices() azure.subscription.recoveryServicesService
 }
 
 // Azure function
@@ -3011,6 +3013,8 @@ private azure.subscription.monitorService {
   applicationInsights() []azure.subscription.monitorService.applicationInsight
   // Monitor activity log
   activityLog() azure.subscription.monitorService.activityLog
+  // Log Analytics workspaces
+  workspaces() []azure.subscription.monitorService.workspace
 }
 
 // Azure Monitor activity log
@@ -3047,6 +3051,8 @@ private azure.subscription.monitorService.applicationInsight @defaults("name loc
   retentionInDays int
   // Log Analytics workspace resource ID
   workspaceResourceId string
+  // Log Analytics workspace (typed reference)
+  workspace() azure.subscription.monitorService.workspace
 }
 
 // Azure Monitor activity log alert
@@ -4357,4 +4363,258 @@ private azure.subscription.containerRegistryService.registry.token @defaults("id
   scopeMap() azure.subscription.containerRegistryService.registry.scopeMap
   // Token certificates
   certificates []dict
+}
+
+// Azure Log Analytics workspace
+azure.subscription.monitorService.workspace @defaults("id name location skuName") {
+  // Workspace resource ID
+  id string
+  // Workspace name
+  name string
+  // Workspace location
+  location string
+  // Resource type
+  type string
+  // Workspace tags
+  tags map[string]string
+  // SKU name ("Free", "Standard", "Premium", "PerNode", "PerGB2018", "Standalone", "CapacityReservation", "LACluster")
+  skuName string
+  // Capacity reservation level in GB/day (for CapacityReservation SKU)
+  skuCapacityReservationLevel int
+  // Data retention period in days
+  retentionInDays int
+  // Public network access for ingestion ("Enabled" or "Disabled")
+  publicNetworkAccessForIngestion string
+  // Public network access for query ("Enabled" or "Disabled")
+  publicNetworkAccessForQuery string
+  // Whether customer-managed key is required for query
+  forceCmkForQuery bool
+  // Workspace creation date
+  createdDate time
+  // Workspace last modified date
+  modifiedDate time
+  // Provisioning state
+  provisioningState string
+  // Workspace GUID
+  customerId string
+  // Daily data volume capping
+  capping() azure.subscription.monitorService.workspace.capping
+  // Workspace feature flags
+  features() azure.subscription.monitorService.workspace.features
+  // Data export rules
+  dataExports() []azure.subscription.monitorService.workspace.dataExport
+  // Linked services
+  linkedServices() []azure.subscription.monitorService.workspace.linkedService
+  // Private link scoped resources
+  privateLinkScopedResources() []dict
+}
+
+// Daily data volume capping for a Log Analytics workspace
+private azure.subscription.monitorService.workspace.capping @defaults("dailyQuotaGb") {
+  // Capping identifier
+  id string
+  // Daily quota in GB (-1 means unlimited)
+  dailyQuotaGb float
+  // Data ingestion status ("RespectQuota", "ForceOn", "ForceOff", etc.)
+  dataIngestionStatus string
+  // Next quota reset time
+  quotaNextResetTime string
+}
+
+// Feature flags for a Log Analytics workspace
+private azure.subscription.monitorService.workspace.features @defaults("disableLocalAuth enableDataExport") {
+  // Features identifier
+  id string
+  // Whether local authentication is disabled
+  disableLocalAuth bool
+  // Whether data export is enabled
+  enableDataExport bool
+  // Whether log access uses only resource permissions
+  enableLogAccessUsingOnlyResourcePermissions bool
+  // Whether data is immediately purged after 30 days
+  immediatePurgeDataOn30Days bool
+  // Dedicated cluster resource ID
+  clusterResourceId string
+}
+
+// Data export rule for a Log Analytics workspace
+private azure.subscription.monitorService.workspace.dataExport @defaults("id name enabled") {
+  // Data export resource ID
+  id string
+  // Data export name
+  name string
+  // Resource type
+  type string
+  // Whether the export rule is enabled
+  enabled bool
+  // Table names to export
+  tableNames []string
+  // Destination resource ID
+  destinationResourceId string
+  // Creation date
+  createdDate string
+  // Last modified date
+  lastModifiedDate string
+}
+
+// Linked service for a Log Analytics workspace
+private azure.subscription.monitorService.workspace.linkedService @defaults("id name") {
+  // Linked service resource ID
+  id string
+  // Linked service name
+  name string
+  // Resource type
+  type string
+  // Linked resource ID
+  resourceId string
+  // Write access resource ID
+  writeAccessResourceId string
+  // Provisioning state
+  provisioningState string
+}
+
+// Azure Recovery Services
+private azure.subscription.recoveryServicesService {
+  // Subscription identifier
+  subscriptionId string
+  // List of recovery services vaults
+  vaults() []azure.subscription.recoveryServicesService.vault
+}
+
+// Azure Recovery Services vault
+azure.subscription.recoveryServicesService.vault @defaults("id name location skuName") {
+  // Vault resource ID
+  id string
+  // Vault name
+  name string
+  // Vault location
+  location string
+  // Resource type
+  type string
+  // Vault tags
+  tags map[string]string
+  // Identity configuration
+  identity dict
+  // SKU name ("Standard" or "RS0")
+  skuName string
+  // Provisioning state
+  provisioningState string
+  // Public network access ("Enabled" or "Disabled")
+  publicNetworkAccess string
+  // Backup storage version
+  backupStorageVersion string
+  // Private endpoint state for backup ("None" or "Enabled")
+  privateEndpointStateForBackup string
+  // Private endpoint state for site recovery ("None" or "Enabled")
+  privateEndpointStateForSiteRecovery string
+  // Secure score ("Healthy" or "Unhealthy")
+  secureScore string
+  // Security settings (soft delete, immutability, enhanced security)
+  securitySettings() azure.subscription.recoveryServicesService.vault.securitySettings
+  // Encryption settings
+  encryption() azure.subscription.recoveryServicesService.vault.encryption
+  // Monitoring and alerting settings
+  monitoringSettings() azure.subscription.recoveryServicesService.vault.monitoringSettings
+  // Storage redundancy settings
+  redundancySettings() azure.subscription.recoveryServicesService.vault.redundancySettings
+  // Backup vault configuration (from backup API)
+  backupConfig() azure.subscription.recoveryServicesService.vault.backupConfig
+  // Private endpoint connections
+  privateEndpointConnections() []azure.subscription.privateEndpointConnection
+  // Backup policies
+  backupPolicies() []azure.subscription.recoveryServicesService.vault.backupPolicy
+  // Protected (backed-up) items
+  protectedItems() []azure.subscription.recoveryServicesService.vault.protectedItem
+}
+
+// Security settings for a Recovery Services vault
+private azure.subscription.recoveryServicesService.vault.securitySettings @defaults("softDeleteState immutabilityState") {
+  // Security settings identifier
+  id string
+  // Soft delete state ("Enabled" or "Disabled")
+  softDeleteState string
+  // Soft delete retention period in days
+  softDeleteRetentionPeriodInDays int
+  // Enhanced security state ("Enabled" or "Disabled")
+  enhancedSecurityState string
+  // Immutability state ("Locked" or "Unlocked")
+  immutabilityState string
+}
+
+// Encryption settings for a Recovery Services vault
+private azure.subscription.recoveryServicesService.vault.encryption @defaults("infrastructureEncryption") {
+  // Encryption identifier
+  id string
+  // Infrastructure encryption state ("Enabled" or "Disabled")
+  infrastructureEncryption string
+  // Key Vault key URI for CMK encryption
+  keyVaultKeyUri string
+  // Key Vault key used for encryption
+  key() azure.subscription.keyVaultService.key
+}
+
+// Monitoring and alerting settings for a Recovery Services vault
+private azure.subscription.recoveryServicesService.vault.monitoringSettings @defaults("alertsForAllJobFailures") {
+  // Monitoring settings identifier
+  id string
+  // Alerts for all failover issues ("Enabled" or "Disabled")
+  alertsForAllFailoverIssues string
+  // Alerts for all job failures ("Enabled" or "Disabled")
+  alertsForAllJobFailures string
+  // Alerts for all replication issues ("Enabled" or "Disabled")
+  alertsForAllReplicationIssues string
+  // Alerts for critical operations ("Enabled" or "Disabled")
+  alertsForCriticalOperations string
+  // Email notifications for site recovery ("Enabled" or "Disabled")
+  emailNotificationsForSiteRecovery string
+}
+
+// Storage redundancy settings for a Recovery Services vault
+private azure.subscription.recoveryServicesService.vault.redundancySettings @defaults("storageRedundancy crossRegionRestore") {
+  // Redundancy settings identifier
+  id string
+  // Standard tier storage redundancy ("GeoRedundant" or "LocallyRedundant")
+  storageRedundancy string
+  // Cross-region restore setting ("Enabled" or "Disabled")
+  crossRegionRestore string
+}
+
+// Backup vault configuration (soft delete, storage type)
+private azure.subscription.recoveryServicesService.vault.backupConfig @defaults("softDeleteFeatureState storageType") {
+  // Backup config identifier
+  id string
+  // Soft delete feature state ("AlwaysON", "Enabled", or "Disabled")
+  softDeleteFeatureState string
+  // Soft delete retention period in days
+  softDeleteRetentionPeriodInDays int
+  // Enhanced security state ("Enabled" or "Disabled")
+  enhancedSecurityState string
+  // Storage type ("GeoRedundant", "LocallyRedundant", or "ZoneRedundant")
+  storageType string
+  // Storage type lock state ("Locked" or "Unlocked")
+  storageTypeState string
+}
+
+// Backup policy in a Recovery Services vault
+private azure.subscription.recoveryServicesService.vault.backupPolicy @defaults("id name") {
+  // Backup policy resource ID
+  id string
+  // Backup policy name
+  name string
+  // Resource type
+  type string
+  // Policy properties (polymorphic: IaaS VM, SQL, FileShare, etc.)
+  properties dict
+}
+
+// Protected (backed-up) item in a Recovery Services vault
+private azure.subscription.recoveryServicesService.vault.protectedItem @defaults("id name") {
+  // Protected item resource ID
+  id string
+  // Protected item name
+  name string
+  // Resource type
+  type string
+  // Item properties (polymorphic: VM, SQL, FileShare, SAP HANA, etc.)
+  properties dict
 }
