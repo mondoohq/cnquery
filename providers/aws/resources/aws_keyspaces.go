@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -19,6 +20,12 @@ import (
 	"go.mondoo.com/mql/v13/providers/aws/connection"
 	"go.mondoo.com/mql/v13/types"
 )
+
+// isSystemKeyspace returns true for Cassandra system keyspaces that are
+// present in every account/region and not relevant for security auditing.
+func isSystemKeyspace(name string) bool {
+	return strings.HasPrefix(name, "system")
+}
 
 func (a *mqlAwsKeyspaces) id() (string, error) {
 	return "aws.keyspaces", nil
@@ -71,6 +78,10 @@ func (a *mqlAwsKeyspaces) getKeyspaces(conn *connection.AwsConnection) []*jobpoo
 					return nil, err
 				}
 				for _, ks := range page.Keyspaces {
+					// Skip system keyspaces — not user-created, not relevant for auditing
+					if ks.KeyspaceName != nil && isSystemKeyspace(*ks.KeyspaceName) {
+						continue
+					}
 					mqlKeyspace, err := newMqlAwsKeyspacesKeyspace(a.MqlRuntime, region, ks)
 					if err != nil {
 						return nil, err
