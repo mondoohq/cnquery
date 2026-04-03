@@ -135,9 +135,9 @@ jira
 jsonbody
 junos
 kerberoastable
+keyspace
 kqueue
 krbtgt
-KSK
 kubenet
 labelmatchstatement
 launchconfiguration
@@ -267,7 +267,6 @@ Sspr
 stringx
 superusers
 switchports
-SYSVOL
 tailscale
 targetgroup
 tde
