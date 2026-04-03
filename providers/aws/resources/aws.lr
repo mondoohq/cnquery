@@ -1635,7 +1635,7 @@ private aws.sagemaker.endpoint @defaults("arn name") {
   createdAt time
   // Time when the endpoint was last modified
   lastModifiedAt time
-  // Status of the endpoint: OutOfService, Creating, Updating, SystemUpdating, RollingBack, InService, Deleting, or Failed
+  // Status of the endpoint: OutOfService, Creating, Updating, SystemUpdating, RollingBack, InService, Deleting, Failed, or UpdateRollbackFailed
   status string
 }
 
@@ -1669,7 +1669,7 @@ private aws.sagemaker.trainingjob @defaults("arn name status") {
   name string
   // Region where the training job exists
   region string
-  // Status: InProgress, Completed, Failed, Stopping, Stopped
+  // Status: InProgress, Completed, Failed, Stopping, Stopped, Deleting
   status string
   // Time when the training job was created
   createdAt time
@@ -5435,7 +5435,7 @@ private aws.lambda.function @defaults("arn") {
   lastModifiedAt time
   // Function URL configuration (null if no URL is configured)
   urlConfig() aws.lambda.function.urlConfig
-  // Current state of the function (Active, Inactive, Pending, Failed)
+  // Current state of the function (Active, Inactive, Pending, Failed, Deactivating, Deactivated, ActiveNonInvocable, Deleting)
   state string
   // Size of the function deployment package in bytes
   codeSize int
@@ -7790,7 +7790,7 @@ private aws.directoryservice.directory @defaults("directoryId name type stage re
   alias string
   // Access URL for the directory (e.g., alias.awsapps.com)
   accessUrl string
-  // Current stage of the directory: Active, Creating, Deleted, Deleting, Failed, etc.
+  // Current stage of the directory: Requested, Creating, Created, Active, Inoperable, Impaired, Restoring, RestoreFailed, Deleting, Deleted, Failed, Updating
   stage string
   // Additional detail about the directory stage
   stageReason string
@@ -7942,7 +7942,7 @@ private aws.workspacesweb.portal @defaults("displayName portalStatus region") {
   portalEndpoint string
   // Portal status: Incomplete, Pending, Active
   portalStatus string
-  // Authentication type: Standard or IAMIdentityCenter
+  // Authentication type: Standard or IAM_Identity_Center
   authenticationType string
   // Browser type
   browserType string
@@ -8823,11 +8823,11 @@ private aws.elasticbeanstalk.environment @defaults("arn name status") {
   platformArn string
   // Solution stack name
   solutionStackName string
-  // Status: Launching, Updating, Ready, Terminating, Terminated
+  // Status: Launching, Updating, Ready, Terminating, Terminated, Aborting, LinkingFrom, LinkingTo
   status string
   // Health: Green, Yellow, Red, Grey
   health string
-  // Health status: Ok, Info, Warning, Degraded, Severe, Suspended, Unknown, NoData
+  // Health status: Ok, Info, Warning, Degraded, Severe, Suspended, Pending, Unknown, NoData
   healthStatus string
   // CNAME of the environment
   cname string
