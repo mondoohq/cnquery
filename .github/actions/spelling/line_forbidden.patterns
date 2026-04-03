@@ -845,7 +845,7 @@
 
 # s.b. Key Vault
 \bKey vault\b
-\bKeyVault\b
+# \bKeyVault\b # disabled — false positives in Azure SDK enum values (e.g. Microsoft.KeyVault)
 
 # s.b. Ampere
 \bampere\b
