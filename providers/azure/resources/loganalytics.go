@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
+	"github.com/rs/zerolog/log"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -76,6 +77,7 @@ func parseAzureDateString(s *string) *llx.RawData {
 		// Try RFC3339Nano as fallback
 		t, err = time.Parse(time.RFC3339Nano, *s)
 		if err != nil {
+			log.Warn().Str("value", *s).Msg("failed to parse Azure date string")
 			return llx.NilData
 		}
 	}
