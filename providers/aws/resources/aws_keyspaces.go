@@ -97,6 +97,10 @@ func (a *mqlAwsKeyspaces) getKeyspaces(conn *connection.AwsConnection) []*jobpoo
 }
 
 func newMqlAwsKeyspacesKeyspace(runtime *plugin.Runtime, region string, ks keyspaces_types.KeyspaceSummary) (*mqlAwsKeyspacesKeyspace, error) {
+	replicationRegions := ks.ReplicationRegions
+	if replicationRegions == nil {
+		replicationRegions = []string{}
+	}
 	resource, err := CreateResource(runtime, "aws.keyspaces.keyspace",
 		map[string]*llx.RawData{
 			"__id":                llx.StringDataPtr(ks.ResourceArn),
@@ -104,7 +108,7 @@ func newMqlAwsKeyspacesKeyspace(runtime *plugin.Runtime, region string, ks keysp
 			"name":                llx.StringDataPtr(ks.KeyspaceName),
 			"region":              llx.StringData(region),
 			"replicationStrategy": llx.StringData(string(ks.ReplicationStrategy)),
-			"replicationRegions":  llx.ArrayData(convert.SliceAnyToInterface(ks.ReplicationRegions), types.String),
+			"replicationRegions":  llx.ArrayData(convert.SliceAnyToInterface(replicationRegions), types.String),
 		})
 	if err != nil {
 		return nil, err
@@ -184,8 +188,9 @@ func (a *mqlAwsKeyspacesKeyspace) tags() (map[string]any, error) {
 
 // mqlAwsKeyspacesTableInternal caches data from GetTable for lazy-loaded fields.
 type mqlAwsKeyspacesTableInternal struct {
-	fetched bool
-	lock    sync.Mutex
+	fetched  bool
+	fetchErr error
+	lock     sync.Mutex
 
 	// Cached GetTable response fields
 	cachedStatus                 string
@@ -205,12 +210,12 @@ type mqlAwsKeyspacesTableInternal struct {
 
 func (a *mqlAwsKeyspacesTable) fetchTable() error {
 	if a.fetched {
-		return nil
+		return a.fetchErr
 	}
 	a.lock.Lock()
 	defer a.lock.Unlock()
 	if a.fetched {
-		return nil
+		return a.fetchErr
 	}
 
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
@@ -224,6 +229,8 @@ func (a *mqlAwsKeyspacesTable) fetchTable() error {
 		TableName:    &tableName,
 	})
 	if err != nil {
+		a.fetchErr = err
+		a.fetched = true
 		return err
 	}
 
