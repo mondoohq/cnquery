@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.3.2",
-  "generated_at": "2026-04-03T14:21:27-07:00",
+  "generated_at": "2026-04-03T14:37:36-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Authorization/roleAssignments/read",
@@ -241,7 +241,7 @@
     {
       "permission": "Microsoft.DBforPostgreSQL/servers/read",
       "service": "Microsoft.DBforPostgreSQL",
-      "action": "NewListPager",
+      "action": "NewListBySubscriptionPager",
       "source_file": "postgresql.go"
     },
     {
@@ -319,7 +319,7 @@
     {
       "permission": "Microsoft.Network/azureFirewalls/read",
       "service": "Microsoft.Network",
-      "action": "NewListAllPager",
+      "action": "Get",
       "source_file": "network.go"
     },
     {
@@ -367,7 +367,7 @@
     {
       "permission": "Microsoft.Network/natGateways/read",
       "service": "Microsoft.Network",
-      "action": "NewListAllPager",
+      "action": "Get",
       "source_file": "network.go"
     },
     {
@@ -433,7 +433,7 @@
     {
       "permission": "Microsoft.Network/virtualNetworks/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListAllPager",
       "source_file": "network.go"
     },
     {
@@ -445,7 +445,7 @@
     {
       "permission": "Microsoft.Network/webApplicationFirewallPolicies/read",
       "service": "Microsoft.Network",
-      "action": "NewListAllPager",
+      "action": "Get",
       "source_file": "network.go"
     },
     {

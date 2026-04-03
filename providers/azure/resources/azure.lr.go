@@ -980,7 +980,7 @@ func init() {
 			Create: createAzureSubscriptionContainerRegistryServiceRegistryReplication,
 		},
 		"azure.subscription.containerRegistryService.registry.scopeMap": {
-			// to override args, implement: initAzureSubscriptionContainerRegistryServiceRegistryScopeMap(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAzureSubscriptionContainerRegistryServiceRegistryScopeMap,
 			Create: createAzureSubscriptionContainerRegistryServiceRegistryScopeMap,
 		},
 		"azure.subscription.containerRegistryService.registry.token": {

@@ -23,7 +23,6 @@ type mqlAzureSubscriptionContainerRegistryServiceRegistryInternal struct {
 	cachePolicies                   *armcontainerregistry.Policies
 	cacheEncryption                 *armcontainerregistry.EncryptionProperty
 	cachePrivateEndpointConnections []*armcontainerregistry.PrivateEndpointConnection
-	cacheScopeMapID                 string // for token→scopeMap cross-ref (unused on registry itself)
 }
 
 type mqlAzureSubscriptionContainerRegistryServiceRegistryTokenInternal struct {
@@ -674,6 +673,60 @@ func createScopeMapResource(runtime *plugin.Runtime, sm *armcontainerregistry.Sc
 
 func (a *mqlAzureSubscriptionContainerRegistryServiceRegistryScopeMap) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+// initAzureSubscriptionContainerRegistryServiceRegistryScopeMap fetches a scope map by ID
+// when it hasn't been pre-cached via the parent registry's scopeMaps() call.
+func initAzureSubscriptionContainerRegistryServiceRegistryScopeMap(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	idRaw, ok := args["id"]
+	if !ok || idRaw == nil {
+		return nil, nil, errors.New("id required to fetch scope map")
+	}
+	id, ok := idRaw.Value.(string)
+	if !ok || id == "" {
+		return nil, nil, errors.New("id must be a non-empty string")
+	}
+
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, nil, err
+	}
+	registryName, err := resourceID.Component("registries")
+	if err != nil {
+		return nil, nil, err
+	}
+	scopeMapName, err := resourceID.Component("scopeMaps")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	ctx := context.Background()
+	client, err := armcontainerregistry.NewScopeMapsClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	resp, err := client.Get(ctx, resourceID.ResourceGroup, registryName, scopeMapName, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	mqlSm, err := createScopeMapResource(runtime, &resp.ScopeMap)
+	if err != nil {
+		return nil, nil, err
+	}
+	return nil, mqlSm, nil
 }
 
 // tokens fetches all tokens for the registry.
