@@ -834,7 +834,7 @@ func (a *mqlAwsS3Bucket) encryptionRules() ([]any, error) {
 }
 
 func (a *mqlAwsS3BucketMetricsConfiguration) id() (string, error) {
-	return a.Id.Data, nil
+	return a.__id, nil
 }
 
 func (a *mqlAwsS3Bucket) metricsConfigurations() ([]any, error) {
@@ -863,9 +863,11 @@ func (a *mqlAwsS3Bucket) metricsConfigurations() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			mcId := aws.ToString(mc.Id)
 			mqlMC, err := CreateResource(a.MqlRuntime, "aws.s3.bucket.metricsConfiguration",
 				map[string]*llx.RawData{
-					"id":     llx.StringDataPtr(mc.Id),
+					"__id":   llx.StringData(fmt.Sprintf("%s/metricsConfiguration/%s", a.Arn.Data, mcId)),
+					"id":     llx.StringData(mcId),
 					"filter": llx.MapData(filterDict, types.Any),
 				})
 			if err != nil {

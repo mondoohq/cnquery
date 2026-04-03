@@ -179,8 +179,7 @@ func (a *mqlAwsAppstreamFleet) computeCapacityStatus() (*mqlAwsAppstreamFleetCom
 }
 
 func (a *mqlAwsAppstreamFleetComputeCapacityStatus) id() (string, error) {
-	// This is a singleton per fleet, use parent fleet ARN as a namespace
-	return "computeCapacityStatus", nil
+	return a.__id, nil
 }
 
 func (a *mqlAwsAppstreamFleet) tags() (map[string]any, error) {
@@ -341,7 +340,7 @@ func (a *mqlAwsAppstreamStack) contentRedirection() (*mqlAwsAppstreamStackConten
 }
 
 func (a *mqlAwsAppstreamStackContentRedirection) id() (string, error) {
-	return "contentRedirection", nil
+	return a.__id, nil
 }
 
 func (a *mqlAwsAppstreamStack) tags() (map[string]any, error) {

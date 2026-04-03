@@ -399,22 +399,20 @@ func (a *mqlAwsAccount) paths() ([]any, error) {
 	client := conn.Organizations("")
 	ctx := context.Background()
 
-	paginator := organizations.NewListAccountsPaginator(client, &organizations.ListAccountsInput{})
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
-		if err != nil {
-			if Is400AccessDeniedError(err) {
-				return []any{}, nil
-			}
-			return nil, err
+	accountId := a.Id.Data
+	resp, err := client.DescribeAccount(ctx, &organizations.DescribeAccountInput{
+		AccountId: &accountId,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return []any{}, nil
 		}
-		for _, account := range page.Accounts {
-			if aws.ToString(account.Id) == a.Id.Data {
-				return toInterfaceArr(account.Paths), nil
-			}
-		}
+		return nil, err
 	}
-	return []any{}, nil
+	if resp.Account == nil {
+		return []any{}, nil
+	}
+	return toInterfaceArr(resp.Account.Paths), nil
 }
 
 func (a *mqlAwsOrganization) organizationalUnits() ([]any, error) {
