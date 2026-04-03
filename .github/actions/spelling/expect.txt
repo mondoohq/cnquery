@@ -42,6 +42,7 @@ clcerts
 cloudflare
 Clusterwide
 cmdline
+Cmk
 cmek
 cmk
 cmnd
@@ -118,6 +119,7 @@ hostedzone
 hostkeys
 hotlink
 hvm
+Iaa
 iaa
 iana
 iap
