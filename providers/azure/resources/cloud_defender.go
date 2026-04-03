@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"go.mondoo.com/mql/v13/llx"
@@ -15,6 +16,7 @@ import (
 	"go.mondoo.com/mql/v13/providers/azure/connection"
 	"go.mondoo.com/mql/v13/types"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity"
 	security "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity"
@@ -975,6 +977,11 @@ func (a *mqlAzureSubscriptionCloudDefenderService) secureScores() ([]any, error)
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not list secure scores due to access denied")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, item := range page.Value {
@@ -1041,6 +1048,11 @@ func (a *mqlAzureSubscriptionCloudDefenderService) secureScoreControls() ([]any,
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not list secure score controls due to access denied")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, item := range page.Value {
@@ -1127,6 +1139,11 @@ func (a *mqlAzureSubscriptionCloudDefenderService) regulatoryComplianceStandards
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not list regulatory compliance standards due to access denied")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, item := range page.Value {
@@ -1202,6 +1219,11 @@ func (a *mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard) c
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not list regulatory compliance controls due to access denied")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, item := range page.Value {

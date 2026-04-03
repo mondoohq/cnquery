@@ -120,6 +120,7 @@ hvm
 iana
 iap
 iccid
+idps
 ilb
 imds
 imei

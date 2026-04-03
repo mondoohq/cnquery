@@ -990,8 +990,8 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) encryptionScopes() ([]any, e
 
 			var source, state string
 			var requireInfrastructureEncryption *bool
-			var keyVaultProperties map[string]any
-			var creationTime, lastModifiedTime *time.Time
+			var keyVaultKeyUri, currentVersionedKeyIdentifier *string
+			var creationTime, lastModifiedTime, lastKeyRotationTimestamp *time.Time
 
 			if scope.EncryptionScopeProperties != nil {
 				props := scope.EncryptionScopeProperties
@@ -1005,11 +1005,9 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) encryptionScopes() ([]any, e
 				creationTime = props.CreationTime
 				lastModifiedTime = props.LastModifiedTime
 				if props.KeyVaultProperties != nil {
-					kvProps, err := convert.JsonToDict(props.KeyVaultProperties)
-					if err != nil {
-						return nil, err
-					}
-					keyVaultProperties = kvProps
+					keyVaultKeyUri = props.KeyVaultProperties.KeyURI
+					currentVersionedKeyIdentifier = props.KeyVaultProperties.CurrentVersionedKeyIdentifier
+					lastKeyRotationTimestamp = props.KeyVaultProperties.LastKeyRotationTimestamp
 				}
 			}
 
@@ -1021,7 +1019,9 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) encryptionScopes() ([]any, e
 					"source":                          llx.StringData(source),
 					"state":                           llx.StringData(state),
 					"requireInfrastructureEncryption": llx.BoolDataPtr(requireInfrastructureEncryption),
-					"keyVaultProperties":              llx.DictData(keyVaultProperties),
+					"keyVaultKeyUri":                  llx.StringDataPtr(keyVaultKeyUri),
+					"currentVersionedKeyIdentifier":   llx.StringDataPtr(currentVersionedKeyIdentifier),
+					"lastKeyRotationTimestamp":        llx.TimeDataPtr(lastKeyRotationTimestamp),
 					"creationTime":                    llx.TimeDataPtr(creationTime),
 					"lastModifiedTime":                llx.TimeDataPtr(lastModifiedTime),
 				})
@@ -1061,7 +1061,10 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) managementPolicy() (*mqlAzur
 	resp, err := client.Get(ctx, resourceID.ResourceGroup, account, storage.ManagementPolicyNameDefault, nil)
 	if err != nil {
 		var respErr *azcore.ResponseError
-		if errors.As(err, &respErr) && respErr.StatusCode == http.StatusNotFound {
+		if errors.As(err, &respErr) && (respErr.StatusCode == http.StatusNotFound || respErr.StatusCode == http.StatusForbidden) {
+			if respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not get management policy due to access denied")
+			}
 			a.ManagementPolicy.State = plugin.StateIsNull | plugin.StateIsSet
 			return nil, nil
 		}
@@ -1125,15 +1128,15 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) managementPolicy() (*mqlAzur
 				ruleId := fmt.Sprintf("%s/managementPolicy/rules/%s", id, convert.ToValue(rule.Name))
 				mqlRule, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionStorageServiceAccountManagementPolicyRule,
 					map[string]*llx.RawData{
-						"id":              llx.StringData(ruleId),
-						"name":            llx.StringDataPtr(rule.Name),
-						"enabled":         llx.BoolDataPtr(rule.Enabled),
-						"type":            llx.StringData(ruleType),
-						"blobTypes":       llx.ArrayData(blobTypes, types.String),
-						"prefixMatch":     llx.ArrayData(prefixMatch, types.String),
-						"baseBlobActions": llx.DictData(baseBlobActions),
-						"snapshotActions": llx.DictData(snapshotActions),
-						"versionActions":  llx.DictData(versionActions),
+						"id":                llx.StringData(ruleId),
+						"name":              llx.StringDataPtr(rule.Name),
+						"enabled":           llx.BoolDataPtr(rule.Enabled),
+						"type":              llx.StringData(ruleType),
+						"filterBlobTypes":   llx.ArrayData(blobTypes, types.String),
+						"filterPrefixMatch": llx.ArrayData(prefixMatch, types.String),
+						"baseBlobActions":   llx.DictData(baseBlobActions),
+						"snapshotActions":   llx.DictData(snapshotActions),
+						"versionActions":    llx.DictData(versionActions),
 					})
 				if err != nil {
 					return nil, err

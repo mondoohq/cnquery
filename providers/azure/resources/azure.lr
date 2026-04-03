@@ -1572,13 +1572,13 @@ private azure.subscription.storageService.account.encryptionScope @defaults("nam
   name string
   // Encryption scope type
   type string
-  // Encryption source ("Microsoft.Storage" or "Microsoft.KeyVault")
+  // Encryption source ("Microsoft.Storage" or "Microsoft.Keyvault")
   source string
   // State of the encryption scope (Enabled or Disabled)
   state string
   // Whether infrastructure encryption is required
   requireInfrastructureEncryption bool
-  // Key Vault key URI (if source is Microsoft.KeyVault)
+  // Key Vault key URI (if source is Microsoft.Keyvault)
   keyVaultKeyUri string
   // Current versioned key identifier
   currentVersionedKeyIdentifier string
