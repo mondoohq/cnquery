@@ -5921,7 +5921,7 @@ private aws.ec2.networkacl @defaults("id region") {
   associations []aws.ec2.networkacl.association
 }
 
-private aws.ec2.networkacl.association {
+private aws.ec2.networkacl.association @defaults("associationId subnetId") {
   // ID for the association
   associationId string
   // Network ACL ID for the association

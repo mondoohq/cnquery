@@ -505,7 +505,7 @@ func init() {
 			Create: createAwsVpcFlowlog,
 		},
 		"aws.vpc.vpnGateway": {
-			// to override args, implement: initAwsVpcVpnGateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsVpcVpnGateway,
 			Create: createAwsVpcVpnGateway,
 		},
 		"aws.waf": {
@@ -1593,7 +1593,7 @@ func init() {
 			Create: createAwsEc2ClientVpnEndpoint,
 		},
 		"aws.ec2.customerGateway": {
-			// to override args, implement: initAwsEc2CustomerGateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsEc2CustomerGateway,
 			Create: createAwsEc2CustomerGateway,
 		},
 		"aws.ec2.egressOnlyInternetGateway": {
@@ -1681,7 +1681,7 @@ func init() {
 			Create: createAwsEc2Instance,
 		},
 		"aws.ec2.networkinterface": {
-			// to override args, implement: initAwsEc2Networkinterface(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsEc2Networkinterface,
 			Create: createAwsEc2Networkinterface,
 		},
 		"aws.ec2.keypair": {
