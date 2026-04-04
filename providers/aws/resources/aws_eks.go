@@ -70,7 +70,11 @@ func (a *mqlAwsEks) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 				}
 
 				for _, clusterName := range page.Clusters {
-					// If tag filters are active, we need to describe the cluster to check tags
+					clusterArn := fmt.Sprintf("arn:aws:eks:%s:%s:cluster/%s", region, conn.AccountId(), clusterName)
+
+					// If tag filters are active, we need to describe the cluster to check tags.
+					// Cache the response to avoid a redundant call in fetchDetail().
+					var cachedDescribe *ekstypes.Cluster
 					if conn.Filters.General.HasTags() {
 						descResp, err := svc.DescribeCluster(ctx, &eks.DescribeClusterInput{Name: aws.String(clusterName)})
 						if err != nil {
@@ -83,9 +87,13 @@ func (a *mqlAwsEks) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 							log.Debug().Str("cluster", clusterName).Msg("skipping eks cluster due to filters")
 							continue
 						}
+						cachedDescribe = descResp.Cluster
+						// Use the real ARN from the API (handles partitions correctly)
+						if descResp.Cluster.Arn != nil {
+							clusterArn = *descResp.Cluster.Arn
+						}
 					}
 
-					clusterArn := fmt.Sprintf("arn:aws:eks:%s:%s:cluster/%s", region, conn.AccountId(), clusterName)
 					args := map[string]*llx.RawData{
 						"name":   llx.StringData(clusterName),
 						"arn":    llx.StringData(clusterArn),
@@ -95,6 +103,14 @@ func (a *mqlAwsEks) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 					mqlCluster, err := CreateResource(a.MqlRuntime, ResourceAwsEksCluster, args)
 					if err != nil {
 						return nil, err
+					}
+					// If we already described the cluster for tag filtering, cache it
+					// to avoid a redundant DescribeCluster call in fetchDetail()
+					if cachedDescribe != nil {
+						cast := mqlCluster.(*mqlAwsEksCluster)
+						if err := cast.populateFromDescribe(cachedDescribe); err != nil {
+							return nil, err
+						}
 					}
 					res = append(res, mqlCluster)
 				}
@@ -135,8 +151,18 @@ func (a *mqlAwsEksCluster) fetchDetail() error {
 		a.fetchErr = err
 		return err
 	}
-	cluster := descResp.Cluster
+	if err := a.populateFromDescribe(descResp.Cluster); err != nil {
+		a.fetched = true
+		a.fetchErr = err
+		return err
+	}
+	return nil
+}
 
+// populateFromDescribe sets all computed fields from a DescribeCluster response.
+// Called from fetchDetail() and also from getClusters() when tag filtering is active
+// (to avoid a redundant DescribeCluster call).
+func (a *mqlAwsEksCluster) populateFromDescribe(cluster *ekstypes.Cluster) error {
 	a.Tags = plugin.TValue[map[string]any]{Data: toInterfaceMap(cluster.Tags), State: plugin.StateIsSet}
 	a.Endpoint = plugin.TValue[string]{Data: convert.ToValue(cluster.Endpoint), State: plugin.StateIsSet}
 	a.Version = plugin.TValue[string]{Data: convert.ToValue(cluster.Version), State: plugin.StateIsSet}
@@ -193,8 +219,6 @@ func (a *mqlAwsEksCluster) fetchDetail() error {
 			map[string]*llx.RawData{"arn": llx.StringDataPtr(cluster.RoleArn)},
 		)
 		if err != nil {
-			a.fetched = true
-			a.fetchErr = err
 			return err
 		}
 		a.IamRole = plugin.TValue[*mqlAwsIamRole]{Data: mqlIam.(*mqlAwsIamRole), State: plugin.StateIsSet}
@@ -247,7 +271,10 @@ func (a *mqlAwsEksCluster) createdAt() (*time.Time, error) {
 }
 
 func (a *mqlAwsEksCluster) iamRole() (*mqlAwsIamRole, error) {
-	return nil, a.fetchDetail()
+	if err := a.fetchDetail(); err != nil {
+		return nil, err
+	}
+	return a.IamRole.Data, nil
 }
 
 func (a *mqlAwsEksCluster) supportType() (string, error) {
