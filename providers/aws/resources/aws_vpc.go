@@ -236,6 +236,14 @@ func (a *mqlAwsVpcEndpoint) id() (string, error) {
 	return a.Id.Data, nil
 }
 
+type mqlAwsVpcEndpointInternal struct {
+	securityGroupIdHandler
+	cacheRouteTableIds       []string
+	cacheNetworkInterfaceIds []string
+	region                   string
+	accountID                string
+}
+
 func (a *mqlAwsVpc) endpoints() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	vpcId := a.Id.Data
@@ -264,6 +272,9 @@ func (a *mqlAwsVpc) endpoints() ([]any, error) {
 			for _, subnet := range endpoint.SubnetIds {
 				subnetIds = append(subnetIds, subnet)
 			}
+
+			dnsEntries, _ := convert.JsonToDictSlice(endpoint.DnsEntries)
+
 			mqlEndpoint, err := CreateResource(a.MqlRuntime, ResourceAwsVpcEndpoint,
 				map[string]*llx.RawData{
 					"id":                llx.StringData(fmt.Sprintf("%s/%s", a.Region.Data, *endpoint.VpcEndpointId)),
@@ -276,11 +287,30 @@ func (a *mqlAwsVpc) endpoints() ([]any, error) {
 					"type":              llx.StringData(string(endpoint.VpcEndpointType)),
 					"vpc":               llx.StringDataPtr(endpoint.VpcId),
 					"createdAt":         llx.TimeDataPtr(endpoint.CreationTimestamp),
+					"dnsEntries":        llx.ArrayData(dnsEntries, types.Any),
 				},
 			)
 			if err != nil {
 				return nil, err
 			}
+
+			ep := mqlEndpoint.(*mqlAwsVpcEndpoint)
+			ep.region = a.Region.Data
+			ep.accountID = conn.AccountId()
+
+			// Cache security group ARNs
+			sgArns := make([]string, len(endpoint.Groups))
+			for i, sg := range endpoint.Groups {
+				sgArns[i] = fmt.Sprintf(securityGroupArnPattern, a.Region.Data, conn.AccountId(), convert.ToValue(sg.GroupId))
+			}
+			ep.setSecurityGroupArns(sgArns)
+
+			// Cache route table IDs
+			ep.cacheRouteTableIds = endpoint.RouteTableIds
+
+			// Cache network interface IDs
+			ep.cacheNetworkInterfaceIds = endpoint.NetworkInterfaceIds
+
 			endpoints = append(endpoints, mqlEndpoint)
 		}
 	}
@@ -461,12 +491,34 @@ func (a *mqlAwsVpc) peeringConnections() ([]any, error) {
 			if peerconn.Status != nil {
 				status = *peerconn.Status.Message
 			}
+			// Determine DNS resolution status from peering options
+			dnsResolution := false
+			if peerconn.RequesterVpcInfo != nil && peerconn.RequesterVpcInfo.PeeringOptions != nil &&
+				peerconn.RequesterVpcInfo.PeeringOptions.AllowDnsResolutionFromRemoteVpc != nil {
+				dnsResolution = *peerconn.RequesterVpcInfo.PeeringOptions.AllowDnsResolutionFromRemoteVpc
+			}
+			if !dnsResolution && peerconn.AccepterVpcInfo != nil && peerconn.AccepterVpcInfo.PeeringOptions != nil &&
+				peerconn.AccepterVpcInfo.PeeringOptions.AllowDnsResolutionFromRemoteVpc != nil {
+				dnsResolution = *peerconn.AccepterVpcInfo.PeeringOptions.AllowDnsResolutionFromRemoteVpc
+			}
+
+			var requesterAccountId, accepterAccountId string
+			if peerconn.RequesterVpcInfo != nil {
+				requesterAccountId = convert.ToValue(peerconn.RequesterVpcInfo.OwnerId)
+			}
+			if peerconn.AccepterVpcInfo != nil {
+				accepterAccountId = convert.ToValue(peerconn.AccepterVpcInfo.OwnerId)
+			}
+
 			mqlPeerConn, err := CreateResource(a.MqlRuntime, ResourceAwsVpcPeeringConnection,
 				map[string]*llx.RawData{
-					"expirationTime": llx.TimeDataPtr(peerconn.ExpirationTime),
-					"id":             llx.StringDataPtr(peerconn.VpcPeeringConnectionId),
-					"status":         llx.StringData(status),
-					"tags":           llx.MapData(toInterfaceMap(ec2TagsToMap(peerconn.Tags)), types.String),
+					"expirationTime":       llx.TimeDataPtr(peerconn.ExpirationTime),
+					"id":                   llx.StringDataPtr(peerconn.VpcPeeringConnectionId),
+					"status":               llx.StringData(status),
+					"tags":                 llx.MapData(toInterfaceMap(ec2TagsToMap(peerconn.Tags)), types.String),
+					"requesterAccountId":   llx.StringData(requesterAccountId),
+					"accepterAccountId":    llx.StringData(accepterAccountId),
+					"dnsResolutionEnabled": llx.BoolData(dnsResolution),
 				},
 			)
 			if err != nil {
@@ -589,6 +641,12 @@ func (a *mqlAwsVpc) flowLogs() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			fl := mqlFlowLog.(*mqlAwsVpcFlowlog)
+			fl.cacheDeliverLogsPermissionArn = flowLog.DeliverLogsPermissionArn
+			fl.cacheLogGroupName = flowLog.LogGroupName
+			fl.cacheLogDestination = flowLog.LogDestination
+			fl.cacheLogDestinationType = string(flowLog.LogDestinationType)
+			fl.region = a.Region.Data
 			flowLogs = append(flowLogs, mqlFlowLog)
 		}
 	}
@@ -871,6 +929,11 @@ func (a *mqlAwsVpc) subnets() ([]any, error) {
 			}
 
 			tagsMap := ec2TagsToMap(subnet.Tags)
+			var ipv6CidrBlock string
+			if len(subnet.Ipv6CidrBlockAssociationSet) > 0 && subnet.Ipv6CidrBlockAssociationSet[0].Ipv6CidrBlock != nil {
+				ipv6CidrBlock = *subnet.Ipv6CidrBlockAssociationSet[0].Ipv6CidrBlock
+			}
+
 			subnetResource, err := CreateResource(a.MqlRuntime, ResourceAwsVpcSubnet,
 				map[string]*llx.RawData{
 					"arn":                         llx.StringData(fmt.Sprintf(subnetArnPattern, a.Region.Data, conn.AccountId(), convert.ToValue(subnet.SubnetId))),
@@ -880,6 +943,7 @@ func (a *mqlAwsVpc) subnets() ([]any, error) {
 					"cidrs":                       llx.StringDataPtr(subnet.CidrBlock),
 					"defaultForAvailabilityZone":  llx.BoolDataPtr(subnet.DefaultForAz),
 					"id":                          llx.StringDataPtr(subnet.SubnetId),
+					"ipv6CidrBlock":               llx.StringData(ipv6CidrBlock),
 					"mapPublicIpOnLaunch":         llx.BoolDataPtr(subnet.MapPublicIpOnLaunch),
 					"name":                        llx.StringData(tagsMap["Name"]),
 					"region":                      llx.StringData(a.Region.Data),
@@ -952,6 +1016,11 @@ func initAwsVpcSubnet(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 		args["cidrs"] = llx.StringDataPtr(subnet.CidrBlock)
 		args["defaultForAvailabilityZone"] = llx.BoolDataPtr(subnet.DefaultForAz)
 		args["id"] = llx.StringDataPtr(subnet.SubnetId)
+		var ipv6CidrBlock string
+		if len(subnet.Ipv6CidrBlockAssociationSet) > 0 && subnet.Ipv6CidrBlockAssociationSet[0].Ipv6CidrBlock != nil {
+			ipv6CidrBlock = *subnet.Ipv6CidrBlockAssociationSet[0].Ipv6CidrBlock
+		}
+		args["ipv6CidrBlock"] = llx.StringData(ipv6CidrBlock)
 		if subnet.BlockPublicAccessStates != nil {
 			args["internetGatewayBlockMode"] = llx.StringData(string(subnet.BlockPublicAccessStates.InternetGatewayBlockMode))
 		}
@@ -1207,7 +1276,372 @@ func (a *mqlAwsVpc) vpnGateways() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlVgw.(*mqlAwsVpcVpnGateway).region = a.Region.Data
 		vgws = append(vgws, mqlVgw)
 	}
 	return vgws, nil
+}
+
+// VPC DNS attributes (#14, #15)
+
+func (a *mqlAwsVpc) enableDnsSupport() (bool, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Ec2(a.Region.Data)
+	ctx := context.Background()
+
+	resp, err := svc.DescribeVpcAttribute(ctx, &ec2.DescribeVpcAttributeInput{
+		VpcId:     aws.String(a.Id.Data),
+		Attribute: vpctypes.VpcAttributeNameEnableDnsSupport,
+	})
+	if err != nil {
+		return false, err
+	}
+	if resp.EnableDnsSupport != nil && resp.EnableDnsSupport.Value != nil {
+		return *resp.EnableDnsSupport.Value, nil
+	}
+	return false, nil
+}
+
+func (a *mqlAwsVpc) enableDnsHostnames() (bool, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Ec2(a.Region.Data)
+	ctx := context.Background()
+
+	resp, err := svc.DescribeVpcAttribute(ctx, &ec2.DescribeVpcAttributeInput{
+		VpcId:     aws.String(a.Id.Data),
+		Attribute: vpctypes.VpcAttributeNameEnableDnsHostnames,
+	})
+	if err != nil {
+		return false, err
+	}
+	if resp.EnableDnsHostnames != nil && resp.EnableDnsHostnames.Value != nil {
+		return *resp.EnableDnsHostnames.Value, nil
+	}
+	return false, nil
+}
+
+// DHCP Options (#13)
+
+func (a *mqlAwsEc2DhcpOptions) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAwsVpc) dhcpOptions() (*mqlAwsEc2DhcpOptions, error) {
+	dhcpOptionsId := a.DhcpOptionsId.Data
+	if dhcpOptionsId == "" {
+		a.DhcpOptions.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Ec2(a.Region.Data)
+	ctx := context.Background()
+
+	resp, err := svc.DescribeDhcpOptions(ctx, &ec2.DescribeDhcpOptionsInput{
+		DhcpOptionsIds: []string{dhcpOptionsId},
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(resp.DhcpOptions) == 0 {
+		a.DhcpOptions.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	opts := resp.DhcpOptions[0]
+	configs, _ := convert.JsonToDictSlice(opts.DhcpConfigurations)
+
+	mqlDhcp, err := CreateResource(a.MqlRuntime, ResourceAwsEc2DhcpOptions,
+		map[string]*llx.RawData{
+			"id":             llx.StringDataPtr(opts.DhcpOptionsId),
+			"region":         llx.StringData(a.Region.Data),
+			"tags":           llx.MapData(toInterfaceMap(ec2TagsToMap(opts.Tags)), types.String),
+			"configurations": llx.ArrayData(configs, types.Any),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlDhcp.(*mqlAwsEc2DhcpOptions), nil
+}
+
+// VPC Endpoint methods (#16-19)
+
+func (a *mqlAwsVpcEndpoint) securityGroups() ([]any, error) {
+	return a.securityGroupIdHandler.newSecurityGroupResources(a.MqlRuntime)
+}
+
+func (a *mqlAwsVpcEndpoint) routeTables() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	rts := []any{}
+	for _, rtId := range a.cacheRouteTableIds {
+		mqlRt, err := NewResource(a.MqlRuntime, ResourceAwsVpcRoutetable,
+			map[string]*llx.RawData{
+				"arn": llx.StringData(fmt.Sprintf(routeTableArnPattern, a.region, conn.AccountId(), rtId)),
+			})
+		if err != nil {
+			return nil, err
+		}
+		rts = append(rts, mqlRt)
+	}
+	return rts, nil
+}
+
+func (a *mqlAwsVpcEndpoint) networkInterfaces() ([]any, error) {
+	enis := []any{}
+	for _, eniId := range a.cacheNetworkInterfaceIds {
+		mqlEni, err := NewResource(a.MqlRuntime, ResourceAwsEc2Networkinterface,
+			map[string]*llx.RawData{
+				"id": llx.StringData(eniId),
+			})
+		if err != nil {
+			return nil, err
+		}
+		enis = append(enis, mqlEni)
+	}
+	return enis, nil
+}
+
+// Flow log methods (#20-22)
+
+type mqlAwsVpcFlowlogInternal struct {
+	cacheDeliverLogsPermissionArn *string
+	cacheLogGroupName             *string
+	cacheLogDestination           *string
+	cacheLogDestinationType       string
+	region                        string
+}
+
+func (a *mqlAwsVpcFlowlog) iamRole() (*mqlAwsIamRole, error) {
+	if a.cacheDeliverLogsPermissionArn == nil || *a.cacheDeliverLogsPermissionArn == "" {
+		a.IamRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlRole, err := NewResource(a.MqlRuntime, "aws.iam.role",
+		map[string]*llx.RawData{
+			"arn": llx.StringDataPtr(a.cacheDeliverLogsPermissionArn),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlRole.(*mqlAwsIamRole), nil
+}
+
+func (a *mqlAwsVpcFlowlog) logGroup() (*mqlAwsCloudwatchLoggroup, error) {
+	if a.cacheLogGroupName == nil || *a.cacheLogGroupName == "" || a.cacheLogDestinationType != "cloud-watch-logs" {
+		a.LogGroup.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	logGroupArn := fmt.Sprintf("arn:aws:logs:%s:%s:log-group:%s", a.region, conn.AccountId(), *a.cacheLogGroupName)
+	mqlLogGroup, err := NewResource(a.MqlRuntime, ResourceAwsCloudwatchLoggroup,
+		map[string]*llx.RawData{
+			"arn": llx.StringData(logGroupArn),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlLogGroup.(*mqlAwsCloudwatchLoggroup), nil
+}
+
+func (a *mqlAwsVpcFlowlog) s3Bucket() (*mqlAwsS3Bucket, error) {
+	if a.cacheLogDestination == nil || *a.cacheLogDestination == "" || a.cacheLogDestinationType != "s3" {
+		a.S3Bucket.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	// Parse bucket name from ARN: arn:aws:s3:::bucket-name or arn:aws:s3:::bucket-name/prefix
+	dest := *a.cacheLogDestination
+	parsed, err := arn.Parse(dest)
+	if err != nil {
+		a.S3Bucket.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	bucketName := strings.Split(parsed.Resource, "/")[0]
+	if bucketName == "" {
+		a.S3Bucket.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	mqlBucket, err := NewResource(a.MqlRuntime, "aws.s3.bucket",
+		map[string]*llx.RawData{
+			"name": llx.StringData(bucketName),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlBucket.(*mqlAwsS3Bucket), nil
+}
+
+// Subnet methods (#24-26)
+
+func (a *mqlAwsVpcSubnet) networkAcl() (*mqlAwsEc2Networkacl, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Ec2(a.Region.Data)
+	ctx := context.Background()
+
+	subnetFilter := "association.subnet-id"
+	resp, err := svc.DescribeNetworkAcls(ctx, &ec2.DescribeNetworkAclsInput{
+		Filters: []vpctypes.Filter{{Name: &subnetFilter, Values: []string{a.Id.Data}}},
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(resp.NetworkAcls) == 0 {
+		a.NetworkAcl.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	acl := resp.NetworkAcls[0]
+	mqlAcl, err := NewResource(a.MqlRuntime, ResourceAwsEc2Networkacl,
+		map[string]*llx.RawData{
+			"arn": llx.StringData(fmt.Sprintf(networkAclArnPattern, a.Region.Data, conn.AccountId(), convert.ToValue(acl.NetworkAclId))),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlAcl.(*mqlAwsEc2Networkacl), nil
+}
+
+func (a *mqlAwsVpcSubnet) natGateway() (*mqlAwsVpcNatgateway, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Ec2(a.Region.Data)
+	ctx := context.Background()
+
+	subnetFilter := "subnet-id"
+	resp, err := svc.DescribeNatGateways(ctx, &ec2.DescribeNatGatewaysInput{
+		Filter: []vpctypes.Filter{{Name: &subnetFilter, Values: []string{a.Id.Data}}},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Find an active NAT gateway
+	for _, gw := range resp.NatGateways {
+		if gw.State == vpctypes.NatGatewayStateAvailable || gw.State == vpctypes.NatGatewayStatePending {
+			addresses := []any{}
+			for _, address := range gw.NatGatewayAddresses {
+				mqlAddr, err := CreateResource(a.MqlRuntime, ResourceAwsVpcNatgatewayAddress,
+					map[string]*llx.RawData{
+						"allocationId":       llx.StringDataPtr(address.AllocationId),
+						"networkInterfaceId": llx.StringDataPtr(address.NetworkInterfaceId),
+						"privateIp":          llx.StringDataPtr(address.PrivateIp),
+						"isPrimary":          llx.BoolDataPtr(address.IsPrimary),
+					})
+				if err == nil {
+					mqlAddr.(*mqlAwsVpcNatgatewayAddress).natGatewayAddressCache = address
+					mqlAddr.(*mqlAwsVpcNatgatewayAddress).region = a.Region.Data
+					addresses = append(addresses, mqlAddr)
+				}
+			}
+			mqlNatGw, err := CreateResource(a.MqlRuntime, ResourceAwsVpcNatgateway,
+				map[string]*llx.RawData{
+					"createdAt":    llx.TimeDataPtr(gw.CreateTime),
+					"natGatewayId": llx.StringDataPtr(gw.NatGatewayId),
+					"state":        llx.StringData(string(gw.State)),
+					"tags":         llx.MapData(toInterfaceMap(ec2TagsToMap(gw.Tags)), types.String),
+					"addresses":    llx.ArrayData(addresses, types.Type(ResourceAwsVpcNatgatewayAddress)),
+				})
+			if err != nil {
+				return nil, err
+			}
+			mqlNatGw.(*mqlAwsVpcNatgateway).natGatewayCache = gw
+			mqlNatGw.(*mqlAwsVpcNatgateway).region = a.Region.Data
+			return mqlNatGw.(*mqlAwsVpcNatgateway), nil
+		}
+	}
+	a.NatGateway.State = plugin.StateIsNull | plugin.StateIsSet
+	return nil, nil
+}
+
+func (a *mqlAwsVpcSubnet) flowLogs() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Ec2(a.Region.Data)
+	ctx := context.Background()
+
+	filterKeyVal := "resource-id"
+	params := &ec2.DescribeFlowLogsInput{
+		Filter: []vpctypes.Filter{{Name: &filterKeyVal, Values: []string{a.Id.Data}}},
+	}
+	paginator := ec2.NewDescribeFlowLogsPaginator(svc, params)
+	flowLogs := []any{}
+	for paginator.HasMorePages() {
+		resp, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, flowLog := range resp.FlowLogs {
+			mqlFlowLog, err := CreateResource(a.MqlRuntime, ResourceAwsVpcFlowlog,
+				map[string]*llx.RawData{
+					"createdAt":              llx.TimeDataPtr(flowLog.CreationTime),
+					"destination":            llx.StringDataPtr(flowLog.LogDestination),
+					"destinationType":        llx.StringData(string(flowLog.LogDestinationType)),
+					"deliverLogsStatus":      llx.StringDataPtr(flowLog.DeliverLogsStatus),
+					"id":                     llx.StringDataPtr(flowLog.FlowLogId),
+					"logFormat":              llx.StringDataPtr(flowLog.LogFormat),
+					"maxAggregationInterval": llx.IntDataDefault(flowLog.MaxAggregationInterval, 0),
+					"region":                 llx.StringData(a.Region.Data),
+					"status":                 llx.StringDataPtr(flowLog.FlowLogStatus),
+					"tags":                   llx.MapData(toInterfaceMap(ec2TagsToMap(flowLog.Tags)), types.String),
+					"trafficType":            llx.StringData(string(flowLog.TrafficType)),
+					"vpc":                    llx.StringData(a.cacheVpcId),
+				})
+			if err != nil {
+				return nil, err
+			}
+			fl := mqlFlowLog.(*mqlAwsVpcFlowlog)
+			fl.cacheDeliverLogsPermissionArn = flowLog.DeliverLogsPermissionArn
+			fl.cacheLogGroupName = flowLog.LogGroupName
+			fl.cacheLogDestination = flowLog.LogDestination
+			fl.cacheLogDestinationType = string(flowLog.LogDestinationType)
+			fl.region = a.Region.Data
+			flowLogs = append(flowLogs, mqlFlowLog)
+		}
+	}
+	return flowLogs, nil
+}
+
+// VPN Gateway methods (#40)
+
+type mqlAwsVpcVpnGatewayInternal struct {
+	region string
+}
+
+func (a *mqlAwsVpcVpnGateway) vpnConnections() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Ec2(a.region)
+	ctx := context.Background()
+
+	filterKeyVal := "vpn-gateway-id"
+	resp, err := svc.DescribeVpnConnections(ctx, &ec2.DescribeVpnConnectionsInput{
+		Filters: []vpctypes.Filter{{Name: &filterKeyVal, Values: []string{a.Id.Data}}},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	vpnConns := []any{}
+	for _, vpnConn := range resp.VpnConnections {
+		mqlVgwT := []any{}
+		for _, vgwT := range vpnConn.VgwTelemetry {
+			mqlVgwTelemetry, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Vgwtelemetry,
+				map[string]*llx.RawData{
+					"outsideIpAddress": llx.StringData(convert.ToValue(vgwT.OutsideIpAddress)),
+					"status":           llx.StringData(string(vgwT.Status)),
+					"statusMessage":    llx.StringData(convert.ToValue(vgwT.StatusMessage)),
+				})
+			if err != nil {
+				return nil, err
+			}
+			mqlVgwT = append(mqlVgwT, mqlVgwTelemetry)
+		}
+		mqlVpnConn, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Vpnconnection,
+			map[string]*llx.RawData{
+				"arn":          llx.StringData(fmt.Sprintf(vpnConnArnPattern, a.region, conn.AccountId(), convert.ToValue(vpnConn.VpnConnectionId))),
+				"vgwTelemetry": llx.ArrayData(mqlVgwT, types.Resource(ResourceAwsEc2Vgwtelemetry)),
+			})
+		if err != nil {
+			return nil, err
+		}
+		vpnConns = append(vpnConns, mqlVpnConn)
+	}
+	return vpnConns, nil
 }

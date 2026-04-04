@@ -115,6 +115,21 @@ func (a *mqlAwsEc2Eip) instance() (*mqlAwsEc2Instance, error) {
 	return nil, nil
 }
 
+func (a *mqlAwsEc2Eip) networkInterface() (*mqlAwsEc2Networkinterface, error) {
+	if a.eipCache.NetworkInterfaceId == nil || *a.eipCache.NetworkInterfaceId == "" {
+		a.NetworkInterface.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlEni, err := NewResource(a.MqlRuntime, ResourceAwsEc2Networkinterface,
+		map[string]*llx.RawData{
+			"id": llx.StringDataPtr(a.eipCache.NetworkInterfaceId),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlEni.(*mqlAwsEc2Networkinterface), nil
+}
+
 func (a *mqlAwsEc2) eips() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	res := []any{}
@@ -257,6 +272,10 @@ func (a *mqlAwsEc2) getNetworkACLs(conn *connection.AwsConnection) []*jobpool.Jo
 								"subnetId":      llx.StringDataPtr(association.SubnetId),
 							})
 						if err == nil {
+							assocRes := mqlNetworkAclAssoc.(*mqlAwsEc2NetworkaclAssociation)
+							assocRes.cacheSubnetId = association.SubnetId
+							assocRes.region = region
+							assocRes.accountID = conn.AccountId()
 							assoc = append(assoc, mqlNetworkAclAssoc)
 						}
 					}
@@ -331,6 +350,29 @@ func initAwsEc2Networkacl(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 
 	return nil, nil, errors.New("network acl not found")
+}
+
+// NACL association subnet (#31)
+
+type mqlAwsEc2NetworkaclAssociationInternal struct {
+	cacheSubnetId *string
+	region        string
+	accountID     string
+}
+
+func (a *mqlAwsEc2NetworkaclAssociation) subnet() (*mqlAwsVpcSubnet, error) {
+	if a.cacheSubnetId == nil || *a.cacheSubnetId == "" {
+		a.Subnet.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlSubnet, err := NewResource(a.MqlRuntime, ResourceAwsVpcSubnet,
+		map[string]*llx.RawData{
+			"arn": llx.StringData(fmt.Sprintf(subnetArnPattern, a.region, a.accountID, *a.cacheSubnetId)),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlSubnet.(*mqlAwsVpcSubnet), nil
 }
 
 func (a *mqlAwsEc2NetworkaclEntryPortrange) id() (string, error) {
@@ -2430,6 +2472,7 @@ func (a *mqlAwsEc2) getTransitGateways(conn *connection.AwsConnection) []*jobpoo
 					if err != nil {
 						return nil, err
 					}
+					mqlTgw.(*mqlAwsEc2Transitgateway).region = region
 					res = append(res, mqlTgw)
 				}
 			}
@@ -2438,6 +2481,104 @@ func (a *mqlAwsEc2) getTransitGateways(conn *connection.AwsConnection) []*jobpoo
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+// Transit gateway internal and methods (#38-39)
+
+type mqlAwsEc2TransitgatewayInternal struct {
+	region string
+}
+
+func (a *mqlAwsEc2TransitgatewayAttachment) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAwsEc2TransitgatewayRouteTable) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAwsEc2Transitgateway) attachments() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Ec2(a.region)
+	ctx := context.Background()
+
+	filterKeyVal := "transit-gateway-id"
+	params := &ec2.DescribeTransitGatewayAttachmentsInput{
+		Filters: []ec2types.Filter{{Name: &filterKeyVal, Values: []string{a.Id.Data}}},
+	}
+	paginator := ec2.NewDescribeTransitGatewayAttachmentsPaginator(svc, params)
+	attachments := []any{}
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return attachments, nil
+			}
+			return nil, err
+		}
+		for _, att := range page.TransitGatewayAttachments {
+			if conn.Filters.General.MatchesExcludeTags(ec2TagsToMap(att.Tags)) {
+				continue
+			}
+			mqlAtt, err := CreateResource(a.MqlRuntime, ResourceAwsEc2TransitgatewayAttachment,
+				map[string]*llx.RawData{
+					"id":               llx.StringData(convert.ToValue(att.TransitGatewayAttachmentId)),
+					"transitGatewayId": llx.StringData(convert.ToValue(att.TransitGatewayId)),
+					"resourceId":       llx.StringData(convert.ToValue(att.ResourceId)),
+					"resourceType":     llx.StringData(string(att.ResourceType)),
+					"state":            llx.StringData(string(att.State)),
+					"tags":             llx.MapData(toInterfaceMap(ec2TagsToMap(att.Tags)), types.String),
+					"region":           llx.StringData(a.region),
+				})
+			if err != nil {
+				return nil, err
+			}
+			attachments = append(attachments, mqlAtt)
+		}
+	}
+	return attachments, nil
+}
+
+func (a *mqlAwsEc2Transitgateway) routeTables() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Ec2(a.region)
+	ctx := context.Background()
+
+	filterKeyVal := "transit-gateway-id"
+	params := &ec2.DescribeTransitGatewayRouteTablesInput{
+		Filters: []ec2types.Filter{{Name: &filterKeyVal, Values: []string{a.Id.Data}}},
+	}
+	paginator := ec2.NewDescribeTransitGatewayRouteTablesPaginator(svc, params)
+	routeTables := []any{}
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return routeTables, nil
+			}
+			return nil, err
+		}
+		for _, rt := range page.TransitGatewayRouteTables {
+			if conn.Filters.General.MatchesExcludeTags(ec2TagsToMap(rt.Tags)) {
+				continue
+			}
+			mqlRt, err := CreateResource(a.MqlRuntime, ResourceAwsEc2TransitgatewayRouteTable,
+				map[string]*llx.RawData{
+					"id":                           llx.StringData(convert.ToValue(rt.TransitGatewayRouteTableId)),
+					"transitGatewayId":             llx.StringData(convert.ToValue(rt.TransitGatewayId)),
+					"state":                        llx.StringData(string(rt.State)),
+					"defaultAssociationRouteTable": llx.BoolData(convert.ToValue(rt.DefaultAssociationRouteTable)),
+					"defaultPropagationRouteTable": llx.BoolData(convert.ToValue(rt.DefaultPropagationRouteTable)),
+					"tags":                         llx.MapData(toInterfaceMap(ec2TagsToMap(rt.Tags)), types.String),
+					"region":                       llx.StringData(a.region),
+				})
+			if err != nil {
+				return nil, err
+			}
+			routeTables = append(routeTables, mqlRt)
+		}
+	}
+	return routeTables, nil
 }
 
 func (a *mqlAwsEc2Vpnconnection) id() (string, error) {

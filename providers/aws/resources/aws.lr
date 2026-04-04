@@ -178,6 +178,12 @@ aws.vpc @defaults("id isDefault cidrBlock region") {
   networkAcls() []aws.ec2.networkacl
   // Virtual private gateways attached to the VPC
   vpnGateways() []aws.vpc.vpnGateway
+  // DHCP options set associated with the VPC
+  dhcpOptions() aws.ec2.dhcpOptions
+  // Whether DNS resolution is supported for the VPC
+  enableDnsSupport() bool
+  // Whether instances launched in the VPC get public DNS hostnames
+  enableDnsHostnames() bool
 }
 
 // Amazon Virtual Private Cloud (VPC) route table
@@ -282,6 +288,14 @@ private aws.vpc.subnet @defaults("id cidrs region availabilityZone defaultForAva
   tags map[string]string
   // Route table associated with this subnet
   routeTable() aws.vpc.routetable
+  // Network ACL associated with this subnet
+  networkAcl() aws.ec2.networkacl
+  // NAT gateway in this subnet
+  natGateway() aws.vpc.natgateway
+  // Flow logs for this subnet
+  flowLogs() []aws.vpc.flowlog
+  // IPv6 CIDR block associated with the subnet
+  ipv6CidrBlock string
 }
 
 // Amazon Virtual Private Cloud (VPC) endpoint
@@ -306,6 +320,14 @@ private aws.vpc.endpoint @defaults("id type region") {
   state string
   // Creation timestamp
   createdAt time
+  // Security groups associated with the endpoint (interface endpoints only)
+  securityGroups() []aws.ec2.securitygroup
+  // Route tables associated with the endpoint (gateway endpoints only)
+  routeTables() []aws.vpc.routetable
+  // Network interfaces for the endpoint (interface endpoints only)
+  networkInterfaces() []aws.ec2.networkinterface
+  // DNS entries for the endpoint
+  dnsEntries []dict
 }
 
 // Amazon Virtual Private Cloud (VPC) flow log
@@ -334,6 +356,12 @@ private aws.vpc.flowlog @defaults("id region status") {
   maxAggregationInterval int
   // Type of traffic to monitor: ACCEPT, ALL, and REJECT
   trafficType string
+  // IAM role that publishes flow logs to CloudWatch Logs
+  iamRole() aws.iam.role
+  // CloudWatch log group destination (when destinationType is cloud-watch-logs)
+  logGroup() aws.cloudwatch.loggroup
+  // S3 bucket destination (when destinationType is s3)
+  s3Bucket() aws.s3.bucket
 }
 
 // Amazon Virtual Private Cloud (VPC) virtual private gateway
@@ -356,6 +384,8 @@ private aws.vpc.vpnGateway @defaults("id state") {
   attachments []dict
   // Tags on the virtual private gateway
   tags map[string]string
+  // VPN connections associated with this virtual private gateway
+  vpnConnections() []aws.ec2.vpnconnection
 }
 
 // Amazon WAF v2
@@ -5757,6 +5787,8 @@ private aws.ec2.eip @defaults("publicIp attached privateIpAddress") {
   tags map[string]string
   // Region where the EIP is located
   region string
+  // Network interface associated with the EIP
+  networkInterface() aws.ec2.networkinterface
 }
 
 // Amazon VPC NAT Gateway
@@ -5835,6 +5867,12 @@ private aws.vpc.peeringConnection {
   status string
   // Tags for the peering connection
   tags map[string]string
+  // Account ID of the requester VPC owner
+  requesterAccountId string
+  // Account ID of the accepter VPC owner
+  accepterAccountId string
+  // Whether DNS resolution from the remote VPC is enabled for this peering connection
+  dnsResolutionEnabled bool
 }
 
 // Amazon VPC Peering Connection Peering VPC
@@ -5878,8 +5916,10 @@ private aws.ec2.networkacl.association {
   associationId string
   // Network ACL ID for the association
   networkAclId string
-  // Subnet ID for the association
+  // Deprecated. Use `subnet` instead.
   subnetId string
+  // Subnet associated with this network ACL
+  subnet() aws.vpc.subnet
 }
 
 // Amazon EC2 network ACL entry
@@ -5982,6 +6022,58 @@ private aws.ec2.transitgateway @defaults("arn id state") {
   associationDefaultRouteTableId string
   // ID of the default propagation route table
   propagationDefaultRouteTableId string
+  // Attachments to this transit gateway (VPCs, VPNs, peering, etc.)
+  attachments() []aws.ec2.transitgateway.attachment
+  // Route tables for this transit gateway
+  routeTables() []aws.ec2.transitgateway.routeTable
+}
+
+// Amazon EC2 transit gateway attachment
+private aws.ec2.transitgateway.attachment @defaults("id resourceType state") {
+  // Transit gateway attachment ID
+  id string
+  // ID of the transit gateway
+  transitGatewayId string
+  // ID of the attached resource (VPC ID, VPN connection ID, etc.)
+  resourceId string
+  // Type of the attached resource: vpc, vpn, direct-connect-gateway, connect, peering, tgw-peering
+  resourceType string
+  // State of the attachment: initiating, initiatingRequest, pendingAcceptance, rollingBack, pending, available, modifying, deleting, deleted, failed, rejected, rejecting, failing
+  state string
+  // Tags on the attachment
+  tags map[string]string
+  // Region where the attachment exists
+  region string
+}
+
+// Amazon EC2 transit gateway route table
+private aws.ec2.transitgateway.routeTable @defaults("id state") {
+  // Transit gateway route table ID
+  id string
+  // ID of the transit gateway
+  transitGatewayId string
+  // State of the route table: pending, available, deleting, deleted
+  state string
+  // Whether this is the default association route table
+  defaultAssociationRouteTable bool
+  // Whether this is the default propagation route table
+  defaultPropagationRouteTable bool
+  // Tags on the route table
+  tags map[string]string
+  // Region where the route table exists
+  region string
+}
+
+// Amazon EC2 DHCP options set
+private aws.ec2.dhcpOptions @defaults("id region") {
+  // ID of the DHCP options set
+  id string
+  // Region where the DHCP options set exists
+  region string
+  // Tags on the DHCP options set
+  tags map[string]string
+  // DHCP configurations (each entry has a key and list of values)
+  configurations []dict
 }
 
 // Amazon EC2 launch template
