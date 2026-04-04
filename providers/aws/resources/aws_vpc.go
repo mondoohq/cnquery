@@ -1272,9 +1272,30 @@ func initAwsVpcVpnGateway(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 
 	conn := runtime.Connection.(*connection.AwsConnection)
-	svc := conn.Ec2(region)
 	ctx := context.Background()
 
+	if region == "" {
+		regions, err := conn.Regions()
+		if err != nil {
+			return nil, nil, err
+		}
+		for _, r := range regions {
+			svc := conn.Ec2(r)
+			resp, err := svc.DescribeVpnGateways(ctx, &ec2.DescribeVpnGatewaysInput{
+				VpnGatewayIds: []string{vgwId},
+			})
+			if err != nil {
+				continue
+			}
+			if len(resp.VpnGateways) > 0 {
+				region = r
+				return buildVpnGatewayResource(runtime, region, conn, resp.VpnGateways[0])
+			}
+		}
+		return nil, nil, errors.New("vpn gateway not found")
+	}
+
+	svc := conn.Ec2(region)
 	resp, err := svc.DescribeVpnGateways(ctx, &ec2.DescribeVpnGatewaysInput{
 		VpnGatewayIds: []string{vgwId},
 	})
@@ -1284,8 +1305,10 @@ func initAwsVpcVpnGateway(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	if len(resp.VpnGateways) == 0 {
 		return nil, nil, errors.New("vpn gateway not found")
 	}
+	return buildVpnGatewayResource(runtime, region, conn, resp.VpnGateways[0])
+}
 
-	vgw := resp.VpnGateways[0]
+func buildVpnGatewayResource(runtime *plugin.Runtime, region string, conn *connection.AwsConnection, vgw vpctypes.VpnGateway) (map[string]*llx.RawData, plugin.Resource, error) {
 	attachments, _ := convert.JsonToDictSlice(vgw.VpcAttachments)
 
 	var availabilityZone string
@@ -1297,15 +1320,17 @@ func initAwsVpcVpnGateway(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		amazonSideAsn = *vgw.AmazonSideAsn
 	}
 
-	args["id"] = llx.StringDataPtr(vgw.VpnGatewayId)
-	args["arn"] = llx.StringData(fmt.Sprintf(vpnGatewayArnPattern, region, conn.AccountId(), convert.ToValue(vgw.VpnGatewayId)))
-	args["region"] = llx.StringData(region)
-	args["state"] = llx.StringData(string(vgw.State))
-	args["type"] = llx.StringData(string(vgw.Type))
-	args["amazonSideAsn"] = llx.IntData(amazonSideAsn)
-	args["availabilityZone"] = llx.StringData(availabilityZone)
-	args["attachments"] = llx.ArrayData(attachments, types.Any)
-	args["tags"] = llx.MapData(toInterfaceMap(ec2TagsToMap(vgw.Tags)), types.String)
+	args := map[string]*llx.RawData{
+		"id":               llx.StringDataPtr(vgw.VpnGatewayId),
+		"arn":              llx.StringData(fmt.Sprintf(vpnGatewayArnPattern, region, conn.AccountId(), convert.ToValue(vgw.VpnGatewayId))),
+		"region":           llx.StringData(region),
+		"state":            llx.StringData(string(vgw.State)),
+		"type":             llx.StringData(string(vgw.Type)),
+		"amazonSideAsn":    llx.IntData(amazonSideAsn),
+		"availabilityZone": llx.StringData(availabilityZone),
+		"attachments":      llx.ArrayData(attachments, types.Any),
+		"tags":             llx.MapData(toInterfaceMap(ec2TagsToMap(vgw.Tags)), types.String),
+	}
 
 	res, err := CreateResource(runtime, ResourceAwsVpcVpnGateway, args)
 	if err != nil {
