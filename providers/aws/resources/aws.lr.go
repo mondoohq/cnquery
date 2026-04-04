@@ -14632,8 +14632,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cloudwatch.logInsightQuery.logGroupNames": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudwatchLogInsightQuery).GetLogGroupNames()).ToDataRes(types.Array(types.String))
 	},
-	"aws.cloudwatch.logInsightQuery.createdAt": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsCloudwatchLogInsightQuery).GetCreatedAt()).ToDataRes(types.Time)
+	"aws.cloudwatch.logInsightQuery.modifiedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLogInsightQuery).GetModifiedAt()).ToDataRes(types.Time)
 	},
 	"aws.ec2.vpcEndpointServiceConfiguration.connection.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2VpcEndpointServiceConfigurationConnection).GetId()).ToDataRes(types.String)
@@ -32893,8 +32893,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsCloudwatchLogInsightQuery).LogGroupNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"aws.cloudwatch.logInsightQuery.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCloudwatchLogInsightQuery).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"aws.cloudwatch.logInsightQuery.modifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLogInsightQuery).ModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.vpcEndpointServiceConfiguration.connection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -79474,7 +79474,7 @@ type mqlAwsCloudwatchLogInsightQuery struct {
 	Region        plugin.TValue[string]
 	QueryString   plugin.TValue[string]
 	LogGroupNames plugin.TValue[[]any]
-	CreatedAt     plugin.TValue[*time.Time]
+	ModifiedAt    plugin.TValue[*time.Time]
 }
 
 // createAwsCloudwatchLogInsightQuery creates a new instance of this resource
@@ -79534,8 +79534,8 @@ func (c *mqlAwsCloudwatchLogInsightQuery) GetLogGroupNames() *plugin.TValue[[]an
 	return &c.LogGroupNames
 }
 
-func (c *mqlAwsCloudwatchLogInsightQuery) GetCreatedAt() *plugin.TValue[*time.Time] {
-	return &c.CreatedAt
+func (c *mqlAwsCloudwatchLogInsightQuery) GetModifiedAt() *plugin.TValue[*time.Time] {
+	return &c.ModifiedAt
 }
 
 // mqlAwsEc2VpcEndpointServiceConfigurationConnection for the aws.ec2.vpcEndpointServiceConfiguration.connection resource

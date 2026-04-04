@@ -10017,8 +10017,8 @@ private aws.cloudwatch.logInsightQuery @defaults("name") {
   queryString string
   // Log group names the query is associated with
   logGroupNames []string
-  // Creation time of the query
-  createdAt time
+  // Last modified time of the query (the API does not provide a creation time)
+  modifiedAt time
 }
 
 // Amazon VPC Endpoint Service connection (consumer connected to an endpoint service)

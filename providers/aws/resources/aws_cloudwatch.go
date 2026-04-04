@@ -725,13 +725,21 @@ func (a *mqlAwsCloudwatchLoggroup) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+// parseLogGroupArn extracts the region and group name from a CloudWatch log group ARN.
+// ARN format: arn:aws:logs:<region>:<account>:log-group:<name>:*
+// Group names may contain colons, so we rejoin parts 6..n-1 (stripping trailing "*").
+func parseLogGroupArn(arnValue string) (region string, groupName string) {
+	parts := strings.Split(arnValue, ":")
+	region = parts[3]
+	// Rejoin parts 6 through second-to-last to handle names with colons
+	groupName = strings.Join(parts[6:len(parts)-1], ":")
+	return
+}
+
 func (a *mqlAwsCloudwatchLoggroup) metricsFilters() ([]any, error) {
 	arnValue := a.Arn.Data
 
-	// arn:aws:logs:<region>:<aws_account_number>:log-group:GROUPVAL:*
-	logGroupArn := strings.Split(arnValue, ":")
-	groupName := logGroupArn[6]
-	region := logGroupArn[3]
+	region, groupName := parseLogGroupArn(arnValue)
 
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.CloudwatchLogs(region)
@@ -801,9 +809,7 @@ func int64MillisToTime(ms *int64) *time.Time {
 func (a *mqlAwsCloudwatchLoggroup) subscriptionFilters() ([]any, error) {
 	arnValue := a.Arn.Data
 
-	logGroupArn := strings.Split(arnValue, ":")
-	groupName := logGroupArn[6]
-	region := logGroupArn[3]
+	region, groupName := parseLogGroupArn(arnValue)
 
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.CloudwatchLogs(region)
@@ -849,9 +855,7 @@ func (a *mqlAwsCloudwatchLoggroupSubscriptionfilter) id() (string, error) {
 func (a *mqlAwsCloudwatchLoggroup) logStreams() ([]any, error) {
 	arnValue := a.Arn.Data
 
-	logGroupArn := strings.Split(arnValue, ":")
-	groupName := logGroupArn[6]
-	region := logGroupArn[3]
+	region, groupName := parseLogGroupArn(arnValue)
 
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.CloudwatchLogs(region)
@@ -889,7 +893,8 @@ func (a *mqlAwsCloudwatchLoggroup) logStreams() ([]any, error) {
 }
 
 func (a *mqlAwsCloudwatchLoggroupLogstream) id() (string, error) {
-	return a.Arn.Data, nil
+	// Use composite ID instead of ARN since ARN can be nil for some streams
+	return a.Region.Data + "/" + a.Name.Data, nil
 }
 
 func (a *mqlAwsCloudwatch) resourcePolicies() ([]any, error) {

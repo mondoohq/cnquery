@@ -135,7 +135,7 @@ func (a *mqlAwsCloudwatch) getLogInsightQueries(conn *connection.AwsConnection) 
 							"region":        llx.StringData(region),
 							"queryString":   llx.StringDataPtr(qd.QueryString),
 							"logGroupNames": llx.ArrayData(logGroupNames, types.String),
-							"createdAt":     llx.TimeDataPtr(int64MillisToTime(qd.LastModified)),
+							"modifiedAt":    llx.TimeDataPtr(int64MillisToTime(qd.LastModified)),
 						})
 					if err != nil {
 						return nil, err

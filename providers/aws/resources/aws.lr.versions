@@ -483,9 +483,9 @@ aws.cloudwatch.logDestinations 13.6.3
 aws.cloudwatch.logGroups 11.15.2
 aws.cloudwatch.logInsightQueries 13.6.3
 aws.cloudwatch.logInsightQuery 13.6.3
-aws.cloudwatch.logInsightQuery.createdAt 13.6.3
 aws.cloudwatch.logInsightQuery.id 13.6.3
 aws.cloudwatch.logInsightQuery.logGroupNames 13.6.3
+aws.cloudwatch.logInsightQuery.modifiedAt 13.6.3
 aws.cloudwatch.logInsightQuery.name 13.6.3
 aws.cloudwatch.logInsightQuery.queryString 13.6.3
 aws.cloudwatch.logInsightQuery.region 13.6.3
