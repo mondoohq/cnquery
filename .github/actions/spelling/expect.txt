@@ -273,6 +273,7 @@ tailscale
 targetgroup
 tde
 testutils
+tgw
 timestream
 toplevel
 toport

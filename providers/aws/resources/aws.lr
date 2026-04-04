@@ -5765,6 +5765,16 @@ aws.ec2 {
   launchTemplates() []aws.ec2.launchtemplate
   // List of launch configurations (legacy, used by Auto Scaling)
   launchConfigurations() []aws.ec2.launchconfiguration
+  // List of managed prefix lists
+  managedPrefixLists() []aws.ec2.managedPrefixList
+  // List of client VPN endpoints
+  clientVpnEndpoints() []aws.ec2.clientVpnEndpoint
+  // List of customer gateways
+  customerGateways() []aws.ec2.customerGateway
+  // List of egress-only internet gateways
+  egressOnlyInternetGateways() []aws.ec2.egressOnlyInternetGateway
+  // List of VPC endpoint service configurations (PrivateLink provider side)
+  vpcEndpointServiceConfigurations() []aws.ec2.vpcEndpointServiceConfiguration
 }
 
 // Amazon Elastic IP (EIP)
@@ -5953,9 +5963,43 @@ private aws.ec2.networkacl.entry.portrange @defaults("from to") {
 }
 
 // Amazon EC2 VPN connection
-private aws.ec2.vpnconnection @defaults("arn") {
+private aws.ec2.vpnconnection @defaults("arn id state") {
   // ARN for the VPN connection
   arn string
+  // VPN connection ID
+  id string
+  // Region where the VPN connection exists
+  region string
+  // State of the VPN connection: pending, available, deleting, deleted
+  state string
+  // Type of VPN connection (ipsec.1)
+  type string
+  // Category of VPN connection: VPN or VPN-Classic
+  category string
+  // Virtual private gateway associated with this VPN connection
+  vpnGateway() aws.vpc.vpnGateway
+  // Transit gateway associated with this VPN connection
+  transitGateway() aws.ec2.transitgateway
+  // Customer gateway associated with this VPN connection
+  customerGateway() aws.ec2.customerGateway
+  // Whether the VPN connection uses static routes only
+  staticRoutesOnly bool
+  // Whether acceleration is enabled for the VPN connection
+  enableAcceleration bool
+  // IPv4 CIDR on the customer gateway (on-premises) side
+  localIpv4NetworkCidr string
+  // IPv4 CIDR on the AWS side
+  remoteIpv4NetworkCidr string
+  // IPv6 CIDR on the customer gateway (on-premises) side
+  localIpv6NetworkCidr string
+  // IPv6 CIDR on the AWS side
+  remoteIpv6NetworkCidr string
+  // Type of IPv4 address assigned to the outside interface: PrivateIpv4, PublicIpv4, Ipv6
+  outsideIpAddressType string
+  // Whether the VPN tunnels process IPv4 or IPv6 traffic
+  tunnelInsideIpVersion string
+  // Tags on the VPN connection
+  tags map[string]string
   // List of telemetry data for the VPN
   vgwTelemetry []aws.ec2.vgwtelemetry
 }
@@ -6026,6 +6070,8 @@ private aws.ec2.transitgateway @defaults("arn id state") {
   attachments() []aws.ec2.transitgateway.attachment
   // Route tables for this transit gateway
   routeTables() []aws.ec2.transitgateway.routeTable
+  // Peering attachments for this transit gateway
+  peeringAttachments() []aws.ec2.transitgateway.peeringAttachment
 }
 
 // Amazon EC2 transit gateway attachment
@@ -6074,6 +6120,184 @@ private aws.ec2.dhcpOptions @defaults("id region") {
   tags map[string]string
   // DHCP configurations (each entry has a key and list of values)
   configurations []dict
+}
+
+// Amazon EC2 transit gateway peering attachment
+private aws.ec2.transitgateway.peeringAttachment @defaults("id state") {
+  // Transit gateway attachment ID
+  id string
+  // State of the peering attachment
+  state string
+  // Creation timestamp
+  createdAt time
+  // Tags on the peering attachment
+  tags map[string]string
+  // Region where the peering attachment exists
+  region string
+  // Requester transit gateway info (transitGatewayId, ownerId, region)
+  requesterTgwInfo dict
+  // Accepter transit gateway info (transitGatewayId, ownerId, region)
+  accepterTgwInfo dict
+  // Status code: initiating, pendingAcceptance, active, deleted, etc.
+  statusCode string
+  // Status message
+  statusMessage string
+}
+
+// Amazon EC2 managed prefix list
+private aws.ec2.managedPrefixList @defaults("id name state") {
+  // Prefix list ID
+  id string
+  // Prefix list ARN
+  arn string
+  // Name of the prefix list
+  name string
+  // Region where the prefix list exists
+  region string
+  // State of the prefix list: create-in-progress, create-complete, modify-in-progress, etc.
+  state string
+  // Address family: IPv4 or IPv6
+  addressFamily string
+  // Maximum number of entries for the prefix list
+  maxEntries int
+  // Current version of the prefix list
+  version int
+  // AWS account ID of the owner
+  ownerId string
+  // Tags on the prefix list
+  tags map[string]string
+  // Entries in the prefix list
+  entries() []aws.ec2.managedPrefixList.entry
+}
+
+// Amazon EC2 managed prefix list entry
+private aws.ec2.managedPrefixList.entry @defaults("cidr") {
+  // CIDR block
+  cidr string
+  // Description of the entry
+  description string
+}
+
+// Amazon EC2 Client VPN endpoint
+private aws.ec2.clientVpnEndpoint @defaults("id status region") {
+  // Client VPN endpoint ID
+  id string
+  // ARN of the Client VPN endpoint
+  arn string
+  // Region where the endpoint exists
+  region string
+  // Description of the endpoint
+  description string
+  // Status of the endpoint: pending-associate, available, deleting, deleted
+  status string
+  // Creation timestamp
+  createdAt time
+  // VPC associated with the Client VPN endpoint
+  vpc() aws.vpc
+  // ARN of the server certificate
+  serverCertificateArn string
+  // Transport protocol: tcp or udp
+  transportProtocol string
+  // VPN protocol: openvpn
+  vpnProtocol string
+  // Whether split-tunnel is enabled
+  splitTunnel bool
+  // Port number for the Client VPN endpoint
+  vpnPort int
+  // URL of the self-service portal
+  selfServicePortalUrl string
+  // DNS servers for the endpoint
+  dnsServers []string
+  // Security groups associated with the endpoint
+  securityGroups() []aws.ec2.securitygroup
+  // Session timeout in hours
+  sessionTimeoutHours int
+  // Client connect options (Lambda ARN, enabled flag)
+  clientConnectOptions dict
+  // Client login banner options (banner text, enabled flag)
+  clientLoginBannerOptions dict
+  // Connection logging options (CloudWatch log group/stream, enabled flag)
+  connectionLogOptions dict
+  // Authentication options
+  authenticationOptions []dict
+  // Tags on the endpoint
+  tags map[string]string
+}
+
+// Amazon EC2 customer gateway
+private aws.ec2.customerGateway @defaults("id state type") {
+  // Customer gateway ID
+  id string
+  // ARN of the customer gateway
+  arn string
+  // Region where the customer gateway exists
+  region string
+  // State: pending, available, deleting, deleted
+  state string
+  // Type of VPN connection (ipsec.1)
+  type string
+  // BGP ASN
+  bgpAsn string
+  // Extended BGP ASN
+  bgpAsnExtended string
+  // Public IP address of the customer gateway device
+  ipAddress string
+  // ARN of the certificate for the customer gateway
+  certificateArn string
+  // Name of the customer gateway device
+  deviceName string
+  // Tags on the customer gateway
+  tags map[string]string
+}
+
+// Amazon EC2 egress-only internet gateway
+private aws.ec2.egressOnlyInternetGateway @defaults("id region") {
+  // Egress-only internet gateway ID
+  id string
+  // ARN of the egress-only internet gateway
+  arn string
+  // Region where the gateway exists
+  region string
+  // VPC attachments
+  attachments []dict
+  // Tags on the gateway
+  tags map[string]string
+}
+
+// Amazon EC2 VPC endpoint service configuration (PrivateLink provider side)
+private aws.ec2.vpcEndpointServiceConfiguration @defaults("id name state") {
+  // Service ID
+  id string
+  // ARN of the service
+  arn string
+  // Region where the service exists
+  region string
+  // Service name
+  name string
+  // State: Pending, Available, Deleting, Deleted, Failed
+  state string
+  // Service type: Interface, Gateway, GatewayLoadBalancer
+  serviceType string
+  // Whether acceptance is required for endpoint connections
+  acceptanceRequired bool
+  // Private DNS name for the service
+  privateDnsName string
+  // Verification state of the private DNS name: pendingVerification, verified, failed
+  privateDnsNameVerificationState string
+  // Availability zones where the service is available
+  availabilityZones []string
+  // Gateway Load Balancer ARNs
+  gatewayLoadBalancerArns []string
+  // Network Load Balancer ARNs
+  networkLoadBalancerArns []string
+  // Whether the service manages its own VPC endpoints
+  managesVpcEndpoints bool
+  // Payer responsibility: ServiceOwner
+  payerResponsibility string
+  // Supported IP address types: ipv4, ipv6, dualstack
+  supportedIpAddressTypes []string
+  // Tags on the service configuration
+  tags map[string]string
 }
 
 // Amazon EC2 launch template

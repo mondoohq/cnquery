@@ -1620,24 +1620,7 @@ func (a *mqlAwsVpcVpnGateway) vpnConnections() ([]any, error) {
 
 	vpnConns := []any{}
 	for _, vpnConn := range resp.VpnConnections {
-		mqlVgwT := []any{}
-		for _, vgwT := range vpnConn.VgwTelemetry {
-			mqlVgwTelemetry, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Vgwtelemetry,
-				map[string]*llx.RawData{
-					"outsideIpAddress": llx.StringData(convert.ToValue(vgwT.OutsideIpAddress)),
-					"status":           llx.StringData(string(vgwT.Status)),
-					"statusMessage":    llx.StringData(convert.ToValue(vgwT.StatusMessage)),
-				})
-			if err != nil {
-				return nil, err
-			}
-			mqlVgwT = append(mqlVgwT, mqlVgwTelemetry)
-		}
-		mqlVpnConn, err := CreateResource(a.MqlRuntime, ResourceAwsEc2Vpnconnection,
-			map[string]*llx.RawData{
-				"arn":          llx.StringData(fmt.Sprintf(vpnConnArnPattern, a.region, conn.AccountId(), convert.ToValue(vpnConn.VpnConnectionId))),
-				"vgwTelemetry": llx.ArrayData(mqlVgwT, types.Resource(ResourceAwsEc2Vgwtelemetry)),
-			})
+		mqlVpnConn, err := newMqlVpnConnection(a.MqlRuntime, a.region, conn.AccountId(), vpnConn)
 		if err != nil {
 			return nil, err
 		}
