@@ -1313,27 +1313,11 @@ func (i *mqlAwsEc2Instance) networkInterfaces() ([]any, error) {
 				log.Debug().Interface("networkInterface", networkingInterface.NetworkInterfaceId).Msg("excluding network interface due to filters")
 				continue
 			}
-			args := map[string]*llx.RawData{
-				"availabilityZone": llx.StringDataPtr(networkingInterface.AvailabilityZone),
-				"description":      llx.StringDataPtr(networkingInterface.Description),
-				"id":               llx.StringDataPtr(networkingInterface.NetworkInterfaceId),
-				"ipv6Native":       llx.BoolDataPtr(networkingInterface.Ipv6Native),
-				"macAddress":       llx.StringDataPtr(networkingInterface.MacAddress),
-				"privateDnsName":   llx.StringDataPtr(networkingInterface.PrivateDnsName),
-				"privateIpAddress": llx.StringDataPtr(networkingInterface.PrivateIpAddress),
-				"requesterManaged": llx.BoolDataPtr(networkingInterface.RequesterManaged),
-				"sourceDestCheck":  llx.BoolDataPtr(networkingInterface.SourceDestCheck),
-				"status":           llx.StringData(string(networkingInterface.Status)),
-				"tags":             llx.MapData(toInterfaceMap(ec2TagsToMap(networkingInterface.TagSet)), types.String),
-				"region":           llx.StringData(i.Region.Data),
-			}
-			mqlNetworkInterface, err := CreateResource(i.MqlRuntime, ResourceAwsEc2Networkinterface, args)
+			_, mqlEni, err := buildNetworkInterfaceResource(i.MqlRuntime, i.Region.Data, networkingInterface)
 			if err != nil {
 				return nil, err
 			}
-			mqlNetworkInterface.(*mqlAwsEc2Networkinterface).networkInterfaceCache = networkingInterface
-			mqlNetworkInterface.(*mqlAwsEc2Networkinterface).region = i.Region.Data
-			res = append(res, mqlNetworkInterface)
+			res = append(res, mqlEni)
 		}
 	}
 	return res, nil
@@ -1342,6 +1326,84 @@ func (i *mqlAwsEc2Instance) networkInterfaces() ([]any, error) {
 type mqlAwsEc2NetworkinterfaceInternal struct {
 	networkInterfaceCache ec2types.NetworkInterface
 	region                string
+}
+
+func initAwsEc2Networkinterface(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	if args["id"] == nil {
+		return nil, nil, errors.New("id required to fetch aws network interface")
+	}
+	eniId := args["id"].Value.(string)
+
+	var region string
+	if args["region"] != nil {
+		region = args["region"].Value.(string)
+	}
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+	if region == "" {
+		// Try all regions
+		regions, err := conn.Regions()
+		if err != nil {
+			return nil, nil, err
+		}
+		for _, r := range regions {
+			svc := conn.Ec2(r)
+			ctx := context.Background()
+			resp, err := svc.DescribeNetworkInterfaces(ctx, &ec2.DescribeNetworkInterfacesInput{
+				NetworkInterfaceIds: []string{eniId},
+			})
+			if err != nil {
+				continue
+			}
+			if len(resp.NetworkInterfaces) > 0 {
+				region = r
+				return buildNetworkInterfaceResource(runtime, region, resp.NetworkInterfaces[0])
+			}
+		}
+		return nil, nil, errors.New("network interface not found")
+	}
+
+	svc := conn.Ec2(region)
+	ctx := context.Background()
+	resp, err := svc.DescribeNetworkInterfaces(ctx, &ec2.DescribeNetworkInterfacesInput{
+		NetworkInterfaceIds: []string{eniId},
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	if len(resp.NetworkInterfaces) == 0 {
+		return nil, nil, errors.New("network interface not found")
+	}
+	return buildNetworkInterfaceResource(runtime, region, resp.NetworkInterfaces[0])
+}
+
+func buildNetworkInterfaceResource(runtime *plugin.Runtime, region string, eni ec2types.NetworkInterface) (map[string]*llx.RawData, plugin.Resource, error) {
+	args := map[string]*llx.RawData{
+		"availabilityZone": llx.StringDataPtr(eni.AvailabilityZone),
+		"description":      llx.StringDataPtr(eni.Description),
+		"id":               llx.StringDataPtr(eni.NetworkInterfaceId),
+		"ipv6Native":       llx.BoolDataPtr(eni.Ipv6Native),
+		"macAddress":       llx.StringDataPtr(eni.MacAddress),
+		"privateDnsName":   llx.StringDataPtr(eni.PrivateDnsName),
+		"privateIpAddress": llx.StringDataPtr(eni.PrivateIpAddress),
+		"requesterManaged": llx.BoolDataPtr(eni.RequesterManaged),
+		"sourceDestCheck":  llx.BoolDataPtr(eni.SourceDestCheck),
+		"status":           llx.StringData(string(eni.Status)),
+		"tags":             llx.MapData(toInterfaceMap(ec2TagsToMap(eni.TagSet)), types.String),
+		"region":           llx.StringData(region),
+	}
+	res, err := CreateResource(runtime, ResourceAwsEc2Networkinterface, args)
+	if err != nil {
+		return nil, nil, err
+	}
+	mqlEni := res.(*mqlAwsEc2Networkinterface)
+	mqlEni.networkInterfaceCache = eni
+	mqlEni.region = region
+	return nil, mqlEni, nil
 }
 
 func (i *mqlAwsEc2Networkinterface) securityGroups() ([]any, error) {
