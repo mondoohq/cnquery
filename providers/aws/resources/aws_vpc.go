@@ -274,6 +274,9 @@ func (a *mqlAwsVpc) endpoints() ([]any, error) {
 			}
 
 			dnsEntries, _ := convert.JsonToDictSlice(endpoint.DnsEntries)
+			if dnsEntries == nil {
+				dnsEntries = []any{}
+			}
 
 			mqlEndpoint, err := CreateResource(a.MqlRuntime, ResourceAwsVpcEndpoint,
 				map[string]*llx.RawData{
