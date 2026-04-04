@@ -9869,7 +9869,7 @@ private aws.ssm.document @defaults("name documentType") {
   owner string
   // Status of the document: Active, Creating, Deleting, Updating
   status() string
-  // Platform types the document supports: Windows, Linux, MacOS
+  // Platform types the document supports: Windows, Linux, macOS
   platformTypes []string
   // Tags on the document
   tags map[string]string

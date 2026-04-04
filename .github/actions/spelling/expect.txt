@@ -150,6 +150,7 @@ linuxefi
 liveanalytics
 loggingservice
 logon
+logstream
 longtermretentionpolicy
 lsp
 manageddevice
@@ -231,6 +232,7 @@ recaptcha
 regexmatchstatement
 regexpatternsetreferencestatement
 resourcegroup
+resourcepolicy
 resourcequota
 richrule
 RODC
@@ -239,6 +241,7 @@ RRULE
 rtsp
 rulegroup
 rulegroupreferencestatement
+runbooks
 saas
 Sas
 sbom
@@ -268,6 +271,7 @@ sqlimatchstatement
 sqlserver
 Sspr
 stringx
+subscriptionfilter
 superusers
 switchports
 tailscale
