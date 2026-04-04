@@ -103,6 +103,10 @@ func (a *mqlAwsEc2) getVpcEndpointServiceConfigs(conn *connection.AwsConnection)
 					if err != nil {
 						return nil, err
 					}
+					cast := mqlSvc.(*mqlAwsEc2VpcEndpointServiceConfiguration)
+					cast.cacheNlbArns = svcCfg.NetworkLoadBalancerArns
+					cast.cacheGlbArns = svcCfg.GatewayLoadBalancerArns
+					cast.region = region
 					res = append(res, mqlSvc)
 				}
 			}

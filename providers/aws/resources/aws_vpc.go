@@ -294,6 +294,10 @@ func (a *mqlAwsVpc) endpoints() ([]any, error) {
 					"vpc":               llx.StringDataPtr(endpoint.VpcId),
 					"createdAt":         llx.TimeDataPtr(endpoint.CreationTimestamp),
 					"dnsEntries":        llx.ArrayData(dnsEntries, types.Any),
+					"tags":              llx.MapData(toInterfaceMap(ec2TagsToMap(endpoint.Tags)), types.String),
+					"ipAddressType":     llx.StringData(string(endpoint.IpAddressType)),
+					"ownerId":           llx.StringDataPtr(endpoint.OwnerId),
+					"requesterManaged":  llx.BoolDataPtr(endpoint.RequesterManaged),
 				},
 			)
 			if err != nil {

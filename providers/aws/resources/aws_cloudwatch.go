@@ -608,6 +608,8 @@ func (a *mqlAwsCloudwatch) getLogGroups(conn *connection.AwsConnection) []*jobpo
 					args["retentionInDays"] = llx.IntDataDefault(loggroup.RetentionInDays, 0)
 					args["dataProtectionStatus"] = llx.StringData(string(loggroup.DataProtectionStatus))
 					args["deletionProtectionEnabled"] = llx.BoolDataPtr(loggroup.DeletionProtectionEnabled)
+					args["logGroupClass"] = llx.StringData(string(loggroup.LogGroupClass))
+					args["storedBytes"] = llx.IntDataDefault(loggroup.StoredBytes, 0)
 
 					// add kms key if there is one
 					if loggroup.KmsKeyId != nil {
@@ -786,6 +788,180 @@ func (a *mqlAwsCloudwatchMetric) id() (string, error) {
 	namespace := a.Namespace.Data
 	name := a.Name.Data
 	return region + "/" + namespace + "/" + name, nil
+}
+
+func int64MillisToTime(ms *int64) *time.Time {
+	if ms == nil {
+		return nil
+	}
+	t := time.UnixMilli(*ms)
+	return &t
+}
+
+func (a *mqlAwsCloudwatchLoggroup) subscriptionFilters() ([]any, error) {
+	arnValue := a.Arn.Data
+
+	logGroupArn := strings.Split(arnValue, ":")
+	groupName := logGroupArn[6]
+	region := logGroupArn[3]
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.CloudwatchLogs(region)
+	ctx := context.Background()
+
+	params := &cloudwatchlogs.DescribeSubscriptionFiltersInput{LogGroupName: &groupName}
+	paginator := cloudwatchlogs.NewDescribeSubscriptionFiltersPaginator(svc, params)
+	res := []any{}
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return nil, nil
+			}
+			return nil, errors.Wrap(err, "could not gather subscription filters")
+		}
+		for _, sf := range page.SubscriptionFilters {
+			mqlSF, err := CreateResource(a.MqlRuntime, "aws.cloudwatch.loggroup.subscriptionfilter",
+				map[string]*llx.RawData{
+					"id":                     llx.StringData(groupName + "/" + region + "/" + convert.ToValue(sf.FilterName)),
+					"filterName":             llx.StringDataPtr(sf.FilterName),
+					"filterPattern":          llx.StringDataPtr(sf.FilterPattern),
+					"destinationArn":         llx.StringDataPtr(sf.DestinationArn),
+					"roleArn":                llx.StringDataPtr(sf.RoleArn),
+					"distribution":           llx.StringData(string(sf.Distribution)),
+					"applyOnTransformedLogs": llx.BoolData(sf.ApplyOnTransformedLogs),
+					"createdAt":              llx.TimeDataPtr(int64MillisToTime(sf.CreationTime)),
+					"region":                 llx.StringData(region),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlSF)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsCloudwatchLoggroupSubscriptionfilter) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAwsCloudwatchLoggroup) logStreams() ([]any, error) {
+	arnValue := a.Arn.Data
+
+	logGroupArn := strings.Split(arnValue, ":")
+	groupName := logGroupArn[6]
+	region := logGroupArn[3]
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.CloudwatchLogs(region)
+	ctx := context.Background()
+
+	params := &cloudwatchlogs.DescribeLogStreamsInput{LogGroupName: &groupName}
+	paginator := cloudwatchlogs.NewDescribeLogStreamsPaginator(svc, params)
+	res := []any{}
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return nil, nil
+			}
+			return nil, errors.Wrap(err, "could not gather log streams")
+		}
+		for _, ls := range page.LogStreams {
+			mqlLS, err := CreateResource(a.MqlRuntime, "aws.cloudwatch.loggroup.logstream",
+				map[string]*llx.RawData{
+					"arn":                 llx.StringDataPtr(ls.Arn),
+					"name":                llx.StringDataPtr(ls.LogStreamName),
+					"createdAt":           llx.TimeDataPtr(int64MillisToTime(ls.CreationTime)),
+					"firstEventTimestamp": llx.TimeDataPtr(int64MillisToTime(ls.FirstEventTimestamp)),
+					"lastEventTimestamp":  llx.TimeDataPtr(int64MillisToTime(ls.LastEventTimestamp)),
+					"lastIngestionTime":   llx.TimeDataPtr(int64MillisToTime(ls.LastIngestionTime)),
+					"region":              llx.StringData(region),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlLS)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsCloudwatchLoggroupLogstream) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsCloudwatch) resourcePolicies() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getResourcePolicies(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsCloudwatch) getResourcePolicies(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			svc := conn.CloudwatchLogs(region)
+			ctx := context.Background()
+
+			res := []any{}
+			var nextToken *string
+			for {
+				resp, err := svc.DescribeResourcePolicies(ctx, &cloudwatchlogs.DescribeResourcePoliciesInput{
+					NextToken: nextToken,
+				})
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, rp := range resp.ResourcePolicies {
+					mqlRP, err := CreateResource(a.MqlRuntime, "aws.cloudwatch.resourcepolicy",
+						map[string]*llx.RawData{
+							"policyName":      llx.StringDataPtr(rp.PolicyName),
+							"policyDocument":  llx.StringDataPtr(rp.PolicyDocument),
+							"lastUpdatedTime": llx.TimeDataPtr(int64MillisToTime(rp.LastUpdatedTime)),
+							"scope":           llx.StringData(string(rp.PolicyScope)),
+							"resourceArn":     llx.StringDataPtr(rp.ResourceArn),
+							"region":          llx.StringData(region),
+						})
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlRP)
+				}
+				if resp.NextToken == nil {
+					break
+				}
+				nextToken = resp.NextToken
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (a *mqlAwsCloudwatchResourcepolicy) id() (string, error) {
+	return a.Region.Data + "/" + a.PolicyName.Data, nil
 }
 
 func initAwsCloudwatchMetricsalarm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {

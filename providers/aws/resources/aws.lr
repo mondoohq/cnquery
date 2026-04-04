@@ -328,6 +328,14 @@ private aws.vpc.endpoint @defaults("id type region") {
   networkInterfaces() []aws.ec2.networkinterface
   // DNS entries for the endpoint
   dnsEntries []dict
+  // Tags on the endpoint
+  tags map[string]string
+  // IP address type: ipv4, ipv6, dualstack
+  ipAddressType string
+  // Owner of the endpoint
+  ownerId string
+  // Whether the endpoint is requester-managed
+  requesterManaged bool
 }
 
 // Amazon Virtual Private Cloud (VPC) flow log
@@ -3367,6 +3375,12 @@ aws.cloudwatch {
   alarms() []aws.cloudwatch.metricsalarm
   // List of CloudWatch metrics
   metrics() []aws.cloudwatch.metric
+  // List of CloudWatch Logs resource policies
+  resourcePolicies() []aws.cloudwatch.resourcepolicy
+  // List of CloudWatch Logs cross-account destinations
+  logDestinations() []aws.cloudwatch.logDestination
+  // List of CloudWatch Logs Insights saved queries
+  logInsightQueries() []aws.cloudwatch.logInsightQuery
 }
 
 // Amazon CloudWatch metrics alarm
@@ -3460,6 +3474,10 @@ private aws.cloudwatch.loggroup @defaults("arn") {
   name string
   // List of metric filters associated with the log group
   metricsFilters() []aws.cloudwatch.loggroup.metricsfilter
+  // List of subscription filters associated with the log group
+  subscriptionFilters() []aws.cloudwatch.loggroup.subscriptionfilter
+  // List of log streams in the log group
+  logStreams() []aws.cloudwatch.loggroup.logstream
   // KMS key used for log encryption
   kmsKey() aws.kms.key
   // Region where the log group is stored
@@ -3472,6 +3490,10 @@ private aws.cloudwatch.loggroup @defaults("arn") {
   dataProtectionStatus string
   // Whether deletion protection is enabled for the log group
   deletionProtectionEnabled bool
+  // Log class: STANDARD or INFREQUENT_ACCESS
+  logGroupClass string
+  // Number of bytes stored in the log group
+  storedBytes int
 }
 
 // Amazon CloudWatch log group metrics filter
@@ -3484,6 +3506,62 @@ private aws.cloudwatch.loggroup.metricsfilter @defaults("id") {
   filterPattern string
   // List of CloudWatch metrics
   metrics []aws.cloudwatch.metric
+}
+
+// Amazon CloudWatch log group subscription filter
+private aws.cloudwatch.loggroup.subscriptionfilter @defaults("filterName destinationArn") {
+  // Unique ID for the subscription filter
+  id string
+  // Name of the subscription filter
+  filterName string
+  // Filter pattern used to match log events
+  filterPattern string
+  // ARN of the destination (Kinesis, Lambda, or Firehose)
+  destinationArn string
+  // ARN of the IAM role used to write to the destination
+  roleArn string
+  // Method used to distribute log data to the destination (Random, ByLogStream)
+  distribution string
+  // Whether the filter is applied on transformed log events
+  applyOnTransformedLogs bool
+  // Creation time of the subscription filter
+  createdAt time
+  // Region where the subscription filter exists
+  region string
+}
+
+// Amazon CloudWatch log group log stream
+private aws.cloudwatch.loggroup.logstream @defaults("arn") {
+  // ARN of the log stream
+  arn string
+  // Name of the log stream
+  name string
+  // Creation time of the log stream
+  createdAt time
+  // Time of the first event in the log stream
+  firstEventTimestamp time
+  // Time of the most recent log event in the log stream
+  lastEventTimestamp time
+  // Most recent ingestion time for the log stream
+  lastIngestionTime time
+  // Region where the log stream exists
+  region string
+}
+
+// Amazon CloudWatch Logs resource policy
+private aws.cloudwatch.resourcepolicy @defaults("policyName") {
+  // Name of the resource policy
+  policyName string
+  // JSON IAM policy document
+  policyDocument string
+  // Timestamp showing when this policy was last updated
+  lastUpdatedTime time
+  // Scope of the resource policy (ACCOUNT, RESOURCE)
+  scope string
+  // ARN of the resource the policy is attached to (only for resource-scoped policies)
+  resourceArn string
+  // Region where the resource policy exists
+  region string
 }
 
 // Amazon CloudFront
@@ -5678,6 +5756,16 @@ aws.ssm @defaults("instances") {
   instances() []aws.ssm.instance
   // List of SSM parameters
   parameters() []aws.ssm.parameter
+  // List of SSM documents
+  documents() []aws.ssm.document
+  // List of SSM patch baselines
+  patchBaselines() []aws.ssm.patchBaseline
+  // List of SSM maintenance windows
+  maintenanceWindows() []aws.ssm.maintenanceWindow
+  // List of SSM State Manager associations
+  associations() []aws.ssm.association
+  // List of SSM compliance summaries
+  complianceSummaries() []aws.ssm.complianceSummary
 }
 
 
@@ -6298,6 +6386,14 @@ private aws.ec2.vpcEndpointServiceConfiguration @defaults("id name state") {
   supportedIpAddressTypes []string
   // Tags on the service configuration
   tags map[string]string
+  // Network load balancers backing this service (typed references)
+  networkLoadBalancers() []aws.elb.loadbalancer
+  // Gateway load balancers backing this service (typed references)
+  gatewayLoadBalancers() []aws.elb.loadbalancer
+  // Principals allowed to discover the service
+  allowedPrincipals() []string
+  // VPC endpoint connections (consumers connected to this service)
+  connections() []aws.ec2.vpcEndpointServiceConfiguration.connection
 }
 
 // Amazon EC2 launch template
@@ -9751,4 +9847,200 @@ private aws.keyspaces.table.clusteringKey @defaults("name orderBy") {
   name string
   // Sort order: ASC or DESC
   orderBy string
+}
+
+// Amazon SSM document (runbooks, automation, command, policy, session, package)
+private aws.ssm.document @defaults("name documentType") {
+  // ARN of the document
+  arn string
+  // Name of the document
+  name string
+  // Region where the document exists
+  region string
+  // Document type: Command, Automation, Policy, Session, Package, etc.
+  documentType string
+  // Document format: JSON or YAML
+  documentFormat string
+  // Document version
+  documentVersion string
+  // Description of the document
+  description() string
+  // Owner of the document (account ID or Amazon)
+  owner string
+  // Status of the document: Active, Creating, Deleting, Updating
+  status() string
+  // Platform types the document supports: Windows, Linux, MacOS
+  platformTypes []string
+  // Tags on the document
+  tags map[string]string
+  // Document content (JSON/YAML body), lazy-loaded
+  content() string
+  // Review status: Approved, Pending, Rejected, Not reviewed
+  reviewStatus string
+  // Creation date of the document
+  createdAt time
+  // Account sharing permissions for the document
+  permissions() []dict
+}
+
+// Amazon SSM patch baseline
+private aws.ssm.patchBaseline @defaults("id name operatingSystem") {
+  // Patch baseline ID
+  id string
+  // ARN of the patch baseline
+  arn string
+  // Name of the patch baseline
+  name string
+  // Region where the patch baseline exists
+  region string
+  // Description of the patch baseline
+  description string
+  // Operating system: WINDOWS, AMAZON_LINUX_2, AMAZON_LINUX_2023, UBUNTU, REDHAT_ENTERPRISE_LINUX, etc.
+  operatingSystem string
+  // Whether this is the default baseline for its operating system
+  isDefault bool
+  // Approval rules for the patch baseline
+  approvalRules []dict
+  // List of explicitly approved patches
+  approvedPatches []string
+  // Compliance level for approved patches: CRITICAL, HIGH, MEDIUM, LOW, INFORMATIONAL, UNSPECIFIED
+  approvedPatchesComplianceLevel string
+  // List of explicitly rejected patches
+  rejectedPatches []string
+  // Action for rejected patches: ALLOW_AS_DEPENDENCY or BLOCK
+  rejectedPatchesAction string
+  // Global filters for the patch baseline
+  globalFilters []dict
+  // Patch sources
+  sources []dict
+  // Creation date
+  createdAt time
+  // Last modified date
+  modifiedAt time
+  // Tags on the patch baseline
+  tags() map[string]string
+}
+
+// Amazon SSM maintenance window
+private aws.ssm.maintenanceWindow @defaults("id name") {
+  // Maintenance window ID
+  id string
+  // ARN of the maintenance window
+  arn string
+  // Name of the maintenance window
+  name string
+  // Region where the maintenance window exists
+  region string
+  // Description of the maintenance window
+  description string
+  // Whether the maintenance window is enabled
+  enabled bool
+  // Cron or rate schedule expression
+  schedule string
+  // Timezone for the schedule
+  scheduleTimezone string
+  // Duration in hours
+  duration int
+  // Hours before the end of the window to stop scheduling new tasks
+  cutoff int
+  // Whether targets that are not associated with the window can be run
+  allowUnassociatedTargets() bool
+  // Tags on the maintenance window
+  tags() map[string]string
+}
+
+// Amazon SSM State Manager association
+private aws.ssm.association @defaults("associationId name") {
+  // Association ID
+  associationId string
+  // Document name
+  name string
+  // Region where the association exists
+  region string
+  // Targets for the association
+  targets []dict
+  // Cron or rate schedule expression
+  schedule string
+  // Last execution date
+  lastExecutionDate time
+  // Overview of the association execution status (status, detailedStatus, associationStatusAggregatedCount)
+  overview dict
+}
+
+// Amazon SSM compliance summary per resource
+private aws.ssm.complianceSummary @defaults("complianceType resourceId status") {
+  // Compliance type: Patch, Association, Custom:*
+  complianceType string
+  // Resource ID (instance ID)
+  resourceId string
+  // Resource type (e.g., ManagedInstance)
+  resourceType string
+  // Region where the resource exists
+  region string
+  // Compliance status: COMPLIANT, NON_COMPLIANT
+  status string
+  // Count of compliant items
+  compliantCount int
+  // Count of non-compliant items
+  nonCompliantCount int
+  // Execution summary
+  executionSummary dict
+}
+
+// Amazon CloudWatch Logs cross-account destination
+private aws.cloudwatch.logDestination @defaults("name arn") {
+  // Destination name
+  name string
+  // ARN of the destination
+  arn string
+  // Region where the destination exists
+  region string
+  // ARN of the target (Kinesis stream or Firehose delivery stream)
+  targetArn string
+  // ARN of the IAM role used to write to the target
+  roleArn string
+  // Access policy controlling who can write to this destination
+  accessPolicy string
+  // Creation time of the destination
+  createdAt time
+}
+
+// Amazon CloudWatch Logs Insights saved query
+private aws.cloudwatch.logInsightQuery @defaults("name") {
+  // Query ID
+  id string
+  // Name of the saved query
+  name string
+  // Region where the query exists
+  region string
+  // Query string
+  queryString string
+  // Log group names the query is associated with
+  logGroupNames []string
+  // Creation time of the query
+  createdAt time
+}
+
+// Amazon VPC Endpoint Service connection (consumer connected to an endpoint service)
+private aws.ec2.vpcEndpointServiceConfiguration.connection @defaults("endpointId endpointState") {
+  // Unique ID for the connection
+  id string
+  // VPC endpoint ID of the consumer
+  endpointId string
+  // Owner of the consumer endpoint
+  endpointOwner string
+  // Region of the consumer
+  endpointRegion string
+  // Connection state: pendingAcceptance, pending, available, deleting, deleted, rejected, failed, expired
+  endpointState string
+  // IP address type of the connection: ipv4, ipv6, dualstack
+  ipAddressType string
+  // DNS entries for this connection
+  dnsEntries []dict
+  // Network load balancer ARNs in use
+  networkLoadBalancerArns []string
+  // Gateway load balancer ARNs in use
+  gatewayLoadBalancerArns []string
+  // Creation time
+  createdAt time
 }
