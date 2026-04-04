@@ -198,6 +198,7 @@ ontap
 opcplc
 opensearch
 openssl
+openvpn
 openzfs
 orstatement
 ospf
