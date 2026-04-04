@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.6.2",
-  "generated_at": "2026-04-03T23:17:13-07:00",
+  "generated_at": "2026-04-04T10:51:59-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -121,7 +121,9 @@
     "ec2:DescribeTransitGateways",
     "ec2:DescribeVolumes",
     "ec2:DescribeVpcAttribute",
+    "ec2:DescribeVpcEndpointConnections",
     "ec2:DescribeVpcEndpointServiceConfigurations",
+    "ec2:DescribeVpcEndpointServicePermissions",
     "ec2:DescribeVpcEndpoints",
     "ec2:DescribeVpcPeeringConnections",
     "ec2:DescribeVpcs",
@@ -267,8 +269,13 @@
     "lightsail:GetInstances",
     "lightsail:GetLoadBalancers",
     "lightsail:GetRelationalDatabases",
+    "logs:DescribeDestinations",
     "logs:DescribeLogGroups",
+    "logs:DescribeLogStreams",
     "logs:DescribeMetricFilters",
+    "logs:DescribeQueryDefinitions",
+    "logs:DescribeResourcePolicies",
+    "logs:DescribeSubscriptionFilters",
     "logs:ListTagsForResource",
     "macie2:DescribeClassificationJob",
     "macie2:GetBucketStatistics",
@@ -379,9 +386,20 @@
     "sns:ListTopics",
     "sqs:GetQueueAttributes",
     "sqs:ListQueues",
+    "ssm:DescribeDocument",
+    "ssm:DescribeDocumentPermission",
     "ssm:DescribeInstanceInformation",
     "ssm:DescribeInstancePatchStates",
+    "ssm:DescribeMaintenanceWindows",
     "ssm:DescribeParameters",
+    "ssm:DescribePatchBaselines",
+    "ssm:GetDocument",
+    "ssm:GetMaintenanceWindow",
+    "ssm:GetPatchBaseline",
+    "ssm:ListAssociations",
+    "ssm:ListDocuments",
+    "ssm:ListResourceComplianceSummaries",
+    "ssm:ListTagsForResource",
     "timestream-influxdb:GetDbCluster",
     "timestream-influxdb:GetDbInstance",
     "timestream-influxdb:ListDbClusters",
@@ -1150,10 +1168,22 @@
       "source_file": "aws_vpc.go"
     },
     {
+      "permission": "ec2:DescribeVpcEndpointConnections",
+      "service": "ec2",
+      "action": "DescribeVpcEndpointConnections",
+      "source_file": "aws_ec2_endpointservice_ext.go"
+    },
+    {
       "permission": "ec2:DescribeVpcEndpointServiceConfigurations",
       "service": "ec2",
       "action": "DescribeVpcEndpointServiceConfigurations",
       "source_file": "aws_ec2_endpointservice.go"
+    },
+    {
+      "permission": "ec2:DescribeVpcEndpointServicePermissions",
+      "service": "ec2",
+      "action": "DescribeVpcEndpointServicePermissions",
+      "source_file": "aws_ec2_endpointservice_ext.go"
     },
     {
       "permission": "ec2:DescribeVpcEndpoints",
@@ -2044,15 +2074,45 @@
       "source_file": "aws_lightsail.go"
     },
     {
+      "permission": "logs:DescribeDestinations",
+      "service": "logs",
+      "action": "DescribeDestinations",
+      "source_file": "aws_cloudwatch_logs.go"
+    },
+    {
       "permission": "logs:DescribeLogGroups",
       "service": "logs",
       "action": "DescribeLogGroups",
       "source_file": "aws_cloudwatch.go"
     },
     {
+      "permission": "logs:DescribeLogStreams",
+      "service": "logs",
+      "action": "DescribeLogStreams",
+      "source_file": "aws_cloudwatch.go"
+    },
+    {
       "permission": "logs:DescribeMetricFilters",
       "service": "logs",
       "action": "DescribeMetricFilters",
+      "source_file": "aws_cloudwatch.go"
+    },
+    {
+      "permission": "logs:DescribeQueryDefinitions",
+      "service": "logs",
+      "action": "DescribeQueryDefinitions",
+      "source_file": "aws_cloudwatch_logs.go"
+    },
+    {
+      "permission": "logs:DescribeResourcePolicies",
+      "service": "logs",
+      "action": "DescribeResourcePolicies",
+      "source_file": "aws_cloudwatch.go"
+    },
+    {
+      "permission": "logs:DescribeSubscriptionFilters",
+      "service": "logs",
+      "action": "DescribeSubscriptionFilters",
       "source_file": "aws_cloudwatch.go"
     },
     {
@@ -2758,6 +2818,18 @@
       "source_file": "aws_sqs.go"
     },
     {
+      "permission": "ssm:DescribeDocument",
+      "service": "ssm",
+      "action": "DescribeDocument",
+      "source_file": "aws_ssm_documents.go"
+    },
+    {
+      "permission": "ssm:DescribeDocumentPermission",
+      "service": "ssm",
+      "action": "DescribeDocumentPermission",
+      "source_file": "aws_ssm_documents.go"
+    },
+    {
       "permission": "ssm:DescribeInstanceInformation",
       "service": "ssm",
       "action": "DescribeInstanceInformation",
@@ -2776,10 +2848,64 @@
       "source_file": "aws_ec2.go"
     },
     {
+      "permission": "ssm:DescribeMaintenanceWindows",
+      "service": "ssm",
+      "action": "DescribeMaintenanceWindows",
+      "source_file": "aws_ssm_documents.go"
+    },
+    {
       "permission": "ssm:DescribeParameters",
       "service": "ssm",
       "action": "DescribeParameters",
       "source_file": "aws_ssm.go"
+    },
+    {
+      "permission": "ssm:DescribePatchBaselines",
+      "service": "ssm",
+      "action": "DescribePatchBaselines",
+      "source_file": "aws_ssm_documents.go"
+    },
+    {
+      "permission": "ssm:GetDocument",
+      "service": "ssm",
+      "action": "GetDocument",
+      "source_file": "aws_ssm_documents.go"
+    },
+    {
+      "permission": "ssm:GetMaintenanceWindow",
+      "service": "ssm",
+      "action": "GetMaintenanceWindow",
+      "source_file": "aws_ssm_documents.go"
+    },
+    {
+      "permission": "ssm:GetPatchBaseline",
+      "service": "ssm",
+      "action": "GetPatchBaseline",
+      "source_file": "aws_ssm_documents.go"
+    },
+    {
+      "permission": "ssm:ListAssociations",
+      "service": "ssm",
+      "action": "ListAssociations",
+      "source_file": "aws_ssm_documents.go"
+    },
+    {
+      "permission": "ssm:ListDocuments",
+      "service": "ssm",
+      "action": "ListDocuments",
+      "source_file": "aws_ssm_documents.go"
+    },
+    {
+      "permission": "ssm:ListResourceComplianceSummaries",
+      "service": "ssm",
+      "action": "ListResourceComplianceSummaries",
+      "source_file": "aws_ssm_documents.go"
+    },
+    {
+      "permission": "ssm:ListTagsForResource",
+      "service": "ssm",
+      "action": "ListTagsForResource",
+      "source_file": "aws_ssm_documents.go"
     },
     {
       "permission": "timestream-influxdb:GetDbCluster",
