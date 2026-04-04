@@ -268,7 +268,7 @@ func (a *mqlAwsVpc) endpoints() ([]any, error) {
 				continue
 			}
 
-			var subnetIds []any
+			subnetIds := make([]any, 0, len(endpoint.SubnetIds))
 			for _, subnet := range endpoint.SubnetIds {
 				subnetIds = append(subnetIds, subnet)
 			}
