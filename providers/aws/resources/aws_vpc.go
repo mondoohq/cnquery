@@ -273,9 +273,12 @@ func (a *mqlAwsVpc) endpoints() ([]any, error) {
 				subnetIds = append(subnetIds, subnet)
 			}
 
-			dnsEntries, _ := convert.JsonToDictSlice(endpoint.DnsEntries)
-			if dnsEntries == nil {
-				dnsEntries = []any{}
+			dnsEntries := make([]any, 0, len(endpoint.DnsEntries))
+			for _, entry := range endpoint.DnsEntries {
+				dnsEntries = append(dnsEntries, map[string]any{
+					"dnsName":      convert.ToValue(entry.DnsName),
+					"hostedZoneId": convert.ToValue(entry.HostedZoneId),
+				})
 			}
 
 			mqlEndpoint, err := CreateResource(a.MqlRuntime, ResourceAwsVpcEndpoint,
