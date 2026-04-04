@@ -1036,9 +1036,6 @@ func initAwsVpcSubnet(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 		}
 		mqlSubnet := res.(*mqlAwsVpcSubnet)
 		mqlSubnet.cacheVpcId = convert.ToValue(subnet.VpcId)
-		if subnet.BlockPublicAccessStates != nil {
-			mqlSubnet.InternetGatewayBlockMode = plugin.TValue[string]{Data: string(subnet.BlockPublicAccessStates.InternetGatewayBlockMode), State: plugin.StateIsSet}
-		}
 		return nil, mqlSubnet, nil
 	}
 	return nil, nil, errors.New("subnet not found")
