@@ -143,6 +143,9 @@ func (a *mqlAwsSsmDocument) fetchDetail() error {
 	if resp.Document != nil {
 		a.Description = plugin.TValue[string]{Data: convert.ToValue(resp.Document.Description), State: plugin.StateIsSet}
 		a.Status = plugin.TValue[string]{Data: string(resp.Document.Status), State: plugin.StateIsSet}
+	} else {
+		a.Description = plugin.TValue[string]{Data: "", State: plugin.StateIsSet}
+		a.Status = plugin.TValue[string]{Data: "", State: plugin.StateIsSet}
 	}
 
 	a.detailFetched = true

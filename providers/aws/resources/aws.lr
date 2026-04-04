@@ -3476,7 +3476,7 @@ private aws.cloudwatch.loggroup @defaults("arn") {
   metricsFilters() []aws.cloudwatch.loggroup.metricsfilter
   // List of subscription filters associated with the log group
   subscriptionFilters() []aws.cloudwatch.loggroup.subscriptionfilter
-  // List of log streams in the log group
+  // List of log streams in the log group (note: may be slow for high-volume log groups with many streams)
   logStreams() []aws.cloudwatch.loggroup.logstream
   // KMS key used for log encryption
   kmsKey() aws.kms.key
