@@ -84,7 +84,13 @@ func initAwsEc2Eip(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 		args["publicIpv4Pool"] = llx.StringDataPtr(add.PublicIpv4Pool)
 		args["tags"] = llx.MapData(toInterfaceMap(ec2TagsToMap(add.Tags)), types.String)
 		args["region"] = llx.StringData(r)
-		return args, nil, nil
+
+		res, err := CreateResource(runtime, ResourceAwsEc2Eip, args)
+		if err != nil {
+			return nil, nil, err
+		}
+		res.(*mqlAwsEc2Eip).eipCache = add
+		return nil, res, nil
 	}
 	return args, nil, nil
 }
@@ -2661,6 +2667,10 @@ func (a *mqlAwsEc2Vpnconnection) transitGateway() (*mqlAwsEc2Transitgateway, err
 		a.TransitGateway.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
+	// NOTE: For cross-account TGWs (shared via RAM), the TGW owner may differ
+	// from the VPN connection owner. This ARN assumes same-account ownership.
+	// Cross-account TGWs will still resolve if previously fetched via
+	// aws.ec2.transitGateways, since the cache lookup is by __id (ARN).
 	tgwArn := fmt.Sprintf(transitGatewayArnPattern, a.region, a.accountID, *a.cacheTransitGatewayId)
 	mqlTgw, err := NewResource(a.MqlRuntime, ResourceAwsEc2Transitgateway,
 		map[string]*llx.RawData{"arn": llx.StringData(tgwArn)})

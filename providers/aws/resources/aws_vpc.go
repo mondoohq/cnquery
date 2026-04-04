@@ -1029,7 +1029,17 @@ func initAwsVpcSubnet(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 		args["region"] = llx.StringData(region)
 		args["state"] = llx.StringData(string(subnet.State))
 		args["tags"] = llx.MapData(toInterfaceMap(tagsMap), types.String)
-		return args, nil, nil
+
+		res, err := CreateResource(runtime, ResourceAwsVpcSubnet, args)
+		if err != nil {
+			return nil, nil, err
+		}
+		mqlSubnet := res.(*mqlAwsVpcSubnet)
+		mqlSubnet.cacheVpcId = convert.ToValue(subnet.VpcId)
+		if subnet.BlockPublicAccessStates != nil {
+			mqlSubnet.InternetGatewayBlockMode = plugin.TValue[string]{Data: string(subnet.BlockPublicAccessStates.InternetGatewayBlockMode), State: plugin.StateIsSet}
+		}
+		return nil, mqlSubnet, nil
 	}
 	return nil, nil, errors.New("subnet not found")
 }

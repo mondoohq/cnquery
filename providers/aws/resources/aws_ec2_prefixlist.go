@@ -130,9 +130,11 @@ func (a *mqlAwsEc2ManagedPrefixList) entries() ([]any, error) {
 			return nil, err
 		}
 		for _, entry := range page.Entries {
+			cidr := convert.ToValue(entry.Cidr)
 			mqlEntry, err := CreateResource(a.MqlRuntime, ResourceAwsEc2ManagedPrefixListEntry,
 				map[string]*llx.RawData{
-					"cidr":        llx.StringData(convert.ToValue(entry.Cidr)),
+					"__id":        llx.StringData(plId + "/" + cidr),
+					"cidr":        llx.StringData(cidr),
 					"description": llx.StringData(convert.ToValue(entry.Description)),
 				})
 			if err != nil {
