@@ -4,13 +4,133 @@
 package resources
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestEc2TagsToMap(t *testing.T) {
+	t.Run("converts tags to map", func(t *testing.T) {
+		tags := []ec2types.Tag{
+			{Key: aws.String("Name"), Value: aws.String("my-vpc")},
+			{Key: aws.String("env"), Value: aws.String("prod")},
+		}
+		result := ec2TagsToMap(tags)
+		assert.Equal(t, "my-vpc", result["Name"])
+		assert.Equal(t, "prod", result["env"])
+		assert.Len(t, result, 2)
+	})
+
+	t.Run("skips tags with nil key or value", func(t *testing.T) {
+		tags := []ec2types.Tag{
+			{Key: aws.String("good"), Value: aws.String("val")},
+			{Key: nil, Value: aws.String("orphan-val")},
+			{Key: aws.String("orphan-key"), Value: nil},
+		}
+		result := ec2TagsToMap(tags)
+		assert.Equal(t, "val", result["good"])
+		assert.Len(t, result, 1)
+	})
+
+	t.Run("returns empty map for nil slice", func(t *testing.T) {
+		result := ec2TagsToMap(nil)
+		assert.NotNil(t, result)
+		assert.Len(t, result, 0)
+	})
+
+	t.Run("returns empty map for empty slice", func(t *testing.T) {
+		result := ec2TagsToMap([]ec2types.Tag{})
+		assert.NotNil(t, result)
+		assert.Len(t, result, 0)
+	})
+}
+
+func TestToInterfaceMap(t *testing.T) {
+	t.Run("converts string map to any map", func(t *testing.T) {
+		input := map[string]string{"a": "1", "b": "2"}
+		result := toInterfaceMap(input)
+		assert.Equal(t, "1", result["a"])
+		assert.Equal(t, "2", result["b"])
+		assert.Len(t, result, 2)
+	})
+
+	t.Run("returns empty map for empty input", func(t *testing.T) {
+		result := toInterfaceMap(map[string]string{})
+		assert.NotNil(t, result)
+		assert.Len(t, result, 0)
+	})
+}
+
+func TestVpcFilter(t *testing.T) {
+	filter := vpcFilter("vpc-12345")
+	assert.Equal(t, "vpc-id", *filter.Name)
+	assert.Equal(t, []string{"vpc-12345"}, filter.Values)
+}
+
+func TestParseTimeOrZero(t *testing.T) {
+	t.Run("parses RFC3339 format", func(t *testing.T) {
+		s := "2024-01-15T10:30:00Z"
+		result := parseTimeOrZero(&s)
+		assert.Equal(t, 2024, result.Year())
+		assert.Equal(t, time.January, result.Month())
+		assert.Equal(t, 15, result.Day())
+	})
+
+	t.Run("parses ISO 8601 without timezone", func(t *testing.T) {
+		s := "2024-06-20T14:00:00"
+		result := parseTimeOrZero(&s)
+		assert.Equal(t, 2024, result.Year())
+		assert.Equal(t, time.June, result.Month())
+	})
+
+	t.Run("returns zero time for nil", func(t *testing.T) {
+		result := parseTimeOrZero(nil)
+		assert.True(t, result.IsZero())
+	})
+
+	t.Run("returns zero time for empty string", func(t *testing.T) {
+		s := ""
+		result := parseTimeOrZero(&s)
+		assert.True(t, result.IsZero())
+	})
+
+	t.Run("returns zero time for garbage input", func(t *testing.T) {
+		s := "not-a-date"
+		result := parseTimeOrZero(&s)
+		assert.True(t, result.IsZero())
+	})
+}
+
+func TestArnPatterns(t *testing.T) {
+	tests := []struct {
+		name     string
+		pattern  string
+		region   string
+		account  string
+		resource string
+		expected string
+	}{
+		{"VPN connection", vpnConnArnPattern, "us-east-1", "123456789012", "vpn-abc", "arn:aws:ec2:us-east-1:123456789012:vpn-connection/vpn-abc"},
+		{"VPN gateway", vpnGatewayArnPattern, "eu-west-1", "999999999999", "vgw-xyz", "arn:aws:ec2:eu-west-1:999999999999:vpn-gateway/vgw-xyz"},
+		{"customer gateway", customerGatewayArnPattern, "us-west-2", "111111111111", "cgw-123", "arn:aws:ec2:us-west-2:111111111111:customer-gateway/cgw-123"},
+		{"egress-only IGW", egressOnlyIgwArnPattern, "ap-south-1", "222222222222", "eigw-456", "arn:aws:ec2:ap-south-1:222222222222:egress-only-internet-gateway/eigw-456"},
+		{"subnet", subnetArnPattern, "us-east-1", "123456789012", "subnet-aaa", "arn:aws:ec2:us-east-1:123456789012:subnet/subnet-aaa"},
+		{"route table", routeTableArnPattern, "us-east-1", "123456789012", "rtb-bbb", "arn:aws:ec2:us-east-1:123456789012:route-table/rtb-bbb"},
+		{"network ACL", networkAclArnPattern, "us-east-1", "123456789012", "acl-ccc", "arn:aws:ec2:us-east-1:123456789012:network-acl/acl-ccc"},
+		{"transit gateway", transitGatewayArnPattern, "us-east-1", "123456789012", "tgw-ddd", "arn:aws:ec2:us-east-1:123456789012:transit-gateway/tgw-ddd"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := fmt.Sprintf(tt.pattern, tt.region, tt.account, tt.resource)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
 
 func TestNewMqlVpnConnection(t *testing.T) {
 	runtime := testRuntime()
