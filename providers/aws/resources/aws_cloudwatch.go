@@ -730,6 +730,9 @@ func (a *mqlAwsCloudwatchLoggroup) id() (string, error) {
 // Group names may contain colons, so we rejoin parts 6..n-1 (stripping trailing "*").
 func parseLogGroupArn(arnValue string) (region string, groupName string) {
 	parts := strings.Split(arnValue, ":")
+	if len(parts) < 8 {
+		return "", ""
+	}
 	region = parts[3]
 	// Rejoin parts 6 through second-to-last to handle names with colons
 	groupName = strings.Join(parts[6:len(parts)-1], ":")
