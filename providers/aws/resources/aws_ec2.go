@@ -2703,6 +2703,49 @@ func (a *mqlAwsEc2CustomerGateway) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+func initAwsEc2CustomerGateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	if args["arn"] == nil && args["id"] == nil {
+		return nil, nil, errors.New("arn or id required to fetch aws customer gateway")
+	}
+
+	// Load all customer gateways and find the match
+	obj, err := CreateResource(runtime, ResourceAwsEc2, map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	awsEc2 := obj.(*mqlAwsEc2)
+
+	rawResources := awsEc2.GetCustomerGateways()
+	if rawResources.Error != nil {
+		return nil, nil, rawResources.Error
+	}
+
+	var match func(cgw *mqlAwsEc2CustomerGateway) bool
+	if args["arn"] != nil {
+		arnVal := args["arn"].Value.(string)
+		match = func(cgw *mqlAwsEc2CustomerGateway) bool {
+			return cgw.Arn.Data == arnVal
+		}
+	} else if args["id"] != nil {
+		idVal := args["id"].Value.(string)
+		match = func(cgw *mqlAwsEc2CustomerGateway) bool {
+			return cgw.Id.Data == idVal
+		}
+	}
+
+	for _, rawResource := range rawResources.Data {
+		cgw := rawResource.(*mqlAwsEc2CustomerGateway)
+		if match(cgw) {
+			return args, cgw, nil
+		}
+	}
+	return nil, nil, errors.New("customer gateway not found")
+}
+
 func (a *mqlAwsEc2) customerGateways() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	res := []any{}

@@ -1240,6 +1240,81 @@ func (a *mqlAwsVpcVpnGateway) id() (string, error) {
 
 const vpnGatewayArnPattern = "arn:aws:ec2:%s:%s:vpn-gateway/%s"
 
+func initAwsVpcVpnGateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	if args["arn"] == nil && args["id"] == nil {
+		return nil, nil, errors.New("arn or id required to fetch aws vpn gateway")
+	}
+
+	var vgwId, region string
+	if args["arn"] != nil {
+		arnVal := args["arn"].Value.(string)
+		parsed, err := arn.Parse(arnVal)
+		if err == nil {
+			parts := strings.Split(parsed.Resource, "/")
+			if len(parts) == 2 {
+				vgwId = parts[1]
+				region = parsed.Region
+			}
+		}
+	}
+	if args["id"] != nil {
+		vgwId = args["id"].Value.(string)
+	}
+	if args["region"] != nil {
+		region = args["region"].Value.(string)
+	}
+	if vgwId == "" {
+		return nil, nil, errors.New("no vpn gateway id specified")
+	}
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Ec2(region)
+	ctx := context.Background()
+
+	resp, err := svc.DescribeVpnGateways(ctx, &ec2.DescribeVpnGatewaysInput{
+		VpnGatewayIds: []string{vgwId},
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	if len(resp.VpnGateways) == 0 {
+		return nil, nil, errors.New("vpn gateway not found")
+	}
+
+	vgw := resp.VpnGateways[0]
+	attachments, _ := convert.JsonToDictSlice(vgw.VpcAttachments)
+
+	var availabilityZone string
+	if vgw.AvailabilityZone != nil {
+		availabilityZone = *vgw.AvailabilityZone
+	}
+	var amazonSideAsn int64
+	if vgw.AmazonSideAsn != nil {
+		amazonSideAsn = *vgw.AmazonSideAsn
+	}
+
+	args["id"] = llx.StringDataPtr(vgw.VpnGatewayId)
+	args["arn"] = llx.StringData(fmt.Sprintf(vpnGatewayArnPattern, region, conn.AccountId(), convert.ToValue(vgw.VpnGatewayId)))
+	args["region"] = llx.StringData(region)
+	args["state"] = llx.StringData(string(vgw.State))
+	args["type"] = llx.StringData(string(vgw.Type))
+	args["amazonSideAsn"] = llx.IntData(amazonSideAsn)
+	args["availabilityZone"] = llx.StringData(availabilityZone)
+	args["attachments"] = llx.ArrayData(attachments, types.Any)
+	args["tags"] = llx.MapData(toInterfaceMap(ec2TagsToMap(vgw.Tags)), types.String)
+
+	res, err := CreateResource(runtime, ResourceAwsVpcVpnGateway, args)
+	if err != nil {
+		return nil, nil, err
+	}
+	res.(*mqlAwsVpcVpnGateway).region = region
+	return nil, res, nil
+}
+
 func (a *mqlAwsVpc) vpnGateways() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	vpcId := a.Id.Data
