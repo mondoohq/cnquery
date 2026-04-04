@@ -19,7 +19,6 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
-	"go.mondoo.com/mql/v13/types"
 )
 
 func (a *mqlAwsDynamodb) id() (string, error) {
@@ -363,6 +362,9 @@ func (a *mqlAwsDynamodbTable) backups() ([]any, error) {
 
 type mqlAwsDynamodbTableInternal struct {
 	cacheSseKmsKeyArn *string
+	fetched           bool
+	fetchErr          error
+	lock              sync.Mutex
 }
 
 func (a *mqlAwsDynamodbTable) sseKmsKey() (*mqlAwsKmsKey, error) {
@@ -531,54 +533,16 @@ func (a *mqlAwsDynamodb) getTables(conn *connection.AwsConnection) []*jobpool.Jo
 					return nil, errors.Wrap(err, "could not gather aws dynamodb tables")
 				}
 				for _, tableName := range listTablesResp.TableNames {
-					// call describe table to get real info/details about the table
-					table, err := svc.DescribeTable(ctx, &dynamodb.DescribeTableInput{TableName: &tableName})
-					if err != nil {
-						return nil, errors.Wrap(err, "could not get aws dynamodb table")
-					}
-					sseDict, err := convert.JsonToDict(table.Table.SSEDescription)
-					if err != nil {
-						return nil, err
-					}
-					throughputDict, err := convert.JsonToDict(table.Table.ProvisionedThroughput)
-					if err != nil {
-						return nil, err
-					}
-
-					var sseType string
-					var sseKmsKeyArn *string
-					if table.Table.SSEDescription != nil {
-						sseType = string(table.Table.SSEDescription.SSEType)
-						sseKmsKeyArn = table.Table.SSEDescription.KMSMasterKeyArn
-					}
-
 					mqlTable, err := CreateResource(a.MqlRuntime, "aws.dynamodb.table",
 						map[string]*llx.RawData{
-							"arn":                       llx.StringData(fmt.Sprintf(dynamoTableArnPattern, region, conn.AccountId(), tableName)),
-							"name":                      llx.StringData(tableName),
-							"region":                    llx.StringData(region),
-							"sseDescription":            llx.DictData(sseDict),
-							"sseType":                   llx.StringData(sseType),
-							"provisionedThroughput":     llx.DictData(throughputDict),
-							"createdAt":                 llx.TimeDataPtr(table.Table.CreationDateTime),
-							"deletionProtectionEnabled": llx.BoolDataPtr(table.Table.DeletionProtectionEnabled),
-							"globalTableVersion":        llx.StringDataPtr(table.Table.GlobalTableVersion),
-							"id":                        llx.StringDataPtr(table.Table.TableId),
-							"sizeBytes":                 llx.IntDataPtr(table.Table.TableSizeBytes),
-							"status":                    llx.StringData(string(table.Table.TableStatus)),
-							"items":                     llx.IntDataPtr(table.Table.ItemCount),
-							"latestStreamArn":           llx.StringDataPtr(table.Table.LatestStreamArn),
-							"latestStreamLabel":         llx.StringDataPtr(table.Table.LatestStreamLabel),
-							"tableClass":                llx.StringData(tableClassFromSummary(table.Table.TableClassSummary)),
-							"streamEnabled":             llx.BoolData(streamEnabledFromSpec(table.Table.StreamSpecification)),
-							"streamViewType":            llx.StringData(streamViewTypeFromSpec(table.Table.StreamSpecification)),
-							"billingMode":               llx.StringData(billingModeFromSummary(table.Table.BillingModeSummary)),
-							"replicaRegions":            llx.ArrayData(replicaRegionsFromDescriptions(table.Table.Replicas), types.String),
+							"arn":    llx.StringData(fmt.Sprintf(dynamoTableArnPattern, region, conn.AccountId(), tableName)),
+							"name":   llx.StringData(tableName),
+							"region": llx.StringData(region),
+							"id":     llx.StringData(""),
 						})
 					if err != nil {
 						return nil, err
 					}
-					mqlTable.(*mqlAwsDynamodbTable).cacheSseKmsKeyArn = sseKmsKeyArn
 					res = append(res, mqlTable)
 				}
 				if listTablesResp.LastEvaluatedTableName == nil {
@@ -591,6 +555,134 @@ func (a *mqlAwsDynamodb) getTables(conn *connection.AwsConnection) []*jobpool.Jo
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func (a *mqlAwsDynamodbTable) fetchDetail() error {
+	if a.fetched {
+		return a.fetchErr
+	}
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	if a.fetched {
+		return a.fetchErr
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := a.Region.Data
+	tableName := a.Name.Data
+	svc := conn.Dynamodb(region)
+	ctx := context.Background()
+
+	table, err := svc.DescribeTable(ctx, &dynamodb.DescribeTableInput{TableName: &tableName})
+	if err != nil {
+		a.fetchErr = errors.Wrap(err, "could not get aws dynamodb table")
+		a.fetched = true
+		return a.fetchErr
+	}
+
+	sseDict, err := convert.JsonToDict(table.Table.SSEDescription)
+	if err != nil {
+		a.fetchErr = err
+		a.fetched = true
+		return a.fetchErr
+	}
+	throughputDict, err := convert.JsonToDict(table.Table.ProvisionedThroughput)
+	if err != nil {
+		a.fetchErr = err
+		a.fetched = true
+		return a.fetchErr
+	}
+
+	var sseType string
+	if table.Table.SSEDescription != nil {
+		sseType = string(table.Table.SSEDescription.SSEType)
+		a.cacheSseKmsKeyArn = table.Table.SSEDescription.KMSMasterKeyArn
+	}
+
+	a.SseDescription = plugin.TValue[any]{Data: sseDict, State: plugin.StateIsSet}
+	a.SseType = plugin.TValue[string]{Data: sseType, State: plugin.StateIsSet}
+	a.ProvisionedThroughput = plugin.TValue[any]{Data: throughputDict, State: plugin.StateIsSet}
+	a.CreatedAt = plugin.TValue[*time.Time]{Data: table.Table.CreationDateTime, State: plugin.StateIsSet}
+	a.DeletionProtectionEnabled = plugin.TValue[bool]{Data: convert.ToValue(table.Table.DeletionProtectionEnabled), State: plugin.StateIsSet}
+	a.GlobalTableVersion = plugin.TValue[string]{Data: convert.ToValue(table.Table.GlobalTableVersion), State: plugin.StateIsSet}
+	a.Id = plugin.TValue[string]{Data: convert.ToValue(table.Table.TableId), State: plugin.StateIsSet}
+	a.SizeBytes = plugin.TValue[int64]{Data: convert.ToValue(table.Table.TableSizeBytes), State: plugin.StateIsSet}
+	a.Status = plugin.TValue[string]{Data: string(table.Table.TableStatus), State: plugin.StateIsSet}
+	a.Items = plugin.TValue[int64]{Data: convert.ToValue(table.Table.ItemCount), State: plugin.StateIsSet}
+	a.LatestStreamArn = plugin.TValue[string]{Data: convert.ToValue(table.Table.LatestStreamArn), State: plugin.StateIsSet}
+	a.LatestStreamLabel = plugin.TValue[string]{Data: convert.ToValue(table.Table.LatestStreamLabel), State: plugin.StateIsSet}
+	a.TableClass = plugin.TValue[string]{Data: tableClassFromSummary(table.Table.TableClassSummary), State: plugin.StateIsSet}
+	a.StreamEnabled = plugin.TValue[bool]{Data: streamEnabledFromSpec(table.Table.StreamSpecification), State: plugin.StateIsSet}
+	a.StreamViewType = plugin.TValue[string]{Data: streamViewTypeFromSpec(table.Table.StreamSpecification), State: plugin.StateIsSet}
+	a.BillingMode = plugin.TValue[string]{Data: billingModeFromSummary(table.Table.BillingModeSummary), State: plugin.StateIsSet}
+	a.ReplicaRegions = plugin.TValue[[]any]{Data: replicaRegionsFromDescriptions(table.Table.Replicas), State: plugin.StateIsSet}
+
+	a.fetched = true
+	return nil
+}
+
+func (a *mqlAwsDynamodbTable) sseDescription() (any, error) {
+	return nil, a.fetchDetail()
+}
+
+func (a *mqlAwsDynamodbTable) sseType() (string, error) {
+	return "", a.fetchDetail()
+}
+
+func (a *mqlAwsDynamodbTable) provisionedThroughput() (any, error) {
+	return nil, a.fetchDetail()
+}
+
+func (a *mqlAwsDynamodbTable) createdAt() (*time.Time, error) {
+	return nil, a.fetchDetail()
+}
+
+func (a *mqlAwsDynamodbTable) deletionProtectionEnabled() (bool, error) {
+	return false, a.fetchDetail()
+}
+
+func (a *mqlAwsDynamodbTable) globalTableVersion() (string, error) {
+	return "", a.fetchDetail()
+}
+
+func (a *mqlAwsDynamodbTable) items() (int64, error) {
+	return 0, a.fetchDetail()
+}
+
+func (a *mqlAwsDynamodbTable) sizeBytes() (int64, error) {
+	return 0, a.fetchDetail()
+}
+
+func (a *mqlAwsDynamodbTable) status() (string, error) {
+	return "", a.fetchDetail()
+}
+
+func (a *mqlAwsDynamodbTable) latestStreamArn() (string, error) {
+	return "", a.fetchDetail()
+}
+
+func (a *mqlAwsDynamodbTable) latestStreamLabel() (string, error) {
+	return "", a.fetchDetail()
+}
+
+func (a *mqlAwsDynamodbTable) tableClass() (string, error) {
+	return "", a.fetchDetail()
+}
+
+func (a *mqlAwsDynamodbTable) streamEnabled() (bool, error) {
+	return false, a.fetchDetail()
+}
+
+func (a *mqlAwsDynamodbTable) streamViewType() (string, error) {
+	return "", a.fetchDetail()
+}
+
+func (a *mqlAwsDynamodbTable) billingMode() (string, error) {
+	return "", a.fetchDetail()
+}
+
+func (a *mqlAwsDynamodbTable) replicaRegions() ([]any, error) {
+	return nil, a.fetchDetail()
 }
 
 func tableClassFromSummary(s *ddtypes.TableClassSummary) string {

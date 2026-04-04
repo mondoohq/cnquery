@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -682,25 +683,12 @@ func (a *mqlAwsEcs) getECSTaskDefinitions(conn *connection.AwsConnection) []*job
 					return nil, errors.Wrap(err, "could not gather ecs task definition information")
 				}
 				for _, taskDefArn := range resp.TaskDefinitionArns {
-					// Describe each task definition to get full details
-					describeResp, err := svc.DescribeTaskDefinition(ctx, &ecsservice.DescribeTaskDefinitionInput{
-						TaskDefinition: &taskDefArn,
-					})
-					if err != nil {
-						if Is400AccessDeniedError(err) {
-							log.Warn().Str("region", region).Str("taskDef", taskDefArn).Msg("error accessing task definition")
-							continue
-						}
-						return nil, errors.Wrapf(err, "could not describe task definition %s", taskDefArn)
-					}
-
-					if describeResp.TaskDefinition == nil {
-						continue
-					}
-
-					td := describeResp.TaskDefinition
-
-					mqlTaskDef, err := a.createTaskDefinitionResource(region, td)
+					mqlTaskDef, err := CreateResource(a.MqlRuntime, "aws.ecs.taskDefinition",
+						map[string]*llx.RawData{
+							"__id":   llx.StringData(taskDefArn),
+							"arn":    llx.StringData(taskDefArn),
+							"region": llx.StringData(region),
+						})
 					if err != nil {
 						return nil, err
 					}
@@ -714,11 +702,11 @@ func (a *mqlAwsEcs) getECSTaskDefinitions(conn *connection.AwsConnection) []*job
 	return tasks
 }
 
-func (a *mqlAwsEcs) createTaskDefinitionResource(region string, td *ecstypes.TaskDefinition) (any, error) {
+func createTaskDefinitionResource(runtime *plugin.Runtime, region string, td *ecstypes.TaskDefinition) (any, error) {
 	// Extract basic fields
-	arn := ""
+	arnVal := ""
 	if td.TaskDefinitionArn != nil {
-		arn = *td.TaskDefinitionArn
+		arnVal = *td.TaskDefinitionArn
 	}
 	family := ""
 	if td.Family != nil {
@@ -750,7 +738,7 @@ func (a *mqlAwsEcs) createTaskDefinitionResource(region string, td *ecstypes.Tas
 	// Create container definitions
 	containerDefs := []any{}
 	for i := range td.ContainerDefinitions {
-		mqlContainerDef, err := a.createContainerDefinitionResource(arn, &td.ContainerDefinitions[i])
+		mqlContainerDef, err := createContainerDefinitionResource(runtime, arnVal, &td.ContainerDefinitions[i])
 		if err != nil {
 			return nil, err
 		}
@@ -760,7 +748,7 @@ func (a *mqlAwsEcs) createTaskDefinitionResource(region string, td *ecstypes.Tas
 	// Create volumes
 	volumes := []any{}
 	for i := range td.Volumes {
-		mqlVolume, err := a.createVolumeResource(&td.Volumes[i])
+		mqlVolume, err := createVolumeResource(runtime, &td.Volumes[i])
 		if err != nil {
 			return nil, err
 		}
@@ -770,16 +758,16 @@ func (a *mqlAwsEcs) createTaskDefinitionResource(region string, td *ecstypes.Tas
 	// Create ephemeral storage
 	var ephemeralStorage any
 	if td.EphemeralStorage != nil {
-		mqlEphemeralStorage, err := a.createEphemeralStorageResource(td.EphemeralStorage)
+		mqlEphemeralStorage, err := createEphemeralStorageResource(runtime, arnVal, td.EphemeralStorage)
 		if err != nil {
 			return nil, err
 		}
 		ephemeralStorage = mqlEphemeralStorage
 	} else {
 		// Create empty ephemeral storage resource
-		mqlEphemeralStorage, err := CreateResource(a.MqlRuntime, "aws.ecs.taskDefinition.ephemeralStorage",
+		mqlEphemeralStorage, err := CreateResource(runtime, "aws.ecs.taskDefinition.ephemeralStorage",
 			map[string]*llx.RawData{
-				"__id":      llx.StringData(arn + "/ephemeralStorage"),
+				"__id":      llx.StringData(arnVal + "/ephemeralStorage"),
 				"sizeInGiB": llx.IntData(0),
 			})
 		if err != nil {
@@ -794,10 +782,10 @@ func (a *mqlAwsEcs) createTaskDefinitionResource(region string, td *ecstypes.Tas
 		return nil, errors.New("failed to convert ephemeralStorage to Resource")
 	}
 
-	return CreateResource(a.MqlRuntime, "aws.ecs.taskDefinition",
+	res, err := CreateResource(runtime, "aws.ecs.taskDefinition",
 		map[string]*llx.RawData{
-			"__id":                 llx.StringData(arn),
-			"arn":                  llx.StringData(arn),
+			"__id":                 llx.StringData(arnVal),
+			"arn":                  llx.StringData(arnVal),
 			"family":               llx.StringData(family),
 			"revision":             llx.IntData(revision),
 			"status":               llx.StringData(status),
@@ -814,9 +802,17 @@ func (a *mqlAwsEcs) createTaskDefinitionResource(region string, td *ecstypes.Tas
 			"memory":               llx.StringDataPtr(td.Memory),
 			"registeredAt":         llx.TimeDataPtr(td.RegisteredAt),
 		})
+	if err != nil {
+		return nil, err
+	}
+	// Cache the task definition data so fetchDetail() doesn't re-fetch
+	mqlTD := res.(*mqlAwsEcsTaskDefinition)
+	mqlTD.cachedTD = td
+	mqlTD.fetched = true
+	return res, nil
 }
 
-func (a *mqlAwsEcs) createContainerDefinitionResource(taskDefArn string, cd *ecstypes.ContainerDefinition) (any, error) {
+func createContainerDefinitionResource(runtime *plugin.Runtime, taskDefArn string, cd *ecstypes.ContainerDefinition) (any, error) {
 	name := ""
 	if cd.Name != nil {
 		name = *cd.Name
@@ -860,7 +856,7 @@ func (a *mqlAwsEcs) createContainerDefinitionResource(taskDefArn string, cd *ecs
 			if env.Value != nil {
 				envValue = *env.Value
 			}
-			mqlEnv, err := CreateResource(a.MqlRuntime, ResourceAwsEcsTaskDefinitionContainerDefinitionEnvironmentVariable,
+			mqlEnv, err := CreateResource(runtime, ResourceAwsEcsTaskDefinitionContainerDefinitionEnvironmentVariable,
 				map[string]*llx.RawData{
 					"__id":  llx.StringData(taskDefArn + "/container/" + name + "/env/" + envName),
 					"name":  llx.StringData(envName),
@@ -885,7 +881,7 @@ func (a *mqlAwsEcs) createContainerDefinitionResource(taskDefArn string, cd *ecs
 			if secret.ValueFrom != nil {
 				valueFrom = *secret.ValueFrom
 			}
-			mqlSecret, err := CreateResource(a.MqlRuntime, ResourceAwsEcsTaskDefinitionContainerDefinitionSecret,
+			mqlSecret, err := CreateResource(runtime, ResourceAwsEcsTaskDefinitionContainerDefinitionSecret,
 				map[string]*llx.RawData{
 					"__id":      llx.StringData(taskDefArn + "/container/" + name + "/secret/" + secretName),
 					"name":      llx.StringData(secretName),
@@ -908,7 +904,7 @@ func (a *mqlAwsEcs) createContainerDefinitionResource(taskDefArn string, cd *ecs
 				options[k] = v
 			}
 		}
-		mqlLogConfig, err := CreateResource(a.MqlRuntime, ResourceAwsEcsTaskDefinitionContainerDefinitionLogConfiguration,
+		mqlLogConfig, err := CreateResource(runtime, ResourceAwsEcsTaskDefinitionContainerDefinitionLogConfiguration,
 			map[string]*llx.RawData{
 				"__id":      llx.StringData(taskDefArn + "/container/" + name + "/logConfiguration"),
 				"logDriver": llx.StringData(logDriver),
@@ -920,7 +916,7 @@ func (a *mqlAwsEcs) createContainerDefinitionResource(taskDefArn string, cd *ecs
 		logConfig = mqlLogConfig
 	} else {
 		// Create empty log configuration
-		mqlLogConfig, err := CreateResource(a.MqlRuntime, ResourceAwsEcsTaskDefinitionContainerDefinitionLogConfiguration,
+		mqlLogConfig, err := CreateResource(runtime, ResourceAwsEcsTaskDefinitionContainerDefinitionLogConfiguration,
 			map[string]*llx.RawData{
 				"__id":      llx.StringData(taskDefArn + "/container/" + name + "/logConfiguration"),
 				"logDriver": llx.StringData(""),
@@ -945,7 +941,7 @@ func (a *mqlAwsEcs) createContainerDefinitionResource(taskDefArn string, cd *ecs
 				hostPort = int64(*pm.HostPort)
 			}
 			protocol := string(pm.Protocol)
-			mqlPortMapping, err := CreateResource(a.MqlRuntime, ResourceAwsEcsTaskDefinitionContainerDefinitionPortMapping,
+			mqlPortMapping, err := CreateResource(runtime, ResourceAwsEcsTaskDefinitionContainerDefinitionPortMapping,
 				map[string]*llx.RawData{
 					"__id":          llx.StringData(fmt.Sprintf("%s/container/%s/port/%d", taskDefArn, name, containerPort)),
 					"containerPort": llx.IntData(containerPort),
@@ -965,7 +961,7 @@ func (a *mqlAwsEcs) createContainerDefinitionResource(taskDefArn string, cd *ecs
 		return nil, errors.New("failed to convert logConfig to Resource")
 	}
 
-	return CreateResource(a.MqlRuntime, ResourceAwsEcsTaskDefinitionContainerDefinition,
+	return CreateResource(runtime, ResourceAwsEcsTaskDefinitionContainerDefinition,
 		map[string]*llx.RawData{
 			"__id":                   llx.StringData(taskDefArn + "/container/" + name),
 			"name":                   llx.StringData(name),
@@ -983,7 +979,7 @@ func (a *mqlAwsEcs) createContainerDefinitionResource(taskDefArn string, cd *ecs
 		})
 }
 
-func (a *mqlAwsEcs) createVolumeResource(vol *ecstypes.Volume) (any, error) {
+func createVolumeResource(runtime *plugin.Runtime, vol *ecstypes.Volume) (any, error) {
 	volName := ""
 	if vol.Name != nil {
 		volName = *vol.Name
@@ -1015,7 +1011,7 @@ func (a *mqlAwsEcs) createVolumeResource(vol *ecstypes.Volume) (any, error) {
 				accessPointId = *efsConfig.AuthorizationConfig.AccessPointId
 			}
 			iam := string(efsConfig.AuthorizationConfig.Iam)
-			mqlAuthConfig, err := CreateResource(a.MqlRuntime, "aws.ecs.taskDefinition.volume.efsVolumeConfiguration.authorizationConfig",
+			mqlAuthConfig, err := CreateResource(runtime, "aws.ecs.taskDefinition.volume.efsVolumeConfiguration.authorizationConfig",
 				map[string]*llx.RawData{
 					"__id":          llx.StringData(volName + "/efs/auth"),
 					"accessPointId": llx.StringData(accessPointId),
@@ -1027,7 +1023,7 @@ func (a *mqlAwsEcs) createVolumeResource(vol *ecstypes.Volume) (any, error) {
 			authConfig = mqlAuthConfig
 		} else {
 			// Create empty authorization config
-			mqlAuthConfig, err := CreateResource(a.MqlRuntime, "aws.ecs.taskDefinition.volume.efsVolumeConfiguration.authorizationConfig",
+			mqlAuthConfig, err := CreateResource(runtime, "aws.ecs.taskDefinition.volume.efsVolumeConfiguration.authorizationConfig",
 				map[string]*llx.RawData{
 					"__id":          llx.StringData(volName + "/efs/auth"),
 					"accessPointId": llx.StringData(""),
@@ -1044,7 +1040,7 @@ func (a *mqlAwsEcs) createVolumeResource(vol *ecstypes.Volume) (any, error) {
 		if !ok {
 			return nil, errors.New("failed to convert authConfig to Resource")
 		}
-		mqlEfsConfig, err := CreateResource(a.MqlRuntime, "aws.ecs.taskDefinition.volume.efsVolumeConfiguration",
+		mqlEfsConfig, err := CreateResource(runtime, "aws.ecs.taskDefinition.volume.efsVolumeConfiguration",
 			map[string]*llx.RawData{
 				"__id":                  llx.StringData(volName + "/efs"),
 				"fileSystemId":          llx.StringData(fileSystemId),
@@ -1060,7 +1056,7 @@ func (a *mqlAwsEcs) createVolumeResource(vol *ecstypes.Volume) (any, error) {
 	} else {
 		// Create empty EFS config
 		// Create empty authorization config for empty EFS config
-		emptyAuthConfig, err := CreateResource(a.MqlRuntime, "aws.ecs.taskDefinition.volume.efsVolumeConfiguration.authorizationConfig",
+		emptyAuthConfig, err := CreateResource(runtime, "aws.ecs.taskDefinition.volume.efsVolumeConfiguration.authorizationConfig",
 			map[string]*llx.RawData{
 				"__id":          llx.StringData(volName + "/efs/auth"),
 				"accessPointId": llx.StringData(""),
@@ -1069,7 +1065,7 @@ func (a *mqlAwsEcs) createVolumeResource(vol *ecstypes.Volume) (any, error) {
 		if err != nil {
 			return nil, err
 		}
-		mqlEfsConfig, err := CreateResource(a.MqlRuntime, "aws.ecs.taskDefinition.volume.efsVolumeConfiguration",
+		mqlEfsConfig, err := CreateResource(runtime, "aws.ecs.taskDefinition.volume.efsVolumeConfiguration",
 			map[string]*llx.RawData{
 				"__id":                  llx.StringData(volName + "/efs"),
 				"fileSystemId":          llx.StringData(""),
@@ -1091,7 +1087,7 @@ func (a *mqlAwsEcs) createVolumeResource(vol *ecstypes.Volume) (any, error) {
 		if vol.Host.SourcePath != nil {
 			sourcePath = *vol.Host.SourcePath
 		}
-		mqlHost, err := CreateResource(a.MqlRuntime, "aws.ecs.taskDefinition.volume.host",
+		mqlHost, err := CreateResource(runtime, "aws.ecs.taskDefinition.volume.host",
 			map[string]*llx.RawData{
 				"__id":       llx.StringData(volName + "/host"),
 				"sourcePath": llx.StringData(sourcePath),
@@ -1102,7 +1098,7 @@ func (a *mqlAwsEcs) createVolumeResource(vol *ecstypes.Volume) (any, error) {
 		hostConfig = mqlHost
 	} else {
 		// Create empty host config
-		mqlHost, err := CreateResource(a.MqlRuntime, "aws.ecs.taskDefinition.volume.host",
+		mqlHost, err := CreateResource(runtime, "aws.ecs.taskDefinition.volume.host",
 			map[string]*llx.RawData{
 				"__id":       llx.StringData(volName + "/host"),
 				"sourcePath": llx.StringData(""),
@@ -1138,7 +1134,7 @@ func (a *mqlAwsEcs) createVolumeResource(vol *ecstypes.Volume) (any, error) {
 				labels[k] = v
 			}
 		}
-		mqlDocker, err := CreateResource(a.MqlRuntime, "aws.ecs.taskDefinition.volume.dockerVolumeConfiguration",
+		mqlDocker, err := CreateResource(runtime, "aws.ecs.taskDefinition.volume.dockerVolumeConfiguration",
 			map[string]*llx.RawData{
 				"__id":          llx.StringData(volName + "/docker"),
 				"scope":         llx.StringData(scope),
@@ -1153,7 +1149,7 @@ func (a *mqlAwsEcs) createVolumeResource(vol *ecstypes.Volume) (any, error) {
 		dockerConfig = mqlDocker
 	} else {
 		// Create empty docker config
-		mqlDocker, err := CreateResource(a.MqlRuntime, "aws.ecs.taskDefinition.volume.dockerVolumeConfiguration",
+		mqlDocker, err := CreateResource(runtime, "aws.ecs.taskDefinition.volume.dockerVolumeConfiguration",
 			map[string]*llx.RawData{
 				"__id":          llx.StringData(volName + "/docker"),
 				"scope":         llx.StringData(""),
@@ -1182,7 +1178,7 @@ func (a *mqlAwsEcs) createVolumeResource(vol *ecstypes.Volume) (any, error) {
 		return nil, errors.New("failed to convert dockerConfig to Resource")
 	}
 
-	return CreateResource(a.MqlRuntime, "aws.ecs.taskDefinition.volume",
+	return CreateResource(runtime, "aws.ecs.taskDefinition.volume",
 		map[string]*llx.RawData{
 			"__id":                      llx.StringData(volName),
 			"name":                      llx.StringData(volName),
@@ -1192,20 +1188,155 @@ func (a *mqlAwsEcs) createVolumeResource(vol *ecstypes.Volume) (any, error) {
 		})
 }
 
-func (a *mqlAwsEcs) createEphemeralStorageResource(es *ecstypes.EphemeralStorage) (any, error) {
+func createEphemeralStorageResource(runtime *plugin.Runtime, taskDefArn string, es *ecstypes.EphemeralStorage) (any, error) {
 	sizeInGiB := int64(es.SizeInGiB)
 
-	return CreateResource(a.MqlRuntime, "aws.ecs.taskDefinition.ephemeralStorage",
+	return CreateResource(runtime, "aws.ecs.taskDefinition.ephemeralStorage",
 		map[string]*llx.RawData{
-			"__id":      llx.StringData("ephemeralStorage"),
+			"__id":      llx.StringData(taskDefArn + "/ephemeralStorage"),
 			"sizeInGiB": llx.IntData(sizeInGiB),
 		})
 }
 
 type mqlAwsEcsTaskDefinitionInternal struct {
+	cachedTD *ecstypes.TaskDefinition
+	fetched  bool
+	fetchErr error
+	lock     sync.Mutex
+
 	cacheTags   map[string]any
 	tagsFetched bool
 	tagsLock    sync.Mutex
+}
+
+func (a *mqlAwsEcsTaskDefinition) fetchDetail() error {
+	if a.fetched {
+		return a.fetchErr
+	}
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	if a.fetched {
+		return a.fetchErr
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Ecs(a.Region.Data)
+	ctx := context.Background()
+
+	arnVal := a.Arn.Data
+	describeResp, err := svc.DescribeTaskDefinition(ctx, &ecsservice.DescribeTaskDefinitionInput{
+		TaskDefinition: &arnVal,
+	})
+	if err != nil {
+		a.fetched = true
+		a.fetchErr = err
+		return err
+	}
+	if describeResp.TaskDefinition == nil {
+		a.fetched = true
+		a.fetchErr = errors.New("task definition not found")
+		return a.fetchErr
+	}
+
+	td := describeResp.TaskDefinition
+	a.cachedTD = td
+
+	// Set simple scalar fields
+	a.Family = plugin.TValue[string]{Data: convert.ToValue(td.Family), State: plugin.StateIsSet}
+	a.Revision = plugin.TValue[int64]{Data: int64(td.Revision), State: plugin.StateIsSet}
+	a.Status = plugin.TValue[string]{Data: string(td.Status), State: plugin.StateIsSet}
+	a.NetworkMode = plugin.TValue[string]{Data: string(td.NetworkMode), State: plugin.StateIsSet}
+	a.PidMode = plugin.TValue[string]{Data: string(td.PidMode), State: plugin.StateIsSet}
+	a.IpcMode = plugin.TValue[string]{Data: string(td.IpcMode), State: plugin.StateIsSet}
+	a.TaskRoleArn = plugin.TValue[string]{Data: convert.ToValue(td.TaskRoleArn), State: plugin.StateIsSet}
+	a.ExecutionRoleArn = plugin.TValue[string]{Data: convert.ToValue(td.ExecutionRoleArn), State: plugin.StateIsSet}
+	a.Cpu = plugin.TValue[string]{Data: convert.ToValue(td.Cpu), State: plugin.StateIsSet}
+	a.Memory = plugin.TValue[string]{Data: convert.ToValue(td.Memory), State: plugin.StateIsSet}
+	if td.RegisteredAt != nil {
+		a.RegisteredAt = plugin.TValue[*time.Time]{Data: td.RegisteredAt, State: plugin.StateIsSet}
+	} else {
+		a.RegisteredAt = plugin.TValue[*time.Time]{Data: &llx.NeverFutureTime, State: plugin.StateIsSet}
+	}
+
+	a.fetched = true
+	return nil
+}
+
+func (a *mqlAwsEcsTaskDefinition) family() (string, error) {
+	if err := a.fetchDetail(); err != nil {
+		return "", err
+	}
+	return a.Family.Data, nil
+}
+
+func (a *mqlAwsEcsTaskDefinition) revision() (int64, error) {
+	if err := a.fetchDetail(); err != nil {
+		return 0, err
+	}
+	return a.Revision.Data, nil
+}
+
+func (a *mqlAwsEcsTaskDefinition) status() (string, error) {
+	if err := a.fetchDetail(); err != nil {
+		return "", err
+	}
+	return a.Status.Data, nil
+}
+
+func (a *mqlAwsEcsTaskDefinition) networkMode() (string, error) {
+	if err := a.fetchDetail(); err != nil {
+		return "", err
+	}
+	return a.NetworkMode.Data, nil
+}
+
+func (a *mqlAwsEcsTaskDefinition) pidMode() (string, error) {
+	if err := a.fetchDetail(); err != nil {
+		return "", err
+	}
+	return a.PidMode.Data, nil
+}
+
+func (a *mqlAwsEcsTaskDefinition) ipcMode() (string, error) {
+	if err := a.fetchDetail(); err != nil {
+		return "", err
+	}
+	return a.IpcMode.Data, nil
+}
+
+func (a *mqlAwsEcsTaskDefinition) taskRoleArn() (string, error) {
+	if err := a.fetchDetail(); err != nil {
+		return "", err
+	}
+	return a.TaskRoleArn.Data, nil
+}
+
+func (a *mqlAwsEcsTaskDefinition) executionRoleArn() (string, error) {
+	if err := a.fetchDetail(); err != nil {
+		return "", err
+	}
+	return a.ExecutionRoleArn.Data, nil
+}
+
+func (a *mqlAwsEcsTaskDefinition) cpu() (string, error) {
+	if err := a.fetchDetail(); err != nil {
+		return "", err
+	}
+	return a.Cpu.Data, nil
+}
+
+func (a *mqlAwsEcsTaskDefinition) memory() (string, error) {
+	if err := a.fetchDetail(); err != nil {
+		return "", err
+	}
+	return a.Memory.Data, nil
+}
+
+func (a *mqlAwsEcsTaskDefinition) registeredAt() (*time.Time, error) {
+	if err := a.fetchDetail(); err != nil {
+		return nil, err
+	}
+	return a.RegisteredAt.Data, nil
 }
 
 func (a *mqlAwsEcsTaskDefinition) tags() (map[string]any, error) {
@@ -1244,34 +1375,59 @@ func (a *mqlAwsEcsTaskDefinition) tags() (map[string]any, error) {
 
 // Getter methods for task definition resources
 func (a *mqlAwsEcsTaskDefinition) containerDefinitions() ([]any, error) {
-	if !a.ContainerDefinitions.IsSet() {
+	if err := a.fetchDetail(); err != nil {
+		return nil, err
+	}
+	td := a.cachedTD
+	if td == nil {
 		return nil, nil
 	}
-	if a.ContainerDefinitions.Error != nil {
-		return nil, a.ContainerDefinitions.Error
+	arnVal := a.Arn.Data
+	containerDefs := []any{}
+	for i := range td.ContainerDefinitions {
+		mqlContainerDef, err := createContainerDefinitionResource(a.MqlRuntime, arnVal, &td.ContainerDefinitions[i])
+		if err != nil {
+			return nil, err
+		}
+		containerDefs = append(containerDefs, mqlContainerDef)
 	}
-	return a.ContainerDefinitions.Data, nil
+	return containerDefs, nil
 }
 
 func (a *mqlAwsEcsTaskDefinition) volumes() ([]any, error) {
-	if !a.Volumes.IsSet() {
+	if err := a.fetchDetail(); err != nil {
+		return nil, err
+	}
+	td := a.cachedTD
+	if td == nil {
 		return nil, nil
 	}
-	if a.Volumes.Error != nil {
-		return nil, a.Volumes.Error
+	volumes := []any{}
+	for i := range td.Volumes {
+		mqlVolume, err := createVolumeResource(a.MqlRuntime, &td.Volumes[i])
+		if err != nil {
+			return nil, err
+		}
+		volumes = append(volumes, mqlVolume)
 	}
-	return a.Volumes.Data, nil
+	return volumes, nil
 }
 
 func (a *mqlAwsEcsTaskDefinition) ephemeralStorage() (*mqlAwsEcsTaskDefinitionEphemeralStorage, error) {
-	if !a.EphemeralStorage.IsSet() {
+	if err := a.fetchDetail(); err != nil {
+		return nil, err
+	}
+	td := a.cachedTD
+	if td == nil || td.EphemeralStorage == nil {
 		a.EphemeralStorage.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	if a.EphemeralStorage.Error != nil {
-		return nil, a.EphemeralStorage.Error
+	arnVal := a.Arn.Data
+	res, err := createEphemeralStorageResource(a.MqlRuntime, arnVal, td.EphemeralStorage)
+	if err != nil {
+		return nil, err
 	}
-	return a.EphemeralStorage.Data, nil
+	return res.(*mqlAwsEcsTaskDefinitionEphemeralStorage), nil
 }
 
 // id() methods for task definition resources

@@ -5667,6 +5667,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ecs.taskDefinition.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsTaskDefinition).GetArn()).ToDataRes(types.String)
 	},
+	"aws.ecs.taskDefinition.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinition).GetRegion()).ToDataRes(types.String)
+	},
 	"aws.ecs.taskDefinition.family": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsTaskDefinition).GetFamily()).ToDataRes(types.String)
 	},
@@ -5702,9 +5705,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ecs.taskDefinition.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsTaskDefinition).GetTags()).ToDataRes(types.Map(types.String, types.String))
-	},
-	"aws.ecs.taskDefinition.region": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEcsTaskDefinition).GetRegion()).ToDataRes(types.String)
 	},
 	"aws.ecs.taskDefinition.cpu": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsTaskDefinition).GetCpu()).ToDataRes(types.String)
@@ -7281,14 +7281,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.dynamodb.table.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDynamodbTable).GetArn()).ToDataRes(types.String)
 	},
-	"aws.dynamodb.table.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsDynamodbTable).GetId()).ToDataRes(types.String)
-	},
 	"aws.dynamodb.table.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDynamodbTable).GetName()).ToDataRes(types.String)
 	},
 	"aws.dynamodb.table.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDynamodbTable).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.dynamodb.table.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetId()).ToDataRes(types.String)
 	},
 	"aws.dynamodb.table.backups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDynamodbTable).GetBackups()).ToDataRes(types.Array(types.Dict))
@@ -19394,6 +19394,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEcsTaskDefinition).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.ecs.taskDefinition.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinition).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.ecs.taskDefinition.family": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsTaskDefinition).Family, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -19440,10 +19444,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ecs.taskDefinition.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsTaskDefinition).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
-		return
-	},
-	"aws.ecs.taskDefinition.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEcsTaskDefinition).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.taskDefinition.cpu": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21866,16 +21866,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsDynamodbTable).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.dynamodb.table.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsDynamodbTable).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"aws.dynamodb.table.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDynamodbTable).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.dynamodb.table.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDynamodbTable).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.table.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.dynamodb.table.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -45896,6 +45896,7 @@ type mqlAwsEcsTaskDefinition struct {
 	__id       string
 	mqlAwsEcsTaskDefinitionInternal
 	Arn                  plugin.TValue[string]
+	Region               plugin.TValue[string]
 	Family               plugin.TValue[string]
 	Revision             plugin.TValue[int64]
 	Status               plugin.TValue[string]
@@ -45908,7 +45909,6 @@ type mqlAwsEcsTaskDefinition struct {
 	Volumes              plugin.TValue[[]any]
 	EphemeralStorage     plugin.TValue[*mqlAwsEcsTaskDefinitionEphemeralStorage]
 	Tags                 plugin.TValue[map[string]any]
-	Region               plugin.TValue[string]
 	Cpu                  plugin.TValue[string]
 	Memory               plugin.TValue[string]
 	RegisteredAt         plugin.TValue[*time.Time]
@@ -45955,36 +45955,56 @@ func (c *mqlAwsEcsTaskDefinition) GetArn() *plugin.TValue[string] {
 	return &c.Arn
 }
 
+func (c *mqlAwsEcsTaskDefinition) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
 func (c *mqlAwsEcsTaskDefinition) GetFamily() *plugin.TValue[string] {
-	return &c.Family
+	return plugin.GetOrCompute[string](&c.Family, func() (string, error) {
+		return c.family()
+	})
 }
 
 func (c *mqlAwsEcsTaskDefinition) GetRevision() *plugin.TValue[int64] {
-	return &c.Revision
+	return plugin.GetOrCompute[int64](&c.Revision, func() (int64, error) {
+		return c.revision()
+	})
 }
 
 func (c *mqlAwsEcsTaskDefinition) GetStatus() *plugin.TValue[string] {
-	return &c.Status
+	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
+		return c.status()
+	})
 }
 
 func (c *mqlAwsEcsTaskDefinition) GetNetworkMode() *plugin.TValue[string] {
-	return &c.NetworkMode
+	return plugin.GetOrCompute[string](&c.NetworkMode, func() (string, error) {
+		return c.networkMode()
+	})
 }
 
 func (c *mqlAwsEcsTaskDefinition) GetPidMode() *plugin.TValue[string] {
-	return &c.PidMode
+	return plugin.GetOrCompute[string](&c.PidMode, func() (string, error) {
+		return c.pidMode()
+	})
 }
 
 func (c *mqlAwsEcsTaskDefinition) GetIpcMode() *plugin.TValue[string] {
-	return &c.IpcMode
+	return plugin.GetOrCompute[string](&c.IpcMode, func() (string, error) {
+		return c.ipcMode()
+	})
 }
 
 func (c *mqlAwsEcsTaskDefinition) GetTaskRoleArn() *plugin.TValue[string] {
-	return &c.TaskRoleArn
+	return plugin.GetOrCompute[string](&c.TaskRoleArn, func() (string, error) {
+		return c.taskRoleArn()
+	})
 }
 
 func (c *mqlAwsEcsTaskDefinition) GetExecutionRoleArn() *plugin.TValue[string] {
-	return &c.ExecutionRoleArn
+	return plugin.GetOrCompute[string](&c.ExecutionRoleArn, func() (string, error) {
+		return c.executionRoleArn()
+	})
 }
 
 func (c *mqlAwsEcsTaskDefinition) GetContainerDefinitions() *plugin.TValue[[]any] {
@@ -46041,20 +46061,22 @@ func (c *mqlAwsEcsTaskDefinition) GetTags() *plugin.TValue[map[string]any] {
 	})
 }
 
-func (c *mqlAwsEcsTaskDefinition) GetRegion() *plugin.TValue[string] {
-	return &c.Region
-}
-
 func (c *mqlAwsEcsTaskDefinition) GetCpu() *plugin.TValue[string] {
-	return &c.Cpu
+	return plugin.GetOrCompute[string](&c.Cpu, func() (string, error) {
+		return c.cpu()
+	})
 }
 
 func (c *mqlAwsEcsTaskDefinition) GetMemory() *plugin.TValue[string] {
-	return &c.Memory
+	return plugin.GetOrCompute[string](&c.Memory, func() (string, error) {
+		return c.memory()
+	})
 }
 
 func (c *mqlAwsEcsTaskDefinition) GetRegisteredAt() *plugin.TValue[*time.Time] {
-	return &c.RegisteredAt
+	return plugin.GetOrCompute[*time.Time](&c.RegisteredAt, func() (*time.Time, error) {
+		return c.registeredAt()
+	})
 }
 
 // mqlAwsEcsService for the aws.ecs.service resource
@@ -52997,9 +53019,9 @@ type mqlAwsDynamodbTable struct {
 	__id       string
 	mqlAwsDynamodbTableInternal
 	Arn                       plugin.TValue[string]
-	Id                        plugin.TValue[string]
 	Name                      plugin.TValue[string]
 	Region                    plugin.TValue[string]
+	Id                        plugin.TValue[string]
 	Backups                   plugin.TValue[[]any]
 	SseDescription            plugin.TValue[any]
 	SseType                   plugin.TValue[string]
@@ -53063,16 +53085,16 @@ func (c *mqlAwsDynamodbTable) GetArn() *plugin.TValue[string] {
 	return &c.Arn
 }
 
-func (c *mqlAwsDynamodbTable) GetId() *plugin.TValue[string] {
-	return &c.Id
-}
-
 func (c *mqlAwsDynamodbTable) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
 func (c *mqlAwsDynamodbTable) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+func (c *mqlAwsDynamodbTable) GetId() *plugin.TValue[string] {
+	return &c.Id
 }
 
 func (c *mqlAwsDynamodbTable) GetBackups() *plugin.TValue[[]any] {
@@ -53082,11 +53104,15 @@ func (c *mqlAwsDynamodbTable) GetBackups() *plugin.TValue[[]any] {
 }
 
 func (c *mqlAwsDynamodbTable) GetSseDescription() *plugin.TValue[any] {
-	return &c.SseDescription
+	return plugin.GetOrCompute[any](&c.SseDescription, func() (any, error) {
+		return c.sseDescription()
+	})
 }
 
 func (c *mqlAwsDynamodbTable) GetSseType() *plugin.TValue[string] {
-	return &c.SseType
+	return plugin.GetOrCompute[string](&c.SseType, func() (string, error) {
+		return c.sseType()
+	})
 }
 
 func (c *mqlAwsDynamodbTable) GetSseKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
@@ -53106,7 +53132,9 @@ func (c *mqlAwsDynamodbTable) GetSseKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
 }
 
 func (c *mqlAwsDynamodbTable) GetProvisionedThroughput() *plugin.TValue[any] {
-	return &c.ProvisionedThroughput
+	return plugin.GetOrCompute[any](&c.ProvisionedThroughput, func() (any, error) {
+		return c.provisionedThroughput()
+	})
 }
 
 func (c *mqlAwsDynamodbTable) GetContinuousBackups() *plugin.TValue[any] {
@@ -53122,55 +53150,81 @@ func (c *mqlAwsDynamodbTable) GetTags() *plugin.TValue[map[string]any] {
 }
 
 func (c *mqlAwsDynamodbTable) GetCreatedAt() *plugin.TValue[*time.Time] {
-	return &c.CreatedAt
+	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
+		return c.createdAt()
+	})
 }
 
 func (c *mqlAwsDynamodbTable) GetDeletionProtectionEnabled() *plugin.TValue[bool] {
-	return &c.DeletionProtectionEnabled
+	return plugin.GetOrCompute[bool](&c.DeletionProtectionEnabled, func() (bool, error) {
+		return c.deletionProtectionEnabled()
+	})
 }
 
 func (c *mqlAwsDynamodbTable) GetGlobalTableVersion() *plugin.TValue[string] {
-	return &c.GlobalTableVersion
+	return plugin.GetOrCompute[string](&c.GlobalTableVersion, func() (string, error) {
+		return c.globalTableVersion()
+	})
 }
 
 func (c *mqlAwsDynamodbTable) GetItems() *plugin.TValue[int64] {
-	return &c.Items
+	return plugin.GetOrCompute[int64](&c.Items, func() (int64, error) {
+		return c.items()
+	})
 }
 
 func (c *mqlAwsDynamodbTable) GetSizeBytes() *plugin.TValue[int64] {
-	return &c.SizeBytes
+	return plugin.GetOrCompute[int64](&c.SizeBytes, func() (int64, error) {
+		return c.sizeBytes()
+	})
 }
 
 func (c *mqlAwsDynamodbTable) GetLatestStreamArn() *plugin.TValue[string] {
-	return &c.LatestStreamArn
+	return plugin.GetOrCompute[string](&c.LatestStreamArn, func() (string, error) {
+		return c.latestStreamArn()
+	})
 }
 
 func (c *mqlAwsDynamodbTable) GetStatus() *plugin.TValue[string] {
-	return &c.Status
+	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
+		return c.status()
+	})
 }
 
 func (c *mqlAwsDynamodbTable) GetLatestStreamLabel() *plugin.TValue[string] {
-	return &c.LatestStreamLabel
+	return plugin.GetOrCompute[string](&c.LatestStreamLabel, func() (string, error) {
+		return c.latestStreamLabel()
+	})
 }
 
 func (c *mqlAwsDynamodbTable) GetTableClass() *plugin.TValue[string] {
-	return &c.TableClass
+	return plugin.GetOrCompute[string](&c.TableClass, func() (string, error) {
+		return c.tableClass()
+	})
 }
 
 func (c *mqlAwsDynamodbTable) GetStreamEnabled() *plugin.TValue[bool] {
-	return &c.StreamEnabled
+	return plugin.GetOrCompute[bool](&c.StreamEnabled, func() (bool, error) {
+		return c.streamEnabled()
+	})
 }
 
 func (c *mqlAwsDynamodbTable) GetStreamViewType() *plugin.TValue[string] {
-	return &c.StreamViewType
+	return plugin.GetOrCompute[string](&c.StreamViewType, func() (string, error) {
+		return c.streamViewType()
+	})
 }
 
 func (c *mqlAwsDynamodbTable) GetBillingMode() *plugin.TValue[string] {
-	return &c.BillingMode
+	return plugin.GetOrCompute[string](&c.BillingMode, func() (string, error) {
+		return c.billingMode()
+	})
 }
 
 func (c *mqlAwsDynamodbTable) GetReplicaRegions() *plugin.TValue[[]any] {
-	return &c.ReplicaRegions
+	return plugin.GetOrCompute[[]any](&c.ReplicaRegions, func() ([]any, error) {
+		return c.replicaRegions()
+	})
 }
 
 // mqlAwsSqs for the aws.sqs resource
@@ -65949,7 +66003,7 @@ func (c *mqlAwsEksAddon) GetRegion() *plugin.TValue[string] {
 type mqlAwsEksCluster struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsEksClusterInternal it will be used here
+	mqlAwsEksClusterInternal
 	Name                  plugin.TValue[string]
 	Arn                   plugin.TValue[string]
 	Region                plugin.TValue[string]
@@ -66024,43 +66078,63 @@ func (c *mqlAwsEksCluster) GetRegion() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsEksCluster) GetTags() *plugin.TValue[map[string]any] {
-	return &c.Tags
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
 }
 
 func (c *mqlAwsEksCluster) GetEndpoint() *plugin.TValue[string] {
-	return &c.Endpoint
+	return plugin.GetOrCompute[string](&c.Endpoint, func() (string, error) {
+		return c.endpoint()
+	})
 }
 
 func (c *mqlAwsEksCluster) GetVersion() *plugin.TValue[string] {
-	return &c.Version
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
 }
 
 func (c *mqlAwsEksCluster) GetPlatformVersion() *plugin.TValue[string] {
-	return &c.PlatformVersion
+	return plugin.GetOrCompute[string](&c.PlatformVersion, func() (string, error) {
+		return c.platformVersion()
+	})
 }
 
 func (c *mqlAwsEksCluster) GetStatus() *plugin.TValue[string] {
-	return &c.Status
+	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
+		return c.status()
+	})
 }
 
 func (c *mqlAwsEksCluster) GetEncryptionConfig() *plugin.TValue[[]any] {
-	return &c.EncryptionConfig
+	return plugin.GetOrCompute[[]any](&c.EncryptionConfig, func() ([]any, error) {
+		return c.encryptionConfig()
+	})
 }
 
 func (c *mqlAwsEksCluster) GetLogging() *plugin.TValue[any] {
-	return &c.Logging
+	return plugin.GetOrCompute[any](&c.Logging, func() (any, error) {
+		return c.logging()
+	})
 }
 
 func (c *mqlAwsEksCluster) GetNetworkConfig() *plugin.TValue[any] {
-	return &c.NetworkConfig
+	return plugin.GetOrCompute[any](&c.NetworkConfig, func() (any, error) {
+		return c.networkConfig()
+	})
 }
 
 func (c *mqlAwsEksCluster) GetResourcesVpcConfig() *plugin.TValue[any] {
-	return &c.ResourcesVpcConfig
+	return plugin.GetOrCompute[any](&c.ResourcesVpcConfig, func() (any, error) {
+		return c.resourcesVpcConfig()
+	})
 }
 
 func (c *mqlAwsEksCluster) GetCreatedAt() *plugin.TValue[*time.Time] {
-	return &c.CreatedAt
+	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
+		return c.createdAt()
+	})
 }
 
 func (c *mqlAwsEksCluster) GetNodeGroups() *plugin.TValue[[]any] {
@@ -66096,31 +66170,55 @@ func (c *mqlAwsEksCluster) GetAddons() *plugin.TValue[[]any] {
 }
 
 func (c *mqlAwsEksCluster) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
-	return &c.IamRole
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eks.cluster", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
 }
 
 func (c *mqlAwsEksCluster) GetSupportType() *plugin.TValue[string] {
-	return &c.SupportType
+	return plugin.GetOrCompute[string](&c.SupportType, func() (string, error) {
+		return c.supportType()
+	})
 }
 
 func (c *mqlAwsEksCluster) GetAuthenticationMode() *plugin.TValue[string] {
-	return &c.AuthenticationMode
+	return plugin.GetOrCompute[string](&c.AuthenticationMode, func() (string, error) {
+		return c.authenticationMode()
+	})
 }
 
 func (c *mqlAwsEksCluster) GetDeletionProtection() *plugin.TValue[bool] {
-	return &c.DeletionProtection
+	return plugin.GetOrCompute[bool](&c.DeletionProtection, func() (bool, error) {
+		return c.deletionProtection()
+	})
 }
 
 func (c *mqlAwsEksCluster) GetEndpointPublicAccess() *plugin.TValue[bool] {
-	return &c.EndpointPublicAccess
+	return plugin.GetOrCompute[bool](&c.EndpointPublicAccess, func() (bool, error) {
+		return c.endpointPublicAccess()
+	})
 }
 
 func (c *mqlAwsEksCluster) GetEndpointPrivateAccess() *plugin.TValue[bool] {
-	return &c.EndpointPrivateAccess
+	return plugin.GetOrCompute[bool](&c.EndpointPrivateAccess, func() (bool, error) {
+		return c.endpointPrivateAccess()
+	})
 }
 
 func (c *mqlAwsEksCluster) GetPublicAccessCidrs() *plugin.TValue[[]any] {
-	return &c.PublicAccessCidrs
+	return plugin.GetOrCompute[[]any](&c.PublicAccessCidrs, func() ([]any, error) {
+		return c.publicAccessCidrs()
+	})
 }
 
 // mqlAwsNeptune for the aws.neptune resource

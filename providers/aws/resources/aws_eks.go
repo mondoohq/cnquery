@@ -19,8 +19,6 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
-
-	"go.mondoo.com/mql/v13/types"
 )
 
 func (a *mqlAwsEks) id() (string, error) {
@@ -72,79 +70,33 @@ func (a *mqlAwsEks) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 				}
 
 				for _, clusterName := range page.Clusters {
-					// get cluster details
-					log.Debug().Str("cluster", clusterName).Str("region", region).Msg("get info for cluster")
-					describeClusterOutput, err := svc.DescribeCluster(ctx, &eks.DescribeClusterInput{
-						Name: aws.String(clusterName),
-					})
-					if err != nil {
-						return nil, err
-					}
-
-					if describeClusterOutput == nil {
-						continue
-					}
-
-					cluster := describeClusterOutput.Cluster
-					if conn.Filters.General.IsFilteredOutByTags(cluster.Tags) {
-						log.Debug().Interface("cluster", cluster.Arn).Msg("skipping eks cluster due to filters")
-						continue
-					}
-
-					encryptionConfig, _ := convert.JsonToDictSlice(cluster.EncryptionConfig)
-					logging, _ := convert.JsonToDict(cluster.Logging)
-					kubernetesNetworkConfig, _ := convert.JsonToDict(cluster.KubernetesNetworkConfig)
-					vpcConfig, _ := convert.JsonToDict(cluster.ResourcesVpcConfig)
-
-					var endpointPublicAccess, endpointPrivateAccess bool
-					publicAccessCidrs := []any{}
-					if cluster.ResourcesVpcConfig != nil {
-						endpointPublicAccess = cluster.ResourcesVpcConfig.EndpointPublicAccess
-						endpointPrivateAccess = cluster.ResourcesVpcConfig.EndpointPrivateAccess
-						for _, cidr := range cluster.ResourcesVpcConfig.PublicAccessCidrs {
-							publicAccessCidrs = append(publicAccessCidrs, cidr)
-						}
-					}
-
-					args := map[string]*llx.RawData{
-						"arn":                   llx.StringDataPtr(cluster.Arn),
-						"authenticationMode":    llx.StringData(string(cluster.AccessConfig.AuthenticationMode)),
-						"createdAt":             llx.TimeDataPtr(cluster.CreatedAt),
-						"encryptionConfig":      llx.ArrayData(encryptionConfig, types.Any),
-						"endpoint":              llx.StringDataPtr(cluster.Endpoint),
-						"iamRole":               llx.NilData, // set iamRole to nil as default, if iam is not set
-						"logging":               llx.MapData(logging, types.Any),
-						"name":                  llx.StringDataPtr(cluster.Name),
-						"networkConfig":         llx.MapData(kubernetesNetworkConfig, types.Any),
-						"platformVersion":       llx.StringDataPtr(cluster.PlatformVersion),
-						"region":                llx.StringData(region),
-						"resourcesVpcConfig":    llx.MapData(vpcConfig, types.Any),
-						"status":                llx.StringData(string(cluster.Status)),
-						"supportType":           llx.StringData(string(cluster.UpgradePolicy.SupportType)),
-						"tags":                  llx.MapData(toInterfaceMap(cluster.Tags), types.String),
-						"version":               llx.StringDataPtr(cluster.Version),
-						"deletionProtection":    llx.BoolDataPtr(cluster.DeletionProtection),
-						"endpointPublicAccess":  llx.BoolData(endpointPublicAccess),
-						"endpointPrivateAccess": llx.BoolData(endpointPrivateAccess),
-						"publicAccessCidrs":     llx.ArrayData(publicAccessCidrs, types.String),
-					}
-
-					if cluster.RoleArn != nil {
-						mqlIam, err := NewResource(a.MqlRuntime, ResourceAwsIamRole,
-							map[string]*llx.RawData{"arn": llx.StringDataPtr(cluster.RoleArn)},
-						)
+					// If tag filters are active, we need to describe the cluster to check tags
+					if conn.Filters.General.HasTags() {
+						descResp, err := svc.DescribeCluster(ctx, &eks.DescribeClusterInput{Name: aws.String(clusterName)})
 						if err != nil {
 							return nil, err
 						}
-						// update the iam setting
-						args["iamRole"] = llx.ResourceData(mqlIam, mqlIam.MqlName())
+						if descResp == nil || descResp.Cluster == nil {
+							continue
+						}
+						if conn.Filters.General.IsFilteredOutByTags(descResp.Cluster.Tags) {
+							log.Debug().Str("cluster", clusterName).Msg("skipping eks cluster due to filters")
+							continue
+						}
 					}
 
-					mqlFilesystem, err := CreateResource(a.MqlRuntime, ResourceAwsEksCluster, args)
+					clusterArn := fmt.Sprintf("arn:aws:eks:%s:%s:cluster/%s", region, conn.AccountId(), clusterName)
+					args := map[string]*llx.RawData{
+						"name":   llx.StringData(clusterName),
+						"arn":    llx.StringData(clusterArn),
+						"region": llx.StringData(region),
+					}
+
+					mqlCluster, err := CreateResource(a.MqlRuntime, ResourceAwsEksCluster, args)
 					if err != nil {
 						return nil, err
 					}
-					res = append(res, mqlFilesystem)
+					res = append(res, mqlCluster)
 				}
 			}
 
@@ -153,6 +105,173 @@ func (a *mqlAwsEks) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+type mqlAwsEksClusterInternal struct {
+	fetched  bool
+	fetchErr error
+	lock     sync.Mutex
+}
+
+func (a *mqlAwsEksCluster) fetchDetail() error {
+	if a.fetched {
+		return a.fetchErr
+	}
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	if a.fetched {
+		return a.fetchErr
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	ctx := context.Background()
+	svc := conn.Eks(a.Region.Data)
+
+	descResp, err := svc.DescribeCluster(ctx, &eks.DescribeClusterInput{
+		Name: aws.String(a.Name.Data),
+	})
+	if err != nil {
+		a.fetched = true
+		a.fetchErr = err
+		return err
+	}
+	cluster := descResp.Cluster
+
+	a.Tags = plugin.TValue[map[string]any]{Data: toInterfaceMap(cluster.Tags), State: plugin.StateIsSet}
+	a.Endpoint = plugin.TValue[string]{Data: convert.ToValue(cluster.Endpoint), State: plugin.StateIsSet}
+	a.Version = plugin.TValue[string]{Data: convert.ToValue(cluster.Version), State: plugin.StateIsSet}
+	a.PlatformVersion = plugin.TValue[string]{Data: convert.ToValue(cluster.PlatformVersion), State: plugin.StateIsSet}
+	a.Status = plugin.TValue[string]{Data: string(cluster.Status), State: plugin.StateIsSet}
+
+	encryptionConfig, _ := convert.JsonToDictSlice(cluster.EncryptionConfig)
+	a.EncryptionConfig = plugin.TValue[[]any]{Data: encryptionConfig, State: plugin.StateIsSet}
+
+	logging, _ := convert.JsonToDict(cluster.Logging)
+	a.Logging = plugin.TValue[any]{Data: logging, State: plugin.StateIsSet}
+
+	kubernetesNetworkConfig, _ := convert.JsonToDict(cluster.KubernetesNetworkConfig)
+	a.NetworkConfig = plugin.TValue[any]{Data: kubernetesNetworkConfig, State: plugin.StateIsSet}
+
+	vpcConfig, _ := convert.JsonToDict(cluster.ResourcesVpcConfig)
+	a.ResourcesVpcConfig = plugin.TValue[any]{Data: vpcConfig, State: plugin.StateIsSet}
+
+	a.CreatedAt = plugin.TValue[*time.Time]{Data: cluster.CreatedAt, State: plugin.StateIsSet}
+
+	supportType := ""
+	if cluster.UpgradePolicy != nil {
+		supportType = string(cluster.UpgradePolicy.SupportType)
+	}
+	a.SupportType = plugin.TValue[string]{Data: supportType, State: plugin.StateIsSet}
+
+	authMode := ""
+	if cluster.AccessConfig != nil {
+		authMode = string(cluster.AccessConfig.AuthenticationMode)
+	}
+	a.AuthenticationMode = plugin.TValue[string]{Data: authMode, State: plugin.StateIsSet}
+
+	if cluster.DeletionProtection != nil {
+		a.DeletionProtection = plugin.TValue[bool]{Data: *cluster.DeletionProtection, State: plugin.StateIsSet}
+	} else {
+		a.DeletionProtection = plugin.TValue[bool]{State: plugin.StateIsSet | plugin.StateIsNull}
+	}
+
+	var endpointPublicAccess, endpointPrivateAccess bool
+	publicAccessCidrs := []any{}
+	if cluster.ResourcesVpcConfig != nil {
+		endpointPublicAccess = cluster.ResourcesVpcConfig.EndpointPublicAccess
+		endpointPrivateAccess = cluster.ResourcesVpcConfig.EndpointPrivateAccess
+		for _, cidr := range cluster.ResourcesVpcConfig.PublicAccessCidrs {
+			publicAccessCidrs = append(publicAccessCidrs, cidr)
+		}
+	}
+	a.EndpointPublicAccess = plugin.TValue[bool]{Data: endpointPublicAccess, State: plugin.StateIsSet}
+	a.EndpointPrivateAccess = plugin.TValue[bool]{Data: endpointPrivateAccess, State: plugin.StateIsSet}
+	a.PublicAccessCidrs = plugin.TValue[[]any]{Data: publicAccessCidrs, State: plugin.StateIsSet}
+
+	if cluster.RoleArn != nil {
+		mqlIam, err := NewResource(a.MqlRuntime, ResourceAwsIamRole,
+			map[string]*llx.RawData{"arn": llx.StringDataPtr(cluster.RoleArn)},
+		)
+		if err != nil {
+			a.fetched = true
+			a.fetchErr = err
+			return err
+		}
+		a.IamRole = plugin.TValue[*mqlAwsIamRole]{Data: mqlIam.(*mqlAwsIamRole), State: plugin.StateIsSet}
+	} else {
+		a.IamRole = plugin.TValue[*mqlAwsIamRole]{State: plugin.StateIsSet | plugin.StateIsNull}
+	}
+
+	a.fetched = true
+	return nil
+}
+
+func (a *mqlAwsEksCluster) tags() (map[string]any, error) {
+	return nil, a.fetchDetail()
+}
+
+func (a *mqlAwsEksCluster) endpoint() (string, error) {
+	return "", a.fetchDetail()
+}
+
+func (a *mqlAwsEksCluster) version() (string, error) {
+	return "", a.fetchDetail()
+}
+
+func (a *mqlAwsEksCluster) platformVersion() (string, error) {
+	return "", a.fetchDetail()
+}
+
+func (a *mqlAwsEksCluster) status() (string, error) {
+	return "", a.fetchDetail()
+}
+
+func (a *mqlAwsEksCluster) encryptionConfig() ([]any, error) {
+	return nil, a.fetchDetail()
+}
+
+func (a *mqlAwsEksCluster) logging() (map[string]any, error) {
+	return nil, a.fetchDetail()
+}
+
+func (a *mqlAwsEksCluster) networkConfig() (map[string]any, error) {
+	return nil, a.fetchDetail()
+}
+
+func (a *mqlAwsEksCluster) resourcesVpcConfig() (map[string]any, error) {
+	return nil, a.fetchDetail()
+}
+
+func (a *mqlAwsEksCluster) createdAt() (*time.Time, error) {
+	return nil, a.fetchDetail()
+}
+
+func (a *mqlAwsEksCluster) iamRole() (*mqlAwsIamRole, error) {
+	return nil, a.fetchDetail()
+}
+
+func (a *mqlAwsEksCluster) supportType() (string, error) {
+	return "", a.fetchDetail()
+}
+
+func (a *mqlAwsEksCluster) authenticationMode() (string, error) {
+	return "", a.fetchDetail()
+}
+
+func (a *mqlAwsEksCluster) deletionProtection() (bool, error) {
+	return false, a.fetchDetail()
+}
+
+func (a *mqlAwsEksCluster) endpointPublicAccess() (bool, error) {
+	return false, a.fetchDetail()
+}
+
+func (a *mqlAwsEksCluster) endpointPrivateAccess() (bool, error) {
+	return false, a.fetchDetail()
+}
+
+func (a *mqlAwsEksCluster) publicAccessCidrs() ([]any, error) {
+	return nil, a.fetchDetail()
 }
 
 func initAwsEksCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {

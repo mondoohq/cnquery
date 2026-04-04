@@ -2879,22 +2879,24 @@ private aws.ecs.container @defaults("containerName runtimeId clusterName region"
 private aws.ecs.taskDefinition @defaults("arn family revision") {
   // ARN of the task definition
   arn string
+  // Region where the task definition is located
+  region string
   // Family name of the task definition
-  family string
+  family() string
   // Revision number of the task definition
-  revision int
+  revision() int
   // Status of the task definition (ACTIVE, INACTIVE, DELETE_IN_PROGRESS)
-  status string
+  status() string
   // Network mode for the task (bridge, host, awsvpc, none)
-  networkMode string
+  networkMode() string
   // Process namespace mode for the task (host, task)
-  pidMode string
+  pidMode() string
   // IPC resource namespace mode for the task (host, task, none)
-  ipcMode string
+  ipcMode() string
   // ARN of the IAM role that containers in this task can assume
-  taskRoleArn string
+  taskRoleArn() string
   // ARN of the IAM role that the Amazon ECS container agent can assume
-  executionRoleArn string
+  executionRoleArn() string
   // List of container definitions in the task
   containerDefinitions() []aws.ecs.taskDefinition.containerDefinition
   // List of volumes configured for the task
@@ -2903,14 +2905,12 @@ private aws.ecs.taskDefinition @defaults("arn family revision") {
   ephemeralStorage() aws.ecs.taskDefinition.ephemeralStorage
   // Tags associated with the task definition
   tags() map[string]string
-  // Region where the task definition is located
-  region string
   // Total CPU units for the task (e.g., "256", "1024")
-  cpu string
+  cpu() string
   // Total memory in MiB for the task (e.g., "512", "2048")
-  memory string
+  memory() string
   // When the task definition was registered
-  registeredAt time
+  registeredAt() time
 }
 
 // Amazon ECS Service
@@ -4273,52 +4273,52 @@ private aws.dynamodb.globaltable @defaults("name") {
 private aws.dynamodb.table @defaults("name region") {
   // ARN for the table
   arn string
-  // Table ID
-  id string
   // Table name
   name string
   // Region where the table exists
   region string
+  // Table ID
+  id string
   // Backups for the table
   backups() []dict
   // Description of server-side encryption for the table
-  sseDescription dict
+  sseDescription() dict
   // Type of server-side encryption: "AES256" (AWS-owned) or "KMS" (customer-managed or AWS-managed KMS key)
-  sseType string
+  sseType() string
   // KMS key used for server-side encryption at rest
   sseKmsKey() aws.kms.key
   // Provisioned throughput settings for the table
-  provisionedThroughput dict
+  provisionedThroughput() dict
   // Continuous backups and point-in-time recovery settings for the table
   continuousBackups() dict
   // Tags for the table
   tags() map[string]string
   // Date and time the table was created
-  createdAt time
+  createdAt() time
   // Whether deletion protection is enabled
-  deletionProtectionEnabled bool
+  deletionProtectionEnabled() bool
   // Global table version
-  globalTableVersion string
+  globalTableVersion() string
   // Number of items in the table
-  items int
+  items() int
   // Total size of the specified table, in bytes. DynamoDB updates this value approximately every six hours.
-  sizeBytes int
+  sizeBytes() int
   // Latest stream for this table
-  latestStreamArn string
+  latestStreamArn() string
   // Current state of the table: CREATING, UPDATING, DELETING, ACTIVE, INACCESSIBLE_ENCRYPTION_CREDENTIALS, ARCHIVING, ARCHIVED, or REPLICATION_NOT_AUTHORIZED
-  status string
+  status() string
   // Label of the latest DynamoDB stream
-  latestStreamLabel string
+  latestStreamLabel() string
   // Table class: STANDARD or STANDARD_INFREQUENT_ACCESS
-  tableClass string
+  tableClass() string
   // Whether DynamoDB Streams is enabled on the table
-  streamEnabled bool
+  streamEnabled() bool
   // Type of information written to the stream: KEYS_ONLY, NEW_IMAGE, OLD_IMAGE, or NEW_AND_OLD_IMAGES
-  streamViewType string
+  streamViewType() string
   // Billing mode: PROVISIONED or PAY_PER_REQUEST
-  billingMode string
+  billingMode() string
   // Regions where the table is replicated (global tables)
-  replicaRegions []string
+  replicaRegions() []string
 }
 
 // Amazon Simple Queue Service (SQS)
@@ -7198,43 +7198,43 @@ aws.eks.cluster @defaults("arn version status") {
   // Region for the cluster
   region string
   // A map of tags associated with the cluster
-  tags map[string]string
+  tags() map[string]string
   // Endpoint of Kubernetes API server
-  endpoint string
+  endpoint() string
   // Kubernetes server version
-  version string
+  version() string
   // Amazon EKS cluster version
-  platformVersion string
+  platformVersion() string
   // Cluster status
-  status string
+  status() string
   // Encryption configuration for the cluster
-  encryptionConfig []dict
+  encryptionConfig() []dict
   // Cluster logging configuration
-  logging dict
+  logging() dict
   // Kubernetes network configuration
-  networkConfig dict
+  networkConfig() dict
   // VPC configuration
-  resourcesVpcConfig dict
+  resourcesVpcConfig() dict
   // Cluster creation timestamp
-  createdAt time
+  createdAt() time
   // List of EKS node groups
   nodeGroups() []aws.eks.nodegroup
   // List of EKS add-ons
   addons() []aws.eks.addon
   // IAM role that provides permissions for the Kubernetes control plane to make calls to Amazon Web Services API operations on your behalf
-  iamRole aws.iam.role
+  iamRole() aws.iam.role
   // Kubernetes support policy of the cluster. (`STANDARD` support automatically upgrades at the end of standard support. `EXTENDED` automatically enters extended support at the end of standard support)
-  supportType string
+  supportType() string
   // Cluster authentication mode
-  authenticationMode string
+  authenticationMode() string
   // Whether deletion protection is enabled or not
-  deletionProtection bool
+  deletionProtection() bool
   // Whether the Kubernetes API server endpoint is publicly accessible
-  endpointPublicAccess bool
+  endpointPublicAccess() bool
   // Whether the Kubernetes API server endpoint is accessible via private VPC endpoint
-  endpointPrivateAccess bool
+  endpointPrivateAccess() bool
   // CIDR blocks allowed to access the public Kubernetes API endpoint
-  publicAccessCidrs []string
+  publicAccessCidrs() []string
 }
 
 // Amazon Neptune
