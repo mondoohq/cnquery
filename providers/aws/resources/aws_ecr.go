@@ -504,12 +504,15 @@ func (a *mqlAwsEcr) publicRepositories() ([]any, error) {
 		for _, r := range repoResp.Repositories {
 			mqlRepoResource, err := CreateResource(a.MqlRuntime, ResourceAwsEcrRepository,
 				map[string]*llx.RawData{
-					"arn":                llx.StringDataPtr(r.RepositoryArn),
-					"name":               llx.StringDataPtr(r.RepositoryName),
-					"uri":                llx.StringDataPtr(r.RepositoryUri),
-					"registryId":         llx.StringDataPtr(r.RegistryId),
-					"public":             llx.BoolData(true),
-					"region":             llx.StringData("us-east-1"),
+					"arn":        llx.StringDataPtr(r.RepositoryArn),
+					"name":       llx.StringDataPtr(r.RepositoryName),
+					"uri":        llx.StringDataPtr(r.RepositoryUri),
+					"registryId": llx.StringDataPtr(r.RegistryId),
+					"public":     llx.BoolData(true),
+					"region":     llx.StringData("us-east-1"),
+					// Public ECR does not support scan-on-push, uses immutable tags,
+					// and always uses AES256 encryption. These are platform-enforced
+					// defaults (not returned by the public ECR DescribeRepositories API).
 					"imageScanOnPush":    llx.BoolData(false),
 					"imageTagMutability": llx.StringData("IMMUTABLE"),
 					"encryptionType":     llx.StringData("AES256"),
