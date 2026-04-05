@@ -53,6 +53,18 @@ gcp.organization @defaults("name") {
   folders() gcp.folders
   // List of projects
   projects() gcp.projects
+  // Security Command Center sources
+  sccSources() []gcp.scc.source
+  // Security Command Center findings across all sources
+  sccFindings() []gcp.scc.finding
+  // Security Command Center notification configs
+  sccNotificationConfigs() []gcp.scc.notificationConfig
+  // Security Command Center mute configs
+  sccMuteConfigs() []gcp.scc.muteConfig
+  // Security Command Center BigQuery export configs
+  sccBigQueryExports() []gcp.scc.bigQueryExport
+  // VPC Service Controls access policies
+  accessPolicies() []gcp.accesscontextmanager.accessPolicy
 }
 
 // Google Cloud (GCP) folders
@@ -488,6 +500,8 @@ gcp.project @defaults("name number") {
   backupdr() gcp.project.backupdrService
   // GCP Vertex AI resources
   vertexai() gcp.project.vertexaiService
+  // Security Command Center findings for this project
+  sccFindings() []gcp.scc.finding
 }
 
 // Google Cloud (GCP) service
@@ -5561,4 +5575,152 @@ private gcp.project.vertexaiService.featureOnlineStore @defaults("name state") {
   createdAt time
   // Last update time
   updatedAt time
+}
+
+// Google Cloud Security Command Center source
+private gcp.scc.source @defaults("name displayName") {
+  // Full resource name (organizations/{orgId}/sources/{sourceId})
+  name string
+  // Display name
+  displayName string
+  // Description
+  description string
+  // Canonical name
+  canonicalName string
+}
+
+// Google Cloud Security Command Center finding
+private gcp.scc.finding @defaults("name category severity") {
+  // Full resource name
+  name string
+  // Parent source resource name
+  parent string
+  // Category (e.g., OPEN_FIREWALL, PUBLIC_BUCKET_ACL)
+  category string
+  // URI to the finding in SCC console
+  externalUri string
+  // Source-specific properties
+  sourceProperties dict
+  // Security marks
+  securityMarks dict
+  // Event time
+  eventTime time
+  // Create time
+  createTime time
+  // Severity (CRITICAL, HIGH, MEDIUM, LOW, UNSPECIFIED)
+  severity string
+  // Mute state (MUTED, UNMUTED, UNDEFINED)
+  mute string
+  // Finding class (THREAT, VULNERABILITY, MISCONFIGURATION, etc.)
+  findingClass string
+  // State (ACTIVE, INACTIVE)
+  state string
+  // Full resource name of the affected resource
+  resourceName string
+}
+
+// Google Cloud Security Command Center notification config
+private gcp.scc.notificationConfig @defaults("name") {
+  // Full resource name
+  name string
+  // Description
+  description string
+  // Pub/Sub topic for notifications
+  pubsubTopic string
+  // Service account for topic publishing
+  serviceAccount string
+  // Filter expression for findings
+  filter string
+}
+
+// Google Cloud Security Command Center mute config
+private gcp.scc.muteConfig @defaults("name") {
+  // Full resource name
+  name string
+  // Display name
+  displayName string
+  // Description
+  description string
+  // Filter expression
+  filter string
+  // Create time
+  createTime time
+  // Update time
+  updateTime time
+  // Most recent editor
+  mostRecentEditor string
+}
+
+// Google Cloud Security Command Center BigQuery export config
+private gcp.scc.bigQueryExport @defaults("name") {
+  // Full resource name
+  name string
+  // Description
+  description string
+  // BigQuery dataset (projects/{project}/datasets/{dataset})
+  dataset string
+  // Filter expression for findings
+  filter string
+  // Create time
+  createTime time
+  // Update time
+  updateTime time
+  // Most recent editor
+  mostRecentEditor string
+}
+
+// Google Cloud Access Context Manager access policy
+private gcp.accesscontextmanager.accessPolicy @defaults("name title") {
+  // Full resource name (accessPolicies/{policyId})
+  name string
+  // Human-readable title
+  title string
+  // Parent organization (organizations/{orgId})
+  parent string
+  // Etag
+  etag string
+  // Access levels within this policy
+  accessLevels() []gcp.accesscontextmanager.accessLevel
+  // Service perimeters within this policy
+  servicePerimeters() []gcp.accesscontextmanager.servicePerimeter
+}
+
+// Google Cloud Access Context Manager access level
+private gcp.accesscontextmanager.accessLevel @defaults("name title") {
+  // Full resource name (accessPolicies/{policyId}/accessLevels/{levelId})
+  name string
+  // Human-readable title
+  title string
+  // Description
+  description string
+  // Basic access level conditions
+  basic dict
+  // Custom access level CEL expression
+  custom dict
+  // Create time
+  createTime time
+  // Update time
+  updateTime time
+}
+
+// Google Cloud Access Context Manager service perimeter
+private gcp.accesscontextmanager.servicePerimeter @defaults("name title") {
+  // Full resource name
+  name string
+  // Human-readable title
+  title string
+  // Description
+  description string
+  // Perimeter type (PERIMETER_TYPE_REGULAR, PERIMETER_TYPE_BRIDGE)
+  perimeterType string
+  // Current enforced status config
+  status dict
+  // Dry-run spec (proposed config)
+  spec dict
+  // Whether dry-run spec is explicitly set
+  useExplicitDryRunSpec bool
+  // Create time
+  createTime time
+  // Update time
+  updateTime time
 }

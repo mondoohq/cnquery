@@ -6,6 +6,7 @@ go 1.25.7
 
 require (
 	cloud.google.com/go/accessapproval v1.8.8
+	cloud.google.com/go/accesscontextmanager v1.9.7
 	cloud.google.com/go/aiplatform v1.121.0
 	cloud.google.com/go/alloydb v1.21.0
 	cloud.google.com/go/artifactregistry v1.20.0
@@ -31,6 +32,7 @@ require (
 	cloud.google.com/go/run v1.16.0
 	cloud.google.com/go/scheduler v1.11.8
 	cloud.google.com/go/security v1.19.2
+	cloud.google.com/go/securitycenter v1.38.1
 	cloud.google.com/go/serviceusage v1.9.7
 	cloud.google.com/go/spanner v1.89.0
 	github.com/aws/smithy-go v1.24.2
@@ -43,7 +45,7 @@ require (
 	go.mondoo.com/mql/v13 v13.2.0
 	go.mondoo.com/ranger-rpc v0.8.0
 	golang.org/x/oauth2 v0.36.0
-	google.golang.org/api v0.273.0
+	google.golang.org/api v0.273.1
 	google.golang.org/genproto v0.0.0-20260319201613-d00831a3d3e7
 	google.golang.org/protobuf v1.36.11
 )
@@ -293,8 +295,8 @@ require (
 	golang.org/x/time v0.15.0 // indirect
 	golang.org/x/tools v0.43.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260319201613-d00831a3d3e7 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260319201613-d00831a3d3e7 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260401001100-f93e5f3e9f0f // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260401001100-f93e5f3e9f0f // indirect
 	google.golang.org/grpc v1.79.3
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
