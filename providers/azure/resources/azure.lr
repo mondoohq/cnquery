@@ -78,6 +78,16 @@ azure.subscription @defaults ("name") {
   containerRegistry() azure.subscription.containerRegistryService
   // Recovery Services resources in the subscription
   recoveryServices() azure.subscription.recoveryServicesService
+  // Azure Functions resources in the subscription
+  functions() azure.subscription.functionsService
+  // Service Bus resources in the subscription
+  serviceBus() azure.subscription.serviceBusService
+  // Event Hubs resources in the subscription
+  eventHub() azure.subscription.eventHubService
+  // DNS resources in the subscription
+  dns() azure.subscription.dnsService
+  // Front Door and CDN resources in the subscription
+  frontDoor() azure.subscription.frontDoorService
 }
 
 // Azure function
@@ -4617,4 +4627,428 @@ private azure.subscription.recoveryServicesService.vault.protectedItem @defaults
   type string
   // Item properties (polymorphic: VM, SQL, FileShare, SAP HANA, etc.)
   properties dict
+}
+
+// ===== Azure Functions Service =====
+
+// Azure Functions service
+private azure.subscription.functionsService {
+  // Subscription identifier
+  subscriptionId string
+  // List of function apps
+  functionApps() []azure.subscription.functionsService.functionApp
+}
+
+// Azure Function App
+azure.subscription.functionsService.functionApp @defaults("id name location") {
+  // Function App resource ID
+  id string
+  // Function App name
+  name string
+  // Function App location
+  location string
+  // Function App tags
+  tags map[string]string
+  // Function App kind (e.g., "functionapp", "functionapp,linux")
+  kind string
+  // Function App state (e.g., "Running", "Stopped")
+  state string
+  // Default hostname of the function app
+  defaultHostName string
+  // Whether the function app only accepts HTTPS traffic
+  httpsOnly bool
+  // Whether client certificates are enabled
+  clientCertEnabled bool
+  // Client certificate mode (Required, Optional, OptionalInteractiveUser)
+  clientCertMode string
+  // Managed service identity ID
+  managedServiceIdentityId string
+  // Function App properties
+  properties dict
+  // Functions in this function app
+  functions() []azure.subscription.functionsService.functionApp.function
+}
+
+// Azure Function within a Function App
+private azure.subscription.functionsService.functionApp.function @defaults("id name") {
+  // Function resource ID
+  id string
+  // Function name
+  name string
+  // Function configuration
+  config dict
+  // Function language
+  language string
+  // Whether the function is disabled
+  isDisabled bool
+}
+
+// ===== Azure Service Bus Service =====
+
+// Azure Service Bus service
+private azure.subscription.serviceBusService {
+  // Subscription identifier
+  subscriptionId string
+  // List of Service Bus namespaces
+  namespaces() []azure.subscription.serviceBusService.namespace
+}
+
+// Azure Service Bus namespace
+azure.subscription.serviceBusService.namespace @defaults("id name location") {
+  // Namespace resource ID
+  id string
+  // Namespace name
+  name string
+  // Namespace location
+  location string
+  // Namespace tags
+  tags map[string]string
+  // SKU details
+  sku dict
+  // Namespace status
+  status string
+  // Service Bus endpoint
+  serviceBusEndpoint string
+  // Whether local (SAS key) authentication is disabled
+  disableLocalAuth bool
+  // Minimum TLS version (e.g., "1.0", "1.1", "1.2")
+  minimumTlsVersion string
+  // Public network access (Enabled, Disabled, SecuredByPerimeter)
+  publicNetworkAccess string
+  // Queues in this namespace
+  queues() []azure.subscription.serviceBusService.namespace.queue
+  // Topics in this namespace
+  topics() []azure.subscription.serviceBusService.namespace.topic
+}
+
+// Azure Service Bus queue
+private azure.subscription.serviceBusService.namespace.queue @defaults("id name") {
+  // Queue resource ID
+  id string
+  // Queue name
+  name string
+  // Queue status (Active, Disabled, SendDisabled, ReceiveDisabled)
+  status string
+  // Maximum queue size in megabytes
+  maxSizeInMegabytes int
+  // Number of messages in the queue
+  messageCount int
+  // Number of messages in the dead-letter sub-queue
+  deadLetterMessageCount int
+  // Maximum delivery count before dead-lettering
+  maxDeliveryCount int
+  // Lock duration (ISO 8601 duration)
+  lockDuration string
+  // Default time-to-live for messages (ISO 8601 duration)
+  defaultMessageTimeToLive string
+  // Whether duplicate detection is required
+  requiresDuplicateDetection bool
+  // Whether sessions are required
+  requiresSession bool
+  // Whether partitioning is enabled
+  enablePartitioning bool
+}
+
+// Azure Service Bus topic
+private azure.subscription.serviceBusService.namespace.topic @defaults("id name") {
+  // Topic resource ID
+  id string
+  // Topic name
+  name string
+  // Topic status (Active, Disabled, SendDisabled)
+  status string
+  // Maximum topic size in megabytes
+  maxSizeInMegabytes int
+  // Number of subscriptions on the topic
+  subscriptionCount int
+  // Whether partitioning is enabled
+  enablePartitioning bool
+  // Whether ordering is supported
+  supportOrdering bool
+  // Whether duplicate detection is required
+  requiresDuplicateDetection bool
+  // Default time-to-live for messages (ISO 8601 duration)
+  defaultMessageTimeToLive string
+  // Subscriptions on this topic
+  subscriptions() []azure.subscription.serviceBusService.namespace.topic.subscription
+}
+
+// Azure Service Bus topic subscription
+private azure.subscription.serviceBusService.namespace.topic.subscription @defaults("id name") {
+  // Subscription resource ID
+  id string
+  // Subscription name
+  name string
+  // Subscription status (Active, Disabled, ReceiveDisabled)
+  status string
+  // Number of messages in the subscription
+  messageCount int
+  // Number of messages in the dead-letter sub-queue
+  deadLetterMessageCount int
+  // Maximum delivery count before dead-lettering
+  maxDeliveryCount int
+  // Lock duration (ISO 8601 duration)
+  lockDuration string
+  // Default time-to-live for messages (ISO 8601 duration)
+  defaultMessageTimeToLive string
+  // Whether sessions are required
+  requiresSession bool
+}
+
+// ===== Azure Event Hubs Service =====
+
+// Azure Event Hubs service
+private azure.subscription.eventHubService {
+  // Subscription identifier
+  subscriptionId string
+  // List of Event Hub namespaces
+  namespaces() []azure.subscription.eventHubService.namespace
+}
+
+// Azure Event Hub namespace
+azure.subscription.eventHubService.namespace @defaults("id name location") {
+  // Namespace resource ID
+  id string
+  // Namespace name
+  name string
+  // Namespace location
+  location string
+  // Namespace tags
+  tags map[string]string
+  // SKU details
+  sku dict
+  // Namespace status
+  status string
+  // Whether auto-inflate is enabled
+  isAutoInflateEnabled bool
+  // Maximum throughput units when auto-inflate is enabled
+  maximumThroughputUnits int
+  // Whether Kafka is enabled
+  kafkaEnabled bool
+  // Whether local (SAS key) authentication is disabled
+  disableLocalAuth bool
+  // Minimum TLS version (e.g., "1.0", "1.1", "1.2")
+  minimumTlsVersion string
+  // Event Hubs in this namespace
+  eventHubs() []azure.subscription.eventHubService.namespace.eventHub
+}
+
+// Azure Event Hub
+private azure.subscription.eventHubService.namespace.eventHub @defaults("id name") {
+  // Event Hub resource ID
+  id string
+  // Event Hub name
+  name string
+  // Number of partitions
+  partitionCount int
+  // Message retention period in days
+  messageRetentionInDays int
+  // Event Hub status (Active, Disabled, SendDisabled)
+  status string
+  // List of partition IDs
+  partitionIds []string
+  // Consumer groups for this Event Hub
+  consumerGroups() []azure.subscription.eventHubService.namespace.eventHub.consumerGroup
+}
+
+// Azure Event Hub consumer group
+private azure.subscription.eventHubService.namespace.eventHub.consumerGroup @defaults("id name") {
+  // Consumer group resource ID
+  id string
+  // Consumer group name
+  name string
+  // User-defined metadata
+  userMetadata string
+}
+
+// ===== Azure DNS Service =====
+
+// Azure DNS service
+private azure.subscription.dnsService {
+  // Subscription identifier
+  subscriptionId string
+  // List of public DNS zones
+  zones() []azure.subscription.dnsService.zone
+  // List of private DNS zones
+  privateZones() []azure.subscription.dnsService.privateZone
+}
+
+// Azure public DNS zone
+azure.subscription.dnsService.zone @defaults("id name") {
+  // DNS zone resource ID
+  id string
+  // DNS zone name
+  name string
+  // DNS zone location
+  location string
+  // DNS zone tags
+  tags map[string]string
+  // Number of record sets in the zone
+  numberOfRecordSets int
+  // Maximum number of record sets allowed
+  maxNumberOfRecordSets int
+  // Name servers for the zone
+  nameServers []string
+  // Record sets in the zone
+  recordSets() []azure.subscription.dnsService.zone.recordSet
+}
+
+// Azure DNS record set
+private azure.subscription.dnsService.zone.recordSet @defaults("id name type") {
+  // Record set resource ID
+  id string
+  // Record set name
+  name string
+  // Record type (A, AAAA, CNAME, MX, NS, PTR, SOA, SRV, TXT, CAA)
+  type string
+  // Time-to-live in seconds
+  ttl int
+  // Fully qualified domain name
+  fqdn string
+  // Record set properties
+  properties dict
+}
+
+// Azure private DNS zone
+azure.subscription.dnsService.privateZone @defaults("id name") {
+  // Private DNS zone resource ID
+  id string
+  // Private DNS zone name
+  name string
+  // Private DNS zone location
+  location string
+  // Private DNS zone tags
+  tags map[string]string
+  // Number of record sets in the zone
+  numberOfRecordSets int
+  // Maximum number of record sets allowed
+  maxNumberOfRecordSets int
+  // Number of virtual network links
+  numberOfVirtualNetworkLinks int
+  // Virtual network links for this private zone
+  virtualNetworkLinks() []azure.subscription.dnsService.privateZone.virtualNetworkLink
+}
+
+// Azure private DNS zone virtual network link
+private azure.subscription.dnsService.privateZone.virtualNetworkLink @defaults("id name") {
+  // Virtual network link resource ID
+  id string
+  // Virtual network link name
+  name string
+  // Virtual network link location
+  location string
+  // Virtual network link tags
+  tags map[string]string
+  // Whether auto-registration of VM records is enabled
+  registrationEnabled bool
+  // Provisioning state
+  provisioningState string
+}
+
+// ===== Azure Front Door / CDN Service =====
+
+// Azure Front Door and CDN service
+private azure.subscription.frontDoorService {
+  // Subscription identifier
+  subscriptionId string
+  // List of Front Door and CDN profiles
+  profiles() []azure.subscription.frontDoorService.profile
+}
+
+// Azure Front Door / CDN profile
+azure.subscription.frontDoorService.profile @defaults("id name location") {
+  // Profile resource ID
+  id string
+  // Profile name
+  name string
+  // Profile location
+  location string
+  // Profile tags
+  tags map[string]string
+  // SKU details
+  sku dict
+  // Profile kind (frontdoor, cdn)
+  kind string
+  // Provisioning state
+  provisioningState string
+  // Front Door ID
+  frontDoorId string
+  // Resource state (Active, Disabled, etc.)
+  resourceState string
+  // Endpoints in this profile
+  endpoints() []azure.subscription.frontDoorService.profile.endpoint
+  // Custom domains in this profile
+  customDomains() []azure.subscription.frontDoorService.profile.customDomain
+  // Origin groups in this profile
+  originGroups() []azure.subscription.frontDoorService.profile.originGroup
+}
+
+// Azure Front Door / CDN endpoint
+private azure.subscription.frontDoorService.profile.endpoint @defaults("id name hostName") {
+  // Endpoint resource ID
+  id string
+  // Endpoint name
+  name string
+  // Endpoint location
+  location string
+  // Endpoint hostname
+  hostName string
+  // Enabled state (Enabled, Disabled)
+  enabledState string
+  // Provisioning state
+  provisioningState string
+}
+
+// Azure Front Door / CDN custom domain
+private azure.subscription.frontDoorService.profile.customDomain @defaults("id name hostName") {
+  // Custom domain resource ID
+  id string
+  // Custom domain name
+  name string
+  // Custom domain hostname
+  hostName string
+  // Domain validation state (Approved, Pending, Rejected, etc.)
+  validationState string
+  // Provisioning state
+  provisioningState string
+}
+
+// Azure Front Door / CDN origin group
+private azure.subscription.frontDoorService.profile.originGroup @defaults("id name") {
+  // Origin group resource ID
+  id string
+  // Origin group name
+  name string
+  // Provisioning state
+  provisioningState string
+  // Health probe settings
+  healthProbeSettings dict
+  // Load balancing settings
+  loadBalancingSettings dict
+  // Origins in this origin group
+  origins() []azure.subscription.frontDoorService.profile.originGroup.origin
+}
+
+// Azure Front Door / CDN origin
+private azure.subscription.frontDoorService.profile.originGroup.origin @defaults("id name hostName") {
+  // Origin resource ID
+  id string
+  // Origin name
+  name string
+  // Origin hostname
+  hostName string
+  // HTTP port
+  httpPort int
+  // HTTPS port
+  httpsPort int
+  // Origin host header
+  originHostHeader string
+  // Origin priority (1-5)
+  priority int
+  // Origin weight (1-1000)
+  weight int
+  // Enabled state (Enabled, Disabled)
+  enabledState string
+  // Provisioning state
+  provisioningState string
 }

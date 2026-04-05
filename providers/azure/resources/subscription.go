@@ -305,3 +305,53 @@ func (a *mqlAzureSubscription) recoveryServices() (*mqlAzureSubscriptionRecovery
 	}
 	return svc.(*mqlAzureSubscriptionRecoveryServicesService), nil
 }
+
+func (a *mqlAzureSubscription) functions() (*mqlAzureSubscriptionFunctionsService, error) {
+	svc, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionFunctionsService, map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return svc.(*mqlAzureSubscriptionFunctionsService), nil
+}
+
+func (a *mqlAzureSubscription) serviceBus() (*mqlAzureSubscriptionServiceBusService, error) {
+	svc, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionServiceBusService, map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return svc.(*mqlAzureSubscriptionServiceBusService), nil
+}
+
+func (a *mqlAzureSubscription) eventHub() (*mqlAzureSubscriptionEventHubService, error) {
+	svc, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionEventHubService, map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return svc.(*mqlAzureSubscriptionEventHubService), nil
+}
+
+func (a *mqlAzureSubscription) dns() (*mqlAzureSubscriptionDnsService, error) {
+	svc, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionDnsService, map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return svc.(*mqlAzureSubscriptionDnsService), nil
+}
+
+func (a *mqlAzureSubscription) frontDoor() (*mqlAzureSubscriptionFrontDoorService, error) {
+	svc, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionFrontDoorService, map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return svc.(*mqlAzureSubscriptionFrontDoorService), nil
+}
