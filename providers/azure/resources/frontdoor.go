@@ -284,8 +284,15 @@ func (a *mqlAzureSubscriptionFrontDoorServiceProfile) originGroups() ([]any, err
 				if og.Properties.ProvisioningState != nil {
 					provisioningState = string(*og.Properties.ProvisioningState)
 				}
-				healthProbeSettings, _ = convert.JsonToDict(og.Properties.HealthProbeSettings)
-				loadBalancingSettings, _ = convert.JsonToDict(og.Properties.LoadBalancingSettings)
+				var err error
+				healthProbeSettings, err = convert.JsonToDict(og.Properties.HealthProbeSettings)
+				if err != nil {
+					return nil, err
+				}
+				loadBalancingSettings, err = convert.JsonToDict(og.Properties.LoadBalancingSettings)
+				if err != nil {
+					return nil, err
+				}
 			}
 
 			mqlOg, err := CreateResource(a.MqlRuntime, "azure.subscription.frontDoorService.profile.originGroup", map[string]*llx.RawData{

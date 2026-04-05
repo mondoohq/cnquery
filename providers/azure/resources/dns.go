@@ -150,7 +150,7 @@ func (a *mqlAzureSubscriptionDnsServiceZone) recordSets() ([]any, error) {
 
 			properties, err := convert.JsonToDict(rs.Properties)
 			if err != nil {
-				properties = nil
+				return nil, err
 			}
 
 			var ttl int64

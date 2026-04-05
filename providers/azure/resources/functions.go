@@ -72,7 +72,7 @@ func (a *mqlAzureSubscriptionFunctionsService) functionApps() ([]any, error) {
 				continue
 			}
 
-			properties, err := convert.JsonToDict(site)
+			properties, err := convert.JsonToDict(site.Properties)
 			if err != nil {
 				return nil, err
 			}
