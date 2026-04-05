@@ -55,7 +55,7 @@ gcp.organization @defaults("name") {
   projects() gcp.projects
   // Security Command Center sources
   sccSources() []gcp.scc.source
-  // Security Command Center findings across all sources
+  // Security Command Center findings across all sources (active findings only)
   sccFindings() []gcp.scc.finding
   // Security Command Center notification configs
   sccNotificationConfigs() []gcp.scc.notificationConfig
@@ -500,7 +500,7 @@ gcp.project @defaults("name number") {
   backupdr() gcp.project.backupdrService
   // GCP Vertex AI resources
   vertexai() gcp.project.vertexaiService
-  // Security Command Center findings for this project
+  // Security Command Center findings for this project (active findings only)
   sccFindings() []gcp.scc.finding
 }
 

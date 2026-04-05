@@ -1,5 +1,6 @@
 aad
 ACCOUNTADMIN
+accesscontextmanager
 activedirectory
 ACTIVEMQ
 adr
@@ -247,6 +248,7 @@ runbooks
 saas
 Sas
 sbom
+scc
 scim
 scm
 SECRETID

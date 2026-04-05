@@ -92,7 +92,9 @@ func listSCCFindings(runtime *plugin.Runtime, conn *connection.GcpConnection, pa
 	defer client.Close()
 
 	it := client.ListFindings(context.Background(), &sccpb.ListFindingsRequest{
-		Parent: parent + "/sources/-",
+		Parent:   parent + "/sources/-",
+		Filter:   `state="ACTIVE"`,
+		PageSize: 1000,
 	})
 
 	var res []any
@@ -281,44 +283,56 @@ func listSCCBigQueryExports(runtime *plugin.Runtime, conn *connection.GcpConnect
 
 // Organization-level methods
 
-func (g *mqlGcpOrganization) sccSources() ([]any, error) {
+func (g *mqlGcpOrganization) sccParent() (string, *connection.GcpConnection, error) {
 	if g.Id.Error != nil {
-		return nil, g.Id.Error
+		return "", nil, g.Id.Error
 	}
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
-	return listSCCSources(g.MqlRuntime, conn, g.Id.Data)
+	orgId, err := conn.OrganizationID()
+	if err != nil {
+		return "", nil, err
+	}
+	return "organizations/" + orgId, conn, nil
+}
+
+func (g *mqlGcpOrganization) sccSources() ([]any, error) {
+	parent, conn, err := g.sccParent()
+	if err != nil {
+		return nil, err
+	}
+	return listSCCSources(g.MqlRuntime, conn, parent)
 }
 
 func (g *mqlGcpOrganization) sccFindings() ([]any, error) {
-	if g.Id.Error != nil {
-		return nil, g.Id.Error
+	parent, conn, err := g.sccParent()
+	if err != nil {
+		return nil, err
 	}
-	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
-	return listSCCFindings(g.MqlRuntime, conn, g.Id.Data)
+	return listSCCFindings(g.MqlRuntime, conn, parent)
 }
 
 func (g *mqlGcpOrganization) sccNotificationConfigs() ([]any, error) {
-	if g.Id.Error != nil {
-		return nil, g.Id.Error
+	parent, conn, err := g.sccParent()
+	if err != nil {
+		return nil, err
 	}
-	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
-	return listSCCNotificationConfigs(g.MqlRuntime, conn, g.Id.Data)
+	return listSCCNotificationConfigs(g.MqlRuntime, conn, parent)
 }
 
 func (g *mqlGcpOrganization) sccMuteConfigs() ([]any, error) {
-	if g.Id.Error != nil {
-		return nil, g.Id.Error
+	parent, conn, err := g.sccParent()
+	if err != nil {
+		return nil, err
 	}
-	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
-	return listSCCMuteConfigs(g.MqlRuntime, conn, g.Id.Data)
+	return listSCCMuteConfigs(g.MqlRuntime, conn, parent)
 }
 
 func (g *mqlGcpOrganization) sccBigQueryExports() ([]any, error) {
-	if g.Id.Error != nil {
-		return nil, g.Id.Error
+	parent, conn, err := g.sccParent()
+	if err != nil {
+		return nil, err
 	}
-	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
-	return listSCCBigQueryExports(g.MqlRuntime, conn, g.Id.Data)
+	return listSCCBigQueryExports(g.MqlRuntime, conn, parent)
 }
 
 // Project-level method
@@ -334,7 +348,6 @@ func (g *mqlGcpProject) sccFindings() ([]any, error) {
 		return nil, err
 	}
 	if !serviceEnabled {
-		g.SccFindings.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 
