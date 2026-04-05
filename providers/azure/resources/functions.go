@@ -1,4 +1,4 @@
-// Copyright Mondoo, Inc. 2026
+// Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
 package resources
@@ -157,14 +157,11 @@ func (a *mqlAzureSubscriptionFunctionsServiceFunctionApp) functions() ([]any, er
 				continue
 			}
 
-			config, err := convert.JsonToDict(fn.Properties.Config)
-			if err != nil {
-				config = nil
-			}
-
+			var config any
 			var language string
 			var isDisabled bool
 			if fn.Properties != nil {
+				config, _ = convert.JsonToDict(fn.Properties.Config)
 				if fn.Properties.Language != nil {
 					language = *fn.Properties.Language
 				}

@@ -1733,9 +1733,7 @@ azure.subscription.serviceBusService.namespace 13.3.3
 azure.subscription.serviceBusService.namespace.disableLocalAuth 13.3.3
 azure.subscription.serviceBusService.namespace.id 13.3.3
 azure.subscription.serviceBusService.namespace.location 13.3.3
-azure.subscription.serviceBusService.namespace.minimumTlsVersion 13.3.3
 azure.subscription.serviceBusService.namespace.name 13.3.3
-azure.subscription.serviceBusService.namespace.publicNetworkAccess 13.3.3
 azure.subscription.serviceBusService.namespace.queue 13.3.3
 azure.subscription.serviceBusService.namespace.queue.deadLetterMessageCount 13.3.3
 azure.subscription.serviceBusService.namespace.queue.defaultMessageTimeToLive 13.3.3

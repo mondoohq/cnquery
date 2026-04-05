@@ -7051,12 +7051,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.serviceBusService.namespace.disableLocalAuth": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespace).GetDisableLocalAuth()).ToDataRes(types.Bool)
 	},
-	"azure.subscription.serviceBusService.namespace.minimumTlsVersion": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespace).GetMinimumTlsVersion()).ToDataRes(types.String)
-	},
-	"azure.subscription.serviceBusService.namespace.publicNetworkAccess": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespace).GetPublicNetworkAccess()).ToDataRes(types.String)
-	},
 	"azure.subscription.serviceBusService.namespace.queues": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespace).GetQueues()).ToDataRes(types.Array(types.Resource("azure.subscription.serviceBusService.namespace.queue")))
 	},
@@ -16046,14 +16040,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.serviceBusService.namespace.disableLocalAuth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionServiceBusServiceNamespace).DisableLocalAuth, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"azure.subscription.serviceBusService.namespace.minimumTlsVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionServiceBusServiceNamespace).MinimumTlsVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"azure.subscription.serviceBusService.namespace.publicNetworkAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionServiceBusServiceNamespace).PublicNetworkAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.serviceBusService.namespace.queues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -38733,18 +38719,16 @@ type mqlAzureSubscriptionServiceBusServiceNamespace struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAzureSubscriptionServiceBusServiceNamespaceInternal it will be used here
-	Id                  plugin.TValue[string]
-	Name                plugin.TValue[string]
-	Location            plugin.TValue[string]
-	Tags                plugin.TValue[map[string]any]
-	Sku                 plugin.TValue[any]
-	Status              plugin.TValue[string]
-	ServiceBusEndpoint  plugin.TValue[string]
-	DisableLocalAuth    plugin.TValue[bool]
-	MinimumTlsVersion   plugin.TValue[string]
-	PublicNetworkAccess plugin.TValue[string]
-	Queues              plugin.TValue[[]any]
-	Topics              plugin.TValue[[]any]
+	Id                 plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Location           plugin.TValue[string]
+	Tags               plugin.TValue[map[string]any]
+	Sku                plugin.TValue[any]
+	Status             plugin.TValue[string]
+	ServiceBusEndpoint plugin.TValue[string]
+	DisableLocalAuth   plugin.TValue[bool]
+	Queues             plugin.TValue[[]any]
+	Topics             plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionServiceBusServiceNamespace creates a new instance of this resource
@@ -38814,14 +38798,6 @@ func (c *mqlAzureSubscriptionServiceBusServiceNamespace) GetServiceBusEndpoint()
 
 func (c *mqlAzureSubscriptionServiceBusServiceNamespace) GetDisableLocalAuth() *plugin.TValue[bool] {
 	return &c.DisableLocalAuth
-}
-
-func (c *mqlAzureSubscriptionServiceBusServiceNamespace) GetMinimumTlsVersion() *plugin.TValue[string] {
-	return &c.MinimumTlsVersion
-}
-
-func (c *mqlAzureSubscriptionServiceBusServiceNamespace) GetPublicNetworkAccess() *plugin.TValue[string] {
-	return &c.PublicNetworkAccess
 }
 
 func (c *mqlAzureSubscriptionServiceBusServiceNamespace) GetQueues() *plugin.TValue[[]any] {

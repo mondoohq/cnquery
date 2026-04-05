@@ -1,4 +1,4 @@
-// Copyright Mondoo, Inc. 2026
+// Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
 package resources
@@ -95,16 +95,14 @@ func (a *mqlAzureSubscriptionServiceBusService) namespaces() ([]any, error) {
 			}
 
 			mqlNs, err := CreateResource(a.MqlRuntime, "azure.subscription.serviceBusService.namespace", map[string]*llx.RawData{
-				"id":                  llx.StringDataPtr(ns.ID),
-				"name":                llx.StringDataPtr(ns.Name),
-				"location":            llx.StringDataPtr(ns.Location),
-				"tags":                llx.MapData(convert.PtrMapStrToInterface(ns.Tags), types.String),
-				"sku":                 llx.DictData(sku),
-				"status":              llx.StringData(status),
-				"serviceBusEndpoint":  llx.StringData(serviceBusEndpoint),
-				"disableLocalAuth":    llx.BoolData(disableLocalAuth),
-				"minimumTlsVersion":   llx.StringData(""),
-				"publicNetworkAccess": llx.StringData(""),
+				"id":                 llx.StringDataPtr(ns.ID),
+				"name":               llx.StringDataPtr(ns.Name),
+				"location":           llx.StringDataPtr(ns.Location),
+				"tags":               llx.MapData(convert.PtrMapStrToInterface(ns.Tags), types.String),
+				"sku":                llx.DictData(sku),
+				"status":             llx.StringData(status),
+				"serviceBusEndpoint": llx.StringData(serviceBusEndpoint),
+				"disableLocalAuth":   llx.BoolData(disableLocalAuth),
 			})
 			if err != nil {
 				return nil, err

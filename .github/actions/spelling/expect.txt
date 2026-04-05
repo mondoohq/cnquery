@@ -94,8 +94,10 @@ firestore
 FLEXGROUP
 FLEXVOL
 fortios
+frontdoor
 frontmatter
 ftps
+functionapp
 fumadocs
 gcfs
 gcs

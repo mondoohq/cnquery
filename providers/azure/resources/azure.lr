@@ -4711,10 +4711,6 @@ azure.subscription.serviceBusService.namespace @defaults("id name location") {
   serviceBusEndpoint string
   // Whether local (SAS key) authentication is disabled
   disableLocalAuth bool
-  // Minimum TLS version (e.g., "1.0", "1.1", "1.2")
-  minimumTlsVersion string
-  // Public network access (Enabled, Disabled, SecuredByPerimeter)
-  publicNetworkAccess string
   // Queues in this namespace
   queues() []azure.subscription.serviceBusService.namespace.queue
   // Topics in this namespace
