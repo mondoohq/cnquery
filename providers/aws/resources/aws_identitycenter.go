@@ -1,0 +1,298 @@
+// Copyright Mondoo, Inc. 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+package resources
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
+	ssotypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
+	"github.com/rs/zerolog/log"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/mql/v13/providers/aws/connection"
+)
+
+func (a *mqlAwsIdentitycenter) id() (string, error) {
+	return "aws.identitycenter", nil
+}
+
+func (a *mqlAwsIdentitycenter) instances() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getInstances(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		if poolOfJobs.Jobs[i].Result != nil {
+			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsIdentitycenter) getInstances(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+
+	f := func() (jobpool.JobResult, error) {
+		// Identity Center is a global service accessed through a regional endpoint.
+		// Pass empty string to use the default region.
+		svc := conn.SsoAdmin("")
+		ctx := context.Background()
+		res := []any{}
+
+		paginator := ssoadmin.NewListInstancesPaginator(svc, &ssoadmin.ListInstancesInput{})
+		for paginator.HasMorePages() {
+			page, err := paginator.NextPage(ctx)
+			if err != nil {
+				if Is400AccessDeniedError(err) {
+					log.Warn().Msg("error accessing Identity Center API")
+					return res, nil
+				}
+				if IsServiceNotAvailableInRegionError(err) {
+					log.Warn().Msg("Identity Center is not available")
+					return res, nil
+				}
+				return nil, err
+			}
+
+			for _, instance := range page.Instances {
+				mqlInstance, err := CreateResource(a.MqlRuntime, "aws.identitycenter.instance",
+					map[string]*llx.RawData{
+						"__id":            llx.StringDataPtr(instance.InstanceArn),
+						"arn":             llx.StringDataPtr(instance.InstanceArn),
+						"name":            llx.StringDataPtr(instance.Name),
+						"identityStoreId": llx.StringDataPtr(instance.IdentityStoreId),
+						"status":          llx.StringData(string(instance.Status)),
+						"createdAt":       llx.TimeDataPtr(instance.CreatedDate),
+						"ownerAccountId":  llx.StringDataPtr(instance.OwnerAccountId),
+					})
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, mqlInstance)
+			}
+		}
+		return jobpool.JobResult(res), nil
+	}
+	tasks = append(tasks, jobpool.NewJob(f))
+	return tasks
+}
+
+func (a *mqlAwsIdentitycenterInstance) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsIdentitycenterInstance) permissionSets() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.SsoAdmin("")
+	ctx := context.Background()
+
+	instanceArn := a.Arn.Data
+	res := []any{}
+
+	paginator := ssoadmin.NewListPermissionSetsPaginator(svc, &ssoadmin.ListPermissionSetsInput{
+		InstanceArn: &instanceArn,
+	})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, psArn := range page.PermissionSets {
+			desc, err := svc.DescribePermissionSet(ctx, &ssoadmin.DescribePermissionSetInput{
+				InstanceArn:      &instanceArn,
+				PermissionSetArn: &psArn,
+			})
+			if err != nil {
+				return nil, err
+			}
+			ps := desc.PermissionSet
+
+			mqlPs, err := CreateResource(a.MqlRuntime, "aws.identitycenter.permissionSet",
+				map[string]*llx.RawData{
+					"__id":            llx.StringDataPtr(ps.PermissionSetArn),
+					"arn":             llx.StringDataPtr(ps.PermissionSetArn),
+					"name":            llx.StringDataPtr(ps.Name),
+					"description":     llx.StringDataPtr(ps.Description),
+					"sessionDuration": llx.StringDataPtr(ps.SessionDuration),
+					"relayState":      llx.StringDataPtr(ps.RelayState),
+					"createdAt":       llx.TimeDataPtr(ps.CreatedDate),
+				})
+			if err != nil {
+				return nil, err
+			}
+			mqlPsRes := mqlPs.(*mqlAwsIdentitycenterPermissionSet)
+			mqlPsRes.cacheInstanceArn = instanceArn
+			res = append(res, mqlPs)
+		}
+	}
+	return res, nil
+}
+
+type mqlAwsIdentitycenterPermissionSetInternal struct {
+	cacheInstanceArn string
+}
+
+func (a *mqlAwsIdentitycenterPermissionSet) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsIdentitycenterPermissionSet) inlinePolicy() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.SsoAdmin("")
+	ctx := context.Background()
+
+	instanceArn := a.cacheInstanceArn
+	psArn := a.Arn.Data
+	resp, err := svc.GetInlinePolicyForPermissionSet(ctx, &ssoadmin.GetInlinePolicyForPermissionSetInput{
+		InstanceArn:      &instanceArn,
+		PermissionSetArn: &psArn,
+	})
+	if err != nil {
+		return "", err
+	}
+	if resp.InlinePolicy == nil {
+		return "", nil
+	}
+	return *resp.InlinePolicy, nil
+}
+
+func (a *mqlAwsIdentitycenterPermissionSet) managedPolicies() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.SsoAdmin("")
+	ctx := context.Background()
+
+	instanceArn := a.cacheInstanceArn
+	psArn := a.Arn.Data
+	res := []any{}
+
+	paginator := ssoadmin.NewListManagedPoliciesInPermissionSetPaginator(svc, &ssoadmin.ListManagedPoliciesInPermissionSetInput{
+		InstanceArn:      &instanceArn,
+		PermissionSetArn: &psArn,
+	})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, mp := range page.AttachedManagedPolicies {
+			res = append(res, map[string]any{
+				"arn":  convert.ToValue(mp.Arn),
+				"name": convert.ToValue(mp.Name),
+			})
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsIdentitycenterPermissionSet) tags() (map[string]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.SsoAdmin("")
+	ctx := context.Background()
+
+	instanceArn := a.cacheInstanceArn
+	psArn := a.Arn.Data
+	resp, err := svc.ListTagsForResource(ctx, &ssoadmin.ListTagsForResourceInput{
+		InstanceArn: &instanceArn,
+		ResourceArn: &psArn,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return ssoTagsToMap(resp.Tags), nil
+}
+
+func (a *mqlAwsIdentitycenterInstance) accountAssignments() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.SsoAdmin("")
+	ctx := context.Background()
+
+	instanceArn := a.Arn.Data
+	res := []any{}
+
+	// Get all permission sets first
+	psSets := []string{}
+	psPaginator := ssoadmin.NewListPermissionSetsPaginator(svc, &ssoadmin.ListPermissionSetsInput{
+		InstanceArn: &instanceArn,
+	})
+	for psPaginator.HasMorePages() {
+		page, err := psPaginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		psSets = append(psSets, page.PermissionSets...)
+	}
+
+	// For each permission set, list accounts that have assignments
+	for _, psArn := range psSets {
+		accPaginator := ssoadmin.NewListAccountsForProvisionedPermissionSetPaginator(svc,
+			&ssoadmin.ListAccountsForProvisionedPermissionSetInput{
+				InstanceArn:      &instanceArn,
+				PermissionSetArn: &psArn,
+			})
+		for accPaginator.HasMorePages() {
+			accPage, err := accPaginator.NextPage(ctx)
+			if err != nil {
+				return nil, err
+			}
+			for _, accountId := range accPage.AccountIds {
+				assignPaginator := ssoadmin.NewListAccountAssignmentsPaginator(svc,
+					&ssoadmin.ListAccountAssignmentsInput{
+						InstanceArn:      &instanceArn,
+						AccountId:        &accountId,
+						PermissionSetArn: &psArn,
+					})
+				for assignPaginator.HasMorePages() {
+					assignPage, err := assignPaginator.NextPage(ctx)
+					if err != nil {
+						return nil, err
+					}
+					for _, assignment := range assignPage.AccountAssignments {
+						assignId := fmt.Sprintf("%s/%s/%s/%s",
+							convert.ToValue(assignment.AccountId),
+							convert.ToValue(assignment.PermissionSetArn),
+							string(assignment.PrincipalType),
+							convert.ToValue(assignment.PrincipalId))
+
+						mqlAssignment, err := CreateResource(a.MqlRuntime, "aws.identitycenter.accountAssignment",
+							map[string]*llx.RawData{
+								"__id":             llx.StringData(assignId),
+								"id":               llx.StringData(assignId),
+								"accountId":        llx.StringDataPtr(assignment.AccountId),
+								"permissionSetArn": llx.StringDataPtr(assignment.PermissionSetArn),
+								"principalType":    llx.StringData(string(assignment.PrincipalType)),
+								"principalId":      llx.StringDataPtr(assignment.PrincipalId),
+							})
+						if err != nil {
+							return nil, err
+						}
+						res = append(res, mqlAssignment)
+					}
+				}
+			}
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsIdentitycenterAccountAssignment) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func ssoTagsToMap(tags []ssotypes.Tag) map[string]any {
+	tagsMap := make(map[string]any)
+	for _, tag := range tags {
+		if tag.Key != nil && tag.Value != nil {
+			tagsMap[*tag.Key] = *tag.Value
+		}
+	}
+	return tagsMap
+}

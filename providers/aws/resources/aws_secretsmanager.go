@@ -186,6 +186,8 @@ func (a *mqlAwsSecretsmanager) getSecrets(conn *connection.AwsConnection) []*job
 					if err != nil {
 						return nil, err
 					}
+					mqlSecretRes := mqlSecret.(*mqlAwsSecretsmanagerSecret)
+					mqlSecretRes.cacheRegion = region
 					res = append(res, mqlSecret)
 				}
 			}
@@ -194,6 +196,63 @@ func (a *mqlAwsSecretsmanager) getSecrets(conn *connection.AwsConnection) []*job
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func (a *mqlAwsSecretsmanagerSecret) resourcePolicy() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	arn := a.Arn.Data
+	region := a.cacheRegion
+	svc := conn.Secretsmanager(region)
+	ctx := context.Background()
+
+	resp, err := svc.GetResourcePolicy(ctx, &secretsmanager.GetResourcePolicyInput{
+		SecretId: &arn,
+	})
+	if err != nil {
+		return "", err
+	}
+	if resp.ResourcePolicy == nil {
+		return "", nil
+	}
+	return *resp.ResourcePolicy, nil
+}
+
+func (a *mqlAwsSecretsmanagerSecret) replicaRegions() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := a.cacheRegion
+	svc := conn.Secretsmanager(region)
+	ctx := context.Background()
+
+	arn := a.Arn.Data
+	resp, err := svc.DescribeSecret(ctx, &secretsmanager.DescribeSecretInput{
+		SecretId: &arn,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	for _, replica := range resp.ReplicationStatus {
+		mqlReplica, err := CreateResource(a.MqlRuntime, "aws.secretsmanager.secret.replicaRegion",
+			map[string]*llx.RawData{
+				"__id":             llx.StringData(arn + "/replica/" + convert.ToValue(replica.Region)),
+				"id":               llx.StringData(arn + "/replica/" + convert.ToValue(replica.Region)),
+				"region":           llx.StringDataPtr(replica.Region),
+				"status":           llx.StringData(string(replica.Status)),
+				"statusMessage":    llx.StringDataPtr(replica.StatusMessage),
+				"kmsKeyId":         llx.StringDataPtr(replica.KmsKeyId),
+				"lastAccessedDate": llx.TimeDataPtr(replica.LastAccessedDate),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlReplica)
+	}
+	return res, nil
+}
+
+type mqlAwsSecretsmanagerSecretInternal struct {
+	cacheRegion string
 }
 
 func secretTagsToMap(tags []secretstypes.Tag) map[string]any {

@@ -175,6 +175,8 @@ github.com/aws/aws-sdk-go-v2/service/apigateway v1.39.1 h1:r3dXvi6tMfv4D48pyantO
 github.com/aws/aws-sdk-go-v2/service/apigateway v1.39.1/go.mod h1:nhYOLBwQu7P3ckR+L4gZkY0DT0nAhrQuZkI51jR1vTE=
 github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.41.14 h1:0aYQ2UaSB1ccXZXUQ4a5XanrHEykKNzMLFgLEDhf8PU=
 github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.41.14/go.mod h1:nbvfbwTfbJ6tTw6OGrSCgoMqmuDRBqqOIq83FdQKpaY=
+github.com/aws/aws-sdk-go-v2/service/appmesh v1.35.12 h1:NQFnRu8Rtnz0IV/IiP0KMu2Is/QNzwUEJzCZ/GNewMk=
+github.com/aws/aws-sdk-go-v2/service/appmesh v1.35.12/go.mod h1:izUgIRy8UzU7nGU5x9zibSfassyQ9XMcDU4hPJZb+UE=
 github.com/aws/aws-sdk-go-v2/service/appstream v1.56.0 h1:9d9oTqNP8D+FS9dIvlqg04O9B9Sz7libPIpWMgdjsAU=
 github.com/aws/aws-sdk-go-v2/service/appstream v1.56.0/go.mod h1:xcDkPKK0LEMrZm34TrGndNc5PEkmlalI3eBDxPYuYGw=
 github.com/aws/aws-sdk-go-v2/service/athena v1.57.4 h1:NVPYbXd3/opIA7aYbrVYdpiAT4X9v0gFdm3pIT/Gv38=
@@ -295,6 +297,8 @@ github.com/aws/aws-sdk-go-v2/service/organizations v1.51.0 h1:WWZx5pDUGGG/WjlAM6
 github.com/aws/aws-sdk-go-v2/service/organizations v1.51.0/go.mod h1:urLFj1twuR/h5T0wN/2/kmY1gxBFa1tTKr+c60lZ2fA=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.23.20 h1:yHUC6jjoTaHi+ZrOLYTkfAaKOWR1/FpXiVm6XNX+3sc=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.23.20/go.mod h1:C0lB65BEThb5zMMtQd+4hqXexkgtBKcp9yE4yM63PJY=
+github.com/aws/aws-sdk-go-v2/service/ram v1.36.3 h1:VYB+SIf/XsfqZKxCTGf3KGKKK1aWS2FFt6TQeBijzH4=
+github.com/aws/aws-sdk-go-v2/service/ram v1.36.3/go.mod h1:zbuaZSlcvpYF7kXaNda6gI/L1CeHFE1icsKgsoXkiTc=
 github.com/aws/aws-sdk-go-v2/service/rds v1.117.1 h1:LwcVYTKHBsQPhD0evNWtHIH8+xQG62kQaXmWJbLd7jg=
 github.com/aws/aws-sdk-go-v2/service/rds v1.117.1/go.mod h1:EbQarE9odk5+EEhP2Yr6NjDEhms3PU3k9/qZ2GRpOuc=
 github.com/aws/aws-sdk-go-v2/service/redshift v1.62.5 h1:a3aPxz0C4Jdx2eqxS/gfMgDjRS0sYX0B/R/pTtaG4D8=
@@ -315,6 +319,8 @@ github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.41.5 h1:z2ayoK3pOvf8ODj/v
 github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.41.5/go.mod h1:mpZB5HAl4ZIISod9qCi12xZ170TbHX9CCJV5y7nb7QU=
 github.com/aws/aws-sdk-go-v2/service/securityhub v1.68.3 h1:Nz5/FeXnKq+7YtIeNtHIuDeX/ZeFWDETL0oaqf8V0VI=
 github.com/aws/aws-sdk-go-v2/service/securityhub v1.68.3/go.mod h1:wFhqYLcoMThnIKlNsl048lq9FmCA20hJV1GY0TvS7MI=
+github.com/aws/aws-sdk-go-v2/service/sfn v1.40.10 h1:R6zfaJNZcopLNZujk02QwmE78cMOL1KRx08FtxTyI88=
+github.com/aws/aws-sdk-go-v2/service/sfn v1.40.10/go.mod h1:Csc9j7BBtxws0bI2Aj+ALQpDkWaySstkqB37+1XyyJ8=
 github.com/aws/aws-sdk-go-v2/service/shield v1.34.21 h1:mO+bATVTYarn2BlIWGoZ8i+X4+GEARDp940psUNh0f4=
 github.com/aws/aws-sdk-go-v2/service/shield v1.34.21/go.mod h1:MkF0qs5VTWG/lF+2TnoBngRyvbjSUsdL0x+CKH8bWYk=
 github.com/aws/aws-sdk-go-v2/service/signin v1.0.9 h1:QKZH0S178gCmFEgst8hN0mCX1KxLgHBKKY/CLqwP8lg=
@@ -327,6 +333,8 @@ github.com/aws/aws-sdk-go-v2/service/ssm v1.68.4 h1:5Wg8AAAnIWM2LE/0KFGqllZff96b
 github.com/aws/aws-sdk-go-v2/service/ssm v1.68.4/go.mod h1:nph0ypDLWm9D9iA9zOX39W/N+A4GqwzlxA13jzXVD4k=
 github.com/aws/aws-sdk-go-v2/service/sso v1.30.15 h1:lFd1+ZSEYJZYvv9d6kXzhkZu07si3f+GQ1AaYwa2LUM=
 github.com/aws/aws-sdk-go-v2/service/sso v1.30.15/go.mod h1:WSvS1NLr7JaPunCXqpJnWk1Bjo7IxzZXrZi1QQCkuqM=
+github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.37.6 h1:xaCsobg3N0UfLcf0HJdibQ+pw1k7ohLE9YL009xa8/M=
+github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.37.6/go.mod h1:ncL0HzgvOD8ZFzNyoO0Fye/5xsIIc/pYK33g7d4CFzY=
 github.com/aws/aws-sdk-go-v2/service/ssooidc v1.35.19 h1:dzztQ1YmfPrxdrOiuZRMF6fuOwWlWpD2StNLTceKpys=
 github.com/aws/aws-sdk-go-v2/service/ssooidc v1.35.19/go.mod h1:YO8TrYtFdl5w/4vmjL8zaBSsiNp3w0L1FfKVKenZT7w=
 github.com/aws/aws-sdk-go-v2/service/sts v1.41.10 h1:p8ogvvLugcR/zLBXTXrTkj0RYBUdErbMnAFFp12Lm/U=
@@ -335,6 +343,8 @@ github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.19.0 h1:GyTFR/TGudUea
 github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.19.0/go.mod h1:t0Lk/1lKXkkjcRdks8KjRtqyzgzwET5wBNEq0yzkjOw=
 github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.35.20 h1:/w3bh+b6N/J1I2YCQQtjmhmNBhtwUDhdpcGSCUOOqYo=
 github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.35.20/go.mod h1:vjHEk8YzGeUpM6tdAneaerYEHXxDpne1tEa+TXc9S+o=
+github.com/aws/aws-sdk-go-v2/service/transfer v1.69.5 h1:U0h4MI96lzBUkhIehcF3mYV8sAtzYQyypmhIm/P9hTQ=
+github.com/aws/aws-sdk-go-v2/service/transfer v1.69.5/go.mod h1:bBdE+Vq7lkOtLBqySqmmajlW/0aveY1T0Z/xjayEnWQ=
 github.com/aws/aws-sdk-go-v2/service/wafv2 v1.71.3 h1:plz59y4FnLqj3aG5QANid62jrR6ydQ/iVWEsNylwr6A=
 github.com/aws/aws-sdk-go-v2/service/wafv2 v1.71.3/go.mod h1:tFtxEVwsNo157QYmyNYiYkZJqvchWHAFrMq680ukzfk=
 github.com/aws/aws-sdk-go-v2/service/workdocs v1.30.20 h1:paR/tJTa4w45jJg1Dy4438jR0YBbe6/UZm7WlQBa3qI=

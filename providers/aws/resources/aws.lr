@@ -2721,6 +2721,26 @@ aws.secretsmanager.secret @defaults("arn name") {
   rotationRules aws.secretsmanager.secret.rotationRules
   // Tags for the secret
   tags map[string]string
+  // Resource-based policy attached to the secret (JSON string, empty if none)
+  resourcePolicy() string
+  // Regions where the secret is replicated
+  replicaRegions() []aws.secretsmanager.secret.replicaRegion
+}
+
+// AWS Secrets Manager secret replica region
+private aws.secretsmanager.secret.replicaRegion @defaults("region status") {
+  // Unique ID
+  id string
+  // Region name where the secret is replicated
+  region string
+  // Status of the replication: InSync, Failed, InProgress
+  status string
+  // Status message (additional details about the replication status)
+  statusMessage string
+  // KMS key used for encryption in this region
+  kmsKeyId string
+  // Last date the replica was accessed
+  lastAccessedDate time
 }
 
 // AWS Secrets Manager secret rotation rules configuration
@@ -10043,4 +10063,250 @@ private aws.ec2.vpcEndpointServiceConfiguration.connection @defaults("endpointId
   gatewayLoadBalancerArns []string
   // Creation time
   createdAt time
+}
+
+// AWS Step Functions
+aws.sfn @defaults("stateMachines") {
+  // List of Step Functions state machines
+  stateMachines() []aws.sfn.stateMachine
+  // List of Step Functions activities
+  activities() []aws.sfn.activity
+}
+
+// AWS Step Functions state machine
+private aws.sfn.stateMachine @defaults("arn name type status") {
+  // ARN of the state machine
+  arn string
+  // Name of the state machine
+  name string
+  // Region where the state machine exists
+  region string
+  // Type of the state machine: STANDARD or EXPRESS
+  type string
+  // Status of the state machine: ACTIVE or DELETING
+  status() string
+  // Amazon States Language definition of the state machine
+  definition() string
+  // IAM role used by the state machine
+  iamRole() aws.iam.role
+  // Logging configuration
+  loggingConfiguration() dict
+  // Whether X-Ray tracing is enabled
+  tracingEnabled() bool
+  // Date the state machine was created
+  createdAt time
+  // Tags for the state machine
+  tags() map[string]string
+  // Encryption configuration
+  encryptionConfiguration() dict
+}
+
+// AWS Step Functions activity
+private aws.sfn.activity @defaults("arn name") {
+  // ARN of the activity
+  arn string
+  // Name of the activity
+  name string
+  // Region where the activity exists
+  region string
+  // Date the activity was created
+  createdAt time
+}
+
+// AWS Resource Access Manager (RAM)
+aws.ram @defaults("resourceShares") {
+  // List of resource shares owned by this account
+  resourceShares() []aws.ram.resourceShare
+}
+
+// AWS RAM resource share
+private aws.ram.resourceShare @defaults("arn name status") {
+  // ARN of the resource share
+  arn string
+  // Name of the resource share
+  name string
+  // Region where the resource share exists
+  region string
+  // Status of the resource share: ACTIVE, DELETED, DELETING, FAILED, PENDING
+  status string
+  // Account ID of the owning account
+  owningAccountId string
+  // Whether principals outside the organization can be associated
+  allowExternalPrincipals bool
+  // Date the resource share was created
+  createdAt time
+  // Tags for the resource share
+  tags map[string]string
+  // Principals associated with the resource share
+  principals() []dict
+  // Resources associated with the resource share
+  resources() []dict
+}
+
+// AWS Transfer Family
+aws.transfer @defaults("servers") {
+  // List of Transfer Family servers
+  servers() []aws.transfer.server
+}
+
+// AWS Transfer Family server
+private aws.transfer.server @defaults("arn serverId endpointType protocols") {
+  // ARN of the Transfer Family server
+  arn string
+  // Unique identifier for the server
+  serverId string
+  // Region where the server exists
+  region string
+  // Domain of the server: S3 or EFS
+  domain() string
+  // Type of endpoint: PUBLIC, VPC, or VPC_ENDPOINT
+  endpointType string
+  // Identity provider type: SERVICE_MANAGED, API_GATEWAY, AWS_DIRECTORY_SERVICE, AWS_LAMBDA
+  identityProviderType() string
+  // IAM role used for logging
+  loggingRole() aws.iam.role
+  // Protocols enabled on the server: SFTP, FTPS, FTP, AS2
+  protocols() []string
+  // State of the server: ONLINE, OFFLINE, STARTING, STOPPING, START_FAILED, STOP_FAILED
+  state string
+  // Security policy name (e.g., TransferSecurityPolicy-2024-01)
+  securityPolicyName() string
+  // Number of users associated with the server
+  userCount int
+  // Certificate ARN for FTPS protocol
+  certificate() string
+  // Structured log destinations
+  structuredLogDestinations() []string
+  // Tags for the server
+  tags() map[string]string
+}
+
+// AWS App Mesh
+aws.appmesh @defaults("meshes") {
+  // List of App Mesh meshes
+  meshes() []aws.appmesh.mesh
+}
+
+// AWS App Mesh mesh
+private aws.appmesh.mesh @defaults("arn name") {
+  // ARN of the mesh
+  arn string
+  // Name of the mesh
+  name string
+  // Region where the mesh exists
+  region string
+  // Mesh owner account ID
+  meshOwner string
+  // Status of the mesh: ACTIVE, INACTIVE, DELETED
+  status() string
+  // Egress filter type: DROP_ALL or ALLOW_ALL
+  egressFilterType() string
+  // IP preference for service discovery: IPv4_PREFERRED, IPv4_ONLY, IPv6_PREFERRED, IPv6_ONLY
+  serviceDiscoveryIpPreference() string
+  // Date the mesh was created
+  createdAt time
+  // Tags for the mesh
+  tags() map[string]string
+  // Virtual services in the mesh
+  virtualServices() []aws.appmesh.virtualService
+  // Virtual nodes in the mesh
+  virtualNodes() []aws.appmesh.virtualNode
+}
+
+// AWS App Mesh virtual service
+private aws.appmesh.virtualService @defaults("arn name") {
+  // ARN of the virtual service
+  arn string
+  // Name of the virtual service
+  name string
+  // Mesh name the virtual service belongs to
+  meshName string
+  // Region where the virtual service exists
+  region string
+  // Status of the virtual service: ACTIVE, INACTIVE, DELETED
+  status string
+  // Provider type: virtualNode or virtualRouter
+  providerType string
+  // Provider resource name (virtual node or virtual router name)
+  providerName string
+}
+
+// AWS App Mesh virtual node
+private aws.appmesh.virtualNode @defaults("arn name") {
+  // ARN of the virtual node
+  arn string
+  // Name of the virtual node
+  name string
+  // Mesh name the virtual node belongs to
+  meshName string
+  // Region where the virtual node exists
+  region string
+  // Status of the virtual node: ACTIVE, INACTIVE, DELETED
+  status string
+  // Number of backends configured
+  backends() int
+  // Service discovery configuration
+  serviceDiscovery() dict
+}
+
+// AWS IAM Identity Center (SSO)
+aws.identitycenter @defaults("instances") {
+  // List of Identity Center instances
+  instances() []aws.identitycenter.instance
+}
+
+// AWS IAM Identity Center instance
+private aws.identitycenter.instance @defaults("arn name status") {
+  // ARN of the Identity Center instance
+  arn string
+  // Name of the Identity Center instance
+  name string
+  // Identity store ID
+  identityStoreId string
+  // Status of the instance: CREATE_IN_PROGRESS, ACTIVE, DELETE_IN_PROGRESS
+  status string
+  // Date the instance was created
+  createdAt time
+  // Owner account ID
+  ownerAccountId string
+  // Permission sets in this instance
+  permissionSets() []aws.identitycenter.permissionSet
+  // Account assignments in this instance
+  accountAssignments() []aws.identitycenter.accountAssignment
+}
+
+// AWS IAM Identity Center permission set
+private aws.identitycenter.permissionSet @defaults("arn name") {
+  // ARN of the permission set
+  arn string
+  // Name of the permission set
+  name string
+  // Description of the permission set
+  description string
+  // Session duration in ISO-8601 format (e.g., PT1H)
+  sessionDuration string
+  // Relay state URL
+  relayState string
+  // Date the permission set was created
+  createdAt time
+  // Inline policy document (JSON string, empty if none)
+  inlinePolicy() string
+  // AWS managed policies attached to the permission set
+  managedPolicies() []dict
+  // Tags for the permission set
+  tags() map[string]string
+}
+
+// AWS IAM Identity Center account assignment
+private aws.identitycenter.accountAssignment @defaults("accountId permissionSetArn principalType principalId") {
+  // Unique ID for the assignment
+  id string
+  // AWS account ID
+  accountId string
+  // ARN of the permission set
+  permissionSetArn string
+  // Type of principal: USER or GROUP
+  principalType string
+  // ID of the principal (user or group ID)
+  principalId string
 }

@@ -14,6 +14,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/acm v1.38.1
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.39.1
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.41.14
+	github.com/aws/aws-sdk-go-v2/service/appmesh v1.35.12
 	github.com/aws/aws-sdk-go-v2/service/appstream v1.56.0
 	github.com/aws/aws-sdk-go-v2/service/athena v1.57.4
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.65.0
@@ -68,6 +69,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.64.0
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.51.0
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.23.20
+	github.com/aws/aws-sdk-go-v2/service/ram v1.36.3
 	github.com/aws/aws-sdk-go-v2/service/rds v1.117.1
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.62.5
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.62.5
@@ -78,13 +80,16 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.22
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.41.5
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.68.3
+	github.com/aws/aws-sdk-go-v2/service/sfn v1.40.10
 	github.com/aws/aws-sdk-go-v2/service/shield v1.34.21
 	github.com/aws/aws-sdk-go-v2/service/sns v1.39.15
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.42.25
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.68.4
+	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.37.6
 	github.com/aws/aws-sdk-go-v2/service/sts v1.41.10
 	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.35.20
+	github.com/aws/aws-sdk-go-v2/service/transfer v1.69.5
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.71.3
 	github.com/aws/aws-sdk-go-v2/service/workdocs v1.30.20
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.67.2

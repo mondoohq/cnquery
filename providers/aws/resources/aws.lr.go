@@ -146,6 +146,7 @@ const (
 	ResourceAwsShieldEmergencyContact                                           string = "aws.shield.emergencyContact"
 	ResourceAwsSecretsmanager                                                   string = "aws.secretsmanager"
 	ResourceAwsSecretsmanagerSecret                                             string = "aws.secretsmanager.secret"
+	ResourceAwsSecretsmanagerSecretReplicaRegion                                string = "aws.secretsmanager.secret.replicaRegion"
 	ResourceAwsSecretsmanagerSecretRotationRules                                string = "aws.secretsmanager.secret.rotationRules"
 	ResourceAwsEcs                                                              string = "aws.ecs"
 	ResourceAwsEcsCluster                                                       string = "aws.ecs.cluster"
@@ -453,6 +454,21 @@ const (
 	ResourceAwsCloudwatchLogDestination                                         string = "aws.cloudwatch.logDestination"
 	ResourceAwsCloudwatchLogInsightQuery                                        string = "aws.cloudwatch.logInsightQuery"
 	ResourceAwsEc2VpcEndpointServiceConfigurationConnection                     string = "aws.ec2.vpcEndpointServiceConfiguration.connection"
+	ResourceAwsSfn                                                              string = "aws.sfn"
+	ResourceAwsSfnStateMachine                                                  string = "aws.sfn.stateMachine"
+	ResourceAwsSfnActivity                                                      string = "aws.sfn.activity"
+	ResourceAwsRam                                                              string = "aws.ram"
+	ResourceAwsRamResourceShare                                                 string = "aws.ram.resourceShare"
+	ResourceAwsTransfer                                                         string = "aws.transfer"
+	ResourceAwsTransferServer                                                   string = "aws.transfer.server"
+	ResourceAwsAppmesh                                                          string = "aws.appmesh"
+	ResourceAwsAppmeshMesh                                                      string = "aws.appmesh.mesh"
+	ResourceAwsAppmeshVirtualService                                            string = "aws.appmesh.virtualService"
+	ResourceAwsAppmeshVirtualNode                                               string = "aws.appmesh.virtualNode"
+	ResourceAwsIdentitycenter                                                   string = "aws.identitycenter"
+	ResourceAwsIdentitycenterInstance                                           string = "aws.identitycenter.instance"
+	ResourceAwsIdentitycenterPermissionSet                                      string = "aws.identitycenter.permissionSet"
+	ResourceAwsIdentitycenterAccountAssignment                                  string = "aws.identitycenter.accountAssignment"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -978,6 +994,10 @@ func init() {
 		"aws.secretsmanager.secret": {
 			Init:   initAwsSecretsmanagerSecret,
 			Create: createAwsSecretsmanagerSecret,
+		},
+		"aws.secretsmanager.secret.replicaRegion": {
+			// to override args, implement: initAwsSecretsmanagerSecretReplicaRegion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSecretsmanagerSecretReplicaRegion,
 		},
 		"aws.secretsmanager.secret.rotationRules": {
 			// to override args, implement: initAwsSecretsmanagerSecretRotationRules(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2206,6 +2226,66 @@ func init() {
 		"aws.ec2.vpcEndpointServiceConfiguration.connection": {
 			// to override args, implement: initAwsEc2VpcEndpointServiceConfigurationConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEc2VpcEndpointServiceConfigurationConnection,
+		},
+		"aws.sfn": {
+			// to override args, implement: initAwsSfn(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSfn,
+		},
+		"aws.sfn.stateMachine": {
+			// to override args, implement: initAwsSfnStateMachine(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSfnStateMachine,
+		},
+		"aws.sfn.activity": {
+			// to override args, implement: initAwsSfnActivity(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSfnActivity,
+		},
+		"aws.ram": {
+			// to override args, implement: initAwsRam(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsRam,
+		},
+		"aws.ram.resourceShare": {
+			// to override args, implement: initAwsRamResourceShare(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsRamResourceShare,
+		},
+		"aws.transfer": {
+			// to override args, implement: initAwsTransfer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsTransfer,
+		},
+		"aws.transfer.server": {
+			// to override args, implement: initAwsTransferServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsTransferServer,
+		},
+		"aws.appmesh": {
+			// to override args, implement: initAwsAppmesh(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsAppmesh,
+		},
+		"aws.appmesh.mesh": {
+			// to override args, implement: initAwsAppmeshMesh(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsAppmeshMesh,
+		},
+		"aws.appmesh.virtualService": {
+			// to override args, implement: initAwsAppmeshVirtualService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsAppmeshVirtualService,
+		},
+		"aws.appmesh.virtualNode": {
+			// to override args, implement: initAwsAppmeshVirtualNode(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsAppmeshVirtualNode,
+		},
+		"aws.identitycenter": {
+			// to override args, implement: initAwsIdentitycenter(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsIdentitycenter,
+		},
+		"aws.identitycenter.instance": {
+			// to override args, implement: initAwsIdentitycenterInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsIdentitycenterInstance,
+		},
+		"aws.identitycenter.permissionSet": {
+			// to override args, implement: initAwsIdentitycenterPermissionSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsIdentitycenterPermissionSet,
+		},
+		"aws.identitycenter.accountAssignment": {
+			// to override args, implement: initAwsIdentitycenterAccountAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsIdentitycenterAccountAssignment,
 		},
 	}
 }
@@ -5535,6 +5615,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.secretsmanager.secret.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecretsmanagerSecret).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.secretsmanager.secret.resourcePolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecretsmanagerSecret).GetResourcePolicy()).ToDataRes(types.String)
+	},
+	"aws.secretsmanager.secret.replicaRegions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecretsmanagerSecret).GetReplicaRegions()).ToDataRes(types.Array(types.Resource("aws.secretsmanager.secret.replicaRegion")))
+	},
+	"aws.secretsmanager.secret.replicaRegion.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecretsmanagerSecretReplicaRegion).GetId()).ToDataRes(types.String)
+	},
+	"aws.secretsmanager.secret.replicaRegion.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecretsmanagerSecretReplicaRegion).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.secretsmanager.secret.replicaRegion.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecretsmanagerSecretReplicaRegion).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.secretsmanager.secret.replicaRegion.statusMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecretsmanagerSecretReplicaRegion).GetStatusMessage()).ToDataRes(types.String)
+	},
+	"aws.secretsmanager.secret.replicaRegion.kmsKeyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecretsmanagerSecretReplicaRegion).GetKmsKeyId()).ToDataRes(types.String)
+	},
+	"aws.secretsmanager.secret.replicaRegion.lastAccessedDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecretsmanagerSecretReplicaRegion).GetLastAccessedDate()).ToDataRes(types.Time)
 	},
 	"aws.secretsmanager.secret.rotationRules.automaticallyAfterDays": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecretsmanagerSecretRotationRules).GetAutomaticallyAfterDays()).ToDataRes(types.Int)
@@ -14665,6 +14769,285 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.vpcEndpointServiceConfiguration.connection.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2VpcEndpointServiceConfigurationConnection).GetCreatedAt()).ToDataRes(types.Time)
 	},
+	"aws.sfn.stateMachines": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSfn).GetStateMachines()).ToDataRes(types.Array(types.Resource("aws.sfn.stateMachine")))
+	},
+	"aws.sfn.activities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSfn).GetActivities()).ToDataRes(types.Array(types.Resource("aws.sfn.activity")))
+	},
+	"aws.sfn.stateMachine.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSfnStateMachine).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sfn.stateMachine.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSfnStateMachine).GetName()).ToDataRes(types.String)
+	},
+	"aws.sfn.stateMachine.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSfnStateMachine).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sfn.stateMachine.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSfnStateMachine).GetType()).ToDataRes(types.String)
+	},
+	"aws.sfn.stateMachine.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSfnStateMachine).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.sfn.stateMachine.definition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSfnStateMachine).GetDefinition()).ToDataRes(types.String)
+	},
+	"aws.sfn.stateMachine.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSfnStateMachine).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.sfn.stateMachine.loggingConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSfnStateMachine).GetLoggingConfiguration()).ToDataRes(types.Dict)
+	},
+	"aws.sfn.stateMachine.tracingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSfnStateMachine).GetTracingEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.sfn.stateMachine.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSfnStateMachine).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sfn.stateMachine.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSfnStateMachine).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.sfn.stateMachine.encryptionConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSfnStateMachine).GetEncryptionConfiguration()).ToDataRes(types.Dict)
+	},
+	"aws.sfn.activity.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSfnActivity).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sfn.activity.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSfnActivity).GetName()).ToDataRes(types.String)
+	},
+	"aws.sfn.activity.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSfnActivity).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sfn.activity.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSfnActivity).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.ram.resourceShares": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRam).GetResourceShares()).ToDataRes(types.Array(types.Resource("aws.ram.resourceShare")))
+	},
+	"aws.ram.resourceShare.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRamResourceShare).GetArn()).ToDataRes(types.String)
+	},
+	"aws.ram.resourceShare.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRamResourceShare).GetName()).ToDataRes(types.String)
+	},
+	"aws.ram.resourceShare.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRamResourceShare).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.ram.resourceShare.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRamResourceShare).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.ram.resourceShare.owningAccountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRamResourceShare).GetOwningAccountId()).ToDataRes(types.String)
+	},
+	"aws.ram.resourceShare.allowExternalPrincipals": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRamResourceShare).GetAllowExternalPrincipals()).ToDataRes(types.Bool)
+	},
+	"aws.ram.resourceShare.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRamResourceShare).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.ram.resourceShare.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRamResourceShare).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.ram.resourceShare.principals": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRamResourceShare).GetPrincipals()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.ram.resourceShare.resources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRamResourceShare).GetResources()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.transfer.servers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTransfer).GetServers()).ToDataRes(types.Array(types.Resource("aws.transfer.server")))
+	},
+	"aws.transfer.server.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTransferServer).GetArn()).ToDataRes(types.String)
+	},
+	"aws.transfer.server.serverId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTransferServer).GetServerId()).ToDataRes(types.String)
+	},
+	"aws.transfer.server.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTransferServer).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.transfer.server.domain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTransferServer).GetDomain()).ToDataRes(types.String)
+	},
+	"aws.transfer.server.endpointType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTransferServer).GetEndpointType()).ToDataRes(types.String)
+	},
+	"aws.transfer.server.identityProviderType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTransferServer).GetIdentityProviderType()).ToDataRes(types.String)
+	},
+	"aws.transfer.server.loggingRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTransferServer).GetLoggingRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.transfer.server.protocols": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTransferServer).GetProtocols()).ToDataRes(types.Array(types.String))
+	},
+	"aws.transfer.server.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTransferServer).GetState()).ToDataRes(types.String)
+	},
+	"aws.transfer.server.securityPolicyName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTransferServer).GetSecurityPolicyName()).ToDataRes(types.String)
+	},
+	"aws.transfer.server.userCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTransferServer).GetUserCount()).ToDataRes(types.Int)
+	},
+	"aws.transfer.server.certificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTransferServer).GetCertificate()).ToDataRes(types.String)
+	},
+	"aws.transfer.server.structuredLogDestinations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTransferServer).GetStructuredLogDestinations()).ToDataRes(types.Array(types.String))
+	},
+	"aws.transfer.server.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTransferServer).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.appmesh.meshes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmesh).GetMeshes()).ToDataRes(types.Array(types.Resource("aws.appmesh.mesh")))
+	},
+	"aws.appmesh.mesh.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshMesh).GetArn()).ToDataRes(types.String)
+	},
+	"aws.appmesh.mesh.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshMesh).GetName()).ToDataRes(types.String)
+	},
+	"aws.appmesh.mesh.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshMesh).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.appmesh.mesh.meshOwner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshMesh).GetMeshOwner()).ToDataRes(types.String)
+	},
+	"aws.appmesh.mesh.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshMesh).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.appmesh.mesh.egressFilterType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshMesh).GetEgressFilterType()).ToDataRes(types.String)
+	},
+	"aws.appmesh.mesh.serviceDiscoveryIpPreference": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshMesh).GetServiceDiscoveryIpPreference()).ToDataRes(types.String)
+	},
+	"aws.appmesh.mesh.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshMesh).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.appmesh.mesh.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshMesh).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.appmesh.mesh.virtualServices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshMesh).GetVirtualServices()).ToDataRes(types.Array(types.Resource("aws.appmesh.virtualService")))
+	},
+	"aws.appmesh.mesh.virtualNodes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshMesh).GetVirtualNodes()).ToDataRes(types.Array(types.Resource("aws.appmesh.virtualNode")))
+	},
+	"aws.appmesh.virtualService.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualService).GetArn()).ToDataRes(types.String)
+	},
+	"aws.appmesh.virtualService.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualService).GetName()).ToDataRes(types.String)
+	},
+	"aws.appmesh.virtualService.meshName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualService).GetMeshName()).ToDataRes(types.String)
+	},
+	"aws.appmesh.virtualService.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualService).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.appmesh.virtualService.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualService).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.appmesh.virtualService.providerType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualService).GetProviderType()).ToDataRes(types.String)
+	},
+	"aws.appmesh.virtualService.providerName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualService).GetProviderName()).ToDataRes(types.String)
+	},
+	"aws.appmesh.virtualNode.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualNode).GetArn()).ToDataRes(types.String)
+	},
+	"aws.appmesh.virtualNode.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualNode).GetName()).ToDataRes(types.String)
+	},
+	"aws.appmesh.virtualNode.meshName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualNode).GetMeshName()).ToDataRes(types.String)
+	},
+	"aws.appmesh.virtualNode.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualNode).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.appmesh.virtualNode.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualNode).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.appmesh.virtualNode.backends": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualNode).GetBackends()).ToDataRes(types.Int)
+	},
+	"aws.appmesh.virtualNode.serviceDiscovery": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualNode).GetServiceDiscovery()).ToDataRes(types.Dict)
+	},
+	"aws.identitycenter.instances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIdentitycenter).GetInstances()).ToDataRes(types.Array(types.Resource("aws.identitycenter.instance")))
+	},
+	"aws.identitycenter.instance.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIdentitycenterInstance).GetArn()).ToDataRes(types.String)
+	},
+	"aws.identitycenter.instance.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIdentitycenterInstance).GetName()).ToDataRes(types.String)
+	},
+	"aws.identitycenter.instance.identityStoreId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIdentitycenterInstance).GetIdentityStoreId()).ToDataRes(types.String)
+	},
+	"aws.identitycenter.instance.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIdentitycenterInstance).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.identitycenter.instance.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIdentitycenterInstance).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.identitycenter.instance.ownerAccountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIdentitycenterInstance).GetOwnerAccountId()).ToDataRes(types.String)
+	},
+	"aws.identitycenter.instance.permissionSets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIdentitycenterInstance).GetPermissionSets()).ToDataRes(types.Array(types.Resource("aws.identitycenter.permissionSet")))
+	},
+	"aws.identitycenter.instance.accountAssignments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIdentitycenterInstance).GetAccountAssignments()).ToDataRes(types.Array(types.Resource("aws.identitycenter.accountAssignment")))
+	},
+	"aws.identitycenter.permissionSet.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIdentitycenterPermissionSet).GetArn()).ToDataRes(types.String)
+	},
+	"aws.identitycenter.permissionSet.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIdentitycenterPermissionSet).GetName()).ToDataRes(types.String)
+	},
+	"aws.identitycenter.permissionSet.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIdentitycenterPermissionSet).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.identitycenter.permissionSet.sessionDuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIdentitycenterPermissionSet).GetSessionDuration()).ToDataRes(types.String)
+	},
+	"aws.identitycenter.permissionSet.relayState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIdentitycenterPermissionSet).GetRelayState()).ToDataRes(types.String)
+	},
+	"aws.identitycenter.permissionSet.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIdentitycenterPermissionSet).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.identitycenter.permissionSet.inlinePolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIdentitycenterPermissionSet).GetInlinePolicy()).ToDataRes(types.String)
+	},
+	"aws.identitycenter.permissionSet.managedPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIdentitycenterPermissionSet).GetManagedPolicies()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.identitycenter.permissionSet.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIdentitycenterPermissionSet).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.identitycenter.accountAssignment.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIdentitycenterAccountAssignment).GetId()).ToDataRes(types.String)
+	},
+	"aws.identitycenter.accountAssignment.accountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIdentitycenterAccountAssignment).GetAccountId()).ToDataRes(types.String)
+	},
+	"aws.identitycenter.accountAssignment.permissionSetArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIdentitycenterAccountAssignment).GetPermissionSetArn()).ToDataRes(types.String)
+	},
+	"aws.identitycenter.accountAssignment.principalType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIdentitycenterAccountAssignment).GetPrincipalType()).ToDataRes(types.String)
+	},
+	"aws.identitycenter.accountAssignment.principalId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIdentitycenterAccountAssignment).GetPrincipalId()).ToDataRes(types.String)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -19539,6 +19922,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.secretsmanager.secret.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSecretsmanagerSecret).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.secretsmanager.secret.resourcePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecretsmanagerSecret).ResourcePolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.secretsmanager.secret.replicaRegions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecretsmanagerSecret).ReplicaRegions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.secretsmanager.secret.replicaRegion.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecretsmanagerSecretReplicaRegion).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.secretsmanager.secret.replicaRegion.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecretsmanagerSecretReplicaRegion).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.secretsmanager.secret.replicaRegion.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecretsmanagerSecretReplicaRegion).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.secretsmanager.secret.replicaRegion.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecretsmanagerSecretReplicaRegion).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.secretsmanager.secret.replicaRegion.statusMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecretsmanagerSecretReplicaRegion).StatusMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.secretsmanager.secret.replicaRegion.kmsKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecretsmanagerSecretReplicaRegion).KmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.secretsmanager.secret.replicaRegion.lastAccessedDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecretsmanagerSecretReplicaRegion).LastAccessedDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.secretsmanager.secret.rotationRules.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -32941,6 +33360,438 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2VpcEndpointServiceConfigurationConnection).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"aws.sfn.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfn).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sfn.stateMachines": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfn).StateMachines, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sfn.activities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfn).Activities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sfn.stateMachine.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfnStateMachine).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sfn.stateMachine.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfnStateMachine).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sfn.stateMachine.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfnStateMachine).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sfn.stateMachine.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfnStateMachine).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sfn.stateMachine.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfnStateMachine).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sfn.stateMachine.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfnStateMachine).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sfn.stateMachine.definition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfnStateMachine).Definition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sfn.stateMachine.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfnStateMachine).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.sfn.stateMachine.loggingConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfnStateMachine).LoggingConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sfn.stateMachine.tracingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfnStateMachine).TracingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.sfn.stateMachine.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfnStateMachine).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sfn.stateMachine.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfnStateMachine).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.sfn.stateMachine.encryptionConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfnStateMachine).EncryptionConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sfn.activity.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfnActivity).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sfn.activity.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfnActivity).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sfn.activity.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfnActivity).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sfn.activity.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfnActivity).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sfn.activity.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfnActivity).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.ram.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRam).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ram.resourceShares": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRam).ResourceShares, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ram.resourceShare.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRamResourceShare).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ram.resourceShare.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRamResourceShare).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ram.resourceShare.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRamResourceShare).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ram.resourceShare.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRamResourceShare).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ram.resourceShare.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRamResourceShare).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ram.resourceShare.owningAccountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRamResourceShare).OwningAccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ram.resourceShare.allowExternalPrincipals": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRamResourceShare).AllowExternalPrincipals, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ram.resourceShare.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRamResourceShare).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.ram.resourceShare.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRamResourceShare).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.ram.resourceShare.principals": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRamResourceShare).Principals, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ram.resourceShare.resources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRamResourceShare).Resources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.transfer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTransfer).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.transfer.servers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTransfer).Servers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.transfer.server.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTransferServer).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.transfer.server.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTransferServer).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.transfer.server.serverId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTransferServer).ServerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.transfer.server.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTransferServer).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.transfer.server.domain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTransferServer).Domain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.transfer.server.endpointType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTransferServer).EndpointType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.transfer.server.identityProviderType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTransferServer).IdentityProviderType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.transfer.server.loggingRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTransferServer).LoggingRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.transfer.server.protocols": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTransferServer).Protocols, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.transfer.server.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTransferServer).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.transfer.server.securityPolicyName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTransferServer).SecurityPolicyName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.transfer.server.userCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTransferServer).UserCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.transfer.server.certificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTransferServer).Certificate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.transfer.server.structuredLogDestinations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTransferServer).StructuredLogDestinations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.transfer.server.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTransferServer).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmesh).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.appmesh.meshes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmesh).Meshes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.mesh.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshMesh).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.appmesh.mesh.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshMesh).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.mesh.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshMesh).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.mesh.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshMesh).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.mesh.meshOwner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshMesh).MeshOwner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.mesh.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshMesh).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.mesh.egressFilterType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshMesh).EgressFilterType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.mesh.serviceDiscoveryIpPreference": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshMesh).ServiceDiscoveryIpPreference, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.mesh.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshMesh).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.mesh.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshMesh).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.mesh.virtualServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshMesh).VirtualServices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.mesh.virtualNodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshMesh).VirtualNodes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualService).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.appmesh.virtualService.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualService).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualService.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualService).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualService.meshName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualService).MeshName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualService.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualService).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualService.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualService).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualService.providerType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualService).ProviderType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualService.providerName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualService).ProviderName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualNode.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualNode).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.appmesh.virtualNode.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualNode).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualNode.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualNode).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualNode.meshName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualNode).MeshName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualNode.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualNode).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualNode.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualNode).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualNode.backends": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualNode).Backends, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualNode.serviceDiscovery": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualNode).ServiceDiscovery, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.identitycenter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenter).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.identitycenter.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenter).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.identitycenter.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenterInstance).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.identitycenter.instance.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenterInstance).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.identitycenter.instance.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenterInstance).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.identitycenter.instance.identityStoreId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenterInstance).IdentityStoreId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.identitycenter.instance.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenterInstance).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.identitycenter.instance.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenterInstance).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.identitycenter.instance.ownerAccountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenterInstance).OwnerAccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.identitycenter.instance.permissionSets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenterInstance).PermissionSets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.identitycenter.instance.accountAssignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenterInstance).AccountAssignments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.identitycenter.permissionSet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenterPermissionSet).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.identitycenter.permissionSet.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenterPermissionSet).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.identitycenter.permissionSet.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenterPermissionSet).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.identitycenter.permissionSet.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenterPermissionSet).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.identitycenter.permissionSet.sessionDuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenterPermissionSet).SessionDuration, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.identitycenter.permissionSet.relayState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenterPermissionSet).RelayState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.identitycenter.permissionSet.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenterPermissionSet).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.identitycenter.permissionSet.inlinePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenterPermissionSet).InlinePolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.identitycenter.permissionSet.managedPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenterPermissionSet).ManagedPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.identitycenter.permissionSet.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenterPermissionSet).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.identitycenter.accountAssignment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenterAccountAssignment).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.identitycenter.accountAssignment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenterAccountAssignment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.identitycenter.accountAssignment.accountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenterAccountAssignment).AccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.identitycenter.accountAssignment.permissionSetArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenterAccountAssignment).PermissionSetArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.identitycenter.accountAssignment.principalType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenterAccountAssignment).PrincipalType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.identitycenter.accountAssignment.principalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenterAccountAssignment).PrincipalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -45995,7 +46846,7 @@ func (c *mqlAwsSecretsmanager) GetSecrets() *plugin.TValue[[]any] {
 type mqlAwsSecretsmanagerSecret struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsSecretsmanagerSecretInternal it will be used here
+	mqlAwsSecretsmanagerSecretInternal
 	Arn              plugin.TValue[string]
 	CreatedAt        plugin.TValue[*time.Time]
 	Description      plugin.TValue[string]
@@ -46011,6 +46862,8 @@ type mqlAwsSecretsmanagerSecret struct {
 	RotationLambda   plugin.TValue[*mqlAwsLambdaFunction]
 	RotationRules    plugin.TValue[*mqlAwsSecretsmanagerSecretRotationRules]
 	Tags             plugin.TValue[map[string]any]
+	ResourcePolicy   plugin.TValue[string]
+	ReplicaRegions   plugin.TValue[[]any]
 }
 
 // createAwsSecretsmanagerSecret creates a new instance of this resource
@@ -46120,6 +46973,97 @@ func (c *mqlAwsSecretsmanagerSecret) GetRotationRules() *plugin.TValue[*mqlAwsSe
 
 func (c *mqlAwsSecretsmanagerSecret) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
+}
+
+func (c *mqlAwsSecretsmanagerSecret) GetResourcePolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ResourcePolicy, func() (string, error) {
+		return c.resourcePolicy()
+	})
+}
+
+func (c *mqlAwsSecretsmanagerSecret) GetReplicaRegions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ReplicaRegions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.secretsmanager.secret", c.__id, "replicaRegions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.replicaRegions()
+	})
+}
+
+// mqlAwsSecretsmanagerSecretReplicaRegion for the aws.secretsmanager.secret.replicaRegion resource
+type mqlAwsSecretsmanagerSecretReplicaRegion struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsSecretsmanagerSecretReplicaRegionInternal it will be used here
+	Id               plugin.TValue[string]
+	Region           plugin.TValue[string]
+	Status           plugin.TValue[string]
+	StatusMessage    plugin.TValue[string]
+	KmsKeyId         plugin.TValue[string]
+	LastAccessedDate plugin.TValue[*time.Time]
+}
+
+// createAwsSecretsmanagerSecretReplicaRegion creates a new instance of this resource
+func createAwsSecretsmanagerSecretReplicaRegion(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSecretsmanagerSecretReplicaRegion{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.secretsmanager.secret.replicaRegion", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSecretsmanagerSecretReplicaRegion) MqlName() string {
+	return "aws.secretsmanager.secret.replicaRegion"
+}
+
+func (c *mqlAwsSecretsmanagerSecretReplicaRegion) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSecretsmanagerSecretReplicaRegion) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsSecretsmanagerSecretReplicaRegion) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSecretsmanagerSecretReplicaRegion) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsSecretsmanagerSecretReplicaRegion) GetStatusMessage() *plugin.TValue[string] {
+	return &c.StatusMessage
+}
+
+func (c *mqlAwsSecretsmanagerSecretReplicaRegion) GetKmsKeyId() *plugin.TValue[string] {
+	return &c.KmsKeyId
+}
+
+func (c *mqlAwsSecretsmanagerSecretReplicaRegion) GetLastAccessedDate() *plugin.TValue[*time.Time] {
+	return &c.LastAccessedDate
 }
 
 // mqlAwsSecretsmanagerSecretRotationRules for the aws.secretsmanager.secret.rotationRules resource
@@ -79630,4 +80574,1321 @@ func (c *mqlAwsEc2VpcEndpointServiceConfigurationConnection) GetGatewayLoadBalan
 
 func (c *mqlAwsEc2VpcEndpointServiceConfigurationConnection) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
+}
+
+// mqlAwsSfn for the aws.sfn resource
+type mqlAwsSfn struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsSfnInternal it will be used here
+	StateMachines plugin.TValue[[]any]
+	Activities    plugin.TValue[[]any]
+}
+
+// createAwsSfn creates a new instance of this resource
+func createAwsSfn(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSfn{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sfn", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSfn) MqlName() string {
+	return "aws.sfn"
+}
+
+func (c *mqlAwsSfn) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSfn) GetStateMachines() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.StateMachines, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sfn", c.__id, "stateMachines")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.stateMachines()
+	})
+}
+
+func (c *mqlAwsSfn) GetActivities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Activities, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sfn", c.__id, "activities")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.activities()
+	})
+}
+
+// mqlAwsSfnStateMachine for the aws.sfn.stateMachine resource
+type mqlAwsSfnStateMachine struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSfnStateMachineInternal
+	Arn                     plugin.TValue[string]
+	Name                    plugin.TValue[string]
+	Region                  plugin.TValue[string]
+	Type                    plugin.TValue[string]
+	Status                  plugin.TValue[string]
+	Definition              plugin.TValue[string]
+	IamRole                 plugin.TValue[*mqlAwsIamRole]
+	LoggingConfiguration    plugin.TValue[any]
+	TracingEnabled          plugin.TValue[bool]
+	CreatedAt               plugin.TValue[*time.Time]
+	Tags                    plugin.TValue[map[string]any]
+	EncryptionConfiguration plugin.TValue[any]
+}
+
+// createAwsSfnStateMachine creates a new instance of this resource
+func createAwsSfnStateMachine(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSfnStateMachine{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sfn.stateMachine", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSfnStateMachine) MqlName() string {
+	return "aws.sfn.stateMachine"
+}
+
+func (c *mqlAwsSfnStateMachine) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSfnStateMachine) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSfnStateMachine) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSfnStateMachine) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSfnStateMachine) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsSfnStateMachine) GetStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
+		return c.status()
+	})
+}
+
+func (c *mqlAwsSfnStateMachine) GetDefinition() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Definition, func() (string, error) {
+		return c.definition()
+	})
+}
+
+func (c *mqlAwsSfnStateMachine) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sfn.stateMachine", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsSfnStateMachine) GetLoggingConfiguration() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.LoggingConfiguration, func() (any, error) {
+		return c.loggingConfiguration()
+	})
+}
+
+func (c *mqlAwsSfnStateMachine) GetTracingEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.TracingEnabled, func() (bool, error) {
+		return c.tracingEnabled()
+	})
+}
+
+func (c *mqlAwsSfnStateMachine) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSfnStateMachine) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsSfnStateMachine) GetEncryptionConfiguration() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.EncryptionConfiguration, func() (any, error) {
+		return c.encryptionConfiguration()
+	})
+}
+
+// mqlAwsSfnActivity for the aws.sfn.activity resource
+type mqlAwsSfnActivity struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsSfnActivityInternal it will be used here
+	Arn       plugin.TValue[string]
+	Name      plugin.TValue[string]
+	Region    plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
+}
+
+// createAwsSfnActivity creates a new instance of this resource
+func createAwsSfnActivity(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSfnActivity{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sfn.activity", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSfnActivity) MqlName() string {
+	return "aws.sfn.activity"
+}
+
+func (c *mqlAwsSfnActivity) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSfnActivity) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSfnActivity) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSfnActivity) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSfnActivity) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+// mqlAwsRam for the aws.ram resource
+type mqlAwsRam struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsRamInternal it will be used here
+	ResourceShares plugin.TValue[[]any]
+}
+
+// createAwsRam creates a new instance of this resource
+func createAwsRam(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRam{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ram", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRam) MqlName() string {
+	return "aws.ram"
+}
+
+func (c *mqlAwsRam) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRam) GetResourceShares() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ResourceShares, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ram", c.__id, "resourceShares")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.resourceShares()
+	})
+}
+
+// mqlAwsRamResourceShare for the aws.ram.resourceShare resource
+type mqlAwsRamResourceShare struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsRamResourceShareInternal it will be used here
+	Arn                     plugin.TValue[string]
+	Name                    plugin.TValue[string]
+	Region                  plugin.TValue[string]
+	Status                  plugin.TValue[string]
+	OwningAccountId         plugin.TValue[string]
+	AllowExternalPrincipals plugin.TValue[bool]
+	CreatedAt               plugin.TValue[*time.Time]
+	Tags                    plugin.TValue[map[string]any]
+	Principals              plugin.TValue[[]any]
+	Resources               plugin.TValue[[]any]
+}
+
+// createAwsRamResourceShare creates a new instance of this resource
+func createAwsRamResourceShare(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRamResourceShare{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ram.resourceShare", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRamResourceShare) MqlName() string {
+	return "aws.ram.resourceShare"
+}
+
+func (c *mqlAwsRamResourceShare) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRamResourceShare) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsRamResourceShare) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsRamResourceShare) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsRamResourceShare) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsRamResourceShare) GetOwningAccountId() *plugin.TValue[string] {
+	return &c.OwningAccountId
+}
+
+func (c *mqlAwsRamResourceShare) GetAllowExternalPrincipals() *plugin.TValue[bool] {
+	return &c.AllowExternalPrincipals
+}
+
+func (c *mqlAwsRamResourceShare) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsRamResourceShare) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAwsRamResourceShare) GetPrincipals() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Principals, func() ([]any, error) {
+		return c.principals()
+	})
+}
+
+func (c *mqlAwsRamResourceShare) GetResources() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Resources, func() ([]any, error) {
+		return c.resources()
+	})
+}
+
+// mqlAwsTransfer for the aws.transfer resource
+type mqlAwsTransfer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsTransferInternal it will be used here
+	Servers plugin.TValue[[]any]
+}
+
+// createAwsTransfer creates a new instance of this resource
+func createAwsTransfer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsTransfer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.transfer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsTransfer) MqlName() string {
+	return "aws.transfer"
+}
+
+func (c *mqlAwsTransfer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsTransfer) GetServers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Servers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.transfer", c.__id, "servers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.servers()
+	})
+}
+
+// mqlAwsTransferServer for the aws.transfer.server resource
+type mqlAwsTransferServer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsTransferServerInternal
+	Arn                       plugin.TValue[string]
+	ServerId                  plugin.TValue[string]
+	Region                    plugin.TValue[string]
+	Domain                    plugin.TValue[string]
+	EndpointType              plugin.TValue[string]
+	IdentityProviderType      plugin.TValue[string]
+	LoggingRole               plugin.TValue[*mqlAwsIamRole]
+	Protocols                 plugin.TValue[[]any]
+	State                     plugin.TValue[string]
+	SecurityPolicyName        plugin.TValue[string]
+	UserCount                 plugin.TValue[int64]
+	Certificate               plugin.TValue[string]
+	StructuredLogDestinations plugin.TValue[[]any]
+	Tags                      plugin.TValue[map[string]any]
+}
+
+// createAwsTransferServer creates a new instance of this resource
+func createAwsTransferServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsTransferServer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.transfer.server", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsTransferServer) MqlName() string {
+	return "aws.transfer.server"
+}
+
+func (c *mqlAwsTransferServer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsTransferServer) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsTransferServer) GetServerId() *plugin.TValue[string] {
+	return &c.ServerId
+}
+
+func (c *mqlAwsTransferServer) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsTransferServer) GetDomain() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Domain, func() (string, error) {
+		return c.domain()
+	})
+}
+
+func (c *mqlAwsTransferServer) GetEndpointType() *plugin.TValue[string] {
+	return &c.EndpointType
+}
+
+func (c *mqlAwsTransferServer) GetIdentityProviderType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.IdentityProviderType, func() (string, error) {
+		return c.identityProviderType()
+	})
+}
+
+func (c *mqlAwsTransferServer) GetLoggingRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.LoggingRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.transfer.server", c.__id, "loggingRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.loggingRole()
+	})
+}
+
+func (c *mqlAwsTransferServer) GetProtocols() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Protocols, func() ([]any, error) {
+		return c.protocols()
+	})
+}
+
+func (c *mqlAwsTransferServer) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsTransferServer) GetSecurityPolicyName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SecurityPolicyName, func() (string, error) {
+		return c.securityPolicyName()
+	})
+}
+
+func (c *mqlAwsTransferServer) GetUserCount() *plugin.TValue[int64] {
+	return &c.UserCount
+}
+
+func (c *mqlAwsTransferServer) GetCertificate() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Certificate, func() (string, error) {
+		return c.certificate()
+	})
+}
+
+func (c *mqlAwsTransferServer) GetStructuredLogDestinations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.StructuredLogDestinations, func() ([]any, error) {
+		return c.structuredLogDestinations()
+	})
+}
+
+func (c *mqlAwsTransferServer) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsAppmesh for the aws.appmesh resource
+type mqlAwsAppmesh struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsAppmeshInternal it will be used here
+	Meshes plugin.TValue[[]any]
+}
+
+// createAwsAppmesh creates a new instance of this resource
+func createAwsAppmesh(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsAppmesh{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.appmesh", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsAppmesh) MqlName() string {
+	return "aws.appmesh"
+}
+
+func (c *mqlAwsAppmesh) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsAppmesh) GetMeshes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Meshes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.appmesh", c.__id, "meshes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.meshes()
+	})
+}
+
+// mqlAwsAppmeshMesh for the aws.appmesh.mesh resource
+type mqlAwsAppmeshMesh struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsAppmeshMeshInternal
+	Arn                          plugin.TValue[string]
+	Name                         plugin.TValue[string]
+	Region                       plugin.TValue[string]
+	MeshOwner                    plugin.TValue[string]
+	Status                       plugin.TValue[string]
+	EgressFilterType             plugin.TValue[string]
+	ServiceDiscoveryIpPreference plugin.TValue[string]
+	CreatedAt                    plugin.TValue[*time.Time]
+	Tags                         plugin.TValue[map[string]any]
+	VirtualServices              plugin.TValue[[]any]
+	VirtualNodes                 plugin.TValue[[]any]
+}
+
+// createAwsAppmeshMesh creates a new instance of this resource
+func createAwsAppmeshMesh(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsAppmeshMesh{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.appmesh.mesh", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsAppmeshMesh) MqlName() string {
+	return "aws.appmesh.mesh"
+}
+
+func (c *mqlAwsAppmeshMesh) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsAppmeshMesh) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsAppmeshMesh) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsAppmeshMesh) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsAppmeshMesh) GetMeshOwner() *plugin.TValue[string] {
+	return &c.MeshOwner
+}
+
+func (c *mqlAwsAppmeshMesh) GetStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
+		return c.status()
+	})
+}
+
+func (c *mqlAwsAppmeshMesh) GetEgressFilterType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.EgressFilterType, func() (string, error) {
+		return c.egressFilterType()
+	})
+}
+
+func (c *mqlAwsAppmeshMesh) GetServiceDiscoveryIpPreference() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ServiceDiscoveryIpPreference, func() (string, error) {
+		return c.serviceDiscoveryIpPreference()
+	})
+}
+
+func (c *mqlAwsAppmeshMesh) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsAppmeshMesh) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsAppmeshMesh) GetVirtualServices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VirtualServices, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.appmesh.mesh", c.__id, "virtualServices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.virtualServices()
+	})
+}
+
+func (c *mqlAwsAppmeshMesh) GetVirtualNodes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VirtualNodes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.appmesh.mesh", c.__id, "virtualNodes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.virtualNodes()
+	})
+}
+
+// mqlAwsAppmeshVirtualService for the aws.appmesh.virtualService resource
+type mqlAwsAppmeshVirtualService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsAppmeshVirtualServiceInternal it will be used here
+	Arn          plugin.TValue[string]
+	Name         plugin.TValue[string]
+	MeshName     plugin.TValue[string]
+	Region       plugin.TValue[string]
+	Status       plugin.TValue[string]
+	ProviderType plugin.TValue[string]
+	ProviderName plugin.TValue[string]
+}
+
+// createAwsAppmeshVirtualService creates a new instance of this resource
+func createAwsAppmeshVirtualService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsAppmeshVirtualService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.appmesh.virtualService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsAppmeshVirtualService) MqlName() string {
+	return "aws.appmesh.virtualService"
+}
+
+func (c *mqlAwsAppmeshVirtualService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsAppmeshVirtualService) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsAppmeshVirtualService) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsAppmeshVirtualService) GetMeshName() *plugin.TValue[string] {
+	return &c.MeshName
+}
+
+func (c *mqlAwsAppmeshVirtualService) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsAppmeshVirtualService) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsAppmeshVirtualService) GetProviderType() *plugin.TValue[string] {
+	return &c.ProviderType
+}
+
+func (c *mqlAwsAppmeshVirtualService) GetProviderName() *plugin.TValue[string] {
+	return &c.ProviderName
+}
+
+// mqlAwsAppmeshVirtualNode for the aws.appmesh.virtualNode resource
+type mqlAwsAppmeshVirtualNode struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsAppmeshVirtualNodeInternal it will be used here
+	Arn              plugin.TValue[string]
+	Name             plugin.TValue[string]
+	MeshName         plugin.TValue[string]
+	Region           plugin.TValue[string]
+	Status           plugin.TValue[string]
+	Backends         plugin.TValue[int64]
+	ServiceDiscovery plugin.TValue[any]
+}
+
+// createAwsAppmeshVirtualNode creates a new instance of this resource
+func createAwsAppmeshVirtualNode(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsAppmeshVirtualNode{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.appmesh.virtualNode", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsAppmeshVirtualNode) MqlName() string {
+	return "aws.appmesh.virtualNode"
+}
+
+func (c *mqlAwsAppmeshVirtualNode) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsAppmeshVirtualNode) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsAppmeshVirtualNode) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsAppmeshVirtualNode) GetMeshName() *plugin.TValue[string] {
+	return &c.MeshName
+}
+
+func (c *mqlAwsAppmeshVirtualNode) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsAppmeshVirtualNode) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsAppmeshVirtualNode) GetBackends() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Backends, func() (int64, error) {
+		return c.backends()
+	})
+}
+
+func (c *mqlAwsAppmeshVirtualNode) GetServiceDiscovery() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.ServiceDiscovery, func() (any, error) {
+		return c.serviceDiscovery()
+	})
+}
+
+// mqlAwsIdentitycenter for the aws.identitycenter resource
+type mqlAwsIdentitycenter struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsIdentitycenterInternal it will be used here
+	Instances plugin.TValue[[]any]
+}
+
+// createAwsIdentitycenter creates a new instance of this resource
+func createAwsIdentitycenter(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsIdentitycenter{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.identitycenter", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsIdentitycenter) MqlName() string {
+	return "aws.identitycenter"
+}
+
+func (c *mqlAwsIdentitycenter) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsIdentitycenter) GetInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Instances, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.identitycenter", c.__id, "instances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.instances()
+	})
+}
+
+// mqlAwsIdentitycenterInstance for the aws.identitycenter.instance resource
+type mqlAwsIdentitycenterInstance struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsIdentitycenterInstanceInternal it will be used here
+	Arn                plugin.TValue[string]
+	Name               plugin.TValue[string]
+	IdentityStoreId    plugin.TValue[string]
+	Status             plugin.TValue[string]
+	CreatedAt          plugin.TValue[*time.Time]
+	OwnerAccountId     plugin.TValue[string]
+	PermissionSets     plugin.TValue[[]any]
+	AccountAssignments plugin.TValue[[]any]
+}
+
+// createAwsIdentitycenterInstance creates a new instance of this resource
+func createAwsIdentitycenterInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsIdentitycenterInstance{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.identitycenter.instance", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsIdentitycenterInstance) MqlName() string {
+	return "aws.identitycenter.instance"
+}
+
+func (c *mqlAwsIdentitycenterInstance) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsIdentitycenterInstance) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsIdentitycenterInstance) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsIdentitycenterInstance) GetIdentityStoreId() *plugin.TValue[string] {
+	return &c.IdentityStoreId
+}
+
+func (c *mqlAwsIdentitycenterInstance) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsIdentitycenterInstance) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsIdentitycenterInstance) GetOwnerAccountId() *plugin.TValue[string] {
+	return &c.OwnerAccountId
+}
+
+func (c *mqlAwsIdentitycenterInstance) GetPermissionSets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PermissionSets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.identitycenter.instance", c.__id, "permissionSets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.permissionSets()
+	})
+}
+
+func (c *mqlAwsIdentitycenterInstance) GetAccountAssignments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AccountAssignments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.identitycenter.instance", c.__id, "accountAssignments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.accountAssignments()
+	})
+}
+
+// mqlAwsIdentitycenterPermissionSet for the aws.identitycenter.permissionSet resource
+type mqlAwsIdentitycenterPermissionSet struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsIdentitycenterPermissionSetInternal
+	Arn             plugin.TValue[string]
+	Name            plugin.TValue[string]
+	Description     plugin.TValue[string]
+	SessionDuration plugin.TValue[string]
+	RelayState      plugin.TValue[string]
+	CreatedAt       plugin.TValue[*time.Time]
+	InlinePolicy    plugin.TValue[string]
+	ManagedPolicies plugin.TValue[[]any]
+	Tags            plugin.TValue[map[string]any]
+}
+
+// createAwsIdentitycenterPermissionSet creates a new instance of this resource
+func createAwsIdentitycenterPermissionSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsIdentitycenterPermissionSet{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.identitycenter.permissionSet", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsIdentitycenterPermissionSet) MqlName() string {
+	return "aws.identitycenter.permissionSet"
+}
+
+func (c *mqlAwsIdentitycenterPermissionSet) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsIdentitycenterPermissionSet) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsIdentitycenterPermissionSet) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsIdentitycenterPermissionSet) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsIdentitycenterPermissionSet) GetSessionDuration() *plugin.TValue[string] {
+	return &c.SessionDuration
+}
+
+func (c *mqlAwsIdentitycenterPermissionSet) GetRelayState() *plugin.TValue[string] {
+	return &c.RelayState
+}
+
+func (c *mqlAwsIdentitycenterPermissionSet) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsIdentitycenterPermissionSet) GetInlinePolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.InlinePolicy, func() (string, error) {
+		return c.inlinePolicy()
+	})
+}
+
+func (c *mqlAwsIdentitycenterPermissionSet) GetManagedPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedPolicies, func() ([]any, error) {
+		return c.managedPolicies()
+	})
+}
+
+func (c *mqlAwsIdentitycenterPermissionSet) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsIdentitycenterAccountAssignment for the aws.identitycenter.accountAssignment resource
+type mqlAwsIdentitycenterAccountAssignment struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsIdentitycenterAccountAssignmentInternal it will be used here
+	Id               plugin.TValue[string]
+	AccountId        plugin.TValue[string]
+	PermissionSetArn plugin.TValue[string]
+	PrincipalType    plugin.TValue[string]
+	PrincipalId      plugin.TValue[string]
+}
+
+// createAwsIdentitycenterAccountAssignment creates a new instance of this resource
+func createAwsIdentitycenterAccountAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsIdentitycenterAccountAssignment{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.identitycenter.accountAssignment", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsIdentitycenterAccountAssignment) MqlName() string {
+	return "aws.identitycenter.accountAssignment"
+}
+
+func (c *mqlAwsIdentitycenterAccountAssignment) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsIdentitycenterAccountAssignment) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsIdentitycenterAccountAssignment) GetAccountId() *plugin.TValue[string] {
+	return &c.AccountId
+}
+
+func (c *mqlAwsIdentitycenterAccountAssignment) GetPermissionSetArn() *plugin.TValue[string] {
+	return &c.PermissionSetArn
+}
+
+func (c *mqlAwsIdentitycenterAccountAssignment) GetPrincipalType() *plugin.TValue[string] {
+	return &c.PrincipalType
+}
+
+func (c *mqlAwsIdentitycenterAccountAssignment) GetPrincipalId() *plugin.TValue[string] {
+	return &c.PrincipalId
 }
