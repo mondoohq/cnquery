@@ -21,7 +21,7 @@ func (s *mqlSlack) accessLogs() ([]any, error) {
 	}
 
 	accessLogs, _, err := client.GetAccessLogs(slack.AccessLogParameters{
-		Count: 999, // use maximum, must be lower than 1000
+		Limit: 999, // use maximum, must be lower than 1000
 	})
 	if err != nil {
 		return nil, err
