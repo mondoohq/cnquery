@@ -81805,23 +81805,33 @@ func (c *mqlAwsIdentitycenterPermissionSet) GetArn() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsIdentitycenterPermissionSet) GetName() *plugin.TValue[string] {
-	return &c.Name
+	return plugin.GetOrCompute[string](&c.Name, func() (string, error) {
+		return c.name()
+	})
 }
 
 func (c *mqlAwsIdentitycenterPermissionSet) GetDescription() *plugin.TValue[string] {
-	return &c.Description
+	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
+		return c.description()
+	})
 }
 
 func (c *mqlAwsIdentitycenterPermissionSet) GetSessionDuration() *plugin.TValue[string] {
-	return &c.SessionDuration
+	return plugin.GetOrCompute[string](&c.SessionDuration, func() (string, error) {
+		return c.sessionDuration()
+	})
 }
 
 func (c *mqlAwsIdentitycenterPermissionSet) GetRelayState() *plugin.TValue[string] {
-	return &c.RelayState
+	return plugin.GetOrCompute[string](&c.RelayState, func() (string, error) {
+		return c.relayState()
+	})
 }
 
 func (c *mqlAwsIdentitycenterPermissionSet) GetCreatedAt() *plugin.TValue[*time.Time] {
-	return &c.CreatedAt
+	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
+		return c.createdAt()
+	})
 }
 
 func (c *mqlAwsIdentitycenterPermissionSet) GetInlinePolicy() *plugin.TValue[string] {

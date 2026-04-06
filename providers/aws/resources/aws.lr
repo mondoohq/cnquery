@@ -10280,15 +10280,15 @@ private aws.identitycenter.permissionSet @defaults("arn name") {
   // ARN of the permission set
   arn string
   // Name of the permission set
-  name string
+  name() string
   // Description of the permission set
-  description string
+  description() string
   // Session duration in ISO-8601 format (e.g., PT1H)
-  sessionDuration string
+  sessionDuration() string
   // Relay state URL
-  relayState string
+  relayState() string
   // Date the permission set was created
-  createdAt time
+  createdAt() time
   // Inline policy document (JSON string, empty if none)
   inlinePolicy() string
   // AWS managed policies attached to the permission set

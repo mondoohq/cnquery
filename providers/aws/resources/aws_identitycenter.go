@@ -6,6 +6,8 @@ package resources
 import (
 	"context"
 	"fmt"
+	"sync"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	ssotypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
@@ -107,24 +109,10 @@ func (a *mqlAwsIdentitycenterInstance) permissionSets() ([]any, error) {
 		}
 
 		for _, psArn := range page.PermissionSets {
-			desc, err := svc.DescribePermissionSet(ctx, &ssoadmin.DescribePermissionSetInput{
-				InstanceArn:      &instanceArn,
-				PermissionSetArn: &psArn,
-			})
-			if err != nil {
-				return nil, err
-			}
-			ps := desc.PermissionSet
-
 			mqlPs, err := CreateResource(a.MqlRuntime, "aws.identitycenter.permissionSet",
 				map[string]*llx.RawData{
-					"__id":            llx.StringDataPtr(ps.PermissionSetArn),
-					"arn":             llx.StringDataPtr(ps.PermissionSetArn),
-					"name":            llx.StringDataPtr(ps.Name),
-					"description":     llx.StringDataPtr(ps.Description),
-					"sessionDuration": llx.StringDataPtr(ps.SessionDuration),
-					"relayState":      llx.StringDataPtr(ps.RelayState),
-					"createdAt":       llx.TimeDataPtr(ps.CreatedDate),
+					"__id": llx.StringData(psArn),
+					"arn":  llx.StringData(psArn),
 				})
 			if err != nil {
 				return nil, err
@@ -139,10 +127,81 @@ func (a *mqlAwsIdentitycenterInstance) permissionSets() ([]any, error) {
 
 type mqlAwsIdentitycenterPermissionSetInternal struct {
 	cacheInstanceArn string
+	fetched          bool
+	lock             sync.Mutex
+	descResp         *ssoadmin.DescribePermissionSetOutput
 }
 
 func (a *mqlAwsIdentitycenterPermissionSet) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsIdentitycenterPermissionSet) fetchDetail() (*ssoadmin.DescribePermissionSetOutput, error) {
+	if a.fetched {
+		return a.descResp, nil
+	}
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	if a.fetched {
+		return a.descResp, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.SsoAdmin("")
+	ctx := context.Background()
+
+	instanceArn := a.cacheInstanceArn
+	psArn := a.Arn.Data
+	resp, err := svc.DescribePermissionSet(ctx, &ssoadmin.DescribePermissionSetInput{
+		InstanceArn:      &instanceArn,
+		PermissionSetArn: &psArn,
+	})
+	if err != nil {
+		return nil, err
+	}
+	a.fetched = true
+	a.descResp = resp
+	return resp, nil
+}
+
+func (a *mqlAwsIdentitycenterPermissionSet) name() (string, error) {
+	resp, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(resp.PermissionSet.Name), nil
+}
+
+func (a *mqlAwsIdentitycenterPermissionSet) description() (string, error) {
+	resp, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(resp.PermissionSet.Description), nil
+}
+
+func (a *mqlAwsIdentitycenterPermissionSet) sessionDuration() (string, error) {
+	resp, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(resp.PermissionSet.SessionDuration), nil
+}
+
+func (a *mqlAwsIdentitycenterPermissionSet) relayState() (string, error) {
+	resp, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(resp.PermissionSet.RelayState), nil
+}
+
+func (a *mqlAwsIdentitycenterPermissionSet) createdAt() (*time.Time, error) {
+	resp, err := a.fetchDetail()
+	if err != nil {
+		return nil, err
+	}
+	return resp.PermissionSet.CreatedDate, nil
 }
 
 func (a *mqlAwsIdentitycenterPermissionSet) inlinePolicy() (string, error) {
