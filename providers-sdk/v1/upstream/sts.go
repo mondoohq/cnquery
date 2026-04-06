@@ -131,15 +131,6 @@ func ExchangeExternalToken(apiEndpoint, audience, issuerURI, jwtToken string) (*
 	return &creds, nil
 }
 
-// fetchIdentityToken resolves a TokenProvider from the issuer URI and fetches an identity token.
-func fetchIdentityToken(audience, issuerURI string) (string, error) {
-	provider, err := tokenauth.Resolve(issuerURI)
-	if err != nil {
-		return "", err
-	}
-	return provider.GetToken(context.Background(), audience)
-}
-
 // signClaims implements claims signing with ssh.Signer
 //
 // To generate a new SSH key use:
