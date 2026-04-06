@@ -283,6 +283,7 @@ func (g *mqlGcpProjectBigtableServiceInstance) tables() ([]any, error) {
 			automatedBackupPolicy = map[string]any{
 				"retentionPeriod": fmt.Sprintf("%v", abp.RetentionPeriod),
 				"frequency":       fmt.Sprintf("%v", abp.Frequency),
+				"locations":       abp.Locations,
 			}
 		}
 

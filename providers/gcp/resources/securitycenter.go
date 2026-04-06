@@ -136,6 +136,8 @@ func listSCCFindings(runtime *plugin.Runtime, conn *connection.GcpConnection, pa
 			"findingClass":     llx.StringData(f.FindingClass.String()),
 			"state":            llx.StringData(f.State.String()),
 			"resourceName":     llx.StringData(f.ResourceName),
+			"chokepoint":       llx.DictData(chokepointToDict(f.Chokepoint)),
+			"externalExposure": llx.DictData(externalExposureToDict(f.ExternalExposure)),
 		})
 		if err != nil {
 			return nil, err
@@ -156,6 +158,37 @@ func sourcePropertiesToDict(props map[string]*structpb.Value) (map[string]any, e
 		result[k] = v.AsInterface()
 	}
 	return result, nil
+}
+
+// chokepointToDict converts a Chokepoint protobuf to a dict.
+func chokepointToDict(cp *sccpb.Chokepoint) map[string]any {
+	if cp == nil {
+		return nil
+	}
+	return map[string]any{
+		"relatedFindings": cp.RelatedFindings,
+	}
+}
+
+// externalExposureToDict converts an ExternalExposure protobuf to a dict.
+func externalExposureToDict(ee *sccpb.ExternalExposure) map[string]any {
+	if ee == nil {
+		return nil
+	}
+	return map[string]any{
+		"privateIpAddress":           ee.PrivateIpAddress,
+		"privatePort":                ee.PrivatePort,
+		"exposedService":             ee.ExposedService,
+		"publicIpAddress":            ee.PublicIpAddress,
+		"publicPort":                 ee.PublicPort,
+		"exposedEndpoint":            ee.ExposedEndpoint,
+		"loadBalancerFirewallPolicy": ee.LoadBalancerFirewallPolicy,
+		"serviceFirewallPolicy":      ee.ServiceFirewallPolicy,
+		"forwardingRule":             ee.ForwardingRule,
+		"backendService":             ee.BackendService,
+		"instanceGroup":              ee.InstanceGroup,
+		"networkEndpointGroup":       ee.NetworkEndpointGroup,
+	}
 }
 
 // listSCCNotificationConfigs lists SCC notification configs for a given parent.

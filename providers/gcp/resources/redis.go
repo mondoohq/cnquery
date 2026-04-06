@@ -552,6 +552,14 @@ func (g *mqlGcpProjectRedisService) clusters() ([]any, error) {
 		if cluster.BackupCollection != nil {
 			backupCollection = *cluster.BackupCollection
 		}
+		var serverCaMode string
+		if cluster.ServerCaMode != nil {
+			serverCaMode = cluster.ServerCaMode.String()
+		}
+		var serverCaPool string
+		if cluster.ServerCaPool != nil {
+			serverCaPool = *cluster.ServerCaPool
+		}
 
 		mqlCluster, err := CreateResource(g.MqlRuntime, "gcp.project.redisService.cluster", map[string]*llx.RawData{
 			"projectId":                     llx.StringData(projectId),
@@ -593,6 +601,8 @@ func (g *mqlGcpProjectRedisService) clusters() ([]any, error) {
 				clusterConvertClusterEndpoints(g.MqlRuntime, projectId, cluster.Name, cluster.ClusterEndpoints),
 				types.Resource("gcp.project.redisService.cluster.clusterEndpoint"),
 			),
+			"serverCaMode": llx.StringData(serverCaMode),
+			"serverCaPool": llx.StringData(serverCaPool),
 		})
 		if err != nil {
 			return nil, err

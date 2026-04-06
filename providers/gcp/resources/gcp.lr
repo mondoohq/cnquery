@@ -249,6 +249,10 @@ private gcp.project.redisService.cluster @defaults("name") {
   backups() []gcp.project.redisService.cluster.backup
   // The cluster endpoints
   clusterEndpoints []gcp.project.redisService.cluster.clusterEndpoint
+  // The server certificate authority mode
+  serverCaMode string
+  // The CA pool resource for customer-managed CAS
+  serverCaPool string
 }
 
 // Google Cloud (GCP) Redis Cluster PSC configuration
@@ -5617,6 +5621,10 @@ private gcp.scc.finding @defaults("name category severity") {
   state string
   // Full resource name of the affected resource
   resourceName string
+  // Chokepoint analysis for the finding
+  chokepoint dict
+  // External exposure details for the finding
+  externalExposure dict
 }
 
 // Google Cloud Security Command Center notification config

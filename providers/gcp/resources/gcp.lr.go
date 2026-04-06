@@ -1554,6 +1554,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.redisService.cluster.clusterEndpoints": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectRedisServiceCluster).GetClusterEndpoints()).ToDataRes(types.Array(types.Resource("gcp.project.redisService.cluster.clusterEndpoint")))
 	},
+	"gcp.project.redisService.cluster.serverCaMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceCluster).GetServerCaMode()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.serverCaPool": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceCluster).GetServerCaPool()).ToDataRes(types.String)
+	},
 	"gcp.project.redisService.cluster.pscConfig.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectRedisServiceClusterPscConfig).GetProjectId()).ToDataRes(types.String)
 	},
@@ -8238,6 +8244,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.scc.finding.resourceName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpSccFinding).GetResourceName()).ToDataRes(types.String)
 	},
+	"gcp.scc.finding.chokepoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpSccFinding).GetChokepoint()).ToDataRes(types.Dict)
+	},
+	"gcp.scc.finding.externalExposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpSccFinding).GetExternalExposure()).ToDataRes(types.Dict)
+	},
 	"gcp.scc.notificationConfig.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpSccNotificationConfig).GetName()).ToDataRes(types.String)
 	},
@@ -8787,6 +8799,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.redisService.cluster.clusterEndpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectRedisServiceCluster).ClusterEndpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.serverCaMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceCluster).ServerCaMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.serverCaPool": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceCluster).ServerCaPool, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.redisService.cluster.pscConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -18585,6 +18605,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpSccFinding).ResourceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.scc.finding.chokepoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpSccFinding).Chokepoint, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.scc.finding.externalExposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpSccFinding).ExternalExposure, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"gcp.scc.notificationConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpSccNotificationConfig).__id, ok = v.Value.(string)
 		return
@@ -19635,6 +19663,8 @@ type mqlGcpProjectRedisServiceCluster struct {
 	PscConnections                plugin.TValue[[]any]
 	Backups                       plugin.TValue[[]any]
 	ClusterEndpoints              plugin.TValue[[]any]
+	ServerCaMode                  plugin.TValue[string]
+	ServerCaPool                  plugin.TValue[string]
 }
 
 // createGcpProjectRedisServiceCluster creates a new instance of this resource
@@ -19796,6 +19826,14 @@ func (c *mqlGcpProjectRedisServiceCluster) GetBackups() *plugin.TValue[[]any] {
 
 func (c *mqlGcpProjectRedisServiceCluster) GetClusterEndpoints() *plugin.TValue[[]any] {
 	return &c.ClusterEndpoints
+}
+
+func (c *mqlGcpProjectRedisServiceCluster) GetServerCaMode() *plugin.TValue[string] {
+	return &c.ServerCaMode
+}
+
+func (c *mqlGcpProjectRedisServiceCluster) GetServerCaPool() *plugin.TValue[string] {
+	return &c.ServerCaPool
 }
 
 // mqlGcpProjectRedisServiceClusterPscConfig for the gcp.project.redisService.cluster.pscConfig resource
@@ -42789,6 +42827,8 @@ type mqlGcpSccFinding struct {
 	FindingClass     plugin.TValue[string]
 	State            plugin.TValue[string]
 	ResourceName     plugin.TValue[string]
+	Chokepoint       plugin.TValue[any]
+	ExternalExposure plugin.TValue[any]
 }
 
 // createGcpSccFinding creates a new instance of this resource
@@ -42878,6 +42918,14 @@ func (c *mqlGcpSccFinding) GetState() *plugin.TValue[string] {
 
 func (c *mqlGcpSccFinding) GetResourceName() *plugin.TValue[string] {
 	return &c.ResourceName
+}
+
+func (c *mqlGcpSccFinding) GetChokepoint() *plugin.TValue[any] {
+	return &c.Chokepoint
+}
+
+func (c *mqlGcpSccFinding) GetExternalExposure() *plugin.TValue[any] {
+	return &c.ExternalExposure
 }
 
 // mqlGcpSccNotificationConfig for the gcp.scc.notificationConfig resource

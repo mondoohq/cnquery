@@ -2090,6 +2090,8 @@ gcp.project.redisService.cluster.pscConnection.serviceAttachment 11.1.0
 gcp.project.redisService.cluster.pscConnections 11.1.0
 gcp.project.redisService.cluster.redisConfigs 11.1.0
 gcp.project.redisService.cluster.replicaCount 11.1.0
+gcp.project.redisService.cluster.serverCaMode 13.3.5
+gcp.project.redisService.cluster.serverCaPool 13.3.5
 gcp.project.redisService.cluster.shardCount 11.1.0
 gcp.project.redisService.cluster.sizeGb 11.1.0
 gcp.project.redisService.cluster.state 11.1.0
@@ -2517,8 +2519,10 @@ gcp.scc.bigQueryExport.name 13.3.4
 gcp.scc.bigQueryExport.updateTime 13.3.4
 gcp.scc.finding 13.3.4
 gcp.scc.finding.category 13.3.4
+gcp.scc.finding.chokepoint 13.3.5
 gcp.scc.finding.createTime 13.3.4
 gcp.scc.finding.eventTime 13.3.4
+gcp.scc.finding.externalExposure 13.3.5
 gcp.scc.finding.externalUri 13.3.4
 gcp.scc.finding.findingClass 13.3.4
 gcp.scc.finding.mute 13.3.4
