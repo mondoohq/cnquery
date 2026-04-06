@@ -10173,8 +10173,8 @@ private aws.transfer.server @defaults("arn serverId endpointType protocols") {
   securityPolicyName() string
   // Number of users associated with the server
   userCount int
-  // Certificate ARN for FTPS protocol
-  certificate() string
+  // Certificate for FTPS protocol
+  certificate() aws.acm.certificate
   // Structured log destinations
   structuredLogDestinations() []string
   // Tags for the server
@@ -10224,11 +10224,11 @@ private aws.appmesh.virtualService @defaults("arn name") {
   // Region where the virtual service exists
   region string
   // Status of the virtual service: ACTIVE, INACTIVE, DELETED
-  status string
+  status() string
   // Provider type: virtualNode or virtualRouter
-  providerType string
+  providerType() string
   // Provider resource name (virtual node or virtual router name)
-  providerName string
+  providerName() string
 }
 
 // AWS App Mesh virtual node
@@ -10242,7 +10242,7 @@ private aws.appmesh.virtualNode @defaults("arn name") {
   // Region where the virtual node exists
   region string
   // Status of the virtual node: ACTIVE, INACTIVE, DELETED
-  status string
+  status() string
   // Number of backends configured
   backends() int
   // Service discovery configuration

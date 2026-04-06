@@ -1,4 +1,4 @@
-// Copyright Mondoo, Inc. 2026
+// Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
 package resources
@@ -197,48 +197,20 @@ func (a *mqlAwsAppmeshMesh) virtualServices() ([]any, error) {
 			return nil, err
 		}
 		for _, vs := range page.VirtualServices {
-			// Describe the virtual service to get status and provider info
-			desc, err := svc.DescribeVirtualService(ctx, &appmesh.DescribeVirtualServiceInput{
-				MeshName:           &meshName,
-				VirtualServiceName: vs.VirtualServiceName,
-			})
-			if err != nil {
-				return nil, err
-			}
-
-			status := ""
-			providerType := ""
-			providerName := ""
-			if desc.VirtualService != nil {
-				if desc.VirtualService.Status != nil {
-					status = string(desc.VirtualService.Status.Status)
-				}
-				if desc.VirtualService.Spec != nil && desc.VirtualService.Spec.Provider != nil {
-					switch p := desc.VirtualService.Spec.Provider.(type) {
-					case *appmesh_types.VirtualServiceProviderMemberVirtualNode:
-						providerType = "virtualNode"
-						providerName = convert.ToValue(p.Value.VirtualNodeName)
-					case *appmesh_types.VirtualServiceProviderMemberVirtualRouter:
-						providerType = "virtualRouter"
-						providerName = convert.ToValue(p.Value.VirtualRouterName)
-					}
-				}
-			}
-
 			mqlVs, err := CreateResource(a.MqlRuntime, "aws.appmesh.virtualService",
 				map[string]*llx.RawData{
-					"__id":         llx.StringDataPtr(vs.Arn),
-					"arn":          llx.StringDataPtr(vs.Arn),
-					"name":         llx.StringDataPtr(vs.VirtualServiceName),
-					"meshName":     llx.StringData(meshName),
-					"region":       llx.StringData(region),
-					"status":       llx.StringData(status),
-					"providerType": llx.StringData(providerType),
-					"providerName": llx.StringData(providerName),
+					"__id":     llx.StringDataPtr(vs.Arn),
+					"arn":      llx.StringDataPtr(vs.Arn),
+					"name":     llx.StringDataPtr(vs.VirtualServiceName),
+					"meshName": llx.StringData(meshName),
+					"region":   llx.StringData(region),
 				})
 			if err != nil {
 				return nil, err
 			}
+			internal := mqlVs.(*mqlAwsAppmeshVirtualService)
+			internal.region = region
+			internal.meshName = meshName
 			res = append(res, mqlVs)
 		}
 	}
@@ -269,11 +241,13 @@ func (a *mqlAwsAppmeshMesh) virtualNodes() ([]any, error) {
 					"name":     llx.StringDataPtr(vn.VirtualNodeName),
 					"meshName": llx.StringData(meshName),
 					"region":   llx.StringData(region),
-					"status":   llx.StringData(""),
 				})
 			if err != nil {
 				return nil, err
 			}
+			internal := mqlVn.(*mqlAwsAppmeshVirtualNode)
+			internal.region = region
+			internal.meshName = meshName
 			res = append(res, mqlVn)
 		}
 	}
@@ -284,22 +258,140 @@ func (a *mqlAwsAppmeshVirtualService) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+type mqlAwsAppmeshVirtualServiceInternal struct {
+	fetched  bool
+	lock     sync.Mutex
+	descResp *appmesh.DescribeVirtualServiceOutput
+	region   string
+	meshName string
+}
+
+func (a *mqlAwsAppmeshVirtualService) fetchDetail() (*appmesh.DescribeVirtualServiceOutput, error) {
+	if a.fetched {
+		return a.descResp, nil
+	}
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	if a.fetched {
+		return a.descResp, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.AppMesh(a.region)
+	ctx := context.Background()
+
+	name := a.Name.Data
+	meshName := a.meshName
+	resp, err := svc.DescribeVirtualService(ctx, &appmesh.DescribeVirtualServiceInput{
+		MeshName:           &meshName,
+		VirtualServiceName: &name,
+	})
+	if err != nil {
+		return nil, err
+	}
+	a.fetched = true
+	a.descResp = resp
+	return resp, nil
+}
+
+func (a *mqlAwsAppmeshVirtualService) status() (string, error) {
+	resp, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	if resp.VirtualService == nil || resp.VirtualService.Status == nil {
+		return "", nil
+	}
+	return string(resp.VirtualService.Status.Status), nil
+}
+
+func (a *mqlAwsAppmeshVirtualService) providerType() (string, error) {
+	resp, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	if resp.VirtualService == nil || resp.VirtualService.Spec == nil || resp.VirtualService.Spec.Provider == nil {
+		return "", nil
+	}
+	switch resp.VirtualService.Spec.Provider.(type) {
+	case *appmesh_types.VirtualServiceProviderMemberVirtualNode:
+		return "virtualNode", nil
+	case *appmesh_types.VirtualServiceProviderMemberVirtualRouter:
+		return "virtualRouter", nil
+	}
+	return "", nil
+}
+
+func (a *mqlAwsAppmeshVirtualService) providerName() (string, error) {
+	resp, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	if resp.VirtualService == nil || resp.VirtualService.Spec == nil || resp.VirtualService.Spec.Provider == nil {
+		return "", nil
+	}
+	switch p := resp.VirtualService.Spec.Provider.(type) {
+	case *appmesh_types.VirtualServiceProviderMemberVirtualNode:
+		return convert.ToValue(p.Value.VirtualNodeName), nil
+	case *appmesh_types.VirtualServiceProviderMemberVirtualRouter:
+		return convert.ToValue(p.Value.VirtualRouterName), nil
+	}
+	return "", nil
+}
+
 func (a *mqlAwsAppmeshVirtualNode) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func (a *mqlAwsAppmeshVirtualNode) backends() (int64, error) {
+type mqlAwsAppmeshVirtualNodeInternal struct {
+	fetched  bool
+	lock     sync.Mutex
+	descResp *appmesh.DescribeVirtualNodeOutput
+	region   string
+	meshName string
+}
+
+func (a *mqlAwsAppmeshVirtualNode) fetchDetail() (*appmesh.DescribeVirtualNodeOutput, error) {
+	if a.fetched {
+		return a.descResp, nil
+	}
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	if a.fetched {
+		return a.descResp, nil
+	}
+
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	region := a.Region.Data
-	svc := conn.AppMesh(region)
+	svc := conn.AppMesh(a.region)
 	ctx := context.Background()
 
-	meshName := a.MeshName.Data
 	nodeName := a.Name.Data
+	meshName := a.meshName
 	resp, err := svc.DescribeVirtualNode(ctx, &appmesh.DescribeVirtualNodeInput{
 		MeshName:        &meshName,
 		VirtualNodeName: &nodeName,
 	})
+	if err != nil {
+		return nil, err
+	}
+	a.fetched = true
+	a.descResp = resp
+	return resp, nil
+}
+
+func (a *mqlAwsAppmeshVirtualNode) status() (string, error) {
+	resp, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	if resp.VirtualNode == nil || resp.VirtualNode.Status == nil {
+		return "", nil
+	}
+	return string(resp.VirtualNode.Status.Status), nil
+}
+
+func (a *mqlAwsAppmeshVirtualNode) backends() (int64, error) {
+	resp, err := a.fetchDetail()
 	if err != nil {
 		return 0, err
 	}
@@ -310,17 +402,7 @@ func (a *mqlAwsAppmeshVirtualNode) backends() (int64, error) {
 }
 
 func (a *mqlAwsAppmeshVirtualNode) serviceDiscovery() (map[string]any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	region := a.Region.Data
-	svc := conn.AppMesh(region)
-	ctx := context.Background()
-
-	meshName := a.MeshName.Data
-	nodeName := a.Name.Data
-	resp, err := svc.DescribeVirtualNode(ctx, &appmesh.DescribeVirtualNodeInput{
-		MeshName:        &meshName,
-		VirtualNodeName: &nodeName,
-	})
+	resp, err := a.fetchDetail()
 	if err != nil {
 		return nil, err
 	}

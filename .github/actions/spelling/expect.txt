@@ -125,6 +125,7 @@ Iaa
 iana
 iap
 iccid
+identitycenter
 idps
 ilb
 imds
@@ -244,7 +245,6 @@ RRULE
 rtsp
 rulegroup
 rulegroupreferencestatement
-runbooks
 saas
 Sas
 sbom
@@ -258,6 +258,7 @@ secureboot
 selfservice
 serviceconnection
 serviceprincipals
+sfn
 Sflags
 signin
 singlequeryargument

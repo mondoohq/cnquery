@@ -14893,7 +14893,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsTransferServer).GetUserCount()).ToDataRes(types.Int)
 	},
 	"aws.transfer.server.certificate": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsTransferServer).GetCertificate()).ToDataRes(types.String)
+		return (r.(*mqlAwsTransferServer).GetCertificate()).ToDataRes(types.Resource("aws.acm.certificate"))
 	},
 	"aws.transfer.server.structuredLogDestinations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsTransferServer).GetStructuredLogDestinations()).ToDataRes(types.Array(types.String))
@@ -33553,7 +33553,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"aws.transfer.server.certificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsTransferServer).Certificate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlAwsTransferServer).Certificate, ok = plugin.RawToTValue[*mqlAwsAcmCertificate](v.Value, v.Error)
 		return
 	},
 	"aws.transfer.server.structuredLogDestinations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -81082,7 +81082,7 @@ type mqlAwsTransferServer struct {
 	State                     plugin.TValue[string]
 	SecurityPolicyName        plugin.TValue[string]
 	UserCount                 plugin.TValue[int64]
-	Certificate               plugin.TValue[string]
+	Certificate               plugin.TValue[*mqlAwsAcmCertificate]
 	StructuredLogDestinations plugin.TValue[[]any]
 	Tags                      plugin.TValue[map[string]any]
 }
@@ -81188,8 +81188,18 @@ func (c *mqlAwsTransferServer) GetUserCount() *plugin.TValue[int64] {
 	return &c.UserCount
 }
 
-func (c *mqlAwsTransferServer) GetCertificate() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.Certificate, func() (string, error) {
+func (c *mqlAwsTransferServer) GetCertificate() *plugin.TValue[*mqlAwsAcmCertificate] {
+	return plugin.GetOrCompute[*mqlAwsAcmCertificate](&c.Certificate, func() (*mqlAwsAcmCertificate, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.transfer.server", c.__id, "certificate")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsAcmCertificate), nil
+			}
+		}
+
 		return c.certificate()
 	})
 }
@@ -81402,7 +81412,7 @@ func (c *mqlAwsAppmeshMesh) GetVirtualNodes() *plugin.TValue[[]any] {
 type mqlAwsAppmeshVirtualService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsAppmeshVirtualServiceInternal it will be used here
+	mqlAwsAppmeshVirtualServiceInternal
 	Arn          plugin.TValue[string]
 	Name         plugin.TValue[string]
 	MeshName     plugin.TValue[string]
@@ -81466,22 +81476,28 @@ func (c *mqlAwsAppmeshVirtualService) GetRegion() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsAppmeshVirtualService) GetStatus() *plugin.TValue[string] {
-	return &c.Status
+	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
+		return c.status()
+	})
 }
 
 func (c *mqlAwsAppmeshVirtualService) GetProviderType() *plugin.TValue[string] {
-	return &c.ProviderType
+	return plugin.GetOrCompute[string](&c.ProviderType, func() (string, error) {
+		return c.providerType()
+	})
 }
 
 func (c *mqlAwsAppmeshVirtualService) GetProviderName() *plugin.TValue[string] {
-	return &c.ProviderName
+	return plugin.GetOrCompute[string](&c.ProviderName, func() (string, error) {
+		return c.providerName()
+	})
 }
 
 // mqlAwsAppmeshVirtualNode for the aws.appmesh.virtualNode resource
 type mqlAwsAppmeshVirtualNode struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsAppmeshVirtualNodeInternal it will be used here
+	mqlAwsAppmeshVirtualNodeInternal
 	Arn              plugin.TValue[string]
 	Name             plugin.TValue[string]
 	MeshName         plugin.TValue[string]
@@ -81545,7 +81561,9 @@ func (c *mqlAwsAppmeshVirtualNode) GetRegion() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsAppmeshVirtualNode) GetStatus() *plugin.TValue[string] {
-	return &c.Status
+	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
+		return c.status()
+	})
 }
 
 func (c *mqlAwsAppmeshVirtualNode) GetBackends() *plugin.TValue[int64] {

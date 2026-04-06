@@ -1,4 +1,4 @@
-// Copyright Mondoo, Inc. 2026
+// Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
 package resources
@@ -214,6 +214,8 @@ func (a *mqlAwsIdentitycenterInstance) accountAssignments() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.SsoAdmin("")
 	ctx := context.Background()
+
+	log.Warn().Msg("fetching account assignments requires iterating permission sets, accounts, and assignments (triple-nested pagination) — this may be slow for organizations with many permission sets")
 
 	instanceArn := a.Arn.Data
 	res := []any{}

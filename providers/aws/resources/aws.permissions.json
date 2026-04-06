@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.6.2",
-  "generated_at": "2026-04-04T10:51:59-07:00",
+  "generated_at": "2026-04-05T21:11:44-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -16,6 +16,9 @@
     "application-autoscaling:DescribeScalableTargets",
     "application-autoscaling:DescribeScalingPolicies",
     "application-autoscaling:DescribeScheduledActions",
+    "appmesh:ListMeshes",
+    "appmesh:ListVirtualNodes",
+    "appmesh:ListVirtualServices",
     "appstream:DescribeFleets",
     "appstream:DescribeImageBuilders",
     "appstream:DescribeStacks",
@@ -308,6 +311,9 @@
     "organizations:ListTagsForResource",
     "pipes:DescribePipe",
     "pipes:ListPipes",
+    "ram:GetResourceShares",
+    "ram:ListPrincipals",
+    "ram:ListResources",
     "rds:DescribeDBClusterAutomatedBackups",
     "rds:DescribeDBClusterParameterGroups",
     "rds:DescribeDBClusterParameters",
@@ -372,8 +378,12 @@
     "scheduler:GetSchedule",
     "scheduler:ListScheduleGroups",
     "scheduler:ListSchedules",
+    "secretsmanager:DescribeSecret",
+    "secretsmanager:GetResourcePolicy",
     "secretsmanager:ListSecrets",
     "securityhub:DescribeHub",
+    "sfn:ListActivities",
+    "sfn:ListStateMachines",
     "shield:DescribeDRTAccess",
     "shield:DescribeEmergencyContactSettings",
     "shield:DescribeSubscription",
@@ -400,6 +410,11 @@
     "ssm:ListDocuments",
     "ssm:ListResourceComplianceSummaries",
     "ssm:ListTagsForResource",
+    "ssoadmin:ListAccountAssignments",
+    "ssoadmin:ListAccountsForProvisionedPermissionSet",
+    "ssoadmin:ListInstances",
+    "ssoadmin:ListManagedPoliciesInPermissionSet",
+    "ssoadmin:ListPermissionSets",
     "timestream-influxdb:GetDbCluster",
     "timestream-influxdb:GetDbInstance",
     "timestream-influxdb:ListDbClusters",
@@ -407,6 +422,7 @@
     "timestream-influxdb:ListTagsForResource",
     "timestream:ListDatabases",
     "timestream:ListTables",
+    "transfer:ListServers",
     "wafv2:GetIPSet",
     "wafv2:GetLoggingConfiguration",
     "wafv2:GetRegexPatternSet",
@@ -506,6 +522,24 @@
       "service": "application-autoscaling",
       "action": "DescribeScheduledActions",
       "source_file": "aws_applicationautoscaling.go"
+    },
+    {
+      "permission": "appmesh:ListMeshes",
+      "service": "appmesh",
+      "action": "ListMeshes",
+      "source_file": "aws_appmesh.go"
+    },
+    {
+      "permission": "appmesh:ListVirtualNodes",
+      "service": "appmesh",
+      "action": "ListVirtualNodes",
+      "source_file": "aws_appmesh.go"
+    },
+    {
+      "permission": "appmesh:ListVirtualServices",
+      "service": "appmesh",
+      "action": "ListVirtualServices",
+      "source_file": "aws_appmesh.go"
     },
     {
       "permission": "appstream:DescribeFleets",
@@ -2308,6 +2342,24 @@
       "source_file": "aws_eventbridge_pipes.go"
     },
     {
+      "permission": "ram:GetResourceShares",
+      "service": "ram",
+      "action": "GetResourceShares",
+      "source_file": "aws_ram.go"
+    },
+    {
+      "permission": "ram:ListPrincipals",
+      "service": "ram",
+      "action": "ListPrincipals",
+      "source_file": "aws_ram.go"
+    },
+    {
+      "permission": "ram:ListResources",
+      "service": "ram",
+      "action": "ListResources",
+      "source_file": "aws_ram.go"
+    },
+    {
       "permission": "rds:DescribeDBClusterAutomatedBackups",
       "service": "rds",
       "action": "DescribeDBClusterAutomatedBackups",
@@ -2734,6 +2786,18 @@
       "source_file": "aws_eventbridge_scheduler.go"
     },
     {
+      "permission": "secretsmanager:DescribeSecret",
+      "service": "secretsmanager",
+      "action": "DescribeSecret",
+      "source_file": "aws_secretsmanager.go"
+    },
+    {
+      "permission": "secretsmanager:GetResourcePolicy",
+      "service": "secretsmanager",
+      "action": "GetResourcePolicy",
+      "source_file": "aws_secretsmanager.go"
+    },
+    {
       "permission": "secretsmanager:ListSecrets",
       "service": "secretsmanager",
       "action": "ListSecrets",
@@ -2744,6 +2808,18 @@
       "service": "securityhub",
       "action": "DescribeHub",
       "source_file": "aws_securityhub.go"
+    },
+    {
+      "permission": "sfn:ListActivities",
+      "service": "sfn",
+      "action": "ListActivities",
+      "source_file": "aws_sfn.go"
+    },
+    {
+      "permission": "sfn:ListStateMachines",
+      "service": "sfn",
+      "action": "ListStateMachines",
+      "source_file": "aws_sfn.go"
     },
     {
       "permission": "shield:DescribeDRTAccess",
@@ -2908,6 +2984,36 @@
       "source_file": "aws_ssm_documents.go"
     },
     {
+      "permission": "ssoadmin:ListAccountAssignments",
+      "service": "ssoadmin",
+      "action": "ListAccountAssignments",
+      "source_file": "aws_identitycenter.go"
+    },
+    {
+      "permission": "ssoadmin:ListAccountsForProvisionedPermissionSet",
+      "service": "ssoadmin",
+      "action": "ListAccountsForProvisionedPermissionSet",
+      "source_file": "aws_identitycenter.go"
+    },
+    {
+      "permission": "ssoadmin:ListInstances",
+      "service": "ssoadmin",
+      "action": "ListInstances",
+      "source_file": "aws_identitycenter.go"
+    },
+    {
+      "permission": "ssoadmin:ListManagedPoliciesInPermissionSet",
+      "service": "ssoadmin",
+      "action": "ListManagedPoliciesInPermissionSet",
+      "source_file": "aws_identitycenter.go"
+    },
+    {
+      "permission": "ssoadmin:ListPermissionSets",
+      "service": "ssoadmin",
+      "action": "ListPermissionSets",
+      "source_file": "aws_identitycenter.go"
+    },
+    {
       "permission": "timestream-influxdb:GetDbCluster",
       "service": "timestream-influxdb",
       "action": "GetDbCluster",
@@ -2948,6 +3054,12 @@
       "service": "timestream",
       "action": "ListTables",
       "source_file": "aws_timestream.go"
+    },
+    {
+      "permission": "transfer:ListServers",
+      "service": "transfer",
+      "action": "ListServers",
+      "source_file": "aws_transfer.go"
     },
     {
       "permission": "wafv2:GetIPSet",

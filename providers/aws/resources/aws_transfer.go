@@ -183,12 +183,24 @@ func (a *mqlAwsTransferServer) securityPolicyName() (string, error) {
 	return convert.ToValue(resp.Server.SecurityPolicyName), nil
 }
 
-func (a *mqlAwsTransferServer) certificate() (string, error) {
+func (a *mqlAwsTransferServer) certificate() (*mqlAwsAcmCertificate, error) {
 	resp, err := a.fetchDetail()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return convert.ToValue(resp.Server.Certificate), nil
+	certArn := convert.ToValue(resp.Server.Certificate)
+	if certArn == "" {
+		a.Certificate.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlCert, err := NewResource(a.MqlRuntime, "aws.acm.certificate",
+		map[string]*llx.RawData{
+			"arn": llx.StringData(certArn),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlCert.(*mqlAwsAcmCertificate), nil
 }
 
 func (a *mqlAwsTransferServer) tags() (map[string]any, error) {
