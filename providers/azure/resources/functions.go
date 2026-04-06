@@ -161,7 +161,10 @@ func (a *mqlAzureSubscriptionFunctionsServiceFunctionApp) functions() ([]any, er
 			var language string
 			var isDisabled bool
 			if fn.Properties != nil {
-				config, _ = convert.JsonToDict(fn.Properties.Config)
+				config, err = convert.JsonToDict(fn.Properties.Config)
+				if err != nil {
+					return nil, err
+				}
 				if fn.Properties.Language != nil {
 					language = *fn.Properties.Language
 				}
