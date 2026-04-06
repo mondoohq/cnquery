@@ -21,6 +21,7 @@ import (
 	signerv4 "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"go.mondoo.com/mql/v13/providers/os/connection/ssh/signers"
+	"go.mondoo.com/mql/v13/utils/sortx"
 	"go.mondoo.com/ranger-rpc"
 	"golang.org/x/crypto/ssh"
 )
@@ -263,7 +264,8 @@ func fetchGitHubActionsIdentityToken(audience string) (string, error) {
 
 // fetchAWSIdentityToken generates a pre-signed STS GetCallerIdentity POST request
 // and returns it as a JSON object (token) for the AWS Workload Identity Federation
-// token exchange flow.
+// token exchange flow. an audience is not necessary for AWS because the token is
+// not a JWT, rather a pre-signed request as a JSON object.
 func fetchAWSIdentityToken() (string, error) {
 	ctx := context.Background()
 	cfg, err := awsconfig.LoadDefaultConfig(ctx)
@@ -297,7 +299,13 @@ func fetchAWSIdentityToken() (string, error) {
 	}
 
 	headers := []map[string]string{}
-	for key, values := range req.Header {
+
+	if req.Host != "" {
+		headers = append(headers, map[string]string{"key": "host", "value": req.Host})
+	}
+
+	for _, key := range sortx.Keys(req.Header) {
+		values := req.Header.Values(key)
 		if len(values) == 0 {
 			continue
 		}
