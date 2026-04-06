@@ -139,7 +139,7 @@ func ExchangeExternalToken(apiEndpoint, audience, issuerURI, jwtToken string) (*
 }
 
 // fetchIdentityToken fetches an identity token from the current cloud environment
-// It supports GCP, Azure, and GitHub Actions
+// It supports GCP, Azure, AWS and GitHub Actions
 func fetchIdentityToken(audience string) (string, error) {
 	// Try GCP
 	if token, err := fetchGCPIdentityToken(audience); err == nil {
@@ -298,8 +298,13 @@ func fetchAWSIdentityToken() (string, error) {
 		return "", err
 	}
 
+	// SignHTTP attaches the following headers to the request:
+	// - Authorization: SigV4 signature (algorithm, credential scope, signed headers, signature)
+	// - X-Amz-Date: timestamp used during signing; AWS rejects requests older than ~15 minutes
+	// - X-Amz-Security-Token: session token for temporary credentials (SSO, assumed roles, IMDS)
 	headers := []map[string]string{}
 
+	// Attach the host header as well, in case it is needed to reconstruct the signed request on the server side.
 	if req.Host != "" {
 		headers = append(headers, map[string]string{"key": "host", "value": req.Host})
 	}
