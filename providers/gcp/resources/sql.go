@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -102,6 +103,10 @@ func (g *mqlGcpProjectSqlService) id() (string, error) {
 	return fmt.Sprintf("%s/gcp.project.sqlService", projectId), nil
 }
 
+type mqlGcpProjectSqlServiceInternal struct {
+	serviceEnabled bool
+}
+
 func (g *mqlGcpProject) sql() (*mqlGcpProjectSqlService, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
@@ -114,10 +119,26 @@ func (g *mqlGcpProject) sql() (*mqlGcpProjectSqlService, error) {
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlGcpProjectSqlService), nil
+
+	serviceEnabled, err := g.isServiceEnabled(service_sqladmin)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := res.(*mqlGcpProjectSqlService)
+	svc.serviceEnabled = serviceEnabled
+	if !serviceEnabled {
+		log.Debug().Str("service", service_sqladmin).Msg("gcp service is not enabled, skipping")
+	}
+
+	return svc, nil
 }
 
 func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
 	if g.ProjectId.Error != nil {

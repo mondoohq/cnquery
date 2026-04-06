@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -43,6 +44,10 @@ func initGcpProjectStorageService(runtime *plugin.Runtime, args map[string]*llx.
 	return args, nil, nil
 }
 
+type mqlGcpProjectStorageServiceInternal struct {
+	serviceEnabled bool
+}
+
 func (g *mqlGcpProject) storage() (*mqlGcpProjectStorageService, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
@@ -55,10 +60,26 @@ func (g *mqlGcpProject) storage() (*mqlGcpProjectStorageService, error) {
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlGcpProjectStorageService), nil
+
+	serviceEnabled, err := g.isServiceEnabled(service_storage)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := res.(*mqlGcpProjectStorageService)
+	svc.serviceEnabled = serviceEnabled
+	if !serviceEnabled {
+		log.Debug().Str("service", service_storage).Msg("gcp service is not enabled, skipping")
+	}
+
+	return svc, nil
 }
 
 func (g *mqlGcpProjectStorageService) buckets() ([]any, error) {
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}

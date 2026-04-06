@@ -27,6 +27,10 @@ func (g *mqlGcpProjectIamService) id() (string, error) {
 	return fmt.Sprintf("%s/gcp.project.iamService", projectId), nil
 }
 
+type mqlGcpProjectIamServiceInternal struct {
+	serviceEnabled bool
+}
+
 func (g *mqlGcpProject) iam() (*mqlGcpProjectIamService, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
@@ -36,7 +40,22 @@ func (g *mqlGcpProject) iam() (*mqlGcpProjectIamService, error) {
 	res, err := CreateResource(g.MqlRuntime, "gcp.project.iamService", map[string]*llx.RawData{
 		"projectId": llx.StringData(projectId),
 	})
-	return res.(*mqlGcpProjectIamService), err
+	if err != nil {
+		return nil, err
+	}
+
+	serviceEnabled, err := g.isServiceEnabled(service_iam)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := res.(*mqlGcpProjectIamService)
+	svc.serviceEnabled = serviceEnabled
+	if !serviceEnabled {
+		log.Debug().Str("service", service_iam).Msg("gcp service is not enabled, skipping")
+	}
+
+	return svc, nil
 }
 
 func (g *mqlGcpProjectIamServiceServiceAccount) id() (string, error) {
@@ -91,6 +110,10 @@ func initGcpProjectIamServiceServiceAccount(runtime *plugin.Runtime, args map[st
 }
 
 func (g *mqlGcpProjectIamService) serviceAccounts() ([]any, error) {
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}

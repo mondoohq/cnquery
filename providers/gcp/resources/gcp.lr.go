@@ -19166,7 +19166,7 @@ func (c *mqlGcpFolders) GetList() *plugin.TValue[[]any] {
 type mqlGcpProjectRedisService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectRedisServiceInternal it will be used here
+	mqlGcpProjectRedisServiceInternal
 	ProjectId plugin.TValue[string]
 	Instances plugin.TValue[[]any]
 	Clusters  plugin.TValue[[]any]
@@ -24882,7 +24882,7 @@ func (c *mqlGcpProjectComputeServiceBackendServiceCdnPolicy) GetSignedUrlKeyName
 type mqlGcpProjectStorageService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectStorageServiceInternal it will be used here
+	mqlGcpProjectStorageServiceInternal
 	ProjectId plugin.TValue[string]
 	Buckets   plugin.TValue[[]any]
 }
@@ -25323,7 +25323,7 @@ func (c *mqlGcpProjectStorageServiceBucketLifecycleRuleCondition) GetNumNewerVer
 type mqlGcpProjectSqlService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectSqlServiceInternal it will be used here
+	mqlGcpProjectSqlServiceInternal
 	ProjectId plugin.TValue[string]
 	Instances plugin.TValue[[]any]
 }
@@ -29525,7 +29525,7 @@ func (c *mqlGcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes) GetEnabl
 type mqlGcpProjectPubsubService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectPubsubServiceInternal it will be used here
+	mqlGcpProjectPubsubServiceInternal
 	ProjectId     plugin.TValue[string]
 	Topics        plugin.TValue[[]any]
 	Subscriptions plugin.TValue[[]any]
@@ -30176,7 +30176,7 @@ func (c *mqlGcpProjectPubsubServiceSnapshot) GetExpiration() *plugin.TValue[*tim
 type mqlGcpProjectKmsService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectKmsServiceInternal it will be used here
+	mqlGcpProjectKmsServiceInternal
 	ProjectId plugin.TValue[string]
 	Locations plugin.TValue[[]any]
 	Keyrings  plugin.TValue[[]any]
@@ -31016,7 +31016,7 @@ func (c *mqlGcpProjectApiKeyRestrictions) GetServerKeyRestrictions() *plugin.TVa
 type mqlGcpProjectLoggingservice struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectLoggingserviceInternal it will be used here
+	mqlGcpProjectLoggingserviceInternal
 	ProjectId plugin.TValue[string]
 	Buckets   plugin.TValue[[]any]
 	Metrics   plugin.TValue[[]any]
@@ -31461,7 +31461,7 @@ func (c *mqlGcpProjectLoggingserviceSink) GetIncludeChildren() *plugin.TValue[bo
 type mqlGcpProjectIamService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectIamServiceInternal it will be used here
+	mqlGcpProjectIamServiceInternal
 	ProjectId       plugin.TValue[string]
 	ServiceAccounts plugin.TValue[[]any]
 	Roles           plugin.TValue[[]any]
@@ -33033,7 +33033,7 @@ func (c *mqlGcpProjectDataprocServiceClusterVirtualClusterConfig) GetStagingBuck
 type mqlGcpProjectCloudRunService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectCloudRunServiceInternal it will be used here
+	mqlGcpProjectCloudRunServiceInternal
 	ProjectId  plugin.TValue[string]
 	Regions    plugin.TValue[[]any]
 	Operations plugin.TValue[[]any]
@@ -34586,7 +34586,7 @@ func (c *mqlGcpProjectBinaryAuthorizationControlAdmissionRule) GetRequireAttesta
 type mqlGcpProjectSecretmanagerService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectSecretmanagerServiceInternal it will be used here
+	mqlGcpProjectSecretmanagerServiceInternal
 	ProjectId plugin.TValue[string]
 	Secrets   plugin.TValue[[]any]
 }

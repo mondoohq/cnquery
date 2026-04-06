@@ -49,6 +49,10 @@ func initGcpProjectSecretmanagerService(runtime *plugin.Runtime, args map[string
 	return args, nil, nil
 }
 
+type mqlGcpProjectSecretmanagerServiceInternal struct {
+	serviceEnabled bool
+}
+
 func (g *mqlGcpProject) secretmanager() (*mqlGcpProjectSecretmanagerService, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
@@ -61,10 +65,27 @@ func (g *mqlGcpProject) secretmanager() (*mqlGcpProjectSecretmanagerService, err
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlGcpProjectSecretmanagerService), nil
+
+	serviceEnabled, err := g.isServiceEnabled(service_secretmanager)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := res.(*mqlGcpProjectSecretmanagerService)
+	svc.serviceEnabled = serviceEnabled
+	if !serviceEnabled {
+		log.Debug().Str("service", service_secretmanager).Msg("gcp service is not enabled, skipping")
+	}
+
+	return svc, nil
 }
 
 func (g *mqlGcpProjectSecretmanagerService) secrets() ([]any, error) {
+	// when the service is not enabled, we return nil
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}

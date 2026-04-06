@@ -31,6 +31,16 @@ const (
 	service_privateca           = "privateca.googleapis.com"
 	service_orgpolicy           = "orgpolicy.googleapis.com"
 	service_securitycenter      = "securitycenter.googleapis.com"
+	service_redis               = "redis.googleapis.com"
+	service_secretmanager       = "secretmanager.googleapis.com"
+	service_pubsub              = "pubsub.googleapis.com"
+	service_cloudrun            = "run.googleapis.com"
+	service_cloudfunctions      = "cloudfunctions.googleapis.com"
+	service_logging             = "logging.googleapis.com"
+	service_kms                 = "cloudkms.googleapis.com"
+	service_sqladmin            = "sqladmin.googleapis.com"
+	service_storage             = "storage.googleapis.com"
+	service_iam                 = "iam.googleapis.com"
 )
 
 func serviceName(name string) string {

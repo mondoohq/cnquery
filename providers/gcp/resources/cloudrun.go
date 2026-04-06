@@ -49,6 +49,10 @@ func initGcpProjectCloudRunService(runtime *plugin.Runtime, args map[string]*llx
 	return args, nil, nil
 }
 
+type mqlGcpProjectCloudRunServiceInternal struct {
+	serviceEnabled bool
+}
+
 func (g *mqlGcpProject) cloudRun() (*mqlGcpProjectCloudRunService, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
@@ -61,7 +65,19 @@ func (g *mqlGcpProject) cloudRun() (*mqlGcpProjectCloudRunService, error) {
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlGcpProjectCloudRunService), nil
+
+	serviceEnabled, err := g.isServiceEnabled(service_cloudrun)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := res.(*mqlGcpProjectCloudRunService)
+	svc.serviceEnabled = serviceEnabled
+	if !serviceEnabled {
+		log.Debug().Str("service", service_cloudrun).Msg("gcp service is not enabled, skipping")
+	}
+
+	return svc, nil
 }
 
 func (g *mqlGcpProjectCloudRunServiceOperation) id() (string, error) {
@@ -207,6 +223,10 @@ func (g *mqlGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate) id() (str
 }
 
 func (g *mqlGcpProjectCloudRunService) regions() ([]any, error) {
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
 	if g.ProjectId.Error != nil {
@@ -298,6 +318,10 @@ func (g *mqlGcpProjectCloudRunService) operations() ([]any, error) {
 }
 
 func (g *mqlGcpProjectCloudRunService) services() ([]any, error) {
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -523,6 +547,10 @@ func (g *mqlGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate) serviceAc
 }
 
 func (g *mqlGcpProjectCloudRunService) jobs() ([]any, error) {
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}

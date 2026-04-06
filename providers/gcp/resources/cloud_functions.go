@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
@@ -24,6 +25,16 @@ func (g *mqlGcpProject) cloudFunctions() ([]any, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
 	}
+
+	serviceEnabled, err := g.isServiceEnabled(service_cloudfunctions)
+	if err != nil {
+		return nil, err
+	}
+	if !serviceEnabled {
+		log.Debug().Str("service", service_cloudfunctions).Msg("gcp service is not enabled, skipping")
+		return nil, nil
+	}
+
 	projectId := g.Id.Data
 
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)

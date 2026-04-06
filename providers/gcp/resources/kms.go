@@ -105,6 +105,10 @@ func initGcpProjectKmsServiceKeyring(runtime *plugin.Runtime, args map[string]*l
 	return nil, nil, errors.New("KMS keyring not found")
 }
 
+type mqlGcpProjectKmsServiceInternal struct {
+	serviceEnabled bool
+}
+
 func (g *mqlGcpProject) kms() (*mqlGcpProjectKmsService, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
@@ -117,7 +121,19 @@ func (g *mqlGcpProject) kms() (*mqlGcpProjectKmsService, error) {
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlGcpProjectKmsService), nil
+
+	serviceEnabled, err := g.isServiceEnabled(service_kms)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := res.(*mqlGcpProjectKmsService)
+	svc.serviceEnabled = serviceEnabled
+	if !serviceEnabled {
+		log.Debug().Str("service", service_kms).Msg("gcp service is not enabled, skipping")
+	}
+
+	return svc, nil
 }
 
 func (g *mqlGcpProjectKmsServiceKeyring) id() (string, error) {
@@ -243,6 +259,10 @@ func (g *mqlGcpProjectKmsServiceKeyringCryptokeyVersionAttestationCertificatecha
 }
 
 func (g *mqlGcpProjectKmsService) locations() ([]any, error) {
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -280,6 +300,10 @@ func (g *mqlGcpProjectKmsService) locations() ([]any, error) {
 }
 
 func (g *mqlGcpProjectKmsService) keyrings() ([]any, error) {
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}

@@ -14,6 +14,7 @@ import (
 	"cloud.google.com/go/redis/apiv1/redispb"
 	rediscluster "cloud.google.com/go/redis/cluster/apiv1"
 	"cloud.google.com/go/redis/cluster/apiv1/clusterpb"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -22,6 +23,10 @@ import (
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
+
+type mqlGcpProjectRedisServiceInternal struct {
+	serviceEnabled bool
+}
 
 func (g *mqlGcpProject) redis() (*mqlGcpProjectRedisService, error) {
 	if g.Id.Error != nil {
@@ -33,7 +38,19 @@ func (g *mqlGcpProject) redis() (*mqlGcpProjectRedisService, error) {
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlGcpProjectRedisService), nil
+
+	serviceEnabled, err := g.isServiceEnabled(service_redis)
+	if err != nil {
+		return nil, err
+	}
+
+	redisSvc := res.(*mqlGcpProjectRedisService)
+	redisSvc.serviceEnabled = serviceEnabled
+	if !serviceEnabled {
+		log.Debug().Str("service", service_redis).Msg("gcp service is not enabled, skipping")
+	}
+
+	return redisSvc, nil
 }
 
 func initGcpProjectRedisServiceInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -102,6 +119,11 @@ func (g *mqlGcpProjectRedisServiceInstance) id() (string, error) {
 //
 // Docs https://cloud.google.com/memorystore/docs/redis/reference/rest/v1/projects.locations/list#authorization-scopes
 func (g *mqlGcpProjectRedisService) instances() ([]any, error) {
+	// when the service is not enabled, we return nil
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -437,6 +459,11 @@ func initGcpProjectRedisServiceCluster(runtime *plugin.Runtime, args map[string]
 }
 
 func (g *mqlGcpProjectRedisService) clusters() ([]any, error) {
+	// when the service is not enabled, we return nil
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}

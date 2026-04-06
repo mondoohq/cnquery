@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -29,6 +30,10 @@ func (g *mqlGcpProjectLoggingservice) id() (string, error) {
 	return fmt.Sprintf("%s/gcp.project.loggingservice", projectId), nil
 }
 
+type mqlGcpProjectLoggingserviceInternal struct {
+	serviceEnabled bool
+}
+
 func (g *mqlGcpProject) logging() (*mqlGcpProjectLoggingservice, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
@@ -41,10 +46,26 @@ func (g *mqlGcpProject) logging() (*mqlGcpProjectLoggingservice, error) {
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlGcpProjectLoggingservice), nil
+
+	serviceEnabled, err := g.isServiceEnabled(service_logging)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := res.(*mqlGcpProjectLoggingservice)
+	svc.serviceEnabled = serviceEnabled
+	if !serviceEnabled {
+		log.Debug().Str("service", service_logging).Msg("gcp service is not enabled, skipping")
+	}
+
+	return svc, nil
 }
 
 func (g *mqlGcpProjectLoggingservice) buckets() ([]any, error) {
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
 	if g.ProjectId.Error != nil {
