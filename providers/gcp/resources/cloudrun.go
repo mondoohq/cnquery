@@ -258,6 +258,10 @@ func (g *mqlGcpProjectCloudRunService) regions() ([]any, error) {
 }
 
 func (g *mqlGcpProjectCloudRunService) operations() ([]any, error) {
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}

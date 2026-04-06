@@ -149,6 +149,10 @@ func (g *mqlGcpProjectLoggingservice) buckets() ([]any, error) {
 }
 
 func (g *mqlGcpProjectLoggingservice) metrics() ([]any, error) {
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
 	if g.ProjectId.Error != nil {
@@ -261,6 +265,10 @@ func parseAlertPolicyConditionFilterMetricName(condition map[string]any) string 
 }
 
 func (g *mqlGcpProjectLoggingservice) sinks() ([]any, error) {
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
 	if g.ProjectId.Error != nil {
