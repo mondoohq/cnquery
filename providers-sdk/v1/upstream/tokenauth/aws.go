@@ -42,7 +42,7 @@ func (p *AWSTokenProvider) GetToken(ctx context.Context, _ string) (string, erro
 		return "", err
 	}
 
-	req, err := http.NewRequest("POST", awsStsURL, strings.NewReader(awsStsBody))
+	req, err := http.NewRequestWithContext(ctx, "POST", awsStsURL, strings.NewReader(awsStsBody))
 	if err != nil {
 		return "", err
 	}
