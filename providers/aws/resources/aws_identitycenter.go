@@ -200,14 +200,21 @@ func (a *mqlAwsIdentitycenterPermissionSet) tags() (map[string]any, error) {
 
 	instanceArn := a.cacheInstanceArn
 	psArn := a.Arn.Data
-	resp, err := svc.ListTagsForResource(ctx, &ssoadmin.ListTagsForResourceInput{
+	tags := make(map[string]any)
+	paginator := ssoadmin.NewListTagsForResourcePaginator(svc, &ssoadmin.ListTagsForResourceInput{
 		InstanceArn: &instanceArn,
 		ResourceArn: &psArn,
 	})
-	if err != nil {
-		return nil, err
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for k, v := range ssoTagsToMap(page.Tags) {
+			tags[k] = v
+		}
 	}
-	return ssoTagsToMap(resp.Tags), nil
+	return tags, nil
 }
 
 func (a *mqlAwsIdentitycenterInstance) accountAssignments() ([]any, error) {
@@ -215,7 +222,7 @@ func (a *mqlAwsIdentitycenterInstance) accountAssignments() ([]any, error) {
 	svc := conn.SsoAdmin("")
 	ctx := context.Background()
 
-	log.Warn().Msg("fetching account assignments requires iterating permission sets, accounts, and assignments (triple-nested pagination) — this may be slow for organizations with many permission sets")
+	log.Debug().Msg("fetching account assignments requires iterating permission sets, accounts, and assignments (triple-nested pagination) — this may be slow for organizations with many permission sets")
 
 	instanceArn := a.Arn.Data
 	res := []any{}

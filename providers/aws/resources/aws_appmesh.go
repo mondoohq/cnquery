@@ -167,15 +167,18 @@ func (a *mqlAwsAppmeshMesh) tags() (map[string]any, error) {
 	ctx := context.Background()
 
 	arn := a.Arn.Data
-	resp, err := svc.ListTagsForResource(ctx, &appmesh.ListTagsForResourceInput{
+	tags := make(map[string]any)
+	paginator := appmesh.NewListTagsForResourcePaginator(svc, &appmesh.ListTagsForResourceInput{
 		ResourceArn: &arn,
 	})
-	if err != nil {
-		return nil, err
-	}
-	tags := make(map[string]any)
-	for _, tag := range resp.Tags {
-		tags[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, tag := range page.Tags {
+			tags[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
+		}
 	}
 	return tags, nil
 }
