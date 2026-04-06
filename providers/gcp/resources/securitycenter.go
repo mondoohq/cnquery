@@ -282,17 +282,17 @@ func listSCCBigQueryExports(runtime *plugin.Runtime, conn *connection.GcpConnect
 }
 
 // Organization-level methods
+// Note: org-level SCC methods do not check isServiceEnabled because the Security
+// Command Center API is enabled at the project level, not the organization level.
+// Organization-scoped queries work as long as the caller has the appropriate IAM
+// permissions on the org.
 
 func (g *mqlGcpOrganization) sccParent() (string, *connection.GcpConnection, error) {
 	if g.Id.Error != nil {
 		return "", nil, g.Id.Error
 	}
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
-	orgId, err := conn.OrganizationID()
-	if err != nil {
-		return "", nil, err
-	}
-	return "organizations/" + orgId, conn, nil
+	return "organizations/" + g.Id.Data, conn, nil
 }
 
 func (g *mqlGcpOrganization) sccSources() ([]any, error) {
