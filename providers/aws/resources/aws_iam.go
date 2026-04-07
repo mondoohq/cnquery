@@ -1381,7 +1381,7 @@ func (a *mqlAwsIamRole) attachedPolicies() ([]any, error) {
 
 		for _, attachedPolicy := range roleAttachedPolicies.AttachedPolicies {
 			mqlAwsIamPolicy, err := CreateResource(a.MqlRuntime, ResourceAwsIamPolicy,
-				map[string]*llx.RawData{"arn": llx.StringDataPtr(attachedPolicy.PolicyArn), "id": llx.StringDataPtr(attachedPolicy.PolicyArn)})
+				map[string]*llx.RawData{"arn": llx.StringDataPtr(attachedPolicy.PolicyArn)})
 			if err != nil {
 				return nil, err
 			}
@@ -1489,7 +1489,7 @@ func (a *mqlAwsIamGroup) attachedPolicies() ([]any, error) {
 
 		for _, attachedPolicy := range groupAttachedPolicies.AttachedPolicies {
 			mqlAwsIamPolicy, err := CreateResource(a.MqlRuntime, ResourceAwsIamPolicy,
-				map[string]*llx.RawData{"arn": llx.StringDataPtr(attachedPolicy.PolicyArn), "id": llx.StringDataPtr(attachedPolicy.PolicyArn)})
+				map[string]*llx.RawData{"arn": llx.StringDataPtr(attachedPolicy.PolicyArn)})
 			if err != nil {
 				return nil, err
 			}
