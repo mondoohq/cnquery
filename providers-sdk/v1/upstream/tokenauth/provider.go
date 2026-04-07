@@ -18,8 +18,9 @@ type TokenProvider interface {
 var providers = map[string]TokenProvider{
 	"sts.amazonaws.com":                   &AWSTokenProvider{},
 	"accounts.google.com":                 &GCPTokenProvider{},
-	"login.microsoftonline.com":           &AzureTokenProvider{},
 	"token.actions.githubusercontent.com": &GitHubTokenProvider{},
+	"login.microsoftonline.com":           &AzureTokenProvider{},
+	"sts.windows.net":                     &AzureTokenProvider{},
 }
 
 // Resolve returns the TokenProvider matching the given issuer URI.

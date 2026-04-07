@@ -33,6 +33,11 @@ func TestResolve(t *testing.T) {
 			wantType:  &AzureTokenProvider{},
 		},
 		{
+			name:      "Azure (legacy)",
+			issuerURI: "https://sts.windows.net/tenant-id/",
+			wantType:  &AzureTokenProvider{},
+		},
+		{
 			name:      "GitHub Actions",
 			issuerURI: "https://token.actions.githubusercontent.com",
 			wantType:  &GitHubTokenProvider{},
