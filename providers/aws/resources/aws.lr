@@ -184,6 +184,10 @@ aws.vpc @defaults("id isDefault cidrBlock region") {
   enableDnsSupport() bool
   // Whether instances launched in the VPC get public DNS hostnames
   enableDnsHostnames() bool
+  // IPv4 CIDR block associations for the VPC (primary and secondary)
+  cidrBlockAssociations() []dict
+  // IPv6 CIDR block associations for the VPC
+  ipv6CidrBlockAssociations() []dict
 }
 
 // Amazon Virtual Private Cloud (VPC) route table
@@ -1243,6 +1247,16 @@ private aws.kms.key @defaults("id region aliases metadata.Description") {
   keyManager() string
   // Key policy document in JSON format
   policy() string
+  // Describes the type of key material in the key: SYMMETRIC_DEFAULT, RSA_2048, RSA_3072, RSA_4096, ECC_NIST_P256, ECC_NIST_P384, ECC_NIST_P521, ECC_SECG_P256K1, HMAC_224, HMAC_256, HMAC_384, HMAC_512, SM2
+  keySpec() string
+  // Cryptographic operations the key supports: SIGN_VERIFY, ENCRYPT_DECRYPT, GENERATE_VERIFY_MAC, KEY_AGREEMENT
+  keyUsage() string
+  // Whether this is a multi-region key
+  multiRegion() bool
+  // Multi-region key configuration including primary and replica details
+  multiRegionConfiguration() dict
+  // Origin of the key material: AWS_KMS, EXTERNAL, AWS_CLOUDHSM, EXTERNAL_KEY_STORE
+  origin() string
 }
 
 // AWS KMS key grant
@@ -1292,6 +1306,8 @@ aws.iam {
   samlProviders() []aws.iam.samlProvider
   // List of OpenID Connect (OIDC) identity providers configured in IAM
   oidcProviders() []aws.iam.oidcProvider
+  // Account alias for the AWS account (empty string if none)
+  accountAlias() string
 }
 
 // Entry in AWS IAM credential report
@@ -1477,6 +1493,12 @@ private aws.iam.role @defaults("arn name") {
   permissionsBoundaryArn string
   // Path to the role
   path string
+  // Whether this is a service-linked role
+  isServiceLinked bool
+  // List of managed policies attached to the role
+  attachedPolicies() []aws.iam.policy
+  // List of inline policy names embedded in the role
+  inlinePolicies() []string
 }
 
 // AWS IAM group
@@ -1493,6 +1515,8 @@ private aws.iam.group @defaults("arn name") {
   usernames []string
   // List of inline policy names attached to the group
   inlinePolicies() []string
+  // List of managed policies attached to the group
+  attachedPolicies() []aws.iam.policy
   // Path to the group
   path string
 }
@@ -1897,6 +1921,8 @@ private aws.sns.topic @defaults("arn") {
   signatureVersion() string
   // KMS master key used for server-side encryption
   kmsMasterKey() aws.kms.key
+  // Access policy for the topic (parsed JSON)
+  policy() dict
 }
 
 // AWS Simple Notification Service (SNS) subscription
@@ -2597,6 +2623,8 @@ private aws.securityhub.hub @defaults("arn region") {
   subscribedAt string
   // Region where the Security Hub is enabled
   region string
+  // List of enabled security standards (CIS, PCI-DSS, AWS Foundational, etc.)
+  enabledStandards() []dict
 }
 
 // AWS Shield Advanced
@@ -3760,6 +3788,8 @@ private aws.cloudtrail.trail @defaults("name region") {
   region string
   // Whether CloudTrail Insights is enabled for the trail (detects unusual API activity)
   hasInsightSelectors bool
+  // Insight selectors configured for the trail (ApiCallRateInsight, ApiErrorRateInsight)
+  insightSelectors() []dict
   // Whether custom event selectors are configured (enables data event logging for S3/Lambda/DynamoDB)
   hasCustomEventSelectors bool
   // Whether logging is currently enabled for the trail
@@ -3827,6 +3857,12 @@ private aws.s3.bucket @defaults("name location public") {
   exists bool
   // Date and time the bucket was created
   createdAt time
+  // Lifecycle rules for the bucket
+  lifecycleRules() []aws.s3.bucket.lifecycleRule
+  // Notification configuration for the bucket (Lambda, SQS, SNS, EventBridge)
+  notificationConfiguration() dict
+  // Object ownership setting: BucketOwnerEnforced, BucketOwnerPreferred, or ObjectWriter
+  ownershipControls() string
 }
 
 // Amazon S3 bucket grant
@@ -3897,6 +3933,30 @@ private aws.s3.bucket.metricsConfiguration @defaults("id") {
   id string
   // Metrics filter configuration
   filter dict
+}
+
+// Amazon S3 bucket lifecycle rule
+private aws.s3.bucket.lifecycleRule @defaults("resourceId id status") {
+  // Unique resource identifier (bucket ARN + rule ID)
+  resourceId string
+  // Rule identifier
+  id string
+  // Status of the rule: Enabled or Disabled
+  status string
+  // Prefix filter for the rule (deprecated, use filter instead)
+  prefix string
+  // Filter for the rule (prefix, tags, object size)
+  filter dict
+  // Transitions to different storage classes
+  transitions []dict
+  // Expiration settings
+  expiration dict
+  // Noncurrent version transitions
+  noncurrentVersionTransitions []dict
+  // Noncurrent version expiration settings
+  noncurrentVersionExpiration dict
+  // Days after which incomplete multipart uploads are aborted
+  abortIncompleteMultipartUploadDays int
 }
 
 // Amazon S3 bucket policy
@@ -4233,6 +4293,8 @@ private aws.backup.plan @defaults("name region") {
   rules() []aws.backup.plan.rule
   // Advanced backup settings for the plan
   advancedBackupSettings []aws.backup.plan.advancedBackupSetting
+  // Resource selections (which resources are backed up by this plan)
+  selections() []dict
 }
 
 // AWS Backup plan advanced backup setting
@@ -4431,6 +4493,10 @@ private aws.dynamodb.table @defaults("name region") {
   billingMode() string
   // Regions where the table is replicated (global tables)
   replicaRegions() []string
+  // Time to live (TTL) settings for the table
+  ttlDescription() dict
+  // Global secondary indexes on the table
+  globalSecondaryIndexes() []dict
 }
 
 // Amazon Simple Queue Service (SQS)
@@ -4493,6 +4559,8 @@ aws.rds {
   clusterParameterGroups() []aws.rds.clusterParameterGroup
   // List of RDS proxies
   proxies() []aws.rds.proxy
+  // List of RDS event subscriptions
+  eventSubscriptions() []aws.rds.eventSubscription
 }
 
 // Amazon RDS Backup Setting
@@ -5330,6 +5398,8 @@ aws.ecr {
   publicRepositories() []aws.ecr.repository
   // List of images
   images() []aws.ecr.image
+  // Registry replication configuration
+  replicationConfiguration() dict
 }
 
 // AWS Elastic Container Registry repository
@@ -5616,6 +5686,10 @@ private aws.lambda.function @defaults("arn") {
   provisionedConcurrencyConfigs() []aws.lambda.function.provisionedConcurrencyConfig
   // Code signing configuration (null if not configured)
   codeSigningConfig() aws.lambda.codeSigningConfig
+  // Event invoke configuration (destinations, max retry attempts, max event age)
+  eventInvokeConfig() dict
+  // Runtime management configuration (update mode and ARN)
+  runtimeManagementConfig() dict
 }
 
 // AWS Lambda function URL configuration
@@ -5865,6 +5939,10 @@ aws.ec2 {
   instances() []aws.ec2.instance
   // map[region]boolean used to denote if EBS encryption is on by default per region
   ebsEncryptionByDefault() map[string]bool
+  // Whether EC2 serial console access is enabled per region
+  serialConsoleAccessEnabled() map[string]bool
+  // AMI block public access state per region: block-new-sharing or unblocked
+  imageBlockPublicAccess() map[string]string
   // List of volumes across the AWS account
   volumes() []aws.ec2.volume
   // List of snapshots across the account
@@ -5897,6 +5975,12 @@ aws.ec2 {
   egressOnlyInternetGateways() []aws.ec2.egressOnlyInternetGateway
   // List of VPC endpoint service configurations (PrivateLink provider side)
   vpcEndpointServiceConfigurations() []aws.ec2.vpcEndpointServiceConfiguration
+  // List of placement groups
+  placementGroups() []aws.ec2.placementGroup
+  // List of capacity reservations
+  capacityReservations() []aws.ec2.capacityReservation
+  // List of EC2 Instance Connect endpoints
+  instanceConnectEndpoints() []aws.ec2.instanceConnectEndpoint
 }
 
 // Amazon Elastic IP (EIP)
@@ -6386,6 +6470,92 @@ private aws.ec2.egressOnlyInternetGateway @defaults("id region") {
   tags map[string]string
 }
 
+// Amazon EC2 placement group
+private aws.ec2.placementGroup @defaults("name strategy state") {
+  // Name of the placement group
+  name string
+  // ID of the placement group
+  id string
+  // ARN of the placement group
+  arn string
+  // Region where the placement group exists
+  region string
+  // Placement strategy: cluster, spread, or partition
+  strategy string
+  // State of the placement group: pending, available, deleting, deleted
+  state string
+  // Number of partitions (for partition strategy)
+  partitionCount int
+  // Group ID
+  groupId string
+  // Tags on the placement group
+  tags map[string]string
+}
+
+// Amazon EC2 capacity reservation
+private aws.ec2.capacityReservation @defaults("id instanceType state availabilityZone") {
+  // ID of the capacity reservation
+  id string
+  // ARN of the capacity reservation
+  arn string
+  // Region where the reservation exists
+  region string
+  // Instance type for the reservation
+  instanceType string
+  // Instance platform: Linux/UNIX, Red Hat Enterprise Linux, etc.
+  instancePlatform string
+  // Availability Zone
+  availabilityZone string
+  // Total instance count
+  totalInstanceCount int
+  // Available instance count
+  availableInstanceCount int
+  // State: active, expired, cancelled, pending, failed, scheduled, payment-pending, payment-failed
+  state string
+  // Whether the reservation matches running instances: open or targeted
+  instanceMatchCriteria string
+  // End date behavior: unlimited or limited
+  endDateType string
+  // Tenancy: default or dedicated
+  tenancy string
+  // Whether EBS-optimized instances are supported
+  ebsOptimized bool
+  // Whether instances with ephemeral storage are supported
+  ephemeralStorage bool
+  // Date the reservation was created
+  createdAt time
+  // Tags on the reservation
+  tags map[string]string
+}
+
+// Amazon EC2 Instance Connect endpoint
+private aws.ec2.instanceConnectEndpoint @defaults("id state subnetId") {
+  // ID of the Instance Connect endpoint
+  id string
+  // ARN of the Instance Connect endpoint
+  arn string
+  // Region where the endpoint exists
+  region string
+  // State: create-in-progress, create-complete, create-failed, delete-in-progress, delete-complete, delete-failed
+  state string
+  // Subnet ID the endpoint is in
+  subnetId string
+  // VPC ID the endpoint is in
+  vpcId string
+  // Security groups associated with the endpoint
+  securityGroupIds []string
+  // Whether the endpoint preserves client IP
+  preserveClientIp bool
+  // DNS name of the endpoint
+  dnsName string
+  // FIPS DNS name of the endpoint
+  fipsDnsName string
+  // Date the endpoint was created
+  createdAt time
+  // Tags on the endpoint
+  tags map[string]string
+}
+
 // Amazon EC2 VPC endpoint service configuration (PrivateLink provider side)
 private aws.ec2.vpcEndpointServiceConfiguration @defaults("id name state") {
   // Service ID
@@ -6452,6 +6622,16 @@ private aws.ec2.launchtemplate @defaults("name region") {
   tags map[string]string
   // User data from the default version (base64-decoded)
   userData() string
+  // Metadata options from the default version (httpTokens, httpEndpoint, httpPutResponseHopLimit)
+  metadataOptions() dict
+  // Security group IDs from the default version
+  securityGroupIds() []string
+  // IAM instance profile ARN or name from the default version
+  iamInstanceProfile() string
+  // Instance type from the default version
+  instanceType() string
+  // AMI image ID from the default version
+  imageId() string
 }
 
 // Amazon EC2 launch configuration (legacy, used by Auto Scaling)
@@ -7177,6 +7357,8 @@ private aws.config.rule @defaults("name id region state") {
   description string
   // Region for the Config rule
   region string
+  // Compliance status of the rule: COMPLIANT, NON_COMPLIANT, NOT_APPLICABLE, INSUFFICIENT_DATA
+  complianceStatus() string
 }
 
 // AWS Config recorder
@@ -7367,6 +7549,108 @@ aws.eks.cluster @defaults("arn version status") {
   endpointPrivateAccess() bool
   // CIDR blocks allowed to access the public Kubernetes API endpoint
   publicAccessCidrs() []string
+  // List of EKS access entries for RBAC
+  accessEntries() []aws.eks.accessEntry
+  // List of EKS Fargate profiles
+  fargateProfiles() []aws.eks.fargateProfile
+  // List of EKS pod identity associations
+  podIdentityAssociations() []aws.eks.podIdentityAssociation
+  // List of OIDC identity provider configurations
+  identityProviderConfigs() []aws.eks.identityProviderConfig
+}
+
+// AWS EKS access entry for cluster RBAC
+private aws.eks.accessEntry @defaults("principalArn type") {
+  // ARN of the access entry
+  arn() string
+  // Name of the EKS cluster
+  clusterName string
+  // ARN of the IAM principal
+  principalArn string
+  // Kubernetes groups for RBAC authorization
+  kubernetesGroups() []string
+  // Type of the access entry: STANDARD, FARGATE_LINUX, EC2_LINUX, EC2_WINDOWS
+  type() string
+  // Region where the cluster exists
+  region string
+  // Tags associated with the access entry
+  tags() map[string]string
+  // When the access entry was created
+  createdAt() time
+}
+
+// AWS EKS Fargate profile
+private aws.eks.fargateProfile @defaults("name status") {
+  // ARN of the Fargate profile
+  arn() string
+  // Name of the Fargate profile
+  name string
+  // Name of the EKS cluster
+  clusterName string
+  // ARN of the pod execution role
+  podExecutionRoleArn() string
+  // Selectors that determine which pods run on Fargate (namespace and label matchers)
+  selectors() []dict
+  // Subnet IDs for the Fargate profile
+  subnets() []string
+  // Status of the Fargate profile: CREATING, ACTIVE, DELETING, CREATE_FAILED, DELETE_FAILED
+  status() string
+  // Region where the cluster exists
+  region string
+  // Tags associated with the Fargate profile
+  tags() map[string]string
+  // When the Fargate profile was created
+  createdAt() time
+}
+
+// AWS EKS pod identity association
+private aws.eks.podIdentityAssociation @defaults("associationId namespace serviceAccount") {
+  // ARN of the association
+  associationArn string
+  // Unique ID of the association
+  associationId string
+  // Name of the EKS cluster
+  clusterName string
+  // Kubernetes namespace
+  namespace() string
+  // Kubernetes service account name
+  serviceAccount() string
+  // ARN of the IAM role to assume
+  roleArn() string
+  // Region where the cluster exists
+  region string
+  // When the association was created
+  createdAt() time
+}
+
+// AWS EKS OIDC identity provider configuration
+private aws.eks.identityProviderConfig @defaults("name type status") {
+  // Name of the identity provider configuration
+  name string
+  // Type of identity provider (always "oidc" currently)
+  type string
+  // Name of the EKS cluster
+  clusterName string
+  // Region where the cluster exists
+  region string
+  // Status of the identity provider: CREATING, ACTIVE, DELETING
+  status() string
+  // OIDC issuer URL
+  issuerUrl() string
+  // Client ID for the OIDC provider
+  clientId() string
+  // Prefix prepended to username claims
+  usernamePrefix() string
+  // Username claim in the OIDC token
+  usernameClaim() string
+  // Prefix prepended to group claims
+  groupsPrefix() string
+  // Groups claim in the OIDC token
+  groupsClaim() string
+  // Required claims that must be present in the OIDC token
+  requiredClaims() map[string]string
+  // Tags for the identity provider configuration
+  tags() map[string]string
 }
 
 // Amazon Neptune
@@ -9329,6 +9613,32 @@ private aws.rds.proxy @defaults("arn name status") {
   updatedAt time
   // Tags for the proxy
   tags() map[string]string
+}
+
+// AWS RDS event subscription
+private aws.rds.eventSubscription @defaults("arn name status") {
+  // ARN of the event subscription
+  arn string
+  // Name of the event subscription
+  name string
+  // Region of the event subscription
+  region string
+  // Status of the event subscription: creating, modifying, deleting, active, no-permission, topic-not-exist
+  status string
+  // SNS topic ARN that events are published to
+  snsTopicArn string
+  // Source type: db-instance, db-cluster, db-parameter-group, db-security-group, db-snapshot, db-cluster-snapshot, custom-availability-zone
+  sourceType string
+  // List of source IDs for the event subscription
+  sourceIds []string
+  // Whether the subscription is enabled
+  enabled bool
+  // List of event categories the subscription listens for
+  eventCategories []string
+  // Customer-assigned AWS account ID associated with the subscription
+  customerAwsId string
+  // Time the subscription was created (string format from AWS API)
+  subscriptionCreationTime string
 }
 
 // AWS Glue workflow

@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -1044,6 +1045,108 @@ func (a *mqlAwsEc2) getEbsEncryptionPerRegion(conn *connection.AwsConnection) []
 	return tasks
 }
 
+type serialConsoleResult struct {
+	region  string
+	enabled bool
+}
+
+func (a *mqlAwsEc2) serialConsoleAccessEnabled() (map[string]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := make(map[string]any)
+	poolOfJobs := jobpool.CreatePool(a.getSerialConsolePerRegion(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		if poolOfJobs.Jobs[i].Result != nil {
+			jobResult := poolOfJobs.Jobs[i].Result.(serialConsoleResult)
+			res[jobResult.region] = jobResult.enabled
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsEc2) getSerialConsolePerRegion(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			svc := conn.Ec2(region)
+			ctx := context.Background()
+
+			resp, err := svc.GetSerialConsoleAccessStatus(ctx, &ec2.GetSerialConsoleAccessStatusInput{})
+			if err != nil {
+				if Is400AccessDeniedError(err) {
+					return nil, nil
+				}
+				return nil, err
+			}
+			return jobpool.JobResult(serialConsoleResult{
+				region:  region,
+				enabled: convert.ToValue(resp.SerialConsoleAccessEnabled),
+			}), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+type imageBlockResult struct {
+	region string
+	state  string
+}
+
+func (a *mqlAwsEc2) imageBlockPublicAccess() (map[string]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := make(map[string]any)
+	poolOfJobs := jobpool.CreatePool(a.getImageBlockPerRegion(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		if poolOfJobs.Jobs[i].Result != nil {
+			jobResult := poolOfJobs.Jobs[i].Result.(imageBlockResult)
+			res[jobResult.region] = jobResult.state
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsEc2) getImageBlockPerRegion(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			svc := conn.Ec2(region)
+			ctx := context.Background()
+
+			resp, err := svc.GetImageBlockPublicAccessState(ctx, &ec2.GetImageBlockPublicAccessStateInput{})
+			if err != nil {
+				if Is400AccessDeniedError(err) {
+					return nil, nil
+				}
+				return nil, err
+			}
+			return jobpool.JobResult(imageBlockResult{
+				region: region,
+				state:  convert.ToValue(resp.ImageBlockPublicAccessState),
+			}), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
 func (a *mqlAwsEc2) instances() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	res := []any{}
@@ -1878,12 +1981,6 @@ func (a *mqlAwsEc2Instance) disableApiTermination() (bool, error) {
 
 	return false, nil
 }
-
-// # go.mondoo.com/mql/v13/providers/aws/resources
-// resources/aws.lr.go:15420:12: c.iamRole undefined (type *mqlAwsIamInstanceProfile has no field or method iamRole, but does have field IamRole)
-// make[1]: *** [providers/build/aws] Error 1
-
-// x failed to build provider error="exit status 2" provider=aws
 
 func (a *mqlAwsEc2Instance) iamInstanceProfile() (*mqlAwsIamInstanceProfile, error) {
 	if a.instanceCache.IamInstanceProfile == nil {
@@ -2817,7 +2914,9 @@ func (a *mqlAwsEc2) customerGateways() ([]any, error) {
 		return nil, poolOfJobs.GetErrors()
 	}
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+		if poolOfJobs.Jobs[i].Result != nil {
+			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+		}
 	}
 	return res, nil
 }
@@ -2890,7 +2989,9 @@ func (a *mqlAwsEc2) egressOnlyInternetGateways() ([]any, error) {
 		return nil, poolOfJobs.GetErrors()
 	}
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+		if poolOfJobs.Jobs[i].Result != nil {
+			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+		}
 	}
 	return res, nil
 }
@@ -3097,41 +3198,116 @@ func (a *mqlAwsEc2) getLaunchTemplates(conn *connection.AwsConnection) []*jobpoo
 type mqlAwsEc2LaunchtemplateInternal struct {
 	region           string
 	launchTemplateId string
+	ltDataOnce       sync.Once
+	ltData           *ec2types.ResponseLaunchTemplateData
+	ltDataErr        error
 }
 
 func (a *mqlAwsEc2Launchtemplate) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func (a *mqlAwsEc2Launchtemplate) userData() (string, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	svc := conn.Ec2(a.region)
-	ctx := context.Background()
+func (a *mqlAwsEc2Launchtemplate) fetchLaunchTemplateData() (*ec2types.ResponseLaunchTemplateData, error) {
+	a.ltDataOnce.Do(func() {
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		svc := conn.Ec2(a.region)
+		ctx := context.Background()
 
-	ltId := a.launchTemplateId
-	resp, err := svc.DescribeLaunchTemplateVersions(ctx, &ec2.DescribeLaunchTemplateVersionsInput{
-		LaunchTemplateId: &ltId,
-		Versions:         []string{"$Default"},
-	})
-	if err != nil {
-		if Is400AccessDeniedError(err) {
-			return "", nil
+		ltId := a.launchTemplateId
+		resp, err := svc.DescribeLaunchTemplateVersions(ctx, &ec2.DescribeLaunchTemplateVersionsInput{
+			LaunchTemplateId: &ltId,
+			Versions:         []string{"$Default"},
+		})
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return
+			}
+			a.ltDataErr = err
+			return
 		}
+		if len(resp.LaunchTemplateVersions) > 0 {
+			a.ltData = resp.LaunchTemplateVersions[0].LaunchTemplateData
+		}
+	})
+	return a.ltData, a.ltDataErr
+}
+
+func (a *mqlAwsEc2Launchtemplate) userData() (string, error) {
+	data, err := a.fetchLaunchTemplateData()
+	if err != nil {
 		return "", err
 	}
-
-	if len(resp.LaunchTemplateVersions) == 0 || resp.LaunchTemplateVersions[0].LaunchTemplateData == nil {
+	if data == nil || data.UserData == nil || *data.UserData == "" {
 		return "", nil
 	}
-
-	ud := resp.LaunchTemplateVersions[0].LaunchTemplateData.UserData
-	if ud == nil || *ud == "" {
-		return "", nil
-	}
-
-	decoded, err := base64.StdEncoding.DecodeString(*ud)
+	decoded, err := base64.StdEncoding.DecodeString(*data.UserData)
 	if err != nil {
 		return "", err
 	}
 	return string(decoded), nil
+}
+
+func (a *mqlAwsEc2Launchtemplate) metadataOptions() (any, error) {
+	data, err := a.fetchLaunchTemplateData()
+	if err != nil {
+		return nil, err
+	}
+	if data == nil || data.MetadataOptions == nil {
+		return nil, nil
+	}
+	return convert.JsonToDict(data.MetadataOptions)
+}
+
+func (a *mqlAwsEc2Launchtemplate) securityGroupIds() ([]any, error) {
+	data, err := a.fetchLaunchTemplateData()
+	if err != nil {
+		return nil, err
+	}
+	if data == nil {
+		return []any{}, nil
+	}
+	res := make([]any, 0, len(data.SecurityGroupIds))
+	for _, sg := range data.SecurityGroupIds {
+		res = append(res, sg)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsEc2Launchtemplate) iamInstanceProfile() (string, error) {
+	data, err := a.fetchLaunchTemplateData()
+	if err != nil {
+		return "", err
+	}
+	if data == nil || data.IamInstanceProfile == nil {
+		return "", nil
+	}
+	if data.IamInstanceProfile.Arn != nil {
+		return *data.IamInstanceProfile.Arn, nil
+	}
+	if data.IamInstanceProfile.Name != nil {
+		return *data.IamInstanceProfile.Name, nil
+	}
+	return "", nil
+}
+
+func (a *mqlAwsEc2Launchtemplate) instanceType() (string, error) {
+	data, err := a.fetchLaunchTemplateData()
+	if err != nil {
+		return "", err
+	}
+	if data == nil {
+		return "", nil
+	}
+	return string(data.InstanceType), nil
+}
+
+func (a *mqlAwsEc2Launchtemplate) imageId() (string, error) {
+	data, err := a.fetchLaunchTemplateData()
+	if err != nil {
+		return "", err
+	}
+	if data == nil || data.ImageId == nil {
+		return "", nil
+	}
+	return *data.ImageId, nil
 }

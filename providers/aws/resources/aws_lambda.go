@@ -414,6 +414,9 @@ func (a *mqlAwsLambdaFunction) concurrency() (int64, error) {
 	// no pagination required
 	functionConcurrency, err := svc.GetFunctionConcurrency(ctx, &lambda.GetFunctionConcurrencyInput{FunctionName: &funcName})
 	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return 0, nil
+		}
 		return 0, errors.Wrap(err, "could not gather aws lambda function concurrency")
 	}
 	if functionConcurrency.ReservedConcurrentExecutions == nil {
@@ -940,6 +943,79 @@ func (a *mqlAwsLambdaFunction) codeSigningConfig() (*mqlAwsLambdaCodeSigningConf
 
 func (a *mqlAwsLambdaCodeSigningConfig) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsLambdaFunction) eventInvokeConfig() (any, error) {
+	funcName := a.Name.Data
+	region := a.Region.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Lambda(region)
+	ctx := context.Background()
+
+	resp, err := svc.GetFunctionEventInvokeConfig(ctx, &lambda.GetFunctionEventInvokeConfigInput{
+		FunctionName: &funcName,
+	})
+	if err != nil {
+		var respErr *http.ResponseError
+		if errors.As(err, &respErr) && respErr.HTTPStatusCode() == 404 {
+			return map[string]any{}, nil
+		}
+		if Is400AccessDeniedError(err) {
+			return map[string]any{}, nil
+		}
+		return nil, err
+	}
+
+	result := map[string]any{}
+	if resp.MaximumRetryAttempts != nil {
+		result["maximumRetryAttempts"] = *resp.MaximumRetryAttempts
+	}
+	if resp.MaximumEventAgeInSeconds != nil {
+		result["maximumEventAgeInSeconds"] = *resp.MaximumEventAgeInSeconds
+	}
+	if resp.DestinationConfig != nil {
+		destConfig := map[string]any{}
+		if resp.DestinationConfig.OnSuccess != nil {
+			destConfig["onSuccess"] = convert.ToValue(resp.DestinationConfig.OnSuccess.Destination)
+		}
+		if resp.DestinationConfig.OnFailure != nil {
+			destConfig["onFailure"] = convert.ToValue(resp.DestinationConfig.OnFailure.Destination)
+		}
+		result["destinationConfig"] = destConfig
+	}
+	return result, nil
+}
+
+func (a *mqlAwsLambdaFunction) runtimeManagementConfig() (any, error) {
+	funcName := a.Name.Data
+	region := a.Region.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Lambda(region)
+	ctx := context.Background()
+
+	resp, err := svc.GetRuntimeManagementConfig(ctx, &lambda.GetRuntimeManagementConfigInput{
+		FunctionName: &funcName,
+	})
+	if err != nil {
+		var respErr *http.ResponseError
+		if errors.As(err, &respErr) && respErr.HTTPStatusCode() == 404 {
+			return map[string]any{}, nil
+		}
+		if Is400AccessDeniedError(err) {
+			return map[string]any{}, nil
+		}
+		return nil, err
+	}
+
+	result := map[string]any{
+		"updateRuntimeOn": string(resp.UpdateRuntimeOn),
+	}
+	if resp.RuntimeVersionArn != nil {
+		result["runtimeVersionArn"] = *resp.RuntimeVersionArn
+	}
+	return result, nil
 }
 
 // ==================== Types ====================

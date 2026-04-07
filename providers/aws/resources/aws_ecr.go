@@ -55,6 +55,21 @@ func (a *mqlAwsEcr) id() (string, error) {
 	return "aws.ecr", nil
 }
 
+func (a *mqlAwsEcr) replicationConfiguration() (any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Ecr("")
+	ctx := context.Background()
+
+	resp, err := svc.DescribeRegistry(ctx, &ecr.DescribeRegistryInput{})
+	if err != nil {
+		return nil, err
+	}
+	if resp.ReplicationConfiguration == nil {
+		return nil, nil
+	}
+	return convert.JsonToDict(resp.ReplicationConfiguration)
+}
+
 func (a *mqlAwsEcrRepository) id() (string, error) {
 	return a.Arn.Data, nil
 }

@@ -72,6 +72,10 @@ func (a *mqlAwsKms) getKeys(conn *connection.AwsConnection) []*jobpool.Job {
 			for paginator.HasMorePages() {
 				output, err := paginator.NextPage(context.TODO())
 				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
 					return nil, err
 				}
 				keys = append(keys, output.Keys...)
@@ -114,6 +118,9 @@ func (a *mqlAwsKmsKey) keyRotationEnabled() (bool, error) {
 
 	key, err := svc.GetKeyRotationStatus(ctx, &kms.GetKeyRotationStatusInput{KeyId: &keyId})
 	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return false, nil
+		}
 		return false, err
 	}
 	return key.KeyRotationEnabled, nil
@@ -157,7 +164,7 @@ func (a *mqlAwsKmsKey) aliases() ([]any, error) {
 			return nil, err
 		}
 		for _, alias := range page.Aliases {
-			aliases = append(aliases, *alias.AliasName)
+			aliases = append(aliases, convert.ToValue(alias.AliasName))
 		}
 	}
 
@@ -239,6 +246,49 @@ func (a *mqlAwsKmsKey) keyManager() (string, error) {
 		return "", err
 	}
 	return string(md.KeyManager), nil
+}
+
+func (a *mqlAwsKmsKey) keySpec() (string, error) {
+	md, err := a.getKeyMetadata()
+	if err != nil {
+		return "", err
+	}
+	return string(md.KeySpec), nil
+}
+
+func (a *mqlAwsKmsKey) keyUsage() (string, error) {
+	md, err := a.getKeyMetadata()
+	if err != nil {
+		return "", err
+	}
+	return string(md.KeyUsage), nil
+}
+
+func (a *mqlAwsKmsKey) multiRegion() (bool, error) {
+	md, err := a.getKeyMetadata()
+	if err != nil {
+		return false, err
+	}
+	return convert.ToValue(md.MultiRegion), nil
+}
+
+func (a *mqlAwsKmsKey) multiRegionConfiguration() (any, error) {
+	md, err := a.getKeyMetadata()
+	if err != nil {
+		return nil, err
+	}
+	if md.MultiRegionConfiguration == nil {
+		return nil, nil
+	}
+	return convert.JsonToDict(md.MultiRegionConfiguration)
+}
+
+func (a *mqlAwsKmsKey) origin() (string, error) {
+	md, err := a.getKeyMetadata()
+	if err != nil {
+		return "", err
+	}
+	return string(md.Origin), nil
 }
 
 func (a *mqlAwsKmsKey) policy() (string, error) {

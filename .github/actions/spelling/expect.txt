@@ -91,6 +91,7 @@ fargate
 filestore
 filesz
 filevault
+fips
 firefox
 firestore
 FLEXGROUP

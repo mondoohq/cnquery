@@ -66,6 +66,86 @@ func (a *mqlAwsRds) clusterParameterGroups() ([]any, error) {
 	return res, nil
 }
 
+func (a *mqlAwsRds) eventSubscriptions() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getEventSubscriptions(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsRds) getEventSubscriptions(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("rds>getEventSubscriptions>calling aws with region %s", region)
+			res := []any{}
+			svc := conn.Rds(region)
+			ctx := context.Background()
+
+			paginator := rds.NewDescribeEventSubscriptionsPaginator(svc, &rds.DescribeEventSubscriptionsInput{})
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, sub := range page.EventSubscriptionsList {
+					sourceIds := make([]any, 0, len(sub.SourceIdsList))
+					for _, id := range sub.SourceIdsList {
+						sourceIds = append(sourceIds, id)
+					}
+					eventCategories := make([]any, 0, len(sub.EventCategoriesList))
+					for _, cat := range sub.EventCategoriesList {
+						eventCategories = append(eventCategories, cat)
+					}
+
+					mqlSub, err := CreateResource(a.MqlRuntime, "aws.rds.eventSubscription",
+						map[string]*llx.RawData{
+							"__id":                     llx.StringDataPtr(sub.EventSubscriptionArn),
+							"arn":                      llx.StringDataPtr(sub.EventSubscriptionArn),
+							"name":                     llx.StringDataPtr(sub.CustSubscriptionId),
+							"region":                   llx.StringData(region),
+							"status":                   llx.StringDataPtr(sub.Status),
+							"snsTopicArn":              llx.StringDataPtr(sub.SnsTopicArn),
+							"sourceType":               llx.StringDataPtr(sub.SourceType),
+							"sourceIds":                llx.ArrayData(sourceIds, types.String),
+							"enabled":                  llx.BoolData(convert.ToValue(sub.Enabled)),
+							"eventCategories":          llx.ArrayData(eventCategories, types.String),
+							"customerAwsId":            llx.StringDataPtr(sub.CustomerAwsId),
+							"subscriptionCreationTime": llx.StringDataPtr(sub.SubscriptionCreationTime),
+						})
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlSub)
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (a *mqlAwsRdsEventSubscription) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
 func (a *mqlAwsRds) parameterGroups() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	res := []any{}
@@ -570,14 +650,13 @@ func (a *mqlAwsRdsDbinstance) subnets() ([]any, error) {
 			subnet := a.cacheSubnets.Subnets[i]
 			sub, err := NewResource(a.MqlRuntime, ResourceAwsVpcSubnet, map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(subnetArnPattern, a.region, conn.AccountId(), convert.ToValue(subnet.SubnetIdentifier)))})
 			if err != nil {
-				a.Subnets.State = plugin.StateIsNull | plugin.StateIsSet
 				return nil, err
 			}
 			res = append(res, sub)
 		}
 		return res, nil
 	}
-	return nil, errors.New("no subnets found for RDS DB instance")
+	return nil, nil
 }
 
 func (a *mqlAwsRdsDbinstance) kmsKey() (*mqlAwsKmsKey, error) {
@@ -1368,6 +1447,9 @@ func (a *mqlAwsRdsProxy) tags() (map[string]any, error) {
 		ResourceName: &arn,
 	})
 	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return rdsTagsToMap(resp.TagList), nil

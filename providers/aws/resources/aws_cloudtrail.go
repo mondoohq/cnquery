@@ -283,3 +283,26 @@ func (a *mqlAwsCloudtrailTrail) eventSelectors() ([]any, error) {
 
 	return allSelectors, nil
 }
+
+func (a *mqlAwsCloudtrailTrail) insightSelectors() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Cloudtrail(a.Region.Data)
+	ctx := context.Background()
+
+	arnValue := a.Arn.Data
+	resp, err := svc.GetInsightSelectors(ctx, &cloudtrail.GetInsightSelectorsInput{
+		TrailName: &arnValue,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return []any{}, nil
+		}
+		var insightErr *types.InsightNotEnabledException
+		if errors.As(err, &insightErr) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+
+	return convert.JsonToDictSlice(resp.InsightSelectors)
+}

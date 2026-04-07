@@ -112,7 +112,7 @@ func (a *mqlAwsDynamodb) getExports(conn *connection.AwsConnection) []*jobpool.J
 					if err != nil {
 						return nil, err
 					}
-					mqlExport.(*mqlAwsDynamodbExport).arn = *exp.ExportArn
+					mqlExport.(*mqlAwsDynamodbExport).arn = convert.ToValue(exp.ExportArn)
 					mqlExport.(*mqlAwsDynamodbExport).region = region
 					res = append(res, mqlExport)
 				}
@@ -188,6 +188,10 @@ func (a *mqlAwsDynamodbExport) s3Bucket() (*mqlAwsS3Bucket, error) {
 	if err != nil {
 		return nil, err
 	}
+	if exp.S3Bucket == nil || *exp.S3Bucket == "" {
+		a.S3Bucket.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
 	mqlS3Bucket, err := NewResource(a.MqlRuntime, "aws.s3.bucket",
 		map[string]*llx.RawData{
 			"name": llx.StringDataPtr(exp.S3Bucket),
@@ -222,6 +226,10 @@ func (a *mqlAwsDynamodbExport) table() (*mqlAwsDynamodbTable, error) {
 	exp, err := a.fetchExport()
 	if err != nil {
 		return nil, err
+	}
+	if exp.TableArn == nil || *exp.TableArn == "" {
+		a.Table.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
 	}
 	mqltable, err := NewResource(a.MqlRuntime, "aws.dynamodb.table",
 		map[string]*llx.RawData{
@@ -617,6 +625,13 @@ func (a *mqlAwsDynamodbTable) fetchDetail() error {
 	a.BillingMode = plugin.TValue[string]{Data: billingModeFromSummary(table.Table.BillingModeSummary), State: plugin.StateIsSet}
 	a.ReplicaRegions = plugin.TValue[[]any]{Data: replicaRegionsFromDescriptions(table.Table.Replicas), State: plugin.StateIsSet}
 
+	gsiList := []any{}
+	for _, gsi := range table.Table.GlobalSecondaryIndexes {
+		d, _ := convert.JsonToDict(gsi)
+		gsiList = append(gsiList, d)
+	}
+	a.GlobalSecondaryIndexes = plugin.TValue[[]any]{Data: gsiList, State: plugin.StateIsSet}
+
 	a.fetched = true
 	return nil
 }
@@ -683,6 +698,27 @@ func (a *mqlAwsDynamodbTable) billingMode() (string, error) {
 
 func (a *mqlAwsDynamodbTable) replicaRegions() ([]any, error) {
 	return nil, a.fetchDetail()
+}
+
+func (a *mqlAwsDynamodbTable) globalSecondaryIndexes() ([]any, error) {
+	return nil, a.fetchDetail()
+}
+
+func (a *mqlAwsDynamodbTable) ttlDescription() (any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := a.Region.Data
+	tableName := a.Name.Data
+	svc := conn.Dynamodb(region)
+	ctx := context.Background()
+
+	resp, err := svc.DescribeTimeToLive(ctx, &dynamodb.DescribeTimeToLiveInput{TableName: &tableName})
+	if err != nil {
+		return nil, err
+	}
+	if resp.TimeToLiveDescription == nil {
+		return nil, nil
+	}
+	return convert.JsonToDict(resp.TimeToLiveDescription)
 }
 
 func tableClassFromSummary(s *ddtypes.TableClassSummary) string {

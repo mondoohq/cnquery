@@ -264,6 +264,44 @@ func (a *mqlAwsBackupPlan) rules() ([]any, error) {
 	return res, nil
 }
 
+func (a *mqlAwsBackupPlan) selections() ([]any, error) {
+	planId := a.Id.Data
+	planArn := a.Arn.Data
+
+	region, err := GetRegionFromArn(planArn)
+	if err != nil {
+		return nil, err
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Backup(region)
+	ctx := context.Background()
+
+	res := []any{}
+	var nextToken *string
+	for {
+		resp, err := svc.ListBackupSelections(ctx, &backup.ListBackupSelectionsInput{
+			BackupPlanId: &planId,
+			NextToken:    nextToken,
+		})
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return nil, nil
+			}
+			return nil, err
+		}
+		for _, sel := range resp.BackupSelectionsList {
+			d, _ := convert.JsonToDict(sel)
+			res = append(res, d)
+		}
+		if resp.NextToken == nil {
+			break
+		}
+		nextToken = resp.NextToken
+	}
+	return res, nil
+}
+
 func newMqlBackupPlanRule(runtime *plugin.Runtime, planArn string, rule backuptypes.BackupRule) (*mqlAwsBackupPlanRule, error) {
 	ruleId := convert.ToValue(rule.RuleId)
 	uniqueId := planArn + "\x00" + ruleId

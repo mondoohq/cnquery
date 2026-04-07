@@ -177,6 +177,22 @@ func (a *mqlAwsSnsTopic) kmsMasterKey() (*mqlAwsKmsKey, error) {
 	return nil, nil
 }
 
+func (a *mqlAwsSnsTopic) policy() (any, error) {
+	atts, err := a.fetchTopicAttributes()
+	if err != nil {
+		return nil, err
+	}
+	val, ok := atts["Policy"]
+	if !ok || val == "" {
+		return nil, nil
+	}
+	var result map[string]any
+	if err := json.Unmarshal([]byte(val), &result); err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(result)
+}
+
 func (a *mqlAwsSnsTopic) tags() (map[string]any, error) {
 	arn := a.Arn.Data
 	region := a.Region.Data

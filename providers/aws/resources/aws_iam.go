@@ -32,6 +32,22 @@ func (a *mqlAwsIam) id() (string, error) {
 	return ResourceAwsIam, nil
 }
 
+func (a *mqlAwsIam) accountAlias() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Iam("")
+	ctx := context.Background()
+
+	resp, err := svc.ListAccountAliases(ctx, &iam.ListAccountAliasesInput{})
+	if err != nil {
+		return "", err
+	}
+	if len(resp.AccountAliases) > 0 {
+		return resp.AccountAliases[0], nil
+	}
+	return "", nil
+}
+
 func (a *mqlAwsIam) serverCertificates() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
@@ -519,6 +535,7 @@ func (a *mqlAwsIam) roles() ([]any, error) {
 					"maxSessionDuration":       llx.IntDataDefault(role.MaxSessionDuration, 3600),
 					"permissionsBoundaryArn":   llx.StringData(permBoundaryArn),
 					"path":                     llx.StringDataPtr(role.Path),
+					"isServiceLinked":          llx.BoolData(strings.HasPrefix(convert.ToValue(role.Path), "/aws-service-role/")),
 				})
 			if err != nil {
 				return nil, err
@@ -1343,6 +1360,65 @@ func (a *mqlAwsIamRole) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+func (a *mqlAwsIamRole) attachedPolicies() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Iam("")
+	ctx := context.Background()
+
+	rolename := a.Name.Data
+
+	res := []any{}
+	params := &iam.ListAttachedRolePoliciesInput{
+		RoleName: &rolename,
+	}
+	paginator := iam.NewListAttachedRolePoliciesPaginator(svc, params)
+	for paginator.HasMorePages() {
+		roleAttachedPolicies, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, attachedPolicy := range roleAttachedPolicies.AttachedPolicies {
+			mqlAwsIamPolicy, err := CreateResource(a.MqlRuntime, ResourceAwsIamPolicy,
+				map[string]*llx.RawData{"arn": llx.StringDataPtr(attachedPolicy.PolicyArn), "id": llx.StringDataPtr(attachedPolicy.PolicyArn)})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAwsIamPolicy)
+		}
+	}
+
+	return res, nil
+}
+
+func (a *mqlAwsIamRole) inlinePolicies() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Iam("")
+	ctx := context.Background()
+
+	rolename := a.Name.Data
+
+	res := []any{}
+	params := &iam.ListRolePoliciesInput{
+		RoleName: &rolename,
+	}
+	paginator := iam.NewListRolePoliciesPaginator(svc, params)
+	for paginator.HasMorePages() {
+		rolePolicies, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for i := range rolePolicies.PolicyNames {
+			res = append(res, rolePolicies.PolicyNames[i])
+		}
+	}
+
+	return res, nil
+}
+
 func initAwsIamGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
@@ -1390,6 +1466,38 @@ func initAwsIamGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 
 func (a *mqlAwsIamGroup) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsIamGroup) attachedPolicies() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Iam("")
+	ctx := context.Background()
+
+	groupname := a.Name.Data
+
+	res := []any{}
+	params := &iam.ListAttachedGroupPoliciesInput{
+		GroupName: &groupname,
+	}
+	paginator := iam.NewListAttachedGroupPoliciesPaginator(svc, params)
+	for paginator.HasMorePages() {
+		groupAttachedPolicies, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, attachedPolicy := range groupAttachedPolicies.AttachedPolicies {
+			mqlAwsIamPolicy, err := CreateResource(a.MqlRuntime, ResourceAwsIamPolicy,
+				map[string]*llx.RawData{"arn": llx.StringDataPtr(attachedPolicy.PolicyArn), "id": llx.StringDataPtr(attachedPolicy.PolicyArn)})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAwsIamPolicy)
+		}
+	}
+
+	return res, nil
 }
 
 func (a *mqlAwsIamGroup) inlinePolicies() ([]any, error) {
@@ -1498,7 +1606,7 @@ func initAwsIamInstanceProfile(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return args, nil, nil
 	}
 
-	if args["arn"] == nil && args["id"] == nil {
+	if args["arn"] == nil {
 		return nil, nil, errors.New("arn or id required to fetch aws iam instance profile")
 	}
 	var instanceProfileName string
@@ -1538,20 +1646,25 @@ func initAwsIamInstanceProfile(runtime *plugin.Runtime, args map[string]*llx.Raw
 			"instanceProfileName": llx.StringDataPtr(ip.InstanceProfileName),
 			"tags":                llx.MapData(iamTagsToMap(ip.Tags), types.String),
 		})
+		if err != nil {
+			return nil, nil, err
+		}
 		res.(*mqlAwsIamInstanceProfile).rolesCache = ip.Roles
 		return args, res, nil
 	}
-	return args, nil, nil
+	return nil, nil, errors.New("arn required to fetch aws iam instance profile")
 }
 
 type mqlAwsIamSamlProviderInternal struct {
 	listCreateDate *time.Time
 	listValidUntil *time.Time
 	details        *iam.GetSAMLProviderOutput
+	lock           sync.Mutex
 }
 
 type mqlAwsIamOidcProviderInternal struct {
 	details *iam.GetOpenIDConnectProviderOutput
+	lock    sync.Mutex
 }
 
 func (a *mqlAwsIam) samlProviders() ([]any, error) {
@@ -1739,6 +1852,11 @@ func (a *mqlAwsIamOidcProvider) fetchOidcProviderDetails() (*iam.GetOpenIDConnec
 	if a.details != nil {
 		return a.details, nil
 	}
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	if a.details != nil {
+		return a.details, nil
+	}
 
 	arnVal := a.Arn.Data
 	if arnVal == "" {
@@ -1763,6 +1881,11 @@ func (a *mqlAwsIamOidcProvider) fetchOidcProviderDetails() (*iam.GetOpenIDConnec
 }
 
 func (a *mqlAwsIamSamlProvider) fetchSamlProviderDetails() (*iam.GetSAMLProviderOutput, error) {
+	if a.details != nil {
+		return a.details, nil
+	}
+	a.lock.Lock()
+	defer a.lock.Unlock()
 	if a.details != nil {
 		return a.details, nil
 	}

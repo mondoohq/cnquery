@@ -35,6 +35,7 @@
     "autoscaling:DescribeLaunchConfigurations",
     "backup:GetBackupPlan",
     "backup:ListBackupPlans",
+    "backup:ListBackupSelections",
     "backup:ListBackupVaults",
     "backup:ListRecoveryPointsByBackupVault",
     "batch:DescribeComputeEnvironments",
@@ -51,6 +52,7 @@
     "cloudfront:ListTagsForResource",
     "cloudtrail:DescribeTrails",
     "cloudtrail:GetEventSelectors",
+    "cloudtrail:GetInsightSelectors",
     "cloudtrail:GetTrailStatus",
     "cloudwatch:DescribeAlarms",
     "cloudwatch:DescribeAlarmsForMetric",
@@ -71,6 +73,7 @@
     "cognito-idp:DescribeUserPool",
     "cognito-idp:GetUserPoolMfaConfig",
     "cognito-idp:ListUserPools",
+    "config:DescribeComplianceByConfigRule",
     "config:DescribeConfigRules",
     "config:DescribeConfigurationAggregators",
     "config:DescribeConfigurationRecorders",
@@ -89,12 +92,14 @@
     "dynamodb:DescribeGlobalTableSettings",
     "dynamodb:DescribeLimits",
     "dynamodb:DescribeTable",
+    "dynamodb:DescribeTimeToLive",
     "dynamodb:ListBackups",
     "dynamodb:ListExports",
     "dynamodb:ListGlobalTables",
     "dynamodb:ListTables",
     "dynamodb:ListTagsOfResource",
     "ec2:DescribeAddresses",
+    "ec2:DescribeCapacityReservations",
     "ec2:DescribeClientVpnEndpoints",
     "ec2:DescribeCustomerGateways",
     "ec2:DescribeDhcpOptions",
@@ -103,6 +108,7 @@
     "ec2:DescribeImageAttribute",
     "ec2:DescribeImages",
     "ec2:DescribeInstanceAttribute",
+    "ec2:DescribeInstanceConnectEndpoints",
     "ec2:DescribeInstanceStatus",
     "ec2:DescribeInstances",
     "ec2:DescribeInternetGateways",
@@ -113,6 +119,7 @@
     "ec2:DescribeNatGateways",
     "ec2:DescribeNetworkAcls",
     "ec2:DescribeNetworkInterfaces",
+    "ec2:DescribePlacementGroups",
     "ec2:DescribeRouteTables",
     "ec2:DescribeSecurityGroups",
     "ec2:DescribeSnapshotAttribute",
@@ -134,9 +141,12 @@
     "ec2:DescribeVpnConnections",
     "ec2:DescribeVpnGateways",
     "ec2:GetEbsEncryptionByDefault",
+    "ec2:GetImageBlockPublicAccessState",
     "ec2:GetManagedPrefixListEntries",
+    "ec2:GetSerialConsoleAccessStatus",
     "ecr:BatchGetRepositoryScanningConfiguration",
     "ecr:DescribeImages",
+    "ecr:DescribeRegistry",
     "ecr:DescribeRepositories",
     "ecr:GetLifecyclePolicy",
     "ecr:GetRepositoryPolicy",
@@ -161,12 +171,20 @@
     "efs:DescribeFileSystems",
     "efs:DescribeMountTargetSecurityGroups",
     "efs:DescribeMountTargets",
+    "eks:DescribeAccessEntry",
     "eks:DescribeAddon",
     "eks:DescribeCluster",
+    "eks:DescribeFargateProfile",
+    "eks:DescribeIdentityProviderConfig",
     "eks:DescribeNodegroup",
+    "eks:DescribePodIdentityAssociation",
+    "eks:ListAccessEntries",
     "eks:ListAddons",
     "eks:ListClusters",
+    "eks:ListFargateProfiles",
+    "eks:ListIdentityProviderConfigs",
     "eks:ListNodegroups",
+    "eks:ListPodIdentityAssociations",
     "elasticache:DescribeCacheClusters",
     "elasticache:DescribeReplicationGroups",
     "elasticache:DescribeServerlessCaches",
@@ -225,6 +243,8 @@
     "iam:GetUser",
     "iam:ListAccessKeys",
     "iam:ListAccountAliases",
+    "iam:ListAttachedGroupPolicies",
+    "iam:ListAttachedRolePolicies",
     "iam:ListAttachedUserPolicies",
     "iam:ListEntitiesForPolicy",
     "iam:ListGroupPolicies",
@@ -234,6 +254,7 @@
     "iam:ListOpenIDConnectProviders",
     "iam:ListPolicies",
     "iam:ListPolicyVersions",
+    "iam:ListRolePolicies",
     "iam:ListRoles",
     "iam:ListSAMLProviders",
     "iam:ListServerCertificates",
@@ -261,8 +282,10 @@
     "lambda:GetCodeSigningConfig",
     "lambda:GetFunctionCodeSigningConfig",
     "lambda:GetFunctionConcurrency",
+    "lambda:GetFunctionEventInvokeConfig",
     "lambda:GetFunctionUrlConfig",
     "lambda:GetPolicy",
+    "lambda:GetRuntimeManagementConfig",
     "lambda:ListAliases",
     "lambda:ListEventSourceMappings",
     "lambda:ListFunctions",
@@ -328,6 +351,7 @@
     "rds:DescribeDBProxies",
     "rds:DescribeDBSnapshotAttributes",
     "rds:DescribeDBSnapshots",
+    "rds:DescribeEventSubscriptions",
     "rds:DescribePendingMaintenanceActions",
     "rds:ListTagsForResource",
     "redshift:DescribeClusterParameters",
@@ -348,8 +372,11 @@
     "s3:GetBucketAcl",
     "s3:GetBucketCors",
     "s3:GetBucketEncryption",
+    "s3:GetBucketLifecycleConfiguration",
     "s3:GetBucketLocation",
     "s3:GetBucketLogging",
+    "s3:GetBucketNotificationConfiguration",
+    "s3:GetBucketOwnershipControls",
     "s3:GetBucketPolicy",
     "s3:GetBucketReplication",
     "s3:GetBucketTagging",
@@ -383,6 +410,7 @@
     "secretsmanager:GetResourcePolicy",
     "secretsmanager:ListSecrets",
     "securityhub:DescribeHub",
+    "securityhub:GetEnabledStandards",
     "sfn:ListActivities",
     "sfn:ListStateMachines",
     "shield:DescribeDRTAccess",
@@ -640,6 +668,12 @@
       "source_file": "aws_backups.go"
     },
     {
+      "permission": "backup:ListBackupSelections",
+      "service": "backup",
+      "action": "ListBackupSelections",
+      "source_file": "aws_backups.go"
+    },
+    {
       "permission": "backup:ListBackupVaults",
       "service": "backup",
       "action": "ListBackupVaults",
@@ -733,6 +767,12 @@
       "permission": "cloudtrail:GetEventSelectors",
       "service": "cloudtrail",
       "action": "GetEventSelectors",
+      "source_file": "aws_cloudtrail.go"
+    },
+    {
+      "permission": "cloudtrail:GetInsightSelectors",
+      "service": "cloudtrail",
+      "action": "GetInsightSelectors",
       "source_file": "aws_cloudtrail.go"
     },
     {
@@ -856,6 +896,12 @@
       "source_file": "aws_cognito.go"
     },
     {
+      "permission": "config:DescribeComplianceByConfigRule",
+      "service": "config",
+      "action": "DescribeComplianceByConfigRule",
+      "source_file": "aws_config.go"
+    },
+    {
       "permission": "config:DescribeConfigRules",
       "service": "config",
       "action": "DescribeConfigRules",
@@ -964,6 +1010,12 @@
       "source_file": "aws_dynamodb.go"
     },
     {
+      "permission": "dynamodb:DescribeTimeToLive",
+      "service": "dynamodb",
+      "action": "DescribeTimeToLive",
+      "source_file": "aws_dynamodb.go"
+    },
+    {
       "permission": "dynamodb:ListBackups",
       "service": "dynamodb",
       "action": "ListBackups",
@@ -998,6 +1050,12 @@
       "service": "ec2",
       "action": "DescribeAddresses",
       "source_file": "aws_ec2.go"
+    },
+    {
+      "permission": "ec2:DescribeCapacityReservations",
+      "service": "ec2",
+      "action": "DescribeCapacityReservations",
+      "source_file": "aws_ec2_placement.go"
     },
     {
       "permission": "ec2:DescribeClientVpnEndpoints",
@@ -1046,6 +1104,12 @@
       "service": "ec2",
       "action": "DescribeInstanceAttribute",
       "source_file": "aws_ec2.go"
+    },
+    {
+      "permission": "ec2:DescribeInstanceConnectEndpoints",
+      "service": "ec2",
+      "action": "DescribeInstanceConnectEndpoints",
+      "source_file": "aws_ec2_placement.go"
     },
     {
       "permission": "ec2:DescribeInstanceStatus",
@@ -1130,6 +1194,12 @@
       "service": "ec2",
       "action": "DescribeNetworkInterfaces",
       "source_file": "aws_workspaces.go"
+    },
+    {
+      "permission": "ec2:DescribePlacementGroups",
+      "service": "ec2",
+      "action": "DescribePlacementGroups",
+      "source_file": "aws_ec2_placement.go"
     },
     {
       "permission": "ec2:DescribeRouteTables",
@@ -1270,10 +1340,22 @@
       "source_file": "aws_ec2.go"
     },
     {
+      "permission": "ec2:GetImageBlockPublicAccessState",
+      "service": "ec2",
+      "action": "GetImageBlockPublicAccessState",
+      "source_file": "aws_ec2.go"
+    },
+    {
       "permission": "ec2:GetManagedPrefixListEntries",
       "service": "ec2",
       "action": "GetManagedPrefixListEntries",
       "source_file": "aws_ec2_prefixlist.go"
+    },
+    {
+      "permission": "ec2:GetSerialConsoleAccessStatus",
+      "service": "ec2",
+      "action": "GetSerialConsoleAccessStatus",
+      "source_file": "aws_ec2.go"
     },
     {
       "permission": "ecr:BatchGetRepositoryScanningConfiguration",
@@ -1285,6 +1367,12 @@
       "permission": "ecr:DescribeImages",
       "service": "ecr",
       "action": "DescribeImages",
+      "source_file": "aws_ecr.go"
+    },
+    {
+      "permission": "ecr:DescribeRegistry",
+      "service": "ecr",
+      "action": "DescribeRegistry",
       "source_file": "aws_ecr.go"
     },
     {
@@ -1432,6 +1520,12 @@
       "source_file": "aws_efs.go"
     },
     {
+      "permission": "eks:DescribeAccessEntry",
+      "service": "eks",
+      "action": "DescribeAccessEntry",
+      "source_file": "aws_eks.go"
+    },
+    {
       "permission": "eks:DescribeAddon",
       "service": "eks",
       "action": "DescribeAddon",
@@ -1444,9 +1538,33 @@
       "source_file": "aws_eks.go"
     },
     {
+      "permission": "eks:DescribeFargateProfile",
+      "service": "eks",
+      "action": "DescribeFargateProfile",
+      "source_file": "aws_eks.go"
+    },
+    {
+      "permission": "eks:DescribeIdentityProviderConfig",
+      "service": "eks",
+      "action": "DescribeIdentityProviderConfig",
+      "source_file": "aws_eks.go"
+    },
+    {
       "permission": "eks:DescribeNodegroup",
       "service": "eks",
       "action": "DescribeNodegroup",
+      "source_file": "aws_eks.go"
+    },
+    {
+      "permission": "eks:DescribePodIdentityAssociation",
+      "service": "eks",
+      "action": "DescribePodIdentityAssociation",
+      "source_file": "aws_eks.go"
+    },
+    {
+      "permission": "eks:ListAccessEntries",
+      "service": "eks",
+      "action": "ListAccessEntries",
       "source_file": "aws_eks.go"
     },
     {
@@ -1462,9 +1580,27 @@
       "source_file": "aws_eks.go"
     },
     {
+      "permission": "eks:ListFargateProfiles",
+      "service": "eks",
+      "action": "ListFargateProfiles",
+      "source_file": "aws_eks.go"
+    },
+    {
+      "permission": "eks:ListIdentityProviderConfigs",
+      "service": "eks",
+      "action": "ListIdentityProviderConfigs",
+      "source_file": "aws_eks.go"
+    },
+    {
       "permission": "eks:ListNodegroups",
       "service": "eks",
       "action": "ListNodegroups",
+      "source_file": "aws_eks.go"
+    },
+    {
+      "permission": "eks:ListPodIdentityAssociations",
+      "service": "eks",
+      "action": "ListPodIdentityAssociations",
       "source_file": "aws_eks.go"
     },
     {
@@ -1822,6 +1958,24 @@
       "source_file": "aws_account.go"
     },
     {
+      "permission": "iam:ListAccountAliases",
+      "service": "iam",
+      "action": "ListAccountAliases",
+      "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:ListAttachedGroupPolicies",
+      "service": "iam",
+      "action": "ListAttachedGroupPolicies",
+      "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:ListAttachedRolePolicies",
+      "service": "iam",
+      "action": "ListAttachedRolePolicies",
+      "source_file": "aws_iam.go"
+    },
+    {
       "permission": "iam:ListAttachedUserPolicies",
       "service": "iam",
       "action": "ListAttachedUserPolicies",
@@ -1873,6 +2027,12 @@
       "permission": "iam:ListPolicyVersions",
       "service": "iam",
       "action": "ListPolicyVersions",
+      "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:ListRolePolicies",
+      "service": "iam",
+      "action": "ListRolePolicies",
       "source_file": "aws_iam.go"
     },
     {
@@ -2044,6 +2204,12 @@
       "source_file": "aws_lambda.go"
     },
     {
+      "permission": "lambda:GetFunctionEventInvokeConfig",
+      "service": "lambda",
+      "action": "GetFunctionEventInvokeConfig",
+      "source_file": "aws_lambda.go"
+    },
+    {
       "permission": "lambda:GetFunctionUrlConfig",
       "service": "lambda",
       "action": "GetFunctionUrlConfig",
@@ -2053,6 +2219,12 @@
       "permission": "lambda:GetPolicy",
       "service": "lambda",
       "action": "GetPolicy",
+      "source_file": "aws_lambda.go"
+    },
+    {
+      "permission": "lambda:GetRuntimeManagementConfig",
+      "service": "lambda",
+      "action": "GetRuntimeManagementConfig",
       "source_file": "aws_lambda.go"
     },
     {
@@ -2482,6 +2654,12 @@
       "source_file": "aws_rds.go"
     },
     {
+      "permission": "rds:DescribeEventSubscriptions",
+      "service": "rds",
+      "action": "DescribeEventSubscriptions",
+      "source_file": "aws_rds.go"
+    },
+    {
       "permission": "rds:DescribePendingMaintenanceActions",
       "service": "rds",
       "action": "DescribePendingMaintenanceActions",
@@ -2608,6 +2786,12 @@
       "source_file": "aws_s3.go"
     },
     {
+      "permission": "s3:GetBucketLifecycleConfiguration",
+      "service": "s3",
+      "action": "GetBucketLifecycleConfiguration",
+      "source_file": "aws_s3.go"
+    },
+    {
       "permission": "s3:GetBucketLocation",
       "service": "s3",
       "action": "GetBucketLocation",
@@ -2617,6 +2801,18 @@
       "permission": "s3:GetBucketLogging",
       "service": "s3",
       "action": "GetBucketLogging",
+      "source_file": "aws_s3.go"
+    },
+    {
+      "permission": "s3:GetBucketNotificationConfiguration",
+      "service": "s3",
+      "action": "GetBucketNotificationConfiguration",
+      "source_file": "aws_s3.go"
+    },
+    {
+      "permission": "s3:GetBucketOwnershipControls",
+      "service": "s3",
+      "action": "GetBucketOwnershipControls",
       "source_file": "aws_s3.go"
     },
     {
@@ -2815,6 +3011,12 @@
       "permission": "securityhub:DescribeHub",
       "service": "securityhub",
       "action": "DescribeHub",
+      "source_file": "aws_securityhub.go"
+    },
+    {
+      "permission": "securityhub:GetEnabledStandards",
+      "service": "securityhub",
+      "action": "GetEnabledStandards",
       "source_file": "aws_securityhub.go"
     },
     {

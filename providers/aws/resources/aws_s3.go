@@ -649,6 +649,9 @@ type mqlAwsS3BucketInternal struct {
 	objectLockOnce     sync.Once
 	objectLockConfig   *s3types.ObjectLockConfiguration
 	objectLockErr      error
+	lifecycleOnce      sync.Once
+	lifecycleRulesData []s3types.LifecycleRule
+	lifecycleErr       error
 }
 
 func (a *mqlAwsS3Bucket) fetchReplicationConfig() (*s3types.ReplicationConfiguration, error) {
@@ -1086,6 +1089,191 @@ func (a *mqlAwsS3BucketPolicy) statements() ([]any, error) {
 		return nil, err
 	}
 	return convert.JsonToDictSlice(policy.Statements)
+}
+
+func (a *mqlAwsS3Bucket) fetchLifecycleConfig() ([]s3types.LifecycleRule, error) {
+	a.lifecycleOnce.Do(func() {
+		bucketname := a.Name.Data
+		region := a.Location.Data
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		svc := conn.S3(region)
+		ctx := context.Background()
+
+		resp, err := svc.GetBucketLifecycleConfiguration(ctx, &s3.GetBucketLifecycleConfigurationInput{
+			Bucket: &bucketname,
+		})
+		if err != nil {
+			if isNotFoundForS3(err) {
+				return
+			}
+			a.lifecycleErr = err
+			return
+		}
+		a.lifecycleRulesData = resp.Rules
+	})
+	return a.lifecycleRulesData, a.lifecycleErr
+}
+
+func (a *mqlAwsS3Bucket) lifecycleRules() ([]any, error) {
+	bucketArn := a.Arn.Data
+
+	rules, err := a.fetchLifecycleConfig()
+	if err != nil {
+		return nil, err
+	}
+	if rules == nil {
+		return []any{}, nil
+	}
+
+	res := []any{}
+	for i, rule := range rules {
+		ruleId := ""
+		if rule.ID != nil {
+			ruleId = *rule.ID
+		}
+
+		resourceId := fmt.Sprintf("%s/lifecycle/%d", bucketArn, i)
+		if ruleId != "" {
+			resourceId = fmt.Sprintf("%s/lifecycle/%s", bucketArn, ruleId)
+		}
+
+		prefix := ""
+		if rule.Prefix != nil {
+			prefix = *rule.Prefix
+		}
+
+		filterDict, err := convert.JsonToDict(rule.Filter)
+		if err != nil {
+			return nil, err
+		}
+		expirationDict, err := convert.JsonToDict(rule.Expiration)
+		if err != nil {
+			return nil, err
+		}
+		noncurrentExpDict, err := convert.JsonToDict(rule.NoncurrentVersionExpiration)
+		if err != nil {
+			return nil, err
+		}
+
+		transitions := []any{}
+		for _, t := range rule.Transitions {
+			td, err := convert.JsonToDict(t)
+			if err != nil {
+				return nil, err
+			}
+			transitions = append(transitions, td)
+		}
+
+		noncurrentTransitions := []any{}
+		for _, t := range rule.NoncurrentVersionTransitions {
+			td, err := convert.JsonToDict(t)
+			if err != nil {
+				return nil, err
+			}
+			noncurrentTransitions = append(noncurrentTransitions, td)
+		}
+
+		abortDays := int64(0)
+		if rule.AbortIncompleteMultipartUpload != nil && rule.AbortIncompleteMultipartUpload.DaysAfterInitiation != nil {
+			abortDays = int64(*rule.AbortIncompleteMultipartUpload.DaysAfterInitiation)
+		}
+
+		mqlRule, err := CreateResource(a.MqlRuntime, "aws.s3.bucket.lifecycleRule",
+			map[string]*llx.RawData{
+				"resourceId":                         llx.StringData(resourceId),
+				"id":                                 llx.StringData(ruleId),
+				"status":                             llx.StringData(string(rule.Status)),
+				"prefix":                             llx.StringData(prefix),
+				"filter":                             llx.DictData(filterDict),
+				"transitions":                        llx.ArrayData(transitions, types.Dict),
+				"expiration":                         llx.DictData(expirationDict),
+				"noncurrentVersionTransitions":       llx.ArrayData(noncurrentTransitions, types.Dict),
+				"noncurrentVersionExpiration":        llx.DictData(noncurrentExpDict),
+				"abortIncompleteMultipartUploadDays": llx.IntData(abortDays),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlRule)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsS3BucketLifecycleRule) id() (string, error) {
+	return a.ResourceId.Data, nil
+}
+
+func (a *mqlAwsS3Bucket) notificationConfiguration() (any, error) {
+	bucketname := a.Name.Data
+	region := a.Location.Data
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.S3(region)
+	ctx := context.Background()
+
+	resp, err := svc.GetBucketNotificationConfiguration(ctx, &s3.GetBucketNotificationConfigurationInput{
+		Bucket: &bucketname,
+	})
+	if err != nil {
+		if isNotFoundForS3(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	result := map[string]any{}
+	if len(resp.LambdaFunctionConfigurations) > 0 {
+		lambdas := []any{}
+		for _, lc := range resp.LambdaFunctionConfigurations {
+			d, _ := convert.JsonToDict(lc)
+			lambdas = append(lambdas, d)
+		}
+		result["lambdaFunctionConfigurations"] = lambdas
+	}
+	if len(resp.QueueConfigurations) > 0 {
+		queues := []any{}
+		for _, qc := range resp.QueueConfigurations {
+			d, _ := convert.JsonToDict(qc)
+			queues = append(queues, d)
+		}
+		result["queueConfigurations"] = queues
+	}
+	if len(resp.TopicConfigurations) > 0 {
+		topics := []any{}
+		for _, tc := range resp.TopicConfigurations {
+			d, _ := convert.JsonToDict(tc)
+			topics = append(topics, d)
+		}
+		result["topicConfigurations"] = topics
+	}
+	if resp.EventBridgeConfiguration != nil {
+		result["eventBridgeEnabled"] = true
+	}
+
+	return result, nil
+}
+
+func (a *mqlAwsS3Bucket) ownershipControls() (string, error) {
+	bucketname := a.Name.Data
+	region := a.Location.Data
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.S3(region)
+	ctx := context.Background()
+
+	resp, err := svc.GetBucketOwnershipControls(ctx, &s3.GetBucketOwnershipControlsInput{
+		Bucket: &bucketname,
+	})
+	if err != nil {
+		if isNotFoundForS3(err) {
+			return "", nil
+		}
+		return "", err
+	}
+	if resp.OwnershipControls != nil && len(resp.OwnershipControls.Rules) > 0 {
+		return string(resp.OwnershipControls.Rules[0].ObjectOwnership), nil
+	}
+	return "", nil
 }
 
 func isNotFoundForS3(err error) bool {

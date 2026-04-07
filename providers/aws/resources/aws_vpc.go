@@ -101,6 +101,9 @@ func (a *mqlAws) getVpcs(conn *connection.AwsConnection) []*jobpool.Job {
 					if vpc.BlockPublicAccessStates != nil {
 						mqlVpc.(*mqlAwsVpc).InternetGatewayBlockMode = plugin.TValue[string]{Data: string(vpc.BlockPublicAccessStates.InternetGatewayBlockMode), State: plugin.StateIsSet}
 					}
+					mqlVpcRes := mqlVpc.(*mqlAwsVpc)
+					mqlVpcRes.cacheCidrBlockAssociations = vpc.CidrBlockAssociationSet
+					mqlVpcRes.cacheIpv6CidrBlockAssociations = vpc.Ipv6CidrBlockAssociationSet
 					res = append(res, mqlVpc)
 				}
 			}
@@ -109,6 +112,29 @@ func (a *mqlAws) getVpcs(conn *connection.AwsConnection) []*jobpool.Job {
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+type mqlAwsVpcInternal struct {
+	cacheCidrBlockAssociations     []vpctypes.VpcCidrBlockAssociation
+	cacheIpv6CidrBlockAssociations []vpctypes.VpcIpv6CidrBlockAssociation
+}
+
+func (a *mqlAwsVpc) cidrBlockAssociations() ([]any, error) {
+	res := []any{}
+	for _, assoc := range a.cacheCidrBlockAssociations {
+		d, _ := convert.JsonToDict(assoc)
+		res = append(res, d)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsVpc) ipv6CidrBlockAssociations() ([]any, error) {
+	res := []any{}
+	for _, assoc := range a.cacheIpv6CidrBlockAssociations {
+		d, _ := convert.JsonToDict(assoc)
+		res = append(res, d)
+	}
+	return res, nil
 }
 
 func (a *mqlAwsVpcNatgatewayAddress) id() (string, error) {
@@ -147,7 +173,6 @@ func (a *mqlAwsVpcNatgateway) subnet() (*mqlAwsVpcSubnet, error) {
 		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 		res, err := NewResource(a.MqlRuntime, ResourceAwsVpcSubnet, map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(subnetArnPattern, a.region, conn.AccountId(), convert.ToValue(a.natGatewayCache.SubnetId)))})
 		if err != nil {
-			a.Subnet.State = plugin.StateIsNull | plugin.StateIsSet
 			return nil, err
 		}
 		return res.(*mqlAwsVpcSubnet), nil
@@ -543,7 +568,7 @@ func (a *mqlAwsVpc) peeringConnections() ([]any, error) {
 }
 
 func (a *mqlAwsVpcPeeringConnectionPeeringVpc) id() (string, error) {
-	return "", nil
+	return fmt.Sprintf("aws.vpc.peeringConnection.peeringVpc/%s/%s", a.Region.Data, a.VpcId.Data), nil
 }
 
 type mqlAwsVpcPeeringConnectionInternal struct {
@@ -553,17 +578,25 @@ type mqlAwsVpcPeeringConnectionInternal struct {
 
 func (a *mqlAwsVpcPeeringConnection) acceptorVpc() (*mqlAwsVpcPeeringConnectionPeeringVpc, error) {
 	acceptor := a.peeringConnectionCache.AccepterVpcInfo
+	if acceptor == nil {
+		a.AcceptorVpc.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
 	ipv4 := []any{}
 	for i := range acceptor.CidrBlockSet {
-		ipv4 = append(ipv4, *acceptor.CidrBlockSet[i].CidrBlock)
+		ipv4 = append(ipv4, convert.ToValue(acceptor.CidrBlockSet[i].CidrBlock))
 	}
 	ipv6 := []any{}
 	for i := range acceptor.Ipv6CidrBlockSet {
-		ipv6 = append(ipv6, *acceptor.Ipv6CidrBlockSet[i].Ipv6CidrBlock)
+		ipv6 = append(ipv6, convert.ToValue(acceptor.Ipv6CidrBlockSet[i].Ipv6CidrBlock))
+	}
+	var allowDns *bool
+	if acceptor.PeeringOptions != nil {
+		allowDns = acceptor.PeeringOptions.AllowDnsResolutionFromRemoteVpc
 	}
 	mql, err := CreateResource(a.MqlRuntime, ResourceAwsVpcPeeringConnectionPeeringVpc,
 		map[string]*llx.RawData{
-			"allowDnsResolutionFromRemoteVpc": llx.BoolDataPtr(acceptor.PeeringOptions.AllowDnsResolutionFromRemoteVpc),
+			"allowDnsResolutionFromRemoteVpc": llx.BoolDataPtr(allowDns),
 			"ipv4CiderBlocks":                 llx.ArrayData(ipv4, types.String),
 			"ipv6CiderBlocks":                 llx.ArrayData(ipv6, types.String),
 			"ownerID":                         llx.StringDataPtr(acceptor.OwnerId),
@@ -589,23 +622,30 @@ func (a *mqlAwsVpcPeeringConnectionPeeringVpc) vpc() (*mqlAwsVpc, error) {
 
 func (a *mqlAwsVpcPeeringConnection) requestorVpc() (*mqlAwsVpcPeeringConnectionPeeringVpc, error) {
 	requestor := a.peeringConnectionCache.RequesterVpcInfo
+	if requestor == nil {
+		a.RequestorVpc.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
 	ipv4 := []any{}
 	for i := range requestor.CidrBlockSet {
-		ipv4 = append(ipv4, *requestor.CidrBlockSet[i].CidrBlock)
+		ipv4 = append(ipv4, convert.ToValue(requestor.CidrBlockSet[i].CidrBlock))
 	}
 	ipv6 := []any{}
 	for i := range requestor.Ipv6CidrBlockSet {
-		ipv6 = append(ipv6, *requestor.Ipv6CidrBlockSet[i].Ipv6CidrBlock)
+		ipv6 = append(ipv6, convert.ToValue(requestor.Ipv6CidrBlockSet[i].Ipv6CidrBlock))
+	}
+	var allowDns *bool
+	if requestor.PeeringOptions != nil {
+		allowDns = requestor.PeeringOptions.AllowDnsResolutionFromRemoteVpc
 	}
 	mql, err := CreateResource(a.MqlRuntime, ResourceAwsVpcPeeringConnectionPeeringVpc,
 		map[string]*llx.RawData{
-			"allowDnsResolutionFromRemoteVpc": llx.BoolDataPtr(requestor.PeeringOptions.AllowDnsResolutionFromRemoteVpc),
+			"allowDnsResolutionFromRemoteVpc": llx.BoolDataPtr(allowDns),
 			"ipv4CiderBlocks":                 llx.ArrayData(ipv4, types.String),
 			"ipv6CiderBlocks":                 llx.ArrayData(ipv6, types.String),
 			"ownerID":                         llx.StringDataPtr(requestor.OwnerId),
 			"region":                          llx.StringData(a.region),
-			// vpc() aws.vpc // ← We can populate this if the VPC is in this account
-			"vpcId": llx.StringDataPtr(requestor.VpcId),
+			"vpcId":                           llx.StringDataPtr(requestor.VpcId),
 		},
 	)
 	if err != nil {
@@ -807,7 +847,6 @@ func (a *mqlAwsVpcRoutetableAssociation) subnet() (*mqlAwsVpcSubnet, error) {
 		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 		res, err := NewResource(a.MqlRuntime, ResourceAwsVpcSubnet, map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(subnetArnPattern, a.region, conn.AccountId(), convert.ToValue(a.cacheSubnetId)))})
 		if err != nil {
-			a.Subnet.State = plugin.StateIsNull | plugin.StateIsSet
 			return nil, err
 		}
 		return res.(*mqlAwsVpcSubnet), nil

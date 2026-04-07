@@ -160,6 +160,10 @@ func (a *mqlAwsConfig) getDeliveryChannels(conn *connection.AwsConnection) []*jo
 			deliveryChannelsParams := &configservice.DescribeDeliveryChannelsInput{}
 			deliveryChannels, err := svc.DescribeDeliveryChannels(ctx, deliveryChannelsParams)
 			if err != nil {
+				if Is400AccessDeniedError(err) {
+					log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+					return res, nil
+				}
 				return nil, err
 			}
 
@@ -284,6 +288,28 @@ func (a *mqlAwsConfig) getRules(conn *connection.AwsConnection) []*jobpool.Job {
 
 func (a *mqlAwsConfigRule) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsConfigRule) complianceStatus() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	ruleName := a.Name.Data
+	region := a.Region.Data
+	svc := conn.ConfigService(region)
+	ctx := context.Background()
+
+	resp, err := svc.DescribeComplianceByConfigRule(ctx, &configservice.DescribeComplianceByConfigRuleInput{
+		ConfigRuleNames: []string{ruleName},
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return "", nil
+		}
+		return "", err
+	}
+	if len(resp.ComplianceByConfigRules) > 0 {
+		return string(resp.ComplianceByConfigRules[0].Compliance.ComplianceType), nil
+	}
+	return "INSUFFICIENT_DATA", nil
 }
 
 func (a *mqlAwsConfig) aggregators() ([]any, error) {
