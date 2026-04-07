@@ -30,7 +30,7 @@ func Resolve(issuerURI string) (TokenProvider, error) {
 		}
 	}
 	return nil, fmt.Errorf(
-		"issuer %q not supported yet - open an issue %q or see how to exchange tokens manually %q",
+		"issuer %q not supported yet - open an issue %s or see how to exchange tokens manually %s",
 		issuerURI,
 		"https://github.com/mondoohq/mql/issues",
 		"https://mondoo.com/docs/maintain/access/non-human/wif#exchange-tokens-manually")
