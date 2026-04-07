@@ -102,7 +102,10 @@ func (a *mqlAwsSecurityhubHub) enabledStandards() ([]any, error) {
 			return nil, err
 		}
 		for _, std := range page.StandardsSubscriptions {
-			d, _ := convert.JsonToDict(std)
+			d, err := convert.JsonToDict(std)
+			if err != nil {
+				return nil, err
+			}
 			res = append(res, d)
 		}
 	}

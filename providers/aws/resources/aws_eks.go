@@ -195,11 +195,11 @@ func (a *mqlAwsEksCluster) populateFromDescribe(cluster *ekstypes.Cluster) error
 	}
 	a.AuthenticationMode = plugin.TValue[string]{Data: authMode, State: plugin.StateIsSet}
 
+	var deletionProtection bool
 	if cluster.DeletionProtection != nil {
-		a.DeletionProtection = plugin.TValue[bool]{Data: *cluster.DeletionProtection, State: plugin.StateIsSet}
-	} else {
-		a.DeletionProtection = plugin.TValue[bool]{State: plugin.StateIsSet | plugin.StateIsNull}
+		deletionProtection = *cluster.DeletionProtection
 	}
+	a.DeletionProtection = plugin.TValue[bool]{Data: deletionProtection, State: plugin.StateIsSet}
 
 	var endpointPublicAccess, endpointPrivateAccess bool
 	publicAccessCidrs := []any{}
@@ -382,6 +382,7 @@ func (a *mqlAwsEksCluster) nodeGroups() ([]any, error) {
 
 type mqlAwsEksNodegroupInternal struct {
 	details     *ekstypes.Nodegroup
+	fetchErr    error
 	fetched     bool
 	region      string
 	lock        sync.Mutex
@@ -419,18 +420,19 @@ func (a *mqlAwsEksNodegroup) autoscalingGroups() ([]any, error) {
 
 func (a *mqlAwsEksNodegroup) fetchDetails() (*ekstypes.Nodegroup, error) {
 	if a.fetched {
-		return a.details, nil
+		return a.details, a.fetchErr
 	}
 	a.lock.Lock()
 	defer a.lock.Unlock()
 	if a.fetched {
-		return a.details, nil
+		return a.details, a.fetchErr
 	}
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	ctx := context.Background()
 	svc := conn.Eks(a.region)
 	desc, err := svc.DescribeNodegroup(ctx, &eks.DescribeNodegroupInput{NodegroupName: aws.String(a.Name.Data), ClusterName: aws.String(a.clusterName)})
 	if err != nil {
+		a.fetchErr = err
 		a.fetched = true
 		return nil, err
 	}
@@ -616,6 +618,7 @@ func (a *mqlAwsEksCluster) addons() ([]any, error) {
 
 type mqlAwsEksAddonInternal struct {
 	details     *ekstypes.Addon
+	fetchErr    error
 	fetched     bool
 	region      string
 	lock        sync.Mutex
@@ -624,18 +627,19 @@ type mqlAwsEksAddonInternal struct {
 
 func (a *mqlAwsEksAddon) fetchDetails() (*ekstypes.Addon, error) {
 	if a.fetched {
-		return a.details, nil
+		return a.details, a.fetchErr
 	}
 	a.lock.Lock()
 	defer a.lock.Unlock()
 	if a.fetched {
-		return a.details, nil
+		return a.details, a.fetchErr
 	}
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	ctx := context.Background()
 	svc := conn.Eks(a.region)
 	desc, err := svc.DescribeAddon(ctx, &eks.DescribeAddonInput{AddonName: aws.String(a.Name.Data), ClusterName: aws.String(a.clusterName)})
 	if err != nil {
+		a.fetchErr = err
 		a.fetched = true
 		return nil, err
 	}
@@ -775,6 +779,7 @@ func (a *mqlAwsEksCluster) accessEntries() ([]any, error) {
 
 type mqlAwsEksAccessEntryInternal struct {
 	details     *ekstypes.AccessEntry
+	fetchErr    error
 	fetched     bool
 	region      string
 	lock        sync.Mutex
@@ -803,12 +808,12 @@ func (a *mqlAwsEksAccessEntry) compute_type() (string, error) {
 
 func (a *mqlAwsEksAccessEntry) fetchDetails() (*ekstypes.AccessEntry, error) {
 	if a.fetched {
-		return a.details, nil
+		return a.details, a.fetchErr
 	}
 	a.lock.Lock()
 	defer a.lock.Unlock()
 	if a.fetched {
-		return a.details, nil
+		return a.details, a.fetchErr
 	}
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	ctx := context.Background()
@@ -819,6 +824,7 @@ func (a *mqlAwsEksAccessEntry) fetchDetails() (*ekstypes.AccessEntry, error) {
 		PrincipalArn: &principalArn,
 	})
 	if err != nil {
+		a.fetchErr = err
 		a.fetched = true
 		return nil, err
 	}
@@ -899,6 +905,7 @@ func (a *mqlAwsEksCluster) fargateProfiles() ([]any, error) {
 
 type mqlAwsEksFargateProfileInternal struct {
 	details     *ekstypes.FargateProfile
+	fetchErr    error
 	fetched     bool
 	region      string
 	lock        sync.Mutex
@@ -919,12 +926,12 @@ func (a *mqlAwsEksFargateProfile) arn() (string, error) {
 
 func (a *mqlAwsEksFargateProfile) fetchDetails() (*ekstypes.FargateProfile, error) {
 	if a.fetched {
-		return a.details, nil
+		return a.details, a.fetchErr
 	}
 	a.lock.Lock()
 	defer a.lock.Unlock()
 	if a.fetched {
-		return a.details, nil
+		return a.details, a.fetchErr
 	}
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	ctx := context.Background()
@@ -935,6 +942,7 @@ func (a *mqlAwsEksFargateProfile) fetchDetails() (*ekstypes.FargateProfile, erro
 		FargateProfileName: &name,
 	})
 	if err != nil {
+		a.fetchErr = err
 		a.fetched = true
 		return nil, err
 	}
@@ -958,7 +966,10 @@ func (a *mqlAwsEksFargateProfile) selectors() ([]any, error) {
 	}
 	res := []any{}
 	for _, s := range fp.Selectors {
-		d, _ := convert.JsonToDict(s)
+		d, err := convert.JsonToDict(s)
+		if err != nil {
+			return nil, err
+		}
 		res = append(res, d)
 	}
 	return res, nil
@@ -1045,6 +1056,7 @@ func (a *mqlAwsEksCluster) podIdentityAssociations() ([]any, error) {
 
 type mqlAwsEksPodIdentityAssociationInternal struct {
 	details     *ekstypes.PodIdentityAssociation
+	fetchErr    error
 	fetched     bool
 	region      string
 	lock        sync.Mutex
@@ -1057,12 +1069,12 @@ func (a *mqlAwsEksPodIdentityAssociation) id() (string, error) {
 
 func (a *mqlAwsEksPodIdentityAssociation) fetchDetails() (*ekstypes.PodIdentityAssociation, error) {
 	if a.fetched {
-		return a.details, nil
+		return a.details, a.fetchErr
 	}
 	a.lock.Lock()
 	defer a.lock.Unlock()
 	if a.fetched {
-		return a.details, nil
+		return a.details, a.fetchErr
 	}
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	ctx := context.Background()
@@ -1073,6 +1085,7 @@ func (a *mqlAwsEksPodIdentityAssociation) fetchDetails() (*ekstypes.PodIdentityA
 		AssociationId: &assocId,
 	})
 	if err != nil {
+		a.fetchErr = err
 		a.fetched = true
 		return nil, err
 	}
@@ -1154,6 +1167,7 @@ func (a *mqlAwsEksCluster) identityProviderConfigs() ([]any, error) {
 
 type mqlAwsEksIdentityProviderConfigInternal struct {
 	details     *ekstypes.OidcIdentityProviderConfig
+	fetchErr    error
 	fetched     bool
 	region      string
 	lock        sync.Mutex
@@ -1166,12 +1180,12 @@ func (a *mqlAwsEksIdentityProviderConfig) id() (string, error) {
 
 func (a *mqlAwsEksIdentityProviderConfig) fetchDetails() (*ekstypes.OidcIdentityProviderConfig, error) {
 	if a.fetched {
-		return a.details, nil
+		return a.details, a.fetchErr
 	}
 	a.lock.Lock()
 	defer a.lock.Unlock()
 	if a.fetched {
-		return a.details, nil
+		return a.details, a.fetchErr
 	}
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	ctx := context.Background()
@@ -1186,6 +1200,7 @@ func (a *mqlAwsEksIdentityProviderConfig) fetchDetails() (*ekstypes.OidcIdentity
 		},
 	})
 	if err != nil {
+		a.fetchErr = err
 		a.fetched = true
 		return nil, err
 	}

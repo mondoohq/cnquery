@@ -122,7 +122,10 @@ type mqlAwsVpcInternal struct {
 func (a *mqlAwsVpc) cidrBlockAssociations() ([]any, error) {
 	res := []any{}
 	for _, assoc := range a.cacheCidrBlockAssociations {
-		d, _ := convert.JsonToDict(assoc)
+		d, err := convert.JsonToDict(assoc)
+		if err != nil {
+			return nil, err
+		}
 		res = append(res, d)
 	}
 	return res, nil
@@ -131,7 +134,10 @@ func (a *mqlAwsVpc) cidrBlockAssociations() ([]any, error) {
 func (a *mqlAwsVpc) ipv6CidrBlockAssociations() ([]any, error) {
 	res := []any{}
 	for _, assoc := range a.cacheIpv6CidrBlockAssociations {
-		d, _ := convert.JsonToDict(assoc)
+		d, err := convert.JsonToDict(assoc)
+		if err != nil {
+			return nil, err
+		}
 		res = append(res, d)
 	}
 	return res, nil
