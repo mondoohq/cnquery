@@ -363,7 +363,7 @@ func (a *mqlAwsEksCluster) nodeGroups() ([]any, error) {
 		for i := range page.Nodegroups {
 			nodegroup := page.Nodegroups[i]
 			args := map[string]*llx.RawData{
-				"__id":   llx.StringData(fmt.Sprintf("aws.eks.nodegroup/%s/%s", a.Name.Data, nodegroup)),
+				"__id":   llx.StringData(fmt.Sprintf("aws.eks.nodegroup/%s/%s/%s", regionVal, a.Name.Data, nodegroup)),
 				"name":   llx.StringData(nodegroup),
 				"region": llx.StringData(regionVal),
 			}

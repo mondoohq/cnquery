@@ -658,7 +658,7 @@ func (a *mqlAwsRdsDbinstance) subnets() ([]any, error) {
 		}
 		return res, nil
 	}
-	return nil, nil
+	return []any{}, nil
 }
 
 func (a *mqlAwsRdsDbinstance) kmsKey() (*mqlAwsKmsKey, error) {
