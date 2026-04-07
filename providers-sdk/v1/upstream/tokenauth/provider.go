@@ -26,7 +26,7 @@ var providers = map[string]TokenProvider{
 // Resolve returns the TokenProvider matching the given issuer URI.
 func Resolve(issuerURI string) (TokenProvider, error) {
 	for key, provider := range providers {
-		if strings.Contains(issuerURI, key) {
+		if strings.Contains(strings.ToLower(issuerURI), key) {
 			return provider, nil
 		}
 	}

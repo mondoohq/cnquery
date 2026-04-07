@@ -43,6 +43,11 @@ func TestResolve(t *testing.T) {
 			wantType:  &GitHubTokenProvider{},
 		},
 		{
+			name:      "Capitalized letters don't affect matching",
+			issuerURI: "https://Token.ACTIONS.GithubUserContent.com",
+			wantType:  &GitHubTokenProvider{},
+		},
+		{
 			name:      "unsupported issuer",
 			issuerURI: "https://unknown.example.com",
 			wantErr:   "issuer \"https://unknown.example.com\" not supported yet - open an issue https://github.com/mondoohq/mql/issues or see how to exchange tokens manually https://mondoo.com/docs/maintain/access/non-human/wif#exchange-tokens-manually",
