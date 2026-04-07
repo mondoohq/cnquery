@@ -76,7 +76,9 @@ func (a *mqlAwsRds) eventSubscriptions() ([]any, error) {
 		return nil, poolOfJobs.GetErrors()
 	}
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+		if poolOfJobs.Jobs[i].Result != nil {
+			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+		}
 	}
 	return res, nil
 }
