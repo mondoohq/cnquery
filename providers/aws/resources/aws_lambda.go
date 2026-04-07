@@ -969,10 +969,10 @@ func (a *mqlAwsLambdaFunction) eventInvokeConfig() (any, error) {
 
 	result := map[string]any{}
 	if resp.MaximumRetryAttempts != nil {
-		result["maximumRetryAttempts"] = *resp.MaximumRetryAttempts
+		result["maximumRetryAttempts"] = int64(*resp.MaximumRetryAttempts)
 	}
 	if resp.MaximumEventAgeInSeconds != nil {
-		result["maximumEventAgeInSeconds"] = *resp.MaximumEventAgeInSeconds
+		result["maximumEventAgeInSeconds"] = int64(*resp.MaximumEventAgeInSeconds)
 	}
 	if resp.DestinationConfig != nil {
 		destConfig := map[string]any{}
