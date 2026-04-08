@@ -761,7 +761,7 @@ func (a *mqlAwsEksCluster) accessEntries() ([]any, error) {
 		for _, principalArn := range page.AccessEntries {
 			mqlEntry, err := CreateResource(a.MqlRuntime, "aws.eks.accessEntry",
 				map[string]*llx.RawData{
-					"__id":         llx.StringData(fmt.Sprintf("aws.eks.accessEntry/%s/%s", a.Name.Data, principalArn)),
+					"__id":         llx.StringData(fmt.Sprintf("aws.eks.accessEntry/%s/%s/%s", regionVal, a.Name.Data, principalArn)),
 					"clusterName":  llx.StringData(a.Name.Data),
 					"principalArn": llx.StringData(principalArn),
 					"region":       llx.StringData(regionVal),
