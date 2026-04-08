@@ -5,6 +5,7 @@ package resources
 
 import (
 	"slices"
+	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/rs/zerolog/log"
@@ -14,6 +15,11 @@ import (
 	"go.mondoo.com/mql/v13/providers/aws/connection"
 	"go.mondoo.com/mql/v13/utils/stringx"
 )
+
+// discoveryConcurrency is the number of discovery targets to process concurrently.
+// Each target internally uses a 5-worker job pool for per-region API calls,
+// so the total concurrent API calls is at most discoveryConcurrency * 5.
+const discoveryConcurrency = 5
 
 // Discovery Flags
 const (
@@ -123,14 +129,34 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 	awsAccount := res.(*mqlAwsAccount)
 
 	targets := getDiscoveryTargets(conn.Conf)
+
+	var (
+		wg     sync.WaitGroup
+		mu     sync.Mutex
+		assets = make([]*inventory.Asset, 0)
+	)
+	sem := make(chan struct{}, discoveryConcurrency)
+
 	for _, target := range targets {
-		list, err := discover(runtime, awsAccount, target, conn.Filters)
-		if err != nil {
-			log.Error().Err(err).Msg("error during discovery")
-			continue
-		}
-		in.Spec.Assets = append(in.Spec.Assets, list...)
+		wg.Add(1)
+		sem <- struct{}{}
+		go func(t string) {
+			defer wg.Done()
+			defer func() { <-sem }()
+
+			list, err := discover(runtime, awsAccount, t, conn.Filters)
+			if err != nil {
+				log.Error().Err(err).Str("target", t).Msg("error during discovery")
+				return
+			}
+			mu.Lock()
+			assets = append(assets, list...)
+			mu.Unlock()
+		}(target)
 	}
+
+	wg.Wait()
+	in.Spec.Assets = assets
 	return in, nil
 }
 
