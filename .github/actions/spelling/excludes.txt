@@ -80,6 +80,7 @@
 \.zip$
 \.tmpl$
 ^\.github/actions/spelling/
+(?:^|/)CLAUDE\.md$
 ^\.github/workflows/.*\.yaml
 _release_template_file.md
 ignore$
