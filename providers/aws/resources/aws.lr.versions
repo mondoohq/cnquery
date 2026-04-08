@@ -1662,6 +1662,11 @@ aws.ecs.taskDefinition.volume.efsVolumeConfiguration.transitEncryptionPort 11.15
 aws.ecs.taskDefinition.volume.host 11.15.2
 aws.ecs.taskDefinition.volume.host.sourcePath 11.15.2
 aws.ecs.taskDefinition.volume.name 11.15.2
+aws.ecs.taskDefinition.volume.s3filesVolumeConfiguration 13.7.1
+aws.ecs.taskDefinition.volume.s3filesVolumeConfiguration.accessPointArn 13.7.1
+aws.ecs.taskDefinition.volume.s3filesVolumeConfiguration.fileSystemArn 13.7.1
+aws.ecs.taskDefinition.volume.s3filesVolumeConfiguration.rootDirectory 13.7.1
+aws.ecs.taskDefinition.volume.s3filesVolumeConfiguration.transitEncryptionPort 13.7.1
 aws.ecs.taskDefinition.volumes 11.15.2
 aws.ecs.taskDefinitions 11.15.2
 aws.ecs.taskSet 11.15.2
@@ -1776,6 +1781,7 @@ aws.eks.nodegroup.region 11.15.2
 aws.eks.nodegroup.scalingConfig 11.15.2
 aws.eks.nodegroup.status 11.15.2
 aws.eks.nodegroup.tags 11.15.2
+aws.eks.nodegroup.warmPoolConfig 13.7.1
 aws.elasticache 11.15.2
 aws.elasticache.cacheClusters 11.15.2
 aws.elasticache.cluster 11.15.2
@@ -4140,6 +4146,7 @@ aws.transfer.server.certificate 13.6.3
 aws.transfer.server.domain 13.6.3
 aws.transfer.server.endpointType 13.6.3
 aws.transfer.server.identityProviderType 13.6.3
+aws.transfer.server.ipAddressType 13.7.1
 aws.transfer.server.loggingRole 13.6.3
 aws.transfer.server.protocols 13.6.3
 aws.transfer.server.region 13.6.3

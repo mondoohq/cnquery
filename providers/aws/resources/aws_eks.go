@@ -505,6 +505,17 @@ func (a *mqlAwsEksNodegroup) scalingConfig() (map[string]any, error) {
 	return convert.JsonToDict(ng.ScalingConfig)
 }
 
+func (a *mqlAwsEksNodegroup) warmPoolConfig() (map[string]any, error) {
+	ng, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	if ng.WarmPoolConfig == nil {
+		return nil, nil
+	}
+	return convert.JsonToDict(ng.WarmPoolConfig)
+}
+
 func (a *mqlAwsEksNodegroup) instanceTypes() ([]any, error) {
 	ng, err := a.fetchDetails()
 	if err != nil {

@@ -172,6 +172,7 @@ const (
 	ResourceAwsEcsTaskDefinitionVolumeEfsVolumeConfigurationAuthorizationConfig string = "aws.ecs.taskDefinition.volume.efsVolumeConfiguration.authorizationConfig"
 	ResourceAwsEcsTaskDefinitionVolumeHost                                      string = "aws.ecs.taskDefinition.volume.host"
 	ResourceAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration                 string = "aws.ecs.taskDefinition.volume.dockerVolumeConfiguration"
+	ResourceAwsEcsTaskDefinitionVolumeS3filesVolumeConfiguration                string = "aws.ecs.taskDefinition.volume.s3filesVolumeConfiguration"
 	ResourceAwsEcsTaskDefinitionEphemeralStorage                                string = "aws.ecs.taskDefinition.ephemeralStorage"
 	ResourceAwsEmr                                                              string = "aws.emr"
 	ResourceAwsEmrCluster                                                       string = "aws.emr.cluster"
@@ -1098,6 +1099,10 @@ func init() {
 		"aws.ecs.taskDefinition.volume.dockerVolumeConfiguration": {
 			// to override args, implement: initAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration,
+		},
+		"aws.ecs.taskDefinition.volume.s3filesVolumeConfiguration": {
+			// to override args, implement: initAwsEcsTaskDefinitionVolumeS3filesVolumeConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEcsTaskDefinitionVolumeS3filesVolumeConfiguration,
 		},
 		"aws.ecs.taskDefinition.ephemeralStorage": {
 			// to override args, implement: initAwsEcsTaskDefinitionEphemeralStorage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -6132,6 +6137,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ecs.taskDefinition.volume.dockerVolumeConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsTaskDefinitionVolume).GetDockerVolumeConfiguration()).ToDataRes(types.Resource("aws.ecs.taskDefinition.volume.dockerVolumeConfiguration"))
 	},
+	"aws.ecs.taskDefinition.volume.s3filesVolumeConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionVolume).GetS3filesVolumeConfiguration()).ToDataRes(types.Resource("aws.ecs.taskDefinition.volume.s3filesVolumeConfiguration"))
+	},
 	"aws.ecs.taskDefinition.volume.efsVolumeConfiguration.fileSystemId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration).GetFileSystemId()).ToDataRes(types.String)
 	},
@@ -6170,6 +6178,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ecs.taskDefinition.volume.dockerVolumeConfiguration.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.ecs.taskDefinition.volume.s3filesVolumeConfiguration.fileSystemArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionVolumeS3filesVolumeConfiguration).GetFileSystemArn()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskDefinition.volume.s3filesVolumeConfiguration.accessPointArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionVolumeS3filesVolumeConfiguration).GetAccessPointArn()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskDefinition.volume.s3filesVolumeConfiguration.rootDirectory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionVolumeS3filesVolumeConfiguration).GetRootDirectory()).ToDataRes(types.String)
+	},
+	"aws.ecs.taskDefinition.volume.s3filesVolumeConfiguration.transitEncryptionPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsTaskDefinitionVolumeS3filesVolumeConfiguration).GetTransitEncryptionPort()).ToDataRes(types.Int)
 	},
 	"aws.ecs.taskDefinition.ephemeralStorage.sizeInGiB": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsTaskDefinitionEphemeralStorage).GetSizeInGiB()).ToDataRes(types.Int)
@@ -11238,6 +11258,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.eks.nodegroup.autoscalingGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksNodegroup).GetAutoscalingGroups()).ToDataRes(types.Array(types.Resource("aws.autoscaling.group")))
 	},
+	"aws.eks.nodegroup.warmPoolConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksNodegroup).GetWarmPoolConfig()).ToDataRes(types.Dict)
+	},
 	"aws.eks.addon.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksAddon).GetName()).ToDataRes(types.String)
 	},
@@ -14885,6 +14908,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.transfer.server.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsTransferServer).GetState()).ToDataRes(types.String)
+	},
+	"aws.transfer.server.ipAddressType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTransferServer).GetIpAddressType()).ToDataRes(types.String)
 	},
 	"aws.transfer.server.securityPolicyName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsTransferServer).GetSecurityPolicyName()).ToDataRes(types.String)
@@ -20700,6 +20726,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEcsTaskDefinitionVolume).DockerVolumeConfiguration, ok = plugin.RawToTValue[*mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration](v.Value, v.Error)
 		return
 	},
+	"aws.ecs.taskDefinition.volume.s3filesVolumeConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionVolume).S3filesVolumeConfiguration, ok = plugin.RawToTValue[*mqlAwsEcsTaskDefinitionVolumeS3filesVolumeConfiguration](v.Value, v.Error)
+		return
+	},
 	"aws.ecs.taskDefinition.volume.efsVolumeConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration).__id, ok = v.Value.(string)
 		return
@@ -20766,6 +20796,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ecs.taskDefinition.volume.dockerVolumeConfiguration.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.volume.s3filesVolumeConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionVolumeS3filesVolumeConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ecs.taskDefinition.volume.s3filesVolumeConfiguration.fileSystemArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionVolumeS3filesVolumeConfiguration).FileSystemArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.volume.s3filesVolumeConfiguration.accessPointArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionVolumeS3filesVolumeConfiguration).AccessPointArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.volume.s3filesVolumeConfiguration.rootDirectory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionVolumeS3filesVolumeConfiguration).RootDirectory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.taskDefinition.volume.s3filesVolumeConfiguration.transitEncryptionPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsTaskDefinitionVolumeS3filesVolumeConfiguration).TransitEncryptionPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.taskDefinition.ephemeralStorage.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -28224,6 +28274,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEksNodegroup).AutoscalingGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.eks.nodegroup.warmPoolConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksNodegroup).WarmPoolConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"aws.eks.addon.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEksAddon).__id, ok = v.Value.(string)
 		return
@@ -33542,6 +33596,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.transfer.server.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsTransferServer).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.transfer.server.ipAddressType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTransferServer).IpAddressType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.transfer.server.securityPolicyName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -49033,10 +49091,11 @@ type mqlAwsEcsTaskDefinitionVolume struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsEcsTaskDefinitionVolumeInternal it will be used here
-	Name                      plugin.TValue[string]
-	EfsVolumeConfiguration    plugin.TValue[*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration]
-	Host                      plugin.TValue[*mqlAwsEcsTaskDefinitionVolumeHost]
-	DockerVolumeConfiguration plugin.TValue[*mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration]
+	Name                       plugin.TValue[string]
+	EfsVolumeConfiguration     plugin.TValue[*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration]
+	Host                       plugin.TValue[*mqlAwsEcsTaskDefinitionVolumeHost]
+	DockerVolumeConfiguration  plugin.TValue[*mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration]
+	S3filesVolumeConfiguration plugin.TValue[*mqlAwsEcsTaskDefinitionVolumeS3filesVolumeConfiguration]
 }
 
 // createAwsEcsTaskDefinitionVolume creates a new instance of this resource
@@ -49125,6 +49184,22 @@ func (c *mqlAwsEcsTaskDefinitionVolume) GetDockerVolumeConfiguration() *plugin.T
 		}
 
 		return c.dockerVolumeConfiguration()
+	})
+}
+
+func (c *mqlAwsEcsTaskDefinitionVolume) GetS3filesVolumeConfiguration() *plugin.TValue[*mqlAwsEcsTaskDefinitionVolumeS3filesVolumeConfiguration] {
+	return plugin.GetOrCompute[*mqlAwsEcsTaskDefinitionVolumeS3filesVolumeConfiguration](&c.S3filesVolumeConfiguration, func() (*mqlAwsEcsTaskDefinitionVolumeS3filesVolumeConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.taskDefinition.volume", c.__id, "s3filesVolumeConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEcsTaskDefinitionVolumeS3filesVolumeConfiguration), nil
+			}
+		}
+
+		return c.s3filesVolumeConfiguration()
 	})
 }
 
@@ -49379,6 +49454,70 @@ func (c *mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration) GetDriverOpts()
 
 func (c *mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration) GetLabels() *plugin.TValue[map[string]any] {
 	return &c.Labels
+}
+
+// mqlAwsEcsTaskDefinitionVolumeS3filesVolumeConfiguration for the aws.ecs.taskDefinition.volume.s3filesVolumeConfiguration resource
+type mqlAwsEcsTaskDefinitionVolumeS3filesVolumeConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEcsTaskDefinitionVolumeS3filesVolumeConfigurationInternal it will be used here
+	FileSystemArn         plugin.TValue[string]
+	AccessPointArn        plugin.TValue[string]
+	RootDirectory         plugin.TValue[string]
+	TransitEncryptionPort plugin.TValue[int64]
+}
+
+// createAwsEcsTaskDefinitionVolumeS3filesVolumeConfiguration creates a new instance of this resource
+func createAwsEcsTaskDefinitionVolumeS3filesVolumeConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEcsTaskDefinitionVolumeS3filesVolumeConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ecs.taskDefinition.volume.s3filesVolumeConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEcsTaskDefinitionVolumeS3filesVolumeConfiguration) MqlName() string {
+	return "aws.ecs.taskDefinition.volume.s3filesVolumeConfiguration"
+}
+
+func (c *mqlAwsEcsTaskDefinitionVolumeS3filesVolumeConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEcsTaskDefinitionVolumeS3filesVolumeConfiguration) GetFileSystemArn() *plugin.TValue[string] {
+	return &c.FileSystemArn
+}
+
+func (c *mqlAwsEcsTaskDefinitionVolumeS3filesVolumeConfiguration) GetAccessPointArn() *plugin.TValue[string] {
+	return &c.AccessPointArn
+}
+
+func (c *mqlAwsEcsTaskDefinitionVolumeS3filesVolumeConfiguration) GetRootDirectory() *plugin.TValue[string] {
+	return &c.RootDirectory
+}
+
+func (c *mqlAwsEcsTaskDefinitionVolumeS3filesVolumeConfiguration) GetTransitEncryptionPort() *plugin.TValue[int64] {
+	return &c.TransitEncryptionPort
 }
 
 // mqlAwsEcsTaskDefinitionEphemeralStorage for the aws.ecs.taskDefinition.ephemeralStorage resource
@@ -68153,6 +68292,7 @@ type mqlAwsEksNodegroup struct {
 	Labels            plugin.TValue[map[string]any]
 	Tags              plugin.TValue[map[string]any]
 	AutoscalingGroups plugin.TValue[[]any]
+	WarmPoolConfig    plugin.TValue[any]
 }
 
 // createAwsEksNodegroup creates a new instance of this resource
@@ -68295,6 +68435,12 @@ func (c *mqlAwsEksNodegroup) GetAutoscalingGroups() *plugin.TValue[[]any] {
 		}
 
 		return c.autoscalingGroups()
+	})
+}
+
+func (c *mqlAwsEksNodegroup) GetWarmPoolConfig() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.WarmPoolConfig, func() (any, error) {
+		return c.warmPoolConfig()
 	})
 }
 
@@ -81080,6 +81226,7 @@ type mqlAwsTransferServer struct {
 	LoggingRole               plugin.TValue[*mqlAwsIamRole]
 	Protocols                 plugin.TValue[[]any]
 	State                     plugin.TValue[string]
+	IpAddressType             plugin.TValue[string]
 	SecurityPolicyName        plugin.TValue[string]
 	UserCount                 plugin.TValue[int64]
 	Certificate               plugin.TValue[*mqlAwsAcmCertificate]
@@ -81176,6 +81323,12 @@ func (c *mqlAwsTransferServer) GetProtocols() *plugin.TValue[[]any] {
 
 func (c *mqlAwsTransferServer) GetState() *plugin.TValue[string] {
 	return &c.State
+}
+
+func (c *mqlAwsTransferServer) GetIpAddressType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.IpAddressType, func() (string, error) {
+		return c.ipAddressType()
+	})
 }
 
 func (c *mqlAwsTransferServer) GetSecurityPolicyName() *plugin.TValue[string] {

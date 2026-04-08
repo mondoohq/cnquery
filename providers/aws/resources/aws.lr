@@ -3155,6 +3155,8 @@ private aws.ecs.taskDefinition.volume {
   host() aws.ecs.taskDefinition.volume.host
   // Docker volume configuration
   dockerVolumeConfiguration() aws.ecs.taskDefinition.volume.dockerVolumeConfiguration
+  // S3 Files volume configuration
+  s3filesVolumeConfiguration() aws.ecs.taskDefinition.volume.s3filesVolumeConfiguration
 }
 
 // Amazon ECS Task Definition Volume EFS Configuration
@@ -3197,6 +3199,18 @@ private aws.ecs.taskDefinition.volume.dockerVolumeConfiguration {
   driverOpts map[string]string
   // Labels for the Docker volume
   labels map[string]string
+}
+
+// Amazon ECS Task Definition Volume S3 Files Configuration
+private aws.ecs.taskDefinition.volume.s3filesVolumeConfiguration {
+  // ARN of the S3 Files file system
+  fileSystemArn string
+  // ARN of the S3 Files access point
+  accessPointArn string
+  // Directory within the S3 Files file system to mount as root
+  rootDirectory string
+  // Port for sending encrypted data between ECS host and S3 Files
+  transitEncryptionPort int
 }
 
 // Amazon ECS Task Definition Ephemeral Storage
@@ -5588,7 +5602,7 @@ private aws.lambda.function @defaults("arn") {
   snapStartApplyOn string
   // SnapStart optimization status: On or Off
   snapStartOptimizationStatus string
-  // EFS file system mount configurations
+  // File system mount configurations (EFS or S3 Files)
   fileSystemConfigs []dict
   // Code signing profile version ARN
   signingProfileVersionArn string
@@ -7277,6 +7291,8 @@ private aws.eks.nodegroup @defaults("name scalingConfig.DesiredSize diskSize sta
   tags()  map[string]string
   // List of autoscaling groups for the node group
   autoscalingGroups() []aws.autoscaling.group
+  // Warm pool configuration for the node group
+  warmPoolConfig() dict
 }
 
 // Amazon EKS add-on
@@ -10169,6 +10185,8 @@ private aws.transfer.server @defaults("arn serverId endpointType protocols") {
   protocols() []string
   // State of the server: ONLINE, OFFLINE, STARTING, STOPPING, START_FAILED, STOP_FAILED
   state string
+  // IP address type for the server: IPV4, DUALSTACK
+  ipAddressType() string
   // Security policy name (e.g., TransferSecurityPolicy-2024-01)
   securityPolicyName() string
   // Number of users associated with the server

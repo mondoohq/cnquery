@@ -1,7 +1,7 @@
 {
   "provider": "aws",
-  "version": "13.6.2",
-  "generated_at": "2026-04-05T21:41:37-07:00",
+  "version": "13.7.0",
+  "generated_at": "2026-04-08T10:20:19-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",

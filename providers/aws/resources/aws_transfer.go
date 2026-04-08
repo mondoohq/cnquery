@@ -175,6 +175,14 @@ func (a *mqlAwsTransferServer) protocols() ([]any, error) {
 	return protocols, nil
 }
 
+func (a *mqlAwsTransferServer) ipAddressType() (string, error) {
+	resp, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	return string(resp.Server.IpAddressType), nil
+}
+
 func (a *mqlAwsTransferServer) securityPolicyName() (string, error) {
 	resp, err := a.fetchDetail()
 	if err != nil {

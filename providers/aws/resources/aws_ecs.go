@@ -1164,6 +1164,53 @@ func createVolumeResource(runtime *plugin.Runtime, vol *ecstypes.Volume) (any, e
 		dockerConfig = mqlDocker
 	}
 
+	// Create S3 Files volume configuration
+	var s3filesConfig any
+	if vol.S3filesVolumeConfiguration != nil {
+		s3filesCfg := vol.S3filesVolumeConfiguration
+		fileSystemArn := ""
+		if s3filesCfg.FileSystemArn != nil {
+			fileSystemArn = *s3filesCfg.FileSystemArn
+		}
+		accessPointArn := ""
+		if s3filesCfg.AccessPointArn != nil {
+			accessPointArn = *s3filesCfg.AccessPointArn
+		}
+		rootDirectory := ""
+		if s3filesCfg.RootDirectory != nil {
+			rootDirectory = *s3filesCfg.RootDirectory
+		}
+		transitEncryptionPort := int64(0)
+		if s3filesCfg.TransitEncryptionPort != nil {
+			transitEncryptionPort = int64(*s3filesCfg.TransitEncryptionPort)
+		}
+		mqlS3files, err := CreateResource(runtime, "aws.ecs.taskDefinition.volume.s3filesVolumeConfiguration",
+			map[string]*llx.RawData{
+				"__id":                  llx.StringData(volName + "/s3files"),
+				"fileSystemArn":         llx.StringData(fileSystemArn),
+				"accessPointArn":        llx.StringData(accessPointArn),
+				"rootDirectory":         llx.StringData(rootDirectory),
+				"transitEncryptionPort": llx.IntData(transitEncryptionPort),
+			})
+		if err != nil {
+			return nil, err
+		}
+		s3filesConfig = mqlS3files
+	} else {
+		mqlS3files, err := CreateResource(runtime, "aws.ecs.taskDefinition.volume.s3filesVolumeConfiguration",
+			map[string]*llx.RawData{
+				"__id":                  llx.StringData(volName + "/s3files"),
+				"fileSystemArn":         llx.StringData(""),
+				"accessPointArn":        llx.StringData(""),
+				"rootDirectory":         llx.StringData(""),
+				"transitEncryptionPort": llx.IntData(0),
+			})
+		if err != nil {
+			return nil, err
+		}
+		s3filesConfig = mqlS3files
+	}
+
 	// Type assert volume configs to Resource
 	efsVolConfigResource, ok := efsVolConfig.(plugin.Resource)
 	if !ok {
@@ -1177,14 +1224,19 @@ func createVolumeResource(runtime *plugin.Runtime, vol *ecstypes.Volume) (any, e
 	if !ok {
 		return nil, errors.New("failed to convert dockerConfig to Resource")
 	}
+	s3filesConfigResource, ok := s3filesConfig.(plugin.Resource)
+	if !ok {
+		return nil, errors.New("failed to convert s3filesConfig to Resource")
+	}
 
 	return CreateResource(runtime, "aws.ecs.taskDefinition.volume",
 		map[string]*llx.RawData{
-			"__id":                      llx.StringData(volName),
-			"name":                      llx.StringData(volName),
-			"efsVolumeConfiguration":    llx.ResourceData(efsVolConfigResource, "aws.ecs.taskDefinition.volume.efsVolumeConfiguration"),
-			"host":                      llx.ResourceData(hostConfigResource, "aws.ecs.taskDefinition.volume.host"),
-			"dockerVolumeConfiguration": llx.ResourceData(dockerConfigResource, "aws.ecs.taskDefinition.volume.dockerVolumeConfiguration"),
+			"__id":                       llx.StringData(volName),
+			"name":                       llx.StringData(volName),
+			"efsVolumeConfiguration":     llx.ResourceData(efsVolConfigResource, "aws.ecs.taskDefinition.volume.efsVolumeConfiguration"),
+			"host":                       llx.ResourceData(hostConfigResource, "aws.ecs.taskDefinition.volume.host"),
+			"dockerVolumeConfiguration":  llx.ResourceData(dockerConfigResource, "aws.ecs.taskDefinition.volume.dockerVolumeConfiguration"),
+			"s3filesVolumeConfiguration": llx.ResourceData(s3filesConfigResource, "aws.ecs.taskDefinition.volume.s3filesVolumeConfiguration"),
 		})
 }
 
@@ -1513,6 +1565,17 @@ func (a *mqlAwsEcsTaskDefinitionVolume) dockerVolumeConfiguration() (*mqlAwsEcsT
 	return a.DockerVolumeConfiguration.Data, nil
 }
 
+func (a *mqlAwsEcsTaskDefinitionVolume) s3filesVolumeConfiguration() (*mqlAwsEcsTaskDefinitionVolumeS3filesVolumeConfiguration, error) {
+	if !a.S3filesVolumeConfiguration.IsSet() {
+		a.S3filesVolumeConfiguration.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	if a.S3filesVolumeConfiguration.Error != nil {
+		return nil, a.S3filesVolumeConfiguration.Error
+	}
+	return a.S3filesVolumeConfiguration.Data, nil
+}
+
 func (a *mqlAwsEcsTaskDefinitionVolume) id() (string, error) {
 	return a.Name.Data, nil
 }
@@ -1561,6 +1624,10 @@ func (a *mqlAwsEcsTaskDefinitionVolumeHost) id() (string, error) {
 }
 
 func (a *mqlAwsEcsTaskDefinitionVolumeDockerVolumeConfiguration) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAwsEcsTaskDefinitionVolumeS3filesVolumeConfiguration) id() (string, error) {
 	return a.__id, nil
 }
 
