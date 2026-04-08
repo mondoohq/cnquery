@@ -146,5 +146,7 @@ func (r *MondooProviderRegistry) DownloadProvider(ctx context.Context, name, ver
 		return nil, errors.New("failed to download " + name + "-" + version + ", received status code: " + res.Status)
 	}
 
-	return res.Body, nil
+	// Wrap with idle timeout so slow-but-active downloads succeed while
+	// truly stalled transfers are detected. Callers just read and close.
+	return httpx.NewIdleTimeoutReader(res.Body, httpx.DownloadTimeout()), nil
 }

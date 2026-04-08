@@ -30,7 +30,6 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
 	"go.mondoo.com/mql/v13/providers/core/resources/versions/semver"
-	"go.mondoo.com/mql/v13/utils/httpx"
 	"golang.org/x/exp/slices"
 )
 
@@ -437,11 +436,10 @@ func installVersion(ctx context.Context, name string, version string) (*Provider
 	if err != nil {
 		return nil, err
 	}
-	idleReader := httpx.NewIdleTimeoutReader(res, httpx.DownloadTimeout())
-	defer idleReader.Close()
+	defer res.Close()
 
 	var tar []byte
-	if tar, err = io.ReadAll(idleReader); err != nil {
+	if tar, err = io.ReadAll(res); err != nil {
 		logCtx.Debug().Msg("failed to read body of provider download")
 		return nil, errors.Wrap(err, "failed to install "+name+"-"+version+", failed to read body")
 	}
