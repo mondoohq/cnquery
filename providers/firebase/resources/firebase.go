@@ -66,7 +66,14 @@ func (p *mqlFirebaseProject) realtimeDatabase() (*mqlFirebaseProjectRealtimeData
 			log.Debug().Err(err).Str("url", url).Msg("failed to reach Realtime Database")
 			continue
 		}
+		// Drain and close body to allow connection reuse
+		io.Copy(io.Discard, resp.Body)
 		resp.Body.Close()
+
+		// 404 means this URL variant doesn't exist, try the next one
+		if resp.StatusCode == http.StatusNotFound {
+			continue
+		}
 
 		testedURL = baseURL
 
@@ -78,6 +85,7 @@ func (p *mqlFirebaseProject) realtimeDatabase() (*mqlFirebaseProjectRealtimeData
 		shallowURL := baseURL + "/.json?shallow=true"
 		shallowResp, err := client.Get(shallowURL)
 		if err == nil {
+			defer shallowResp.Body.Close()
 			if shallowResp.StatusCode == http.StatusOK {
 				body, _ := io.ReadAll(io.LimitReader(shallowResp.Body, 1<<16))
 				// "null" means empty database, not structure exposure
@@ -85,7 +93,6 @@ func (p *mqlFirebaseProject) realtimeDatabase() (*mqlFirebaseProjectRealtimeData
 					structureExposed = true
 				}
 			}
-			shallowResp.Body.Close()
 		}
 
 		break // Successfully reached the database, no need to try the other URL
@@ -144,13 +151,6 @@ func (p *mqlFirebaseProject) authConfig() (*mqlFirebaseProjectAuthConfig, error)
 		var result map[string]interface{}
 		if err := json.Unmarshal(body, &result); err != nil {
 			return nil, fmt.Errorf("failed to parse Identity Toolkit response: %w", err)
-		}
-
-		// Extract sign-in providers
-		if providers, ok := result["signIn"].(map[string]interface{}); ok {
-			if methods, ok := providers["allowDuplicateEmails"]; ok {
-				_ = methods // just checking it exists
-			}
 		}
 
 		// Try different response structures for providers
@@ -233,7 +233,6 @@ func (p *mqlFirebaseProject) hosting() (*mqlFirebaseProjectHosting, error) {
 	log.Debug().Str("url", appleURL).Msg("checking Apple App Site Association")
 
 	if resp, err := client.Get(appleURL); err == nil {
-		defer resp.Body.Close()
 		if resp.StatusCode == http.StatusOK {
 			body, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 			var parsed interface{}
@@ -241,6 +240,7 @@ func (p *mqlFirebaseProject) hosting() (*mqlFirebaseProjectHosting, error) {
 				appleData = parsed
 			}
 		}
+		resp.Body.Close()
 	}
 
 	// Check Android Asset Links
@@ -249,7 +249,6 @@ func (p *mqlFirebaseProject) hosting() (*mqlFirebaseProjectHosting, error) {
 	log.Debug().Str("url", androidURL).Msg("checking Android Asset Links")
 
 	if resp, err := client.Get(androidURL); err == nil {
-		defer resp.Body.Close()
 		if resp.StatusCode == http.StatusOK {
 			body, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 			var parsed interface{}
@@ -257,6 +256,7 @@ func (p *mqlFirebaseProject) hosting() (*mqlFirebaseProjectHosting, error) {
 				androidData = parsed
 			}
 		}
+		resp.Body.Close()
 	}
 
 	// Use the original domain (without scheme) for display

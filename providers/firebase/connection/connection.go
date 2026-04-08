@@ -33,7 +33,15 @@ func NewFirebaseConnection(id uint32, asset *inventory.Asset, conf *inventory.Co
 		Connection: plugin.NewConnection(id, asset),
 		Conf:       conf,
 		asset:      asset,
-		httpClient: &http.Client{Timeout: 15 * time.Second},
+		httpClient: &http.Client{
+			Timeout: 15 * time.Second,
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				if len(via) >= 5 {
+					return fmt.Errorf("stopped after 5 redirects")
+				}
+				return nil
+			},
+		},
 	}
 
 	if conf.Options != nil {
@@ -110,6 +118,9 @@ func (c *FirebaseConnection) resolveFromDomain() error {
 	// Strategy 3: Find linked JS files and scan them for Firebase config.
 	// Apps using Firebase Auth typically bundle the config in their JS.
 	scriptURLs := extractScriptSrcs(html, domain)
+	if len(scriptURLs) > 15 {
+		scriptURLs = scriptURLs[:15]
+	}
 	log.Debug().Int("count", len(scriptURLs)).Msg("found linked script URLs to scan")
 
 	for _, scriptURL := range scriptURLs {
@@ -134,7 +145,8 @@ func (c *FirebaseConnection) resolveFromDomain() error {
 var (
 	// Match Firebase config patterns in JS — handles both quoted keys and unquoted keys,
 	// property assignment and object literal styles
-	reProjectId  = regexp.MustCompile(`(?:["']?projectId["']?\s*[:=]\s*["']|FIREBASE_PROJECT_ID["']?\s*[:=]\s*["'])([a-zA-Z0-9_-]+)["']`)
+	// GCP project IDs: 6-30 chars, lowercase + digits + hyphens, must start with a letter
+	reProjectId  = regexp.MustCompile(`(?:["']?projectId["']?\s*[:=]\s*["']|FIREBASE_PROJECT_ID["']?\s*[:=]\s*["'])([a-z][a-z0-9-]{5,29})["']`)
 	reApiKey     = regexp.MustCompile(`(?:["']?apiKey["']?\s*[:=]\s*["']|FIREBASE_API_KEY["']?\s*[:=]\s*["'])(AIza[a-zA-Z0-9_-]+)["']`)
 	reAuthDomain = regexp.MustCompile(`(?:["']?authDomain["']?\s*[:=]\s*["']|FIREBASE_AUTH_DOMAIN["']?\s*[:=]\s*["'])([a-zA-Z0-9._-]+)["']`)
 
