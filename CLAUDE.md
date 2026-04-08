@@ -559,6 +559,19 @@ make test/integration
 
 **Note:** CI runs comprehensive checks. Run them locally only if you want to verify before pushing or if changing core/performance-critical code.
 
+### Spell Check CI
+CI runs [check-spelling/check-spelling](https://github.com/check-spelling/check-spelling) on every PR. It **only checks `.md`, `.lr`, and `.mql.yaml` files** (configured in `.github/actions/spelling/only.txt`).
+
+**How it works:**
+- Uses external dictionaries for AWS, Kubernetes, Go, and software terms
+- `.github/actions/spelling/expect.txt` — sorted list of allowed custom words (add new terms here)
+- `.github/actions/spelling/line_forbidden.patterns` — enforces correct capitalization of product names (e.g., "GitHub" not "Github", "Kubernetes" not "kubernetes")
+
+**Fixing spell check failures:**
+- If the word is a legitimate technical term: add it to `expect.txt` (keep sorted)
+- If the word appears in a pattern (ARN, hash, URL): add a regex to `patterns.txt`
+- If it's a genuine typo: fix the spelling
+
 ## 9. Commit Conventions
 
 Use emojis in commit messages (but don't worry about it, since you're NEVER going to commit anything; that's my job):
