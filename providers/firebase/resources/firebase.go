@@ -36,17 +36,26 @@ func (c *mqlFirebaseProject) id() (string, error) {
 	return "firebase/project/" + id, nil
 }
 
-// realtimeDatabase creates the lazy-loaded Realtime Database check resource.
+// realtimeDatabase triggers creation of the child resource via NewResource.
 func (p *mqlFirebaseProject) realtimeDatabase() (*mqlFirebaseProjectRealtimeDatabase, error) {
 	conn := p.MqlRuntime.Connection.(*connection.FirebaseConnection)
-	projectId := conn.ProjectId()
-
-	if projectId == "" {
+	if conn.ProjectId() == "" {
 		p.RealtimeDatabase.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
 
-	// Try both URL variants
+	res, err := NewResource(p.MqlRuntime, "firebase.project.realtimeDatabase", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlFirebaseProjectRealtimeDatabase), nil
+}
+
+// initFirebaseProjectRealtimeDatabase fetches data for the Realtime Database check.
+func initFirebaseProjectRealtimeDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	conn := runtime.Connection.(*connection.FirebaseConnection)
+	projectId := conn.ProjectId()
+
 	urls := []string{
 		fmt.Sprintf("https://%s-default-rtdb.firebaseio.com", projectId),
 		fmt.Sprintf("https://%s.firebaseio.com", projectId),
@@ -66,11 +75,9 @@ func (p *mqlFirebaseProject) realtimeDatabase() (*mqlFirebaseProjectRealtimeData
 			log.Debug().Err(err).Str("url", url).Msg("failed to reach Realtime Database")
 			continue
 		}
-		// Drain and close body to allow connection reuse
 		io.Copy(io.Discard, resp.Body)
 		resp.Body.Close()
 
-		// 404 means this URL variant doesn't exist, try the next one
 		if resp.StatusCode == http.StatusNotFound {
 			continue
 		}
@@ -81,52 +88,55 @@ func (p *mqlFirebaseProject) realtimeDatabase() (*mqlFirebaseProjectRealtimeData
 			publiclyReadable = true
 		}
 
-		// Check shallow query for structure exposure
 		shallowURL := baseURL + "/.json?shallow=true"
 		shallowResp, err := client.Get(shallowURL)
 		if err == nil {
-			defer shallowResp.Body.Close()
 			if shallowResp.StatusCode == http.StatusOK {
 				body, _ := io.ReadAll(io.LimitReader(shallowResp.Body, 1<<16))
-				// "null" means empty database, not structure exposure
 				if string(body) != "null" {
 					structureExposed = true
 				}
 			}
+			shallowResp.Body.Close()
 		}
 
-		break // Successfully reached the database, no need to try the other URL
+		break
 	}
 
 	if testedURL == "" {
-		testedURL = urls[0] // Default to first URL if neither responded
+		testedURL = urls[0]
 	}
 
-	res, err := CreateResource(p.MqlRuntime, "firebase.project.realtimeDatabase", map[string]*llx.RawData{
-		"url":              llx.StringData(testedURL),
-		"publiclyReadable": llx.BoolData(publiclyReadable),
-		"structureExposed": llx.BoolData(structureExposed),
-	})
-	if err != nil {
-		return nil, err
-	}
+	args["url"] = llx.StringData(testedURL)
+	args["publiclyReadable"] = llx.BoolData(publiclyReadable)
+	args["structureExposed"] = llx.BoolData(structureExposed)
 
-	return res.(*mqlFirebaseProjectRealtimeDatabase), nil
+	return args, nil, nil
 }
 
 func (c *mqlFirebaseProjectRealtimeDatabase) id() (string, error) {
 	return "firebase/realtimeDatabase/" + c.Url.Data, nil
 }
 
-// authConfig creates the lazy-loaded auth configuration check resource.
+// authConfig triggers creation of the child resource via NewResource.
 func (p *mqlFirebaseProject) authConfig() (*mqlFirebaseProjectAuthConfig, error) {
 	conn := p.MqlRuntime.Connection.(*connection.FirebaseConnection)
-	apiKey := conn.ApiKey()
-
-	if apiKey == "" {
+	if conn.ApiKey() == "" {
 		p.AuthConfig.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
+
+	res, err := NewResource(p.MqlRuntime, "firebase.project.authConfig", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlFirebaseProjectAuthConfig), nil
+}
+
+// initFirebaseProjectAuthConfig fetches auth configuration from the Identity Toolkit API.
+func initFirebaseProjectAuthConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	conn := runtime.Connection.(*connection.FirebaseConnection)
+	apiKey := conn.ApiKey()
 
 	url := "https://identitytoolkit.googleapis.com/v1/projects?key=" + apiKey
 	log.Debug().Str("url", url).Msg("checking Firebase auth config")
@@ -134,38 +144,39 @@ func (p *mqlFirebaseProject) authConfig() (*mqlFirebaseProjectAuthConfig, error)
 	client := conn.HttpClient()
 	resp, err := client.Get(url)
 	if err != nil {
-		return nil, fmt.Errorf("failed to query Identity Toolkit API: %w", err)
+		return nil, nil, fmt.Errorf("failed to query Identity Toolkit API: %w", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 	if err != nil {
-		return nil, fmt.Errorf("failed to read Identity Toolkit response: %w", err)
+		return nil, nil, fmt.Errorf("failed to read Identity Toolkit response: %w", err)
 	}
 
-	var signInProviders []interface{}
-	var anonymousAuthEnabled bool
-	var authorizedDomains []interface{}
+	signInProviders := []interface{}{}
+	anonymousAuthEnabled := false
+	authorizedDomains := []interface{}{}
 
 	if resp.StatusCode == http.StatusOK {
 		var result map[string]interface{}
 		if err := json.Unmarshal(body, &result); err != nil {
-			return nil, fmt.Errorf("failed to parse Identity Toolkit response: %w", err)
+			return nil, nil, fmt.Errorf("failed to parse Identity Toolkit response: %w", err)
 		}
 
-		// Try different response structures for providers
+		log.Debug().Str("response", string(body)).Msg("Identity Toolkit API response")
+
+		if domains, ok := result["authorizedDomains"].([]interface{}); ok {
+			authorizedDomains = domains
+		}
+
+		// Try v1 response structure
 		if idps, ok := result["signInConfig"].(map[string]interface{}); ok {
 			if methods, ok := idps["allowedMethods"].([]interface{}); ok {
 				signInProviders = methods
 			}
 		}
 
-		// Also check authorizedDomains
-		if domains, ok := result["authorizedDomains"].([]interface{}); ok {
-			authorizedDomains = domains
-		}
-
-		// Check for anonymous auth in the sign-in config
+		// Check for anonymous auth
 		for _, p := range signInProviders {
 			if str, ok := p.(string); ok && strings.EqualFold(str, "anonymous") {
 				anonymousAuthEnabled = true
@@ -174,11 +185,10 @@ func (p *mqlFirebaseProject) authConfig() (*mqlFirebaseProjectAuthConfig, error)
 		}
 	}
 
-	// If we didn't find providers in the new format, try the legacy format
+	// If we didn't find providers in the v1 format, try legacy format
 	if len(signInProviders) == 0 && resp.StatusCode == http.StatusOK {
 		var legacyResult map[string]interface{}
 		if err := json.Unmarshal(body, &legacyResult); err == nil {
-			// Legacy v3 format uses "idpConfig" and "signInOptions"
 			if idps, ok := legacyResult["idpConfig"].([]interface{}); ok {
 				for _, idp := range idps {
 					if idpMap, ok := idp.(map[string]interface{}); ok {
@@ -194,42 +204,47 @@ func (p *mqlFirebaseProject) authConfig() (*mqlFirebaseProjectAuthConfig, error)
 		}
 	}
 
-	res, err := CreateResource(p.MqlRuntime, "firebase.project.authConfig", map[string]*llx.RawData{
-		"signInProviders":      llx.ArrayData(signInProviders, types.String),
-		"anonymousAuthEnabled": llx.BoolData(anonymousAuthEnabled),
-		"authorizedDomains":    llx.ArrayData(authorizedDomains, types.String),
-	})
-	if err != nil {
-		return nil, err
-	}
+	args["signInProviders"] = llx.ArrayData(signInProviders, types.String)
+	args["anonymousAuthEnabled"] = llx.BoolData(anonymousAuthEnabled)
+	args["authorizedDomains"] = llx.ArrayData(authorizedDomains, types.String)
 
-	return res.(*mqlFirebaseProjectAuthConfig), nil
+	return args, nil, nil
 }
 
 func (c *mqlFirebaseProjectAuthConfig) id() (string, error) {
 	return "firebase/authConfig", nil
 }
 
-// hosting creates the lazy-loaded hosting check resource.
+// hosting triggers creation of the child resource via NewResource.
 func (p *mqlFirebaseProject) hosting() (*mqlFirebaseProjectHosting, error) {
 	conn := p.MqlRuntime.Connection.(*connection.FirebaseConnection)
-	domain := conn.Domain()
-
-	if domain == "" {
+	if conn.Domain() == "" {
 		p.Hosting.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
 
-	if !strings.Contains(domain, "://") {
-		domain = "https://" + domain
+	res, err := NewResource(p.MqlRuntime, "firebase.project.hosting", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
 	}
-	domain = strings.TrimRight(domain, "/")
+	return res.(*mqlFirebaseProjectHosting), nil
+}
+
+// initFirebaseProjectHosting checks .well-known paths on the domain.
+func initFirebaseProjectHosting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	conn := runtime.Connection.(*connection.FirebaseConnection)
+	domain := conn.Domain()
+
+	domainURL := domain
+	if !strings.Contains(domainURL, "://") {
+		domainURL = "https://" + domainURL
+	}
+	domainURL = strings.TrimRight(domainURL, "/")
 
 	client := conn.HttpClient()
 
-	// Check Apple App Site Association
 	var appleData interface{}
-	appleURL := domain + "/.well-known/apple-app-site-association"
+	appleURL := domainURL + "/.well-known/apple-app-site-association"
 	log.Debug().Str("url", appleURL).Msg("checking Apple App Site Association")
 
 	if resp, err := client.Get(appleURL); err == nil {
@@ -243,9 +258,8 @@ func (p *mqlFirebaseProject) hosting() (*mqlFirebaseProjectHosting, error) {
 		resp.Body.Close()
 	}
 
-	// Check Android Asset Links
 	var androidData interface{}
-	androidURL := domain + "/.well-known/assetlinks.json"
+	androidURL := domainURL + "/.well-known/assetlinks.json"
 	log.Debug().Str("url", androidURL).Msg("checking Android Asset Links")
 
 	if resp, err := client.Get(androidURL); err == nil {
@@ -259,34 +273,36 @@ func (p *mqlFirebaseProject) hosting() (*mqlFirebaseProjectHosting, error) {
 		resp.Body.Close()
 	}
 
-	// Use the original domain (without scheme) for display
-	displayDomain := conn.Domain()
+	args["domain"] = llx.StringData(domain)
+	args["appleAppSiteAssociation"] = llx.DictData(appleData)
+	args["androidAssetLinks"] = llx.DictData(androidData)
 
-	res, err := CreateResource(p.MqlRuntime, "firebase.project.hosting", map[string]*llx.RawData{
-		"domain":                  llx.StringData(displayDomain),
-		"appleAppSiteAssociation": llx.DictData(appleData),
-		"androidAssetLinks":       llx.DictData(androidData),
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return res.(*mqlFirebaseProjectHosting), nil
+	return args, nil, nil
 }
 
 func (c *mqlFirebaseProjectHosting) id() (string, error) {
 	return "firebase/hosting/" + c.Domain.Data, nil
 }
 
-// storage creates the lazy-loaded storage check resource.
+// storage triggers creation of the child resource via NewResource.
 func (p *mqlFirebaseProject) storage() (*mqlFirebaseProjectStorage, error) {
 	conn := p.MqlRuntime.Connection.(*connection.FirebaseConnection)
-	projectId := conn.ProjectId()
-
-	if projectId == "" {
+	if conn.ProjectId() == "" {
 		p.Storage.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
+
+	res, err := NewResource(p.MqlRuntime, "firebase.project.storage", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlFirebaseProjectStorage), nil
+}
+
+// initFirebaseProjectStorage checks the Firebase Storage bucket for public listing.
+func initFirebaseProjectStorage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	conn := runtime.Connection.(*connection.FirebaseConnection)
+	projectId := conn.ProjectId()
 
 	bucketURL := fmt.Sprintf("https://firebasestorage.googleapis.com/v0/b/%s.appspot.com/o", projectId)
 	log.Debug().Str("url", bucketURL).Msg("checking Firebase Storage public listing")
@@ -296,21 +312,16 @@ func (p *mqlFirebaseProject) storage() (*mqlFirebaseProjectStorage, error) {
 
 	resp, err := client.Get(bucketURL)
 	if err == nil {
-		defer resp.Body.Close()
 		if resp.StatusCode == http.StatusOK {
 			publiclyListable = true
 		}
+		resp.Body.Close()
 	}
 
-	res, err := CreateResource(p.MqlRuntime, "firebase.project.storage", map[string]*llx.RawData{
-		"bucketUrl":        llx.StringData(bucketURL),
-		"publiclyListable": llx.BoolData(publiclyListable),
-	})
-	if err != nil {
-		return nil, err
-	}
+	args["bucketUrl"] = llx.StringData(bucketURL)
+	args["publiclyListable"] = llx.BoolData(publiclyListable)
 
-	return res.(*mqlFirebaseProjectStorage), nil
+	return args, nil, nil
 }
 
 func (c *mqlFirebaseProjectStorage) id() (string, error) {

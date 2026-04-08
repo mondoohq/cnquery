@@ -31,19 +31,19 @@ func init() {
 			Create: createFirebaseProject,
 		},
 		"firebase.project.realtimeDatabase": {
-			// to override args, implement: initFirebaseProjectRealtimeDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initFirebaseProjectRealtimeDatabase,
 			Create: createFirebaseProjectRealtimeDatabase,
 		},
 		"firebase.project.authConfig": {
-			// to override args, implement: initFirebaseProjectAuthConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initFirebaseProjectAuthConfig,
 			Create: createFirebaseProjectAuthConfig,
 		},
 		"firebase.project.hosting": {
-			// to override args, implement: initFirebaseProjectHosting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initFirebaseProjectHosting,
 			Create: createFirebaseProjectHosting,
 		},
 		"firebase.project.storage": {
-			// to override args, implement: initFirebaseProjectStorage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initFirebaseProjectStorage,
 			Create: createFirebaseProjectStorage,
 		},
 	}
