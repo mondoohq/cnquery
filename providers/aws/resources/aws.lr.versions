@@ -893,9 +893,14 @@ aws.drs.launchConfiguration.postLaunchEnabled 11.15.2
 aws.drs.launchConfiguration.sourceServerID 11.15.2
 aws.drs.launchConfiguration.targetInstanceTypeRightSizingMethod 11.15.2
 aws.drs.replicationConfiguration 11.15.2
+aws.drs.replicationConfiguration.associateDefaultSecurityGroup 13.9.0
+aws.drs.replicationConfiguration.autoReplicateNewDisks 13.9.0
 aws.drs.replicationConfiguration.bandwidthThrottling 11.15.2
+aws.drs.replicationConfiguration.createPublicIP 13.9.0
+aws.drs.replicationConfiguration.dataPlaneRouting 13.9.0
 aws.drs.replicationConfiguration.ebsEncryption 11.15.2
 aws.drs.replicationConfiguration.ebsEncryptionKeyArn 11.15.2
+aws.drs.replicationConfiguration.internetProtocol 13.9.0
 aws.drs.replicationConfiguration.replicatedDisks 11.15.2
 aws.drs.replicationConfiguration.replicationServerInstanceType 11.15.2
 aws.drs.replicationConfiguration.sourceServerID 11.15.2

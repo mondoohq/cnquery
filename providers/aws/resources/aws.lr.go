@@ -7382,6 +7382,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.drs.replicationConfiguration.bandwidthThrottling": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDrsReplicationConfiguration).GetBandwidthThrottling()).ToDataRes(types.Int)
 	},
+	"aws.drs.replicationConfiguration.dataPlaneRouting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsReplicationConfiguration).GetDataPlaneRouting()).ToDataRes(types.String)
+	},
+	"aws.drs.replicationConfiguration.internetProtocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsReplicationConfiguration).GetInternetProtocol()).ToDataRes(types.String)
+	},
+	"aws.drs.replicationConfiguration.createPublicIP": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsReplicationConfiguration).GetCreatePublicIP()).ToDataRes(types.Bool)
+	},
+	"aws.drs.replicationConfiguration.associateDefaultSecurityGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsReplicationConfiguration).GetAssociateDefaultSecurityGroup()).ToDataRes(types.Bool)
+	},
+	"aws.drs.replicationConfiguration.autoReplicateNewDisks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsReplicationConfiguration).GetAutoReplicateNewDisks()).ToDataRes(types.Bool)
+	},
 	"aws.drs.launchConfiguration.sourceServerID": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDrsLaunchConfiguration).GetSourceServerID()).ToDataRes(types.String)
 	},
@@ -23008,6 +23023,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.drs.replicationConfiguration.bandwidthThrottling": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDrsReplicationConfiguration).BandwidthThrottling, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.drs.replicationConfiguration.dataPlaneRouting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsReplicationConfiguration).DataPlaneRouting, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.drs.replicationConfiguration.internetProtocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsReplicationConfiguration).InternetProtocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.drs.replicationConfiguration.createPublicIP": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsReplicationConfiguration).CreatePublicIP, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.drs.replicationConfiguration.associateDefaultSecurityGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsReplicationConfiguration).AssociateDefaultSecurityGroup, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.drs.replicationConfiguration.autoReplicateNewDisks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsReplicationConfiguration).AutoReplicateNewDisks, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.drs.launchConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -55350,6 +55385,11 @@ type mqlAwsDrsReplicationConfiguration struct {
 	EbsEncryptionKeyArn           plugin.TValue[string]
 	ReplicatedDisks               plugin.TValue[[]any]
 	BandwidthThrottling           plugin.TValue[int64]
+	DataPlaneRouting              plugin.TValue[string]
+	InternetProtocol              plugin.TValue[string]
+	CreatePublicIP                plugin.TValue[bool]
+	AssociateDefaultSecurityGroup plugin.TValue[bool]
+	AutoReplicateNewDisks         plugin.TValue[bool]
 }
 
 // createAwsDrsReplicationConfiguration creates a new instance of this resource
@@ -55423,6 +55463,26 @@ func (c *mqlAwsDrsReplicationConfiguration) GetReplicatedDisks() *plugin.TValue[
 
 func (c *mqlAwsDrsReplicationConfiguration) GetBandwidthThrottling() *plugin.TValue[int64] {
 	return &c.BandwidthThrottling
+}
+
+func (c *mqlAwsDrsReplicationConfiguration) GetDataPlaneRouting() *plugin.TValue[string] {
+	return &c.DataPlaneRouting
+}
+
+func (c *mqlAwsDrsReplicationConfiguration) GetInternetProtocol() *plugin.TValue[string] {
+	return &c.InternetProtocol
+}
+
+func (c *mqlAwsDrsReplicationConfiguration) GetCreatePublicIP() *plugin.TValue[bool] {
+	return &c.CreatePublicIP
+}
+
+func (c *mqlAwsDrsReplicationConfiguration) GetAssociateDefaultSecurityGroup() *plugin.TValue[bool] {
+	return &c.AssociateDefaultSecurityGroup
+}
+
+func (c *mqlAwsDrsReplicationConfiguration) GetAutoReplicateNewDisks() *plugin.TValue[bool] {
+	return &c.AutoReplicateNewDisks
 }
 
 // mqlAwsDrsLaunchConfiguration for the aws.drs.launchConfiguration resource

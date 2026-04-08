@@ -1076,6 +1076,7 @@ gcp.project.computeService.instance.status 9.0.0
 gcp.project.computeService.instance.statusMessage 9.0.0
 gcp.project.computeService.instance.tags 9.0.0
 gcp.project.computeService.instance.totalEgressBandwidthTier 9.0.0
+gcp.project.computeService.instance.workloadIdentityConfig 13.5.0
 gcp.project.computeService.instance.zone 9.0.0
 gcp.project.computeService.instanceGroup 11.6.6
 gcp.project.computeService.instanceGroup.created 11.6.6
@@ -1378,6 +1379,7 @@ gcp.project.computeService.vpnGateway.labels 11.6.6
 gcp.project.computeService.vpnGateway.name 11.6.6
 gcp.project.computeService.vpnGateway.network 11.6.6
 gcp.project.computeService.vpnGateway.regionUrl 11.6.6
+gcp.project.computeService.vpnGateway.resourceManagerTags 13.5.0
 gcp.project.computeService.vpnGateway.stackType 11.6.6
 gcp.project.computeService.vpnGateway.vpnInterfaces 11.6.6
 gcp.project.computeService.vpnGateways 11.6.6
@@ -1396,6 +1398,7 @@ gcp.project.computeService.vpnTunnel.peerGcpGateway 11.6.6
 gcp.project.computeService.vpnTunnel.peerIp 11.6.6
 gcp.project.computeService.vpnTunnel.regionUrl 11.6.6
 gcp.project.computeService.vpnTunnel.remoteTrafficSelector 11.6.6
+gcp.project.computeService.vpnTunnel.resourceManagerTags 13.5.0
 gcp.project.computeService.vpnTunnel.routerUrl 11.6.6
 gcp.project.computeService.vpnTunnel.sharedSecretHash 11.6.6
 gcp.project.computeService.vpnTunnel.status 11.6.6

@@ -573,6 +573,14 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 		return nil, err
 	}
 
+	var mqlWorkloadIdentityConfig map[string]any
+	if instance.WorkloadIdentityConfig != nil {
+		mqlWorkloadIdentityConfig, err = convert.JsonToDict(instance.WorkloadIdentityConfig)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	reservationAffinity, err := convert.JsonToDict(instance.ReservationAffinity)
 	if err != nil {
 		return nil, err
@@ -660,6 +668,7 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 		"zone":                       llx.ResourceData(zone, "gcp.project.computeService.zone"),
 		"satisfiesPzi":               llx.BoolData(instance.SatisfiesPzi),
 		"satisfiesPzs":               llx.BoolData(instance.SatisfiesPzs),
+		"workloadIdentityConfig":     llx.DictData(mqlWorkloadIdentityConfig),
 	})
 	if err != nil {
 		return nil, err
@@ -2931,16 +2940,22 @@ func (g *mqlGcpProjectComputeService) vpnGateways() ([]any, error) {
 					vpnInterfaces = append(vpnInterfaces, ifaceDict)
 				}
 
+				var gwResourceManagerTags map[string]any
+				if gw.Params != nil {
+					gwResourceManagerTags = convert.MapToInterfaceMap(gw.Params.ResourceManagerTags)
+				}
+
 				mqlGw, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.vpnGateway", map[string]*llx.RawData{
-					"id":               llx.StringData(fmt.Sprintf("%d", gw.Id)),
-					"name":             llx.StringData(gw.Name),
-					"description":      llx.StringData(gw.Description),
-					"created":          llx.TimeDataPtr(parseTime(gw.CreationTimestamp)),
-					"labels":           llx.MapData(convert.MapToInterfaceMap(gw.Labels), types.String),
-					"gatewayIpVersion": llx.StringData(gw.GatewayIpVersion),
-					"stackType":        llx.StringData(gw.StackType),
-					"regionUrl":        llx.StringData(gw.Region),
-					"vpnInterfaces":    llx.ArrayData(vpnInterfaces, types.Dict),
+					"id":                  llx.StringData(fmt.Sprintf("%d", gw.Id)),
+					"name":                llx.StringData(gw.Name),
+					"description":         llx.StringData(gw.Description),
+					"created":             llx.TimeDataPtr(parseTime(gw.CreationTimestamp)),
+					"labels":              llx.MapData(convert.MapToInterfaceMap(gw.Labels), types.String),
+					"gatewayIpVersion":    llx.StringData(gw.GatewayIpVersion),
+					"stackType":           llx.StringData(gw.StackType),
+					"regionUrl":           llx.StringData(gw.Region),
+					"vpnInterfaces":       llx.ArrayData(vpnInterfaces, types.Dict),
+					"resourceManagerTags": llx.MapData(gwResourceManagerTags, types.String),
 				})
 				if err != nil {
 					return err
@@ -2988,6 +3003,11 @@ func (g *mqlGcpProjectComputeService) vpnTunnels() ([]any, error) {
 	if err := req.Pages(ctx, func(page *compute.VpnTunnelAggregatedList) error {
 		for _, scopedList := range page.Items {
 			for _, t := range scopedList.VpnTunnels {
+				var tunnelResourceManagerTags map[string]any
+				if t.Params != nil {
+					tunnelResourceManagerTags = convert.MapToInterfaceMap(t.Params.ResourceManagerTags)
+				}
+
 				mqlTunnel, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.vpnTunnel", map[string]*llx.RawData{
 					"id":                           llx.StringData(fmt.Sprintf("%d", t.Id)),
 					"name":                         llx.StringData(t.Name),
@@ -3009,6 +3029,7 @@ func (g *mqlGcpProjectComputeService) vpnTunnels() ([]any, error) {
 					"targetVpnGateway":             llx.StringData(t.TargetVpnGateway),
 					"vpnGatewayUrl":                llx.StringData(t.VpnGateway),
 					"vpnGatewayInterface":          llx.IntData(int64(t.VpnGatewayInterface)),
+					"resourceManagerTags":          llx.MapData(tunnelResourceManagerTags, types.String),
 				})
 				if err != nil {
 					return err

@@ -2388,6 +2388,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.instance.satisfiesPzs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstance).GetSatisfiesPzs()).ToDataRes(types.Bool)
 	},
+	"gcp.project.computeService.instance.workloadIdentityConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetWorkloadIdentityConfig()).ToDataRes(types.Dict)
+	},
 	"gcp.project.computeService.instance.shieldedInstanceConfig.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstanceShieldedInstanceConfig).GetId()).ToDataRes(types.String)
 	},
@@ -6591,6 +6594,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.vpnGateway.vpnInterfaces": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceVpnGateway).GetVpnInterfaces()).ToDataRes(types.Array(types.Dict))
 	},
+	"gcp.project.computeService.vpnGateway.resourceManagerTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceVpnGateway).GetResourceManagerTags()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"gcp.project.computeService.vpnTunnel.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceVpnTunnel).GetId()).ToDataRes(types.String)
 	},
@@ -6650,6 +6656,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.vpnTunnel.vpnGatewayInterface": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceVpnTunnel).GetVpnGatewayInterface()).ToDataRes(types.Int)
+	},
+	"gcp.project.computeService.vpnTunnel.resourceManagerTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceVpnTunnel).GetResourceManagerTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"gcp.project.computeService.storagePool.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceStoragePool).GetId()).ToDataRes(types.String)
@@ -9987,6 +9996,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.instance.satisfiesPzs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceInstance).SatisfiesPzs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.workloadIdentityConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).WorkloadIdentityConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.instance.shieldedInstanceConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16165,6 +16178,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceVpnGateway).VpnInterfaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.vpnGateway.resourceManagerTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceVpnGateway).ResourceManagerTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.vpnTunnel.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceVpnTunnel).__id, ok = v.Value.(string)
 		return
@@ -16247,6 +16264,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.vpnTunnel.vpnGatewayInterface": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceVpnTunnel).VpnGatewayInterface, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.vpnTunnel.resourceManagerTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceVpnTunnel).ResourceManagerTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.storagePool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -22765,6 +22786,7 @@ type mqlGcpProjectComputeServiceInstance struct {
 	Zone                       plugin.TValue[*mqlGcpProjectComputeServiceZone]
 	SatisfiesPzi               plugin.TValue[bool]
 	SatisfiesPzs               plugin.TValue[bool]
+	WorkloadIdentityConfig     plugin.TValue[any]
 }
 
 // createGcpProjectComputeServiceInstance creates a new instance of this resource
@@ -22982,6 +23004,10 @@ func (c *mqlGcpProjectComputeServiceInstance) GetSatisfiesPzi() *plugin.TValue[b
 
 func (c *mqlGcpProjectComputeServiceInstance) GetSatisfiesPzs() *plugin.TValue[bool] {
 	return &c.SatisfiesPzs
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetWorkloadIdentityConfig() *plugin.TValue[any] {
+	return &c.WorkloadIdentityConfig
 }
 
 // mqlGcpProjectComputeServiceInstanceShieldedInstanceConfig for the gcp.project.computeService.instance.shieldedInstanceConfig resource
@@ -37094,16 +37120,17 @@ type mqlGcpProjectComputeServiceVpnGateway struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlGcpProjectComputeServiceVpnGatewayInternal
-	Id               plugin.TValue[string]
-	Name             plugin.TValue[string]
-	Description      plugin.TValue[string]
-	Created          plugin.TValue[*time.Time]
-	Labels           plugin.TValue[map[string]any]
-	Network          plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
-	GatewayIpVersion plugin.TValue[string]
-	StackType        plugin.TValue[string]
-	RegionUrl        plugin.TValue[string]
-	VpnInterfaces    plugin.TValue[[]any]
+	Id                  plugin.TValue[string]
+	Name                plugin.TValue[string]
+	Description         plugin.TValue[string]
+	Created             plugin.TValue[*time.Time]
+	Labels              plugin.TValue[map[string]any]
+	Network             plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
+	GatewayIpVersion    plugin.TValue[string]
+	StackType           plugin.TValue[string]
+	RegionUrl           plugin.TValue[string]
+	VpnInterfaces       plugin.TValue[[]any]
+	ResourceManagerTags plugin.TValue[map[string]any]
 }
 
 // createGcpProjectComputeServiceVpnGateway creates a new instance of this resource
@@ -37195,6 +37222,10 @@ func (c *mqlGcpProjectComputeServiceVpnGateway) GetVpnInterfaces() *plugin.TValu
 	return &c.VpnInterfaces
 }
 
+func (c *mqlGcpProjectComputeServiceVpnGateway) GetResourceManagerTags() *plugin.TValue[map[string]any] {
+	return &c.ResourceManagerTags
+}
+
 // mqlGcpProjectComputeServiceVpnTunnel for the gcp.project.computeService.vpnTunnel resource
 type mqlGcpProjectComputeServiceVpnTunnel struct {
 	MqlRuntime *plugin.Runtime
@@ -37220,6 +37251,7 @@ type mqlGcpProjectComputeServiceVpnTunnel struct {
 	TargetVpnGateway             plugin.TValue[string]
 	VpnGatewayUrl                plugin.TValue[string]
 	VpnGatewayInterface          plugin.TValue[int64]
+	ResourceManagerTags          plugin.TValue[map[string]any]
 }
 
 // createGcpProjectComputeServiceVpnTunnel creates a new instance of this resource
@@ -37337,6 +37369,10 @@ func (c *mqlGcpProjectComputeServiceVpnTunnel) GetVpnGatewayUrl() *plugin.TValue
 
 func (c *mqlGcpProjectComputeServiceVpnTunnel) GetVpnGatewayInterface() *plugin.TValue[int64] {
 	return &c.VpnGatewayInterface
+}
+
+func (c *mqlGcpProjectComputeServiceVpnTunnel) GetResourceManagerTags() *plugin.TValue[map[string]any] {
+	return &c.ResourceManagerTags
 }
 
 // mqlGcpProjectComputeServiceStoragePool for the gcp.project.computeService.storagePool resource

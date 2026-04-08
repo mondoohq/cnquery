@@ -4181,6 +4181,16 @@ private aws.drs.replicationConfiguration @defaults("sourceServerID") {
   replicatedDisks []dict
   // Bandwidth throttling in Mbps
   bandwidthThrottling int
+  // Data plane routing mechanism (PRIVATE_IP, PUBLIC_IP)
+  dataPlaneRouting string
+  // Internet protocol version for replication (IPV4, IPV6)
+  internetProtocol string
+  // Whether to create a public IP for the recovery instance
+  createPublicIP bool
+  // Whether to associate the default security group
+  associateDefaultSecurityGroup bool
+  // Whether to automatically replicate newly added disks
+  autoReplicateNewDisks bool
 }
 
 // AWS DRS launch configuration

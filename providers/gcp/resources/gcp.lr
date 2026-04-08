@@ -880,6 +880,8 @@ gcp.project.computeService.instance @defaults("name id") {
   satisfiesPzi bool
   // Whether the instance satisfies Google's Protected Zone Separation requirements
   satisfiesPzs bool
+  // Workload identity configuration for the instance
+  workloadIdentityConfig dict
 }
 
 // Google Cloud (GCP) Compute Shielded Instance configuration
@@ -4283,6 +4285,8 @@ private gcp.project.computeService.vpnGateway @defaults("name") {
   regionUrl string
   // VPN interfaces associated with this VPN gateway
   vpnInterfaces []dict
+  // Resource manager tags bound to this VPN gateway
+  resourceManagerTags map[string]string
 }
 
 // Google Cloud (GCP) Compute VPN tunnel
@@ -4327,6 +4331,8 @@ private gcp.project.computeService.vpnTunnel @defaults("name status") {
   vpnGatewayUrl string
   // Interface ID of the VPN gateway
   vpnGatewayInterface int
+  // Resource manager tags bound to this VPN tunnel
+  resourceManagerTags map[string]string
 }
 
 // Google Cloud (GCP) Compute storage pool

@@ -193,6 +193,11 @@ func (a *mqlAwsDrsSourceServer) replicationConfiguration() (*mqlAwsDrsReplicatio
 			"ebsEncryptionKeyArn":           llx.StringDataPtr(resp.EbsEncryptionKeyArn),
 			"replicatedDisks":               llx.ArrayData(replicatedDisks, types.Dict),
 			"bandwidthThrottling":           llx.IntData(int64(resp.BandwidthThrottling)),
+			"dataPlaneRouting":              llx.StringData(string(resp.DataPlaneRouting)),
+			"internetProtocol":              llx.StringData(string(resp.InternetProtocol)),
+			"createPublicIP":                llx.BoolDataPtr(resp.CreatePublicIP),
+			"associateDefaultSecurityGroup": llx.BoolDataPtr(resp.AssociateDefaultSecurityGroup),
+			"autoReplicateNewDisks":         llx.BoolDataPtr(resp.AutoReplicateNewDisks),
 		})
 	if err != nil {
 		return nil, err
