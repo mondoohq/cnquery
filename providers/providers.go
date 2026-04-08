@@ -210,6 +210,41 @@ func httpClientWithRetry() (*http.Client, error) {
 	return retryClient.StandardClient(), nil
 }
 
+// httpClientForDownload creates an HTTP client tuned for large file downloads.
+// Unlike httpClientWithRetry it does NOT set http.Client.Timeout, which would
+// cap the entire request lifecycle including body reads. Callers should wrap
+// the response body with an idleTimeoutReader to detect stalled transfers.
+func httpClientForDownload() (*http.Client, error) {
+	var proxyFn func(*http.Request) (*url.URL, error)
+
+	proxy, err := config.GetAPIProxy()
+	if err != nil {
+		log.Fatal().Err(err).Msg("could not parse proxy URL")
+	}
+
+	if proxy != nil {
+		proxyFn = http.ProxyURL(proxy)
+	}
+
+	retryClient := retryablehttp.NewClient()
+	retryClient.RetryMax = 3
+	retryClient.Logger = zerologadapter.New(log.Logger)
+	retryClient.HTTPClient = &http.Client{
+		Transport: &http.Transport{
+			Proxy: proxyFn,
+			DialContext: (&net.Dialer{
+				Timeout:   defaultHttpTimeout,
+				KeepAlive: 30 * time.Second,
+			}).DialContext,
+			MaxIdleConns:          100,
+			IdleConnTimeout:       defaultIdleConnTimeout,
+			TLSHandshakeTimeout:   defaultTLSHandshakeTimeout,
+			ExpectContinueTimeout: 1 * time.Second,
+		},
+	}
+	return retryClient.StandardClient(), nil
+}
+
 // List providers that are going to be used in their default order:
 // builtin > user > system. The providers are also loaded and provider their
 // metadata/configuration.
@@ -436,11 +471,11 @@ func installVersion(ctx context.Context, name string, version string) (*Provider
 	if err != nil {
 		return nil, err
 	}
-	defer res.Close()
+	idleReader := newIdleTimeoutReader(res, downloadTimeout())
+	defer idleReader.Close()
 
-	// we have to create new Reader to get rid of the timeouts imposed by the http client
 	var tar []byte
-	if tar, err = io.ReadAll(res); err != nil {
+	if tar, err = io.ReadAll(idleReader); err != nil {
 		logCtx.Debug().Msg("failed to read body of provider download")
 		return nil, errors.Wrap(err, "failed to install "+name+"-"+version+", failed to read body")
 	}

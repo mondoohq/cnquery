@@ -127,7 +127,7 @@ func (r *MondooProviderRegistry) DownloadProvider(ctx context.Context, name, ver
 
 	log.Debug().Str("url", downloadURL).Msg("downloading provider from URL")
 
-	client, err := httpClientWithRetry()
+	client, err := httpClientForDownload()
 	if err != nil {
 		return nil, err
 	}

@@ -18,6 +18,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/cockroachdb/errors"
@@ -422,8 +423,9 @@ func downloadAndInstall(ctx context.Context, release *Release, destPath string, 
 
 	log.Debug().Str("url", downloadURL).Msg("self-update: downloading")
 
-	// Download the file
-	client, err := httpClientWithRetry()
+	// Download the file using a client without total-request timeout,
+	// so large downloads on slow connections are not killed prematurely.
+	client, err := httpClientForDownload()
 	if err != nil {
 		return "", err
 	}
@@ -437,11 +439,17 @@ func downloadAndInstall(ctx context.Context, release *Release, destPath string, 
 	if err != nil {
 		return "", errors.Wrap(err, "failed to download release")
 	}
-	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
+		resp.Body.Close()
 		return "", errors.Newf("download failed with status: %d", resp.StatusCode)
 	}
+
+	// Wrap body with idle timeout so stalled downloads are detected,
+	// while slow-but-active transfers are allowed to complete.
+	// The idle reader owns resp.Body from this point.
+	idleReader := newIdleTimeoutReader(resp.Body, downloadTimeout())
+	defer idleReader.Close()
 
 	// Create a temporary file to store the download
 	tmpFile, err := os.CreateTemp("", binaryName+"-update-*")
@@ -455,7 +463,7 @@ func downloadAndInstall(ctx context.Context, release *Release, destPath string, 
 	hash := sha256.New()
 	writer := io.MultiWriter(tmpFile, hash)
 
-	if _, err := io.Copy(writer, resp.Body); err != nil {
+	if _, err := io.Copy(writer, idleReader); err != nil {
 		tmpFile.Close()
 		return "", errors.Wrap(err, "failed to download file")
 	}
@@ -552,4 +560,102 @@ func httpClientWithRetry() (*http.Client, error) {
 	}
 
 	return retryClient.StandardClient(), nil
+}
+
+// httpClientForDownload creates an HTTP client tuned for large file downloads.
+// Unlike httpClientWithRetry it does NOT set http.Client.Timeout, which would
+// cap the entire request lifecycle including body reads. Callers should wrap
+// the response body with an idleTimeoutReader to detect stalled transfers.
+func httpClientForDownload() (*http.Client, error) {
+	var proxyFn func(*http.Request) (*url.URL, error)
+
+	proxy, err := config.GetAPIProxy()
+	if err != nil {
+		log.Warn().Err(err).Msg("self-update: could not parse proxy URL")
+	}
+
+	if proxy != nil {
+		proxyFn = http.ProxyURL(proxy)
+	}
+
+	retryClient := retryablehttp.NewClient()
+	retryClient.RetryMax = 3
+	retryClient.Logger = zerologadapter.New(log.Logger)
+	retryClient.HTTPClient = &http.Client{
+		Transport: &http.Transport{
+			Proxy: proxyFn,
+			DialContext: (&net.Dialer{
+				Timeout:   defaultHttpTimeout,
+				KeepAlive: 30 * time.Second,
+			}).DialContext,
+			MaxIdleConns:          100,
+			IdleConnTimeout:       defaultIdleConnTimeout,
+			TLSHandshakeTimeout:   defaultTLSHandshakeTimeout,
+			ExpectContinueTimeout: 1 * time.Second,
+		},
+	}
+	return retryClient.StandardClient(), nil
+}
+
+const (
+	envDownloadTimeout     = "MONDOO_DOWNLOAD_TIMEOUT"
+	defaultDownloadTimeout = 2 * time.Minute
+)
+
+func downloadTimeout() time.Duration {
+	v := os.Getenv(envDownloadTimeout)
+	if v == "" {
+		return defaultDownloadTimeout
+	}
+	d, err := time.ParseDuration(v)
+	if err != nil {
+		log.Warn().Str("value", v).Msg("invalid " + envDownloadTimeout + " value, using default")
+		return defaultDownloadTimeout
+	}
+	if d <= 0 {
+		log.Warn().Str("value", v).Msg(envDownloadTimeout + " must be positive, using default")
+		return defaultDownloadTimeout
+	}
+	return d
+}
+
+// idleTimeoutReader wraps an io.ReadCloser and enforces an idle timeout.
+// If no data is received for the configured duration, the underlying reader
+// is closed, causing any blocked Read to return an error.
+type idleTimeoutReader struct {
+	body     io.ReadCloser
+	timeout  time.Duration
+	timer    *time.Timer
+	timedOut atomic.Bool
+}
+
+func newIdleTimeoutReader(body io.ReadCloser, timeout time.Duration) *idleTimeoutReader {
+	itr := &idleTimeoutReader{
+		body:    body,
+		timeout: timeout,
+	}
+	itr.timer = time.AfterFunc(timeout, func() {
+		itr.timedOut.Store(true)
+		body.Close()
+	})
+	return itr
+}
+
+func (itr *idleTimeoutReader) Read(p []byte) (int, error) {
+	n, err := itr.body.Read(p)
+	if n > 0 {
+		itr.timer.Reset(itr.timeout)
+	}
+	if err != nil && itr.timedOut.Load() {
+		return n, fmt.Errorf("download stalled: no data received for %s (configure with %s)", itr.timeout, envDownloadTimeout)
+	}
+	return n, err
+}
+
+func (itr *idleTimeoutReader) Close() error {
+	itr.timer.Stop()
+	if itr.timedOut.Load() {
+		return nil // body already closed by timer callback
+	}
+	return itr.body.Close()
 }
