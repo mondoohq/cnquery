@@ -887,7 +887,7 @@ func (a *mqlAwsEksCluster) fargateProfiles() ([]any, error) {
 		for _, profileName := range page.FargateProfileNames {
 			mqlProfile, err := CreateResource(a.MqlRuntime, "aws.eks.fargateProfile",
 				map[string]*llx.RawData{
-					"__id":        llx.StringData(fmt.Sprintf("aws.eks.fargateProfile/%s/%s", a.Name.Data, profileName)),
+					"__id":        llx.StringData(fmt.Sprintf("aws.eks.fargateProfile/%s/%s/%s", regionVal, a.Name.Data, profileName)),
 					"name":        llx.StringData(profileName),
 					"clusterName": llx.StringData(a.Name.Data),
 					"region":      llx.StringData(regionVal),
@@ -913,7 +913,7 @@ type mqlAwsEksFargateProfileInternal struct {
 }
 
 func (a *mqlAwsEksFargateProfile) id() (string, error) {
-	return fmt.Sprintf("aws.eks.fargateProfile/%s/%s", a.ClusterName.Data, a.Name.Data), nil
+	return fmt.Sprintf("aws.eks.fargateProfile/%s/%s/%s", a.region, a.ClusterName.Data, a.Name.Data), nil
 }
 
 func (a *mqlAwsEksFargateProfile) arn() (string, error) {
@@ -1148,7 +1148,7 @@ func (a *mqlAwsEksCluster) identityProviderConfigs() ([]any, error) {
 		for _, config := range page.IdentityProviderConfigs {
 			mqlConfig, err := CreateResource(a.MqlRuntime, "aws.eks.identityProviderConfig",
 				map[string]*llx.RawData{
-					"__id":        llx.StringData(fmt.Sprintf("aws.eks.identityProviderConfig/%s/%s/%s", a.Name.Data, convert.ToValue(config.Type), convert.ToValue(config.Name))),
+					"__id":        llx.StringData(fmt.Sprintf("aws.eks.identityProviderConfig/%s/%s/%s/%s", regionVal, a.Name.Data, convert.ToValue(config.Type), convert.ToValue(config.Name))),
 					"name":        llx.StringDataPtr(config.Name),
 					"type":        llx.StringDataPtr(config.Type),
 					"clusterName": llx.StringData(a.Name.Data),
@@ -1175,7 +1175,7 @@ type mqlAwsEksIdentityProviderConfigInternal struct {
 }
 
 func (a *mqlAwsEksIdentityProviderConfig) id() (string, error) {
-	return fmt.Sprintf("aws.eks.identityProviderConfig/%s/%s/%s", a.ClusterName.Data, a.Type.Data, a.Name.Data), nil
+	return fmt.Sprintf("aws.eks.identityProviderConfig/%s/%s/%s/%s", a.region, a.ClusterName.Data, a.Type.Data, a.Name.Data), nil
 }
 
 func (a *mqlAwsEksIdentityProviderConfig) fetchDetails() (*ekstypes.OidcIdentityProviderConfig, error) {
