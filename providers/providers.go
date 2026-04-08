@@ -30,6 +30,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
 	"go.mondoo.com/mql/v13/providers/core/resources/versions/semver"
+	"go.mondoo.com/mql/v13/utils/httpx"
 	"golang.org/x/exp/slices"
 )
 
@@ -206,41 +207,6 @@ func httpClientWithRetry() (*http.Client, error) {
 			ExpectContinueTimeout: 1 * time.Second,
 		},
 		Timeout: defaultHttpTimeout,
-	}
-	return retryClient.StandardClient(), nil
-}
-
-// httpClientForDownload creates an HTTP client tuned for large file downloads.
-// Unlike httpClientWithRetry it does NOT set http.Client.Timeout, which would
-// cap the entire request lifecycle including body reads. Callers should wrap
-// the response body with an idleTimeoutReader to detect stalled transfers.
-func httpClientForDownload() (*http.Client, error) {
-	var proxyFn func(*http.Request) (*url.URL, error)
-
-	proxy, err := config.GetAPIProxy()
-	if err != nil {
-		log.Fatal().Err(err).Msg("could not parse proxy URL")
-	}
-
-	if proxy != nil {
-		proxyFn = http.ProxyURL(proxy)
-	}
-
-	retryClient := retryablehttp.NewClient()
-	retryClient.RetryMax = 3
-	retryClient.Logger = zerologadapter.New(log.Logger)
-	retryClient.HTTPClient = &http.Client{
-		Transport: &http.Transport{
-			Proxy: proxyFn,
-			DialContext: (&net.Dialer{
-				Timeout:   defaultHttpTimeout,
-				KeepAlive: 30 * time.Second,
-			}).DialContext,
-			MaxIdleConns:          100,
-			IdleConnTimeout:       defaultIdleConnTimeout,
-			TLSHandshakeTimeout:   defaultTLSHandshakeTimeout,
-			ExpectContinueTimeout: 1 * time.Second,
-		},
 	}
 	return retryClient.StandardClient(), nil
 }
@@ -471,7 +437,7 @@ func installVersion(ctx context.Context, name string, version string) (*Provider
 	if err != nil {
 		return nil, err
 	}
-	idleReader := newIdleTimeoutReader(res, downloadTimeout())
+	idleReader := httpx.NewIdleTimeoutReader(res, httpx.DownloadTimeout())
 	defer idleReader.Close()
 
 	var tar []byte

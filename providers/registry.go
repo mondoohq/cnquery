@@ -13,6 +13,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/mql/v13/utils/httpx"
 )
 
 var DefaultUpdatesURL = "https://releases.mondoo.com"
@@ -127,7 +128,7 @@ func (r *MondooProviderRegistry) DownloadProvider(ctx context.Context, name, ver
 
 	log.Debug().Str("url", downloadURL).Msg("downloading provider from URL")
 
-	client, err := httpClientForDownload()
+	client, err := httpx.ClientForDownload()
 	if err != nil {
 		return nil, err
 	}

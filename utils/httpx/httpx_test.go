@@ -1,7 +1,7 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
-package providers
+package httpx
 
 import (
 	"bytes"
@@ -61,7 +61,7 @@ func TestIdleTimeoutReader_NormalRead(t *testing.T) {
 	data := []byte("hello world provider data")
 	body := io.NopCloser(bytes.NewReader(data))
 
-	itr := newIdleTimeoutReader(body, 5*time.Second)
+	itr := NewIdleTimeoutReader(body, 5*time.Second)
 	defer itr.Close()
 
 	got, err := io.ReadAll(itr)
@@ -75,7 +75,7 @@ func TestIdleTimeoutReader_StalledReadTimesOut(t *testing.T) {
 		err:  io.EOF,
 	}
 
-	itr := newIdleTimeoutReader(blocker, 100*time.Millisecond)
+	itr := NewIdleTimeoutReader(blocker, 100*time.Millisecond)
 	defer itr.Close()
 
 	_, err := io.ReadAll(itr)
@@ -93,7 +93,7 @@ func TestIdleTimeoutReader_SlowButActiveSucceeds(t *testing.T) {
 	}
 
 	// Idle timeout is 500ms — each chunk arrives every 50ms, well within limit
-	itr := newIdleTimeoutReader(slow, 500*time.Millisecond)
+	itr := NewIdleTimeoutReader(slow, 500*time.Millisecond)
 	defer itr.Close()
 
 	got, err := io.ReadAll(itr)
@@ -107,7 +107,7 @@ func TestIdleTimeoutReader_CloseStopsTimer(t *testing.T) {
 		err:  io.EOF,
 	}
 
-	itr := newIdleTimeoutReader(blocker, 1*time.Hour)
+	itr := NewIdleTimeoutReader(blocker, 1*time.Hour)
 	// Close should stop the timer without panic
 	require.NoError(t, itr.Close())
 	// The timer should not fire after close
@@ -116,22 +116,22 @@ func TestIdleTimeoutReader_CloseStopsTimer(t *testing.T) {
 
 func TestDownloadTimeout_Default(t *testing.T) {
 	t.Setenv(EnvDownloadTimeout, "")
-	assert.Equal(t, defaultDownloadTimeout, downloadTimeout())
+	assert.Equal(t, DefaultDownloadTimeout, DownloadTimeout())
 }
 
 func TestDownloadTimeout_CustomValue(t *testing.T) {
 	t.Setenv(EnvDownloadTimeout, "5m")
-	assert.Equal(t, 5*time.Minute, downloadTimeout())
+	assert.Equal(t, 5*time.Minute, DownloadTimeout())
 }
 
 func TestDownloadTimeout_InvalidFallsBackToDefault(t *testing.T) {
 	t.Setenv(EnvDownloadTimeout, "not-a-duration")
-	assert.Equal(t, defaultDownloadTimeout, downloadTimeout())
+	assert.Equal(t, DefaultDownloadTimeout, DownloadTimeout())
 }
 
 func TestDownloadTimeout_NegativeFallsBackToDefault(t *testing.T) {
 	t.Setenv(EnvDownloadTimeout, "-5s")
-	assert.Equal(t, defaultDownloadTimeout, downloadTimeout())
+	assert.Equal(t, DefaultDownloadTimeout, DownloadTimeout())
 }
 
 func TestIdleTimeoutReader_LargePayload(t *testing.T) {
@@ -139,7 +139,7 @@ func TestIdleTimeoutReader_LargePayload(t *testing.T) {
 	data := []byte(strings.Repeat("abcdefghij", 100_000))
 	body := io.NopCloser(bytes.NewReader(data))
 
-	itr := newIdleTimeoutReader(body, 5*time.Second)
+	itr := NewIdleTimeoutReader(body, 5*time.Second)
 	defer itr.Close()
 
 	got, err := io.ReadAll(itr)
