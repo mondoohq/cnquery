@@ -5,6 +5,7 @@ package resources
 
 import (
 	"encoding/json"
+	"strconv"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
@@ -16,11 +17,12 @@ import (
 
 type mqlBicepTemplateInternal struct {
 	armTemplate *connection.ARMTemplate
+	cachePath   string
 }
 
-func newMqlBicepTemplate(runtime *plugin.Runtime, tmpl *connection.ARMTemplate) (*mqlBicepTemplate, error) {
+func newMqlBicepTemplate(runtime *plugin.Runtime, filePath string, tmpl *connection.ARMTemplate) (*mqlBicepTemplate, error) {
 	res, err := CreateResource(runtime, "bicep.template", map[string]*llx.RawData{
-		"__id":           llx.StringData("bicep.template:" + tmpl.Schema),
+		"__id":           llx.StringData("bicep.template:" + filePath),
 		"schema":         llx.StringData(tmpl.Schema),
 		"contentVersion": llx.StringData(tmpl.ContentVersion),
 	})
@@ -29,11 +31,12 @@ func newMqlBicepTemplate(runtime *plugin.Runtime, tmpl *connection.ARMTemplate) 
 	}
 	mqlT := res.(*mqlBicepTemplate)
 	mqlT.armTemplate = tmpl
+	mqlT.cachePath = filePath
 	return mqlT, nil
 }
 
 func (t *mqlBicepTemplate) id() (string, error) {
-	return "bicep.template:" + t.Schema.Data, nil
+	return "bicep.template:" + t.cachePath, nil
 }
 
 func (t *mqlBicepTemplate) parameters() (map[string]any, error) {
@@ -56,7 +59,7 @@ func (t *mqlBicepTemplate) resources() ([]any, error) {
 			log.Warn().Err(err).Int("index", i).Msg("failed to unmarshal ARM template resource")
 			continue
 		}
-		mqlR, err := newMqlBicepTemplateResource(t.MqlRuntime, obj)
+		mqlR, err := newMqlBicepTemplateResource(t.MqlRuntime, t.cachePath, i, obj)
 		if err != nil {
 			log.Warn().Err(err).Int("index", i).Msg("failed to create ARM template resource")
 			continue
@@ -66,7 +69,7 @@ func (t *mqlBicepTemplate) resources() ([]any, error) {
 	return mqlResources, nil
 }
 
-func newMqlBicepTemplateResource(runtime *plugin.Runtime, obj map[string]any) (*mqlBicepTemplateResource, error) {
+func newMqlBicepTemplateResource(runtime *plugin.Runtime, templatePath string, index int, obj map[string]any) (*mqlBicepTemplateResource, error) {
 	typ, _ := obj["type"].(string)
 	apiVersion, _ := obj["apiVersion"].(string)
 	name, _ := obj["name"].(string)
@@ -86,7 +89,7 @@ func newMqlBicepTemplateResource(runtime *plugin.Runtime, obj map[string]any) (*
 
 	manifest, _ := convert.JsonToDict(obj)
 
-	id := "bicep.template.resource:" + typ + ":" + name
+	id := "bicep.template.resource:" + templatePath + ":" + typ + ":" + name + ":" + strconv.Itoa(index)
 	res, err := CreateResource(runtime, "bicep.template.resource", map[string]*llx.RawData{
 		"__id":       llx.StringData(id),
 		"type":       llx.StringData(typ),

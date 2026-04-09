@@ -35,7 +35,7 @@ func (r *mqlBicep) template() (*mqlBicepTemplate, error) {
 		r.Template.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	return newMqlBicepTemplate(r.MqlRuntime, armTmpl)
+	return newMqlBicepTemplate(r.MqlRuntime, conn.Path(), armTmpl)
 }
 
 type mqlBicepFileInternal struct {

@@ -275,6 +275,16 @@ func parseOutput(line string, decorators []string) parsedOutput {
 	return o
 }
 
+// extractBlock extracts a brace-delimited block starting from startIdx by
+// counting '{' and '}' characters to track nesting depth.
+//
+// Known limitation: the depth counter scans the entire line without skipping
+// string literals (e.g., Bicep string interpolation '...${expr}...') or
+// comments that may contain braces. A full lexer would be needed to handle
+// these cases correctly, but the regex/line-scanning approach used by the
+// Bicep parser is intentionally lightweight. In practice, mismatched depth
+// from braces inside strings or comments is rare in typical Bicep files and
+// the impact is a slightly shifted block boundary rather than a hard failure.
 func extractBlock(lines []string, startIdx int) (string, int) {
 	depth := 0
 	started := false
