@@ -41,6 +41,7 @@ const (
 	service_sqladmin            = "sqladmin.googleapis.com"
 	service_storage             = "storage.googleapis.com"
 	service_iam                 = "iam.googleapis.com"
+	service_modelarmor          = "modelarmor.googleapis.com"
 )
 
 func serviceName(name string) string {

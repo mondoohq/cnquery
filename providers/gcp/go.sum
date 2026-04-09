@@ -88,6 +88,8 @@ cloud.google.com/go/logging v1.14.0 h1:xpPpY8cVT6n9DgIRgrWyE+YEsGlO/994pWnbc7o5E
 cloud.google.com/go/logging v1.14.0/go.mod h1:jmI+Try/fZeOTOAer3wVYOuPf9WX9PyzhlSDoBAi4HM=
 cloud.google.com/go/longrunning v0.9.0 h1:0EzbDEGsAvOZNbqXopgniY0w0a1phvu5IdUFq8grmqY=
 cloud.google.com/go/longrunning v0.9.0/go.mod h1:pkTz846W7bF4o2SzdWJ40Hu0Re+UoNT6Q5t+igIcb8E=
+cloud.google.com/go/modelarmor v0.7.0 h1:oH4pGZMOaYb9N4FiCcjM0u/skhZRnzz9wmbUjFWwicI=
+cloud.google.com/go/modelarmor v0.7.0/go.mod h1:opem4Kq0Dd5EAIpHiqkK5voN2Q04ptfhv3VOG5cgZl4=
 cloud.google.com/go/monitoring v1.25.0 h1:HnsTIOxTN6BCSkt1P/Im23r1m7MHTTpmSYCzPkW7NK4=
 cloud.google.com/go/monitoring v1.25.0/go.mod h1:wlj6rX+JGyusw/8+2duW4cJ6kmDHGmde3zMTJuG3Jpc=
 cloud.google.com/go/orgpolicy v1.16.0 h1:MdF2ebs6H4CoxgrtPQ7XDvE1ACIeSQDY2a1/QwVgqvA=

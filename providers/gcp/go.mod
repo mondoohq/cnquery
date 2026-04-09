@@ -24,6 +24,7 @@ require (
 	cloud.google.com/go/kms v1.27.0
 	cloud.google.com/go/logging v1.14.0
 	cloud.google.com/go/longrunning v0.9.0
+	cloud.google.com/go/modelarmor v0.7.0
 	cloud.google.com/go/monitoring v1.25.0
 	cloud.google.com/go/orgpolicy v1.16.0
 	cloud.google.com/go/pubsub v1.50.2

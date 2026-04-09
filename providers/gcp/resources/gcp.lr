@@ -26,6 +26,7 @@ alias gcp.alloydb = gcp.project.alloydbService
 alias gcp.artifactregistry = gcp.project.artifactRegistryService
 alias gcp.backupdr = gcp.project.backupdrService
 alias gcp.vertexai = gcp.project.vertexaiService
+alias gcp.modelarmor = gcp.project.modelArmorService
 
 // Google Cloud (GCP) organization
 gcp.organization @defaults("name") {
@@ -504,6 +505,8 @@ gcp.project @defaults("name number") {
   backupdr() gcp.project.backupdrService
   // GCP Vertex AI resources
   vertexai() gcp.project.vertexaiService
+  // GCP Model Armor resources
+  modelArmor() gcp.project.modelArmorService
   // Security Command Center findings for this project (active findings only)
   sccFindings() []gcp.scc.finding
 }
@@ -5737,4 +5740,30 @@ private gcp.accesscontextmanager.servicePerimeter @defaults("name title") {
   createTime time
   // Update time
   updateTime time
+}
+
+// Google Cloud (GCP) Model Armor service
+private gcp.project.modelArmorService {
+  // Project ID
+  projectId string
+  // List of Model Armor templates
+  templates() []gcp.project.modelArmorService.template
+}
+
+// Google Cloud (GCP) Model Armor template
+private gcp.project.modelArmorService.template @defaults("name") {
+  // Full resource name
+  name string
+  // Project ID
+  projectId string
+  // Creation time
+  createdAt time
+  // Last update time
+  updatedAt time
+  // Resource labels
+  labels map[string]string
+  // Filter configuration (raiSettings, sdpSettings, piAndJailbreakFilterSettings, maliciousUriFilterSettings)
+  filterConfig dict
+  // Template metadata (enforcement type, error settings, multi-language detection)
+  templateMetadata dict
 }

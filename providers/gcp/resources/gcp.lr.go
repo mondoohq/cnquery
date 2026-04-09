@@ -250,6 +250,8 @@ const (
 	ResourceGcpAccesscontextmanagerAccessPolicy                                        string = "gcp.accesscontextmanager.accessPolicy"
 	ResourceGcpAccesscontextmanagerAccessLevel                                         string = "gcp.accesscontextmanager.accessLevel"
 	ResourceGcpAccesscontextmanagerServicePerimeter                                    string = "gcp.accesscontextmanager.servicePerimeter"
+	ResourceGcpProjectModelArmorService                                                string = "gcp.project.modelArmorService"
+	ResourceGcpProjectModelArmorServiceTemplate                                        string = "gcp.project.modelArmorService.template"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -1192,6 +1194,14 @@ func init() {
 			// to override args, implement: initGcpAccesscontextmanagerServicePerimeter(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpAccesscontextmanagerServicePerimeter,
 		},
+		"gcp.project.modelArmorService": {
+			Init:   initGcpProjectModelArmorService,
+			Create: createGcpProjectModelArmorService,
+		},
+		"gcp.project.modelArmorService.template": {
+			// to override args, implement: initGcpProjectModelArmorServiceTemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectModelArmorServiceTemplate,
+		},
 	}
 }
 
@@ -1883,6 +1893,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.vertexai": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetVertexai()).ToDataRes(types.Resource("gcp.project.vertexaiService"))
+	},
+	"gcp.project.modelArmor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetModelArmor()).ToDataRes(types.Resource("gcp.project.modelArmorService"))
 	},
 	"gcp.project.sccFindings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetSccFindings()).ToDataRes(types.Array(types.Resource("gcp.scc.finding")))
@@ -8382,6 +8395,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.accesscontextmanager.servicePerimeter.updateTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpAccesscontextmanagerServicePerimeter).GetUpdateTime()).ToDataRes(types.Time)
 	},
+	"gcp.project.modelArmorService.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectModelArmorService).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.modelArmorService.templates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectModelArmorService).GetTemplates()).ToDataRes(types.Array(types.Resource("gcp.project.modelArmorService.template")))
+	},
+	"gcp.project.modelArmorService.template.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectModelArmorServiceTemplate).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.modelArmorService.template.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectModelArmorServiceTemplate).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.modelArmorService.template.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectModelArmorServiceTemplate).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.modelArmorService.template.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectModelArmorServiceTemplate).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"gcp.project.modelArmorService.template.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectModelArmorServiceTemplate).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.modelArmorService.template.filterConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectModelArmorServiceTemplate).GetFilterConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.modelArmorService.template.templateMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectModelArmorServiceTemplate).GetTemplateMetadata()).ToDataRes(types.Dict)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -9284,6 +9324,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.vertexai": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProject).Vertexai, ok = plugin.RawToTValue[*mqlGcpProjectVertexaiService](v.Value, v.Error)
+		return
+	},
+	"gcp.project.modelArmor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).ModelArmor, ok = plugin.RawToTValue[*mqlGcpProjectModelArmorService](v.Value, v.Error)
 		return
 	},
 	"gcp.project.sccFindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -18822,6 +18866,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpAccesscontextmanagerServicePerimeter).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"gcp.project.modelArmorService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectModelArmorService).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.modelArmorService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectModelArmorService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.modelArmorService.templates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectModelArmorService).Templates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.modelArmorService.template.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectModelArmorServiceTemplate).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.modelArmorService.template.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectModelArmorServiceTemplate).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.modelArmorService.template.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectModelArmorServiceTemplate).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.modelArmorService.template.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectModelArmorServiceTemplate).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.modelArmorService.template.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectModelArmorServiceTemplate).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.modelArmorService.template.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectModelArmorServiceTemplate).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.modelArmorService.template.filterConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectModelArmorServiceTemplate).FilterConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.modelArmorService.template.templateMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectModelArmorServiceTemplate).TemplateMetadata, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -20610,6 +20698,7 @@ type mqlGcpProject struct {
 	ArtifactRegistry       plugin.TValue[*mqlGcpProjectArtifactRegistryService]
 	Backupdr               plugin.TValue[*mqlGcpProjectBackupdrService]
 	Vertexai               plugin.TValue[*mqlGcpProjectVertexaiService]
+	ModelArmor             plugin.TValue[*mqlGcpProjectModelArmorService]
 	SccFindings            plugin.TValue[[]any]
 }
 
@@ -21323,6 +21412,22 @@ func (c *mqlGcpProject) GetVertexai() *plugin.TValue[*mqlGcpProjectVertexaiServi
 		}
 
 		return c.vertexai()
+	})
+}
+
+func (c *mqlGcpProject) GetModelArmor() *plugin.TValue[*mqlGcpProjectModelArmorService] {
+	return plugin.GetOrCompute[*mqlGcpProjectModelArmorService](&c.ModelArmor, func() (*mqlGcpProjectModelArmorService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project", c.__id, "modelArmor")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectModelArmorService), nil
+			}
+		}
+
+		return c.modelArmor()
 	})
 }
 
@@ -43455,4 +43560,149 @@ func (c *mqlGcpAccesscontextmanagerServicePerimeter) GetCreateTime() *plugin.TVa
 
 func (c *mqlGcpAccesscontextmanagerServicePerimeter) GetUpdateTime() *plugin.TValue[*time.Time] {
 	return &c.UpdateTime
+}
+
+// mqlGcpProjectModelArmorService for the gcp.project.modelArmorService resource
+type mqlGcpProjectModelArmorService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectModelArmorServiceInternal
+	ProjectId plugin.TValue[string]
+	Templates plugin.TValue[[]any]
+}
+
+// createGcpProjectModelArmorService creates a new instance of this resource
+func createGcpProjectModelArmorService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectModelArmorService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.modelArmorService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectModelArmorService) MqlName() string {
+	return "gcp.project.modelArmorService"
+}
+
+func (c *mqlGcpProjectModelArmorService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectModelArmorService) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectModelArmorService) GetTemplates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Templates, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.modelArmorService", c.__id, "templates")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.templates()
+	})
+}
+
+// mqlGcpProjectModelArmorServiceTemplate for the gcp.project.modelArmorService.template resource
+type mqlGcpProjectModelArmorServiceTemplate struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectModelArmorServiceTemplateInternal it will be used here
+	Name             plugin.TValue[string]
+	ProjectId        plugin.TValue[string]
+	CreatedAt        plugin.TValue[*time.Time]
+	UpdatedAt        plugin.TValue[*time.Time]
+	Labels           plugin.TValue[map[string]any]
+	FilterConfig     plugin.TValue[any]
+	TemplateMetadata plugin.TValue[any]
+}
+
+// createGcpProjectModelArmorServiceTemplate creates a new instance of this resource
+func createGcpProjectModelArmorServiceTemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectModelArmorServiceTemplate{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.modelArmorService.template", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectModelArmorServiceTemplate) MqlName() string {
+	return "gcp.project.modelArmorService.template"
+}
+
+func (c *mqlGcpProjectModelArmorServiceTemplate) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectModelArmorServiceTemplate) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectModelArmorServiceTemplate) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectModelArmorServiceTemplate) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGcpProjectModelArmorServiceTemplate) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlGcpProjectModelArmorServiceTemplate) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectModelArmorServiceTemplate) GetFilterConfig() *plugin.TValue[any] {
+	return &c.FilterConfig
+}
+
+func (c *mqlGcpProjectModelArmorServiceTemplate) GetTemplateMetadata() *plugin.TValue[any] {
+	return &c.TemplateMetadata
 }
