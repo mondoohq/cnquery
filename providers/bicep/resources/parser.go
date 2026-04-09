@@ -158,7 +158,12 @@ func parseParameter(line string, decorators []string) parsedParameter {
 		if len(m) > 3 {
 			rest := strings.TrimSpace(m[3])
 			if strings.HasPrefix(rest, "=") {
-				p.defaultValue = strings.TrimSpace(rest[1:])
+				val := strings.TrimSpace(rest[1:])
+				// Strip Bicep single-quote string delimiters
+				if len(val) >= 2 && val[0] == '\'' && val[len(val)-1] == '\'' {
+					val = val[1 : len(val)-1]
+				}
+				p.defaultValue = val
 			}
 		}
 	}
