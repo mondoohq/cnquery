@@ -121,6 +121,44 @@ func TestSchemaMaturity(t *testing.T) {
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "invalid maturity")
 	})
+
+	t.Run("implicit intermediate inherits maturity from leaf", func(t *testing.T) {
+		// x is stable (default), x.y.z is deprecated.
+		// x.y is implicitly created and should inherit deprecated from x.y.z.
+		res := schemaFor(t, `
+			x { val string }
+			x.y.z @maturity("deprecated") { val string }
+		`)
+		require.NotNil(t, res.Resources["x.y"])
+		require.NotNil(t, res.Resources["x.y"].Fields["z"])
+		assert.Equal(t, "deprecated", res.Resources["x.y"].Fields["z"].Maturity,
+			"implicit field z on x.y should inherit deprecated from x.y.z")
+		// x.y itself (the implicit resource) has no maturity annotation
+		assert.Equal(t, "", res.Resources["x.y"].Maturity)
+		// x's field "y" pointing to x.y should inherit x.y.z's maturity
+		require.NotNil(t, res.Resources["x"].Fields["y"])
+		assert.Equal(t, "deprecated", res.Resources["x"].Fields["y"].Maturity)
+	})
+
+	t.Run("explicit intermediate is not affected by leaf maturity", func(t *testing.T) {
+		// x, x.y, and x.y.z are all declared. x.y.z is deprecated.
+		// x.y is explicitly declared (stable), so x's field "y" should be stable.
+		res := schemaFor(t, `
+			x { val string }
+			x.y { val string }
+			x.y.z @maturity("deprecated") { val string }
+		`)
+		require.NotNil(t, res.Resources["x.y"])
+		// x.y is explicitly declared with no maturity = stable
+		assert.Equal(t, "", res.Resources["x.y"].Maturity)
+		// x.y's field "z" should still be deprecated (from x.y.z)
+		require.NotNil(t, res.Resources["x.y"].Fields["z"])
+		assert.Equal(t, "deprecated", res.Resources["x.y"].Fields["z"].Maturity)
+		// x's field "y" should be stable because x.y is explicitly declared
+		require.NotNil(t, res.Resources["x"].Fields["y"])
+		assert.Equal(t, "", res.Resources["x"].Fields["y"].Maturity,
+			"explicit x.y is stable, so x's field y should be stable too")
+	})
 }
 
 func TestDetermnisticSchema(t *testing.T) {
