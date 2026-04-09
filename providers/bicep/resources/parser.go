@@ -94,11 +94,21 @@ func parseBicep(content string) *parsedBicepFile {
 		line := lines[i]
 		trimmed := strings.TrimSpace(line)
 
-		// Collect decorators
+		// Collect decorators. Multiline decorators (e.g. @allowed([\n...\n]))
+		// are reassembled by tracking paren/bracket depth.
 		var decorators []string
 		for strings.HasPrefix(trimmed, "@") {
-			decorators = append(decorators, trimmed)
+			decLine := trimmed
+			depth := parenBracketDepth(decLine)
 			i++
+			for depth > 0 && i < len(lines) {
+				line = lines[i]
+				trimmed = strings.TrimSpace(line)
+				decLine += "\n" + trimmed
+				depth += parenBracketDepth(trimmed)
+				i++
+			}
+			decorators = append(decorators, decLine)
 			if i >= len(lines) {
 				break
 			}
@@ -395,6 +405,21 @@ func extractFieldBlock(body string, fieldName string) string {
 		}
 	}
 	return ""
+}
+
+// parenBracketDepth returns the net depth change from parens and brackets on a line.
+// Positive means more openers than closers.
+func parenBracketDepth(s string) int {
+	depth := 0
+	for _, ch := range s {
+		switch ch {
+		case '(', '[':
+			depth++
+		case ')', ']':
+			depth--
+		}
+	}
+	return depth
 }
 
 var dependsOnRe = regexp.MustCompile(`(?m)dependsOn\s*:\s*\[([^\]]*)\]`)
