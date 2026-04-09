@@ -480,22 +480,21 @@ func initFirebaseProjectFirestore(runtime *plugin.Runtime, args map[string]*llx.
 	publiclyReadable := false
 	exposedCollections := []interface{}{}
 
+	// Check 1: Can we read documents directly?
 	resp, err := client.Get(firestoreURL)
 	if err == nil {
-		defer resp.Body.Close()
 		if resp.StatusCode == http.StatusOK {
 			publiclyReadable = true
 
 			body, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 			var result map[string]interface{}
 			if json.Unmarshal(body, &result) == nil {
-				// Extract collection IDs from the documents response
 				if docs, ok := result["documents"].([]interface{}); ok {
 					seen := map[string]bool{}
 					for _, doc := range docs {
 						if docMap, ok := doc.(map[string]interface{}); ok {
 							if name, ok := docMap["name"].(string); ok {
-								// Document name format: projects/{proj}/databases/(default)/documents/{collection}/{docId}
+								// Document name: projects/{proj}/databases/(default)/documents/{collection}/{docId}
 								parts := strings.Split(name, "/")
 								if len(parts) >= 6 {
 									collectionId := parts[5]
@@ -510,6 +509,41 @@ func initFirebaseProjectFirestore(runtime *plugin.Runtime, args map[string]*llx.
 				}
 			}
 		}
+		resp.Body.Close()
+	}
+
+	// Check 2: listCollectionIds — often allowed even when document reads are blocked.
+	// This reveals the database structure (top-level collection names).
+	listURL := firestoreURL + ":listCollectionIds"
+	log.Debug().Str("url", listURL).Msg("checking Firestore listCollectionIds")
+
+	listResp, err := client.Post(listURL, "application/json", strings.NewReader("{}"))
+	if err == nil {
+		if listResp.StatusCode == http.StatusOK {
+			body, _ := io.ReadAll(io.LimitReader(listResp.Body, 1<<20))
+			var listResult map[string]interface{}
+			if json.Unmarshal(body, &listResult) == nil {
+				if collIds, ok := listResult["collectionIds"].([]interface{}); ok {
+					// Merge with any collections found from document reads
+					seen := map[string]bool{}
+					for _, c := range exposedCollections {
+						seen[c.(string)] = true
+					}
+					for _, id := range collIds {
+						if s, ok := id.(string); ok && !seen[s] {
+							seen[s] = true
+							exposedCollections = append(exposedCollections, id)
+						}
+					}
+					// If we got collection IDs, the database structure is exposed
+					// even if direct document reads are blocked
+					if !publiclyReadable && len(collIds) > 0 {
+						publiclyReadable = true
+					}
+				}
+			}
+		}
+		listResp.Body.Close()
 	}
 
 	args["url"] = llx.StringData(firestoreURL)
