@@ -9,14 +9,14 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"testing/synctest"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// blockingReadCloser blocks on Read until the done channel is closed, then
-// returns the provided error.
+// blockingReadCloser blocks on Read until Close is called, then returns err.
 type blockingReadCloser struct {
 	done chan struct{}
 	err  error
@@ -33,7 +33,8 @@ func (b *blockingReadCloser) Close() error {
 	return nil
 }
 
-// slowReadCloser returns data in small chunks with a delay between each Read.
+// slowReadCloser returns data in small chunks with a time.Sleep between each Read.
+// Inside a synctest bubble the sleeps use fake time, so tests are instant.
 type slowReadCloser struct {
 	data  []byte
 	pos   int
@@ -46,10 +47,7 @@ func (s *slowReadCloser) Read(p []byte) (int, error) {
 		return 0, io.EOF
 	}
 	time.Sleep(s.delay)
-	end := s.pos + s.chunk
-	if end > len(s.data) {
-		end = len(s.data)
-	}
+	end := min(s.pos+s.chunk, len(s.data))
 	n := copy(p, s.data[s.pos:end])
 	s.pos += n
 	return n, nil
@@ -58,61 +56,83 @@ func (s *slowReadCloser) Read(p []byte) (int, error) {
 func (s *slowReadCloser) Close() error { return nil }
 
 func TestIdleTimeoutReader_NormalRead(t *testing.T) {
-	data := []byte("hello world provider data")
-	body := io.NopCloser(bytes.NewReader(data))
+	synctest.Test(t, func(t *testing.T) {
+		data := []byte("hello world provider data")
+		body := io.NopCloser(bytes.NewReader(data))
 
-	itr := NewIdleTimeoutReader(body, 5*time.Second)
-	defer itr.Close()
+		itr := NewIdleTimeoutReader(body, 2*time.Minute)
+		defer itr.Close()
 
-	got, err := io.ReadAll(itr)
-	require.NoError(t, err)
-	assert.Equal(t, data, got)
+		got, err := io.ReadAll(itr)
+		require.NoError(t, err)
+		assert.Equal(t, data, got)
+	})
 }
 
 func TestIdleTimeoutReader_StalledReadTimesOut(t *testing.T) {
-	blocker := &blockingReadCloser{
-		done: make(chan struct{}),
-		err:  io.EOF,
-	}
+	synctest.Test(t, func(t *testing.T) {
+		blocker := &blockingReadCloser{
+			done: make(chan struct{}),
+			err:  io.EOF,
+		}
 
-	itr := NewIdleTimeoutReader(blocker, 100*time.Millisecond)
-	defer itr.Close()
+		// Use realistic default timeout — fake time makes this instant
+		itr := NewIdleTimeoutReader(blocker, 2*time.Minute)
+		defer itr.Close()
 
-	_, err := io.ReadAll(itr)
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "download stalled")
-	assert.Contains(t, err.Error(), "MONDOO_DOWNLOAD_TIMEOUT")
+		_, err := io.ReadAll(itr)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "download stalled")
+		assert.Contains(t, err.Error(), "MONDOO_DOWNLOAD_TIMEOUT")
+	})
 }
 
 func TestIdleTimeoutReader_SlowButActiveSucceeds(t *testing.T) {
-	data := bytes.Repeat([]byte("x"), 100)
-	slow := &slowReadCloser{
-		data:  data,
-		chunk: 10,
-		delay: 50 * time.Millisecond, // 50ms between chunks
-	}
+	synctest.Test(t, func(t *testing.T) {
+		data := bytes.Repeat([]byte("x"), 100)
+		slow := &slowReadCloser{
+			data:  data,
+			chunk: 10,
+			delay: 30 * time.Second, // 30s between chunks, well under 2m timeout
+		}
 
-	// Idle timeout is 500ms — each chunk arrives every 50ms, well within limit
-	itr := NewIdleTimeoutReader(slow, 500*time.Millisecond)
-	defer itr.Close()
+		itr := NewIdleTimeoutReader(slow, 2*time.Minute)
+		defer itr.Close()
 
-	got, err := io.ReadAll(itr)
-	require.NoError(t, err)
-	assert.Equal(t, data, got)
+		got, err := io.ReadAll(itr)
+		require.NoError(t, err)
+		assert.Equal(t, data, got)
+	})
 }
 
 func TestIdleTimeoutReader_CloseStopsTimer(t *testing.T) {
-	blocker := &blockingReadCloser{
-		done: make(chan struct{}),
-		err:  io.EOF,
-	}
+	synctest.Test(t, func(t *testing.T) {
+		blocker := &blockingReadCloser{
+			done: make(chan struct{}),
+			err:  io.EOF,
+		}
 
-	itr := NewIdleTimeoutReader(blocker, 1*time.Hour)
-	// Close should stop the timer without panic
-	require.NoError(t, itr.Close())
-	// The timer should not fire after close
-	assert.False(t, itr.timedOut.Load())
+		itr := NewIdleTimeoutReader(blocker, 1*time.Hour)
+		require.NoError(t, itr.Close())
+		assert.False(t, itr.timedOut.Load())
+	})
 }
+
+func TestIdleTimeoutReader_LargePayload(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		data := []byte(strings.Repeat("abcdefghij", 100_000))
+		body := io.NopCloser(bytes.NewReader(data))
+
+		itr := NewIdleTimeoutReader(body, 2*time.Minute)
+		defer itr.Close()
+
+		got, err := io.ReadAll(itr)
+		require.NoError(t, err)
+		assert.Equal(t, len(data), len(got))
+	})
+}
+
+// DownloadTimeout tests don't involve timers — no synctest needed.
 
 func TestDownloadTimeout_Default(t *testing.T) {
 	t.Setenv(EnvDownloadTimeout, "")
@@ -132,17 +152,4 @@ func TestDownloadTimeout_InvalidFallsBackToDefault(t *testing.T) {
 func TestDownloadTimeout_NegativeFallsBackToDefault(t *testing.T) {
 	t.Setenv(EnvDownloadTimeout, "-5s")
 	assert.Equal(t, DefaultDownloadTimeout, DownloadTimeout())
-}
-
-func TestIdleTimeoutReader_LargePayload(t *testing.T) {
-	// 1MB of data to ensure the reader handles larger payloads
-	data := []byte(strings.Repeat("abcdefghij", 100_000))
-	body := io.NopCloser(bytes.NewReader(data))
-
-	itr := NewIdleTimeoutReader(body, 5*time.Second)
-	defer itr.Close()
-
-	got, err := io.ReadAll(itr)
-	require.NoError(t, err)
-	assert.Equal(t, len(data), len(got))
 }
