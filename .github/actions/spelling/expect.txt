@@ -51,6 +51,7 @@ cname
 compressratio
 cooldown
 cpe
+crowdstrike
 cryptokey
 ctx
 customresources

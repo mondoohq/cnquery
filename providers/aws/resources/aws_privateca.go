@@ -16,7 +16,6 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
-	"go.mondoo.com/mql/v13/types"
 )
 
 func (a *mqlAwsPrivateca) id() (string, error) {
@@ -69,7 +68,7 @@ func (a *mqlAwsPrivateca) getCertificateAuthorities(conn *connection.AwsConnecti
 				}
 
 				for _, ca := range page.CertificateAuthorities {
-					mqlCA, err := newMqlPrivatecaCertificateAuthority(a.MqlRuntime, ca, region, svc)
+					mqlCA, err := newMqlPrivatecaCertificateAuthority(a.MqlRuntime, ca, region)
 					if err != nil {
 						return nil, err
 					}
@@ -83,7 +82,7 @@ func (a *mqlAwsPrivateca) getCertificateAuthorities(conn *connection.AwsConnecti
 	return tasks
 }
 
-func newMqlPrivatecaCertificateAuthority(runtime *plugin.Runtime, ca acmpcatypes.CertificateAuthority, region string, svc *acmpca.Client) (*mqlAwsPrivatecaCertificateAuthority, error) {
+func newMqlPrivatecaCertificateAuthority(runtime *plugin.Runtime, ca acmpcatypes.CertificateAuthority, region string) (*mqlAwsPrivatecaCertificateAuthority, error) {
 	var subject any
 	if ca.CertificateAuthorityConfiguration != nil {
 		subject, _ = convert.JsonToDict(ca.CertificateAuthorityConfiguration.Subject)
@@ -97,30 +96,6 @@ func newMqlPrivatecaCertificateAuthority(runtime *plugin.Runtime, ca acmpcatypes
 	if ca.CertificateAuthorityConfiguration != nil {
 		keyAlgorithm = string(ca.CertificateAuthorityConfiguration.KeyAlgorithm)
 		signingAlgorithm = string(ca.CertificateAuthorityConfiguration.SigningAlgorithm)
-	}
-
-	tags := make(map[string]any)
-	if ca.Arn != nil {
-		ctx := context.Background()
-		var nextToken *string
-		for {
-			tagsResp, err := svc.ListTags(ctx, &acmpca.ListTagsInput{
-				CertificateAuthorityArn: ca.Arn,
-				NextToken:               nextToken,
-			})
-			if err != nil {
-				break
-			}
-			for _, tag := range tagsResp.Tags {
-				if tag.Key != nil && tag.Value != nil {
-					tags[*tag.Key] = *tag.Value
-				}
-			}
-			if tagsResp.NextToken == nil {
-				break
-			}
-			nextToken = tagsResp.NextToken
-		}
 	}
 
 	res, err := CreateResource(runtime, "aws.privateca.certificateAuthority",
@@ -143,7 +118,6 @@ func newMqlPrivatecaCertificateAuthority(runtime *plugin.Runtime, ca acmpcatypes
 			"createdAt":                  llx.TimeDataPtr(ca.CreatedAt),
 			"lastStateChangeAt":          llx.TimeDataPtr(ca.LastStateChangeAt),
 			"failureReason":              llx.StringData(string(ca.FailureReason)),
-			"tags":                       llx.MapData(tags, types.String),
 		})
 	if err != nil {
 		return nil, err
@@ -215,6 +189,35 @@ func (a *mqlAwsPrivatecaCertificateAuthority) certificateChain() (string, error)
 		return "", err
 	}
 	return a.certChainData, nil
+}
+
+func (a *mqlAwsPrivatecaCertificateAuthority) tags() (map[string]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Acmpca(a.cacheRegion)
+	ctx := context.Background()
+
+	arn := a.Arn.Data
+	res := map[string]any{}
+	var nextToken *string
+	for {
+		resp, err := svc.ListTags(ctx, &acmpca.ListTagsInput{
+			CertificateAuthorityArn: &arn,
+			NextToken:               nextToken,
+		})
+		if err != nil {
+			return nil, err
+		}
+		for _, tag := range resp.Tags {
+			if tag.Key != nil && tag.Value != nil {
+				res[*tag.Key] = *tag.Value
+			}
+		}
+		if resp.NextToken == nil {
+			break
+		}
+		nextToken = resp.NextToken
+	}
+	return res, nil
 }
 
 func (a *mqlAwsPrivatecaCertificateAuthority) policy() (string, error) {

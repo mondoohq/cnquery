@@ -26,78 +26,43 @@ func (a *mqlAwsBedrock) id() (string, error) {
 
 func (a *mqlAwsBedrock) foundationModels() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(a.getFoundationModels(conn), 5)
-	poolOfJobs.Run()
+	// ListFoundationModels returns a global catalog, identical across all regions.
+	// Query once from the default region to avoid duplicates.
+	svc := conn.Bedrock("")
+	ctx := context.Background()
 
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
+	resp, err := svc.ListFoundationModels(ctx, &bedrock.ListFoundationModelsInput{})
+	if err != nil {
+		return nil, err
 	}
-	for i := range poolOfJobs.Jobs {
-		if poolOfJobs.Jobs[i].Result != nil {
-			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+
+	res := []any{}
+	for _, fm := range resp.ModelSummaries {
+		var lifecycleStatus string
+		if fm.ModelLifecycle != nil {
+			lifecycleStatus = string(fm.ModelLifecycle.Status)
 		}
+
+		mqlFM, err := CreateResource(a.MqlRuntime, "aws.bedrock.foundationModel",
+			map[string]*llx.RawData{
+				"__id":                       llx.StringDataPtr(fm.ModelArn),
+				"modelArn":                   llx.StringDataPtr(fm.ModelArn),
+				"modelId":                    llx.StringDataPtr(fm.ModelId),
+				"modelName":                  llx.StringDataPtr(fm.ModelName),
+				"providerName":               llx.StringDataPtr(fm.ProviderName),
+				"inputModalities":            llx.ArrayData(enumSliceToAny(fm.InputModalities), types.String),
+				"outputModalities":           llx.ArrayData(enumSliceToAny(fm.OutputModalities), types.String),
+				"customizationsSupported":    llx.ArrayData(enumSliceToAny(fm.CustomizationsSupported), types.String),
+				"inferenceTypesSupported":    llx.ArrayData(enumSliceToAny(fm.InferenceTypesSupported), types.String),
+				"responseStreamingSupported": llx.BoolDataPtr(fm.ResponseStreamingSupported),
+				"modelLifecycleStatus":       llx.StringData(lifecycleStatus),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlFM)
 	}
 	return res, nil
-}
-
-func (a *mqlAwsBedrock) getFoundationModels(conn *connection.AwsConnection) []*jobpool.Job {
-	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.Regions()
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
-
-	for _, region := range regions {
-		f := func() (jobpool.JobResult, error) {
-			svc := conn.Bedrock(region)
-			ctx := context.Background()
-			res := []any{}
-
-			// ListFoundationModels is not paginated
-			resp, err := svc.ListFoundationModels(ctx, &bedrock.ListFoundationModelsInput{})
-			if err != nil {
-				if Is400AccessDeniedError(err) {
-					log.Warn().Str("region", region).Msg("error accessing region for AWS API")
-					return res, nil
-				}
-				if IsServiceNotAvailableInRegionError(err) {
-					log.Debug().Str("region", region).Msg("bedrock is not available in region")
-					return res, nil
-				}
-				return nil, err
-			}
-
-			for _, fm := range resp.ModelSummaries {
-				var lifecycleStatus string
-				if fm.ModelLifecycle != nil {
-					lifecycleStatus = string(fm.ModelLifecycle.Status)
-				}
-
-				mqlFM, err := CreateResource(a.MqlRuntime, "aws.bedrock.foundationModel",
-					map[string]*llx.RawData{
-						"__id":                       llx.StringDataPtr(fm.ModelArn),
-						"modelArn":                   llx.StringDataPtr(fm.ModelArn),
-						"modelId":                    llx.StringDataPtr(fm.ModelId),
-						"modelName":                  llx.StringDataPtr(fm.ModelName),
-						"providerName":               llx.StringDataPtr(fm.ProviderName),
-						"inputModalities":            llx.ArrayData(enumSliceToAny(fm.InputModalities), types.String),
-						"outputModalities":           llx.ArrayData(enumSliceToAny(fm.OutputModalities), types.String),
-						"customizationsSupported":    llx.ArrayData(enumSliceToAny(fm.CustomizationsSupported), types.String),
-						"inferenceTypesSupported":    llx.ArrayData(enumSliceToAny(fm.InferenceTypesSupported), types.String),
-						"responseStreamingSupported": llx.BoolDataPtr(fm.ResponseStreamingSupported),
-						"modelLifecycleStatus":       llx.StringData(lifecycleStatus),
-					})
-				if err != nil {
-					return nil, err
-				}
-				res = append(res, mqlFM)
-			}
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
 }
 
 func (a *mqlAwsBedrockFoundationModel) id() (string, error) {

@@ -85946,7 +85946,9 @@ func (c *mqlAwsPrivatecaCertificateAuthority) GetFailureReason() *plugin.TValue[
 }
 
 func (c *mqlAwsPrivatecaCertificateAuthority) GetTags() *plugin.TValue[map[string]any] {
-	return &c.Tags
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
 }
 
 func (c *mqlAwsPrivatecaCertificateAuthority) GetCertificate() *plugin.TValue[string] {

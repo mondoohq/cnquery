@@ -10692,7 +10692,7 @@ private aws.privateca.certificateAuthority @defaults("arn status type") {
   // Failure reason if the CA is in a failed state
   failureReason string
   // Tags for the certificate authority
-  tags map[string]string
+  tags() map[string]string
   // PEM-encoded CA certificate
   certificate() string
   // PEM-encoded CA certificate chain
