@@ -402,6 +402,14 @@ When developing mql alongside cnspec, create a `go.work` in a parent directory w
 
 ## 7. Important Implementation Details
 
+### Copyright & License Headers
+Every source file (`.go`, `.lr`, `.proto`, etc.) must begin with:
+```
+// Copyright Mondoo, Inc. 2024, <current year>
+// SPDX-License-Identifier: BUSL-1.1
+```
+The format is `2024, <current year>` (comma-separated, not a dash). The first year (2024) is fixed; the second year should be the current calendar year. This is enforced by the `copywrite` tool installed via `make prep/tools`.
+
 ### Provider Connection Management
 - Implement proper connection lifecycle: `Connect()`, `GetData()`, `StoreData()`, `Disconnect()`
 - Handle authentication failures gracefully with `Is400AccessDeniedError()` checks
@@ -493,6 +501,12 @@ Each provider follows a standard directory layout:
 - **`resources/`** - Resource implementations and .lr files
 - **`main.go`** - Provider binary entry point
 - **`gen/main.go`** - Generates CLI configuration JSON
+
+When adding a new provider, you must also register it in these files:
+- **`providers/defaults.go`** — Add a default entry (alphabetically) so the CLI discovers the provider before it's installed
+- **`README.md`** — Add a row to the provider table (alphabetically)
+- **`DEVELOPMENT.md`** — Add the provider path to the `go.work` provider list (alphabetically)
+- **`Makefile`** — Add the provider name to the `PROVIDERS` list (alphabetically)
 
 ### CLI and Output
 Key directories for user-facing functionality:
