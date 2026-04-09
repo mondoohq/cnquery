@@ -1,0 +1,56 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: production
+namePrefix: prod-
+nameSuffix: -v1
+
+commonLabels:
+  app: myapp
+  env: production
+
+commonAnnotations:
+  team: platform
+
+resources:
+  - deployment.yaml
+  - service.yaml
+
+patches:
+  - target:
+      kind: Deployment
+      name: myapp
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 5
+
+configMapGenerator:
+  - name: app-config
+    literals:
+      - DATABASE_HOST=db.production.svc
+      - LOG_LEVEL=info
+
+secretGenerator:
+  - name: app-secrets
+    literals:
+      - API_KEY=changeme
+
+images:
+  - name: nginx
+    newName: registry.example.com/nginx
+    newTag: "1.25-alpine"
+  - name: redis
+    newTag: "7.2"
+
+replacements:
+  - source:
+      kind: Deployment
+      name: myapp
+      fieldPath: metadata.name
+    targets:
+      - select:
+          kind: Service
+          name: myapp
+        fieldPaths:
+          - spec.selector.app

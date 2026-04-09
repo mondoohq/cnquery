@@ -17,7 +17,8 @@ import (
 func (k *mqlKustomizeKustomization) resources() ([]any, error) {
 	rendered, err := k.fetchRendered()
 	if err != nil {
-		return nil, err
+		log.Warn().Err(err).Str("path", k.kustPath).Msg("failed to render kustomize overlay, returning empty resources")
+		return []any{}, nil
 	}
 
 	var allResources []any
