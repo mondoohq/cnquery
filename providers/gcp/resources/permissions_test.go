@@ -92,6 +92,7 @@ var validatedGCPPermissions = []string{
 	"iam.serviceAccountKeys.list",
 	"iam.serviceAccounts.list",
 	"logging.buckets.list",
+	"modelarmor.templates.list",
 	"monitoring.alertPolicies.list",
 	"orgpolicy.policies.list",
 	"privateca.caPools.list",
