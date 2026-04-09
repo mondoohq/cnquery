@@ -387,7 +387,7 @@
 
 # s.b. CrowdStrike
 \bCrowd Strike\b
-\b[Cc]rowdstrike\b
+# \b[Cc]rowdstrike\b # false positive with enum in aws provider
 
 # s.b. Zendesk
 \bZenDesk\b

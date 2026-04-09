@@ -102,15 +102,24 @@ func newMqlPrivatecaCertificateAuthority(runtime *plugin.Runtime, ca acmpcatypes
 	tags := make(map[string]any)
 	if ca.Arn != nil {
 		ctx := context.Background()
-		tagsResp, err := svc.ListTags(ctx, &acmpca.ListTagsInput{
-			CertificateAuthorityArn: ca.Arn,
-		})
-		if err == nil {
+		var nextToken *string
+		for {
+			tagsResp, err := svc.ListTags(ctx, &acmpca.ListTagsInput{
+				CertificateAuthorityArn: ca.Arn,
+				NextToken:               nextToken,
+			})
+			if err != nil {
+				break
+			}
 			for _, tag := range tagsResp.Tags {
 				if tag.Key != nil && tag.Value != nil {
 					tags[*tag.Key] = *tag.Value
 				}
 			}
+			if tagsResp.NextToken == nil {
+				break
+			}
+			nextToken = tagsResp.NextToken
 		}
 	}
 
