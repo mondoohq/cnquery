@@ -54,6 +54,7 @@ func RemoteOptionsFromConfigOptions(cfg *inventory.Config) ([]remote.Option, err
 		}
 	}
 	opts = append(opts, remote.WithTransport(transport))
+	opts = append(opts, auth.AuthOption("", cfg.Credentials))
 	return opts, nil
 }
 

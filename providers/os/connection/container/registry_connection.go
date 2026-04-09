@@ -81,7 +81,7 @@ func (r *RegistryConnection) DiscoverImages() (*inventory.Inventory, error) {
 
 	resolver := container_registry.NewContainerRegistryResolver(opts...)
 	host := r.asset.Connections[0].Host
-	assets, err := resolver.ListRegistry(host)
+	assets, err := resolver.ListImages(host)
 	if err != nil {
 		return nil, err
 	}
