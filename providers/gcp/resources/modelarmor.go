@@ -1,4 +1,4 @@
-// Copyright Mondoo, Inc. 2024, 2026
+// Copyright Mondoo, Inc. 2026
 // SPDX-License-Identifier: BUSL-1.1
 
 package resources
@@ -100,7 +100,7 @@ func (g *mqlGcpProjectModelArmorService) templates() ([]any, error) {
 	var res []any
 	for {
 		template, err := it.Next()
-		if err == iterator.Done {
+		if errors.Is(err, iterator.Done) {
 			break
 		}
 		if err != nil {
