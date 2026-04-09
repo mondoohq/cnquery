@@ -62,7 +62,7 @@ func (a *mqlAwsPrivateca) getCertificateAuthorities(conn *connection.AwsConnecti
 						return res, nil
 					}
 					if IsServiceNotAvailableInRegionError(err) {
-						log.Warn().Str("region", region).Msg("acm-pca is not available in region")
+						log.Debug().Str("region", region).Msg("acm-pca is not available in region")
 						return res, nil
 					}
 					return nil, err

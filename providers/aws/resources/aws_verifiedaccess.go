@@ -61,6 +61,10 @@ func (a *mqlAwsVerifiedaccess) getInstances(conn *connection.AwsConnection) []*j
 						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
+					if IsServiceNotAvailableInRegionError(err) {
+						log.Debug().Str("region", region).Msg("verified access is not available in region")
+						return res, nil
+					}
 					return nil, err
 				}
 
@@ -198,6 +202,10 @@ func (a *mqlAwsVerifiedaccess) getTrustProviders(conn *connection.AwsConnection)
 						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
+					if IsServiceNotAvailableInRegionError(err) {
+						log.Debug().Str("region", region).Msg("verified access is not available in region")
+						return res, nil
+					}
 					return nil, err
 				}
 
@@ -275,6 +283,10 @@ func (a *mqlAwsVerifiedaccess) getGroups(conn *connection.AwsConnection) []*jobp
 						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
+					if IsServiceNotAvailableInRegionError(err) {
+						log.Debug().Str("region", region).Msg("verified access is not available in region")
+						return res, nil
+					}
 					return nil, err
 				}
 
@@ -347,6 +359,10 @@ func (a *mqlAwsVerifiedaccess) getEndpoints(conn *connection.AwsConnection) []*j
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					if IsServiceNotAvailableInRegionError(err) {
+						log.Debug().Str("region", region).Msg("verified access is not available in region")
 						return res, nil
 					}
 					return nil, err

@@ -61,7 +61,7 @@ func (a *mqlAwsSecuritylake) getDataLakes(conn *connection.AwsConnection) []*job
 					return res, nil
 				}
 				if IsServiceNotAvailableInRegionError(err) {
-					log.Warn().Str("region", region).Msg("security lake is not available in region")
+					log.Debug().Str("region", region).Msg("security lake is not available in region")
 					return res, nil
 				}
 				return nil, err
@@ -174,7 +174,7 @@ func (a *mqlAwsSecuritylake) getSubscribers(conn *connection.AwsConnection) []*j
 						return res, nil
 					}
 					if IsServiceNotAvailableInRegionError(err) {
-						log.Warn().Str("region", region).Msg("security lake is not available in region")
+						log.Debug().Str("region", region).Msg("security lake is not available in region")
 						return res, nil
 					}
 					return nil, err

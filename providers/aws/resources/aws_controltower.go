@@ -60,7 +60,7 @@ func (a *mqlAwsControltower) getLandingZones(conn *connection.AwsConnection) []*
 						return res, nil
 					}
 					if IsServiceNotAvailableInRegionError(err) {
-						log.Warn().Str("region", region).Msg("control tower is not available in region")
+						log.Debug().Str("region", region).Msg("control tower is not available in region")
 						return res, nil
 					}
 					return nil, err
@@ -201,7 +201,7 @@ func (a *mqlAwsControltower) getEnabledBaselines(conn *connection.AwsConnection)
 						return res, nil
 					}
 					if IsServiceNotAvailableInRegionError(err) {
-						log.Warn().Str("region", region).Msg("control tower is not available in region")
+						log.Debug().Str("region", region).Msg("control tower is not available in region")
 						return res, nil
 					}
 					return nil, err

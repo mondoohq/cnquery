@@ -62,7 +62,7 @@ func (a *mqlAwsBedrock) getFoundationModels(conn *connection.AwsConnection) []*j
 					return res, nil
 				}
 				if IsServiceNotAvailableInRegionError(err) {
-					log.Warn().Str("region", region).Msg("bedrock is not available in region")
+					log.Debug().Str("region", region).Msg("bedrock is not available in region")
 					return res, nil
 				}
 				return nil, err
@@ -154,7 +154,7 @@ func (a *mqlAwsBedrock) getCustomModels(conn *connection.AwsConnection) []*jobpo
 						return res, nil
 					}
 					if IsServiceNotAvailableInRegionError(err) {
-						log.Warn().Str("region", region).Msg("bedrock is not available in region")
+						log.Debug().Str("region", region).Msg("bedrock is not available in region")
 						return res, nil
 					}
 					return nil, err
@@ -300,7 +300,7 @@ func (a *mqlAwsBedrock) getGuardrails(conn *connection.AwsConnection) []*jobpool
 						return res, nil
 					}
 					if IsServiceNotAvailableInRegionError(err) {
-						log.Warn().Str("region", region).Msg("bedrock is not available in region")
+						log.Debug().Str("region", region).Msg("bedrock is not available in region")
 						return res, nil
 					}
 					return nil, err
@@ -469,7 +469,7 @@ func (a *mqlAwsBedrock) getModelInvocationLoggingConfigurations(conn *connection
 					return res, nil
 				}
 				if IsServiceNotAvailableInRegionError(err) {
-					log.Warn().Str("region", region).Msg("bedrock is not available in region")
+					log.Debug().Str("region", region).Msg("bedrock is not available in region")
 					return res, nil
 				}
 				return nil, err
@@ -548,7 +548,7 @@ func (a *mqlAwsBedrock) getProvisionedModelThroughputs(conn *connection.AwsConne
 						return res, nil
 					}
 					if IsServiceNotAvailableInRegionError(err) {
-						log.Warn().Str("region", region).Msg("bedrock is not available in region")
+						log.Debug().Str("region", region).Msg("bedrock is not available in region")
 						return res, nil
 					}
 					return nil, err

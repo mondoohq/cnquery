@@ -41,6 +41,7 @@ ciscocatalyst
 clcerts
 chokepoint
 cloudflare
+claude
 Clusterwide
 cmdline
 cmek
@@ -136,6 +137,7 @@ ipsetforwardedipconfig
 ipsetreferencestatement
 istio
 jira
+jamf
 jsonbody
 junos
 kerberoastable
@@ -224,6 +226,7 @@ posix
 postgre
 POWERUSER
 priorityclass
+privateca
 processingjob
 psc
 PTn
@@ -289,6 +292,7 @@ targetgroup
 tde
 testutils
 tgw
+throughputs
 timestream
 toplevel
 toport
@@ -306,6 +310,7 @@ Utc
 valkey
 VAULTNAME
 Vcpus
+verifiedaccess
 vdcs
 vdev
 vertexai
