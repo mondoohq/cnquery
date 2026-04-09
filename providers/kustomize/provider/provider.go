@@ -176,11 +176,7 @@ func parseNameFromPath(file string) string {
 	}
 
 	if fi.IsDir() {
-		name := filepath.Base(absPath)
-		if name != "/" && name != "." {
-			return "directory " + name
-		}
-		return name
+		return "directory " + filepath.Base(absPath)
 	}
 
 	name := filepath.Base(fi.Name())
