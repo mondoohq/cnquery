@@ -112,8 +112,10 @@ func NewIdleTimeoutReader(body io.ReadCloser, timeout time.Duration) *IdleTimeou
 
 func (itr *IdleTimeoutReader) Read(p []byte) (int, error) {
 	n, err := itr.body.Read(p)
-	if n > 0 {
+	if n > 0 && err == nil {
 		itr.timer.Reset(itr.timeout)
+	} else if err != nil {
+		itr.timer.Stop()
 	}
 	if err != nil && itr.timedOut.Load() {
 		return n, fmt.Errorf("download stalled: no data received for %s (configure with %s)", itr.timeout, EnvDownloadTimeout)
@@ -122,9 +124,9 @@ func (itr *IdleTimeoutReader) Read(p []byte) (int, error) {
 }
 
 func (itr *IdleTimeoutReader) Close() error {
-	itr.timer.Stop()
-	if itr.timedOut.Load() {
-		return nil // body already closed by timer callback
+	if !itr.timer.Stop() {
+		// Timer already fired; callback will (or has) closed the body.
+		return nil
 	}
 	return itr.body.Close()
 }
