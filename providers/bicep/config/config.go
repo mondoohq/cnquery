@@ -6,6 +6,7 @@ package config
 import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
 	"go.mondoo.com/mql/v13/providers/bicep/provider"
 )
 
@@ -13,6 +14,7 @@ var Config = plugin.Provider{
 	Name:            "bicep",
 	ID:              "go.mondoo.com/mql/v13/providers/bicep",
 	Version:         "13.0.0",
+	Maturity:        resources.MaturityExperimental,
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{
 		{

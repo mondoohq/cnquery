@@ -80,7 +80,8 @@ func ValidateMaturity(m string) error {
 	if MaturityLevel(m) >= 0 {
 		return nil
 	}
-	return fmt.Errorf("invalid maturity %q, must be one of: experimental, preview, stable, deprecated, eol", m)
+	return fmt.Errorf("invalid maturity %q, must be one of: %s, %s, %s, %s, %s",
+		m, MaturityExperimental, MaturityPreview, MaturityStable, MaturityDeprecated, MaturityEOL)
 }
 
 // MaturityLabel returns a human-readable label for a maturity string,
