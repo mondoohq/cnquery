@@ -171,6 +171,8 @@ github.com/aws/aws-sdk-go-v2/service/account v1.30.5 h1:mBCX+sC+HpY0uvgGjBKlUaRo
 github.com/aws/aws-sdk-go-v2/service/account v1.30.5/go.mod h1:0Yr7MY5U8hHfqLWVyzcs+MrkmcVlNqgXijaK3ryIHLc=
 github.com/aws/aws-sdk-go-v2/service/acm v1.38.1 h1:41vgMbK0HvVfv5+549nVLMDWIsWFP/0FNAYDos5lKGA=
 github.com/aws/aws-sdk-go-v2/service/acm v1.38.1/go.mod h1:0XoAyD03Stvqf8e/vVCk/1FP2aaF+xUluP7K9MrHWcQ=
+github.com/aws/aws-sdk-go-v2/service/acmpca v1.46.12 h1:jnLzSmGRlTl7SYhecRKMgeKeg8lkCkOzRLT1B3GSpSY=
+github.com/aws/aws-sdk-go-v2/service/acmpca v1.46.12/go.mod h1:6o9TY7hinjyo61EUZSJN9IX+IcKe3DDjbTyFcH8GxlI=
 github.com/aws/aws-sdk-go-v2/service/apigateway v1.39.1 h1:r3dXvi6tMfv4D48pyantOgDL48ifV6Ibj1eU1ca0C3k=
 github.com/aws/aws-sdk-go-v2/service/apigateway v1.39.1/go.mod h1:nhYOLBwQu7P3ckR+L4gZkY0DT0nAhrQuZkI51jR1vTE=
 github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.41.14 h1:0aYQ2UaSB1ccXZXUQ4a5XanrHEykKNzMLFgLEDhf8PU=
@@ -187,6 +189,8 @@ github.com/aws/aws-sdk-go-v2/service/backup v1.55.0 h1:p/1UY5ijuHkzGNTmRyvfU5t/f
 github.com/aws/aws-sdk-go-v2/service/backup v1.55.0/go.mod h1:H59xrHDDsJO4OMJ9bznKryHxZdMOvoZb+4dKW+A9TKo=
 github.com/aws/aws-sdk-go-v2/service/batch v1.63.2 h1:9bsy0RFJYSspgVBhJ9rArmHOMS9XYYHdg1IgpuZqUO4=
 github.com/aws/aws-sdk-go-v2/service/batch v1.63.2/go.mod h1:T/6gED/2b8Qh8ZOOke4oG/JCjUewh+YFkTDF7GODXQ0=
+github.com/aws/aws-sdk-go-v2/service/bedrock v1.59.0 h1:iddGKq5eJ8ABEDE543752cUuI0mSAJOBDuoC1RcS+bQ=
+github.com/aws/aws-sdk-go-v2/service/bedrock v1.59.0/go.mod h1:C8KxG3IPteAlDQUCBVIXfkn81kDh9iIBZ4SS8B5UbDE=
 github.com/aws/aws-sdk-go-v2/service/cloudformation v1.71.9 h1:AISf54dn2oMUmhoWt4UH80xC8GqlZectZIcffiJzp6U=
 github.com/aws/aws-sdk-go-v2/service/cloudformation v1.71.9/go.mod h1:YWA53lezhB2wltdgeVvDQEIwGVKWh/n+yU5Wh0YTxCw=
 github.com/aws/aws-sdk-go-v2/service/cloudfront v1.61.0 h1:Yx6+Np7TIPx2/j15dWnuGadv+w11ysw5KHgKpaiZsYM=
@@ -207,6 +211,8 @@ github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.59.3 h1:iO0QRVlR
 github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.59.3/go.mod h1:XPkppF4ijOR6oZvwXB2tjQDLjkTEGCFn8Onl26v4GHQ=
 github.com/aws/aws-sdk-go-v2/service/configservice v1.62.1 h1:0kqK/rGcsuDGDyLLBjLSH95zC3k8lIkW0nksCYEU72g=
 github.com/aws/aws-sdk-go-v2/service/configservice v1.62.1/go.mod h1:9dXB7G3BUakIT/aCgH8si8fCl//iWvR8wpkWuVKY22A=
+github.com/aws/aws-sdk-go-v2/service/controltower v1.28.9 h1:FKQ4VPl2Vp3qrfEQ1DA7CrBXVbMW9axovux13CbLtaY=
+github.com/aws/aws-sdk-go-v2/service/controltower v1.28.9/go.mod h1:BV/X4lbe2tx+pUSdSoDp/oJEVSakBFkdBo0nwnmPKDc=
 github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.62.0 h1:aGmD/oKKz23xhUe7xA8Fij4wLdcgLIEPfCLwCRvVsQ0=
 github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.62.0/go.mod h1:RTEJQr3mkkqxxLUgBhmN5sc9ASrdGMlI+Gmv2CQhbDM=
 github.com/aws/aws-sdk-go-v2/service/dax v1.29.16 h1:QscUGVecME2laCqDmkUwK/Vp0xri5Ymujq3+NGLUn3o=
@@ -319,6 +325,8 @@ github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.41.5 h1:z2ayoK3pOvf8ODj/v
 github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.41.5/go.mod h1:mpZB5HAl4ZIISod9qCi12xZ170TbHX9CCJV5y7nb7QU=
 github.com/aws/aws-sdk-go-v2/service/securityhub v1.68.3 h1:Nz5/FeXnKq+7YtIeNtHIuDeX/ZeFWDETL0oaqf8V0VI=
 github.com/aws/aws-sdk-go-v2/service/securityhub v1.68.3/go.mod h1:wFhqYLcoMThnIKlNsl048lq9FmCA20hJV1GY0TvS7MI=
+github.com/aws/aws-sdk-go-v2/service/securitylake v1.25.13 h1:RfJQCcBl1LbCq0aiDXiB4cxrhOV7P+7YAytFnpa/ENI=
+github.com/aws/aws-sdk-go-v2/service/securitylake v1.25.13/go.mod h1:I4Wy1npPxCFEvynpbEM8orrnq5a34kGKY29DzGKeGqo=
 github.com/aws/aws-sdk-go-v2/service/sfn v1.40.10 h1:R6zfaJNZcopLNZujk02QwmE78cMOL1KRx08FtxTyI88=
 github.com/aws/aws-sdk-go-v2/service/sfn v1.40.10/go.mod h1:Csc9j7BBtxws0bI2Aj+ALQpDkWaySstkqB37+1XyyJ8=
 github.com/aws/aws-sdk-go-v2/service/shield v1.34.21 h1:mO+bATVTYarn2BlIWGoZ8i+X4+GEARDp940psUNh0f4=

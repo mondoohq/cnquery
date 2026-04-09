@@ -10648,3 +10648,391 @@ private aws.identitycenter.accountAssignment @defaults("accountId permissionSetA
   // ID of the principal (user or group ID)
   principalId string
 }
+
+// AWS Private Certificate Authority (ACM PCA)
+aws.privateca {
+  // List of private certificate authorities
+  certificateAuthorities() []aws.privateca.certificateAuthority
+}
+
+// AWS Private Certificate Authority
+private aws.privateca.certificateAuthority @defaults("arn status type") {
+  // ARN of the certificate authority
+  arn string
+  // Region where the CA exists
+  region string
+  // Status: CREATING, PENDING_CERTIFICATE, ACTIVE, DELETED, DISABLED, EXPIRED, or FAILED
+  status string
+  // Type: ROOT or SUBORDINATE
+  type string
+  // Usage mode: GENERAL_PURPOSE or SHORT_LIVED_CERTIFICATE
+  usageMode string
+  // Serial number of the CA certificate
+  serial string
+  // Key algorithm used by the CA (e.g., RSA_2048, EC_prime256v1)
+  keyAlgorithm string
+  // Signing algorithm used by the CA
+  signingAlgorithm string
+  // Subject information for the CA
+  subject dict
+  // Revocation configuration for the CA (CRL and OCSP settings)
+  revocationConfiguration dict
+  // Key storage security standard (e.g., FIPS_140_2_LEVEL_3_OR_HIGHER)
+  keyStorageSecurityStandard string
+  // Owner account ID
+  ownerAccount string
+  // Date before which the CA certificate is not valid
+  notBefore time
+  // Date after which the CA certificate is not valid
+  notAfter time
+  // Date the CA was created
+  createdAt time
+  // Date of the last state change
+  lastStateChangeAt time
+  // Failure reason if the CA is in a failed state
+  failureReason string
+  // Tags for the certificate authority
+  tags map[string]string
+  // PEM-encoded CA certificate
+  certificate() string
+  // PEM-encoded CA certificate chain
+  certificateChain() string
+  // Resource-based policy for the CA (JSON string, empty if none)
+  policy() string
+}
+
+// AWS Security Lake
+aws.securitylake {
+  // List of Security Lake data lakes
+  dataLakes() []aws.securitylake.dataLake
+  // List of Security Lake subscribers
+  subscribers() []aws.securitylake.subscriber
+}
+
+// AWS Security Lake data lake
+private aws.securitylake.dataLake @defaults("dataLakeArn region createStatus") {
+  // ARN of the data lake
+  dataLakeArn string
+  // Region of the data lake
+  region string
+  // Creation status: INITIALIZED, PENDING, COMPLETED, or FAILED
+  createStatus string
+  // KMS key used for encryption
+  encryptionKmsKey() aws.kms.key
+  // Lifecycle configuration for the data lake
+  lifecycleConfiguration dict
+  // Replication configuration for the data lake
+  replicationConfiguration dict
+  // S3 bucket ARN for the data lake
+  s3BucketArn string
+}
+
+// AWS Security Lake subscriber
+private aws.securitylake.subscriber @defaults("subscriberArn subscriberName subscriberStatus") {
+  // ARN of the subscriber
+  subscriberArn string
+  // ID of the subscriber
+  subscriberId string
+  // Name of the subscriber
+  subscriberName string
+  // Identity of the subscriber (principal and external ID)
+  subscriberIdentity dict
+  // Log and event sources
+  sources []dict
+  // Access types: LAKEFORMATION or S3
+  accessTypes []string
+  // Status: ACTIVE, DEACTIVATED, PENDING, or READY
+  subscriberStatus string
+  // IAM role ARN used by the subscriber
+  roleArn string
+  // S3 bucket ARN for the subscriber
+  s3BucketArn string
+  // Date the subscriber was created
+  createdAt time
+}
+
+// AWS Verified Access
+aws.verifiedaccess {
+  // List of Verified Access instances
+  instances() []aws.verifiedaccess.instance
+  // List of Verified Access trust providers
+  trustProviders() []aws.verifiedaccess.trustProvider
+  // List of Verified Access groups
+  groups() []aws.verifiedaccess.group
+  // List of Verified Access endpoints
+  endpoints() []aws.verifiedaccess.endpoint
+}
+
+// AWS Verified Access instance
+private aws.verifiedaccess.instance @defaults("verifiedAccessInstanceId description") {
+  // ID of the Verified Access instance
+  verifiedAccessInstanceId string
+  // Region where the instance exists
+  region string
+  // Description of the instance
+  description string
+  // Whether FIPS is enabled
+  fipsEnabled bool
+  // Trust providers associated with this instance
+  trustProviders []dict
+  // Time when the instance was created
+  createdAt time
+  // Time when the instance was last updated
+  lastUpdatedAt time
+  // Tags for the instance
+  tags map[string]string
+  // Logging configuration for this instance
+  loggingConfiguration() aws.verifiedaccess.instanceLoggingConfiguration
+}
+
+// AWS Verified Access trust provider
+private aws.verifiedaccess.trustProvider @defaults("verifiedAccessTrustProviderId trustProviderType") {
+  // ID of the trust provider
+  verifiedAccessTrustProviderId string
+  // Region where the trust provider exists
+  region string
+  // Type of trust provider: user or device
+  trustProviderType string
+  // User trust provider type (e.g., iam-identity-center, oidc)
+  userTrustProviderType string
+  // Device trust provider type (e.g., jamf, crowdstrike)
+  deviceTrustProviderType string
+  // Policy reference name used in Cedar policies
+  policyReferenceName string
+  // OIDC options configuration
+  oidcOptions dict
+  // SSE specification (KMS encryption)
+  sseSpecification dict
+  // Tags for the trust provider
+  tags map[string]string
+}
+
+// AWS Verified Access group
+private aws.verifiedaccess.group @defaults("verifiedAccessGroupId verifiedAccessGroupArn") {
+  // ID of the group
+  verifiedAccessGroupId string
+  // ARN of the group
+  verifiedAccessGroupArn string
+  // Region where the group exists
+  region string
+  // Verified Access instance ID the group belongs to
+  verifiedAccessInstanceId string
+  // SSE specification (KMS encryption)
+  sseSpecification dict
+  // Owner of the group
+  owner string
+  // Tags for the group
+  tags map[string]string
+}
+
+// AWS Verified Access endpoint
+private aws.verifiedaccess.endpoint @defaults("verifiedAccessEndpointId applicationDomain endpointType") {
+  // ID of the endpoint
+  verifiedAccessEndpointId string
+  // Region where the endpoint exists
+  region string
+  // Verified Access group ID
+  verifiedAccessGroupId string
+  // Verified Access instance ID
+  verifiedAccessInstanceId string
+  // Application domain for the endpoint
+  applicationDomain string
+  // Endpoint domain
+  endpointDomain string
+  // Endpoint type (e.g., load-balancer, network-interface, rds, cidr)
+  endpointType string
+  // Attachment type
+  attachmentType string
+  // Domain certificate ARN
+  domainCertificateArn string
+  // Status of the endpoint
+  status dict
+  // Security group IDs
+  securityGroupIds []string
+  // SSE specification (KMS encryption)
+  sseSpecification dict
+  // Tags for the endpoint
+  tags map[string]string
+}
+
+// AWS Verified Access instance logging configuration
+private aws.verifiedaccess.instanceLoggingConfiguration @defaults("verifiedAccessInstanceId") {
+  // Verified Access instance ID
+  verifiedAccessInstanceId string
+  // Region where the configuration exists
+  region string
+  // Whether trust context is included in logs
+  includeTrustContext bool
+  // Log version
+  logVersion string
+  // CloudWatch Logs configuration
+  cloudWatchLogs dict
+  // Kinesis Data Firehose configuration
+  kinesisDataFirehose dict
+  // S3 configuration
+  s3 dict
+}
+
+// AWS Control Tower
+aws.controltower {
+  // List of Control Tower landing zones
+  landingZones() []aws.controltower.landingZone
+  // List of enabled baselines
+  enabledBaselines() []aws.controltower.enabledBaseline
+}
+
+// AWS Control Tower landing zone
+private aws.controltower.landingZone @defaults("arn status") {
+  // ARN of the landing zone
+  arn string
+  // Region where the landing zone exists
+  region string
+  // Version of the landing zone
+  version() string
+  // Latest available version of the landing zone
+  latestAvailableVersion() string
+  // Drift status: DRIFTED or IN_SYNC
+  driftStatus() string
+  // Status: ACTIVE, PROCESSING, or FAILED
+  status() string
+}
+
+// AWS Control Tower enabled baseline
+private aws.controltower.enabledBaseline @defaults("arn baselineIdentifier") {
+  // ARN of the enabled baseline
+  arn string
+  // Region where the enabled baseline exists
+  region string
+  // Identifier of the baseline
+  baselineIdentifier string
+  // Identifier of the target (e.g., OU ARN)
+  targetIdentifier string
+  // Version of the baseline
+  baselineVersion string
+  // Status of the enabled baseline
+  status string
+  // Drift status of the enabled baseline
+  driftStatus string
+}
+
+// Amazon Bedrock
+aws.bedrock {
+  // Foundation models available in Bedrock
+  foundationModels() []aws.bedrock.foundationModel
+  // Custom models in the account
+  customModels() []aws.bedrock.customModel
+  // Guardrails configured in the account
+  guardrails() []aws.bedrock.guardrail
+  // Model invocation logging configurations (one per region)
+  modelInvocationLoggingConfigurations() []aws.bedrock.modelInvocationLoggingConfiguration
+  // Provisioned model throughputs
+  provisionedModelThroughputs() []aws.bedrock.provisionedModelThroughput
+}
+
+// Amazon Bedrock foundation model
+private aws.bedrock.foundationModel @defaults("modelId modelName providerName") {
+  // ARN of the model
+  modelArn string
+  // ID of the model (e.g., anthropic.claude-3-sonnet)
+  modelId string
+  // Name of the model
+  modelName string
+  // Provider name (e.g., Anthropic, Amazon, Meta)
+  providerName string
+  // Input modalities supported (e.g., TEXT, IMAGE)
+  inputModalities []string
+  // Output modalities supported
+  outputModalities []string
+  // Customizations supported (e.g., FINE_TUNING, CONTINUED_PRE_TRAINING)
+  customizationsSupported []string
+  // Inference types supported (e.g., ON_DEMAND, PROVISIONED)
+  inferenceTypesSupported []string
+  // Whether response streaming is supported
+  responseStreamingSupported bool
+  // Model lifecycle status (e.g., ACTIVE, LEGACY)
+  modelLifecycleStatus string
+}
+
+// Amazon Bedrock custom model
+private aws.bedrock.customModel @defaults("modelArn modelName") {
+  // ARN of the custom model
+  modelArn string
+  // Name of the custom model
+  modelName string
+  // Region where the custom model exists
+  region string
+  // ARN of the base model used for customization
+  baseModelArn string
+  // Customization type: FINE_TUNING or CONTINUED_PRE_TRAINING
+  customizationType string
+  // KMS key used for model encryption
+  kmsKey() aws.kms.key
+  // Training data configuration
+  trainingDataConfig() dict
+  // Output data configuration
+  outputDataConfig() dict
+}
+
+// Amazon Bedrock guardrail
+private aws.bedrock.guardrail @defaults("id name status") {
+  // ARN of the guardrail
+  arn string
+  // ID of the guardrail
+  id string
+  // Name of the guardrail
+  name string
+  // Region where the guardrail exists
+  region string
+  // Status of the guardrail
+  status string
+  // Version of the guardrail
+  version string
+  // KMS key used for encryption
+  kmsKey() aws.kms.key
+  // Content filtering policy configuration
+  contentPolicy() dict
+  // Sensitive information policy (PII detection)
+  sensitiveInformationPolicy() dict
+  // Topic policy configuration (denied topics)
+  topicPolicy() dict
+  // Word policy configuration (blocked words)
+  wordPolicy() dict
+}
+
+// Amazon Bedrock model invocation logging configuration
+private aws.bedrock.modelInvocationLoggingConfiguration @defaults("region textDataDeliveryEnabled imageDataDeliveryEnabled") {
+  // Region for this logging configuration
+  region string
+  // CloudWatch logging configuration
+  cloudWatchConfig dict
+  // S3 logging configuration
+  s3Config dict
+  // Whether text data delivery is enabled
+  textDataDeliveryEnabled bool
+  // Whether image data delivery is enabled
+  imageDataDeliveryEnabled bool
+  // Whether embedding data delivery is enabled
+  embeddingDataDeliveryEnabled bool
+  // Whether video data delivery is enabled
+  videoDataDeliveryEnabled bool
+}
+
+// Amazon Bedrock provisioned model throughput
+private aws.bedrock.provisionedModelThroughput @defaults("provisionedModelName modelArn status") {
+  // ARN of the provisioned model throughput
+  provisionedModelArn string
+  // Name of the provisioned model throughput
+  provisionedModelName string
+  // Region where the provisioned throughput exists
+  region string
+  // ARN of the model
+  modelArn string
+  // ARN of the foundation model
+  foundationModelArn string
+  // Number of model units provisioned
+  modelUnits int
+  // Status: Creating, InService, Updating, or Failed
+  status string
+  // Commitment duration: ONE_MONTH, SIX_MONTHS, or NO_COMMITMENT
+  commitmentDuration string
+}

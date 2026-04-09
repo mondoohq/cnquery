@@ -479,6 +479,26 @@ const (
 	ResourceAwsIdentitycenterInstance                                           string = "aws.identitycenter.instance"
 	ResourceAwsIdentitycenterPermissionSet                                      string = "aws.identitycenter.permissionSet"
 	ResourceAwsIdentitycenterAccountAssignment                                  string = "aws.identitycenter.accountAssignment"
+	ResourceAwsPrivateca                                                        string = "aws.privateca"
+	ResourceAwsPrivatecaCertificateAuthority                                    string = "aws.privateca.certificateAuthority"
+	ResourceAwsSecuritylake                                                     string = "aws.securitylake"
+	ResourceAwsSecuritylakeDataLake                                             string = "aws.securitylake.dataLake"
+	ResourceAwsSecuritylakeSubscriber                                           string = "aws.securitylake.subscriber"
+	ResourceAwsVerifiedaccess                                                   string = "aws.verifiedaccess"
+	ResourceAwsVerifiedaccessInstance                                           string = "aws.verifiedaccess.instance"
+	ResourceAwsVerifiedaccessTrustProvider                                      string = "aws.verifiedaccess.trustProvider"
+	ResourceAwsVerifiedaccessGroup                                              string = "aws.verifiedaccess.group"
+	ResourceAwsVerifiedaccessEndpoint                                           string = "aws.verifiedaccess.endpoint"
+	ResourceAwsVerifiedaccessInstanceLoggingConfiguration                       string = "aws.verifiedaccess.instanceLoggingConfiguration"
+	ResourceAwsControltower                                                     string = "aws.controltower"
+	ResourceAwsControltowerLandingZone                                          string = "aws.controltower.landingZone"
+	ResourceAwsControltowerEnabledBaseline                                      string = "aws.controltower.enabledBaseline"
+	ResourceAwsBedrock                                                          string = "aws.bedrock"
+	ResourceAwsBedrockFoundationModel                                           string = "aws.bedrock.foundationModel"
+	ResourceAwsBedrockCustomModel                                               string = "aws.bedrock.customModel"
+	ResourceAwsBedrockGuardrail                                                 string = "aws.bedrock.guardrail"
+	ResourceAwsBedrockModelInvocationLoggingConfiguration                       string = "aws.bedrock.modelInvocationLoggingConfiguration"
+	ResourceAwsBedrockProvisionedModelThroughput                                string = "aws.bedrock.provisionedModelThroughput"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -2336,6 +2356,86 @@ func init() {
 		"aws.identitycenter.accountAssignment": {
 			// to override args, implement: initAwsIdentitycenterAccountAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsIdentitycenterAccountAssignment,
+		},
+		"aws.privateca": {
+			// to override args, implement: initAwsPrivateca(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsPrivateca,
+		},
+		"aws.privateca.certificateAuthority": {
+			// to override args, implement: initAwsPrivatecaCertificateAuthority(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsPrivatecaCertificateAuthority,
+		},
+		"aws.securitylake": {
+			// to override args, implement: initAwsSecuritylake(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSecuritylake,
+		},
+		"aws.securitylake.dataLake": {
+			// to override args, implement: initAwsSecuritylakeDataLake(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSecuritylakeDataLake,
+		},
+		"aws.securitylake.subscriber": {
+			// to override args, implement: initAwsSecuritylakeSubscriber(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSecuritylakeSubscriber,
+		},
+		"aws.verifiedaccess": {
+			// to override args, implement: initAwsVerifiedaccess(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsVerifiedaccess,
+		},
+		"aws.verifiedaccess.instance": {
+			// to override args, implement: initAwsVerifiedaccessInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsVerifiedaccessInstance,
+		},
+		"aws.verifiedaccess.trustProvider": {
+			// to override args, implement: initAwsVerifiedaccessTrustProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsVerifiedaccessTrustProvider,
+		},
+		"aws.verifiedaccess.group": {
+			// to override args, implement: initAwsVerifiedaccessGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsVerifiedaccessGroup,
+		},
+		"aws.verifiedaccess.endpoint": {
+			// to override args, implement: initAwsVerifiedaccessEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsVerifiedaccessEndpoint,
+		},
+		"aws.verifiedaccess.instanceLoggingConfiguration": {
+			// to override args, implement: initAwsVerifiedaccessInstanceLoggingConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsVerifiedaccessInstanceLoggingConfiguration,
+		},
+		"aws.controltower": {
+			// to override args, implement: initAwsControltower(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsControltower,
+		},
+		"aws.controltower.landingZone": {
+			// to override args, implement: initAwsControltowerLandingZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsControltowerLandingZone,
+		},
+		"aws.controltower.enabledBaseline": {
+			// to override args, implement: initAwsControltowerEnabledBaseline(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsControltowerEnabledBaseline,
+		},
+		"aws.bedrock": {
+			// to override args, implement: initAwsBedrock(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBedrock,
+		},
+		"aws.bedrock.foundationModel": {
+			// to override args, implement: initAwsBedrockFoundationModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBedrockFoundationModel,
+		},
+		"aws.bedrock.customModel": {
+			// to override args, implement: initAwsBedrockCustomModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBedrockCustomModel,
+		},
+		"aws.bedrock.guardrail": {
+			// to override args, implement: initAwsBedrockGuardrail(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBedrockGuardrail,
+		},
+		"aws.bedrock.modelInvocationLoggingConfiguration": {
+			// to override args, implement: initAwsBedrockModelInvocationLoggingConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBedrockModelInvocationLoggingConfiguration,
+		},
+		"aws.bedrock.provisionedModelThroughput": {
+			// to override args, implement: initAwsBedrockProvisionedModelThroughput(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBedrockProvisionedModelThroughput,
 		},
 	}
 }
@@ -15544,6 +15644,468 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.identitycenter.accountAssignment.principalId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIdentitycenterAccountAssignment).GetPrincipalId()).ToDataRes(types.String)
+	},
+	"aws.privateca.certificateAuthorities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPrivateca).GetCertificateAuthorities()).ToDataRes(types.Array(types.Resource("aws.privateca.certificateAuthority")))
+	},
+	"aws.privateca.certificateAuthority.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPrivatecaCertificateAuthority).GetArn()).ToDataRes(types.String)
+	},
+	"aws.privateca.certificateAuthority.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPrivatecaCertificateAuthority).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.privateca.certificateAuthority.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPrivatecaCertificateAuthority).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.privateca.certificateAuthority.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPrivatecaCertificateAuthority).GetType()).ToDataRes(types.String)
+	},
+	"aws.privateca.certificateAuthority.usageMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPrivatecaCertificateAuthority).GetUsageMode()).ToDataRes(types.String)
+	},
+	"aws.privateca.certificateAuthority.serial": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPrivatecaCertificateAuthority).GetSerial()).ToDataRes(types.String)
+	},
+	"aws.privateca.certificateAuthority.keyAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPrivatecaCertificateAuthority).GetKeyAlgorithm()).ToDataRes(types.String)
+	},
+	"aws.privateca.certificateAuthority.signingAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPrivatecaCertificateAuthority).GetSigningAlgorithm()).ToDataRes(types.String)
+	},
+	"aws.privateca.certificateAuthority.subject": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPrivatecaCertificateAuthority).GetSubject()).ToDataRes(types.Dict)
+	},
+	"aws.privateca.certificateAuthority.revocationConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPrivatecaCertificateAuthority).GetRevocationConfiguration()).ToDataRes(types.Dict)
+	},
+	"aws.privateca.certificateAuthority.keyStorageSecurityStandard": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPrivatecaCertificateAuthority).GetKeyStorageSecurityStandard()).ToDataRes(types.String)
+	},
+	"aws.privateca.certificateAuthority.ownerAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPrivatecaCertificateAuthority).GetOwnerAccount()).ToDataRes(types.String)
+	},
+	"aws.privateca.certificateAuthority.notBefore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPrivatecaCertificateAuthority).GetNotBefore()).ToDataRes(types.Time)
+	},
+	"aws.privateca.certificateAuthority.notAfter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPrivatecaCertificateAuthority).GetNotAfter()).ToDataRes(types.Time)
+	},
+	"aws.privateca.certificateAuthority.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPrivatecaCertificateAuthority).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.privateca.certificateAuthority.lastStateChangeAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPrivatecaCertificateAuthority).GetLastStateChangeAt()).ToDataRes(types.Time)
+	},
+	"aws.privateca.certificateAuthority.failureReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPrivatecaCertificateAuthority).GetFailureReason()).ToDataRes(types.String)
+	},
+	"aws.privateca.certificateAuthority.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPrivatecaCertificateAuthority).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.privateca.certificateAuthority.certificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPrivatecaCertificateAuthority).GetCertificate()).ToDataRes(types.String)
+	},
+	"aws.privateca.certificateAuthority.certificateChain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPrivatecaCertificateAuthority).GetCertificateChain()).ToDataRes(types.String)
+	},
+	"aws.privateca.certificateAuthority.policy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsPrivatecaCertificateAuthority).GetPolicy()).ToDataRes(types.String)
+	},
+	"aws.securitylake.dataLakes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecuritylake).GetDataLakes()).ToDataRes(types.Array(types.Resource("aws.securitylake.dataLake")))
+	},
+	"aws.securitylake.subscribers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecuritylake).GetSubscribers()).ToDataRes(types.Array(types.Resource("aws.securitylake.subscriber")))
+	},
+	"aws.securitylake.dataLake.dataLakeArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecuritylakeDataLake).GetDataLakeArn()).ToDataRes(types.String)
+	},
+	"aws.securitylake.dataLake.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecuritylakeDataLake).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.securitylake.dataLake.createStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecuritylakeDataLake).GetCreateStatus()).ToDataRes(types.String)
+	},
+	"aws.securitylake.dataLake.encryptionKmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecuritylakeDataLake).GetEncryptionKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.securitylake.dataLake.lifecycleConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecuritylakeDataLake).GetLifecycleConfiguration()).ToDataRes(types.Dict)
+	},
+	"aws.securitylake.dataLake.replicationConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecuritylakeDataLake).GetReplicationConfiguration()).ToDataRes(types.Dict)
+	},
+	"aws.securitylake.dataLake.s3BucketArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecuritylakeDataLake).GetS3BucketArn()).ToDataRes(types.String)
+	},
+	"aws.securitylake.subscriber.subscriberArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecuritylakeSubscriber).GetSubscriberArn()).ToDataRes(types.String)
+	},
+	"aws.securitylake.subscriber.subscriberId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecuritylakeSubscriber).GetSubscriberId()).ToDataRes(types.String)
+	},
+	"aws.securitylake.subscriber.subscriberName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecuritylakeSubscriber).GetSubscriberName()).ToDataRes(types.String)
+	},
+	"aws.securitylake.subscriber.subscriberIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecuritylakeSubscriber).GetSubscriberIdentity()).ToDataRes(types.Dict)
+	},
+	"aws.securitylake.subscriber.sources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecuritylakeSubscriber).GetSources()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.securitylake.subscriber.accessTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecuritylakeSubscriber).GetAccessTypes()).ToDataRes(types.Array(types.String))
+	},
+	"aws.securitylake.subscriber.subscriberStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecuritylakeSubscriber).GetSubscriberStatus()).ToDataRes(types.String)
+	},
+	"aws.securitylake.subscriber.roleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecuritylakeSubscriber).GetRoleArn()).ToDataRes(types.String)
+	},
+	"aws.securitylake.subscriber.s3BucketArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecuritylakeSubscriber).GetS3BucketArn()).ToDataRes(types.String)
+	},
+	"aws.securitylake.subscriber.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecuritylakeSubscriber).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.verifiedaccess.instances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccess).GetInstances()).ToDataRes(types.Array(types.Resource("aws.verifiedaccess.instance")))
+	},
+	"aws.verifiedaccess.trustProviders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccess).GetTrustProviders()).ToDataRes(types.Array(types.Resource("aws.verifiedaccess.trustProvider")))
+	},
+	"aws.verifiedaccess.groups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccess).GetGroups()).ToDataRes(types.Array(types.Resource("aws.verifiedaccess.group")))
+	},
+	"aws.verifiedaccess.endpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccess).GetEndpoints()).ToDataRes(types.Array(types.Resource("aws.verifiedaccess.endpoint")))
+	},
+	"aws.verifiedaccess.instance.verifiedAccessInstanceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessInstance).GetVerifiedAccessInstanceId()).ToDataRes(types.String)
+	},
+	"aws.verifiedaccess.instance.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessInstance).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.verifiedaccess.instance.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessInstance).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.verifiedaccess.instance.fipsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessInstance).GetFipsEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.verifiedaccess.instance.trustProviders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessInstance).GetTrustProviders()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.verifiedaccess.instance.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessInstance).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.verifiedaccess.instance.lastUpdatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessInstance).GetLastUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.verifiedaccess.instance.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessInstance).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.verifiedaccess.instance.loggingConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessInstance).GetLoggingConfiguration()).ToDataRes(types.Resource("aws.verifiedaccess.instanceLoggingConfiguration"))
+	},
+	"aws.verifiedaccess.trustProvider.verifiedAccessTrustProviderId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessTrustProvider).GetVerifiedAccessTrustProviderId()).ToDataRes(types.String)
+	},
+	"aws.verifiedaccess.trustProvider.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessTrustProvider).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.verifiedaccess.trustProvider.trustProviderType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessTrustProvider).GetTrustProviderType()).ToDataRes(types.String)
+	},
+	"aws.verifiedaccess.trustProvider.userTrustProviderType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessTrustProvider).GetUserTrustProviderType()).ToDataRes(types.String)
+	},
+	"aws.verifiedaccess.trustProvider.deviceTrustProviderType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessTrustProvider).GetDeviceTrustProviderType()).ToDataRes(types.String)
+	},
+	"aws.verifiedaccess.trustProvider.policyReferenceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessTrustProvider).GetPolicyReferenceName()).ToDataRes(types.String)
+	},
+	"aws.verifiedaccess.trustProvider.oidcOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessTrustProvider).GetOidcOptions()).ToDataRes(types.Dict)
+	},
+	"aws.verifiedaccess.trustProvider.sseSpecification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessTrustProvider).GetSseSpecification()).ToDataRes(types.Dict)
+	},
+	"aws.verifiedaccess.trustProvider.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessTrustProvider).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.verifiedaccess.group.verifiedAccessGroupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessGroup).GetVerifiedAccessGroupId()).ToDataRes(types.String)
+	},
+	"aws.verifiedaccess.group.verifiedAccessGroupArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessGroup).GetVerifiedAccessGroupArn()).ToDataRes(types.String)
+	},
+	"aws.verifiedaccess.group.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessGroup).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.verifiedaccess.group.verifiedAccessInstanceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessGroup).GetVerifiedAccessInstanceId()).ToDataRes(types.String)
+	},
+	"aws.verifiedaccess.group.sseSpecification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessGroup).GetSseSpecification()).ToDataRes(types.Dict)
+	},
+	"aws.verifiedaccess.group.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessGroup).GetOwner()).ToDataRes(types.String)
+	},
+	"aws.verifiedaccess.group.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessGroup).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.verifiedaccess.endpoint.verifiedAccessEndpointId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessEndpoint).GetVerifiedAccessEndpointId()).ToDataRes(types.String)
+	},
+	"aws.verifiedaccess.endpoint.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessEndpoint).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.verifiedaccess.endpoint.verifiedAccessGroupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessEndpoint).GetVerifiedAccessGroupId()).ToDataRes(types.String)
+	},
+	"aws.verifiedaccess.endpoint.verifiedAccessInstanceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessEndpoint).GetVerifiedAccessInstanceId()).ToDataRes(types.String)
+	},
+	"aws.verifiedaccess.endpoint.applicationDomain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessEndpoint).GetApplicationDomain()).ToDataRes(types.String)
+	},
+	"aws.verifiedaccess.endpoint.endpointDomain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessEndpoint).GetEndpointDomain()).ToDataRes(types.String)
+	},
+	"aws.verifiedaccess.endpoint.endpointType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessEndpoint).GetEndpointType()).ToDataRes(types.String)
+	},
+	"aws.verifiedaccess.endpoint.attachmentType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessEndpoint).GetAttachmentType()).ToDataRes(types.String)
+	},
+	"aws.verifiedaccess.endpoint.domainCertificateArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessEndpoint).GetDomainCertificateArn()).ToDataRes(types.String)
+	},
+	"aws.verifiedaccess.endpoint.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessEndpoint).GetStatus()).ToDataRes(types.Dict)
+	},
+	"aws.verifiedaccess.endpoint.securityGroupIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessEndpoint).GetSecurityGroupIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.verifiedaccess.endpoint.sseSpecification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessEndpoint).GetSseSpecification()).ToDataRes(types.Dict)
+	},
+	"aws.verifiedaccess.endpoint.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessEndpoint).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.verifiedaccess.instanceLoggingConfiguration.verifiedAccessInstanceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessInstanceLoggingConfiguration).GetVerifiedAccessInstanceId()).ToDataRes(types.String)
+	},
+	"aws.verifiedaccess.instanceLoggingConfiguration.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessInstanceLoggingConfiguration).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.verifiedaccess.instanceLoggingConfiguration.includeTrustContext": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessInstanceLoggingConfiguration).GetIncludeTrustContext()).ToDataRes(types.Bool)
+	},
+	"aws.verifiedaccess.instanceLoggingConfiguration.logVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessInstanceLoggingConfiguration).GetLogVersion()).ToDataRes(types.String)
+	},
+	"aws.verifiedaccess.instanceLoggingConfiguration.cloudWatchLogs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessInstanceLoggingConfiguration).GetCloudWatchLogs()).ToDataRes(types.Dict)
+	},
+	"aws.verifiedaccess.instanceLoggingConfiguration.kinesisDataFirehose": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessInstanceLoggingConfiguration).GetKinesisDataFirehose()).ToDataRes(types.Dict)
+	},
+	"aws.verifiedaccess.instanceLoggingConfiguration.s3": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessInstanceLoggingConfiguration).GetS3()).ToDataRes(types.Dict)
+	},
+	"aws.controltower.landingZones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsControltower).GetLandingZones()).ToDataRes(types.Array(types.Resource("aws.controltower.landingZone")))
+	},
+	"aws.controltower.enabledBaselines": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsControltower).GetEnabledBaselines()).ToDataRes(types.Array(types.Resource("aws.controltower.enabledBaseline")))
+	},
+	"aws.controltower.landingZone.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsControltowerLandingZone).GetArn()).ToDataRes(types.String)
+	},
+	"aws.controltower.landingZone.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsControltowerLandingZone).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.controltower.landingZone.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsControltowerLandingZone).GetVersion()).ToDataRes(types.String)
+	},
+	"aws.controltower.landingZone.latestAvailableVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsControltowerLandingZone).GetLatestAvailableVersion()).ToDataRes(types.String)
+	},
+	"aws.controltower.landingZone.driftStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsControltowerLandingZone).GetDriftStatus()).ToDataRes(types.String)
+	},
+	"aws.controltower.landingZone.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsControltowerLandingZone).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.controltower.enabledBaseline.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsControltowerEnabledBaseline).GetArn()).ToDataRes(types.String)
+	},
+	"aws.controltower.enabledBaseline.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsControltowerEnabledBaseline).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.controltower.enabledBaseline.baselineIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsControltowerEnabledBaseline).GetBaselineIdentifier()).ToDataRes(types.String)
+	},
+	"aws.controltower.enabledBaseline.targetIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsControltowerEnabledBaseline).GetTargetIdentifier()).ToDataRes(types.String)
+	},
+	"aws.controltower.enabledBaseline.baselineVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsControltowerEnabledBaseline).GetBaselineVersion()).ToDataRes(types.String)
+	},
+	"aws.controltower.enabledBaseline.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsControltowerEnabledBaseline).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.controltower.enabledBaseline.driftStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsControltowerEnabledBaseline).GetDriftStatus()).ToDataRes(types.String)
+	},
+	"aws.bedrock.foundationModels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrock).GetFoundationModels()).ToDataRes(types.Array(types.Resource("aws.bedrock.foundationModel")))
+	},
+	"aws.bedrock.customModels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrock).GetCustomModels()).ToDataRes(types.Array(types.Resource("aws.bedrock.customModel")))
+	},
+	"aws.bedrock.guardrails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrock).GetGuardrails()).ToDataRes(types.Array(types.Resource("aws.bedrock.guardrail")))
+	},
+	"aws.bedrock.modelInvocationLoggingConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrock).GetModelInvocationLoggingConfigurations()).ToDataRes(types.Array(types.Resource("aws.bedrock.modelInvocationLoggingConfiguration")))
+	},
+	"aws.bedrock.provisionedModelThroughputs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrock).GetProvisionedModelThroughputs()).ToDataRes(types.Array(types.Resource("aws.bedrock.provisionedModelThroughput")))
+	},
+	"aws.bedrock.foundationModel.modelArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockFoundationModel).GetModelArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.foundationModel.modelId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockFoundationModel).GetModelId()).ToDataRes(types.String)
+	},
+	"aws.bedrock.foundationModel.modelName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockFoundationModel).GetModelName()).ToDataRes(types.String)
+	},
+	"aws.bedrock.foundationModel.providerName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockFoundationModel).GetProviderName()).ToDataRes(types.String)
+	},
+	"aws.bedrock.foundationModel.inputModalities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockFoundationModel).GetInputModalities()).ToDataRes(types.Array(types.String))
+	},
+	"aws.bedrock.foundationModel.outputModalities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockFoundationModel).GetOutputModalities()).ToDataRes(types.Array(types.String))
+	},
+	"aws.bedrock.foundationModel.customizationsSupported": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockFoundationModel).GetCustomizationsSupported()).ToDataRes(types.Array(types.String))
+	},
+	"aws.bedrock.foundationModel.inferenceTypesSupported": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockFoundationModel).GetInferenceTypesSupported()).ToDataRes(types.Array(types.String))
+	},
+	"aws.bedrock.foundationModel.responseStreamingSupported": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockFoundationModel).GetResponseStreamingSupported()).ToDataRes(types.Bool)
+	},
+	"aws.bedrock.foundationModel.modelLifecycleStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockFoundationModel).GetModelLifecycleStatus()).ToDataRes(types.String)
+	},
+	"aws.bedrock.customModel.modelArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockCustomModel).GetModelArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.customModel.modelName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockCustomModel).GetModelName()).ToDataRes(types.String)
+	},
+	"aws.bedrock.customModel.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockCustomModel).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.bedrock.customModel.baseModelArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockCustomModel).GetBaseModelArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.customModel.customizationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockCustomModel).GetCustomizationType()).ToDataRes(types.String)
+	},
+	"aws.bedrock.customModel.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockCustomModel).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.bedrock.customModel.trainingDataConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockCustomModel).GetTrainingDataConfig()).ToDataRes(types.Dict)
+	},
+	"aws.bedrock.customModel.outputDataConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockCustomModel).GetOutputDataConfig()).ToDataRes(types.Dict)
+	},
+	"aws.bedrock.guardrail.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockGuardrail).GetArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.guardrail.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockGuardrail).GetId()).ToDataRes(types.String)
+	},
+	"aws.bedrock.guardrail.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockGuardrail).GetName()).ToDataRes(types.String)
+	},
+	"aws.bedrock.guardrail.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockGuardrail).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.bedrock.guardrail.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockGuardrail).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.bedrock.guardrail.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockGuardrail).GetVersion()).ToDataRes(types.String)
+	},
+	"aws.bedrock.guardrail.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockGuardrail).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.bedrock.guardrail.contentPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockGuardrail).GetContentPolicy()).ToDataRes(types.Dict)
+	},
+	"aws.bedrock.guardrail.sensitiveInformationPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockGuardrail).GetSensitiveInformationPolicy()).ToDataRes(types.Dict)
+	},
+	"aws.bedrock.guardrail.topicPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockGuardrail).GetTopicPolicy()).ToDataRes(types.Dict)
+	},
+	"aws.bedrock.guardrail.wordPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockGuardrail).GetWordPolicy()).ToDataRes(types.Dict)
+	},
+	"aws.bedrock.modelInvocationLoggingConfiguration.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelInvocationLoggingConfiguration).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.bedrock.modelInvocationLoggingConfiguration.cloudWatchConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelInvocationLoggingConfiguration).GetCloudWatchConfig()).ToDataRes(types.Dict)
+	},
+	"aws.bedrock.modelInvocationLoggingConfiguration.s3Config": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelInvocationLoggingConfiguration).GetS3Config()).ToDataRes(types.Dict)
+	},
+	"aws.bedrock.modelInvocationLoggingConfiguration.textDataDeliveryEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelInvocationLoggingConfiguration).GetTextDataDeliveryEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.bedrock.modelInvocationLoggingConfiguration.imageDataDeliveryEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelInvocationLoggingConfiguration).GetImageDataDeliveryEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.bedrock.modelInvocationLoggingConfiguration.embeddingDataDeliveryEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelInvocationLoggingConfiguration).GetEmbeddingDataDeliveryEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.bedrock.modelInvocationLoggingConfiguration.videoDataDeliveryEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelInvocationLoggingConfiguration).GetVideoDataDeliveryEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.bedrock.provisionedModelThroughput.provisionedModelArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockProvisionedModelThroughput).GetProvisionedModelArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.provisionedModelThroughput.provisionedModelName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockProvisionedModelThroughput).GetProvisionedModelName()).ToDataRes(types.String)
+	},
+	"aws.bedrock.provisionedModelThroughput.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockProvisionedModelThroughput).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.bedrock.provisionedModelThroughput.modelArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockProvisionedModelThroughput).GetModelArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.provisionedModelThroughput.foundationModelArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockProvisionedModelThroughput).GetFoundationModelArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.provisionedModelThroughput.modelUnits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockProvisionedModelThroughput).GetModelUnits()).ToDataRes(types.Int)
+	},
+	"aws.bedrock.provisionedModelThroughput.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockProvisionedModelThroughput).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.bedrock.provisionedModelThroughput.commitmentDuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockProvisionedModelThroughput).GetCommitmentDuration()).ToDataRes(types.String)
 	},
 }
 
@@ -34923,6 +35485,702 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.identitycenter.accountAssignment.principalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIdentitycenterAccountAssignment).PrincipalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.privateca.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPrivateca).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.privateca.certificateAuthorities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPrivateca).CertificateAuthorities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.privateca.certificateAuthority.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPrivatecaCertificateAuthority).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.privateca.certificateAuthority.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPrivatecaCertificateAuthority).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.privateca.certificateAuthority.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPrivatecaCertificateAuthority).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.privateca.certificateAuthority.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPrivatecaCertificateAuthority).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.privateca.certificateAuthority.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPrivatecaCertificateAuthority).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.privateca.certificateAuthority.usageMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPrivatecaCertificateAuthority).UsageMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.privateca.certificateAuthority.serial": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPrivatecaCertificateAuthority).Serial, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.privateca.certificateAuthority.keyAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPrivatecaCertificateAuthority).KeyAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.privateca.certificateAuthority.signingAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPrivatecaCertificateAuthority).SigningAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.privateca.certificateAuthority.subject": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPrivatecaCertificateAuthority).Subject, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.privateca.certificateAuthority.revocationConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPrivatecaCertificateAuthority).RevocationConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.privateca.certificateAuthority.keyStorageSecurityStandard": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPrivatecaCertificateAuthority).KeyStorageSecurityStandard, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.privateca.certificateAuthority.ownerAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPrivatecaCertificateAuthority).OwnerAccount, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.privateca.certificateAuthority.notBefore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPrivatecaCertificateAuthority).NotBefore, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.privateca.certificateAuthority.notAfter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPrivatecaCertificateAuthority).NotAfter, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.privateca.certificateAuthority.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPrivatecaCertificateAuthority).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.privateca.certificateAuthority.lastStateChangeAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPrivatecaCertificateAuthority).LastStateChangeAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.privateca.certificateAuthority.failureReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPrivatecaCertificateAuthority).FailureReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.privateca.certificateAuthority.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPrivatecaCertificateAuthority).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.privateca.certificateAuthority.certificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPrivatecaCertificateAuthority).Certificate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.privateca.certificateAuthority.certificateChain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPrivatecaCertificateAuthority).CertificateChain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.privateca.certificateAuthority.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsPrivatecaCertificateAuthority).Policy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securitylake.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecuritylake).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.securitylake.dataLakes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecuritylake).DataLakes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.securitylake.subscribers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecuritylake).Subscribers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.securitylake.dataLake.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecuritylakeDataLake).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.securitylake.dataLake.dataLakeArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecuritylakeDataLake).DataLakeArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securitylake.dataLake.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecuritylakeDataLake).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securitylake.dataLake.createStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecuritylakeDataLake).CreateStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securitylake.dataLake.encryptionKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecuritylakeDataLake).EncryptionKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.securitylake.dataLake.lifecycleConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecuritylakeDataLake).LifecycleConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.securitylake.dataLake.replicationConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecuritylakeDataLake).ReplicationConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.securitylake.dataLake.s3BucketArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecuritylakeDataLake).S3BucketArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securitylake.subscriber.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecuritylakeSubscriber).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.securitylake.subscriber.subscriberArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecuritylakeSubscriber).SubscriberArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securitylake.subscriber.subscriberId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecuritylakeSubscriber).SubscriberId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securitylake.subscriber.subscriberName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecuritylakeSubscriber).SubscriberName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securitylake.subscriber.subscriberIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecuritylakeSubscriber).SubscriberIdentity, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.securitylake.subscriber.sources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecuritylakeSubscriber).Sources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.securitylake.subscriber.accessTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecuritylakeSubscriber).AccessTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.securitylake.subscriber.subscriberStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecuritylakeSubscriber).SubscriberStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securitylake.subscriber.roleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecuritylakeSubscriber).RoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securitylake.subscriber.s3BucketArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecuritylakeSubscriber).S3BucketArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securitylake.subscriber.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecuritylakeSubscriber).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccess).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.verifiedaccess.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccess).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.trustProviders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccess).TrustProviders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccess).Groups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.endpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccess).Endpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessInstance).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.verifiedaccess.instance.verifiedAccessInstanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessInstance).VerifiedAccessInstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.instance.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessInstance).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.instance.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessInstance).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.instance.fipsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessInstance).FipsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.instance.trustProviders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessInstance).TrustProviders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.instance.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessInstance).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.instance.lastUpdatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessInstance).LastUpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.instance.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessInstance).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.instance.loggingConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessInstance).LoggingConfiguration, ok = plugin.RawToTValue[*mqlAwsVerifiedaccessInstanceLoggingConfiguration](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.trustProvider.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessTrustProvider).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.verifiedaccess.trustProvider.verifiedAccessTrustProviderId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessTrustProvider).VerifiedAccessTrustProviderId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.trustProvider.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessTrustProvider).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.trustProvider.trustProviderType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessTrustProvider).TrustProviderType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.trustProvider.userTrustProviderType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessTrustProvider).UserTrustProviderType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.trustProvider.deviceTrustProviderType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessTrustProvider).DeviceTrustProviderType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.trustProvider.policyReferenceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessTrustProvider).PolicyReferenceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.trustProvider.oidcOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessTrustProvider).OidcOptions, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.trustProvider.sseSpecification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessTrustProvider).SseSpecification, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.trustProvider.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessTrustProvider).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.verifiedaccess.group.verifiedAccessGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessGroup).VerifiedAccessGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.group.verifiedAccessGroupArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessGroup).VerifiedAccessGroupArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.group.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessGroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.group.verifiedAccessInstanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessGroup).VerifiedAccessInstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.group.sseSpecification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessGroup).SseSpecification, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.group.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessGroup).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.group.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessGroup).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.endpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessEndpoint).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.verifiedaccess.endpoint.verifiedAccessEndpointId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessEndpoint).VerifiedAccessEndpointId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.endpoint.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessEndpoint).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.endpoint.verifiedAccessGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessEndpoint).VerifiedAccessGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.endpoint.verifiedAccessInstanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessEndpoint).VerifiedAccessInstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.endpoint.applicationDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessEndpoint).ApplicationDomain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.endpoint.endpointDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessEndpoint).EndpointDomain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.endpoint.endpointType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessEndpoint).EndpointType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.endpoint.attachmentType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessEndpoint).AttachmentType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.endpoint.domainCertificateArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessEndpoint).DomainCertificateArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.endpoint.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessEndpoint).Status, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.endpoint.securityGroupIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessEndpoint).SecurityGroupIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.endpoint.sseSpecification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessEndpoint).SseSpecification, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.endpoint.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessEndpoint).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.instanceLoggingConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessInstanceLoggingConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.verifiedaccess.instanceLoggingConfiguration.verifiedAccessInstanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessInstanceLoggingConfiguration).VerifiedAccessInstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.instanceLoggingConfiguration.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessInstanceLoggingConfiguration).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.instanceLoggingConfiguration.includeTrustContext": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessInstanceLoggingConfiguration).IncludeTrustContext, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.instanceLoggingConfiguration.logVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessInstanceLoggingConfiguration).LogVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.instanceLoggingConfiguration.cloudWatchLogs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessInstanceLoggingConfiguration).CloudWatchLogs, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.instanceLoggingConfiguration.kinesisDataFirehose": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessInstanceLoggingConfiguration).KinesisDataFirehose, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.instanceLoggingConfiguration.s3": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessInstanceLoggingConfiguration).S3, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.controltower.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsControltower).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.controltower.landingZones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsControltower).LandingZones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.controltower.enabledBaselines": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsControltower).EnabledBaselines, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.controltower.landingZone.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsControltowerLandingZone).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.controltower.landingZone.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsControltowerLandingZone).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.controltower.landingZone.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsControltowerLandingZone).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.controltower.landingZone.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsControltowerLandingZone).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.controltower.landingZone.latestAvailableVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsControltowerLandingZone).LatestAvailableVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.controltower.landingZone.driftStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsControltowerLandingZone).DriftStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.controltower.landingZone.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsControltowerLandingZone).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.controltower.enabledBaseline.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsControltowerEnabledBaseline).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.controltower.enabledBaseline.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsControltowerEnabledBaseline).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.controltower.enabledBaseline.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsControltowerEnabledBaseline).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.controltower.enabledBaseline.baselineIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsControltowerEnabledBaseline).BaselineIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.controltower.enabledBaseline.targetIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsControltowerEnabledBaseline).TargetIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.controltower.enabledBaseline.baselineVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsControltowerEnabledBaseline).BaselineVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.controltower.enabledBaseline.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsControltowerEnabledBaseline).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.controltower.enabledBaseline.driftStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsControltowerEnabledBaseline).DriftStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrock).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.bedrock.foundationModels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrock).FoundationModels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.customModels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrock).CustomModels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.guardrails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrock).Guardrails, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelInvocationLoggingConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrock).ModelInvocationLoggingConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.provisionedModelThroughputs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrock).ProvisionedModelThroughputs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.foundationModel.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockFoundationModel).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.bedrock.foundationModel.modelArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockFoundationModel).ModelArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.foundationModel.modelId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockFoundationModel).ModelId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.foundationModel.modelName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockFoundationModel).ModelName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.foundationModel.providerName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockFoundationModel).ProviderName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.foundationModel.inputModalities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockFoundationModel).InputModalities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.foundationModel.outputModalities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockFoundationModel).OutputModalities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.foundationModel.customizationsSupported": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockFoundationModel).CustomizationsSupported, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.foundationModel.inferenceTypesSupported": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockFoundationModel).InferenceTypesSupported, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.foundationModel.responseStreamingSupported": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockFoundationModel).ResponseStreamingSupported, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.foundationModel.modelLifecycleStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockFoundationModel).ModelLifecycleStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.customModel.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockCustomModel).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.bedrock.customModel.modelArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockCustomModel).ModelArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.customModel.modelName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockCustomModel).ModelName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.customModel.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockCustomModel).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.customModel.baseModelArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockCustomModel).BaseModelArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.customModel.customizationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockCustomModel).CustomizationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.customModel.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockCustomModel).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.customModel.trainingDataConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockCustomModel).TrainingDataConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.customModel.outputDataConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockCustomModel).OutputDataConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.guardrail.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockGuardrail).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.bedrock.guardrail.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockGuardrail).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.guardrail.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockGuardrail).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.guardrail.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockGuardrail).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.guardrail.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockGuardrail).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.guardrail.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockGuardrail).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.guardrail.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockGuardrail).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.guardrail.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockGuardrail).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.guardrail.contentPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockGuardrail).ContentPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.guardrail.sensitiveInformationPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockGuardrail).SensitiveInformationPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.guardrail.topicPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockGuardrail).TopicPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.guardrail.wordPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockGuardrail).WordPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelInvocationLoggingConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelInvocationLoggingConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.bedrock.modelInvocationLoggingConfiguration.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelInvocationLoggingConfiguration).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelInvocationLoggingConfiguration.cloudWatchConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelInvocationLoggingConfiguration).CloudWatchConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelInvocationLoggingConfiguration.s3Config": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelInvocationLoggingConfiguration).S3Config, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelInvocationLoggingConfiguration.textDataDeliveryEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelInvocationLoggingConfiguration).TextDataDeliveryEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelInvocationLoggingConfiguration.imageDataDeliveryEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelInvocationLoggingConfiguration).ImageDataDeliveryEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelInvocationLoggingConfiguration.embeddingDataDeliveryEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelInvocationLoggingConfiguration).EmbeddingDataDeliveryEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelInvocationLoggingConfiguration.videoDataDeliveryEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelInvocationLoggingConfiguration).VideoDataDeliveryEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.provisionedModelThroughput.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockProvisionedModelThroughput).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.bedrock.provisionedModelThroughput.provisionedModelArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockProvisionedModelThroughput).ProvisionedModelArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.provisionedModelThroughput.provisionedModelName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockProvisionedModelThroughput).ProvisionedModelName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.provisionedModelThroughput.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockProvisionedModelThroughput).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.provisionedModelThroughput.modelArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockProvisionedModelThroughput).ModelArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.provisionedModelThroughput.foundationModelArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockProvisionedModelThroughput).FoundationModelArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.provisionedModelThroughput.modelUnits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockProvisionedModelThroughput).ModelUnits, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.provisionedModelThroughput.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockProvisionedModelThroughput).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.provisionedModelThroughput.commitmentDuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockProvisionedModelThroughput).CommitmentDuration, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -84491,4 +85749,1896 @@ func (c *mqlAwsIdentitycenterAccountAssignment) GetPrincipalType() *plugin.TValu
 
 func (c *mqlAwsIdentitycenterAccountAssignment) GetPrincipalId() *plugin.TValue[string] {
 	return &c.PrincipalId
+}
+
+// mqlAwsPrivateca for the aws.privateca resource
+type mqlAwsPrivateca struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsPrivatecaInternal it will be used here
+	CertificateAuthorities plugin.TValue[[]any]
+}
+
+// createAwsPrivateca creates a new instance of this resource
+func createAwsPrivateca(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsPrivateca{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.privateca", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsPrivateca) MqlName() string {
+	return "aws.privateca"
+}
+
+func (c *mqlAwsPrivateca) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsPrivateca) GetCertificateAuthorities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CertificateAuthorities, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.privateca", c.__id, "certificateAuthorities")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.certificateAuthorities()
+	})
+}
+
+// mqlAwsPrivatecaCertificateAuthority for the aws.privateca.certificateAuthority resource
+type mqlAwsPrivatecaCertificateAuthority struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsPrivatecaCertificateAuthorityInternal
+	Arn                        plugin.TValue[string]
+	Region                     plugin.TValue[string]
+	Status                     plugin.TValue[string]
+	Type                       plugin.TValue[string]
+	UsageMode                  plugin.TValue[string]
+	Serial                     plugin.TValue[string]
+	KeyAlgorithm               plugin.TValue[string]
+	SigningAlgorithm           plugin.TValue[string]
+	Subject                    plugin.TValue[any]
+	RevocationConfiguration    plugin.TValue[any]
+	KeyStorageSecurityStandard plugin.TValue[string]
+	OwnerAccount               plugin.TValue[string]
+	NotBefore                  plugin.TValue[*time.Time]
+	NotAfter                   plugin.TValue[*time.Time]
+	CreatedAt                  plugin.TValue[*time.Time]
+	LastStateChangeAt          plugin.TValue[*time.Time]
+	FailureReason              plugin.TValue[string]
+	Tags                       plugin.TValue[map[string]any]
+	Certificate                plugin.TValue[string]
+	CertificateChain           plugin.TValue[string]
+	Policy                     plugin.TValue[string]
+}
+
+// createAwsPrivatecaCertificateAuthority creates a new instance of this resource
+func createAwsPrivatecaCertificateAuthority(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsPrivatecaCertificateAuthority{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.privateca.certificateAuthority", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsPrivatecaCertificateAuthority) MqlName() string {
+	return "aws.privateca.certificateAuthority"
+}
+
+func (c *mqlAwsPrivatecaCertificateAuthority) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsPrivatecaCertificateAuthority) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsPrivatecaCertificateAuthority) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsPrivatecaCertificateAuthority) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsPrivatecaCertificateAuthority) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsPrivatecaCertificateAuthority) GetUsageMode() *plugin.TValue[string] {
+	return &c.UsageMode
+}
+
+func (c *mqlAwsPrivatecaCertificateAuthority) GetSerial() *plugin.TValue[string] {
+	return &c.Serial
+}
+
+func (c *mqlAwsPrivatecaCertificateAuthority) GetKeyAlgorithm() *plugin.TValue[string] {
+	return &c.KeyAlgorithm
+}
+
+func (c *mqlAwsPrivatecaCertificateAuthority) GetSigningAlgorithm() *plugin.TValue[string] {
+	return &c.SigningAlgorithm
+}
+
+func (c *mqlAwsPrivatecaCertificateAuthority) GetSubject() *plugin.TValue[any] {
+	return &c.Subject
+}
+
+func (c *mqlAwsPrivatecaCertificateAuthority) GetRevocationConfiguration() *plugin.TValue[any] {
+	return &c.RevocationConfiguration
+}
+
+func (c *mqlAwsPrivatecaCertificateAuthority) GetKeyStorageSecurityStandard() *plugin.TValue[string] {
+	return &c.KeyStorageSecurityStandard
+}
+
+func (c *mqlAwsPrivatecaCertificateAuthority) GetOwnerAccount() *plugin.TValue[string] {
+	return &c.OwnerAccount
+}
+
+func (c *mqlAwsPrivatecaCertificateAuthority) GetNotBefore() *plugin.TValue[*time.Time] {
+	return &c.NotBefore
+}
+
+func (c *mqlAwsPrivatecaCertificateAuthority) GetNotAfter() *plugin.TValue[*time.Time] {
+	return &c.NotAfter
+}
+
+func (c *mqlAwsPrivatecaCertificateAuthority) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsPrivatecaCertificateAuthority) GetLastStateChangeAt() *plugin.TValue[*time.Time] {
+	return &c.LastStateChangeAt
+}
+
+func (c *mqlAwsPrivatecaCertificateAuthority) GetFailureReason() *plugin.TValue[string] {
+	return &c.FailureReason
+}
+
+func (c *mqlAwsPrivatecaCertificateAuthority) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAwsPrivatecaCertificateAuthority) GetCertificate() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Certificate, func() (string, error) {
+		return c.certificate()
+	})
+}
+
+func (c *mqlAwsPrivatecaCertificateAuthority) GetCertificateChain() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CertificateChain, func() (string, error) {
+		return c.certificateChain()
+	})
+}
+
+func (c *mqlAwsPrivatecaCertificateAuthority) GetPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Policy, func() (string, error) {
+		return c.policy()
+	})
+}
+
+// mqlAwsSecuritylake for the aws.securitylake resource
+type mqlAwsSecuritylake struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsSecuritylakeInternal it will be used here
+	DataLakes   plugin.TValue[[]any]
+	Subscribers plugin.TValue[[]any]
+}
+
+// createAwsSecuritylake creates a new instance of this resource
+func createAwsSecuritylake(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSecuritylake{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.securitylake", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSecuritylake) MqlName() string {
+	return "aws.securitylake"
+}
+
+func (c *mqlAwsSecuritylake) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSecuritylake) GetDataLakes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DataLakes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.securitylake", c.__id, "dataLakes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.dataLakes()
+	})
+}
+
+func (c *mqlAwsSecuritylake) GetSubscribers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subscribers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.securitylake", c.__id, "subscribers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subscribers()
+	})
+}
+
+// mqlAwsSecuritylakeDataLake for the aws.securitylake.dataLake resource
+type mqlAwsSecuritylakeDataLake struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSecuritylakeDataLakeInternal
+	DataLakeArn              plugin.TValue[string]
+	Region                   plugin.TValue[string]
+	CreateStatus             plugin.TValue[string]
+	EncryptionKmsKey         plugin.TValue[*mqlAwsKmsKey]
+	LifecycleConfiguration   plugin.TValue[any]
+	ReplicationConfiguration plugin.TValue[any]
+	S3BucketArn              plugin.TValue[string]
+}
+
+// createAwsSecuritylakeDataLake creates a new instance of this resource
+func createAwsSecuritylakeDataLake(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSecuritylakeDataLake{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.securitylake.dataLake", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSecuritylakeDataLake) MqlName() string {
+	return "aws.securitylake.dataLake"
+}
+
+func (c *mqlAwsSecuritylakeDataLake) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSecuritylakeDataLake) GetDataLakeArn() *plugin.TValue[string] {
+	return &c.DataLakeArn
+}
+
+func (c *mqlAwsSecuritylakeDataLake) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSecuritylakeDataLake) GetCreateStatus() *plugin.TValue[string] {
+	return &c.CreateStatus
+}
+
+func (c *mqlAwsSecuritylakeDataLake) GetEncryptionKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.EncryptionKmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.securitylake.dataLake", c.__id, "encryptionKmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.encryptionKmsKey()
+	})
+}
+
+func (c *mqlAwsSecuritylakeDataLake) GetLifecycleConfiguration() *plugin.TValue[any] {
+	return &c.LifecycleConfiguration
+}
+
+func (c *mqlAwsSecuritylakeDataLake) GetReplicationConfiguration() *plugin.TValue[any] {
+	return &c.ReplicationConfiguration
+}
+
+func (c *mqlAwsSecuritylakeDataLake) GetS3BucketArn() *plugin.TValue[string] {
+	return &c.S3BucketArn
+}
+
+// mqlAwsSecuritylakeSubscriber for the aws.securitylake.subscriber resource
+type mqlAwsSecuritylakeSubscriber struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsSecuritylakeSubscriberInternal it will be used here
+	SubscriberArn      plugin.TValue[string]
+	SubscriberId       plugin.TValue[string]
+	SubscriberName     plugin.TValue[string]
+	SubscriberIdentity plugin.TValue[any]
+	Sources            plugin.TValue[[]any]
+	AccessTypes        plugin.TValue[[]any]
+	SubscriberStatus   plugin.TValue[string]
+	RoleArn            plugin.TValue[string]
+	S3BucketArn        plugin.TValue[string]
+	CreatedAt          plugin.TValue[*time.Time]
+}
+
+// createAwsSecuritylakeSubscriber creates a new instance of this resource
+func createAwsSecuritylakeSubscriber(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSecuritylakeSubscriber{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.securitylake.subscriber", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSecuritylakeSubscriber) MqlName() string {
+	return "aws.securitylake.subscriber"
+}
+
+func (c *mqlAwsSecuritylakeSubscriber) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSecuritylakeSubscriber) GetSubscriberArn() *plugin.TValue[string] {
+	return &c.SubscriberArn
+}
+
+func (c *mqlAwsSecuritylakeSubscriber) GetSubscriberId() *plugin.TValue[string] {
+	return &c.SubscriberId
+}
+
+func (c *mqlAwsSecuritylakeSubscriber) GetSubscriberName() *plugin.TValue[string] {
+	return &c.SubscriberName
+}
+
+func (c *mqlAwsSecuritylakeSubscriber) GetSubscriberIdentity() *plugin.TValue[any] {
+	return &c.SubscriberIdentity
+}
+
+func (c *mqlAwsSecuritylakeSubscriber) GetSources() *plugin.TValue[[]any] {
+	return &c.Sources
+}
+
+func (c *mqlAwsSecuritylakeSubscriber) GetAccessTypes() *plugin.TValue[[]any] {
+	return &c.AccessTypes
+}
+
+func (c *mqlAwsSecuritylakeSubscriber) GetSubscriberStatus() *plugin.TValue[string] {
+	return &c.SubscriberStatus
+}
+
+func (c *mqlAwsSecuritylakeSubscriber) GetRoleArn() *plugin.TValue[string] {
+	return &c.RoleArn
+}
+
+func (c *mqlAwsSecuritylakeSubscriber) GetS3BucketArn() *plugin.TValue[string] {
+	return &c.S3BucketArn
+}
+
+func (c *mqlAwsSecuritylakeSubscriber) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+// mqlAwsVerifiedaccess for the aws.verifiedaccess resource
+type mqlAwsVerifiedaccess struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsVerifiedaccessInternal it will be used here
+	Instances      plugin.TValue[[]any]
+	TrustProviders plugin.TValue[[]any]
+	Groups         plugin.TValue[[]any]
+	Endpoints      plugin.TValue[[]any]
+}
+
+// createAwsVerifiedaccess creates a new instance of this resource
+func createAwsVerifiedaccess(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsVerifiedaccess{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.verifiedaccess", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsVerifiedaccess) MqlName() string {
+	return "aws.verifiedaccess"
+}
+
+func (c *mqlAwsVerifiedaccess) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsVerifiedaccess) GetInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Instances, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.verifiedaccess", c.__id, "instances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.instances()
+	})
+}
+
+func (c *mqlAwsVerifiedaccess) GetTrustProviders() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TrustProviders, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.verifiedaccess", c.__id, "trustProviders")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.trustProviders()
+	})
+}
+
+func (c *mqlAwsVerifiedaccess) GetGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Groups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.verifiedaccess", c.__id, "groups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.groups()
+	})
+}
+
+func (c *mqlAwsVerifiedaccess) GetEndpoints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Endpoints, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.verifiedaccess", c.__id, "endpoints")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.endpoints()
+	})
+}
+
+// mqlAwsVerifiedaccessInstance for the aws.verifiedaccess.instance resource
+type mqlAwsVerifiedaccessInstance struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsVerifiedaccessInstanceInternal
+	VerifiedAccessInstanceId plugin.TValue[string]
+	Region                   plugin.TValue[string]
+	Description              plugin.TValue[string]
+	FipsEnabled              plugin.TValue[bool]
+	TrustProviders           plugin.TValue[[]any]
+	CreatedAt                plugin.TValue[*time.Time]
+	LastUpdatedAt            plugin.TValue[*time.Time]
+	Tags                     plugin.TValue[map[string]any]
+	LoggingConfiguration     plugin.TValue[*mqlAwsVerifiedaccessInstanceLoggingConfiguration]
+}
+
+// createAwsVerifiedaccessInstance creates a new instance of this resource
+func createAwsVerifiedaccessInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsVerifiedaccessInstance{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.verifiedaccess.instance", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsVerifiedaccessInstance) MqlName() string {
+	return "aws.verifiedaccess.instance"
+}
+
+func (c *mqlAwsVerifiedaccessInstance) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsVerifiedaccessInstance) GetVerifiedAccessInstanceId() *plugin.TValue[string] {
+	return &c.VerifiedAccessInstanceId
+}
+
+func (c *mqlAwsVerifiedaccessInstance) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsVerifiedaccessInstance) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsVerifiedaccessInstance) GetFipsEnabled() *plugin.TValue[bool] {
+	return &c.FipsEnabled
+}
+
+func (c *mqlAwsVerifiedaccessInstance) GetTrustProviders() *plugin.TValue[[]any] {
+	return &c.TrustProviders
+}
+
+func (c *mqlAwsVerifiedaccessInstance) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsVerifiedaccessInstance) GetLastUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.LastUpdatedAt
+}
+
+func (c *mqlAwsVerifiedaccessInstance) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAwsVerifiedaccessInstance) GetLoggingConfiguration() *plugin.TValue[*mqlAwsVerifiedaccessInstanceLoggingConfiguration] {
+	return plugin.GetOrCompute[*mqlAwsVerifiedaccessInstanceLoggingConfiguration](&c.LoggingConfiguration, func() (*mqlAwsVerifiedaccessInstanceLoggingConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.verifiedaccess.instance", c.__id, "loggingConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVerifiedaccessInstanceLoggingConfiguration), nil
+			}
+		}
+
+		return c.loggingConfiguration()
+	})
+}
+
+// mqlAwsVerifiedaccessTrustProvider for the aws.verifiedaccess.trustProvider resource
+type mqlAwsVerifiedaccessTrustProvider struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsVerifiedaccessTrustProviderInternal it will be used here
+	VerifiedAccessTrustProviderId plugin.TValue[string]
+	Region                        plugin.TValue[string]
+	TrustProviderType             plugin.TValue[string]
+	UserTrustProviderType         plugin.TValue[string]
+	DeviceTrustProviderType       plugin.TValue[string]
+	PolicyReferenceName           plugin.TValue[string]
+	OidcOptions                   plugin.TValue[any]
+	SseSpecification              plugin.TValue[any]
+	Tags                          plugin.TValue[map[string]any]
+}
+
+// createAwsVerifiedaccessTrustProvider creates a new instance of this resource
+func createAwsVerifiedaccessTrustProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsVerifiedaccessTrustProvider{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.verifiedaccess.trustProvider", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsVerifiedaccessTrustProvider) MqlName() string {
+	return "aws.verifiedaccess.trustProvider"
+}
+
+func (c *mqlAwsVerifiedaccessTrustProvider) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsVerifiedaccessTrustProvider) GetVerifiedAccessTrustProviderId() *plugin.TValue[string] {
+	return &c.VerifiedAccessTrustProviderId
+}
+
+func (c *mqlAwsVerifiedaccessTrustProvider) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsVerifiedaccessTrustProvider) GetTrustProviderType() *plugin.TValue[string] {
+	return &c.TrustProviderType
+}
+
+func (c *mqlAwsVerifiedaccessTrustProvider) GetUserTrustProviderType() *plugin.TValue[string] {
+	return &c.UserTrustProviderType
+}
+
+func (c *mqlAwsVerifiedaccessTrustProvider) GetDeviceTrustProviderType() *plugin.TValue[string] {
+	return &c.DeviceTrustProviderType
+}
+
+func (c *mqlAwsVerifiedaccessTrustProvider) GetPolicyReferenceName() *plugin.TValue[string] {
+	return &c.PolicyReferenceName
+}
+
+func (c *mqlAwsVerifiedaccessTrustProvider) GetOidcOptions() *plugin.TValue[any] {
+	return &c.OidcOptions
+}
+
+func (c *mqlAwsVerifiedaccessTrustProvider) GetSseSpecification() *plugin.TValue[any] {
+	return &c.SseSpecification
+}
+
+func (c *mqlAwsVerifiedaccessTrustProvider) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+// mqlAwsVerifiedaccessGroup for the aws.verifiedaccess.group resource
+type mqlAwsVerifiedaccessGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsVerifiedaccessGroupInternal it will be used here
+	VerifiedAccessGroupId    plugin.TValue[string]
+	VerifiedAccessGroupArn   plugin.TValue[string]
+	Region                   plugin.TValue[string]
+	VerifiedAccessInstanceId plugin.TValue[string]
+	SseSpecification         plugin.TValue[any]
+	Owner                    plugin.TValue[string]
+	Tags                     plugin.TValue[map[string]any]
+}
+
+// createAwsVerifiedaccessGroup creates a new instance of this resource
+func createAwsVerifiedaccessGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsVerifiedaccessGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.verifiedaccess.group", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsVerifiedaccessGroup) MqlName() string {
+	return "aws.verifiedaccess.group"
+}
+
+func (c *mqlAwsVerifiedaccessGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsVerifiedaccessGroup) GetVerifiedAccessGroupId() *plugin.TValue[string] {
+	return &c.VerifiedAccessGroupId
+}
+
+func (c *mqlAwsVerifiedaccessGroup) GetVerifiedAccessGroupArn() *plugin.TValue[string] {
+	return &c.VerifiedAccessGroupArn
+}
+
+func (c *mqlAwsVerifiedaccessGroup) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsVerifiedaccessGroup) GetVerifiedAccessInstanceId() *plugin.TValue[string] {
+	return &c.VerifiedAccessInstanceId
+}
+
+func (c *mqlAwsVerifiedaccessGroup) GetSseSpecification() *plugin.TValue[any] {
+	return &c.SseSpecification
+}
+
+func (c *mqlAwsVerifiedaccessGroup) GetOwner() *plugin.TValue[string] {
+	return &c.Owner
+}
+
+func (c *mqlAwsVerifiedaccessGroup) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+// mqlAwsVerifiedaccessEndpoint for the aws.verifiedaccess.endpoint resource
+type mqlAwsVerifiedaccessEndpoint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsVerifiedaccessEndpointInternal it will be used here
+	VerifiedAccessEndpointId plugin.TValue[string]
+	Region                   plugin.TValue[string]
+	VerifiedAccessGroupId    plugin.TValue[string]
+	VerifiedAccessInstanceId plugin.TValue[string]
+	ApplicationDomain        plugin.TValue[string]
+	EndpointDomain           plugin.TValue[string]
+	EndpointType             plugin.TValue[string]
+	AttachmentType           plugin.TValue[string]
+	DomainCertificateArn     plugin.TValue[string]
+	Status                   plugin.TValue[any]
+	SecurityGroupIds         plugin.TValue[[]any]
+	SseSpecification         plugin.TValue[any]
+	Tags                     plugin.TValue[map[string]any]
+}
+
+// createAwsVerifiedaccessEndpoint creates a new instance of this resource
+func createAwsVerifiedaccessEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsVerifiedaccessEndpoint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.verifiedaccess.endpoint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsVerifiedaccessEndpoint) MqlName() string {
+	return "aws.verifiedaccess.endpoint"
+}
+
+func (c *mqlAwsVerifiedaccessEndpoint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsVerifiedaccessEndpoint) GetVerifiedAccessEndpointId() *plugin.TValue[string] {
+	return &c.VerifiedAccessEndpointId
+}
+
+func (c *mqlAwsVerifiedaccessEndpoint) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsVerifiedaccessEndpoint) GetVerifiedAccessGroupId() *plugin.TValue[string] {
+	return &c.VerifiedAccessGroupId
+}
+
+func (c *mqlAwsVerifiedaccessEndpoint) GetVerifiedAccessInstanceId() *plugin.TValue[string] {
+	return &c.VerifiedAccessInstanceId
+}
+
+func (c *mqlAwsVerifiedaccessEndpoint) GetApplicationDomain() *plugin.TValue[string] {
+	return &c.ApplicationDomain
+}
+
+func (c *mqlAwsVerifiedaccessEndpoint) GetEndpointDomain() *plugin.TValue[string] {
+	return &c.EndpointDomain
+}
+
+func (c *mqlAwsVerifiedaccessEndpoint) GetEndpointType() *plugin.TValue[string] {
+	return &c.EndpointType
+}
+
+func (c *mqlAwsVerifiedaccessEndpoint) GetAttachmentType() *plugin.TValue[string] {
+	return &c.AttachmentType
+}
+
+func (c *mqlAwsVerifiedaccessEndpoint) GetDomainCertificateArn() *plugin.TValue[string] {
+	return &c.DomainCertificateArn
+}
+
+func (c *mqlAwsVerifiedaccessEndpoint) GetStatus() *plugin.TValue[any] {
+	return &c.Status
+}
+
+func (c *mqlAwsVerifiedaccessEndpoint) GetSecurityGroupIds() *plugin.TValue[[]any] {
+	return &c.SecurityGroupIds
+}
+
+func (c *mqlAwsVerifiedaccessEndpoint) GetSseSpecification() *plugin.TValue[any] {
+	return &c.SseSpecification
+}
+
+func (c *mqlAwsVerifiedaccessEndpoint) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+// mqlAwsVerifiedaccessInstanceLoggingConfiguration for the aws.verifiedaccess.instanceLoggingConfiguration resource
+type mqlAwsVerifiedaccessInstanceLoggingConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsVerifiedaccessInstanceLoggingConfigurationInternal it will be used here
+	VerifiedAccessInstanceId plugin.TValue[string]
+	Region                   plugin.TValue[string]
+	IncludeTrustContext      plugin.TValue[bool]
+	LogVersion               plugin.TValue[string]
+	CloudWatchLogs           plugin.TValue[any]
+	KinesisDataFirehose      plugin.TValue[any]
+	S3                       plugin.TValue[any]
+}
+
+// createAwsVerifiedaccessInstanceLoggingConfiguration creates a new instance of this resource
+func createAwsVerifiedaccessInstanceLoggingConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsVerifiedaccessInstanceLoggingConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.verifiedaccess.instanceLoggingConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsVerifiedaccessInstanceLoggingConfiguration) MqlName() string {
+	return "aws.verifiedaccess.instanceLoggingConfiguration"
+}
+
+func (c *mqlAwsVerifiedaccessInstanceLoggingConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsVerifiedaccessInstanceLoggingConfiguration) GetVerifiedAccessInstanceId() *plugin.TValue[string] {
+	return &c.VerifiedAccessInstanceId
+}
+
+func (c *mqlAwsVerifiedaccessInstanceLoggingConfiguration) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsVerifiedaccessInstanceLoggingConfiguration) GetIncludeTrustContext() *plugin.TValue[bool] {
+	return &c.IncludeTrustContext
+}
+
+func (c *mqlAwsVerifiedaccessInstanceLoggingConfiguration) GetLogVersion() *plugin.TValue[string] {
+	return &c.LogVersion
+}
+
+func (c *mqlAwsVerifiedaccessInstanceLoggingConfiguration) GetCloudWatchLogs() *plugin.TValue[any] {
+	return &c.CloudWatchLogs
+}
+
+func (c *mqlAwsVerifiedaccessInstanceLoggingConfiguration) GetKinesisDataFirehose() *plugin.TValue[any] {
+	return &c.KinesisDataFirehose
+}
+
+func (c *mqlAwsVerifiedaccessInstanceLoggingConfiguration) GetS3() *plugin.TValue[any] {
+	return &c.S3
+}
+
+// mqlAwsControltower for the aws.controltower resource
+type mqlAwsControltower struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsControltowerInternal it will be used here
+	LandingZones     plugin.TValue[[]any]
+	EnabledBaselines plugin.TValue[[]any]
+}
+
+// createAwsControltower creates a new instance of this resource
+func createAwsControltower(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsControltower{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.controltower", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsControltower) MqlName() string {
+	return "aws.controltower"
+}
+
+func (c *mqlAwsControltower) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsControltower) GetLandingZones() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LandingZones, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.controltower", c.__id, "landingZones")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.landingZones()
+	})
+}
+
+func (c *mqlAwsControltower) GetEnabledBaselines() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EnabledBaselines, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.controltower", c.__id, "enabledBaselines")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.enabledBaselines()
+	})
+}
+
+// mqlAwsControltowerLandingZone for the aws.controltower.landingZone resource
+type mqlAwsControltowerLandingZone struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsControltowerLandingZoneInternal
+	Arn                    plugin.TValue[string]
+	Region                 plugin.TValue[string]
+	Version                plugin.TValue[string]
+	LatestAvailableVersion plugin.TValue[string]
+	DriftStatus            plugin.TValue[string]
+	Status                 plugin.TValue[string]
+}
+
+// createAwsControltowerLandingZone creates a new instance of this resource
+func createAwsControltowerLandingZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsControltowerLandingZone{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.controltower.landingZone", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsControltowerLandingZone) MqlName() string {
+	return "aws.controltower.landingZone"
+}
+
+func (c *mqlAwsControltowerLandingZone) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsControltowerLandingZone) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsControltowerLandingZone) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsControltowerLandingZone) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlAwsControltowerLandingZone) GetLatestAvailableVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LatestAvailableVersion, func() (string, error) {
+		return c.latestAvailableVersion()
+	})
+}
+
+func (c *mqlAwsControltowerLandingZone) GetDriftStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DriftStatus, func() (string, error) {
+		return c.driftStatus()
+	})
+}
+
+func (c *mqlAwsControltowerLandingZone) GetStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
+		return c.status()
+	})
+}
+
+// mqlAwsControltowerEnabledBaseline for the aws.controltower.enabledBaseline resource
+type mqlAwsControltowerEnabledBaseline struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsControltowerEnabledBaselineInternal it will be used here
+	Arn                plugin.TValue[string]
+	Region             plugin.TValue[string]
+	BaselineIdentifier plugin.TValue[string]
+	TargetIdentifier   plugin.TValue[string]
+	BaselineVersion    plugin.TValue[string]
+	Status             plugin.TValue[string]
+	DriftStatus        plugin.TValue[string]
+}
+
+// createAwsControltowerEnabledBaseline creates a new instance of this resource
+func createAwsControltowerEnabledBaseline(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsControltowerEnabledBaseline{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.controltower.enabledBaseline", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsControltowerEnabledBaseline) MqlName() string {
+	return "aws.controltower.enabledBaseline"
+}
+
+func (c *mqlAwsControltowerEnabledBaseline) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsControltowerEnabledBaseline) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsControltowerEnabledBaseline) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsControltowerEnabledBaseline) GetBaselineIdentifier() *plugin.TValue[string] {
+	return &c.BaselineIdentifier
+}
+
+func (c *mqlAwsControltowerEnabledBaseline) GetTargetIdentifier() *plugin.TValue[string] {
+	return &c.TargetIdentifier
+}
+
+func (c *mqlAwsControltowerEnabledBaseline) GetBaselineVersion() *plugin.TValue[string] {
+	return &c.BaselineVersion
+}
+
+func (c *mqlAwsControltowerEnabledBaseline) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsControltowerEnabledBaseline) GetDriftStatus() *plugin.TValue[string] {
+	return &c.DriftStatus
+}
+
+// mqlAwsBedrock for the aws.bedrock resource
+type mqlAwsBedrock struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsBedrockInternal it will be used here
+	FoundationModels                     plugin.TValue[[]any]
+	CustomModels                         plugin.TValue[[]any]
+	Guardrails                           plugin.TValue[[]any]
+	ModelInvocationLoggingConfigurations plugin.TValue[[]any]
+	ProvisionedModelThroughputs          plugin.TValue[[]any]
+}
+
+// createAwsBedrock creates a new instance of this resource
+func createAwsBedrock(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBedrock{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.bedrock", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBedrock) MqlName() string {
+	return "aws.bedrock"
+}
+
+func (c *mqlAwsBedrock) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBedrock) GetFoundationModels() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FoundationModels, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock", c.__id, "foundationModels")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.foundationModels()
+	})
+}
+
+func (c *mqlAwsBedrock) GetCustomModels() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CustomModels, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock", c.__id, "customModels")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.customModels()
+	})
+}
+
+func (c *mqlAwsBedrock) GetGuardrails() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Guardrails, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock", c.__id, "guardrails")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.guardrails()
+	})
+}
+
+func (c *mqlAwsBedrock) GetModelInvocationLoggingConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ModelInvocationLoggingConfigurations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock", c.__id, "modelInvocationLoggingConfigurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.modelInvocationLoggingConfigurations()
+	})
+}
+
+func (c *mqlAwsBedrock) GetProvisionedModelThroughputs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ProvisionedModelThroughputs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock", c.__id, "provisionedModelThroughputs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.provisionedModelThroughputs()
+	})
+}
+
+// mqlAwsBedrockFoundationModel for the aws.bedrock.foundationModel resource
+type mqlAwsBedrockFoundationModel struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsBedrockFoundationModelInternal it will be used here
+	ModelArn                   plugin.TValue[string]
+	ModelId                    plugin.TValue[string]
+	ModelName                  plugin.TValue[string]
+	ProviderName               plugin.TValue[string]
+	InputModalities            plugin.TValue[[]any]
+	OutputModalities           plugin.TValue[[]any]
+	CustomizationsSupported    plugin.TValue[[]any]
+	InferenceTypesSupported    plugin.TValue[[]any]
+	ResponseStreamingSupported plugin.TValue[bool]
+	ModelLifecycleStatus       plugin.TValue[string]
+}
+
+// createAwsBedrockFoundationModel creates a new instance of this resource
+func createAwsBedrockFoundationModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBedrockFoundationModel{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.bedrock.foundationModel", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBedrockFoundationModel) MqlName() string {
+	return "aws.bedrock.foundationModel"
+}
+
+func (c *mqlAwsBedrockFoundationModel) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBedrockFoundationModel) GetModelArn() *plugin.TValue[string] {
+	return &c.ModelArn
+}
+
+func (c *mqlAwsBedrockFoundationModel) GetModelId() *plugin.TValue[string] {
+	return &c.ModelId
+}
+
+func (c *mqlAwsBedrockFoundationModel) GetModelName() *plugin.TValue[string] {
+	return &c.ModelName
+}
+
+func (c *mqlAwsBedrockFoundationModel) GetProviderName() *plugin.TValue[string] {
+	return &c.ProviderName
+}
+
+func (c *mqlAwsBedrockFoundationModel) GetInputModalities() *plugin.TValue[[]any] {
+	return &c.InputModalities
+}
+
+func (c *mqlAwsBedrockFoundationModel) GetOutputModalities() *plugin.TValue[[]any] {
+	return &c.OutputModalities
+}
+
+func (c *mqlAwsBedrockFoundationModel) GetCustomizationsSupported() *plugin.TValue[[]any] {
+	return &c.CustomizationsSupported
+}
+
+func (c *mqlAwsBedrockFoundationModel) GetInferenceTypesSupported() *plugin.TValue[[]any] {
+	return &c.InferenceTypesSupported
+}
+
+func (c *mqlAwsBedrockFoundationModel) GetResponseStreamingSupported() *plugin.TValue[bool] {
+	return &c.ResponseStreamingSupported
+}
+
+func (c *mqlAwsBedrockFoundationModel) GetModelLifecycleStatus() *plugin.TValue[string] {
+	return &c.ModelLifecycleStatus
+}
+
+// mqlAwsBedrockCustomModel for the aws.bedrock.customModel resource
+type mqlAwsBedrockCustomModel struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsBedrockCustomModelInternal
+	ModelArn           plugin.TValue[string]
+	ModelName          plugin.TValue[string]
+	Region             plugin.TValue[string]
+	BaseModelArn       plugin.TValue[string]
+	CustomizationType  plugin.TValue[string]
+	KmsKey             plugin.TValue[*mqlAwsKmsKey]
+	TrainingDataConfig plugin.TValue[any]
+	OutputDataConfig   plugin.TValue[any]
+}
+
+// createAwsBedrockCustomModel creates a new instance of this resource
+func createAwsBedrockCustomModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBedrockCustomModel{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.bedrock.customModel", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBedrockCustomModel) MqlName() string {
+	return "aws.bedrock.customModel"
+}
+
+func (c *mqlAwsBedrockCustomModel) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBedrockCustomModel) GetModelArn() *plugin.TValue[string] {
+	return &c.ModelArn
+}
+
+func (c *mqlAwsBedrockCustomModel) GetModelName() *plugin.TValue[string] {
+	return &c.ModelName
+}
+
+func (c *mqlAwsBedrockCustomModel) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsBedrockCustomModel) GetBaseModelArn() *plugin.TValue[string] {
+	return &c.BaseModelArn
+}
+
+func (c *mqlAwsBedrockCustomModel) GetCustomizationType() *plugin.TValue[string] {
+	return &c.CustomizationType
+}
+
+func (c *mqlAwsBedrockCustomModel) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.customModel", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsBedrockCustomModel) GetTrainingDataConfig() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.TrainingDataConfig, func() (any, error) {
+		return c.trainingDataConfig()
+	})
+}
+
+func (c *mqlAwsBedrockCustomModel) GetOutputDataConfig() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.OutputDataConfig, func() (any, error) {
+		return c.outputDataConfig()
+	})
+}
+
+// mqlAwsBedrockGuardrail for the aws.bedrock.guardrail resource
+type mqlAwsBedrockGuardrail struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsBedrockGuardrailInternal
+	Arn                        plugin.TValue[string]
+	Id                         plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	Region                     plugin.TValue[string]
+	Status                     plugin.TValue[string]
+	Version                    plugin.TValue[string]
+	KmsKey                     plugin.TValue[*mqlAwsKmsKey]
+	ContentPolicy              plugin.TValue[any]
+	SensitiveInformationPolicy plugin.TValue[any]
+	TopicPolicy                plugin.TValue[any]
+	WordPolicy                 plugin.TValue[any]
+}
+
+// createAwsBedrockGuardrail creates a new instance of this resource
+func createAwsBedrockGuardrail(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBedrockGuardrail{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.bedrock.guardrail", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBedrockGuardrail) MqlName() string {
+	return "aws.bedrock.guardrail"
+}
+
+func (c *mqlAwsBedrockGuardrail) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBedrockGuardrail) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsBedrockGuardrail) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsBedrockGuardrail) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsBedrockGuardrail) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsBedrockGuardrail) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsBedrockGuardrail) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlAwsBedrockGuardrail) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.guardrail", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsBedrockGuardrail) GetContentPolicy() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.ContentPolicy, func() (any, error) {
+		return c.contentPolicy()
+	})
+}
+
+func (c *mqlAwsBedrockGuardrail) GetSensitiveInformationPolicy() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.SensitiveInformationPolicy, func() (any, error) {
+		return c.sensitiveInformationPolicy()
+	})
+}
+
+func (c *mqlAwsBedrockGuardrail) GetTopicPolicy() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.TopicPolicy, func() (any, error) {
+		return c.topicPolicy()
+	})
+}
+
+func (c *mqlAwsBedrockGuardrail) GetWordPolicy() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.WordPolicy, func() (any, error) {
+		return c.wordPolicy()
+	})
+}
+
+// mqlAwsBedrockModelInvocationLoggingConfiguration for the aws.bedrock.modelInvocationLoggingConfiguration resource
+type mqlAwsBedrockModelInvocationLoggingConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsBedrockModelInvocationLoggingConfigurationInternal it will be used here
+	Region                       plugin.TValue[string]
+	CloudWatchConfig             plugin.TValue[any]
+	S3Config                     plugin.TValue[any]
+	TextDataDeliveryEnabled      plugin.TValue[bool]
+	ImageDataDeliveryEnabled     plugin.TValue[bool]
+	EmbeddingDataDeliveryEnabled plugin.TValue[bool]
+	VideoDataDeliveryEnabled     plugin.TValue[bool]
+}
+
+// createAwsBedrockModelInvocationLoggingConfiguration creates a new instance of this resource
+func createAwsBedrockModelInvocationLoggingConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBedrockModelInvocationLoggingConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.bedrock.modelInvocationLoggingConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBedrockModelInvocationLoggingConfiguration) MqlName() string {
+	return "aws.bedrock.modelInvocationLoggingConfiguration"
+}
+
+func (c *mqlAwsBedrockModelInvocationLoggingConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBedrockModelInvocationLoggingConfiguration) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsBedrockModelInvocationLoggingConfiguration) GetCloudWatchConfig() *plugin.TValue[any] {
+	return &c.CloudWatchConfig
+}
+
+func (c *mqlAwsBedrockModelInvocationLoggingConfiguration) GetS3Config() *plugin.TValue[any] {
+	return &c.S3Config
+}
+
+func (c *mqlAwsBedrockModelInvocationLoggingConfiguration) GetTextDataDeliveryEnabled() *plugin.TValue[bool] {
+	return &c.TextDataDeliveryEnabled
+}
+
+func (c *mqlAwsBedrockModelInvocationLoggingConfiguration) GetImageDataDeliveryEnabled() *plugin.TValue[bool] {
+	return &c.ImageDataDeliveryEnabled
+}
+
+func (c *mqlAwsBedrockModelInvocationLoggingConfiguration) GetEmbeddingDataDeliveryEnabled() *plugin.TValue[bool] {
+	return &c.EmbeddingDataDeliveryEnabled
+}
+
+func (c *mqlAwsBedrockModelInvocationLoggingConfiguration) GetVideoDataDeliveryEnabled() *plugin.TValue[bool] {
+	return &c.VideoDataDeliveryEnabled
+}
+
+// mqlAwsBedrockProvisionedModelThroughput for the aws.bedrock.provisionedModelThroughput resource
+type mqlAwsBedrockProvisionedModelThroughput struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsBedrockProvisionedModelThroughputInternal it will be used here
+	ProvisionedModelArn  plugin.TValue[string]
+	ProvisionedModelName plugin.TValue[string]
+	Region               plugin.TValue[string]
+	ModelArn             plugin.TValue[string]
+	FoundationModelArn   plugin.TValue[string]
+	ModelUnits           plugin.TValue[int64]
+	Status               plugin.TValue[string]
+	CommitmentDuration   plugin.TValue[string]
+}
+
+// createAwsBedrockProvisionedModelThroughput creates a new instance of this resource
+func createAwsBedrockProvisionedModelThroughput(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBedrockProvisionedModelThroughput{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.bedrock.provisionedModelThroughput", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBedrockProvisionedModelThroughput) MqlName() string {
+	return "aws.bedrock.provisionedModelThroughput"
+}
+
+func (c *mqlAwsBedrockProvisionedModelThroughput) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBedrockProvisionedModelThroughput) GetProvisionedModelArn() *plugin.TValue[string] {
+	return &c.ProvisionedModelArn
+}
+
+func (c *mqlAwsBedrockProvisionedModelThroughput) GetProvisionedModelName() *plugin.TValue[string] {
+	return &c.ProvisionedModelName
+}
+
+func (c *mqlAwsBedrockProvisionedModelThroughput) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsBedrockProvisionedModelThroughput) GetModelArn() *plugin.TValue[string] {
+	return &c.ModelArn
+}
+
+func (c *mqlAwsBedrockProvisionedModelThroughput) GetFoundationModelArn() *plugin.TValue[string] {
+	return &c.FoundationModelArn
+}
+
+func (c *mqlAwsBedrockProvisionedModelThroughput) GetModelUnits() *plugin.TValue[int64] {
+	return &c.ModelUnits
+}
+
+func (c *mqlAwsBedrockProvisionedModelThroughput) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsBedrockProvisionedModelThroughput) GetCommitmentDuration() *plugin.TValue[string] {
+	return &c.CommitmentDuration
 }

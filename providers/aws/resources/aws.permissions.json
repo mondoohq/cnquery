@@ -1,7 +1,7 @@
 {
   "provider": "aws",
-  "version": "13.9.0",
-  "generated_at": "2026-04-08T15:34:04-07:00",
+  "version": "13.10.0",
+  "generated_at": "2026-04-08T16:03:53-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -11,6 +11,7 @@
     "acm:GetCertificate",
     "acm:ListCertificates",
     "acm:ListTagsForCertificate",
+    "acmpca:ListCertificateAuthorities",
     "apigateway:GetRestApis",
     "apigateway:GetStages",
     "application-autoscaling:DescribeScalableTargets",
@@ -41,6 +42,9 @@
     "batch:DescribeComputeEnvironments",
     "batch:DescribeJobDefinitions",
     "batch:DescribeJobQueues",
+    "bedrock:ListCustomModels",
+    "bedrock:ListGuardrails",
+    "bedrock:ListProvisionedModelThroughputs",
     "cloudformation:DescribeStackSet",
     "cloudformation:DescribeStacks",
     "cloudformation:ListStackSets",
@@ -78,6 +82,8 @@
     "config:DescribeConfigurationAggregators",
     "config:DescribeConfigurationRecorders",
     "config:DescribeDeliveryChannels",
+    "controltower:ListEnabledBaselines",
+    "controltower:ListLandingZones",
     "dax:DescribeClusters",
     "dax:ListTags",
     "dms:DescribeReplicationInstances",
@@ -130,6 +136,11 @@
     "ec2:DescribeTransitGatewayPeeringAttachments",
     "ec2:DescribeTransitGatewayRouteTables",
     "ec2:DescribeTransitGateways",
+    "ec2:DescribeVerifiedAccessEndpoints",
+    "ec2:DescribeVerifiedAccessGroups",
+    "ec2:DescribeVerifiedAccessInstanceLoggingConfigurations",
+    "ec2:DescribeVerifiedAccessInstances",
+    "ec2:DescribeVerifiedAccessTrustProviders",
     "ec2:DescribeVolumes",
     "ec2:DescribeVpcAttribute",
     "ec2:DescribeVpcEndpointConnections",
@@ -411,6 +422,7 @@
     "secretsmanager:ListSecrets",
     "securityhub:DescribeHub",
     "securityhub:GetEnabledStandards",
+    "securitylake:ListSubscribers",
     "sfn:ListActivities",
     "sfn:ListStateMachines",
     "shield:DescribeDRTAccess",
@@ -522,6 +534,12 @@
       "service": "acm",
       "action": "ListTagsForCertificate",
       "source_file": "aws_acm.go"
+    },
+    {
+      "permission": "acmpca:ListCertificateAuthorities",
+      "service": "acmpca",
+      "action": "ListCertificateAuthorities",
+      "source_file": "aws_privateca.go"
     },
     {
       "permission": "apigateway:GetRestApis",
@@ -702,6 +720,24 @@
       "service": "batch",
       "action": "DescribeJobQueues",
       "source_file": "aws_batch.go"
+    },
+    {
+      "permission": "bedrock:ListCustomModels",
+      "service": "bedrock",
+      "action": "ListCustomModels",
+      "source_file": "aws_bedrock.go"
+    },
+    {
+      "permission": "bedrock:ListGuardrails",
+      "service": "bedrock",
+      "action": "ListGuardrails",
+      "source_file": "aws_bedrock.go"
+    },
+    {
+      "permission": "bedrock:ListProvisionedModelThroughputs",
+      "service": "bedrock",
+      "action": "ListProvisionedModelThroughputs",
+      "source_file": "aws_bedrock.go"
     },
     {
       "permission": "cloudformation:DescribeStackSet",
@@ -924,6 +960,18 @@
       "service": "config",
       "action": "DescribeDeliveryChannels",
       "source_file": "aws_config.go"
+    },
+    {
+      "permission": "controltower:ListEnabledBaselines",
+      "service": "controltower",
+      "action": "ListEnabledBaselines",
+      "source_file": "aws_controltower.go"
+    },
+    {
+      "permission": "controltower:ListLandingZones",
+      "service": "controltower",
+      "action": "ListLandingZones",
+      "source_file": "aws_controltower.go"
     },
     {
       "permission": "dax:DescribeClusters",
@@ -1266,6 +1314,36 @@
       "service": "ec2",
       "action": "DescribeTransitGateways",
       "source_file": "aws_ec2.go"
+    },
+    {
+      "permission": "ec2:DescribeVerifiedAccessEndpoints",
+      "service": "ec2",
+      "action": "DescribeVerifiedAccessEndpoints",
+      "source_file": "aws_verifiedaccess.go"
+    },
+    {
+      "permission": "ec2:DescribeVerifiedAccessGroups",
+      "service": "ec2",
+      "action": "DescribeVerifiedAccessGroups",
+      "source_file": "aws_verifiedaccess.go"
+    },
+    {
+      "permission": "ec2:DescribeVerifiedAccessInstanceLoggingConfigurations",
+      "service": "ec2",
+      "action": "DescribeVerifiedAccessInstanceLoggingConfigurations",
+      "source_file": "aws_verifiedaccess.go"
+    },
+    {
+      "permission": "ec2:DescribeVerifiedAccessInstances",
+      "service": "ec2",
+      "action": "DescribeVerifiedAccessInstances",
+      "source_file": "aws_verifiedaccess.go"
+    },
+    {
+      "permission": "ec2:DescribeVerifiedAccessTrustProviders",
+      "service": "ec2",
+      "action": "DescribeVerifiedAccessTrustProviders",
+      "source_file": "aws_verifiedaccess.go"
     },
     {
       "permission": "ec2:DescribeVolumes",
@@ -3018,6 +3096,12 @@
       "service": "securityhub",
       "action": "GetEnabledStandards",
       "source_file": "aws_securityhub.go"
+    },
+    {
+      "permission": "securitylake:ListSubscribers",
+      "service": "securitylake",
+      "action": "ListSubscribers",
+      "source_file": "aws_securitylake.go"
     },
     {
       "permission": "sfn:ListActivities",

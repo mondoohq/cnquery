@@ -12,6 +12,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.47.0
 	github.com/aws/aws-sdk-go-v2/service/account v1.30.5
 	github.com/aws/aws-sdk-go-v2/service/acm v1.38.1
+	github.com/aws/aws-sdk-go-v2/service/acmpca v1.46.12
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.39.1
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.41.14
 	github.com/aws/aws-sdk-go-v2/service/appmesh v1.35.12
@@ -20,6 +21,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.65.0
 	github.com/aws/aws-sdk-go-v2/service/backup v1.55.0
 	github.com/aws/aws-sdk-go-v2/service/batch v1.63.2
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.59.0
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.71.9
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.61.0
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.55.9
@@ -30,6 +32,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.33.22
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.59.3
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.62.1
+	github.com/aws/aws-sdk-go-v2/service/controltower v1.28.9
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.62.0
 	github.com/aws/aws-sdk-go-v2/service/dax v1.29.16
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.38.16
@@ -80,6 +83,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.22
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.41.5
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.68.3
+	github.com/aws/aws-sdk-go-v2/service/securitylake v1.25.13
 	github.com/aws/aws-sdk-go-v2/service/sfn v1.40.10
 	github.com/aws/aws-sdk-go-v2/service/shield v1.34.21
 	github.com/aws/aws-sdk-go-v2/service/sns v1.39.15
