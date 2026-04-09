@@ -22,6 +22,7 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/mqlc"
 	"go.mondoo.com/mql/v13/mqlc/parser"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
 	"go.mondoo.com/mql/v13/utils/stringx"
 )
 
@@ -1142,10 +1143,10 @@ func (m *shellModel) formatSuggestions(suggestions []*llx.Documentation) string 
 
 // listResources lists available resources
 func (m *shellModel) listResources(filter string) string {
-	resources := m.runtime.Schema().AllResources()
+	allResources := m.runtime.Schema().AllResources()
 
 	var keys []string
-	for k := range resources {
+	for k := range allResources {
 		if filter == "" || strings.HasPrefix(k, filter) {
 			keys = append(keys, k)
 		}
@@ -1168,8 +1169,11 @@ func (m *shellModel) listResources(filter string) string {
 
 	var b strings.Builder
 	for _, k := range sortedKeys {
-		resource := resources[k]
+		resource := allResources[k]
 		b.WriteString(m.theme.SecondaryText(resource.Name))
+		if label := resources.MaturityLabel(resource.Maturity); label != "" {
+			b.WriteString(" [" + label + "]")
+		}
 		b.WriteString(": ")
 		b.WriteString(resource.Title)
 		b.WriteString("\n")
@@ -1182,6 +1186,9 @@ func (m *shellModel) listResources(filter string) string {
 				}
 				b.WriteString("  ")
 				b.WriteString(m.theme.SecondaryText(field.Name))
+				if label := resources.MaturityLabel(resources.EffectiveFieldMaturity(resource, field)); label != "" {
+					b.WriteString(" [" + label + "]")
+				}
 				b.WriteString(": ")
 				b.WriteString(field.Title)
 				b.WriteString("\n")

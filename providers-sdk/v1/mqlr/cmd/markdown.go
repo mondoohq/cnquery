@@ -217,6 +217,10 @@ func (l *lrSchemaRenderer) renderResourcePage(resource *lrcore.Resource, schema 
 	builder.WriteString(resource.ID)
 	builder.WriteString("\n\n")
 
+	if label := resources.MaturityLabel(schema.Resources[resource.ID].Maturity); label != "" {
+		builder.WriteString("**Maturity**: " + label + "\n\n")
+	}
+
 	if schema.Resources[resource.ID].Title != "" {
 		builder.WriteString("**Description**\n\n")
 		builder.WriteString(strings.Join(sanitizeComments([]string{schema.Resources[resource.ID].Title}), "\n"))
@@ -259,12 +263,21 @@ func (l *lrSchemaRenderer) renderResourcePage(resource *lrcore.Resource, schema 
 		builder.WriteString("**Fields**\n\n")
 		rows := [][]string{}
 
+		resourceInfo := schema.Resources[resource.ID]
 		for k := range basicFields {
 			field := basicFields[k]
-			rows = append(rows, []string{
+			row := []string{
 				field.ID, renderLrType(field.Type, l.resourceHrefMap),
 				strings.Join(sanitizeComments(comments[k]), ", "),
-			})
+			}
+			maturityLabel := ""
+			if resourceInfo != nil {
+				if fieldInfo, ok := resourceInfo.Fields[field.ID]; ok {
+					maturityLabel = resources.MaturityLabel(resources.EffectiveFieldMaturity(resourceInfo, fieldInfo))
+				}
+			}
+			row = append(row, maturityLabel)
+			rows = append(rows, row)
 		}
 
 		table := tablewriter.NewTable(builder,
@@ -290,7 +303,7 @@ func (l *lrSchemaRenderer) renderResourcePage(resource *lrcore.Resource, schema 
 				},
 			}),
 		)
-		table.Header([]string{"ID", "Type", "Description"})
+		table.Header([]string{"ID", "Type", "Description", "Maturity"})
 		err := table.Bulk(rows)
 		if err != nil {
 			panic(err)

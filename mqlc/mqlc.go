@@ -266,9 +266,13 @@ func addResourceSuggestions(schema resources.ResourcesSchema, name string, res *
 			if info.GetPrivate() {
 				continue
 			}
+			title := info.Title
+			if label := resources.MaturityLabel(info.Maturity); label != "" {
+				title = "[" + label + "] " + title
+			}
 			res.Suggestions = append(res.Suggestions, &llx.Documentation{
 				Field:    field,
-				Title:    info.Title,
+				Title:    title,
 				Desc:     info.Desc,
 				Provider: info.Provider,
 			})

@@ -58,6 +58,60 @@ func TestParse(t *testing.T) {
 		}, res.Resources)
 	})
 
+	t.Run("maturity on resource", func(t *testing.T) {
+		res := parse(t, `name @maturity("experimental")`)
+		assert.Equal(t, []*Resource{
+			{
+				ID:       "name",
+				Maturity: "experimental",
+			},
+		}, res.Resources)
+	})
+
+	t.Run("maturity on resource with other annotations", func(t *testing.T) {
+		res := parse(t, `name @defaults("id") @context("file.context") @maturity("preview")`)
+		assert.Equal(t, []*Resource{
+			{
+				ID:       "name",
+				Defaults: "id",
+				Context:  "file.context",
+				Maturity: "preview",
+			},
+		}, res.Resources)
+	})
+
+	t.Run("maturity on static field", func(t *testing.T) {
+		res := parse(t, "name {\nfield @maturity(\"deprecated\") string\n}")
+		f := []*Field{
+			{
+				BasicField: &BasicField{
+					ID:       "field",
+					Maturity: "deprecated",
+					Type:     Type{SimpleType: &SimpleType{"string"}},
+				},
+			},
+		}
+		assert.Equal(t, "name", res.Resources[0].ID)
+		assert.Equal(t, f, res.Resources[0].Body.Fields)
+	})
+
+	t.Run("maturity on computed field", func(t *testing.T) {
+		res := parse(t, "name {\nfield(dep) @maturity(\"experimental\") string\n}")
+		assert.Equal(t, "name", res.Resources[0].ID)
+		bf := res.Resources[0].Body.Fields[0].BasicField
+		assert.Equal(t, "field", bf.ID)
+		assert.Equal(t, "experimental", bf.Maturity)
+		assert.NotNil(t, bf.Args)
+	})
+
+	t.Run("maturity on resource and field", func(t *testing.T) {
+		res := parse(t, `name @maturity("preview") {
+			field @maturity("deprecated") string
+		}`)
+		assert.Equal(t, "preview", res.Resources[0].Maturity)
+		assert.Equal(t, "deprecated", res.Resources[0].Body.Fields[0].BasicField.Maturity)
+	})
+
 	t.Run("resource with a static field", func(t *testing.T) {
 		res := parse(t, `
 		// resource-docs

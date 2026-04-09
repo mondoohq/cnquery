@@ -321,6 +321,15 @@ func (m *ResourceInfo) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
+	if len(m.Maturity) > 0 {
+		i -= len(m.Maturity)
+		copy(dAtA[i:], m.Maturity)
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(len(m.Maturity)))
+		i--
+		dAtA[i] = 0x2
+		i--
+		dAtA[i] = 0x82
+	}
 	if len(m.MinProviderVersion) > 0 {
 		i -= len(m.MinProviderVersion)
 		copy(dAtA[i:], m.MinProviderVersion)
@@ -543,6 +552,15 @@ func (m *Field) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		dAtA[i] = 0x1
 		i--
 		dAtA[i] = 0xda
+	}
+	if len(m.Maturity) > 0 {
+		i -= len(m.Maturity)
+		copy(dAtA[i:], m.Maturity)
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(len(m.Maturity)))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xd2
 	}
 	if m.IsEmbedded {
 		i--
@@ -827,6 +845,10 @@ func (m *ResourceInfo) SizeVT() (n int) {
 	if l > 0 {
 		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
+	l = len(m.Maturity)
+	if l > 0 {
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
 	n += len(m.unknownFields)
 	return n
 }
@@ -874,6 +896,10 @@ func (m *Field) SizeVT() (n int) {
 	}
 	if m.IsEmbedded {
 		n += 3
+	}
+	l = len(m.Maturity)
+	if l > 0 {
+		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	l = len(m.Provider)
 	if l > 0 {
@@ -2240,6 +2266,38 @@ func (m *ResourceInfo) UnmarshalVT(dAtA []byte) error {
 			}
 			m.MinProviderVersion = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 32:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Maturity", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Maturity = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])
@@ -2563,6 +2621,38 @@ func (m *Field) UnmarshalVT(dAtA []byte) error {
 				}
 			}
 			m.IsEmbedded = bool(v != 0)
+		case 26:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Maturity", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Maturity = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		case 27:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Provider", wireType)

@@ -63,6 +63,9 @@ func (s *Schema) Add(other ResourcesSchema) ResourcesSchema {
 			if v.Context != "" {
 				existing.Context = v.Context
 			}
+			if v.Maturity != "" {
+				existing.Maturity = v.Maturity
+			}
 
 			if existing.Fields == nil {
 				existing.Fields = map[string]*Field{}
@@ -90,6 +93,7 @@ func (s *Schema) Add(other ResourcesSchema) ResourcesSchema {
 				Defaults:    v.Defaults,
 				Context:     v.Context,
 				Provider:    v.Provider,
+				Maturity:    v.Maturity,
 			}
 			for k, v := range v.Fields {
 				ri.Fields[k] = v

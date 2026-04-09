@@ -74,6 +74,7 @@ type Resource struct {
 	ID          string         `@Ident { @'.' @Ident }`
 	Defaults    string         ` ( '@' "defaults" '(' @String ')' )? `
 	Context     string         ` ( '@' "context" '(' @String ')' )? `
+	Maturity    string         ` ( '@' "maturity" '(' @String ')' )? `
 	ListType    *SimplListType `[ '{' [ @@ ]`
 	Body        *ResourceDef   `@@ '}' ]`
 	title       string
@@ -161,6 +162,7 @@ type TypedArg struct {
 type BasicField struct {
 	ID         string     `@Ident?`
 	Args       *FieldArgs `[ '(' @@ ')' ]`
+	Maturity   string     ` ( '@' "maturity" '(' @String ')' )? `
 	Type       Type       `[ @@ ]`
 	isEmbedded bool
 }

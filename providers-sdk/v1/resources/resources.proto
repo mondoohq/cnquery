@@ -57,6 +57,8 @@ message ResourceInfo {
   // executions.
   repeated ResourceInfo others = 29;
 
+  string maturity = 32;
+
   // DEPRECATED: remove in v14, not used anymore as of v13.
   // We now use min_provider_version to show what providers we require.
   string min_mondoo_version = 25 [deprecated = true];
@@ -79,6 +81,7 @@ message Field {
   string min_mondoo_version = 23 [deprecated = true];
   bool is_implicit_resource = 24;
   bool is_embedded = 25;
+  string maturity = 26;
   // This field contains references to other providers with the same 
   // resource/field.
   // Note: Please do not use this field, it is only temporary and will be

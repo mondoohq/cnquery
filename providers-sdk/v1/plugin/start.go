@@ -33,6 +33,7 @@ type Provider struct {
 	CrossProviderTypes []string
 	Connectors         []Connector
 	AssetUrlTrees      []*inventory.AssetUrlBranch
+	Maturity           string `json:",omitempty"`
 }
 
 type Connector struct {
@@ -46,6 +47,7 @@ type Connector struct {
 	Flags     []Flag   `json:",omitempty"`
 	Aliases   []string `json:",omitempty"`
 	Discovery []string `json:",omitempty"`
+	Maturity  string   `json:",omitempty"`
 }
 
 func Start(args []string, impl ProviderPlugin) {

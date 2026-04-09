@@ -1336,6 +1336,9 @@ func (h *LRHandler) createResourceHover(resource *lrcore.Resource, ast *lrcore.L
 	if resource.IsExtension {
 		content.WriteString("*Extension resource*\n\n")
 	}
+	if resource.Maturity != "" && resource.Maturity != resources.MaturityStable {
+		fmt.Fprintf(&content, "*Maturity: %s*\n\n", resources.MaturityLabel(resource.Maturity))
+	}
 
 	if resource.Body != nil && len(resource.Body.Fields) > 0 {
 		content.WriteString("**Fields:**\n")
@@ -1403,6 +1406,10 @@ func (h *LRHandler) createFieldHover(field *lrcore.BasicField, resource *lrcore.
 				fmt.Fprintf(&content, "%s\n\n", fieldInfo.Desc)
 			}
 		}
+	}
+
+	if field.Maturity != "" && field.Maturity != resources.MaturityStable {
+		fmt.Fprintf(&content, "*Maturity: %s*\n\n", resources.MaturityLabel(field.Maturity))
 	}
 
 	typeStr := getTypeString(field.Type)

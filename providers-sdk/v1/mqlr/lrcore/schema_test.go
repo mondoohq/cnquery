@@ -88,6 +88,41 @@ func TestSchema(t *testing.T) {
 	})
 }
 
+func TestSchemaMaturity(t *testing.T) {
+	t.Run("resource maturity propagates to schema", func(t *testing.T) {
+		res := schemaFor(t, `name @maturity("experimental") { field string }`)
+		assert.Equal(t, "experimental", res.Resources["name"].Maturity)
+	})
+
+	t.Run("field maturity propagates to schema", func(t *testing.T) {
+		res := schemaFor(t, `name { field @maturity("deprecated") string }`)
+		assert.Equal(t, "deprecated", res.Resources["name"].Fields["field"].Maturity)
+	})
+
+	t.Run("maturity propagates to implicit fields", func(t *testing.T) {
+		res := schemaFor(t, `platform.config @maturity("experimental") { value string }`)
+		require.NotNil(t, res.Resources["platform"])
+		require.NotNil(t, res.Resources["platform"].Fields["config"])
+		assert.Equal(t, "experimental", res.Resources["platform"].Fields["config"].Maturity)
+	})
+
+	t.Run("invalid maturity is rejected", func(t *testing.T) {
+		ast := parse(t, `name @maturity("bogus") { field string }`)
+		ast.Options = map[string]string{"provider": provider}
+		_, err := Schema(ast)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "invalid maturity")
+	})
+
+	t.Run("invalid field maturity is rejected", func(t *testing.T) {
+		ast := parse(t, `name { field @maturity("bogus") string }`)
+		ast.Options = map[string]string{"provider": provider}
+		_, err := Schema(ast)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "invalid maturity")
+	})
+}
+
 func TestDetermnisticSchema(t *testing.T) {
 	lrSchema, err := os.ReadFile("testdata/new.lr")
 	require.NoError(t, err)

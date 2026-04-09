@@ -5,6 +5,7 @@ package lrcore
 
 import (
 	"errors"
+	"fmt"
 	"maps"
 	"slices"
 	"strings"
@@ -113,6 +114,7 @@ func Schema(ast *LR) (*resources.Schema, error) {
 					Title:              fieldInfo.Title,
 					Desc:               fieldInfo.Desc,
 					Provider:           provider,
+					Maturity:           v.Maturity,
 				}
 			}
 
@@ -123,6 +125,18 @@ func Schema(ast *LR) (*resources.Schema, error) {
 				child.Fields[basename].IsPrivate = false
 			}
 			fieldInfo = child
+		}
+	}
+
+	// Validate all maturity values
+	for name, ri := range res.Resources {
+		if err := resources.ValidateMaturity(ri.Maturity); err != nil {
+			return nil, fmt.Errorf("resource %s: %w", name, err)
+		}
+		for fname, f := range ri.Fields {
+			if err := resources.ValidateMaturity(f.Maturity); err != nil {
+				return nil, fmt.Errorf("resource %s field %s: %w", name, fname, err)
+			}
 		}
 	}
 
@@ -193,6 +207,7 @@ func resourceFields(r *Resource, ast *LR) (map[string]*resources.Field, error) {
 			Desc:        desc,
 			Refs:        refs,
 			IsEmbedded:  f.BasicField.isEmbedded,
+			Maturity:    f.BasicField.Maturity,
 		}
 	}
 
@@ -225,6 +240,7 @@ func resourceSchema(r *Resource, ast *LR) (*resources.ResourceInfo, error) {
 		Fields:      fields,
 		Defaults:    r.Defaults,
 		Context:     r.Context,
+		Maturity:    r.Maturity,
 	}
 
 	if r.ListType != nil {

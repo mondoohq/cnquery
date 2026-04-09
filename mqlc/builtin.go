@@ -346,17 +346,25 @@ func publicFieldsInfo(c *compiler, resourceInfo *resources.ResourceInfo) map[str
 
 			// implicit resources don't have their own metadata, so we grab it from
 			// the resource itself
+			title := child.Title
+			if label := resources.MaturityLabel(resources.EffectiveFieldMaturity(resourceInfo, v)); label != "" {
+				title = "[" + label + "] " + title
+			}
 			res[k] = llx.Documentation{
 				Field: k,
-				Title: child.Title,
+				Title: title,
 				Desc:  child.Desc,
 			}
 			continue
 		}
 
+		title := v.Title
+		if label := resources.MaturityLabel(resources.EffectiveFieldMaturity(resourceInfo, v)); label != "" {
+			title = "[" + label + "] " + title
+		}
 		res[k] = llx.Documentation{
 			Field: k,
-			Title: v.Title,
+			Title: title,
 			Desc:  v.Desc,
 		}
 	}
