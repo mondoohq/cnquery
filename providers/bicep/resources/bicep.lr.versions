@@ -14,6 +14,8 @@ bicep.file.variables 13.0.0
 bicep.files 13.0.0
 bicep.module 13.0.0
 bicep.module.condition 13.0.0
+bicep.module.decorators 13.0.1
+bicep.module.description 13.0.1
 bicep.module.isRegistry 13.0.0
 bicep.module.isTemplateSpec 13.0.0
 bicep.module.name 13.0.0

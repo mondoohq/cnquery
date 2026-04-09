@@ -251,6 +251,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"bicep.module.isTemplateSpec": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepModule).GetIsTemplateSpec()).ToDataRes(types.Bool)
 	},
+	"bicep.module.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepModule).GetDescription()).ToDataRes(types.String)
+	},
+	"bicep.module.decorators": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlBicepModule).GetDecorators()).ToDataRes(types.Array(types.String))
+	},
 	"bicep.output.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBicepOutput).GetName()).ToDataRes(types.String)
 	},
@@ -488,6 +494,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"bicep.module.isTemplateSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlBicepModule).IsTemplateSpec, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"bicep.module.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepModule).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"bicep.module.decorators": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlBicepModule).Decorators, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"bicep.output.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1050,6 +1064,8 @@ type mqlBicepModule struct {
 	Condition      plugin.TValue[string]
 	IsRegistry     plugin.TValue[bool]
 	IsTemplateSpec plugin.TValue[bool]
+	Description    plugin.TValue[string]
+	Decorators     plugin.TValue[[]any]
 }
 
 // createBicepModule creates a new instance of this resource
@@ -1110,6 +1126,14 @@ func (c *mqlBicepModule) GetIsRegistry() *plugin.TValue[bool] {
 
 func (c *mqlBicepModule) GetIsTemplateSpec() *plugin.TValue[bool] {
 	return &c.IsTemplateSpec
+}
+
+func (c *mqlBicepModule) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlBicepModule) GetDecorators() *plugin.TValue[[]any] {
+	return &c.Decorators
 }
 
 // mqlBicepOutput for the bicep.output resource

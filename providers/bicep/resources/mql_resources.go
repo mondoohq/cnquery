@@ -13,8 +13,8 @@ import (
 func createMqlParameters(runtime *plugin.Runtime, filePath string, params []parsedParameter) ([]any, error) {
 	var mqlParams []any
 	for _, p := range params {
-		allowed := convert.SliceAnyToInterface(p.allowed)
-		decorators := convert.SliceAnyToInterface(p.decorators)
+		allowed := sliceToAny(p.allowed)
+		decorators := sliceToAny(p.decorators)
 
 		res, err := CreateResource(runtime, "bicep.parameter", map[string]*llx.RawData{
 			"__id":         llx.StringData("bicep.parameter:" + filePath + ":" + p.name),
@@ -54,8 +54,8 @@ func createMqlVariables(runtime *plugin.Runtime, filePath string, vars []parsedV
 func createMqlResources(runtime *plugin.Runtime, filePath string, resources []parsedResource) ([]any, error) {
 	var mqlResources []any
 	for _, r := range resources {
-		dependsOn := convert.SliceAnyToInterface(r.dependsOn)
-		decorators := convert.SliceAnyToInterface(r.decorators)
+		dependsOn := sliceToAny(r.dependsOn)
+		decorators := sliceToAny(r.decorators)
 
 		// Parse body into a dict for properties
 		var properties any
@@ -91,15 +91,30 @@ func createMqlResources(runtime *plugin.Runtime, filePath string, resources []pa
 func createMqlModules(runtime *plugin.Runtime, filePath string, modules []parsedModule) ([]any, error) {
 	var mqlModules []any
 	for _, m := range modules {
+		// Extract params block from body as a raw dict
+		var params any
+		if m.body != "" {
+			if raw := extractFieldBlock(m.body, "params"); raw != "" {
+				dict, err := convert.JsonToDict(map[string]any{"raw": raw})
+				if err == nil {
+					params = dict
+				}
+			}
+		}
+
+		decorators := sliceToAny(m.decorators)
+
 		res, err := CreateResource(runtime, "bicep.module", map[string]*llx.RawData{
 			"__id":           llx.StringData("bicep.module:" + filePath + ":" + m.name),
 			"name":           llx.StringData(m.name),
 			"source":         llx.StringData(m.source),
 			"scope":          llx.StringData(m.scope),
-			"params":         llx.DictData(nil),
+			"params":         llx.DictData(params),
 			"condition":      llx.StringData(m.condition),
 			"isRegistry":     llx.BoolData(m.isRegistry),
 			"isTemplateSpec": llx.BoolData(m.isTemplateSpec),
+			"description":    llx.StringData(m.description),
+			"decorators":     llx.ArrayData(decorators, types.String),
 		})
 		if err != nil {
 			return nil, err
@@ -125,6 +140,14 @@ func createMqlOutputs(runtime *plugin.Runtime, filePath string, outputs []parsed
 		mqlOutputs = append(mqlOutputs, res)
 	}
 	return mqlOutputs, nil
+}
+
+func sliceToAny(s []string) []any {
+	out := make([]any, len(s))
+	for i, v := range s {
+		out[i] = v
+	}
+	return out
 }
 
 // Ensure all leaf resources satisfy the plugin interface.

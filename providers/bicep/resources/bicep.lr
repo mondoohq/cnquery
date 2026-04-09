@@ -102,6 +102,10 @@ bicep.module @defaults("name source") {
   isRegistry bool
   // Whether this references a template spec (ts:)
   isTemplateSpec bool
+  // Description from @description decorator
+  description string
+  // All decorators as raw strings
+  decorators []string
 }
 
 // An output declaration

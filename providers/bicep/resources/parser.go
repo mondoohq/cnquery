@@ -54,8 +54,10 @@ type parsedModule struct {
 	scope          string
 	condition      string
 	body           string
+	description    string
 	isRegistry     bool
 	isTemplateSpec bool
+	decorators     []string
 }
 
 type parsedOutput struct {
@@ -126,7 +128,7 @@ func parseBicep(content string) *parsedBicepFile {
 		}
 
 		if strings.HasPrefix(trimmed, "module ") {
-			mod, consumed := parseModuleDecl(lines, i)
+			mod, consumed := parseModuleDecl(lines, i, decorators)
 			if mod != nil {
 				result.modules = append(result.modules, *mod)
 			}
@@ -238,7 +240,7 @@ func parseResourceDecl(lines []string, startIdx int, decorators []string) (*pars
 	return r, endIdx
 }
 
-func parseModuleDecl(lines []string, startIdx int) (*parsedModule, int) {
+func parseModuleDecl(lines []string, startIdx int, decorators []string) (*parsedModule, int) {
 	line := strings.TrimSpace(lines[startIdx])
 	m := moduleRe.FindStringSubmatch(line)
 	if len(m) < 3 {
@@ -250,12 +252,18 @@ func parseModuleDecl(lines []string, startIdx int) (*parsedModule, int) {
 		source:         m[2],
 		isRegistry:     strings.HasPrefix(m[2], "br:") || strings.HasPrefix(m[2], "br/"),
 		isTemplateSpec: strings.HasPrefix(m[2], "ts:") || strings.HasPrefix(m[2], "ts/"),
+		decorators:     decorators,
 	}
 
 	mod.condition = extractCondition(line)
 	body, endIdx := extractBlock(lines, startIdx)
 	mod.body = body
 	mod.scope = extractFieldValue(body, "scope")
+
+	decText := strings.Join(decorators, "\n")
+	if dm := descDecRe.FindStringSubmatch(decText); len(dm) > 1 {
+		mod.description = dm[1]
+	}
 
 	return mod, endIdx
 }
@@ -351,6 +359,33 @@ func extractCondition(line string) string {
 						return rest[1:i]
 					}
 				}
+			}
+		}
+	}
+	return ""
+}
+
+// extractFieldBlock extracts the brace-delimited block for a top-level field
+// like "params: { ... }" from a body string. Returns the raw content between
+// the braces, or empty string if the field is not found.
+func extractFieldBlock(body string, fieldName string) string {
+	lines := strings.Split(body, "\n")
+	for i, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, fieldName+":") {
+			// Find the opening brace on this or subsequent lines
+			rest := strings.TrimSpace(strings.TrimPrefix(trimmed, fieldName+":"))
+			if strings.HasPrefix(rest, "{") {
+				block, _ := extractBlock(lines, i)
+				// Strip the outer braces
+				if idx := strings.Index(block, "{"); idx >= 0 {
+					inner := block[idx+1:]
+					if last := strings.LastIndex(inner, "}"); last >= 0 {
+						inner = inner[:last]
+					}
+					return strings.TrimSpace(inner)
+				}
+				return block
 			}
 		}
 	}
