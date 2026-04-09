@@ -331,6 +331,29 @@ func TestHelmNoTemplates(t *testing.T) {
 	assert.Empty(t, resourcesResp.Data.Array)
 }
 
+func TestHelmRequiredValuesGraceful(t *testing.T) {
+	// Charts that use `required` fail rendering with default values.
+	// resources() should return empty (not error), matching templates() behavior.
+	srv, resp := newTestService("../testdata/required-values")
+
+	helmResp := getData(t, srv, resp.Id, "helm", "", "")
+	helmID := string(helmResp.Data.Value)
+	chartsResp := getData(t, srv, resp.Id, "helm", helmID, "charts")
+	chartID := string(chartsResp.Data.Array[0].Value)
+
+	// resources should gracefully return empty, not error
+	resourcesResp := getData(t, srv, resp.Id, "helm.chart", chartID, "resources")
+	assert.Empty(t, resourcesResp.Data.Array)
+
+	// templates should still work (raw content available, rendered may be empty)
+	templatesResp := getData(t, srv, resp.Id, "helm.chart", chartID, "templates")
+	require.GreaterOrEqual(t, len(templatesResp.Data.Array), 1)
+
+	// chart metadata should still be fine
+	nameResp := getData(t, srv, resp.Id, "helm.chart", chartID, "name")
+	assert.Equal(t, "required-values", string(nameResp.Data.Value))
+}
+
 func TestHelmNoValues(t *testing.T) {
 	srv, resp := newTestService("../testdata/no-values")
 

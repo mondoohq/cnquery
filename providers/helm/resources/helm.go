@@ -163,7 +163,8 @@ func (c *mqlHelmChart) values() (any, error) {
 func (c *mqlHelmChart) resources() ([]any, error) {
 	rendered, err := c.fetchRendered()
 	if err != nil {
-		return nil, err
+		log.Warn().Err(err).Str("chart", c.chartObj.Name()).Msg("failed to render helm chart templates, returning empty resources")
+		return []any{}, nil
 	}
 
 	var allResources []any

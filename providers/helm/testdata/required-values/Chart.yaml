@@ -1,0 +1,4 @@
+apiVersion: v2
+name: required-values
+version: 0.1.0
+description: Chart that requires specific values to render
