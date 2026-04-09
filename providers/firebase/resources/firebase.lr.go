@@ -20,6 +20,7 @@ const (
 	ResourceFirebaseProjectAuthConfig       string = "firebase.project.authConfig"
 	ResourceFirebaseProjectHosting          string = "firebase.project.hosting"
 	ResourceFirebaseProjectStorage          string = "firebase.project.storage"
+	ResourceFirebaseProjectFirestore        string = "firebase.project.firestore"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -45,6 +46,10 @@ func init() {
 		"firebase.project.storage": {
 			Init:   initFirebaseProjectStorage,
 			Create: createFirebaseProjectStorage,
+		},
+		"firebase.project.firestore": {
+			Init:   initFirebaseProjectFirestore,
+			Create: createFirebaseProjectFirestore,
 		},
 	}
 }
@@ -141,6 +146,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"firebase.project.storage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFirebaseProject).GetStorage()).ToDataRes(types.Resource("firebase.project.storage"))
 	},
+	"firebase.project.firestore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirebaseProject).GetFirestore()).ToDataRes(types.Resource("firebase.project.firestore"))
+	},
 	"firebase.project.realtimeDatabase.url": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFirebaseProjectRealtimeDatabase).GetUrl()).ToDataRes(types.String)
 	},
@@ -159,6 +167,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"firebase.project.authConfig.authorizedDomains": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFirebaseProjectAuthConfig).GetAuthorizedDomains()).ToDataRes(types.Array(types.String))
 	},
+	"firebase.project.authConfig.emailEnumerationProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirebaseProjectAuthConfig).GetEmailEnumerationProtection()).ToDataRes(types.Bool)
+	},
 	"firebase.project.hosting.domain": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFirebaseProjectHosting).GetDomain()).ToDataRes(types.String)
 	},
@@ -168,11 +179,26 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"firebase.project.hosting.androidAssetLinks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFirebaseProjectHosting).GetAndroidAssetLinks()).ToDataRes(types.Dict)
 	},
+	"firebase.project.hosting.sourceMapExposed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirebaseProjectHosting).GetSourceMapExposed()).ToDataRes(types.Bool)
+	},
+	"firebase.project.hosting.exposedSourceMaps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirebaseProjectHosting).GetExposedSourceMaps()).ToDataRes(types.Array(types.String))
+	},
 	"firebase.project.storage.bucketUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFirebaseProjectStorage).GetBucketUrl()).ToDataRes(types.String)
 	},
 	"firebase.project.storage.publiclyListable": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFirebaseProjectStorage).GetPubliclyListable()).ToDataRes(types.Bool)
+	},
+	"firebase.project.firestore.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirebaseProjectFirestore).GetUrl()).ToDataRes(types.String)
+	},
+	"firebase.project.firestore.publiclyReadable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirebaseProjectFirestore).GetPubliclyReadable()).ToDataRes(types.Bool)
+	},
+	"firebase.project.firestore.exposedCollections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirebaseProjectFirestore).GetExposedCollections()).ToDataRes(types.Array(types.String))
 	},
 }
 
@@ -222,6 +248,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlFirebaseProject).Storage, ok = plugin.RawToTValue[*mqlFirebaseProjectStorage](v.Value, v.Error)
 		return
 	},
+	"firebase.project.firestore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirebaseProject).Firestore, ok = plugin.RawToTValue[*mqlFirebaseProjectFirestore](v.Value, v.Error)
+		return
+	},
 	"firebase.project.realtimeDatabase.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlFirebaseProjectRealtimeDatabase).__id, ok = v.Value.(string)
 		return
@@ -254,6 +284,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlFirebaseProjectAuthConfig).AuthorizedDomains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"firebase.project.authConfig.emailEnumerationProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirebaseProjectAuthConfig).EmailEnumerationProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"firebase.project.hosting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlFirebaseProjectHosting).__id, ok = v.Value.(string)
 		return
@@ -270,6 +304,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlFirebaseProjectHosting).AndroidAssetLinks, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"firebase.project.hosting.sourceMapExposed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirebaseProjectHosting).SourceMapExposed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"firebase.project.hosting.exposedSourceMaps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirebaseProjectHosting).ExposedSourceMaps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"firebase.project.storage.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlFirebaseProjectStorage).__id, ok = v.Value.(string)
 		return
@@ -280,6 +322,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"firebase.project.storage.publiclyListable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlFirebaseProjectStorage).PubliclyListable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"firebase.project.firestore.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirebaseProjectFirestore).__id, ok = v.Value.(string)
+		return
+	},
+	"firebase.project.firestore.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirebaseProjectFirestore).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firebase.project.firestore.publiclyReadable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirebaseProjectFirestore).PubliclyReadable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"firebase.project.firestore.exposedCollections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirebaseProjectFirestore).ExposedCollections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 }
@@ -319,6 +377,7 @@ type mqlFirebaseProject struct {
 	AuthConfig       plugin.TValue[*mqlFirebaseProjectAuthConfig]
 	Hosting          plugin.TValue[*mqlFirebaseProjectHosting]
 	Storage          plugin.TValue[*mqlFirebaseProjectStorage]
+	Firestore        plugin.TValue[*mqlFirebaseProjectFirestore]
 }
 
 // createFirebaseProject creates a new instance of this resource
@@ -438,6 +497,22 @@ func (c *mqlFirebaseProject) GetStorage() *plugin.TValue[*mqlFirebaseProjectStor
 	})
 }
 
+func (c *mqlFirebaseProject) GetFirestore() *plugin.TValue[*mqlFirebaseProjectFirestore] {
+	return plugin.GetOrCompute[*mqlFirebaseProjectFirestore](&c.Firestore, func() (*mqlFirebaseProjectFirestore, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("firebase.project", c.__id, "firestore")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFirebaseProjectFirestore), nil
+			}
+		}
+
+		return c.firestore()
+	})
+}
+
 // mqlFirebaseProjectRealtimeDatabase for the firebase.project.realtimeDatabase resource
 type mqlFirebaseProjectRealtimeDatabase struct {
 	MqlRuntime *plugin.Runtime
@@ -502,9 +577,10 @@ type mqlFirebaseProjectAuthConfig struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlFirebaseProjectAuthConfigInternal it will be used here
-	SignInProviders      plugin.TValue[[]any]
-	AnonymousAuthEnabled plugin.TValue[bool]
-	AuthorizedDomains    plugin.TValue[[]any]
+	SignInProviders            plugin.TValue[[]any]
+	AnonymousAuthEnabled       plugin.TValue[bool]
+	AuthorizedDomains          plugin.TValue[[]any]
+	EmailEnumerationProtection plugin.TValue[bool]
 }
 
 // createFirebaseProjectAuthConfig creates a new instance of this resource
@@ -556,6 +632,10 @@ func (c *mqlFirebaseProjectAuthConfig) GetAuthorizedDomains() *plugin.TValue[[]a
 	return &c.AuthorizedDomains
 }
 
+func (c *mqlFirebaseProjectAuthConfig) GetEmailEnumerationProtection() *plugin.TValue[bool] {
+	return &c.EmailEnumerationProtection
+}
+
 // mqlFirebaseProjectHosting for the firebase.project.hosting resource
 type mqlFirebaseProjectHosting struct {
 	MqlRuntime *plugin.Runtime
@@ -564,6 +644,8 @@ type mqlFirebaseProjectHosting struct {
 	Domain                  plugin.TValue[string]
 	AppleAppSiteAssociation plugin.TValue[any]
 	AndroidAssetLinks       plugin.TValue[any]
+	SourceMapExposed        plugin.TValue[bool]
+	ExposedSourceMaps       plugin.TValue[[]any]
 }
 
 // createFirebaseProjectHosting creates a new instance of this resource
@@ -613,6 +695,14 @@ func (c *mqlFirebaseProjectHosting) GetAppleAppSiteAssociation() *plugin.TValue[
 
 func (c *mqlFirebaseProjectHosting) GetAndroidAssetLinks() *plugin.TValue[any] {
 	return &c.AndroidAssetLinks
+}
+
+func (c *mqlFirebaseProjectHosting) GetSourceMapExposed() *plugin.TValue[bool] {
+	return &c.SourceMapExposed
+}
+
+func (c *mqlFirebaseProjectHosting) GetExposedSourceMaps() *plugin.TValue[[]any] {
+	return &c.ExposedSourceMaps
 }
 
 // mqlFirebaseProjectStorage for the firebase.project.storage resource
@@ -667,4 +757,63 @@ func (c *mqlFirebaseProjectStorage) GetBucketUrl() *plugin.TValue[string] {
 
 func (c *mqlFirebaseProjectStorage) GetPubliclyListable() *plugin.TValue[bool] {
 	return &c.PubliclyListable
+}
+
+// mqlFirebaseProjectFirestore for the firebase.project.firestore resource
+type mqlFirebaseProjectFirestore struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlFirebaseProjectFirestoreInternal it will be used here
+	Url                plugin.TValue[string]
+	PubliclyReadable   plugin.TValue[bool]
+	ExposedCollections plugin.TValue[[]any]
+}
+
+// createFirebaseProjectFirestore creates a new instance of this resource
+func createFirebaseProjectFirestore(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFirebaseProjectFirestore{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("firebase.project.firestore", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFirebaseProjectFirestore) MqlName() string {
+	return "firebase.project.firestore"
+}
+
+func (c *mqlFirebaseProjectFirestore) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFirebaseProjectFirestore) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlFirebaseProjectFirestore) GetPubliclyReadable() *plugin.TValue[bool] {
+	return &c.PubliclyReadable
+}
+
+func (c *mqlFirebaseProjectFirestore) GetExposedCollections() *plugin.TValue[[]any] {
+	return &c.ExposedCollections
 }

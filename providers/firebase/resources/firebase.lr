@@ -22,6 +22,8 @@ firebase.project @defaults("projectId domain") {
   hosting() firebase.project.hosting
   // Cloud Storage security posture
   storage() firebase.project.storage
+  // Cloud Firestore security posture
+  firestore() firebase.project.firestore
 }
 
 // Firebase Realtime Database public access check
@@ -42,16 +44,22 @@ firebase.project.authConfig @defaults("signInProviders anonymousAuthEnabled") {
   anonymousAuthEnabled bool
   // Authorized domains for OAuth redirects
   authorizedDomains []string
+  // Whether email enumeration protection is enabled (projects before Sept 2023 default to off)
+  emailEnumerationProtection bool
 }
 
 // Firebase Hosting well-known path configuration
-firebase.project.hosting @defaults("domain") {
+firebase.project.hosting @defaults("domain sourceMapExposed") {
   // Domain checked
   domain string
   // Apple App Site Association data from /.well-known/apple-app-site-association
   appleAppSiteAssociation dict
   // Android Asset Links data from /.well-known/assetlinks.json
   androidAssetLinks dict
+  // Whether JavaScript source maps are publicly accessible
+  sourceMapExposed bool
+  // URLs of exposed source maps found
+  exposedSourceMaps []string
 }
 
 // Firebase Cloud Storage public access check
@@ -60,4 +68,14 @@ firebase.project.storage @defaults("bucketUrl publiclyListable") {
   bucketUrl string
   // Whether the default storage bucket is publicly listable
   publiclyListable bool
+}
+
+// Firebase Cloud Firestore public access check
+firebase.project.firestore @defaults("url publiclyReadable") {
+  // Firestore REST API URL tested
+  url string
+  // Whether the default Firestore database is publicly readable
+  publiclyReadable bool
+  // Top-level collection IDs exposed (if publicly readable)
+  exposedCollections []string
 }

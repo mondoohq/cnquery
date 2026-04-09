@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -36,7 +37,10 @@ func (c *mqlFirebaseProject) id() (string, error) {
 	return "firebase/project/" + id, nil
 }
 
-// realtimeDatabase triggers creation of the child resource via NewResource.
+// ---------------------------------------------------------------------------
+// Realtime Database
+// ---------------------------------------------------------------------------
+
 func (p *mqlFirebaseProject) realtimeDatabase() (*mqlFirebaseProjectRealtimeDatabase, error) {
 	conn := p.MqlRuntime.Connection.(*connection.FirebaseConnection)
 	if conn.ProjectId() == "" {
@@ -51,7 +55,6 @@ func (p *mqlFirebaseProject) realtimeDatabase() (*mqlFirebaseProjectRealtimeData
 	return res.(*mqlFirebaseProjectRealtimeDatabase), nil
 }
 
-// initFirebaseProjectRealtimeDatabase fetches data for the Realtime Database check.
 func initFirebaseProjectRealtimeDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	conn := runtime.Connection.(*connection.FirebaseConnection)
 	projectId := conn.ProjectId()
@@ -118,7 +121,10 @@ func (c *mqlFirebaseProjectRealtimeDatabase) id() (string, error) {
 	return "firebase/realtimeDatabase/" + c.Url.Data, nil
 }
 
-// authConfig triggers creation of the child resource via NewResource.
+// ---------------------------------------------------------------------------
+// Auth Config
+// ---------------------------------------------------------------------------
+
 func (p *mqlFirebaseProject) authConfig() (*mqlFirebaseProjectAuthConfig, error) {
 	conn := p.MqlRuntime.Connection.(*connection.FirebaseConnection)
 	if conn.ApiKey() == "" {
@@ -133,7 +139,6 @@ func (p *mqlFirebaseProject) authConfig() (*mqlFirebaseProjectAuthConfig, error)
 	return res.(*mqlFirebaseProjectAuthConfig), nil
 }
 
-// initFirebaseProjectAuthConfig fetches auth configuration from the Identity Toolkit API.
 func initFirebaseProjectAuthConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	conn := runtime.Connection.(*connection.FirebaseConnection)
 	apiKey := conn.ApiKey()
@@ -156,6 +161,7 @@ func initFirebaseProjectAuthConfig(runtime *plugin.Runtime, args map[string]*llx
 	signInProviders := []interface{}{}
 	anonymousAuthEnabled := false
 	authorizedDomains := []interface{}{}
+	emailEnumerationProtection := false
 
 	if resp.StatusCode == http.StatusOK {
 		var result map[string]interface{}
@@ -167,6 +173,13 @@ func initFirebaseProjectAuthConfig(runtime *plugin.Runtime, args map[string]*llx
 
 		if domains, ok := result["authorizedDomains"].([]interface{}); ok {
 			authorizedDomains = domains
+		}
+
+		// Check email enumeration protection (emailPrivacyConfig.enableImprovedEmailPrivacy)
+		if emailPrivacy, ok := result["emailPrivacyConfig"].(map[string]interface{}); ok {
+			if enabled, ok := emailPrivacy["enableImprovedEmailPrivacy"].(bool); ok {
+				emailEnumerationProtection = enabled
+			}
 		}
 
 		// Try v1 response structure
@@ -204,18 +217,65 @@ func initFirebaseProjectAuthConfig(runtime *plugin.Runtime, args map[string]*llx
 		}
 	}
 
+	// If not found in the config response, probe for email enumeration directly.
+	// Try signing up with a clearly-invalid email to see if the error distinguishes
+	// between "email exists" vs "email not found" (only safe read-only check).
+	if !emailEnumerationProtection && apiKey != "" {
+		emailEnumerationProtection = probeEmailEnumerationProtection(client, apiKey)
+	}
+
 	args["signInProviders"] = llx.ArrayData(signInProviders, types.String)
 	args["anonymousAuthEnabled"] = llx.BoolData(anonymousAuthEnabled)
 	args["authorizedDomains"] = llx.ArrayData(authorizedDomains, types.String)
+	args["emailEnumerationProtection"] = llx.BoolData(emailEnumerationProtection)
 
 	return args, nil, nil
+}
+
+// probeEmailEnumerationProtection tests whether email enumeration protection is enabled
+// by calling the signUp endpoint with an invalid email and checking error behavior.
+// When protection is ON, the API returns a generic error rather than EMAIL_EXISTS/EMAIL_NOT_FOUND.
+func probeEmailEnumerationProtection(client *http.Client, apiKey string) bool {
+	url := "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=" + apiKey
+	payload := `{"email":"mql-probe-nonexistent-user@test.invalid","password":"probe","returnSecureToken":false}`
+
+	resp, err := client.Post(url, "application/json", strings.NewReader(payload))
+	if err != nil {
+		return false
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<16))
+	if err != nil {
+		return false
+	}
+
+	bodyStr := string(body)
+
+	// If the error message says EMAIL_NOT_FOUND, enumeration protection is OFF
+	// (the API is revealing whether the email exists).
+	// If protection is ON, we get INVALID_LOGIN_CREDENTIALS instead.
+	if strings.Contains(bodyStr, "EMAIL_NOT_FOUND") {
+		return false
+	}
+	if strings.Contains(bodyStr, "INVALID_LOGIN_CREDENTIALS") {
+		return true
+	}
+
+	// Unable to determine — assume not protected
+	return false
 }
 
 func (c *mqlFirebaseProjectAuthConfig) id() (string, error) {
 	return "firebase/authConfig", nil
 }
 
-// hosting triggers creation of the child resource via NewResource.
+// ---------------------------------------------------------------------------
+// Hosting
+// ---------------------------------------------------------------------------
+
+var reScriptSrcTag = regexp.MustCompile(`<script[^>]+src=["']([^"']+\.js)["']`)
+
 func (p *mqlFirebaseProject) hosting() (*mqlFirebaseProjectHosting, error) {
 	conn := p.MqlRuntime.Connection.(*connection.FirebaseConnection)
 	if conn.Domain() == "" {
@@ -230,7 +290,6 @@ func (p *mqlFirebaseProject) hosting() (*mqlFirebaseProjectHosting, error) {
 	return res.(*mqlFirebaseProjectHosting), nil
 }
 
-// initFirebaseProjectHosting checks .well-known paths on the domain.
 func initFirebaseProjectHosting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	conn := runtime.Connection.(*connection.FirebaseConnection)
 	domain := conn.Domain()
@@ -243,6 +302,7 @@ func initFirebaseProjectHosting(runtime *plugin.Runtime, args map[string]*llx.Ra
 
 	client := conn.HttpClient()
 
+	// Check Apple App Site Association
 	var appleData interface{}
 	appleURL := domainURL + "/.well-known/apple-app-site-association"
 	log.Debug().Str("url", appleURL).Msg("checking Apple App Site Association")
@@ -258,6 +318,7 @@ func initFirebaseProjectHosting(runtime *plugin.Runtime, args map[string]*llx.Ra
 		resp.Body.Close()
 	}
 
+	// Check Android Asset Links
 	var androidData interface{}
 	androidURL := domainURL + "/.well-known/assetlinks.json"
 	log.Debug().Str("url", androidURL).Msg("checking Android Asset Links")
@@ -273,9 +334,69 @@ func initFirebaseProjectHosting(runtime *plugin.Runtime, args map[string]*llx.Ra
 		resp.Body.Close()
 	}
 
+	// Check for exposed source maps
+	exposedSourceMaps := []interface{}{}
+	sourceMapExposed := false
+
+	// Fetch main page to discover JS bundles and check their .map files
+	if resp, err := client.Get(domainURL); err == nil {
+		if resp.StatusCode == http.StatusOK {
+			body, _ := io.ReadAll(io.LimitReader(resp.Body, 2<<20))
+			html := string(body)
+
+			// Find script tags and check for .js.map files
+			matches := reScriptSrcTag.FindAllStringSubmatch(html, -1)
+			checked := 0
+			for _, m := range matches {
+				if checked >= 10 {
+					break
+				}
+				src := m[1]
+
+				// Resolve relative URLs
+				if strings.HasPrefix(src, "//") {
+					src = "https:" + src
+				} else if strings.HasPrefix(src, "/") {
+					src = domainURL + src
+				} else if !strings.HasPrefix(src, "http") {
+					src = domainURL + "/" + src
+				}
+
+				// Skip external CDNs
+				if strings.Contains(src, "googleapis.com") ||
+					strings.Contains(src, "gstatic.com") ||
+					strings.Contains(src, "google-analytics.com") ||
+					strings.Contains(src, "googletagmanager.com") {
+					continue
+				}
+
+				mapURL := src + ".map"
+				log.Debug().Str("url", mapURL).Msg("checking source map exposure")
+
+				mapResp, err := client.Get(mapURL)
+				if err == nil {
+					if mapResp.StatusCode == http.StatusOK {
+						// Verify it's actually a source map (should contain "sources" key)
+						mapBody, _ := io.ReadAll(io.LimitReader(mapResp.Body, 1<<10)) // Just peek
+						if strings.Contains(string(mapBody), "\"sources\"") ||
+							strings.Contains(string(mapBody), "\"mappings\"") {
+							sourceMapExposed = true
+							exposedSourceMaps = append(exposedSourceMaps, mapURL)
+						}
+					}
+					mapResp.Body.Close()
+				}
+				checked++
+			}
+		}
+		resp.Body.Close()
+	}
+
 	args["domain"] = llx.StringData(domain)
 	args["appleAppSiteAssociation"] = llx.DictData(appleData)
 	args["androidAssetLinks"] = llx.DictData(androidData)
+	args["sourceMapExposed"] = llx.BoolData(sourceMapExposed)
+	args["exposedSourceMaps"] = llx.ArrayData(exposedSourceMaps, types.String)
 
 	return args, nil, nil
 }
@@ -284,7 +405,10 @@ func (c *mqlFirebaseProjectHosting) id() (string, error) {
 	return "firebase/hosting/" + c.Domain.Data, nil
 }
 
-// storage triggers creation of the child resource via NewResource.
+// ---------------------------------------------------------------------------
+// Storage
+// ---------------------------------------------------------------------------
+
 func (p *mqlFirebaseProject) storage() (*mqlFirebaseProjectStorage, error) {
 	conn := p.MqlRuntime.Connection.(*connection.FirebaseConnection)
 	if conn.ProjectId() == "" {
@@ -299,7 +423,6 @@ func (p *mqlFirebaseProject) storage() (*mqlFirebaseProjectStorage, error) {
 	return res.(*mqlFirebaseProjectStorage), nil
 }
 
-// initFirebaseProjectStorage checks the Firebase Storage bucket for public listing.
 func initFirebaseProjectStorage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	conn := runtime.Connection.(*connection.FirebaseConnection)
 	projectId := conn.ProjectId()
@@ -326,4 +449,76 @@ func initFirebaseProjectStorage(runtime *plugin.Runtime, args map[string]*llx.Ra
 
 func (c *mqlFirebaseProjectStorage) id() (string, error) {
 	return "firebase/storage/" + c.BucketUrl.Data, nil
+}
+
+// ---------------------------------------------------------------------------
+// Firestore
+// ---------------------------------------------------------------------------
+
+func (p *mqlFirebaseProject) firestore() (*mqlFirebaseProjectFirestore, error) {
+	conn := p.MqlRuntime.Connection.(*connection.FirebaseConnection)
+	if conn.ProjectId() == "" {
+		p.Firestore.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	res, err := NewResource(p.MqlRuntime, "firebase.project.firestore", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlFirebaseProjectFirestore), nil
+}
+
+func initFirebaseProjectFirestore(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	conn := runtime.Connection.(*connection.FirebaseConnection)
+	projectId := conn.ProjectId()
+
+	firestoreURL := fmt.Sprintf("https://firestore.googleapis.com/v1/projects/%s/databases/(default)/documents", projectId)
+	log.Debug().Str("url", firestoreURL).Msg("checking Firestore public access")
+
+	client := conn.HttpClient()
+	publiclyReadable := false
+	exposedCollections := []interface{}{}
+
+	resp, err := client.Get(firestoreURL)
+	if err == nil {
+		defer resp.Body.Close()
+		if resp.StatusCode == http.StatusOK {
+			publiclyReadable = true
+
+			body, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+			var result map[string]interface{}
+			if json.Unmarshal(body, &result) == nil {
+				// Extract collection IDs from the documents response
+				if docs, ok := result["documents"].([]interface{}); ok {
+					seen := map[string]bool{}
+					for _, doc := range docs {
+						if docMap, ok := doc.(map[string]interface{}); ok {
+							if name, ok := docMap["name"].(string); ok {
+								// Document name format: projects/{proj}/databases/(default)/documents/{collection}/{docId}
+								parts := strings.Split(name, "/")
+								if len(parts) >= 6 {
+									collectionId := parts[5]
+									if !seen[collectionId] {
+										seen[collectionId] = true
+										exposedCollections = append(exposedCollections, collectionId)
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	args["url"] = llx.StringData(firestoreURL)
+	args["publiclyReadable"] = llx.BoolData(publiclyReadable)
+	args["exposedCollections"] = llx.ArrayData(exposedCollections, types.String)
+
+	return args, nil, nil
+}
+
+func (c *mqlFirebaseProjectFirestore) id() (string, error) {
+	return "firebase/firestore/" + c.Url.Data, nil
 }
