@@ -55,6 +55,25 @@ type grafanaOrgUserJSON struct {
 	LastSeenAtAge string `json:"lastSeenAtAge"`
 }
 
+// initGrafanaOrganization delegates to the parent grafana resource when the
+// organization is accessed directly (e.g. grafana.organization.name). Without
+// this, NewResource creates an empty stub with no field data.
+func initGrafanaOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 0 {
+		return args, nil, nil
+	}
+
+	grafanaRes, err := NewResource(runtime, "grafana", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	org := grafanaRes.(*mqlGrafana).GetOrganization()
+	if org.Error != nil {
+		return nil, nil, org.Error
+	}
+	return nil, org.Data, nil
+}
+
 func (g *mqlGrafana) organization() (*mqlGrafanaOrganization, error) {
 	conn, err := grafanaConnection(g.MqlRuntime)
 	if err != nil {

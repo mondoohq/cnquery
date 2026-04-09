@@ -35,7 +35,7 @@ func init() {
 			Create: createGrafana,
 		},
 		"grafana.organization": {
-			// to override args, implement: initGrafanaOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGrafanaOrganization,
 			Create: createGrafanaOrganization,
 		},
 		"grafana.user": {
@@ -59,7 +59,7 @@ func init() {
 			Create: createGrafanaContactPoint,
 		},
 		"grafana.notificationPolicy": {
-			// to override args, implement: initGrafanaNotificationPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGrafanaNotificationPolicy,
 			Create: createGrafanaNotificationPolicy,
 		},
 	}

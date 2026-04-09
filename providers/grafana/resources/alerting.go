@@ -10,6 +10,7 @@ import (
 	"net/http"
 
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/types"
 )
@@ -81,6 +82,25 @@ func (g *mqlGrafana) contactPoints() ([]interface{}, error) {
 
 func (c *mqlGrafanaContactPoint) id() (string, error) {
 	return "grafana-cp/" + c.Uid.Data, nil
+}
+
+// initGrafanaNotificationPolicy delegates to the parent grafana resource when
+// the notification policy is accessed directly (e.g. grafana.notificationPolicy.receiver).
+// Without this, NewResource creates an empty stub with no field data.
+func initGrafanaNotificationPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 0 {
+		return args, nil, nil
+	}
+
+	grafanaRes, err := NewResource(runtime, "grafana", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	np := grafanaRes.(*mqlGrafana).GetNotificationPolicy()
+	if np.Error != nil {
+		return nil, nil, np.Error
+	}
+	return nil, np.Data, nil
 }
 
 func (g *mqlGrafana) notificationPolicy() (*mqlGrafanaNotificationPolicy, error) {
