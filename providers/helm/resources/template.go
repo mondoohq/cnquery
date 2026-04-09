@@ -9,6 +9,7 @@ import (
 	"text/template"
 	"text/template/parse"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"helm.sh/helm/v3/pkg/chart"
@@ -176,7 +177,10 @@ func walkNodes(runtime *plugin.Runtime, templateName string, node parse.Node, di
 }
 
 func addDirective(runtime *plugin.Runtime, templateName string, directiveType string, expression string, line int, directives *[]any) {
-	id := "helm.directive:" + templateName + ":" + directiveType + ":" + strconv.Itoa(line)
+	// Include the current count of directives as an index to avoid __id collisions
+	// when multiple directives of the same type appear on the same line.
+	idx := len(*directives)
+	id := "helm.directive:" + templateName + ":" + directiveType + ":" + strconv.Itoa(line) + ":" + strconv.Itoa(idx)
 	res, err := CreateResource(runtime, "helm.directive", map[string]*llx.RawData{
 		"__id":       llx.StringData(id),
 		"type":       llx.StringData(directiveType),
@@ -184,6 +188,7 @@ func addDirective(runtime *plugin.Runtime, templateName string, directiveType st
 		"line":       llx.IntData(int64(line)),
 	})
 	if err != nil {
+		log.Warn().Err(err).Str("template", templateName).Str("type", directiveType).Int("line", line).Msg("failed to create helm directive resource")
 		return
 	}
 	*directives = append(*directives, res)

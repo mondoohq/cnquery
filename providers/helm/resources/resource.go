@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -109,6 +110,7 @@ func (r *mqlHelmResource) template() (*mqlHelmTemplate, error) {
 		"__id": llx.StringData("helm.template:" + r.cacheTemplateKey),
 	})
 	if err != nil {
+		log.Warn().Err(err).Str("templateKey", r.cacheTemplateKey).Msg("failed to resolve helm template for resource")
 		r.Template.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
