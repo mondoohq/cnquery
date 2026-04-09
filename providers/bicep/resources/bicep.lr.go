@@ -1246,11 +1246,15 @@ func (c *mqlBicepTemplate) MqlID() string {
 }
 
 func (c *mqlBicepTemplate) GetSchema() *plugin.TValue[string] {
-	return &c.Schema
+	return plugin.GetOrCompute[string](&c.Schema, func() (string, error) {
+		return c.schema()
+	})
 }
 
 func (c *mqlBicepTemplate) GetContentVersion() *plugin.TValue[string] {
-	return &c.ContentVersion
+	return plugin.GetOrCompute[string](&c.ContentVersion, func() (string, error) {
+		return c.contentVersion()
+	})
 }
 
 func (c *mqlBicepTemplate) GetParameters() *plugin.TValue[map[string]any] {

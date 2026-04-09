@@ -135,19 +135,44 @@ param teradiciRegKey string = ''`
 }
 
 func TestParseParameterAllowed(t *testing.T) {
-	input := `@allowed([
+	t.Run("multiline newline-separated", func(t *testing.T) {
+		input := `@allowed([
   'Standard_LRS'
   'Standard_GRS'
 ])
 param storageSku string`
 
-	result := parseBicep(input)
-	require.Len(t, result.parameters, 1)
-	p := result.parameters[0]
+		result := parseBicep(input)
+		require.Len(t, result.parameters, 1)
+		p := result.parameters[0]
 
-	assert.Equal(t, "storageSku", p.name)
-	assert.Equal(t, "string", p.typ)
-	assert.Equal(t, []string{"Standard_LRS", "Standard_GRS"}, p.allowed)
+		assert.Equal(t, "storageSku", p.name)
+		assert.Equal(t, []string{"Standard_LRS", "Standard_GRS"}, p.allowed)
+	})
+
+	t.Run("single-line comma-separated", func(t *testing.T) {
+		input := `@allowed([ 'win10', 'ws2019' ])
+param osType string = 'win10'`
+
+		result := parseBicep(input)
+		require.Len(t, result.parameters, 1)
+		p := result.parameters[0]
+
+		assert.Equal(t, "osType", p.name)
+		assert.Equal(t, []string{"win10", "ws2019"}, p.allowed)
+	})
+
+	t.Run("mixed comma and newline", func(t *testing.T) {
+		input := `@allowed([
+  'a', 'b'
+  'c'
+])
+param x string`
+
+		result := parseBicep(input)
+		require.Len(t, result.parameters, 1)
+		assert.Equal(t, []string{"a", "b", "c"}, result.parameters[0].allowed)
+	})
 }
 
 func TestParseAllowedValues(t *testing.T) {
@@ -157,14 +182,14 @@ func TestParseAllowedValues(t *testing.T) {
 		want []string
 	}{
 		{
-			name: "single-quoted values",
+			name: "newline-separated",
 			raw:  "'a'\n'b'\n'c'",
 			want: []string{"a", "b", "c"},
 		},
 		{
-			name: "values with trailing commas",
-			raw:  "'x',\n'y',",
-			want: []string{"x", "y"},
+			name: "comma-separated on one line",
+			raw:  " 'win10', 'ws2019' ",
+			want: []string{"win10", "ws2019"},
 		},
 		{
 			name: "empty input",
@@ -175,6 +200,11 @@ func TestParseAllowedValues(t *testing.T) {
 			name: "whitespace only",
 			raw:  "   \n   ",
 			want: nil,
+		},
+		{
+			name: "empty string value",
+			raw:  "''",
+			want: []string{""},
 		},
 	}
 

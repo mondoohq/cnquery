@@ -190,16 +190,18 @@ func parseParameter(line string, decorators []string) parsedParameter {
 	return p
 }
 
+// allowedValueRe matches individual quoted values like 'foo' or "foo".
+var allowedValueRe = regexp.MustCompile(`'([^']*)'`)
+
 func parseAllowedValues(raw string) []string {
+	// Extract all single-quoted values from the raw content.
+	// This handles both newline-separated and comma-separated formats:
+	//   'Standard_LRS'\n'Standard_GRS'
+	//   'win10', 'ws2019'
+	matches := allowedValueRe.FindAllStringSubmatch(raw, -1)
 	var vals []string
-	for _, part := range strings.Split(raw, "\n") {
-		part = strings.TrimSpace(part)
-		part = strings.Trim(part, "'\"")
-		part = strings.TrimSuffix(part, ",")
-		part = strings.Trim(part, "'\"")
-		if part != "" {
-			vals = append(vals, part)
-		}
+	for _, m := range matches {
+		vals = append(vals, m[1])
 	}
 	return vals
 }

@@ -22,9 +22,7 @@ type mqlBicepTemplateInternal struct {
 
 func newMqlBicepTemplate(runtime *plugin.Runtime, filePath string, tmpl *connection.ARMTemplate) (*mqlBicepTemplate, error) {
 	res, err := CreateResource(runtime, "bicep.template", map[string]*llx.RawData{
-		"__id":           llx.StringData("bicep.template:" + filePath),
-		"schema":         llx.StringData(tmpl.Schema),
-		"contentVersion": llx.StringData(tmpl.ContentVersion),
+		"__id": llx.StringData("bicep.template:" + filePath),
 	})
 	if err != nil {
 		return nil, err
@@ -39,21 +37,68 @@ func (t *mqlBicepTemplate) id() (string, error) {
 	return "bicep.template:" + t.cachePath, nil
 }
 
+func (t *mqlBicepTemplate) getARMTemplate() *connection.ARMTemplate {
+	if t.armTemplate != nil {
+		return t.armTemplate
+	}
+	// Re-fetch from connection when Internal struct wasn't populated
+	// (happens when resource is reconstructed via StoreData across gRPC).
+	conn := t.MqlRuntime.Connection.(*connection.BicepConnection)
+	tmpl := conn.ARMTemplate()
+	if tmpl != nil {
+		t.armTemplate = tmpl
+		t.cachePath = conn.Path()
+	}
+	return tmpl
+}
+
+func (t *mqlBicepTemplate) schema() (string, error) {
+	tmpl := t.getARMTemplate()
+	if tmpl == nil {
+		return "", nil
+	}
+	return tmpl.Schema, nil
+}
+
+func (t *mqlBicepTemplate) contentVersion() (string, error) {
+	tmpl := t.getARMTemplate()
+	if tmpl == nil {
+		return "", nil
+	}
+	return tmpl.ContentVersion, nil
+}
+
 func (t *mqlBicepTemplate) parameters() (map[string]any, error) {
-	return rawMessageMapToDict(t.armTemplate.Parameters)
+	tmpl := t.getARMTemplate()
+	if tmpl == nil {
+		return nil, nil
+	}
+	return rawMessageMapToDict(tmpl.Parameters)
 }
 
 func (t *mqlBicepTemplate) variables() (map[string]any, error) {
-	return rawMessageMapToDict(t.armTemplate.Variables)
+	tmpl := t.getARMTemplate()
+	if tmpl == nil {
+		return nil, nil
+	}
+	return rawMessageMapToDict(tmpl.Variables)
 }
 
 func (t *mqlBicepTemplate) outputs() (map[string]any, error) {
-	return rawMessageMapToDict(t.armTemplate.Outputs)
+	tmpl := t.getARMTemplate()
+	if tmpl == nil {
+		return nil, nil
+	}
+	return rawMessageMapToDict(tmpl.Outputs)
 }
 
 func (t *mqlBicepTemplate) resources() ([]any, error) {
+	tmpl := t.getARMTemplate()
+	if tmpl == nil {
+		return nil, nil
+	}
 	var mqlResources []any
-	for i, raw := range t.armTemplate.Resources {
+	for i, raw := range tmpl.Resources {
 		var obj map[string]any
 		if err := json.Unmarshal(raw, &obj); err != nil {
 			log.Warn().Err(err).Int("index", i).Msg("failed to unmarshal ARM template resource")

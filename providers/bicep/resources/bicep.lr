@@ -123,9 +123,9 @@ bicep.output @defaults("name type") {
 // Compiled ARM template (from ARM JSON input)
 bicep.template @defaults("schema") {
   // ARM schema URL
-  schema string
+  schema() string
   // Content version
-  contentVersion string
+  contentVersion() string
   // Compiled parameters
   parameters() map[string]dict
   // Compiled variables
