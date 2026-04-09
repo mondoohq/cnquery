@@ -491,9 +491,6 @@ func (r *recording) GetData(lookup llx.AssetRecordingLookup, resource string, id
 	}
 
 	data, ok := obj.Fields[field]
-	if !ok && field == "id" {
-		return llx.StringData(resolvedID), true
-	}
 
 	return data, ok
 }

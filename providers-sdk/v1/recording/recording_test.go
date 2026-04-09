@@ -214,10 +214,12 @@ func TestAddAndGetData(t *testing.T) {
 		assert.True(t, ok)
 		assert.Equal(t, "i-field-test", data.Value)
 
-		// Verify GetData for "id" field returns the resource id
+		// Verify GetData for "id" field returns false when the field was never stored.
+		// The recording must not conflate the resource identifier (resolvedID) with a
+		// user-defined "id" field, since they may have different types.
 		data, ok = r.GetData(llx.AssetRecordingLookup{ConnectionId: 6}, "aws.ec2.instance", "i-field-test", "id")
-		assert.True(t, ok)
-		assert.Equal(t, "i-field-test", data.Value)
+		assert.False(t, ok)
+		assert.Nil(t, data)
 	})
 
 	t.Run("overwrites field data when added multiple times", func(t *testing.T) {
