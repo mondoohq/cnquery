@@ -118,8 +118,10 @@ func Is400InstanceNotFoundError(err error) bool {
 	return false
 }
 
-// IsServiceNotAvailableInRegionError checks if the error indicates the service is not available in the region.
-// This typically happens with DNS lookup failures for regional services like MemoryDB.
+// IsServiceNotAvailableInRegionError checks if the error indicates the service or API action
+// is not available in the region. This includes DNS lookup failures for regional services,
+// InvalidAction errors for EC2 actions not yet deployed to a region (e.g., Verified Access),
+// and UnknownOperationException for services like Bedrock in unsupported regions.
 func IsServiceNotAvailableInRegionError(err error) bool {
 	if err == nil {
 		return false
@@ -127,7 +129,11 @@ func IsServiceNotAvailableInRegionError(err error) bool {
 	errStr := err.Error()
 	return strings.Contains(errStr, "no such host") ||
 		strings.Contains(errStr, "UnknownEndpoint") ||
-		strings.Contains(errStr, "could not resolve endpoint")
+		strings.Contains(errStr, "could not resolve endpoint") ||
+		strings.Contains(errStr, "InvalidAction") ||
+		strings.Contains(errStr, "UnknownOperationException") ||
+		strings.Contains(errStr, "Unknown operation") ||
+		strings.Contains(errStr, "Unknown Operation")
 }
 
 func toInterfaceMap(m map[string]string) map[string]any {

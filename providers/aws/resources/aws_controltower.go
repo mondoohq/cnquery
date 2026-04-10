@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"strings"
 	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/service/controltower"
@@ -14,6 +15,15 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
 )
+
+// isControlTowerNotConfiguredError returns true if the error indicates that
+// Control Tower is not set up in this account (e.g., missing AWSControlTowerAdmin role).
+func isControlTowerNotConfiguredError(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(err.Error(), "AWSControlTowerAdmin")
+}
 
 func (a *mqlAwsControltower) id() (string, error) {
 	return "aws.controltower", nil
@@ -40,6 +50,10 @@ func (a *mqlAwsControltower) landingZones() ([]any, error) {
 			}
 			if IsServiceNotAvailableInRegionError(err) {
 				log.Debug().Msg("control tower is not available in the default region")
+				return nil, nil
+			}
+			if isControlTowerNotConfiguredError(err) {
+				log.Debug().Msg("control tower is not configured in this account")
 				return nil, nil
 			}
 			return nil, err
@@ -177,6 +191,10 @@ func (a *mqlAwsControltower) getEnabledBaselines(conn *connection.AwsConnection)
 					}
 					if IsServiceNotAvailableInRegionError(err) {
 						log.Debug().Str("region", region).Msg("control tower is not available in region")
+						return res, nil
+					}
+					if isControlTowerNotConfiguredError(err) {
+						log.Debug().Str("region", region).Msg("control tower is not configured in this account")
 						return res, nil
 					}
 					return nil, err

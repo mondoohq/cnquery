@@ -344,8 +344,14 @@ func parseAwsTimestampPtr(value *string) *time.Time {
 func parseAwsTimestamp(value string) *time.Time {
 	timestamp, err := time.Parse(time.RFC3339, value)
 	if err != nil {
-		log.Warn().Err(err).Str("timestamp", value).Msg("failed to parse timestamp")
-		return nil
+		// Some AWS APIs (e.g., EC2 Verified Access) return timestamps without
+		// timezone info like "2026-04-09T05:40:04". Parse as UTC in that case.
+		timestamp, err = time.Parse("2006-01-02T15:04:05", value)
+		if err != nil {
+			log.Warn().Err(err).Str("timestamp", value).Msg("failed to parse timestamp")
+			return nil
+		}
+		timestamp = timestamp.UTC()
 	}
 	return &timestamp
 }
