@@ -108,6 +108,16 @@ const (
 	ResourceAwsSagemakerPipeline                                                string = "aws.sagemaker.pipeline"
 	ResourceAwsSagemakerDomain                                                  string = "aws.sagemaker.domain"
 	ResourceAwsSagemakerInferenceComponent                                      string = "aws.sagemaker.inferenceComponent"
+	ResourceAwsSagemakerCluster                                                 string = "aws.sagemaker.cluster"
+	ResourceAwsSagemakerClusterInstanceGroup                                    string = "aws.sagemaker.clusterInstanceGroup"
+	ResourceAwsSagemakerClusterNode                                             string = "aws.sagemaker.clusterNode"
+	ResourceAwsSagemakerFeatureGroup                                            string = "aws.sagemaker.featureGroup"
+	ResourceAwsSagemakerFeatureDefinition                                       string = "aws.sagemaker.featureDefinition"
+	ResourceAwsSagemakerModelPackage                                            string = "aws.sagemaker.modelPackage"
+	ResourceAwsSagemakerModelPackageGroup                                       string = "aws.sagemaker.modelPackageGroup"
+	ResourceAwsSagemakerModelCard                                               string = "aws.sagemaker.modelCard"
+	ResourceAwsSagemakerSpace                                                   string = "aws.sagemaker.space"
+	ResourceAwsSagemakerUserProfile                                             string = "aws.sagemaker.userProfile"
 	ResourceAwsSns                                                              string = "aws.sns"
 	ResourceAwsSnsTopic                                                         string = "aws.sns.topic"
 	ResourceAwsSnsSubscription                                                  string = "aws.sns.subscription"
@@ -866,12 +876,52 @@ func init() {
 			Create: createAwsSagemakerPipeline,
 		},
 		"aws.sagemaker.domain": {
-			// to override args, implement: initAwsSagemakerDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsSagemakerDomain,
 			Create: createAwsSagemakerDomain,
 		},
 		"aws.sagemaker.inferenceComponent": {
 			// to override args, implement: initAwsSagemakerInferenceComponent(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsSagemakerInferenceComponent,
+		},
+		"aws.sagemaker.cluster": {
+			// to override args, implement: initAwsSagemakerCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerCluster,
+		},
+		"aws.sagemaker.clusterInstanceGroup": {
+			// to override args, implement: initAwsSagemakerClusterInstanceGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerClusterInstanceGroup,
+		},
+		"aws.sagemaker.clusterNode": {
+			// to override args, implement: initAwsSagemakerClusterNode(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerClusterNode,
+		},
+		"aws.sagemaker.featureGroup": {
+			// to override args, implement: initAwsSagemakerFeatureGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerFeatureGroup,
+		},
+		"aws.sagemaker.featureDefinition": {
+			// to override args, implement: initAwsSagemakerFeatureDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerFeatureDefinition,
+		},
+		"aws.sagemaker.modelPackage": {
+			// to override args, implement: initAwsSagemakerModelPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerModelPackage,
+		},
+		"aws.sagemaker.modelPackageGroup": {
+			Init:   initAwsSagemakerModelPackageGroup,
+			Create: createAwsSagemakerModelPackageGroup,
+		},
+		"aws.sagemaker.modelCard": {
+			// to override args, implement: initAwsSagemakerModelCard(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerModelCard,
+		},
+		"aws.sagemaker.space": {
+			// to override args, implement: initAwsSagemakerSpace(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerSpace,
+		},
+		"aws.sagemaker.userProfile": {
+			// to override args, implement: initAwsSagemakerUserProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerUserProfile,
 		},
 		"aws.sns": {
 			// to override args, implement: initAwsSns(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4431,6 +4481,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.sagemaker.inferenceComponents": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemaker).GetInferenceComponents()).ToDataRes(types.Array(types.Resource("aws.sagemaker.inferenceComponent")))
 	},
+	"aws.sagemaker.clusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemaker).GetClusters()).ToDataRes(types.Array(types.Resource("aws.sagemaker.cluster")))
+	},
+	"aws.sagemaker.featureGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemaker).GetFeatureGroups()).ToDataRes(types.Array(types.Resource("aws.sagemaker.featureGroup")))
+	},
+	"aws.sagemaker.modelPackages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemaker).GetModelPackages()).ToDataRes(types.Array(types.Resource("aws.sagemaker.modelPackage")))
+	},
+	"aws.sagemaker.modelPackageGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemaker).GetModelPackageGroups()).ToDataRes(types.Array(types.Resource("aws.sagemaker.modelPackageGroup")))
+	},
+	"aws.sagemaker.modelCards": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemaker).GetModelCards()).ToDataRes(types.Array(types.Resource("aws.sagemaker.modelCard")))
+	},
+	"aws.sagemaker.spaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemaker).GetSpaces()).ToDataRes(types.Array(types.Resource("aws.sagemaker.space")))
+	},
+	"aws.sagemaker.userProfiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemaker).GetUserProfiles()).ToDataRes(types.Array(types.Resource("aws.sagemaker.userProfile")))
+	},
 	"aws.sagemaker.notebookinstance.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerNotebookinstance).GetArn()).ToDataRes(types.String)
 	},
@@ -4458,6 +4529,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.sagemaker.notebookinstance.url": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerNotebookinstance).GetUrl()).ToDataRes(types.String)
 	},
+	"aws.sagemaker.notebookinstance.instanceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerNotebookinstance).GetInstanceType()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.notebookinstance.lifecycleConfigName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerNotebookinstance).GetLifecycleConfigName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.notebookinstance.defaultCodeRepository": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerNotebookinstance).GetDefaultCodeRepository()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.notebookinstance.additionalCodeRepositories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerNotebookinstance).GetAdditionalCodeRepositories()).ToDataRes(types.Array(types.String))
+	},
 	"aws.sagemaker.notebookinstancedetails.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerNotebookinstancedetails).GetArn()).ToDataRes(types.String)
 	},
@@ -4475,6 +4558,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.sagemaker.notebookinstancedetails.subnet": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerNotebookinstancedetails).GetSubnet()).ToDataRes(types.Resource("aws.vpc.subnet"))
+	},
+	"aws.sagemaker.notebookinstancedetails.ipAddressType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerNotebookinstancedetails).GetIpAddressType()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.notebookinstancedetails.platformIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerNotebookinstancedetails).GetPlatformIdentifier()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.notebookinstancedetails.volumeSizeInGB": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerNotebookinstancedetails).GetVolumeSizeInGB()).ToDataRes(types.Int)
+	},
+	"aws.sagemaker.notebookinstancedetails.failureReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerNotebookinstancedetails).GetFailureReason()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.notebookinstancedetails.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerNotebookinstancedetails).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.sagemaker.notebookinstancedetails.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerNotebookinstancedetails).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
 	},
 	"aws.sagemaker.endpoint.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerEndpoint).GetArn()).ToDataRes(types.String)
@@ -4527,6 +4628,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.sagemaker.model.vpcConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerModel).GetVpcConfig()).ToDataRes(types.Dict)
 	},
+	"aws.sagemaker.model.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModel).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
 	"aws.sagemaker.trainingjob.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerTrainingjob).GetArn()).ToDataRes(types.String)
 	},
@@ -4574,6 +4678,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.sagemaker.trainingjob.vpcConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerTrainingjob).GetVpcConfig()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.trainingjob.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerTrainingjob).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
 	},
 	"aws.sagemaker.trainingjob.outputDataConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerTrainingjob).GetOutputDataConfig()).ToDataRes(types.Dict)
@@ -4625,6 +4732,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.sagemaker.processingjob.vpcConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerProcessingjob).GetVpcConfig()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.processingjob.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerProcessingjob).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
 	},
 	"aws.sagemaker.processingjob.processingResources": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerProcessingjob).GetProcessingResources()).ToDataRes(types.Dict)
@@ -4716,6 +4826,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.sagemaker.domain.defaultUserSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerDomain).GetDefaultUserSettings()).ToDataRes(types.Dict)
 	},
+	"aws.sagemaker.domain.securityGroupForDomainBoundary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDomain).GetSecurityGroupForDomainBoundary()).ToDataRes(types.Resource("aws.ec2.securitygroup"))
+	},
+	"aws.sagemaker.domain.appSecurityGroupManagement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDomain).GetAppSecurityGroupManagement()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.domain.tagPropagation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDomain).GetTagPropagation()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.domain.singleSignOnApplicationArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDomain).GetSingleSignOnApplicationArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.domain.failureReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDomain).GetFailureReason()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.domain.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDomain).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
+	"aws.sagemaker.domain.defaultExecutionRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDomain).GetDefaultExecutionRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
 	"aws.sagemaker.inferenceComponent.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerInferenceComponent).GetArn()).ToDataRes(types.String)
 	},
@@ -4760,6 +4891,348 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.sagemaker.inferenceComponent.specification": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerInferenceComponent).GetSpecification()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.inferenceComponent.failureReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerInferenceComponent).GetFailureReason()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.cluster.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerCluster).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.cluster.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerCluster).GetName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.cluster.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerCluster).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.cluster.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerCluster).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.cluster.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerCluster).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.cluster.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerCluster).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.sagemaker.cluster.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerCluster).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.sagemaker.cluster.instanceGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerCluster).GetInstanceGroups()).ToDataRes(types.Array(types.Resource("aws.sagemaker.clusterInstanceGroup")))
+	},
+	"aws.sagemaker.cluster.orchestrator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerCluster).GetOrchestrator()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.cluster.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerCluster).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
+	"aws.sagemaker.cluster.nodeRecovery": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerCluster).GetNodeRecovery()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.cluster.nodeProvisioningMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerCluster).GetNodeProvisioningMode()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.cluster.failureMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerCluster).GetFailureMessage()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.cluster.nodes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerCluster).GetNodes()).ToDataRes(types.Array(types.Resource("aws.sagemaker.clusterNode")))
+	},
+	"aws.sagemaker.clusterInstanceGroup.instanceGroupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterInstanceGroup).GetInstanceGroupName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.clusterInstanceGroup.instanceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterInstanceGroup).GetInstanceType()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.clusterInstanceGroup.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterInstanceGroup).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.clusterInstanceGroup.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterInstanceGroup).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.clusterInstanceGroup.currentCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterInstanceGroup).GetCurrentCount()).ToDataRes(types.Int)
+	},
+	"aws.sagemaker.clusterInstanceGroup.targetCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterInstanceGroup).GetTargetCount()).ToDataRes(types.Int)
+	},
+	"aws.sagemaker.clusterInstanceGroup.threadsPerCore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterInstanceGroup).GetThreadsPerCore()).ToDataRes(types.Int)
+	},
+	"aws.sagemaker.clusterInstanceGroup.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterInstanceGroup).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.sagemaker.clusterInstanceGroup.lifecycleConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterInstanceGroup).GetLifecycleConfig()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.clusterNode.instanceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterNode).GetInstanceId()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.clusterNode.instanceGroupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterNode).GetInstanceGroupName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.clusterNode.instanceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterNode).GetInstanceType()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.clusterNode.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterNode).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.clusterNode.statusMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterNode).GetStatusMessage()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.clusterNode.launchedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterNode).GetLaunchedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.clusterNode.privateDnsHostname": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterNode).GetPrivateDnsHostname()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.clusterNode.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterNode).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.featureGroup.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFeatureGroup).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.featureGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFeatureGroup).GetName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.featureGroup.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFeatureGroup).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.featureGroup.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFeatureGroup).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.featureGroup.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFeatureGroup).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.featureGroup.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFeatureGroup).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.sagemaker.featureGroup.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFeatureGroup).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.sagemaker.featureGroup.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFeatureGroup).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.featureGroup.featureDefinitions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFeatureGroup).GetFeatureDefinitions()).ToDataRes(types.Array(types.Resource("aws.sagemaker.featureDefinition")))
+	},
+	"aws.sagemaker.featureGroup.eventTimeFeatureName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFeatureGroup).GetEventTimeFeatureName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.featureGroup.recordIdentifierFeatureName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFeatureGroup).GetRecordIdentifierFeatureName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.featureGroup.offlineStoreConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFeatureGroup).GetOfflineStoreConfig()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.featureGroup.onlineStoreConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFeatureGroup).GetOnlineStoreConfig()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.featureGroup.failureReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFeatureGroup).GetFailureReason()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.featureGroup.offlineStoreStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFeatureGroup).GetOfflineStoreStatus()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.featureGroup.onlineStoreTotalSizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFeatureGroup).GetOnlineStoreTotalSizeBytes()).ToDataRes(types.Int)
+	},
+	"aws.sagemaker.featureDefinition.featureName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFeatureDefinition).GetFeatureName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.featureDefinition.featureType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFeatureDefinition).GetFeatureType()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.featureDefinition.collectionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFeatureDefinition).GetCollectionType()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelPackage.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackage).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelPackage.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackage).GetName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelPackage.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackage).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelPackage.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackage).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelPackage.approvalStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackage).GetApprovalStatus()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelPackage.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackage).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.modelPackage.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackage).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.sagemaker.modelPackage.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackage).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelPackage.modelPackageGroupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackage).GetModelPackageGroupName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelPackage.modelPackageGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackage).GetModelPackageGroup()).ToDataRes(types.Resource("aws.sagemaker.modelPackageGroup"))
+	},
+	"aws.sagemaker.modelPackage.modelPackageVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackage).GetModelPackageVersion()).ToDataRes(types.Int)
+	},
+	"aws.sagemaker.modelPackage.certifyForMarketplace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackage).GetCertifyForMarketplace()).ToDataRes(types.Bool)
+	},
+	"aws.sagemaker.modelPackage.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackage).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.sagemaker.modelPackage.inferenceSpecification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackage).GetInferenceSpecification()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.modelPackage.approvalDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackage).GetApprovalDescription()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelPackage.modelMetrics": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackage).GetModelMetrics()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.modelPackage.sourceUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackage).GetSourceUri()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelPackage.customerMetadataProperties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackage).GetCustomerMetadataProperties()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.sagemaker.modelPackage.skipModelValidation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackage).GetSkipModelValidation()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelPackage.lastModifiedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackage).GetLastModifiedTime()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.modelPackageGroup.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackageGroup).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelPackageGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackageGroup).GetName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelPackageGroup.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackageGroup).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelPackageGroup.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackageGroup).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelPackageGroup.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackageGroup).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.modelPackageGroup.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackageGroup).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.sagemaker.modelPackageGroup.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackageGroup).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelCard.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelCard).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelCard.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelCard).GetName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelCard.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelCard).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelCard.modelCardStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelCard).GetModelCardStatus()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelCard.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelCard).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.modelCard.lastModifiedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelCard).GetLastModifiedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.modelCard.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelCard).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.sagemaker.modelCard.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelCard).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.sagemaker.modelCard.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelCard).GetContent()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelCard.modelCardVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelCard).GetModelCardVersion()).ToDataRes(types.Int)
+	},
+	"aws.sagemaker.modelCard.modelCardProcessingStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelCard).GetModelCardProcessingStatus()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.space.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerSpace).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.space.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerSpace).GetName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.space.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerSpace).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.space.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerSpace).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.space.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerSpace).GetDisplayName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.space.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerSpace).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.space.lastModifiedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerSpace).GetLastModifiedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.space.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerSpace).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.sagemaker.space.domain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerSpace).GetDomain()).ToDataRes(types.Resource("aws.sagemaker.domain"))
+	},
+	"aws.sagemaker.space.ownerUserProfileName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerSpace).GetOwnerUserProfileName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.space.sharingType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerSpace).GetSharingType()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.space.spaceUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerSpace).GetSpaceUrl()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.space.settings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerSpace).GetSettings()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.space.failureReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerSpace).GetFailureReason()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.userProfile.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerUserProfile).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.userProfile.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerUserProfile).GetName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.userProfile.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerUserProfile).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.userProfile.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerUserProfile).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.userProfile.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerUserProfile).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.userProfile.lastModifiedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerUserProfile).GetLastModifiedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.userProfile.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerUserProfile).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.sagemaker.userProfile.domain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerUserProfile).GetDomain()).ToDataRes(types.Resource("aws.sagemaker.domain"))
+	},
+	"aws.sagemaker.userProfile.failureReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerUserProfile).GetFailureReason()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.userProfile.singleSignOnUserIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerUserProfile).GetSingleSignOnUserIdentifier()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.userProfile.singleSignOnUserValue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerUserProfile).GetSingleSignOnUserValue()).ToDataRes(types.String)
 	},
 	"aws.sns.topics": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSns).GetTopics()).ToDataRes(types.Array(types.Resource("aws.sns.topic")))
@@ -19015,6 +19488,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSagemaker).InferenceComponents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.sagemaker.clusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemaker).Clusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.featureGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemaker).FeatureGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemaker).ModelPackages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackageGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemaker).ModelPackageGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelCards": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemaker).ModelCards, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.spaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemaker).Spaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.userProfiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemaker).UserProfiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.sagemaker.notebookinstance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerNotebookinstance).__id, ok = v.Value.(string)
 		return
@@ -19055,6 +19556,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSagemakerNotebookinstance).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.sagemaker.notebookinstance.instanceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerNotebookinstance).InstanceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.notebookinstance.lifecycleConfigName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerNotebookinstance).LifecycleConfigName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.notebookinstance.defaultCodeRepository": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerNotebookinstance).DefaultCodeRepository, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.notebookinstance.additionalCodeRepositories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerNotebookinstance).AdditionalCodeRepositories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.sagemaker.notebookinstancedetails.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerNotebookinstancedetails).__id, ok = v.Value.(string)
 		return
@@ -19081,6 +19598,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.sagemaker.notebookinstancedetails.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerNotebookinstancedetails).Subnet, ok = plugin.RawToTValue[*mqlAwsVpcSubnet](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.notebookinstancedetails.ipAddressType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerNotebookinstancedetails).IpAddressType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.notebookinstancedetails.platformIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerNotebookinstancedetails).PlatformIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.notebookinstancedetails.volumeSizeInGB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerNotebookinstancedetails).VolumeSizeInGB, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.notebookinstancedetails.failureReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerNotebookinstancedetails).FailureReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.notebookinstancedetails.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerNotebookinstancedetails).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.notebookinstancedetails.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerNotebookinstancedetails).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.endpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19159,6 +19700,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSagemakerModel).VpcConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.sagemaker.model.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModel).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
 	"aws.sagemaker.trainingjob.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerTrainingjob).__id, ok = v.Value.(string)
 		return
@@ -19225,6 +19770,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.sagemaker.trainingjob.vpcConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerTrainingjob).VpcConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.trainingjob.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerTrainingjob).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.trainingjob.outputDataConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19297,6 +19846,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.sagemaker.processingjob.vpcConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerProcessingjob).VpcConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.processingjob.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerProcessingjob).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.processingjob.processingResources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19427,6 +19980,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSagemakerDomain).DefaultUserSettings, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.sagemaker.domain.securityGroupForDomainBoundary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDomain).SecurityGroupForDomainBoundary, ok = plugin.RawToTValue[*mqlAwsEc2Securitygroup](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.domain.appSecurityGroupManagement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDomain).AppSecurityGroupManagement, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.domain.tagPropagation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDomain).TagPropagation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.domain.singleSignOnApplicationArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDomain).SingleSignOnApplicationArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.domain.failureReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDomain).FailureReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.domain.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDomain).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.domain.defaultExecutionRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDomain).DefaultExecutionRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
 	"aws.sagemaker.inferenceComponent.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerInferenceComponent).__id, ok = v.Value.(string)
 		return
@@ -19489,6 +20070,502 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.sagemaker.inferenceComponent.specification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerInferenceComponent).Specification, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.inferenceComponent.failureReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerInferenceComponent).FailureReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerCluster).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.cluster.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerCluster).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.cluster.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerCluster).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.cluster.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerCluster).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.cluster.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerCluster).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.cluster.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerCluster).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.cluster.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerCluster).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.cluster.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerCluster).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.cluster.instanceGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerCluster).InstanceGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.cluster.orchestrator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerCluster).Orchestrator, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.cluster.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerCluster).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.cluster.nodeRecovery": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerCluster).NodeRecovery, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.cluster.nodeProvisioningMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerCluster).NodeProvisioningMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.cluster.failureMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerCluster).FailureMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.cluster.nodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerCluster).Nodes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterInstanceGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterInstanceGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.clusterInstanceGroup.instanceGroupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterInstanceGroup).InstanceGroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterInstanceGroup.instanceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterInstanceGroup).InstanceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterInstanceGroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterInstanceGroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterInstanceGroup.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterInstanceGroup).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterInstanceGroup.currentCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterInstanceGroup).CurrentCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterInstanceGroup.targetCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterInstanceGroup).TargetCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterInstanceGroup.threadsPerCore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterInstanceGroup).ThreadsPerCore, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterInstanceGroup.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterInstanceGroup).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterInstanceGroup.lifecycleConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterInstanceGroup).LifecycleConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterNode.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterNode).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.clusterNode.instanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterNode).InstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterNode.instanceGroupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterNode).InstanceGroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterNode.instanceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterNode).InstanceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterNode.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterNode).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterNode.statusMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterNode).StatusMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterNode.launchedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterNode).LaunchedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterNode.privateDnsHostname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterNode).PrivateDnsHostname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterNode.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterNode).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.featureGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFeatureGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.featureGroup.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFeatureGroup).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.featureGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFeatureGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.featureGroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFeatureGroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.featureGroup.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFeatureGroup).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.featureGroup.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFeatureGroup).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.featureGroup.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFeatureGroup).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.featureGroup.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFeatureGroup).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.featureGroup.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFeatureGroup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.featureGroup.featureDefinitions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFeatureGroup).FeatureDefinitions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.featureGroup.eventTimeFeatureName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFeatureGroup).EventTimeFeatureName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.featureGroup.recordIdentifierFeatureName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFeatureGroup).RecordIdentifierFeatureName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.featureGroup.offlineStoreConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFeatureGroup).OfflineStoreConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.featureGroup.onlineStoreConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFeatureGroup).OnlineStoreConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.featureGroup.failureReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFeatureGroup).FailureReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.featureGroup.offlineStoreStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFeatureGroup).OfflineStoreStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.featureGroup.onlineStoreTotalSizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFeatureGroup).OnlineStoreTotalSizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.featureDefinition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFeatureDefinition).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.featureDefinition.featureName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFeatureDefinition).FeatureName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.featureDefinition.featureType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFeatureDefinition).FeatureType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.featureDefinition.collectionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFeatureDefinition).CollectionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackage.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackage).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.modelPackage.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackage).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackage.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackage.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackage).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackage.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackage).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackage.approvalStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackage).ApprovalStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackage.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackage).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackage.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackage).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackage.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackage).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackage.modelPackageGroupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackage).ModelPackageGroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackage.modelPackageGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackage).ModelPackageGroup, ok = plugin.RawToTValue[*mqlAwsSagemakerModelPackageGroup](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackage.modelPackageVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackage).ModelPackageVersion, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackage.certifyForMarketplace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackage).CertifyForMarketplace, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackage.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackage).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackage.inferenceSpecification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackage).InferenceSpecification, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackage.approvalDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackage).ApprovalDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackage.modelMetrics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackage).ModelMetrics, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackage.sourceUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackage).SourceUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackage.customerMetadataProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackage).CustomerMetadataProperties, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackage.skipModelValidation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackage).SkipModelValidation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackage.lastModifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackage).LastModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackageGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackageGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.modelPackageGroup.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackageGroup).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackageGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackageGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackageGroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackageGroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackageGroup.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackageGroup).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackageGroup.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackageGroup).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackageGroup.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackageGroup).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackageGroup.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackageGroup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelCard.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelCard).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.modelCard.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelCard).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelCard.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelCard).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelCard.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelCard).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelCard.modelCardStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelCard).ModelCardStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelCard.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelCard).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelCard.lastModifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelCard).LastModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelCard.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelCard).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelCard.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelCard).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelCard.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelCard).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelCard.modelCardVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelCard).ModelCardVersion, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelCard.modelCardProcessingStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelCard).ModelCardProcessingStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.space.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerSpace).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.space.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerSpace).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.space.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerSpace).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.space.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerSpace).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.space.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerSpace).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.space.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerSpace).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.space.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerSpace).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.space.lastModifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerSpace).LastModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.space.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerSpace).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.space.domain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerSpace).Domain, ok = plugin.RawToTValue[*mqlAwsSagemakerDomain](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.space.ownerUserProfileName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerSpace).OwnerUserProfileName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.space.sharingType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerSpace).SharingType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.space.spaceUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerSpace).SpaceUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.space.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerSpace).Settings, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.space.failureReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerSpace).FailureReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.userProfile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerUserProfile).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.userProfile.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerUserProfile).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.userProfile.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerUserProfile).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.userProfile.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerUserProfile).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.userProfile.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerUserProfile).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.userProfile.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerUserProfile).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.userProfile.lastModifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerUserProfile).LastModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.userProfile.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerUserProfile).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.userProfile.domain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerUserProfile).Domain, ok = plugin.RawToTValue[*mqlAwsSagemakerDomain](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.userProfile.failureReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerUserProfile).FailureReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.userProfile.singleSignOnUserIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerUserProfile).SingleSignOnUserIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.userProfile.singleSignOnUserValue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerUserProfile).SingleSignOnUserValue, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.sns.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -44158,6 +45235,13 @@ type mqlAwsSagemaker struct {
 	Pipelines           plugin.TValue[[]any]
 	Domains             plugin.TValue[[]any]
 	InferenceComponents plugin.TValue[[]any]
+	Clusters            plugin.TValue[[]any]
+	FeatureGroups       plugin.TValue[[]any]
+	ModelPackages       plugin.TValue[[]any]
+	ModelPackageGroups  plugin.TValue[[]any]
+	ModelCards          plugin.TValue[[]any]
+	Spaces              plugin.TValue[[]any]
+	UserProfiles        plugin.TValue[[]any]
 }
 
 // createAwsSagemaker creates a new instance of this resource
@@ -44325,20 +45409,136 @@ func (c *mqlAwsSagemaker) GetInferenceComponents() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsSagemaker) GetClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Clusters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker", c.__id, "clusters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.clusters()
+	})
+}
+
+func (c *mqlAwsSagemaker) GetFeatureGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FeatureGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker", c.__id, "featureGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.featureGroups()
+	})
+}
+
+func (c *mqlAwsSagemaker) GetModelPackages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ModelPackages, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker", c.__id, "modelPackages")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.modelPackages()
+	})
+}
+
+func (c *mqlAwsSagemaker) GetModelPackageGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ModelPackageGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker", c.__id, "modelPackageGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.modelPackageGroups()
+	})
+}
+
+func (c *mqlAwsSagemaker) GetModelCards() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ModelCards, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker", c.__id, "modelCards")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.modelCards()
+	})
+}
+
+func (c *mqlAwsSagemaker) GetSpaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Spaces, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker", c.__id, "spaces")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.spaces()
+	})
+}
+
+func (c *mqlAwsSagemaker) GetUserProfiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UserProfiles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker", c.__id, "userProfiles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.userProfiles()
+	})
+}
+
 // mqlAwsSagemakerNotebookinstance for the aws.sagemaker.notebookinstance resource
 type mqlAwsSagemakerNotebookinstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsSagemakerNotebookinstanceInternal
-	Arn            plugin.TValue[string]
-	Name           plugin.TValue[string]
-	Details        plugin.TValue[*mqlAwsSagemakerNotebookinstancedetails]
-	Region         plugin.TValue[string]
-	Tags           plugin.TValue[map[string]any]
-	CreatedAt      plugin.TValue[*time.Time]
-	LastModifiedAt plugin.TValue[*time.Time]
-	Status         plugin.TValue[string]
-	Url            plugin.TValue[string]
+	Arn                        plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	Details                    plugin.TValue[*mqlAwsSagemakerNotebookinstancedetails]
+	Region                     plugin.TValue[string]
+	Tags                       plugin.TValue[map[string]any]
+	CreatedAt                  plugin.TValue[*time.Time]
+	LastModifiedAt             plugin.TValue[*time.Time]
+	Status                     plugin.TValue[string]
+	Url                        plugin.TValue[string]
+	InstanceType               plugin.TValue[string]
+	LifecycleConfigName        plugin.TValue[string]
+	DefaultCodeRepository      plugin.TValue[string]
+	AdditionalCodeRepositories plugin.TValue[[]any]
 }
 
 // createAwsSagemakerNotebookinstance creates a new instance of this resource
@@ -44428,6 +45628,22 @@ func (c *mqlAwsSagemakerNotebookinstance) GetUrl() *plugin.TValue[string] {
 	return &c.Url
 }
 
+func (c *mqlAwsSagemakerNotebookinstance) GetInstanceType() *plugin.TValue[string] {
+	return &c.InstanceType
+}
+
+func (c *mqlAwsSagemakerNotebookinstance) GetLifecycleConfigName() *plugin.TValue[string] {
+	return &c.LifecycleConfigName
+}
+
+func (c *mqlAwsSagemakerNotebookinstance) GetDefaultCodeRepository() *plugin.TValue[string] {
+	return &c.DefaultCodeRepository
+}
+
+func (c *mqlAwsSagemakerNotebookinstance) GetAdditionalCodeRepositories() *plugin.TValue[[]any] {
+	return &c.AdditionalCodeRepositories
+}
+
 // mqlAwsSagemakerNotebookinstancedetails for the aws.sagemaker.notebookinstancedetails resource
 type mqlAwsSagemakerNotebookinstancedetails struct {
 	MqlRuntime *plugin.Runtime
@@ -44439,6 +45655,12 @@ type mqlAwsSagemakerNotebookinstancedetails struct {
 	RootAccess                            plugin.TValue[bool]
 	MinimumInstanceMetadataServiceVersion plugin.TValue[string]
 	Subnet                                plugin.TValue[*mqlAwsVpcSubnet]
+	IpAddressType                         plugin.TValue[string]
+	PlatformIdentifier                    plugin.TValue[string]
+	VolumeSizeInGB                        plugin.TValue[int64]
+	FailureReason                         plugin.TValue[string]
+	IamRole                               plugin.TValue[*mqlAwsIamRole]
+	SecurityGroups                        plugin.TValue[[]any]
 }
 
 // createAwsSagemakerNotebookinstancedetails creates a new instance of this resource
@@ -44523,6 +45745,62 @@ func (c *mqlAwsSagemakerNotebookinstancedetails) GetSubnet() *plugin.TValue[*mql
 		}
 
 		return c.subnet()
+	})
+}
+
+func (c *mqlAwsSagemakerNotebookinstancedetails) GetIpAddressType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.IpAddressType, func() (string, error) {
+		return c.ipAddressType()
+	})
+}
+
+func (c *mqlAwsSagemakerNotebookinstancedetails) GetPlatformIdentifier() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PlatformIdentifier, func() (string, error) {
+		return c.platformIdentifier()
+	})
+}
+
+func (c *mqlAwsSagemakerNotebookinstancedetails) GetVolumeSizeInGB() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.VolumeSizeInGB, func() (int64, error) {
+		return c.volumeSizeInGB()
+	})
+}
+
+func (c *mqlAwsSagemakerNotebookinstancedetails) GetFailureReason() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.FailureReason, func() (string, error) {
+		return c.failureReason()
+	})
+}
+
+func (c *mqlAwsSagemakerNotebookinstancedetails) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.notebookinstancedetails", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsSagemakerNotebookinstancedetails) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.notebookinstancedetails", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
 	})
 }
 
@@ -44628,6 +45906,7 @@ type mqlAwsSagemakerModel struct {
 	IamRole                plugin.TValue[*mqlAwsIamRole]
 	PrimaryContainer       plugin.TValue[any]
 	VpcConfig              plugin.TValue[any]
+	Vpc                    plugin.TValue[*mqlAwsVpc]
 }
 
 // createAwsSagemakerModel creates a new instance of this resource
@@ -44723,6 +46002,22 @@ func (c *mqlAwsSagemakerModel) GetVpcConfig() *plugin.TValue[any] {
 	})
 }
 
+func (c *mqlAwsSagemakerModel) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.model", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
 // mqlAwsSagemakerTrainingjob for the aws.sagemaker.trainingjob resource
 type mqlAwsSagemakerTrainingjob struct {
 	MqlRuntime *plugin.Runtime
@@ -44744,6 +46039,7 @@ type mqlAwsSagemakerTrainingjob struct {
 	FailureReason                         plugin.TValue[string]
 	BillableTimeInSeconds                 plugin.TValue[int64]
 	VpcConfig                             plugin.TValue[any]
+	Vpc                                   plugin.TValue[*mqlAwsVpc]
 	OutputDataConfig                      plugin.TValue[any]
 	ResourceConfig                        plugin.TValue[any]
 	StoppingCondition                     plugin.TValue[any]
@@ -44878,6 +46174,22 @@ func (c *mqlAwsSagemakerTrainingjob) GetVpcConfig() *plugin.TValue[any] {
 	})
 }
 
+func (c *mqlAwsSagemakerTrainingjob) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.trainingjob", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
 func (c *mqlAwsSagemakerTrainingjob) GetOutputDataConfig() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.OutputDataConfig, func() (any, error) {
 		return c.outputDataConfig()
@@ -44915,6 +46227,7 @@ type mqlAwsSagemakerProcessingjob struct {
 	EnableNetworkIsolation                plugin.TValue[bool]
 	EnableInterContainerTrafficEncryption plugin.TValue[bool]
 	VpcConfig                             plugin.TValue[any]
+	Vpc                                   plugin.TValue[*mqlAwsVpc]
 	ProcessingResources                   plugin.TValue[any]
 	Environment                           plugin.TValue[map[string]any]
 }
@@ -45029,6 +46342,22 @@ func (c *mqlAwsSagemakerProcessingjob) GetEnableInterContainerTrafficEncryption(
 func (c *mqlAwsSagemakerProcessingjob) GetVpcConfig() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.VpcConfig, func() (any, error) {
 		return c.vpcConfig()
+	})
+}
+
+func (c *mqlAwsSagemakerProcessingjob) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.processingjob", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
 	})
 }
 
@@ -45178,21 +46507,28 @@ type mqlAwsSagemakerDomain struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsSagemakerDomainInternal
-	Arn                  plugin.TValue[string]
-	DomainId             plugin.TValue[string]
-	Name                 plugin.TValue[string]
-	Region               plugin.TValue[string]
-	Status               plugin.TValue[string]
-	Url                  plugin.TValue[string]
-	CreatedAt            plugin.TValue[*time.Time]
-	LastModifiedAt       plugin.TValue[*time.Time]
-	Tags                 plugin.TValue[map[string]any]
-	AuthMode             plugin.TValue[string]
-	AppNetworkAccessType plugin.TValue[string]
-	Vpc                  plugin.TValue[*mqlAwsVpc]
-	KmsKey               plugin.TValue[*mqlAwsKmsKey]
-	HomeEfsFileSystemId  plugin.TValue[string]
-	DefaultUserSettings  plugin.TValue[any]
+	Arn                            plugin.TValue[string]
+	DomainId                       plugin.TValue[string]
+	Name                           plugin.TValue[string]
+	Region                         plugin.TValue[string]
+	Status                         plugin.TValue[string]
+	Url                            plugin.TValue[string]
+	CreatedAt                      plugin.TValue[*time.Time]
+	LastModifiedAt                 plugin.TValue[*time.Time]
+	Tags                           plugin.TValue[map[string]any]
+	AuthMode                       plugin.TValue[string]
+	AppNetworkAccessType           plugin.TValue[string]
+	Vpc                            plugin.TValue[*mqlAwsVpc]
+	KmsKey                         plugin.TValue[*mqlAwsKmsKey]
+	HomeEfsFileSystemId            plugin.TValue[string]
+	DefaultUserSettings            plugin.TValue[any]
+	SecurityGroupForDomainBoundary plugin.TValue[*mqlAwsEc2Securitygroup]
+	AppSecurityGroupManagement     plugin.TValue[string]
+	TagPropagation                 plugin.TValue[string]
+	SingleSignOnApplicationArn     plugin.TValue[string]
+	FailureReason                  plugin.TValue[string]
+	Subnets                        plugin.TValue[[]any]
+	DefaultExecutionRole           plugin.TValue[*mqlAwsIamRole]
 }
 
 // createAwsSagemakerDomain creates a new instance of this resource
@@ -45326,6 +46662,78 @@ func (c *mqlAwsSagemakerDomain) GetDefaultUserSettings() *plugin.TValue[any] {
 	})
 }
 
+func (c *mqlAwsSagemakerDomain) GetSecurityGroupForDomainBoundary() *plugin.TValue[*mqlAwsEc2Securitygroup] {
+	return plugin.GetOrCompute[*mqlAwsEc2Securitygroup](&c.SecurityGroupForDomainBoundary, func() (*mqlAwsEc2Securitygroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.domain", c.__id, "securityGroupForDomainBoundary")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Securitygroup), nil
+			}
+		}
+
+		return c.securityGroupForDomainBoundary()
+	})
+}
+
+func (c *mqlAwsSagemakerDomain) GetAppSecurityGroupManagement() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AppSecurityGroupManagement, func() (string, error) {
+		return c.appSecurityGroupManagement()
+	})
+}
+
+func (c *mqlAwsSagemakerDomain) GetTagPropagation() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TagPropagation, func() (string, error) {
+		return c.tagPropagation()
+	})
+}
+
+func (c *mqlAwsSagemakerDomain) GetSingleSignOnApplicationArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SingleSignOnApplicationArn, func() (string, error) {
+		return c.singleSignOnApplicationArn()
+	})
+}
+
+func (c *mqlAwsSagemakerDomain) GetFailureReason() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.FailureReason, func() (string, error) {
+		return c.failureReason()
+	})
+}
+
+func (c *mqlAwsSagemakerDomain) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.domain", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
+}
+
+func (c *mqlAwsSagemakerDomain) GetDefaultExecutionRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.DefaultExecutionRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.domain", c.__id, "defaultExecutionRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.defaultExecutionRole()
+	})
+}
+
 // mqlAwsSagemakerInferenceComponent for the aws.sagemaker.inferenceComponent resource
 type mqlAwsSagemakerInferenceComponent struct {
 	MqlRuntime *plugin.Runtime
@@ -45346,6 +46754,7 @@ type mqlAwsSagemakerInferenceComponent struct {
 	CopyCount         plugin.TValue[int64]
 	RuntimeConfig     plugin.TValue[any]
 	Specification     plugin.TValue[any]
+	FailureReason     plugin.TValue[string]
 }
 
 // createAwsSagemakerInferenceComponent creates a new instance of this resource
@@ -45464,6 +46873,1241 @@ func (c *mqlAwsSagemakerInferenceComponent) GetRuntimeConfig() *plugin.TValue[an
 func (c *mqlAwsSagemakerInferenceComponent) GetSpecification() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.Specification, func() (any, error) {
 		return c.specification()
+	})
+}
+
+func (c *mqlAwsSagemakerInferenceComponent) GetFailureReason() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.FailureReason, func() (string, error) {
+		return c.failureReason()
+	})
+}
+
+// mqlAwsSagemakerCluster for the aws.sagemaker.cluster resource
+type mqlAwsSagemakerCluster struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerClusterInternal
+	Arn                  plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Region               plugin.TValue[string]
+	Status               plugin.TValue[string]
+	CreatedAt            plugin.TValue[*time.Time]
+	Tags                 plugin.TValue[map[string]any]
+	IamRole              plugin.TValue[*mqlAwsIamRole]
+	InstanceGroups       plugin.TValue[[]any]
+	Orchestrator         plugin.TValue[any]
+	Vpc                  plugin.TValue[*mqlAwsVpc]
+	NodeRecovery         plugin.TValue[string]
+	NodeProvisioningMode plugin.TValue[string]
+	FailureMessage       plugin.TValue[string]
+	Nodes                plugin.TValue[[]any]
+}
+
+// createAwsSagemakerCluster creates a new instance of this resource
+func createAwsSagemakerCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerCluster{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.cluster", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerCluster) MqlName() string {
+	return "aws.sagemaker.cluster"
+}
+
+func (c *mqlAwsSagemakerCluster) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerCluster) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSagemakerCluster) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSagemakerCluster) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSagemakerCluster) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsSagemakerCluster) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSagemakerCluster) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsSagemakerCluster) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.cluster", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsSagemakerCluster) GetInstanceGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InstanceGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.cluster", c.__id, "instanceGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.instanceGroups()
+	})
+}
+
+func (c *mqlAwsSagemakerCluster) GetOrchestrator() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Orchestrator, func() (any, error) {
+		return c.orchestrator()
+	})
+}
+
+func (c *mqlAwsSagemakerCluster) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.cluster", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
+func (c *mqlAwsSagemakerCluster) GetNodeRecovery() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.NodeRecovery, func() (string, error) {
+		return c.nodeRecovery()
+	})
+}
+
+func (c *mqlAwsSagemakerCluster) GetNodeProvisioningMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.NodeProvisioningMode, func() (string, error) {
+		return c.nodeProvisioningMode()
+	})
+}
+
+func (c *mqlAwsSagemakerCluster) GetFailureMessage() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.FailureMessage, func() (string, error) {
+		return c.failureMessage()
+	})
+}
+
+func (c *mqlAwsSagemakerCluster) GetNodes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Nodes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.cluster", c.__id, "nodes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.nodes()
+	})
+}
+
+// mqlAwsSagemakerClusterInstanceGroup for the aws.sagemaker.clusterInstanceGroup resource
+type mqlAwsSagemakerClusterInstanceGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerClusterInstanceGroupInternal
+	InstanceGroupName plugin.TValue[string]
+	InstanceType      plugin.TValue[string]
+	Region            plugin.TValue[string]
+	Status            plugin.TValue[string]
+	CurrentCount      plugin.TValue[int64]
+	TargetCount       plugin.TValue[int64]
+	ThreadsPerCore    plugin.TValue[int64]
+	IamRole           plugin.TValue[*mqlAwsIamRole]
+	LifecycleConfig   plugin.TValue[any]
+}
+
+// createAwsSagemakerClusterInstanceGroup creates a new instance of this resource
+func createAwsSagemakerClusterInstanceGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerClusterInstanceGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.clusterInstanceGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerClusterInstanceGroup) MqlName() string {
+	return "aws.sagemaker.clusterInstanceGroup"
+}
+
+func (c *mqlAwsSagemakerClusterInstanceGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerClusterInstanceGroup) GetInstanceGroupName() *plugin.TValue[string] {
+	return &c.InstanceGroupName
+}
+
+func (c *mqlAwsSagemakerClusterInstanceGroup) GetInstanceType() *plugin.TValue[string] {
+	return &c.InstanceType
+}
+
+func (c *mqlAwsSagemakerClusterInstanceGroup) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSagemakerClusterInstanceGroup) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsSagemakerClusterInstanceGroup) GetCurrentCount() *plugin.TValue[int64] {
+	return &c.CurrentCount
+}
+
+func (c *mqlAwsSagemakerClusterInstanceGroup) GetTargetCount() *plugin.TValue[int64] {
+	return &c.TargetCount
+}
+
+func (c *mqlAwsSagemakerClusterInstanceGroup) GetThreadsPerCore() *plugin.TValue[int64] {
+	return &c.ThreadsPerCore
+}
+
+func (c *mqlAwsSagemakerClusterInstanceGroup) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.clusterInstanceGroup", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsSagemakerClusterInstanceGroup) GetLifecycleConfig() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.LifecycleConfig, func() (any, error) {
+		return c.lifecycleConfig()
+	})
+}
+
+// mqlAwsSagemakerClusterNode for the aws.sagemaker.clusterNode resource
+type mqlAwsSagemakerClusterNode struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerClusterNodeInternal
+	InstanceId         plugin.TValue[string]
+	InstanceGroupName  plugin.TValue[string]
+	InstanceType       plugin.TValue[string]
+	Status             plugin.TValue[string]
+	StatusMessage      plugin.TValue[string]
+	LaunchedAt         plugin.TValue[*time.Time]
+	PrivateDnsHostname plugin.TValue[string]
+	Region             plugin.TValue[string]
+}
+
+// createAwsSagemakerClusterNode creates a new instance of this resource
+func createAwsSagemakerClusterNode(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerClusterNode{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.clusterNode", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerClusterNode) MqlName() string {
+	return "aws.sagemaker.clusterNode"
+}
+
+func (c *mqlAwsSagemakerClusterNode) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerClusterNode) GetInstanceId() *plugin.TValue[string] {
+	return &c.InstanceId
+}
+
+func (c *mqlAwsSagemakerClusterNode) GetInstanceGroupName() *plugin.TValue[string] {
+	return &c.InstanceGroupName
+}
+
+func (c *mqlAwsSagemakerClusterNode) GetInstanceType() *plugin.TValue[string] {
+	return &c.InstanceType
+}
+
+func (c *mqlAwsSagemakerClusterNode) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsSagemakerClusterNode) GetStatusMessage() *plugin.TValue[string] {
+	return &c.StatusMessage
+}
+
+func (c *mqlAwsSagemakerClusterNode) GetLaunchedAt() *plugin.TValue[*time.Time] {
+	return &c.LaunchedAt
+}
+
+func (c *mqlAwsSagemakerClusterNode) GetPrivateDnsHostname() *plugin.TValue[string] {
+	return &c.PrivateDnsHostname
+}
+
+func (c *mqlAwsSagemakerClusterNode) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsSagemakerFeatureGroup for the aws.sagemaker.featureGroup resource
+type mqlAwsSagemakerFeatureGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerFeatureGroupInternal
+	Arn                         plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	Region                      plugin.TValue[string]
+	Status                      plugin.TValue[string]
+	CreatedAt                   plugin.TValue[*time.Time]
+	Tags                        plugin.TValue[map[string]any]
+	IamRole                     plugin.TValue[*mqlAwsIamRole]
+	Description                 plugin.TValue[string]
+	FeatureDefinitions          plugin.TValue[[]any]
+	EventTimeFeatureName        plugin.TValue[string]
+	RecordIdentifierFeatureName plugin.TValue[string]
+	OfflineStoreConfig          plugin.TValue[any]
+	OnlineStoreConfig           plugin.TValue[any]
+	FailureReason               plugin.TValue[string]
+	OfflineStoreStatus          plugin.TValue[string]
+	OnlineStoreTotalSizeBytes   plugin.TValue[int64]
+}
+
+// createAwsSagemakerFeatureGroup creates a new instance of this resource
+func createAwsSagemakerFeatureGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerFeatureGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.featureGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerFeatureGroup) MqlName() string {
+	return "aws.sagemaker.featureGroup"
+}
+
+func (c *mqlAwsSagemakerFeatureGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerFeatureGroup) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSagemakerFeatureGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSagemakerFeatureGroup) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSagemakerFeatureGroup) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsSagemakerFeatureGroup) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSagemakerFeatureGroup) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsSagemakerFeatureGroup) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.featureGroup", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsSagemakerFeatureGroup) GetDescription() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
+		return c.description()
+	})
+}
+
+func (c *mqlAwsSagemakerFeatureGroup) GetFeatureDefinitions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FeatureDefinitions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.featureGroup", c.__id, "featureDefinitions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.featureDefinitions()
+	})
+}
+
+func (c *mqlAwsSagemakerFeatureGroup) GetEventTimeFeatureName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.EventTimeFeatureName, func() (string, error) {
+		return c.eventTimeFeatureName()
+	})
+}
+
+func (c *mqlAwsSagemakerFeatureGroup) GetRecordIdentifierFeatureName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RecordIdentifierFeatureName, func() (string, error) {
+		return c.recordIdentifierFeatureName()
+	})
+}
+
+func (c *mqlAwsSagemakerFeatureGroup) GetOfflineStoreConfig() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.OfflineStoreConfig, func() (any, error) {
+		return c.offlineStoreConfig()
+	})
+}
+
+func (c *mqlAwsSagemakerFeatureGroup) GetOnlineStoreConfig() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.OnlineStoreConfig, func() (any, error) {
+		return c.onlineStoreConfig()
+	})
+}
+
+func (c *mqlAwsSagemakerFeatureGroup) GetFailureReason() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.FailureReason, func() (string, error) {
+		return c.failureReason()
+	})
+}
+
+func (c *mqlAwsSagemakerFeatureGroup) GetOfflineStoreStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.OfflineStoreStatus, func() (string, error) {
+		return c.offlineStoreStatus()
+	})
+}
+
+func (c *mqlAwsSagemakerFeatureGroup) GetOnlineStoreTotalSizeBytes() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.OnlineStoreTotalSizeBytes, func() (int64, error) {
+		return c.onlineStoreTotalSizeBytes()
+	})
+}
+
+// mqlAwsSagemakerFeatureDefinition for the aws.sagemaker.featureDefinition resource
+type mqlAwsSagemakerFeatureDefinition struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerFeatureDefinitionInternal
+	FeatureName    plugin.TValue[string]
+	FeatureType    plugin.TValue[string]
+	CollectionType plugin.TValue[string]
+}
+
+// createAwsSagemakerFeatureDefinition creates a new instance of this resource
+func createAwsSagemakerFeatureDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerFeatureDefinition{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.featureDefinition", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerFeatureDefinition) MqlName() string {
+	return "aws.sagemaker.featureDefinition"
+}
+
+func (c *mqlAwsSagemakerFeatureDefinition) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerFeatureDefinition) GetFeatureName() *plugin.TValue[string] {
+	return &c.FeatureName
+}
+
+func (c *mqlAwsSagemakerFeatureDefinition) GetFeatureType() *plugin.TValue[string] {
+	return &c.FeatureType
+}
+
+func (c *mqlAwsSagemakerFeatureDefinition) GetCollectionType() *plugin.TValue[string] {
+	return &c.CollectionType
+}
+
+// mqlAwsSagemakerModelPackage for the aws.sagemaker.modelPackage resource
+type mqlAwsSagemakerModelPackage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerModelPackageInternal
+	Arn                        plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	Region                     plugin.TValue[string]
+	Status                     plugin.TValue[string]
+	ApprovalStatus             plugin.TValue[string]
+	CreatedAt                  plugin.TValue[*time.Time]
+	Tags                       plugin.TValue[map[string]any]
+	Description                plugin.TValue[string]
+	ModelPackageGroupName      plugin.TValue[string]
+	ModelPackageGroup          plugin.TValue[*mqlAwsSagemakerModelPackageGroup]
+	ModelPackageVersion        plugin.TValue[int64]
+	CertifyForMarketplace      plugin.TValue[bool]
+	KmsKey                     plugin.TValue[*mqlAwsKmsKey]
+	InferenceSpecification     plugin.TValue[any]
+	ApprovalDescription        plugin.TValue[string]
+	ModelMetrics               plugin.TValue[any]
+	SourceUri                  plugin.TValue[string]
+	CustomerMetadataProperties plugin.TValue[map[string]any]
+	SkipModelValidation        plugin.TValue[string]
+	LastModifiedTime           plugin.TValue[*time.Time]
+}
+
+// createAwsSagemakerModelPackage creates a new instance of this resource
+func createAwsSagemakerModelPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerModelPackage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.modelPackage", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerModelPackage) MqlName() string {
+	return "aws.sagemaker.modelPackage"
+}
+
+func (c *mqlAwsSagemakerModelPackage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerModelPackage) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSagemakerModelPackage) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSagemakerModelPackage) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSagemakerModelPackage) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsSagemakerModelPackage) GetApprovalStatus() *plugin.TValue[string] {
+	return &c.ApprovalStatus
+}
+
+func (c *mqlAwsSagemakerModelPackage) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSagemakerModelPackage) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsSagemakerModelPackage) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsSagemakerModelPackage) GetModelPackageGroupName() *plugin.TValue[string] {
+	return &c.ModelPackageGroupName
+}
+
+func (c *mqlAwsSagemakerModelPackage) GetModelPackageGroup() *plugin.TValue[*mqlAwsSagemakerModelPackageGroup] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerModelPackageGroup](&c.ModelPackageGroup, func() (*mqlAwsSagemakerModelPackageGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.modelPackage", c.__id, "modelPackageGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerModelPackageGroup), nil
+			}
+		}
+
+		return c.modelPackageGroup()
+	})
+}
+
+func (c *mqlAwsSagemakerModelPackage) GetModelPackageVersion() *plugin.TValue[int64] {
+	return &c.ModelPackageVersion
+}
+
+func (c *mqlAwsSagemakerModelPackage) GetCertifyForMarketplace() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.CertifyForMarketplace, func() (bool, error) {
+		return c.certifyForMarketplace()
+	})
+}
+
+func (c *mqlAwsSagemakerModelPackage) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.modelPackage", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsSagemakerModelPackage) GetInferenceSpecification() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.InferenceSpecification, func() (any, error) {
+		return c.inferenceSpecification()
+	})
+}
+
+func (c *mqlAwsSagemakerModelPackage) GetApprovalDescription() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ApprovalDescription, func() (string, error) {
+		return c.approvalDescription()
+	})
+}
+
+func (c *mqlAwsSagemakerModelPackage) GetModelMetrics() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.ModelMetrics, func() (any, error) {
+		return c.modelMetrics()
+	})
+}
+
+func (c *mqlAwsSagemakerModelPackage) GetSourceUri() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SourceUri, func() (string, error) {
+		return c.sourceUri()
+	})
+}
+
+func (c *mqlAwsSagemakerModelPackage) GetCustomerMetadataProperties() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.CustomerMetadataProperties, func() (map[string]any, error) {
+		return c.customerMetadataProperties()
+	})
+}
+
+func (c *mqlAwsSagemakerModelPackage) GetSkipModelValidation() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SkipModelValidation, func() (string, error) {
+		return c.skipModelValidation()
+	})
+}
+
+func (c *mqlAwsSagemakerModelPackage) GetLastModifiedTime() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LastModifiedTime, func() (*time.Time, error) {
+		return c.lastModifiedTime()
+	})
+}
+
+// mqlAwsSagemakerModelPackageGroup for the aws.sagemaker.modelPackageGroup resource
+type mqlAwsSagemakerModelPackageGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerModelPackageGroupInternal
+	Arn         plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Region      plugin.TValue[string]
+	Status      plugin.TValue[string]
+	CreatedAt   plugin.TValue[*time.Time]
+	Tags        plugin.TValue[map[string]any]
+	Description plugin.TValue[string]
+}
+
+// createAwsSagemakerModelPackageGroup creates a new instance of this resource
+func createAwsSagemakerModelPackageGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerModelPackageGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.modelPackageGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerModelPackageGroup) MqlName() string {
+	return "aws.sagemaker.modelPackageGroup"
+}
+
+func (c *mqlAwsSagemakerModelPackageGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerModelPackageGroup) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSagemakerModelPackageGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSagemakerModelPackageGroup) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSagemakerModelPackageGroup) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsSagemakerModelPackageGroup) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSagemakerModelPackageGroup) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsSagemakerModelPackageGroup) GetDescription() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
+		return c.description()
+	})
+}
+
+// mqlAwsSagemakerModelCard for the aws.sagemaker.modelCard resource
+type mqlAwsSagemakerModelCard struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerModelCardInternal
+	Arn                       plugin.TValue[string]
+	Name                      plugin.TValue[string]
+	Region                    plugin.TValue[string]
+	ModelCardStatus           plugin.TValue[string]
+	CreatedAt                 plugin.TValue[*time.Time]
+	LastModifiedAt            plugin.TValue[*time.Time]
+	Tags                      plugin.TValue[map[string]any]
+	KmsKey                    plugin.TValue[*mqlAwsKmsKey]
+	Content                   plugin.TValue[string]
+	ModelCardVersion          plugin.TValue[int64]
+	ModelCardProcessingStatus plugin.TValue[string]
+}
+
+// createAwsSagemakerModelCard creates a new instance of this resource
+func createAwsSagemakerModelCard(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerModelCard{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.modelCard", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerModelCard) MqlName() string {
+	return "aws.sagemaker.modelCard"
+}
+
+func (c *mqlAwsSagemakerModelCard) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerModelCard) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSagemakerModelCard) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSagemakerModelCard) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSagemakerModelCard) GetModelCardStatus() *plugin.TValue[string] {
+	return &c.ModelCardStatus
+}
+
+func (c *mqlAwsSagemakerModelCard) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSagemakerModelCard) GetLastModifiedAt() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedAt
+}
+
+func (c *mqlAwsSagemakerModelCard) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsSagemakerModelCard) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.modelCard", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsSagemakerModelCard) GetContent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		return c.content()
+	})
+}
+
+func (c *mqlAwsSagemakerModelCard) GetModelCardVersion() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ModelCardVersion, func() (int64, error) {
+		return c.modelCardVersion()
+	})
+}
+
+func (c *mqlAwsSagemakerModelCard) GetModelCardProcessingStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ModelCardProcessingStatus, func() (string, error) {
+		return c.modelCardProcessingStatus()
+	})
+}
+
+// mqlAwsSagemakerSpace for the aws.sagemaker.space resource
+type mqlAwsSagemakerSpace struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerSpaceInternal
+	Arn                  plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Region               plugin.TValue[string]
+	Status               plugin.TValue[string]
+	DisplayName          plugin.TValue[string]
+	CreatedAt            plugin.TValue[*time.Time]
+	LastModifiedAt       plugin.TValue[*time.Time]
+	Tags                 plugin.TValue[map[string]any]
+	Domain               plugin.TValue[*mqlAwsSagemakerDomain]
+	OwnerUserProfileName plugin.TValue[string]
+	SharingType          plugin.TValue[string]
+	SpaceUrl             plugin.TValue[string]
+	Settings             plugin.TValue[any]
+	FailureReason        plugin.TValue[string]
+}
+
+// createAwsSagemakerSpace creates a new instance of this resource
+func createAwsSagemakerSpace(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerSpace{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.space", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerSpace) MqlName() string {
+	return "aws.sagemaker.space"
+}
+
+func (c *mqlAwsSagemakerSpace) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerSpace) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSagemakerSpace) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSagemakerSpace) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSagemakerSpace) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsSagemakerSpace) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlAwsSagemakerSpace) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSagemakerSpace) GetLastModifiedAt() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedAt
+}
+
+func (c *mqlAwsSagemakerSpace) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsSagemakerSpace) GetDomain() *plugin.TValue[*mqlAwsSagemakerDomain] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerDomain](&c.Domain, func() (*mqlAwsSagemakerDomain, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.space", c.__id, "domain")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerDomain), nil
+			}
+		}
+
+		return c.domain()
+	})
+}
+
+func (c *mqlAwsSagemakerSpace) GetOwnerUserProfileName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.OwnerUserProfileName, func() (string, error) {
+		return c.ownerUserProfileName()
+	})
+}
+
+func (c *mqlAwsSagemakerSpace) GetSharingType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SharingType, func() (string, error) {
+		return c.sharingType()
+	})
+}
+
+func (c *mqlAwsSagemakerSpace) GetSpaceUrl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SpaceUrl, func() (string, error) {
+		return c.spaceUrl()
+	})
+}
+
+func (c *mqlAwsSagemakerSpace) GetSettings() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Settings, func() (any, error) {
+		return c.settings()
+	})
+}
+
+func (c *mqlAwsSagemakerSpace) GetFailureReason() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.FailureReason, func() (string, error) {
+		return c.failureReason()
+	})
+}
+
+// mqlAwsSagemakerUserProfile for the aws.sagemaker.userProfile resource
+type mqlAwsSagemakerUserProfile struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerUserProfileInternal
+	Arn                        plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	Region                     plugin.TValue[string]
+	Status                     plugin.TValue[string]
+	CreatedAt                  plugin.TValue[*time.Time]
+	LastModifiedAt             plugin.TValue[*time.Time]
+	Tags                       plugin.TValue[map[string]any]
+	Domain                     plugin.TValue[*mqlAwsSagemakerDomain]
+	FailureReason              plugin.TValue[string]
+	SingleSignOnUserIdentifier plugin.TValue[string]
+	SingleSignOnUserValue      plugin.TValue[string]
+}
+
+// createAwsSagemakerUserProfile creates a new instance of this resource
+func createAwsSagemakerUserProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerUserProfile{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.userProfile", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerUserProfile) MqlName() string {
+	return "aws.sagemaker.userProfile"
+}
+
+func (c *mqlAwsSagemakerUserProfile) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerUserProfile) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSagemakerUserProfile) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSagemakerUserProfile) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSagemakerUserProfile) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsSagemakerUserProfile) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSagemakerUserProfile) GetLastModifiedAt() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedAt
+}
+
+func (c *mqlAwsSagemakerUserProfile) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsSagemakerUserProfile) GetDomain() *plugin.TValue[*mqlAwsSagemakerDomain] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerDomain](&c.Domain, func() (*mqlAwsSagemakerDomain, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.userProfile", c.__id, "domain")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerDomain), nil
+			}
+		}
+
+		return c.domain()
+	})
+}
+
+func (c *mqlAwsSagemakerUserProfile) GetFailureReason() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.FailureReason, func() (string, error) {
+		return c.failureReason()
+	})
+}
+
+func (c *mqlAwsSagemakerUserProfile) GetSingleSignOnUserIdentifier() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SingleSignOnUserIdentifier, func() (string, error) {
+		return c.singleSignOnUserIdentifier()
+	})
+}
+
+func (c *mqlAwsSagemakerUserProfile) GetSingleSignOnUserValue() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SingleSignOnUserValue, func() (string, error) {
+		return c.singleSignOnUserValue()
 	})
 }
 

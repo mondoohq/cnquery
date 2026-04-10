@@ -1,7 +1,7 @@
 {
   "provider": "aws",
-  "version": "13.10.0",
-  "generated_at": "2026-04-08T16:03:53-07:00",
+  "version": "13.12.0",
+  "generated_at": "2026-04-10T12:51:16-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -397,23 +397,38 @@
     "s3:GetPublicAccessBlock",
     "s3:ListBucketMetricsConfigurations",
     "s3:ListBuckets",
+    "sagemaker:DescribeCluster",
     "sagemaker:DescribeDomain",
     "sagemaker:DescribeEndpointConfig",
+    "sagemaker:DescribeFeatureGroup",
     "sagemaker:DescribeInferenceComponent",
     "sagemaker:DescribeModel",
+    "sagemaker:DescribeModelCard",
+    "sagemaker:DescribeModelPackage",
+    "sagemaker:DescribeModelPackageGroup",
     "sagemaker:DescribeNotebookInstance",
     "sagemaker:DescribePipeline",
     "sagemaker:DescribeProcessingJob",
+    "sagemaker:DescribeSpace",
     "sagemaker:DescribeTrainingJob",
+    "sagemaker:DescribeUserProfile",
+    "sagemaker:ListClusterNodes",
+    "sagemaker:ListClusters",
     "sagemaker:ListDomains",
     "sagemaker:ListEndpoints",
+    "sagemaker:ListFeatureGroups",
     "sagemaker:ListInferenceComponents",
+    "sagemaker:ListModelCards",
+    "sagemaker:ListModelPackageGroups",
+    "sagemaker:ListModelPackages",
     "sagemaker:ListModels",
     "sagemaker:ListNotebookInstances",
     "sagemaker:ListPipelines",
     "sagemaker:ListProcessingJobs",
+    "sagemaker:ListSpaces",
     "sagemaker:ListTags",
     "sagemaker:ListTrainingJobs",
+    "sagemaker:ListUserProfiles",
     "scheduler:GetSchedule",
     "scheduler:ListScheduleGroups",
     "scheduler:ListSchedules",
@@ -1278,6 +1293,12 @@
       "service": "ec2",
       "action": "DescribeSnapshots",
       "source_file": "aws_ec2.go"
+    },
+    {
+      "permission": "ec2:DescribeSubnets",
+      "service": "ec2",
+      "action": "DescribeSubnets",
+      "source_file": "aws_sagemaker.go"
     },
     {
       "permission": "ec2:DescribeSubnets",
@@ -2948,6 +2969,12 @@
       "source_file": "aws_s3.go"
     },
     {
+      "permission": "sagemaker:DescribeCluster",
+      "service": "sagemaker",
+      "action": "DescribeCluster",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
       "permission": "sagemaker:DescribeDomain",
       "service": "sagemaker",
       "action": "DescribeDomain",
@@ -2960,6 +2987,12 @@
       "source_file": "aws_sagemaker.go"
     },
     {
+      "permission": "sagemaker:DescribeFeatureGroup",
+      "service": "sagemaker",
+      "action": "DescribeFeatureGroup",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
       "permission": "sagemaker:DescribeInferenceComponent",
       "service": "sagemaker",
       "action": "DescribeInferenceComponent",
@@ -2969,6 +3002,24 @@
       "permission": "sagemaker:DescribeModel",
       "service": "sagemaker",
       "action": "DescribeModel",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:DescribeModelCard",
+      "service": "sagemaker",
+      "action": "DescribeModelCard",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:DescribeModelPackage",
+      "service": "sagemaker",
+      "action": "DescribeModelPackage",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:DescribeModelPackageGroup",
+      "service": "sagemaker",
+      "action": "DescribeModelPackageGroup",
       "source_file": "aws_sagemaker.go"
     },
     {
@@ -2990,9 +3041,33 @@
       "source_file": "aws_sagemaker.go"
     },
     {
+      "permission": "sagemaker:DescribeSpace",
+      "service": "sagemaker",
+      "action": "DescribeSpace",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
       "permission": "sagemaker:DescribeTrainingJob",
       "service": "sagemaker",
       "action": "DescribeTrainingJob",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:DescribeUserProfile",
+      "service": "sagemaker",
+      "action": "DescribeUserProfile",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:ListClusterNodes",
+      "service": "sagemaker",
+      "action": "ListClusterNodes",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:ListClusters",
+      "service": "sagemaker",
+      "action": "ListClusters",
       "source_file": "aws_sagemaker.go"
     },
     {
@@ -3008,9 +3083,33 @@
       "source_file": "aws_sagemaker.go"
     },
     {
+      "permission": "sagemaker:ListFeatureGroups",
+      "service": "sagemaker",
+      "action": "ListFeatureGroups",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
       "permission": "sagemaker:ListInferenceComponents",
       "service": "sagemaker",
       "action": "ListInferenceComponents",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:ListModelCards",
+      "service": "sagemaker",
+      "action": "ListModelCards",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:ListModelPackageGroups",
+      "service": "sagemaker",
+      "action": "ListModelPackageGroups",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:ListModelPackages",
+      "service": "sagemaker",
+      "action": "ListModelPackages",
       "source_file": "aws_sagemaker.go"
     },
     {
@@ -3038,6 +3137,12 @@
       "source_file": "aws_sagemaker.go"
     },
     {
+      "permission": "sagemaker:ListSpaces",
+      "service": "sagemaker",
+      "action": "ListSpaces",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
       "permission": "sagemaker:ListTags",
       "service": "sagemaker",
       "action": "ListTags",
@@ -3047,6 +3152,12 @@
       "permission": "sagemaker:ListTrainingJobs",
       "service": "sagemaker",
       "action": "ListTrainingJobs",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:ListUserProfiles",
+      "service": "sagemaker",
+      "action": "ListUserProfiles",
       "source_file": "aws_sagemaker.go"
     },
     {

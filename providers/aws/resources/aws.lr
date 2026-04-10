@@ -1641,6 +1641,20 @@ aws.sagemaker {
   domains() []aws.sagemaker.domain
   // List of SageMaker inference components
   inferenceComponents() []aws.sagemaker.inferenceComponent
+  // List of SageMaker HyperPod clusters
+  clusters() []aws.sagemaker.cluster
+  // List of SageMaker feature groups
+  featureGroups() []aws.sagemaker.featureGroup
+  // List of SageMaker model packages (excludes packages within model package groups)
+  modelPackages() []aws.sagemaker.modelPackage
+  // List of SageMaker model package groups
+  modelPackageGroups() []aws.sagemaker.modelPackageGroup
+  // List of SageMaker model cards
+  modelCards() []aws.sagemaker.modelCard
+  // List of SageMaker spaces
+  spaces() []aws.sagemaker.space
+  // List of SageMaker user profiles
+  userProfiles() []aws.sagemaker.userProfile
 }
 
 // AWS SageMaker notebook instance
@@ -1663,6 +1677,14 @@ private aws.sagemaker.notebookinstance @defaults("arn name") {
   status string
   // URL to connect to the Jupyter notebook
   url string
+  // ML compute instance type
+  instanceType string
+  // Name of the lifecycle configuration associated with the notebook instance
+  lifecycleConfigName string
+  // Default Git repository associated with the notebook instance
+  defaultCodeRepository string
+  // Additional Git repositories associated with the notebook instance
+  additionalCodeRepositories []string
 }
 
 // AWS SageMaker notebook instance details
@@ -1679,6 +1701,18 @@ private aws.sagemaker.notebookinstancedetails @defaults("arn") {
   minimumInstanceMetadataServiceVersion string
   // VPC subnet the notebook instance is deployed in
   subnet() aws.vpc.subnet
+  // IP address type: ipv4 or dualstack
+  ipAddressType() string
+  // Platform identifier of the notebook instance runtime environment
+  platformIdentifier() string
+  // Size (in GB) of the ML storage volume attached to the instance
+  volumeSizeInGB() int
+  // Failure reason if the notebook instance is in a failed state
+  failureReason() string
+  // IAM role associated with the instance
+  iamRole() aws.iam.role
+  // VPC security groups associated with the instance
+  securityGroups() []aws.ec2.securitygroup
 }
 
 // AWS SageMaker endpoint
@@ -1719,8 +1753,10 @@ private aws.sagemaker.model @defaults("arn name") {
   iamRole() aws.iam.role
   // Primary container definition
   primaryContainer() dict
-  // VPC configuration
+  // Deprecated: Use vpc instead. Raw VPC configuration dict
   vpcConfig() dict
+  // VPC associated with this model
+  vpc() aws.vpc
 }
 
 // AWS SageMaker training job
@@ -1755,8 +1791,10 @@ private aws.sagemaker.trainingjob @defaults("arn name status") {
   failureReason() string
   // Billable time in seconds
   billableTimeInSeconds() int
-  // VPC configuration
+  // Deprecated: Use vpc instead. Raw VPC configuration dict
   vpcConfig() dict
+  // VPC associated with this training job
+  vpc() aws.vpc
   // Output data configuration
   outputDataConfig() dict
   // Resource configuration (instanceType, instanceCount, volumeSizeInGB)
@@ -1793,8 +1831,10 @@ private aws.sagemaker.processingjob @defaults("arn name status") {
   enableNetworkIsolation() bool
   // Whether inter-container traffic encryption is enabled
   enableInterContainerTrafficEncryption() bool
-  // VPC configuration
+  // Deprecated: Use vpc instead. Raw VPC configuration dict
   vpcConfig() dict
+  // VPC associated with this processing job
+  vpc() aws.vpc
   // Processing resources configuration
   processingResources() dict
   // Environment variables
@@ -1863,6 +1903,20 @@ private aws.sagemaker.domain @defaults("arn name status") {
   homeEfsFileSystemId() string
   // Default user settings
   defaultUserSettings() dict
+  // Security group for domain boundary
+  securityGroupForDomainBoundary() aws.ec2.securitygroup
+  // Who manages security groups for inter-app communication: Service or Customer
+  appSecurityGroupManagement() string
+  // Whether custom tag propagation is supported
+  tagPropagation() string
+  // IAM Identity Center application ARN
+  singleSignOnApplicationArn() string
+  // Failure reason if the domain is in a failed state
+  failureReason() string
+  // VPC subnets the domain uses for communication
+  subnets() []aws.vpc.subnet
+  // Default execution role from user settings
+  defaultExecutionRole() aws.iam.role
 }
 
 // AWS SageMaker inference component
@@ -1897,6 +1951,274 @@ private aws.sagemaker.inferenceComponent @defaults("arn name status") {
   runtimeConfig() dict
   // Compute resource requirements specification
   specification() dict
+  // Failure reason if the inference component is in a failed state
+  failureReason() string
+}
+
+// AWS SageMaker HyperPod cluster
+private aws.sagemaker.cluster @defaults("arn name status") {
+  // ARN of the cluster
+  arn string
+  // Name of the cluster
+  name string
+  // Region where the cluster exists
+  region string
+  // Status: InService, Creating, Updating, Failed, Deleting, RollingBack, SystemUpdating
+  status string
+  // Time when the cluster was created
+  createdAt time
+  // Tags for the cluster
+  tags() map[string]string
+  // IAM role used for cluster operations
+  iamRole() aws.iam.role
+  // Cluster instance groups
+  instanceGroups() []aws.sagemaker.clusterInstanceGroup
+  // Orchestrator type (EKS or Slurm configuration)
+  orchestrator() dict
+  // VPC associated with this cluster
+  vpc() aws.vpc
+  // Node recovery mode
+  nodeRecovery() string
+  // Node provisioning mode
+  nodeProvisioningMode() string
+  // Failure message if the cluster is in a failed state
+  failureMessage() string
+  // Nodes in the cluster
+  nodes() []aws.sagemaker.clusterNode
+}
+
+// AWS SageMaker HyperPod cluster instance group
+private aws.sagemaker.clusterInstanceGroup @defaults("instanceGroupName instanceType status") {
+  // Name of the instance group
+  instanceGroupName string
+  // ML instance type for the group
+  instanceType string
+  // Region where the cluster exists
+  region string
+  // Status of the instance group
+  status string
+  // Current number of instances in the group
+  currentCount int
+  // Target number of instances in the group
+  targetCount int
+  // Threads per CPU core
+  threadsPerCore int
+  // IAM execution role for the instance group
+  iamRole() aws.iam.role
+  // Lifecycle configuration
+  lifecycleConfig() dict
+}
+
+// AWS SageMaker HyperPod cluster node
+private aws.sagemaker.clusterNode @defaults("instanceId instanceGroupName instanceType") {
+  // Instance ID of the node
+  instanceId string
+  // Instance group name the node belongs to
+  instanceGroupName string
+  // Instance type of the node
+  instanceType string
+  // Status of the node
+  status string
+  // Status message for the node
+  statusMessage string
+  // Time when the node was launched
+  launchedAt time
+  // Private DNS hostname of the node
+  privateDnsHostname string
+  // Region where the node exists
+  region string
+}
+
+// AWS SageMaker feature group
+private aws.sagemaker.featureGroup @defaults("arn name status") {
+  // ARN of the feature group
+  arn string
+  // Name of the feature group
+  name string
+  // Region where the feature group exists
+  region string
+  // Status: Creating, Created, CreateFailed, Deleting, DeleteFailed
+  status string
+  // Time when the feature group was created
+  createdAt time
+  // Tags for the feature group
+  tags() map[string]string
+  // IAM execution role for offline store persistence
+  iamRole() aws.iam.role
+  // Description of the feature group
+  description() string
+  // Feature definitions (name, type pairs)
+  featureDefinitions() []aws.sagemaker.featureDefinition
+  // Name of the feature used as event time
+  eventTimeFeatureName() string
+  // Name of the feature used as record identifier
+  recordIdentifierFeatureName() string
+  // Offline store configuration (S3, Glue catalog, encryption)
+  offlineStoreConfig() dict
+  // Online store configuration (encryption, storage type, TTL)
+  onlineStoreConfig() dict
+  // Failure reason if the feature group failed
+  failureReason() string
+  // Offline store replication status: Active or Blocked
+  offlineStoreStatus() string
+  // Size of the online store in bytes
+  onlineStoreTotalSizeBytes() int
+}
+
+// AWS SageMaker feature definition
+private aws.sagemaker.featureDefinition @defaults("featureName featureType") {
+  // Name of the feature
+  featureName string
+  // Data type: Integral, Fractional, String
+  featureType string
+  // Collection type: List, Set, Vector
+  collectionType string
+}
+
+// AWS SageMaker model package
+private aws.sagemaker.modelPackage @defaults("arn name approvalStatus") {
+  // ARN of the model package
+  arn string
+  // Name of the model package
+  name string
+  // Region where the model package exists
+  region string
+  // Status: Pending, InProgress, Completed, Failed, Deleting
+  status string
+  // Approval status: Approved, Rejected, PendingManualApproval
+  approvalStatus string
+  // Time when the model package was created
+  createdAt time
+  // Tags for the model package
+  tags() map[string]string
+  // Description of the model package
+  description string
+  // Name of the model package group this belongs to
+  modelPackageGroupName string
+  // Model package group this belongs to
+  modelPackageGroup() aws.sagemaker.modelPackageGroup
+  // Version number within the model package group
+  modelPackageVersion int
+  // Whether the model package is certified for AWS Marketplace
+  certifyForMarketplace() bool
+  // KMS key used for encryption
+  kmsKey() aws.kms.key
+  // Inference specification (containers, supported instance types)
+  inferenceSpecification() dict
+  // Approval description
+  approvalDescription() string
+  // Model metrics
+  modelMetrics() dict
+  // Source URI
+  sourceUri() string
+  // Customer metadata properties
+  customerMetadataProperties() map[string]string
+  // Whether to skip model validation: All or None
+  skipModelValidation() string
+  // Time when the model package was last modified
+  lastModifiedTime() time
+}
+
+// AWS SageMaker model package group
+private aws.sagemaker.modelPackageGroup @defaults("arn name status") {
+  // ARN of the model package group
+  arn string
+  // Name of the model package group
+  name string
+  // Region where the model package group exists
+  region string
+  // Status: Pending, InProgress, Completed, Failed, Deleting, DeleteFailed
+  status string
+  // Time when the group was created
+  createdAt time
+  // Tags for the model package group
+  tags() map[string]string
+  // Description of the model package group
+  description() string
+}
+
+// AWS SageMaker model card
+private aws.sagemaker.modelCard @defaults("arn name modelCardStatus") {
+  // ARN of the model card
+  arn string
+  // Name of the model card
+  name string
+  // Region where the model card exists
+  region string
+  // Approval status: Draft, PendingReview, Approved, Archived
+  modelCardStatus string
+  // Time when the model card was created
+  createdAt time
+  // Time when the model card was last modified
+  lastModifiedAt time
+  // Tags for the model card
+  tags() map[string]string
+  // KMS key used for encryption
+  kmsKey() aws.kms.key
+  // Model card content (JSON string)
+  content() string
+  // Model card version number
+  modelCardVersion() int
+  // Processing status of model card deletion
+  modelCardProcessingStatus() string
+}
+
+// AWS SageMaker space
+private aws.sagemaker.space @defaults("arn name status") {
+  // ARN of the space
+  arn string
+  // Name of the space
+  name string
+  // Region where the space exists
+  region string
+  // Status: Creating, Created, Deleting, Failed, Updating, Pending
+  status string
+  // Display name of the space
+  displayName string
+  // Time when the space was created
+  createdAt time
+  // Time when the space was last modified
+  lastModifiedAt time
+  // Tags for the space
+  tags() map[string]string
+  // Domain the space belongs to
+  domain() aws.sagemaker.domain
+  // Owner user profile name
+  ownerUserProfileName() string
+  // Sharing type of the space
+  sharingType() string
+  // URL of the space
+  spaceUrl() string
+  // Space settings (app type, storage, app configurations)
+  settings() dict
+  // Failure reason if the space is in a failed state
+  failureReason() string
+}
+
+// AWS SageMaker user profile
+private aws.sagemaker.userProfile @defaults("arn name status") {
+  // ARN of the user profile
+  arn string
+  // Name of the user profile
+  name string
+  // Region where the user profile exists
+  region string
+  // Status: Deleting, Failed, InService, Pending, Updating, Update_Failed, Delete_Failed
+  status string
+  // Time when the user profile was created
+  createdAt time
+  // Time when the user profile was last modified
+  lastModifiedAt time
+  // Tags for the user profile
+  tags() map[string]string
+  // Domain the user profile belongs to
+  domain() aws.sagemaker.domain
+  // Failure reason if the user profile is in a failed state
+  failureReason() string
+  // IAM Identity Center user identifier
+  singleSignOnUserIdentifier() string
+  // IAM Identity Center user value
+  singleSignOnUserValue() string
 }
 
 // AWS Simple Notification Service (SNS)

@@ -272,6 +272,7 @@ Sflags
 signin
 singlequeryargument
 sizeconstraintstatement
+Slurm
 smbv
 Snat
 SNYK
