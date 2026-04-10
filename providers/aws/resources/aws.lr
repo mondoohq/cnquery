@@ -2777,11 +2777,13 @@ private aws.guardduty.detector @defaults("id region") {
   region string
   // Status of the detector: ENABLED or DISABLED
   status() string
-  // Feature set for the detector
+  // Deprecated: Use `featureConfigurations` instead
   features() []dict
-  // Tags for the project
+  // Typed feature configurations for the detector
+  featureConfigurations() []aws.guardduty.detector.feature
+  // Tags for the detector
   tags() map[string]string
-  // Publishing frequency for the detector
+  // Publishing frequency for the detector: FIFTEEN_MINUTES, ONE_HOUR, SIX_HOURS
   findingPublishingFrequency() string
   // List of active findings by the detector
   findings() []aws.guardduty.finding
@@ -2789,9 +2791,85 @@ private aws.guardduty.detector @defaults("id region") {
   createdAt() time
   // Time when the detector was last updated
   updatedAt() time
+  // Publishing destinations where findings are exported
+  publishingDestinations() []aws.guardduty.detector.publishingDestination
+  // Trusted IP lists that suppress findings
+  ipSets() []aws.guardduty.detector.ipSet
+  // Custom threat intelligence sets
+  threatIntelSets() []aws.guardduty.detector.threatIntelSet
+  // Coverage statistics for runtime monitoring
+  coverageStatistics() []aws.guardduty.detector.coverageStatistic
 }
 
-// AWS Guard Duty finding
+// Amazon GuardDuty detector feature configuration
+private aws.guardduty.detector.feature @defaults("name status") {
+  // Feature name: S3_DATA_EVENTS, EKS_AUDIT_LOGS, EBS_MALWARE_PROTECTION, RDS_LOGIN_EVENTS, EKS_RUNTIME_MONITORING, LAMBDA_NETWORK_LOGS, RUNTIME_MONITORING
+  name string
+  // Feature status: ENABLED, DISABLED
+  status string
+  // Time when the feature was last updated
+  updatedAt time
+  // Additional configuration for sub-features (varies per feature)
+  additionalConfiguration []dict
+}
+
+// Amazon GuardDuty detector publishing destination
+private aws.guardduty.detector.publishingDestination @defaults("destinationType status") {
+  // Unique ID of the publishing destination
+  destinationId string
+  // Destination type: S3
+  destinationType string
+  // Publishing status: PUBLISHING, UNABLE_TO_PUBLISH_FIX_DESTINATION_PROPERTY, PENDING_VERIFICATION, STOPPED
+  status string
+  // S3 bucket where findings are published
+  s3Bucket() aws.s3.bucket
+  // KMS key used to encrypt published findings
+  kmsKey() aws.kms.key
+}
+
+// Amazon GuardDuty detector trusted IP set
+private aws.guardduty.detector.ipSet @defaults("name status") {
+  // Unique ID of the IP set
+  id string
+  // Name of the IP set
+  name string
+  // Format of the IP set file: TXT, STIX, OTX_CSV, ALIEN_VAULT, PROOF_POINT, FIRE_EYE
+  format string
+  // S3 URI of the IP set file
+  location string
+  // Status: INACTIVE, ACTIVATING, ACTIVE, DEACTIVATING, ERROR, DELETE_PENDING, DELETED
+  status string
+  // Tags associated with the IP set
+  tags map[string]string
+}
+
+// Amazon GuardDuty detector threat intelligence set
+private aws.guardduty.detector.threatIntelSet @defaults("name status") {
+  // Unique ID of the threat intel set
+  id string
+  // Name of the threat intel set
+  name string
+  // Format of the threat intel set file: TXT, STIX, OTX_CSV, ALIEN_VAULT, PROOF_POINT, FIRE_EYE
+  format string
+  // S3 URI of the threat intel set file
+  location string
+  // Status: INACTIVE, ACTIVATING, ACTIVE, DEACTIVATING, ERROR, DELETE_PENDING, DELETED
+  status string
+  // Tags associated with the threat intel set
+  tags map[string]string
+}
+
+// Amazon GuardDuty detector coverage statistic
+private aws.guardduty.detector.coverageStatistic @defaults("resourceType") {
+  // Resource type: EC2, ECS, EKS
+  resourceType string
+  // Number of covered resources
+  coveredCount int
+  // Number of uncovered resources
+  uncoveredCount int
+}
+
+// AWS GuardDuty finding
 private aws.guardduty.finding @defaults("title region severity") {
   // Unique ID for the finding
   arn string
@@ -2813,6 +2891,18 @@ private aws.guardduty.finding @defaults("title region severity") {
   createdAt time
   // Updated at time
   updatedAt time
+  // AWS account ID where the finding was generated
+  accountId string
+  // Type of resource involved in the finding (e.g., Instance, AccessKey, S3Bucket)
+  resourceType string
+  // AWS service that generated the finding
+  service string
+  // Type of action that triggered the finding (e.g., NETWORK_CONNECTION, AWS_API_CALL, DNS_REQUEST)
+  actionType string
+  // Number of times this finding has been generated
+  count int
+  // Detailed resource information for the finding
+  resourceDetails() dict
 }
 
 // Amazon Macie
@@ -4096,7 +4186,7 @@ private aws.cloudtrail.trail @defaults("name region") {
   s3bucket() aws.s3.bucket
   // ARN of the SNS topic that the trail uses to send notifications
   snsTopicARN string
-  // JSON list of information about the trail
+  // Deprecated: Use individual status fields (isLogging, latestDeliveryTime, etc.) instead
   status() dict
   // Log group where trail files are delivered
   logGroup() aws.cloudwatch.loggroup
@@ -4104,18 +4194,88 @@ private aws.cloudtrail.trail @defaults("name region") {
   cloudWatchLogsRoleArn string
   // Group for logs endpoint to assume when writing to log group
   cloudWatchLogsLogGroupArn string
-  // Settings for the trail's configured event selectors
+  // Deprecated: Use `eventSelectorEntries` instead
   eventSelectors() []dict
+  // Typed event selector configuration for the trail
+  eventSelectorEntries() []aws.cloudtrail.trail.eventSelector
+  // Advanced event selectors configured for the trail
+  advancedEventSelectors() []aws.cloudtrail.trail.advancedEventSelector
   // Region in which the trail was created (home region)
   region string
   // Whether CloudTrail Insights is enabled for the trail (detects unusual API activity)
   hasInsightSelectors bool
-  // Insight selectors configured for the trail (ApiCallRateInsight, ApiErrorRateInsight)
+  // Deprecated: Use `insightSelectorEntries` instead
   insightSelectors() []dict
+  // Typed insight selector configuration for the trail
+  insightSelectorEntries() []aws.cloudtrail.trail.insightSelector
   // Whether custom event selectors are configured (enables data event logging for S3/Lambda/DynamoDB)
   hasCustomEventSelectors bool
   // Whether logging is currently enabled for the trail
   isLogging() bool
+  // Tags associated with the trail
+  tags() map[string]string
+  // Time of the most recent delivery of log files to the trail's S3 bucket
+  latestDeliveryTime() time
+  // Time of the most recent notification sent to the trail's SNS topic
+  latestNotificationTime() time
+  // Time of the most recent log delivery to CloudWatch Logs
+  latestCloudWatchLogsDeliveryTime() time
+  // Most recent error message from delivering log files to S3
+  latestDeliveryError() string
+  // Time of the most recent digest file delivery to the trail's S3 bucket
+  latestDigestDeliveryTime() time
+}
+
+// AWS CloudTrail trail event selector
+private aws.cloudtrail.trail.eventSelector @defaults("readWriteType") {
+  // Type of events to log: All, ReadOnly, WriteOnly
+  readWriteType string
+  // Whether management events are logged
+  includeManagementEvents bool
+  // Data resources for which events are logged
+  dataResources []aws.cloudtrail.trail.eventSelector.dataResource
+  // Management event sources to exclude (e.g., kms.amazonaws.com)
+  excludeManagementEventSources []string
+}
+
+// AWS CloudTrail trail event selector data resource
+private aws.cloudtrail.trail.eventSelector.dataResource @defaults("type") {
+  // Resource type (e.g., AWS::S3::Object, AWS::Lambda::Function)
+  type string
+  // Resource ARN values (e.g., arn:aws:s3::: for all S3 objects)
+  values []string
+}
+
+// AWS CloudTrail trail advanced event selector
+private aws.cloudtrail.trail.advancedEventSelector @defaults("name") {
+  // Name of the advanced event selector
+  name string
+  // Field selectors that make up this advanced event selector
+  fieldSelectors []aws.cloudtrail.trail.advancedEventSelector.fieldSelector
+}
+
+// AWS CloudTrail trail advanced event selector field selector
+private aws.cloudtrail.trail.advancedEventSelector.fieldSelector @defaults("field") {
+  // Field to match (e.g., eventCategory, resources.type, readOnly)
+  field string
+  // Values that must equal the field value
+  equals []string
+  // Values that the field value must start with
+  startsWith []string
+  // Values that the field value must end with
+  endsWith []string
+  // Values that must not equal the field value
+  notEquals []string
+  // Values that the field value must not start with
+  notStartsWith []string
+  // Values that the field value must not end with
+  notEndsWith []string
+}
+
+// AWS CloudTrail trail insight selector
+private aws.cloudtrail.trail.insightSelector @defaults("insightType") {
+  // Type of insight: ApiCallRateInsight, ApiErrorRateInsight
+  insightType string
 }
 
 // Amazon S3 bucket control
@@ -7671,6 +7831,8 @@ aws.config {
   deliveryChannels() []aws.config.deliverychannel
   // List of configuration aggregators
   aggregators() []aws.config.aggregator
+  // List of conformance packs (pre-built compliance frameworks)
+  conformancePacks() []aws.config.conformancePack
 }
 
 // AWS Config rule
@@ -7691,6 +7853,44 @@ private aws.config.rule @defaults("name id region state") {
   region string
   // Compliance status of the rule: COMPLIANT, NON_COMPLIANT, NOT_APPLICABLE, INSUFFICIENT_DATA
   complianceStatus() string
+  // Detailed compliance results for individual resources evaluated by this rule
+  complianceDetails() []aws.config.rule.complianceDetail
+  // Remediation configuration associated with this rule
+  remediation() aws.config.rule.remediation
+}
+
+// AWS Config rule compliance detail for an individual resource
+private aws.config.rule.complianceDetail @defaults("resourceType resourceId complianceType") {
+  // Type of resource evaluated (e.g., AWS::EC2::Instance)
+  resourceType string
+  // ID of the resource evaluated
+  resourceId string
+  // Compliance type: COMPLIANT, NON_COMPLIANT
+  complianceType string
+  // Annotation from the evaluator explaining the result
+  annotation string
+  // Time when the evaluation was ordered
+  orderingTimestamp time
+  // Time when the result was recorded
+  resultRecordedTime time
+}
+
+// AWS Config rule remediation configuration
+private aws.config.rule.remediation @defaults("targetType targetId") {
+  // Remediation target type: SSM_DOCUMENT
+  targetType string
+  // Remediation target ID (e.g., AWS-DisablePublicAccessForSecurityGroup)
+  targetId string
+  // Whether auto-remediation is enabled
+  automatic bool
+  // Maximum number of concurrent remediation executions (percentage)
+  maxConcurrentPercentage string
+  // Maximum number of concurrent remediation executions (count)
+  maxConcurrentCount string
+  // Number of seconds to wait before retrying a failed remediation
+  retryAttemptSeconds int
+  // Parameters passed to the remediation target
+  parameters dict
 }
 
 // AWS Config recorder
@@ -7713,6 +7913,10 @@ private aws.config.recorder @defaults("name region") {
   region string
   // Whether the recorder records specific resource types
   resourceTypes []string
+  // Recording strategy: ALL_SUPPORTED_RESOURCE_TYPES, INCLUSION_BY_RESOURCE_TYPES, EXCLUSION_BY_RESOURCE_TYPES
+  recordingStrategy() string
+  // Resource types explicitly excluded from recording
+  exclusionByResourceTypes() []string
 }
 
 // AWS Config delivery channel
@@ -7727,6 +7931,46 @@ private aws.config.deliverychannel @defaults("name region") {
   snsTopicARN string
   // Region for the delivery channel
   region string
+  // Frequency at which AWS Config delivers configuration snapshots: One_Hour, Three_Hours, Six_Hours, Twelve_Hours, TwentyFour_Hours
+  deliveryFrequency() string
+  // Time of the most recent successful delivery
+  lastSuccessfulDeliveryTime() time
+  // Time of the most recent failed delivery
+  lastFailedDeliveryTime() time
+  // Status of the last delivery attempt: SUCCESS, FAILURE, NOT_APPLICABLE
+  lastDeliveryStatus() string
+}
+
+// AWS Config conformance pack (pre-built compliance framework)
+private aws.config.conformancePack @defaults("name region") {
+  // Name of the conformance pack
+  name string
+  // ARN of the conformance pack
+  arn string
+  // Region for the conformance pack
+  region string
+  // S3 bucket name where conformance pack artifacts are delivered
+  deliveryS3Bucket string
+  // S3 key prefix for conformance pack artifacts
+  deliveryS3KeyPrefix string
+  // Input parameters for the conformance pack
+  inputParameters []dict
+  // Time when the conformance pack was created
+  createdAt time
+  // Time of the last update request
+  lastUpdateRequestedTime time
+  // Overall compliance status: COMPLIANT, NON_COMPLIANT, INSUFFICIENT_DATA
+  complianceStatus() string
+  // Compliance status of individual rules within the conformance pack
+  ruleCompliance() []aws.config.conformancePack.ruleCompliance
+}
+
+// AWS Config conformance pack rule compliance
+private aws.config.conformancePack.ruleCompliance @defaults("ruleName complianceType") {
+  // Name of the Config rule within the conformance pack
+  ruleName string
+  // Compliance type: COMPLIANT, NON_COMPLIANT, INSUFFICIENT_DATA
+  complianceType string
 }
 
 // AWS Config aggregator

@@ -6,8 +6,10 @@ package resources
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
+	cstypes "github.com/aws/aws-sdk-go-v2/service/configservice/types"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -100,6 +102,7 @@ func (a *mqlAwsConfig) getRecorders(conn *connection.AwsConnection) []*jobpool.J
 				}
 				mqlRecorderRes := mqlRecorder.(*mqlAwsConfigRecorder)
 				mqlRecorderRes.cacheRoleArn = r.RoleARN
+				mqlRecorderRes.cacheRecordingGroup = r.RecordingGroup
 				res = append(res, mqlRecorderRes)
 			}
 			return jobpool.JobResult(res), nil
@@ -110,7 +113,8 @@ func (a *mqlAwsConfig) getRecorders(conn *connection.AwsConnection) []*jobpool.J
 }
 
 type mqlAwsConfigRecorderInternal struct {
-	cacheRoleArn *string
+	cacheRoleArn        *string
+	cacheRecordingGroup *cstypes.RecordingGroup
 }
 
 func (a *mqlAwsConfigRecorder) iamRole() (*mqlAwsIamRole, error) {
@@ -179,7 +183,11 @@ func (a *mqlAwsConfig) getDeliveryChannels(conn *connection.AwsConnection) []*jo
 				if err != nil {
 					return nil, err
 				}
-				res = append(res, mqlDeliveryChannel)
+				mqlChRes := mqlDeliveryChannel.(*mqlAwsConfigDeliverychannel)
+				if channel.ConfigSnapshotDeliveryProperties != nil {
+					mqlChRes.cacheDeliveryFrequency = string(channel.ConfigSnapshotDeliveryProperties.DeliveryFrequency)
+				}
+				res = append(res, mqlChRes)
 			}
 
 			return jobpool.JobResult(res), nil
@@ -474,5 +482,364 @@ func (a *mqlAwsConfigAggregatorOrganizationAggregationSource) iamRole() (*mqlAws
 }
 
 func (a *mqlAwsConfigAggregatorAccountAggregationSource) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAwsConfigRecorder) recordingStrategy() (string, error) {
+	if a.cacheRecordingGroup == nil || a.cacheRecordingGroup.RecordingStrategy == nil {
+		return "", nil
+	}
+	return string(a.cacheRecordingGroup.RecordingStrategy.UseOnly), nil
+}
+
+func (a *mqlAwsConfigRecorder) exclusionByResourceTypes() ([]any, error) {
+	if a.cacheRecordingGroup == nil || a.cacheRecordingGroup.ExclusionByResourceTypes == nil {
+		return []any{}, nil
+	}
+	res := make([]any, len(a.cacheRecordingGroup.ExclusionByResourceTypes.ResourceTypes))
+	for i, rt := range a.cacheRecordingGroup.ExclusionByResourceTypes.ResourceTypes {
+		res[i] = string(rt)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsConfigDeliverychannel) id() (string, error) {
+	name := a.Name.Data
+	region := a.Region.Data
+	return getName(name, region), nil
+}
+
+func (a *mqlAwsConfigDeliverychannel) deliveryFrequency() (string, error) {
+	return a.cacheDeliveryFrequency, nil
+}
+
+func (a *mqlAwsConfigDeliverychannel) getDeliveryStatus() (*cstypes.DeliveryChannelStatus, error) {
+	if a.cachedDeliveryStatus != nil {
+		return a.cachedDeliveryStatus, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.ConfigService(a.Region.Data)
+	ctx := context.Background()
+
+	channelName := a.Name.Data
+	resp, err := svc.DescribeDeliveryChannelStatus(ctx, &configservice.DescribeDeliveryChannelStatusInput{
+		DeliveryChannelNames: []string{channelName},
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	if len(resp.DeliveryChannelsStatus) > 0 {
+		a.cachedDeliveryStatus = &resp.DeliveryChannelsStatus[0]
+		return a.cachedDeliveryStatus, nil
+	}
+	return nil, nil
+}
+
+func (a *mqlAwsConfigDeliverychannel) lastSuccessfulDeliveryTime() (*time.Time, error) {
+	status, err := a.getDeliveryStatus()
+	if err != nil || status == nil {
+		return nil, err
+	}
+	if status.ConfigSnapshotDeliveryInfo != nil {
+		return status.ConfigSnapshotDeliveryInfo.LastSuccessfulTime, nil
+	}
+	return nil, nil
+}
+
+func (a *mqlAwsConfigDeliverychannel) lastFailedDeliveryTime() (*time.Time, error) {
+	status, err := a.getDeliveryStatus()
+	if err != nil || status == nil {
+		return nil, err
+	}
+	if status.ConfigSnapshotDeliveryInfo != nil {
+		return status.ConfigSnapshotDeliveryInfo.LastAttemptTime, nil
+	}
+	return nil, nil
+}
+
+func (a *mqlAwsConfigDeliverychannel) lastDeliveryStatus() (string, error) {
+	status, err := a.getDeliveryStatus()
+	if err != nil || status == nil {
+		return "", err
+	}
+	if status.ConfigSnapshotDeliveryInfo != nil {
+		return string(status.ConfigSnapshotDeliveryInfo.LastStatus), nil
+	}
+	return "", nil
+}
+
+type mqlAwsConfigDeliverychannelInternal struct {
+	cachedDeliveryStatus   *cstypes.DeliveryChannelStatus
+	cacheDeliveryFrequency string
+}
+
+func (a *mqlAwsConfigRule) complianceDetails() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	ruleName := a.Name.Data
+	region := a.Region.Data
+	svc := conn.ConfigService(region)
+	ctx := context.Background()
+
+	res := []any{}
+	var nextToken *string
+	for {
+		resp, err := svc.GetComplianceDetailsByConfigRule(ctx, &configservice.GetComplianceDetailsByConfigRuleInput{
+			ConfigRuleName: &ruleName,
+			NextToken:      nextToken,
+		})
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return []any{}, nil
+			}
+			return nil, err
+		}
+
+		for i, eval := range resp.EvaluationResults {
+			var resourceType, resourceId string
+			var orderingTimestamp *time.Time
+			if eval.EvaluationResultIdentifier != nil {
+				if eval.EvaluationResultIdentifier.EvaluationResultQualifier != nil {
+					resourceType = convert.ToValue(eval.EvaluationResultIdentifier.EvaluationResultQualifier.ResourceType)
+					resourceId = convert.ToValue(eval.EvaluationResultIdentifier.EvaluationResultQualifier.ResourceId)
+				}
+				orderingTimestamp = eval.EvaluationResultIdentifier.OrderingTimestamp
+			}
+
+			mqlDetail, err := CreateResource(a.MqlRuntime, "aws.config.rule.complianceDetail",
+				map[string]*llx.RawData{
+					"__id":               llx.StringData(fmt.Sprintf("%s/complianceDetail/%s/%s/%d", a.Arn.Data, resourceType, resourceId, i)),
+					"resourceType":       llx.StringData(resourceType),
+					"resourceId":         llx.StringData(resourceId),
+					"complianceType":     llx.StringData(string(eval.ComplianceType)),
+					"annotation":         llx.StringDataPtr(eval.Annotation),
+					"orderingTimestamp":  llx.TimeDataPtr(orderingTimestamp),
+					"resultRecordedTime": llx.TimeDataPtr(eval.ResultRecordedTime),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlDetail)
+		}
+
+		if resp.NextToken == nil {
+			break
+		}
+		nextToken = resp.NextToken
+	}
+	return res, nil
+}
+
+func (a *mqlAwsConfigRule) remediation() (*mqlAwsConfigRuleRemediation, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	ruleName := a.Name.Data
+	region := a.Region.Data
+	svc := conn.ConfigService(region)
+	ctx := context.Background()
+
+	resp, err := svc.DescribeRemediationConfigurations(ctx, &configservice.DescribeRemediationConfigurationsInput{
+		ConfigRuleNames: []string{ruleName},
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			a.Remediation.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	if len(resp.RemediationConfigurations) == 0 {
+		a.Remediation.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	rem := resp.RemediationConfigurations[0]
+	params, _ := convert.JsonToDict(rem.Parameters)
+
+	var maxConcPct, maxConcCount string
+	var retrySeconds int64
+	if rem.ExecutionControls != nil && rem.ExecutionControls.SsmControls != nil {
+		if rem.ExecutionControls.SsmControls.ConcurrentExecutionRatePercentage != nil {
+			maxConcPct = fmt.Sprintf("%d", *rem.ExecutionControls.SsmControls.ConcurrentExecutionRatePercentage)
+		}
+		if rem.ExecutionControls.SsmControls.ErrorPercentage != nil {
+			maxConcCount = fmt.Sprintf("%d", *rem.ExecutionControls.SsmControls.ErrorPercentage)
+		}
+	}
+	if rem.RetryAttemptSeconds != nil {
+		retrySeconds = *rem.RetryAttemptSeconds
+	}
+
+	mqlRem, err := CreateResource(a.MqlRuntime, "aws.config.rule.remediation",
+		map[string]*llx.RawData{
+			"__id":                    llx.StringData(fmt.Sprintf("%s/remediation", a.Arn.Data)),
+			"targetType":              llx.StringData(string(rem.TargetType)),
+			"targetId":                llx.StringDataPtr(rem.TargetId),
+			"automatic":               llx.BoolData(rem.Automatic),
+			"maxConcurrentPercentage": llx.StringData(maxConcPct),
+			"maxConcurrentCount":      llx.StringData(maxConcCount),
+			"retryAttemptSeconds":     llx.IntData(retrySeconds),
+			"parameters":              llx.MapData(params, types.Any),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlRem.(*mqlAwsConfigRuleRemediation), nil
+}
+
+func (a *mqlAwsConfigRuleComplianceDetail) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAwsConfigRuleRemediation) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAwsConfig) conformancePacks() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getConformancePacks(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for _, job := range poolOfJobs.Jobs {
+		res = append(res, job.Result.([]any)...)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsConfig) getConformancePacks(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("config>getConformancePacks>calling aws with region %s", region)
+
+			svc := conn.ConfigService(region)
+			ctx := context.Background()
+			res := []any{}
+
+			var nextToken *string
+			for {
+				resp, err := svc.DescribeConformancePacks(ctx, &configservice.DescribeConformancePacksInput{
+					NextToken: nextToken,
+				})
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, err
+				}
+
+				for _, pack := range resp.ConformancePackDetails {
+					inputParams, _ := convert.JsonToDictSlice(pack.ConformancePackInputParameters)
+
+					mqlPack, err := CreateResource(a.MqlRuntime, "aws.config.conformancePack",
+						map[string]*llx.RawData{
+							"name":                    llx.StringDataPtr(pack.ConformancePackName),
+							"arn":                     llx.StringDataPtr(pack.ConformancePackArn),
+							"region":                  llx.StringData(region),
+							"deliveryS3Bucket":        llx.StringDataPtr(pack.DeliveryS3Bucket),
+							"deliveryS3KeyPrefix":     llx.StringDataPtr(pack.DeliveryS3KeyPrefix),
+							"inputParameters":         llx.ArrayData(inputParams, types.Dict),
+							"createdAt":               llx.TimeData(time.Time{}),
+							"lastUpdateRequestedTime": llx.TimeDataPtr(pack.LastUpdateRequestedTime),
+						})
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlPack)
+				}
+
+				if resp.NextToken == nil {
+					break
+				}
+				nextToken = resp.NextToken
+			}
+
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (a *mqlAwsConfigConformancePack) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsConfigConformancePack) complianceStatus() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.ConfigService(a.Region.Data)
+	ctx := context.Background()
+
+	packName := a.Name.Data
+	resp, err := svc.GetConformancePackComplianceSummary(ctx, &configservice.GetConformancePackComplianceSummaryInput{
+		ConformancePackNames: []string{packName},
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return "INSUFFICIENT_DATA", nil
+		}
+		return "", err
+	}
+	if len(resp.ConformancePackComplianceSummaryList) > 0 {
+		return string(resp.ConformancePackComplianceSummaryList[0].ConformancePackComplianceStatus), nil
+	}
+	return "INSUFFICIENT_DATA", nil
+}
+
+func (a *mqlAwsConfigConformancePack) ruleCompliance() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.ConfigService(a.Region.Data)
+	ctx := context.Background()
+
+	packName := a.Name.Data
+	res := []any{}
+	var nextToken *string
+	for {
+		resp, err := svc.DescribeConformancePackCompliance(ctx, &configservice.DescribeConformancePackComplianceInput{
+			ConformancePackName: &packName,
+			NextToken:           nextToken,
+		})
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return []any{}, nil
+			}
+			return nil, err
+		}
+
+		for i, rule := range resp.ConformancePackRuleComplianceList {
+			mqlRule, err := CreateResource(a.MqlRuntime, "aws.config.conformancePack.ruleCompliance",
+				map[string]*llx.RawData{
+					"__id":           llx.StringData(fmt.Sprintf("%s/ruleCompliance/%d", a.Arn.Data, i)),
+					"ruleName":       llx.StringDataPtr(rule.ConfigRuleName),
+					"complianceType": llx.StringData(string(rule.ComplianceType)),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlRule)
+		}
+
+		if resp.NextToken == nil {
+			break
+		}
+		nextToken = resp.NextToken
+	}
+	return res, nil
+}
+
+func (a *mqlAwsConfigConformancePackRuleCompliance) id() (string, error) {
 	return a.__id, nil
 }

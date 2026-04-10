@@ -6,7 +6,9 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
@@ -17,6 +19,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
+	mqlTypes "go.mondoo.com/mql/v13/types"
 )
 
 func (a *mqlAwsGuardduty) id() (string, error) {
@@ -89,6 +92,10 @@ func (a *mqlAwsGuardduty) getDetectors(conn *connection.AwsConnection) []*jobpoo
 	return tasks
 }
 
+type mqlAwsGuarddutyDetectorInternal struct {
+	cachedDetector *guardduty.GetDetectorOutput
+}
+
 func (a *mqlAwsGuarddutyDetector) populateData() error {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
@@ -120,6 +127,9 @@ func (a *mqlAwsGuarddutyDetector) populateData() error {
 	if err != nil {
 		return err
 	}
+
+	// Cache the detector response for typed feature method
+	a.cachedDetector = detector
 
 	a.Status = plugin.TValue[string]{Data: string(detector.Status), State: plugin.StateIsSet}
 	a.FindingPublishingFrequency = plugin.TValue[string]{Data: string(detector.FindingPublishingFrequency), State: plugin.StateIsSet}
@@ -304,6 +314,10 @@ func fetchFindings(svc *guardduty.Client, detectorId string, regionVal string, p
 	return res, nil
 }
 
+type mqlAwsGuarddutyFindingInternal struct {
+	cachedResource *types.Resource
+}
+
 func newMqlAwsGuardDutyFinding(runtime *plugin.Runtime, finding types.Finding) (*mqlAwsGuarddutyFinding, error) {
 	var severity float64
 	if finding.Severity != nil {
@@ -315,23 +329,55 @@ func newMqlAwsGuardDutyFinding(runtime *plugin.Runtime, finding types.Finding) (
 		confidence = *finding.Confidence
 	}
 
+	var serviceName string
+	var actionType string
+	var count int64
+	if finding.Service != nil {
+		serviceName = convert.ToValue(finding.Service.ServiceName)
+		if finding.Service.Count != nil {
+			count = int64(*finding.Service.Count)
+		}
+		if finding.Service.Action != nil {
+			actionType = convert.ToValue(finding.Service.Action.ActionType)
+		}
+	}
+
+	var resourceType string
+	if finding.Resource != nil {
+		resourceType = convert.ToValue(finding.Resource.ResourceType)
+	}
+
 	res, err := CreateResource(runtime, "aws.guardduty.finding", map[string]*llx.RawData{
-		"__id":        llx.StringDataPtr(finding.Arn),
-		"arn":         llx.StringDataPtr(finding.Arn),
-		"id":          llx.StringDataPtr(finding.Id),
-		"region":      llx.StringDataPtr(finding.Region),
-		"title":       llx.StringDataPtr(finding.Title),
-		"description": llx.StringDataPtr(finding.Description),
-		"severity":    llx.FloatData(severity),
-		"confidence":  llx.FloatData(confidence),
-		"type":        llx.StringDataPtr(finding.Type),
-		"createdAt":   llx.TimeDataPtr(parseAwsTimestampPtr(finding.CreatedAt)),
-		"updatedAt":   llx.TimeDataPtr(parseAwsTimestampPtr(finding.UpdatedAt)),
+		"__id":         llx.StringDataPtr(finding.Arn),
+		"arn":          llx.StringDataPtr(finding.Arn),
+		"id":           llx.StringDataPtr(finding.Id),
+		"region":       llx.StringDataPtr(finding.Region),
+		"title":        llx.StringDataPtr(finding.Title),
+		"description":  llx.StringDataPtr(finding.Description),
+		"severity":     llx.FloatData(severity),
+		"confidence":   llx.FloatData(confidence),
+		"type":         llx.StringDataPtr(finding.Type),
+		"createdAt":    llx.TimeDataPtr(parseAwsTimestampPtr(finding.CreatedAt)),
+		"updatedAt":    llx.TimeDataPtr(parseAwsTimestampPtr(finding.UpdatedAt)),
+		"accountId":    llx.StringDataPtr(finding.AccountId),
+		"resourceType": llx.StringData(resourceType),
+		"service":      llx.StringData(serviceName),
+		"actionType":   llx.StringData(actionType),
+		"count":        llx.IntData(count),
 	})
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAwsGuarddutyFinding), nil
+	mqlFinding := res.(*mqlAwsGuarddutyFinding)
+	mqlFinding.cachedResource = finding.Resource
+	return mqlFinding, nil
+}
+
+func (a *mqlAwsGuarddutyFinding) resourceDetails() (any, error) {
+	if a.cachedResource == nil {
+		return nil, nil
+	}
+	return convert.JsonToDict(a.cachedResource)
 }
 
 func parseAwsTimestampPtr(value *string) *time.Time {
@@ -354,4 +400,277 @@ func parseAwsTimestamp(value string) *time.Time {
 		timestamp = timestamp.UTC()
 	}
 	return &timestamp
+}
+
+func (a *mqlAwsGuarddutyDetector) featureConfigurations() ([]any, error) {
+	// Ensure detector data is populated (which caches the response)
+	if err := a.populateData(); err != nil {
+		return nil, err
+	}
+
+	if a.cachedDetector == nil {
+		return []any{}, nil
+	}
+
+	detectorId := a.Id.Data
+	res := []any{}
+	for i, feat := range a.cachedDetector.Features {
+		additionalConfig, _ := convert.JsonToDictSlice(feat.AdditionalConfiguration)
+		mqlFeat, err := CreateResource(a.MqlRuntime, "aws.guardduty.detector.feature",
+			map[string]*llx.RawData{
+				"__id":                    llx.StringData(fmt.Sprintf("%s/feature/%d", detectorId, i)),
+				"name":                    llx.StringData(string(feat.Name)),
+				"status":                  llx.StringData(string(feat.Status)),
+				"updatedAt":               llx.TimeDataPtr(feat.UpdatedAt),
+				"additionalConfiguration": llx.ArrayData(additionalConfig, mqlTypes.Dict),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlFeat)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsGuarddutyDetector) publishingDestinations() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	detectorId := a.Id.Data
+	region := a.Region.Data
+	svc := conn.Guardduty(region)
+	ctx := context.Background()
+
+	resp, err := svc.ListPublishingDestinations(ctx, &guardduty.ListPublishingDestinationsInput{
+		DetectorId: &detectorId,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+
+	res := []any{}
+	for _, dest := range resp.Destinations {
+		// Fetch full details for each destination
+		detail, err := svc.DescribePublishingDestination(ctx, &guardduty.DescribePublishingDestinationInput{
+			DetectorId:    &detectorId,
+			DestinationId: dest.DestinationId,
+		})
+		if err != nil {
+			log.Warn().Err(err).Str("destinationId", convert.ToValue(dest.DestinationId)).Msg("could not describe publishing destination")
+			continue
+		}
+
+		mqlDest, err := CreateResource(a.MqlRuntime, "aws.guardduty.detector.publishingDestination",
+			map[string]*llx.RawData{
+				"__id":            llx.StringData(fmt.Sprintf("%s/publishingDestination/%s", detectorId, convert.ToValue(dest.DestinationId))),
+				"destinationId":   llx.StringDataPtr(dest.DestinationId),
+				"destinationType": llx.StringData(string(dest.DestinationType)),
+				"status":          llx.StringData(string(dest.Status)),
+			})
+		if err != nil {
+			return nil, err
+		}
+
+		mqlDestRes := mqlDest.(*mqlAwsGuarddutyDetectorPublishingDestination)
+		if detail.DestinationProperties != nil {
+			mqlDestRes.cacheBucketArn = detail.DestinationProperties.DestinationArn
+			mqlDestRes.cacheKmsKeyArn = detail.DestinationProperties.KmsKeyArn
+		}
+		res = append(res, mqlDestRes)
+	}
+	return res, nil
+}
+
+type mqlAwsGuarddutyDetectorPublishingDestinationInternal struct {
+	cacheBucketArn *string
+	cacheKmsKeyArn *string
+}
+
+func (a *mqlAwsGuarddutyDetectorPublishingDestination) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAwsGuarddutyDetectorPublishingDestination) s3Bucket() (*mqlAwsS3Bucket, error) {
+	if a.cacheBucketArn == nil || *a.cacheBucketArn == "" {
+		a.S3Bucket.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	// The destination ARN is an S3 bucket ARN like arn:aws:s3:::bucket-name or arn:aws:s3:::bucket-name/prefix
+	// Extract just the bucket name
+	bucketArn := *a.cacheBucketArn
+	parts := strings.Split(bucketArn, ":::")
+	if len(parts) < 2 {
+		a.S3Bucket.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	bucketName := strings.Split(parts[1], "/")[0]
+
+	mqlBucket, err := NewResource(a.MqlRuntime, "aws.s3.bucket",
+		map[string]*llx.RawData{"name": llx.StringData(bucketName)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlBucket.(*mqlAwsS3Bucket), nil
+}
+
+func (a *mqlAwsGuarddutyDetectorPublishingDestination) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.cacheKmsKeyArn == nil || *a.cacheKmsKeyArn == "" {
+		a.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheKmsKeyArn)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
+func (a *mqlAwsGuarddutyDetector) ipSets() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	detectorId := a.Id.Data
+	region := a.Region.Data
+	svc := conn.Guardduty(region)
+	ctx := context.Background()
+
+	resp, err := svc.ListIPSets(ctx, &guardduty.ListIPSetsInput{
+		DetectorId: &detectorId,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+
+	res := []any{}
+	for _, ipSetId := range resp.IpSetIds {
+		detail, err := svc.GetIPSet(ctx, &guardduty.GetIPSetInput{
+			DetectorId: &detectorId,
+			IpSetId:    &ipSetId,
+		})
+		if err != nil {
+			log.Warn().Err(err).Str("ipSetId", ipSetId).Msg("could not get IP set details")
+			continue
+		}
+
+		mqlIpSet, err := CreateResource(a.MqlRuntime, "aws.guardduty.detector.ipSet",
+			map[string]*llx.RawData{
+				"__id":     llx.StringData(fmt.Sprintf("%s/ipSet/%s", detectorId, ipSetId)),
+				"id":       llx.StringData(ipSetId),
+				"name":     llx.StringDataPtr(detail.Name),
+				"format":   llx.StringData(string(detail.Format)),
+				"location": llx.StringDataPtr(detail.Location),
+				"status":   llx.StringData(string(detail.Status)),
+				"tags":     llx.MapData(convert.MapToInterfaceMap(detail.Tags), mqlTypes.String),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlIpSet)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsGuarddutyDetector) threatIntelSets() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	detectorId := a.Id.Data
+	region := a.Region.Data
+	svc := conn.Guardduty(region)
+	ctx := context.Background()
+
+	resp, err := svc.ListThreatIntelSets(ctx, &guardduty.ListThreatIntelSetsInput{
+		DetectorId: &detectorId,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+
+	res := []any{}
+	for _, tiSetId := range resp.ThreatIntelSetIds {
+		detail, err := svc.GetThreatIntelSet(ctx, &guardduty.GetThreatIntelSetInput{
+			DetectorId:       &detectorId,
+			ThreatIntelSetId: &tiSetId,
+		})
+		if err != nil {
+			log.Warn().Err(err).Str("threatIntelSetId", tiSetId).Msg("could not get threat intel set details")
+			continue
+		}
+
+		mqlTiSet, err := CreateResource(a.MqlRuntime, "aws.guardduty.detector.threatIntelSet",
+			map[string]*llx.RawData{
+				"__id":     llx.StringData(fmt.Sprintf("%s/threatIntelSet/%s", detectorId, tiSetId)),
+				"id":       llx.StringData(tiSetId),
+				"name":     llx.StringDataPtr(detail.Name),
+				"format":   llx.StringData(string(detail.Format)),
+				"location": llx.StringDataPtr(detail.Location),
+				"status":   llx.StringData(string(detail.Status)),
+				"tags":     llx.MapData(convert.MapToInterfaceMap(detail.Tags), mqlTypes.String),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlTiSet)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsGuarddutyDetector) coverageStatistics() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	detectorId := a.Id.Data
+	region := a.Region.Data
+	svc := conn.Guardduty(region)
+	ctx := context.Background()
+
+	resp, err := svc.GetCoverageStatistics(ctx, &guardduty.GetCoverageStatisticsInput{
+		DetectorId: &detectorId,
+		StatisticsType: []types.CoverageStatisticsType{
+			types.CoverageStatisticsTypeCountByResourceType,
+			types.CoverageStatisticsTypeCountByCoverageStatus,
+		},
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+
+	res := []any{}
+	if resp.CoverageStatistics != nil && resp.CoverageStatistics.CountByResourceType != nil {
+		for resourceType, count := range resp.CoverageStatistics.CountByResourceType {
+			mqlStat, err := CreateResource(a.MqlRuntime, "aws.guardduty.detector.coverageStatistic",
+				map[string]*llx.RawData{
+					"__id":           llx.StringData(fmt.Sprintf("%s/coverage/%s", detectorId, resourceType)),
+					"resourceType":   llx.StringData(resourceType),
+					"coveredCount":   llx.IntData(count),
+					"uncoveredCount": llx.IntData(0),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlStat)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsGuarddutyDetectorFeature) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAwsGuarddutyDetectorIpSet) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAwsGuarddutyDetectorThreatIntelSet) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAwsGuarddutyDetectorCoverageStatistic) id() (string, error) {
+	return a.__id, nil
 }

@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail/types"
@@ -18,6 +19,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
+	mqlTypes "go.mondoo.com/mql/v13/types"
 )
 
 func (a *mqlAwsCloudtrail) id() (string, error) {
@@ -93,9 +95,11 @@ func initAwsCloudtrailTrail(runtime *plugin.Runtime, args map[string]*llx.RawDat
 }
 
 type mqlAwsCloudtrailTrailInternal struct {
-	trailCache        types.Trail
-	cachedTrailStatus *cloudtrail.GetTrailStatusOutput
-	trailStatusLock   sync.Mutex
+	trailCache           types.Trail
+	cachedTrailStatus    *cloudtrail.GetTrailStatusOutput
+	trailStatusLock      sync.Mutex
+	cachedEventSelectors *cloudtrail.GetEventSelectorsOutput
+	eventSelectorsLock   sync.Mutex
 }
 
 func (a *mqlAwsCloudtrail) getTrails(conn *connection.AwsConnection) []*jobpool.Job {
@@ -305,4 +309,245 @@ func (a *mqlAwsCloudtrailTrail) insightSelectors() ([]any, error) {
 	}
 
 	return convert.JsonToDictSlice(resp.InsightSelectors)
+}
+
+func (a *mqlAwsCloudtrailTrail) tags() (map[string]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Cloudtrail(a.Region.Data)
+	ctx := context.Background()
+
+	arnValue := a.Arn.Data
+	resp, err := svc.ListTags(ctx, &cloudtrail.ListTagsInput{
+		ResourceIdList: []string{arnValue},
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	tags := map[string]any{}
+	for _, resourceTag := range resp.ResourceTagList {
+		for _, tag := range resourceTag.TagsList {
+			tags[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
+		}
+	}
+	return tags, nil
+}
+
+func (a *mqlAwsCloudtrailTrail) getEventSelectorsData() (*cloudtrail.GetEventSelectorsOutput, error) {
+	if a.cachedEventSelectors != nil {
+		return a.cachedEventSelectors, nil
+	}
+	a.eventSelectorsLock.Lock()
+	defer a.eventSelectorsLock.Unlock()
+	if a.cachedEventSelectors != nil {
+		return a.cachedEventSelectors, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Cloudtrail(a.Region.Data)
+	ctx := context.Background()
+
+	arnValue := a.Arn.Data
+	resp, err := svc.GetEventSelectors(ctx, &cloudtrail.GetEventSelectorsInput{
+		TrailName: &arnValue,
+	})
+	if err != nil {
+		return nil, err
+	}
+	a.cachedEventSelectors = resp
+	return resp, nil
+}
+
+func (a *mqlAwsCloudtrailTrail) eventSelectorEntries() ([]any, error) {
+	resp, err := a.getEventSelectorsData()
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	for i, sel := range resp.EventSelectors {
+		// Build data resource sub-resources
+		dataResources := []any{}
+		for j, dr := range sel.DataResources {
+			values := make([]any, len(dr.Values))
+			for k, v := range dr.Values {
+				values[k] = v
+			}
+			mqlDr, err := CreateResource(a.MqlRuntime, "aws.cloudtrail.trail.eventSelector.dataResource",
+				map[string]*llx.RawData{
+					"__id":   llx.StringData(fmt.Sprintf("%s/eventSelector/%d/dataResource/%d", a.Arn.Data, i, j)),
+					"type":   llx.StringDataPtr(dr.Type),
+					"values": llx.ArrayData(values, mqlTypes.String),
+				})
+			if err != nil {
+				return nil, err
+			}
+			dataResources = append(dataResources, mqlDr)
+		}
+
+		excludeSources := make([]any, len(sel.ExcludeManagementEventSources))
+		for j, s := range sel.ExcludeManagementEventSources {
+			excludeSources[j] = s
+		}
+
+		mqlSel, err := CreateResource(a.MqlRuntime, "aws.cloudtrail.trail.eventSelector",
+			map[string]*llx.RawData{
+				"__id":                          llx.StringData(fmt.Sprintf("%s/eventSelector/%d", a.Arn.Data, i)),
+				"readWriteType":                 llx.StringData(string(sel.ReadWriteType)),
+				"includeManagementEvents":       llx.BoolDataPtr(sel.IncludeManagementEvents),
+				"dataResources":                 llx.ArrayData(dataResources, mqlTypes.Resource("aws.cloudtrail.trail.eventSelector.dataResource")),
+				"excludeManagementEventSources": llx.ArrayData(excludeSources, mqlTypes.String),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlSel)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsCloudtrailTrail) advancedEventSelectors() ([]any, error) {
+	resp, err := a.getEventSelectorsData()
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	for i, sel := range resp.AdvancedEventSelectors {
+		fieldSelectors := []any{}
+		for j, fs := range sel.FieldSelectors {
+			toAnySlice := func(s []string) []any {
+				r := make([]any, len(s))
+				for k, v := range s {
+					r[k] = v
+				}
+				return r
+			}
+			mqlFs, err := CreateResource(a.MqlRuntime, "aws.cloudtrail.trail.advancedEventSelector.fieldSelector",
+				map[string]*llx.RawData{
+					"__id":          llx.StringData(fmt.Sprintf("%s/advancedEventSelector/%d/fieldSelector/%d", a.Arn.Data, i, j)),
+					"field":         llx.StringDataPtr(fs.Field),
+					"equals":        llx.ArrayData(toAnySlice(fs.Equals), mqlTypes.String),
+					"startsWith":    llx.ArrayData(toAnySlice(fs.StartsWith), mqlTypes.String),
+					"endsWith":      llx.ArrayData(toAnySlice(fs.EndsWith), mqlTypes.String),
+					"notEquals":     llx.ArrayData(toAnySlice(fs.NotEquals), mqlTypes.String),
+					"notStartsWith": llx.ArrayData(toAnySlice(fs.NotStartsWith), mqlTypes.String),
+					"notEndsWith":   llx.ArrayData(toAnySlice(fs.NotEndsWith), mqlTypes.String),
+				})
+			if err != nil {
+				return nil, err
+			}
+			fieldSelectors = append(fieldSelectors, mqlFs)
+		}
+
+		mqlSel, err := CreateResource(a.MqlRuntime, "aws.cloudtrail.trail.advancedEventSelector",
+			map[string]*llx.RawData{
+				"__id":           llx.StringData(fmt.Sprintf("%s/advancedEventSelector/%d", a.Arn.Data, i)),
+				"name":           llx.StringDataPtr(sel.Name),
+				"fieldSelectors": llx.ArrayData(fieldSelectors, mqlTypes.Resource("aws.cloudtrail.trail.advancedEventSelector.fieldSelector")),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlSel)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsCloudtrailTrail) insightSelectorEntries() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Cloudtrail(a.Region.Data)
+	ctx := context.Background()
+
+	arnValue := a.Arn.Data
+	resp, err := svc.GetInsightSelectors(ctx, &cloudtrail.GetInsightSelectorsInput{
+		TrailName: &arnValue,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return []any{}, nil
+		}
+		var insightErr *types.InsightNotEnabledException
+		if errors.As(err, &insightErr) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+
+	res := []any{}
+	for i, sel := range resp.InsightSelectors {
+		mqlSel, err := CreateResource(a.MqlRuntime, "aws.cloudtrail.trail.insightSelector",
+			map[string]*llx.RawData{
+				"__id":        llx.StringData(fmt.Sprintf("%s/insightSelector/%d", a.Arn.Data, i)),
+				"insightType": llx.StringData(string(sel.InsightType)),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlSel)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsCloudtrailTrail) latestDeliveryTime() (*time.Time, error) {
+	trailstatus, err := a.getTrailStatus()
+	if err != nil {
+		return nil, err
+	}
+	return trailstatus.LatestDeliveryTime, nil
+}
+
+func (a *mqlAwsCloudtrailTrail) latestNotificationTime() (*time.Time, error) {
+	trailstatus, err := a.getTrailStatus()
+	if err != nil {
+		return nil, err
+	}
+	return trailstatus.LatestNotificationTime, nil
+}
+
+func (a *mqlAwsCloudtrailTrail) latestCloudWatchLogsDeliveryTime() (*time.Time, error) {
+	trailstatus, err := a.getTrailStatus()
+	if err != nil {
+		return nil, err
+	}
+	return trailstatus.LatestCloudWatchLogsDeliveryTime, nil
+}
+
+func (a *mqlAwsCloudtrailTrail) latestDeliveryError() (string, error) {
+	trailstatus, err := a.getTrailStatus()
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(trailstatus.LatestDeliveryError), nil
+}
+
+func (a *mqlAwsCloudtrailTrail) latestDigestDeliveryTime() (*time.Time, error) {
+	trailstatus, err := a.getTrailStatus()
+	if err != nil {
+		return nil, err
+	}
+	return trailstatus.LatestDigestDeliveryTime, nil
+}
+
+func (a *mqlAwsCloudtrailTrailEventSelector) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAwsCloudtrailTrailEventSelectorDataResource) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAwsCloudtrailTrailAdvancedEventSelector) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAwsCloudtrailTrailAdvancedEventSelectorFieldSelector) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAwsCloudtrailTrailInsightSelector) id() (string, error) {
+	return a.__id, nil
 }
