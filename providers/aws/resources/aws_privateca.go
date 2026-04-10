@@ -205,6 +205,10 @@ func (a *mqlAwsPrivatecaCertificateAuthority) tags() (map[string]any, error) {
 			NextToken:               nextToken,
 		})
 		if err != nil {
+			if Is400AccessDeniedError(err) {
+				log.Warn().Str("arn", arn).Msg("access denied listing tags for private CA")
+				return nil, nil
+			}
 			return nil, err
 		}
 		for _, tag := range resp.Tags {
@@ -232,6 +236,10 @@ func (a *mqlAwsPrivatecaCertificateAuthority) policy() (string, error) {
 	if err != nil {
 		var rnfe *acmpcatypes.ResourceNotFoundException
 		if errors.As(err, &rnfe) {
+			return "", nil
+		}
+		if Is400AccessDeniedError(err) {
+			log.Warn().Str("arn", arn).Msg("access denied fetching policy for private CA")
 			return "", nil
 		}
 		return "", err

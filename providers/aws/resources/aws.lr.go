@@ -15885,8 +15885,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.verifiedaccess.endpoint.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVerifiedaccessEndpoint).GetStatus()).ToDataRes(types.Dict)
 	},
-	"aws.verifiedaccess.endpoint.securityGroupIds": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsVerifiedaccessEndpoint).GetSecurityGroupIds()).ToDataRes(types.Array(types.String))
+	"aws.verifiedaccess.endpoint.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessEndpoint).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
 	},
 	"aws.verifiedaccess.endpoint.sseSpecification": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVerifiedaccessEndpoint).GetSseSpecification()).ToDataRes(types.Dict)
@@ -35847,8 +35847,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsVerifiedaccessEndpoint).Status, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.verifiedaccess.endpoint.securityGroupIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVerifiedaccessEndpoint).SecurityGroupIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"aws.verifiedaccess.endpoint.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessEndpoint).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.verifiedaccess.endpoint.sseSpecification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -86617,7 +86617,7 @@ func (c *mqlAwsVerifiedaccessGroup) GetTags() *plugin.TValue[map[string]any] {
 type mqlAwsVerifiedaccessEndpoint struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsVerifiedaccessEndpointInternal it will be used here
+	mqlAwsVerifiedaccessEndpointInternal
 	VerifiedAccessEndpointId plugin.TValue[string]
 	Region                   plugin.TValue[string]
 	VerifiedAccessGroupId    plugin.TValue[string]
@@ -86628,7 +86628,7 @@ type mqlAwsVerifiedaccessEndpoint struct {
 	AttachmentType           plugin.TValue[string]
 	DomainCertificateArn     plugin.TValue[string]
 	Status                   plugin.TValue[any]
-	SecurityGroupIds         plugin.TValue[[]any]
+	SecurityGroups           plugin.TValue[[]any]
 	SseSpecification         plugin.TValue[any]
 	Tags                     plugin.TValue[map[string]any]
 }
@@ -86710,8 +86710,20 @@ func (c *mqlAwsVerifiedaccessEndpoint) GetStatus() *plugin.TValue[any] {
 	return &c.Status
 }
 
-func (c *mqlAwsVerifiedaccessEndpoint) GetSecurityGroupIds() *plugin.TValue[[]any] {
-	return &c.SecurityGroupIds
+func (c *mqlAwsVerifiedaccessEndpoint) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.verifiedaccess.endpoint", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
 }
 
 func (c *mqlAwsVerifiedaccessEndpoint) GetSseSpecification() *plugin.TValue[any] {

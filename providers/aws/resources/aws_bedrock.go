@@ -33,6 +33,14 @@ func (a *mqlAwsBedrock) foundationModels() ([]any, error) {
 
 	resp, err := svc.ListFoundationModels(ctx, &bedrock.ListFoundationModelsInput{})
 	if err != nil {
+		if Is400AccessDeniedError(err) {
+			log.Warn().Msg("error accessing bedrock API")
+			return nil, nil
+		}
+		if IsServiceNotAvailableInRegionError(err) {
+			log.Debug().Msg("bedrock is not available in the default region")
+			return nil, nil
+		}
 		return nil, err
 	}
 

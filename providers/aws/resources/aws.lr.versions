@@ -4433,7 +4433,7 @@ aws.verifiedaccess.endpoint.domainCertificateArn 13.10.0
 aws.verifiedaccess.endpoint.endpointDomain 13.10.0
 aws.verifiedaccess.endpoint.endpointType 13.10.0
 aws.verifiedaccess.endpoint.region 13.10.0
-aws.verifiedaccess.endpoint.securityGroupIds 13.10.0
+aws.verifiedaccess.endpoint.securityGroups 13.10.0
 aws.verifiedaccess.endpoint.sseSpecification 13.10.0
 aws.verifiedaccess.endpoint.status 13.10.0
 aws.verifiedaccess.endpoint.tags 13.10.0

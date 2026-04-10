@@ -10847,8 +10847,8 @@ private aws.verifiedaccess.endpoint @defaults("verifiedAccessEndpointId applicat
   domainCertificateArn string
   // Status of the endpoint
   status dict
-  // Security group IDs
-  securityGroupIds []string
+  // Security groups associated with the endpoint
+  securityGroups() []aws.ec2.securitygroup
   // SSE specification (KMS encryption)
   sseSpecification dict
   // Tags for the endpoint

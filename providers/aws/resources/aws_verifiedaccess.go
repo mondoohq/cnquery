@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -116,6 +117,11 @@ func (a *mqlAwsVerifiedaccessInstance) loggingConfiguration() (*mqlAwsVerifiedac
 		VerifiedAccessInstanceIds: []string{instanceId},
 	})
 	if err != nil {
+		if Is400AccessDeniedError(err) {
+			log.Warn().Str("instanceId", instanceId).Msg("access denied fetching verified access logging configuration")
+			a.LoggingConfiguration.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -384,13 +390,9 @@ func (a *mqlAwsVerifiedaccess) getEndpoints(conn *connection.AwsConnection) []*j
 }
 
 func newMqlVerifiedAccessEndpoint(runtime *plugin.Runtime, ep ec2types.VerifiedAccessEndpoint, region string) (*mqlAwsVerifiedaccessEndpoint, error) {
+	conn := runtime.Connection.(*connection.AwsConnection)
 	sseSpec, _ := convert.JsonToDict(ep.SseSpecification)
 	statusDict, _ := convert.JsonToDict(ep.Status)
-
-	secGroupIds := make([]any, len(ep.SecurityGroupIds))
-	for i, sg := range ep.SecurityGroupIds {
-		secGroupIds[i] = sg
-	}
 
 	res, err := CreateResource(runtime, "aws.verifiedaccess.endpoint",
 		map[string]*llx.RawData{
@@ -405,16 +407,29 @@ func newMqlVerifiedAccessEndpoint(runtime *plugin.Runtime, ep ec2types.VerifiedA
 			"attachmentType":           llx.StringData(string(ep.AttachmentType)),
 			"domainCertificateArn":     llx.StringDataPtr(ep.DomainCertificateArn),
 			"status":                   llx.DictData(statusDict),
-			"securityGroupIds":         llx.ArrayData(secGroupIds, types.String),
 			"sseSpecification":         llx.DictData(sseSpec),
 			"tags":                     llx.MapData(toInterfaceMap(ec2TagsToMap(ep.Tags)), types.String),
 		})
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAwsVerifiedaccessEndpoint), nil
+	mqlEP := res.(*mqlAwsVerifiedaccessEndpoint)
+	sgArns := make([]string, len(ep.SecurityGroupIds))
+	for i, sgId := range ep.SecurityGroupIds {
+		sgArns[i] = fmt.Sprintf(securityGroupArnPattern, region, conn.AccountId(), sgId)
+	}
+	mqlEP.securityGroupIdHandler.setSecurityGroupArns(sgArns)
+	return mqlEP, nil
+}
+
+type mqlAwsVerifiedaccessEndpointInternal struct {
+	securityGroupIdHandler
 }
 
 func (a *mqlAwsVerifiedaccessEndpoint) id() (string, error) {
 	return "aws.verifiedaccess.endpoint/" + a.Region.Data + "/" + a.VerifiedAccessEndpointId.Data, nil
+}
+
+func (a *mqlAwsVerifiedaccessEndpoint) securityGroups() ([]any, error) {
+	return a.securityGroupIdHandler.newSecurityGroupResources(a.MqlRuntime)
 }

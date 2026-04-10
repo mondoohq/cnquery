@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/securitylake"
 	sltypes "github.com/aws/aws-sdk-go-v2/service/securitylake/types"
@@ -127,6 +128,13 @@ func (a *mqlAwsSecuritylakeDataLake) encryptionKmsKey() (*mqlAwsKmsKey, error) {
 		a.EncryptionKmsKey.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
+	// The EncryptionConfiguration.KmsKeyId field can be a key ID, alias, or ARN.
+	// initAwsKmsKey requires a valid ARN, so skip non-ARN values.
+	if !strings.HasPrefix(*a.cacheKmsKeyId, "arn:") {
+		log.Warn().Str("kmsKeyId", *a.cacheKmsKeyId).Msg("security lake encryption key is not an ARN, cannot resolve as typed resource")
+		a.EncryptionKmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
 	mqlKey, err := NewResource(a.MqlRuntime, "aws.kms.key",
 		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheKmsKeyId)})
 	if err != nil {
@@ -196,11 +204,6 @@ func (a *mqlAwsSecuritylake) getSubscribers(conn *connection.AwsConnection) []*j
 }
 
 func newMqlSecuritylakeSubscriber(runtime *plugin.Runtime, sub sltypes.SubscriberResource) (*mqlAwsSecuritylakeSubscriber, error) {
-	accessTypes := make([]string, len(sub.AccessTypes))
-	for i, at := range sub.AccessTypes {
-		accessTypes[i] = string(at)
-	}
-
 	sources, _ := convert.JsonToDictSlice(sub.Sources)
 
 	var identity any
@@ -216,7 +219,7 @@ func newMqlSecuritylakeSubscriber(runtime *plugin.Runtime, sub sltypes.Subscribe
 			"subscriberName":     llx.StringDataPtr(sub.SubscriberName),
 			"subscriberIdentity": llx.DictData(identity),
 			"sources":            llx.ArrayData(sources, types.Dict),
-			"accessTypes":        llx.ArrayData(convert.SliceAnyToInterface(accessTypes), types.String),
+			"accessTypes":        llx.ArrayData(enumSliceToAny(sub.AccessTypes), types.String),
 			"subscriberStatus":   llx.StringData(string(sub.SubscriberStatus)),
 			"roleArn":            llx.StringDataPtr(sub.RoleArn),
 			"s3BucketArn":        llx.StringDataPtr(sub.S3BucketArn),

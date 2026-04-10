@@ -145,6 +145,10 @@ func (p *AwsConnection) AccountId() string {
 	return p.accountId
 }
 
+func (p *AwsConnection) Region() string {
+	return p.cfg.Region
+}
+
 func parseFlagsForConnectionOptions(m map[string]string, creds []*vault.Credential) []ConnectionOption {
 	o := make([]ConnectionOption, 0)
 	if apiEndpoint, ok := m["endpoint-url"]; ok {

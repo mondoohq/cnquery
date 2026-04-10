@@ -23,69 +23,44 @@ func (a *mqlAwsControltower) id() (string, error) {
 
 func (a *mqlAwsControltower) landingZones() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	// An account has at most one landing zone, and the ListLandingZones API
+	// returns it regardless of which region is queried. Use the default
+	// region to avoid redundant calls across every enabled region.
+	svc := conn.Controltower("")
+	ctx := context.Background()
 	res := []any{}
-	poolOfJobs := jobpool.CreatePool(a.getLandingZones(conn), 5)
-	poolOfJobs.Run()
 
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	for i := range poolOfJobs.Jobs {
-		if poolOfJobs.Jobs[i].Result != nil {
-			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+	paginator := controltower.NewListLandingZonesPaginator(svc, &controltower.ListLandingZonesInput{})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				log.Warn().Msg("error accessing control tower API")
+				return nil, nil
+			}
+			if IsServiceNotAvailableInRegionError(err) {
+				log.Debug().Msg("control tower is not available in the default region")
+				return nil, nil
+			}
+			return nil, err
+		}
+
+		for _, lz := range page.LandingZones {
+			mqlLZ, err := CreateResource(a.MqlRuntime, "aws.controltower.landingZone",
+				map[string]*llx.RawData{
+					"__id":   llx.StringDataPtr(lz.Arn),
+					"arn":    llx.StringDataPtr(lz.Arn),
+					"region": llx.StringData(conn.Region()),
+				})
+			if err != nil {
+				return nil, err
+			}
+			mqlLZRes := mqlLZ.(*mqlAwsControltowerLandingZone)
+			mqlLZRes.cacheRegion = conn.Region()
+			res = append(res, mqlLZ)
 		}
 	}
 	return res, nil
-}
-
-func (a *mqlAwsControltower) getLandingZones(conn *connection.AwsConnection) []*jobpool.Job {
-	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.Regions()
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
-
-	for _, region := range regions {
-		f := func() (jobpool.JobResult, error) {
-			svc := conn.Controltower(region)
-			ctx := context.Background()
-			res := []any{}
-
-			paginator := controltower.NewListLandingZonesPaginator(svc, &controltower.ListLandingZonesInput{})
-			for paginator.HasMorePages() {
-				page, err := paginator.NextPage(ctx)
-				if err != nil {
-					if Is400AccessDeniedError(err) {
-						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
-						return res, nil
-					}
-					if IsServiceNotAvailableInRegionError(err) {
-						log.Debug().Str("region", region).Msg("control tower is not available in region")
-						return res, nil
-					}
-					return nil, err
-				}
-
-				for _, lz := range page.LandingZones {
-					mqlLZ, err := CreateResource(a.MqlRuntime, "aws.controltower.landingZone",
-						map[string]*llx.RawData{
-							"__id":   llx.StringDataPtr(lz.Arn),
-							"arn":    llx.StringDataPtr(lz.Arn),
-							"region": llx.StringData(region),
-						})
-					if err != nil {
-						return nil, err
-					}
-					mqlLZRes := mqlLZ.(*mqlAwsControltowerLandingZone)
-					mqlLZRes.cacheRegion = region
-					res = append(res, mqlLZ)
-				}
-			}
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
 }
 
 type mqlAwsControltowerLandingZoneInternal struct {
