@@ -14,8 +14,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/spf13/afero"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 	"go.mondoo.com/mql/v13/types"
 	"sigs.k8s.io/yaml"
 )
@@ -34,14 +36,23 @@ func initClaudeCode(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	}
 
 	if _, ok := args["configPath"]; !ok {
-		home, err := os.UserHomeDir()
+		// Resolve the home directory from the target's user list, not the local host.
+		home, err := targetHomeDir(runtime)
 		if err != nil {
-			return nil, nil, fmt.Errorf("cannot determine user home directory: %w", err)
+			return nil, nil, err
 		}
 		args["configPath"] = llx.StringData(filepath.Join(home, defaultClaudeCodeConfigDir))
 	}
 
 	return args, nil, nil
+}
+
+// mqlClaudeCodeInternal caches the backup state for the lifetime of
+// this resource instance, avoiding the global map that leaked across assets.
+type mqlClaudeCodeInternal struct {
+	backupOnce  sync.Once
+	backupState *claudeBackupState
+	backupErr   error
 }
 
 func (r *mqlClaudeCode) id() (string, error) {
@@ -51,6 +62,12 @@ func (r *mqlClaudeCode) id() (string, error) {
 // configDir returns the configPath for this resource instance.
 func (r *mqlClaudeCode) configDir() string {
 	return r.ConfigPath.Data
+}
+
+// afs returns an afero.Afero wrapping the connection's filesystem.
+func (r *mqlClaudeCode) afs() *afero.Afero {
+	conn := r.MqlRuntime.Connection.(shared.Connection)
+	return &afero.Afero{Fs: conn.FileSystem()}
 }
 
 func (r *mqlClaudeCode) email() (string, error) {
@@ -103,7 +120,7 @@ func (r *mqlClaudeCode) organizationId() (string, error) {
 
 func (r *mqlClaudeCode) settings() (interface{}, error) {
 	var settings map[string]interface{}
-	err := claudeReadJSONFile(r.configDir(), "settings.json", &settings)
+	err := readJSONFileAfero(r.afs(), r.configDir(), "settings.json", &settings)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return map[string]interface{}{}, nil
@@ -117,7 +134,7 @@ func (r *mqlClaudeCode) enabledPlugins() ([]interface{}, error) {
 	var settings struct {
 		EnabledPlugins map[string]bool `json:"enabledPlugins"`
 	}
-	err := claudeReadJSONFile(r.configDir(), "settings.json", &settings)
+	err := readJSONFileAfero(r.afs(), r.configDir(), "settings.json", &settings)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, nil
@@ -137,11 +154,13 @@ func (r *mqlClaudeCode) enabledPlugins() ([]interface{}, error) {
 }
 
 func (r *mqlClaudeCode) plugins() ([]interface{}, error) {
+	afs := r.afs()
+
 	var installedPlugins struct {
 		Version int                               `json:"version"`
 		Plugins map[string][]installedPluginEntry `json:"plugins"`
 	}
-	err := claudeReadJSONFile(r.configDir(), "plugins/installed_plugins.json", &installedPlugins)
+	err := readJSONFileAfero(afs, r.configDir(), "plugins/installed_plugins.json", &installedPlugins)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, nil
@@ -152,7 +171,7 @@ func (r *mqlClaudeCode) plugins() ([]interface{}, error) {
 	var settings struct {
 		EnabledPlugins map[string]bool `json:"enabledPlugins"`
 	}
-	_ = claudeReadJSONFile(r.configDir(), "settings.json", &settings)
+	_ = readJSONFileAfero(afs, r.configDir(), "settings.json", &settings)
 
 	var result []interface{}
 	for name, entries := range installedPlugins.Plugins {
@@ -184,9 +203,10 @@ func (r *mqlClaudeCode) plugins() ([]interface{}, error) {
 }
 
 func (r *mqlClaudeCode) skills() ([]interface{}, error) {
+	afs := r.afs()
 	skillsDir := filepath.Join(r.configDir(), "skills")
 
-	entries, err := os.ReadDir(skillsDir)
+	entries, err := afs.ReadDir(skillsDir)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, nil
@@ -201,7 +221,7 @@ func (r *mqlClaudeCode) skills() ([]interface{}, error) {
 		}
 
 		skillPath := filepath.Join(skillsDir, entry.Name(), "SKILL.md")
-		data, err := os.ReadFile(skillPath)
+		data, err := afs.ReadFile(skillPath)
 		if err != nil {
 			continue
 		}
@@ -231,6 +251,7 @@ func (r *mqlClaudeCode) skills() ([]interface{}, error) {
 }
 
 func (r *mqlClaudeCode) projects() ([]interface{}, error) {
+	afs := r.afs()
 	state, err := r.loadBackupState()
 	if err != nil {
 		return nil, err
@@ -240,7 +261,7 @@ func (r *mqlClaudeCode) projects() ([]interface{}, error) {
 	var result []interface{}
 	for projectPath, dirName := range state.projectDirMap() {
 		memoryDir := filepath.Join(projectsDir, dirName, "memory")
-		hasMemory := dirHasFiles(memoryDir)
+		hasMemory := dirHasFilesAfero(afs, memoryDir)
 
 		res, err := NewResource(r.MqlRuntime, "claude.code.project", map[string]*llx.RawData{
 			"__id":      llx.StringData("claude.code.project/" + projectPath),
@@ -259,7 +280,7 @@ func (r *mqlClaudeCode) mcpServers() ([]interface{}, error) {
 	var cache map[string]struct {
 		Timestamp int64 `json:"timestamp"`
 	}
-	err := claudeReadJSONFile(r.configDir(), "mcp-needs-auth-cache.json", &cache)
+	err := readJSONFileAfero(r.afs(), r.configDir(), "mcp-needs-auth-cache.json", &cache)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, nil
@@ -274,6 +295,8 @@ func (r *mqlClaudeCode) mcpServers() ([]interface{}, error) {
 			lastChecked = time.UnixMilli(entry.Timestamp).UTC().Format(time.RFC3339)
 		}
 
+		// Presence in mcp-needs-auth-cache.json means the server requires
+		// authentication; servers that don't need auth are not listed.
 		res, err := NewResource(r.MqlRuntime, "claude.code.mcpServer", map[string]*llx.RawData{
 			"__id":        llx.StringData("claude.code.mcpServer/" + name),
 			"name":        llx.StringData(name),
@@ -341,45 +364,25 @@ func pathToProjectDir(path string) string {
 	return "-" + s
 }
 
-// backupStateOnce caches the backup state per resource instance,
-// loaded at most once via sync.Once.
-type backupStateOnce struct {
-	once  sync.Once
-	state *claudeBackupState
-	err   error
-}
-
-var (
-	backupStateInstances   = make(map[string]*backupStateOnce)
-	backupStateInstancesMu sync.Mutex
-)
-
 func (r *mqlClaudeCode) loadBackupState() (*claudeBackupState, error) {
-	dir := r.configDir()
+	r.backupOnce.Do(func() {
+		afs := r.afs()
+		dir := r.configDir()
 
-	backupStateInstancesMu.Lock()
-	bso, ok := backupStateInstances[dir]
-	if !ok {
-		bso = &backupStateOnce{}
-		backupStateInstances[dir] = bso
-	}
-	backupStateInstancesMu.Unlock()
-
-	bso.once.Do(func() {
-		backupFile, err := findLatestBackup(dir)
+		backupFile, err := findLatestBackupAfero(afs, dir)
 		if err != nil {
-			bso.err = err
+			r.backupErr = err
 			return
 		}
 		var state claudeBackupState
-		if err := claudeReadJSONFile(dir, filepath.Join("backups", backupFile), &state); err != nil {
-			bso.err = err
+		if err := readJSONFileAfero(afs, dir, filepath.Join("backups", backupFile), &state); err != nil {
+			r.backupErr = err
 			return
 		}
-		bso.state = &state
+		r.backupState = &state
 	})
 
-	return bso.state, bso.err
+	return r.backupState, r.backupErr
 }
 
 func (r *mqlClaudeCode) loadOAuthAccount() (*oauthAccount, error) {
@@ -393,9 +396,9 @@ func (r *mqlClaudeCode) loadOAuthAccount() (*oauthAccount, error) {
 	return state.OAuthAccount, nil
 }
 
-func findLatestBackup(configDir string) (string, error) {
+func findLatestBackupAfero(afs *afero.Afero, configDir string) (string, error) {
 	backupsDir := filepath.Join(configDir, "backups")
-	entries, err := os.ReadDir(backupsDir)
+	entries, err := afs.ReadDir(backupsDir)
 	if err != nil {
 		return "", fmt.Errorf("cannot read backups directory: %w", err)
 	}
@@ -424,9 +427,10 @@ func findLatestBackup(configDir string) (string, error) {
 	return latestBackup, nil
 }
 
-// claudeReadJSONFile reads and unmarshals a JSON file relative to a base directory.
-func claudeReadJSONFile(baseDir string, relPath string, v interface{}) error {
-	data, err := os.ReadFile(filepath.Join(baseDir, relPath))
+// readJSONFileAfero reads and unmarshals a JSON file relative to a base directory
+// using the provided afero filesystem (which may be remote via SSH, container, etc.).
+func readJSONFileAfero(afs *afero.Afero, baseDir string, relPath string, v interface{}) error {
+	data, err := afs.ReadFile(filepath.Join(baseDir, relPath))
 	if err != nil {
 		return err
 	}
@@ -482,8 +486,8 @@ func parseSkillMd(name, sourcePath, content string) skillInfo {
 	return info
 }
 
-func dirHasFiles(dir string) bool {
-	entries, err := os.ReadDir(dir)
+func dirHasFilesAfero(afs *afero.Afero, dir string) bool {
+	entries, err := afs.ReadDir(dir)
 	if err != nil {
 		return false
 	}
@@ -493,6 +497,30 @@ func dirHasFiles(dir string) bool {
 		}
 	}
 	return false
+}
+
+// targetHomeDir resolves the first non-system user's home directory on the target
+// via the users resource, so it works for remote SSH/container connections.
+func targetHomeDir(runtime *plugin.Runtime) (string, error) {
+	usersResource, err := CreateResource(runtime, "users", map[string]*llx.RawData{})
+	if err != nil {
+		return "", fmt.Errorf("cannot list users on target: %w", err)
+	}
+
+	userList := usersResource.(*mqlUsers).GetList()
+	if userList.Error != nil {
+		return "", fmt.Errorf("cannot list users on target: %w", userList.Error)
+	}
+
+	for _, u := range userList.Data {
+		user := u.(*mqlUser)
+		home := user.GetHome().Data
+		if home != "" && !invalidHomeDirs[home] {
+			return home, nil
+		}
+	}
+
+	return "", fmt.Errorf("no valid user home directory found on target")
 }
 
 // Stub ID methods for child resources (they use __id set during creation)

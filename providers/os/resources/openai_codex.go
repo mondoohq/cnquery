@@ -9,8 +9,10 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/spf13/afero"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 	"go.mondoo.com/mql/v13/types"
 )
 
@@ -28,9 +30,10 @@ func initOpenaiCodex(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	}
 
 	if _, ok := args["configPath"]; !ok {
-		home, err := os.UserHomeDir()
+		// Resolve the home directory from the target's user list, not the local host.
+		home, err := targetHomeDir(runtime)
 		if err != nil {
-			return nil, nil, fmt.Errorf("cannot determine user home directory: %w", err)
+			return nil, nil, err
 		}
 		args["configPath"] = llx.StringData(filepath.Join(home, defaultCodexConfigDir))
 	}
@@ -44,6 +47,12 @@ func (r *mqlOpenaiCodex) id() (string, error) {
 
 func (r *mqlOpenaiCodex) codexDir() string {
 	return r.ConfigPath.Data
+}
+
+// afs returns an afero.Afero wrapping the connection's filesystem.
+func (r *mqlOpenaiCodex) afs() *afero.Afero {
+	conn := r.MqlRuntime.Connection.(shared.Connection)
+	return &afero.Afero{Fs: conn.FileSystem()}
 }
 
 func (r *mqlOpenaiCodex) authMode() (string, error) {
@@ -69,7 +78,7 @@ func (r *mqlOpenaiCodex) version() (string, error) {
 	var ver struct {
 		LatestVersion string `json:"latest_version"`
 	}
-	err := claudeReadJSONFile(r.codexDir(), "version.json", &ver)
+	err := readJSONFileAfero(r.afs(), r.codexDir(), "version.json", &ver)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return "", nil
@@ -88,9 +97,10 @@ func (r *mqlOpenaiCodex) lastRefresh() (string, error) {
 }
 
 func (r *mqlOpenaiCodex) plugins() ([]interface{}, error) {
+	afs := r.afs()
 	pluginsDir := filepath.Join(r.codexDir(), ".tmp", "plugins", "plugins")
 
-	entries, err := os.ReadDir(pluginsDir)
+	entries, err := afs.ReadDir(pluginsDir)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, nil
@@ -111,7 +121,7 @@ func (r *mqlOpenaiCodex) plugins() ([]interface{}, error) {
 
 		// Read plugin.json
 		var pj codexPluginJSON
-		if err := claudeReadJSONFile(pluginDir, ".codex-plugin/plugin.json", &pj); err == nil {
+		if err := readJSONFileAfero(afs, pluginDir, ".codex-plugin/plugin.json", &pj); err == nil {
 			p.version = pj.Version
 			p.description = pj.Description
 			if pj.Author != nil {
@@ -125,7 +135,7 @@ func (r *mqlOpenaiCodex) plugins() ([]interface{}, error) {
 
 		// Collect skill names from skills directory
 		skillsDir := filepath.Join(pluginDir, "skills")
-		if skillEntries, err := os.ReadDir(skillsDir); err == nil {
+		if skillEntries, err := afs.ReadDir(skillsDir); err == nil {
 			for _, se := range skillEntries {
 				if se.IsDir() {
 					p.skillNames = append(p.skillNames, se.Name())
@@ -134,12 +144,12 @@ func (r *mqlOpenaiCodex) plugins() ([]interface{}, error) {
 		}
 
 		// Check for MCP config
-		_, mcpErr := os.Stat(filepath.Join(pluginDir, ".mcp.json"))
-		p.hasMcp = mcpErr == nil
+		mcpExists, _ := afs.Exists(filepath.Join(pluginDir, ".mcp.json"))
+		p.hasMcp = mcpExists
 
 		// Check for hooks
-		_, hooksErr := os.Stat(filepath.Join(pluginDir, "hooks.json"))
-		p.hasHooks = hooksErr == nil
+		hooksExists, _ := afs.Exists(filepath.Join(pluginDir, "hooks.json"))
+		p.hasHooks = hooksExists
 
 		capAny := make([]interface{}, len(p.capabilities))
 		for i, c := range p.capabilities {
@@ -171,17 +181,18 @@ func (r *mqlOpenaiCodex) plugins() ([]interface{}, error) {
 }
 
 func (r *mqlOpenaiCodex) skills() ([]interface{}, error) {
+	afs := r.afs()
 	var result []interface{}
 
 	// Collect system skills
 	systemSkillsDir := filepath.Join(r.codexDir(), "skills", ".system")
-	if entries, err := os.ReadDir(systemSkillsDir); err == nil {
+	if entries, err := afs.ReadDir(systemSkillsDir); err == nil {
 		for _, entry := range entries {
 			if !entry.IsDir() {
 				continue
 			}
 			skillPath := filepath.Join(systemSkillsDir, entry.Name(), "SKILL.md")
-			data, err := os.ReadFile(skillPath)
+			data, err := afs.ReadFile(skillPath)
 			if err != nil {
 				continue
 			}
@@ -196,14 +207,14 @@ func (r *mqlOpenaiCodex) skills() ([]interface{}, error) {
 
 	// Collect plugin skills
 	pluginsDir := filepath.Join(r.codexDir(), ".tmp", "plugins", "plugins")
-	if pluginEntries, err := os.ReadDir(pluginsDir); err == nil {
+	if pluginEntries, err := afs.ReadDir(pluginsDir); err == nil {
 		for _, pe := range pluginEntries {
 			if !pe.IsDir() {
 				continue
 			}
 			pluginName := pe.Name()
 			skillsDir := filepath.Join(pluginsDir, pluginName, "skills")
-			skillEntries, err := os.ReadDir(skillsDir)
+			skillEntries, err := afs.ReadDir(skillsDir)
 			if err != nil {
 				continue
 			}
@@ -212,7 +223,7 @@ func (r *mqlOpenaiCodex) skills() ([]interface{}, error) {
 					continue
 				}
 				skillPath := filepath.Join(skillsDir, se.Name(), "SKILL.md")
-				data, err := os.ReadFile(skillPath)
+				data, err := afs.ReadFile(skillPath)
 				if err != nil {
 					continue
 				}
@@ -230,9 +241,10 @@ func (r *mqlOpenaiCodex) skills() ([]interface{}, error) {
 }
 
 func (r *mqlOpenaiCodex) mcpServers() ([]interface{}, error) {
+	afs := r.afs()
 	pluginsDir := filepath.Join(r.codexDir(), ".tmp", "plugins", "plugins")
 
-	entries, err := os.ReadDir(pluginsDir)
+	entries, err := afs.ReadDir(pluginsDir)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, nil
@@ -251,7 +263,7 @@ func (r *mqlOpenaiCodex) mcpServers() ([]interface{}, error) {
 		var mcpConfig struct {
 			McpServers map[string]codexMcpServerEntry `json:"mcpServers"`
 		}
-		data, err := os.ReadFile(mcpPath)
+		data, err := afs.ReadFile(mcpPath)
 		if err != nil {
 			continue
 		}
@@ -278,9 +290,10 @@ func (r *mqlOpenaiCodex) mcpServers() ([]interface{}, error) {
 }
 
 func (r *mqlOpenaiCodex) connectors() ([]interface{}, error) {
+	afs := r.afs()
 	pluginsDir := filepath.Join(r.codexDir(), ".tmp", "plugins", "plugins")
 
-	entries, err := os.ReadDir(pluginsDir)
+	entries, err := afs.ReadDir(pluginsDir)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, nil
@@ -300,7 +313,7 @@ func (r *mqlOpenaiCodex) connectors() ([]interface{}, error) {
 				ID string `json:"id"`
 			} `json:"apps"`
 		}
-		if err := claudeReadJSONFile(filepath.Join(pluginsDir, pluginName), ".app.json", &appConfig); err != nil {
+		if err := readJSONFileAfero(afs, filepath.Join(pluginsDir, pluginName), ".app.json", &appConfig); err != nil {
 			continue
 		}
 
@@ -368,7 +381,7 @@ type codexPluginInfo struct {
 
 func (r *mqlOpenaiCodex) loadAuth() (*codexAuthJSON, error) {
 	var auth codexAuthJSON
-	err := claudeReadJSONFile(r.codexDir(), "auth.json", &auth)
+	err := readJSONFileAfero(r.afs(), r.codexDir(), "auth.json", &auth)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return &codexAuthJSON{}, nil

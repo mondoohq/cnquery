@@ -28340,7 +28340,7 @@ func (c *mqlZfsDataset) GetSnapshots() *plugin.TValue[[]any] {
 type mqlClaudeCode struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlClaudeCodeInternal it will be used here
+	mqlClaudeCodeInternal
 	ConfigPath     plugin.TValue[string]
 	Email          plugin.TValue[string]
 	Organization   plugin.TValue[string]

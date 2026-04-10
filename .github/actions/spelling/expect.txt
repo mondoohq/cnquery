@@ -12,6 +12,7 @@ apparmor
 appslot
 arp
 artifactregistry
+asdk
 atlassian
 auditlog
 Auths
@@ -39,6 +40,7 @@ cdn
 certificatechains
 ciscocatalyst
 clcerts
+chatgpt
 chokepoint
 cloudflare
 claude
@@ -109,6 +111,7 @@ gistfile
 gpc
 gpo
 gpu
+gopls
 grafana
 groupname
 gvnic
@@ -207,6 +210,7 @@ oidc
 ondemand
 ontap
 opcplc
+openai
 opensearch
 openssl
 openvpn

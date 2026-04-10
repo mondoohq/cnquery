@@ -8,9 +8,16 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// testAfero returns an afero.Afero backed by the real OS filesystem,
+// suitable for unit tests that create temp directories.
+func testAfero() *afero.Afero {
+	return &afero.Afero{Fs: afero.NewOsFs()}
+}
 
 // createTestClaudeConfig creates a temporary directory tree mimicking a Claude Code
 // config directory and returns its path. The caller should defer os.RemoveAll(path).
@@ -158,30 +165,34 @@ func TestPathToProjectDir(t *testing.T) {
 	}
 }
 
-func TestDirHasFiles(t *testing.T) {
-	assert.False(t, dirHasFiles("/nonexistent/path"))
+func TestDirHasFilesAfero(t *testing.T) {
+	afs := testAfero()
+
+	assert.False(t, dirHasFilesAfero(afs, "/nonexistent/path"))
 
 	dir := t.TempDir()
-	assert.False(t, dirHasFiles(dir))
+	assert.False(t, dirHasFilesAfero(afs, dir))
 
 	require.NoError(t, os.WriteFile(filepath.Join(dir, "test.txt"), []byte("hi"), 0o644))
-	assert.True(t, dirHasFiles(dir))
+	assert.True(t, dirHasFilesAfero(afs, dir))
 }
 
-func TestClaudeReadJSONFile(t *testing.T) {
+func TestReadJSONFileAfero(t *testing.T) {
+	afs := testAfero()
 	dir := t.TempDir()
 	writeTestFile(t, dir, "test.json", `{"key": "value"}`)
 
 	var result map[string]string
-	err := claudeReadJSONFile(dir, "test.json", &result)
+	err := readJSONFileAfero(afs, dir, "test.json", &result)
 	require.NoError(t, err)
 	assert.Equal(t, "value", result["key"])
 
-	err = claudeReadJSONFile(dir, "nonexistent.json", &result)
+	err = readJSONFileAfero(afs, dir, "nonexistent.json", &result)
 	assert.True(t, os.IsNotExist(err))
 }
 
-func TestFindLatestBackup(t *testing.T) {
+func TestFindLatestBackupAfero(t *testing.T) {
+	afs := testAfero()
 	dir := t.TempDir()
 	mkdirAllTest(t, dir, "backups")
 
@@ -189,38 +200,40 @@ func TestFindLatestBackup(t *testing.T) {
 	writeTestFile(t, dir, "backups/.claude.json.backup.2000000000000", "{}")
 	writeTestFile(t, dir, "backups/.claude.json.backup.1500000000000", "{}")
 
-	latest, err := findLatestBackup(dir)
+	latest, err := findLatestBackupAfero(afs, dir)
 	require.NoError(t, err)
 	assert.Equal(t, ".claude.json.backup.2000000000000", latest)
 }
 
-func TestFindLatestBackupEmpty(t *testing.T) {
+func TestFindLatestBackupAferoEmpty(t *testing.T) {
+	afs := testAfero()
 	dir := t.TempDir()
 	mkdirAllTest(t, dir, "backups")
 
-	_, err := findLatestBackup(dir)
+	_, err := findLatestBackupAfero(afs, dir)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "no backup files found")
 }
 
 func TestClaudeConfigIntegration(t *testing.T) {
+	afs := testAfero()
 	dir := createTestClaudeConfig(t)
 
 	// Test settings reading
 	var settings struct {
 		EnabledPlugins map[string]bool `json:"enabledPlugins"`
 	}
-	err := claudeReadJSONFile(dir, "settings.json", &settings)
+	err := readJSONFileAfero(afs, dir, "settings.json", &settings)
 	require.NoError(t, err)
 	assert.True(t, settings.EnabledPlugins["gopls-lsp@official"])
 	assert.True(t, settings.EnabledPlugins["frontend-design@official"])
 
 	// Test backup state loading
-	latest, err := findLatestBackup(dir)
+	latest, err := findLatestBackupAfero(afs, dir)
 	require.NoError(t, err)
 
 	var state claudeBackupState
-	err = claudeReadJSONFile(dir, filepath.Join("backups", latest), &state)
+	err = readJSONFileAfero(afs, dir, filepath.Join("backups", latest), &state)
 	require.NoError(t, err)
 	require.NotNil(t, state.OAuthAccount)
 	assert.Equal(t, "test@example.com", state.OAuthAccount.EmailAddress)
@@ -236,12 +249,12 @@ func TestClaudeConfigIntegration(t *testing.T) {
 	assert.Equal(t, "-home-test-go-src-github-com-user-repo", dirMap["/home/test/go/src/github.com/user/repo"])
 
 	// Test memory detection
-	assert.False(t, dirHasFiles(filepath.Join(dir, "projects", "-home-test-project-one", "memory")))
-	assert.True(t, dirHasFiles(filepath.Join(dir, "projects", "-home-test-go-src-github-com-user-repo", "memory")))
+	assert.False(t, dirHasFilesAfero(afs, filepath.Join(dir, "projects", "-home-test-project-one", "memory")))
+	assert.True(t, dirHasFilesAfero(afs, filepath.Join(dir, "projects", "-home-test-go-src-github-com-user-repo", "memory")))
 
 	// Test skill parsing from fixture
 	skillPath := filepath.Join(dir, "skills", "review-pr", "SKILL.md")
-	data, err := os.ReadFile(skillPath)
+	data, err := afs.ReadFile(skillPath)
 	require.NoError(t, err)
 	skill := parseSkillMd("review-pr", skillPath, string(data))
 	assert.Equal(t, "review-pr", skill.name)
@@ -254,7 +267,7 @@ func TestClaudeConfigIntegration(t *testing.T) {
 	var cache map[string]struct {
 		Timestamp int64 `json:"timestamp"`
 	}
-	err = claudeReadJSONFile(dir, "mcp-needs-auth-cache.json", &cache)
+	err = readJSONFileAfero(afs, dir, "mcp-needs-auth-cache.json", &cache)
 	require.NoError(t, err)
 	assert.Len(t, cache, 2)
 	assert.Equal(t, int64(1700000000000), cache["claude.ai HubSpot"].Timestamp)
