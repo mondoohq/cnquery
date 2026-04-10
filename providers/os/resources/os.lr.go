@@ -232,6 +232,16 @@ const (
 	ResourceZfsPool                    string = "zfs.pool"
 	ResourceZfsPoolVdev                string = "zfs.pool.vdev"
 	ResourceZfsDataset                 string = "zfs.dataset"
+	ResourceClaudeCode                 string = "claude.code"
+	ResourceClaudeCodePlugin           string = "claude.code.plugin"
+	ResourceClaudeCodeSkill            string = "claude.code.skill"
+	ResourceClaudeCodeProject          string = "claude.code.project"
+	ResourceClaudeCodeMcpServer        string = "claude.code.mcpServer"
+	ResourceOpenaiCodex                string = "openai.codex"
+	ResourceOpenaiCodexPlugin          string = "openai.codex.plugin"
+	ResourceOpenaiCodexSkill           string = "openai.codex.skill"
+	ResourceOpenaiCodexMcpServer       string = "openai.codex.mcpServer"
+	ResourceOpenaiCodexConnector       string = "openai.codex.connector"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -1101,6 +1111,46 @@ func init() {
 		"zfs.dataset": {
 			Init:   initZfsDataset,
 			Create: createZfsDataset,
+		},
+		"claude.code": {
+			Init:   initClaudeCode,
+			Create: createClaudeCode,
+		},
+		"claude.code.plugin": {
+			// to override args, implement: initClaudeCodePlugin(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createClaudeCodePlugin,
+		},
+		"claude.code.skill": {
+			// to override args, implement: initClaudeCodeSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createClaudeCodeSkill,
+		},
+		"claude.code.project": {
+			// to override args, implement: initClaudeCodeProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createClaudeCodeProject,
+		},
+		"claude.code.mcpServer": {
+			// to override args, implement: initClaudeCodeMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createClaudeCodeMcpServer,
+		},
+		"openai.codex": {
+			Init:   initOpenaiCodex,
+			Create: createOpenaiCodex,
+		},
+		"openai.codex.plugin": {
+			// to override args, implement: initOpenaiCodexPlugin(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOpenaiCodexPlugin,
+		},
+		"openai.codex.skill": {
+			// to override args, implement: initOpenaiCodexSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOpenaiCodexSkill,
+		},
+		"openai.codex.mcpServer": {
+			// to override args, implement: initOpenaiCodexMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOpenaiCodexMcpServer,
+		},
+		"openai.codex.connector": {
+			// to override args, implement: initOpenaiCodexConnector(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOpenaiCodexConnector,
 		},
 	}
 }
@@ -4595,6 +4645,195 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"zfs.dataset.snapshots": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlZfsDataset).GetSnapshots()).ToDataRes(types.Array(types.Resource("zfs.dataset")))
+	},
+	"claude.code.configPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCode).GetConfigPath()).ToDataRes(types.String)
+	},
+	"claude.code.email": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCode).GetEmail()).ToDataRes(types.String)
+	},
+	"claude.code.organization": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCode).GetOrganization()).ToDataRes(types.String)
+	},
+	"claude.code.role": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCode).GetRole()).ToDataRes(types.String)
+	},
+	"claude.code.subscription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCode).GetSubscription()).ToDataRes(types.String)
+	},
+	"claude.code.userId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCode).GetUserId()).ToDataRes(types.String)
+	},
+	"claude.code.organizationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCode).GetOrganizationId()).ToDataRes(types.String)
+	},
+	"claude.code.settings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCode).GetSettings()).ToDataRes(types.Dict)
+	},
+	"claude.code.enabledPlugins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCode).GetEnabledPlugins()).ToDataRes(types.Array(types.String))
+	},
+	"claude.code.plugins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCode).GetPlugins()).ToDataRes(types.Array(types.Resource("claude.code.plugin")))
+	},
+	"claude.code.skills": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCode).GetSkills()).ToDataRes(types.Array(types.Resource("claude.code.skill")))
+	},
+	"claude.code.projects": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCode).GetProjects()).ToDataRes(types.Array(types.Resource("claude.code.project")))
+	},
+	"claude.code.mcpServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCode).GetMcpServers()).ToDataRes(types.Array(types.Resource("claude.code.mcpServer")))
+	},
+	"claude.code.plugin.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodePlugin).GetName()).ToDataRes(types.String)
+	},
+	"claude.code.plugin.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodePlugin).GetVersion()).ToDataRes(types.String)
+	},
+	"claude.code.plugin.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodePlugin).GetScope()).ToDataRes(types.String)
+	},
+	"claude.code.plugin.installPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodePlugin).GetInstallPath()).ToDataRes(types.String)
+	},
+	"claude.code.plugin.installedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodePlugin).GetInstalledAt()).ToDataRes(types.String)
+	},
+	"claude.code.plugin.lastUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodePlugin).GetLastUpdated()).ToDataRes(types.String)
+	},
+	"claude.code.plugin.gitCommitSha": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodePlugin).GetGitCommitSha()).ToDataRes(types.String)
+	},
+	"claude.code.plugin.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodePlugin).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"claude.code.skill.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeSkill).GetName()).ToDataRes(types.String)
+	},
+	"claude.code.skill.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeSkill).GetDescription()).ToDataRes(types.String)
+	},
+	"claude.code.skill.allowedTools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeSkill).GetAllowedTools()).ToDataRes(types.Array(types.String))
+	},
+	"claude.code.skill.argumentHint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeSkill).GetArgumentHint()).ToDataRes(types.String)
+	},
+	"claude.code.skill.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeSkill).GetSource()).ToDataRes(types.String)
+	},
+	"claude.code.skill.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeSkill).GetContent()).ToDataRes(types.String)
+	},
+	"claude.code.project.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeProject).GetPath()).ToDataRes(types.String)
+	},
+	"claude.code.project.hasMemory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeProject).GetHasMemory()).ToDataRes(types.Bool)
+	},
+	"claude.code.mcpServer.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeMcpServer).GetName()).ToDataRes(types.String)
+	},
+	"claude.code.mcpServer.needsAuth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeMcpServer).GetNeedsAuth()).ToDataRes(types.Bool)
+	},
+	"claude.code.mcpServer.lastChecked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeMcpServer).GetLastChecked()).ToDataRes(types.String)
+	},
+	"openai.codex.configPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodex).GetConfigPath()).ToDataRes(types.String)
+	},
+	"openai.codex.authMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodex).GetAuthMode()).ToDataRes(types.String)
+	},
+	"openai.codex.accountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodex).GetAccountId()).ToDataRes(types.String)
+	},
+	"openai.codex.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodex).GetVersion()).ToDataRes(types.String)
+	},
+	"openai.codex.lastRefresh": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodex).GetLastRefresh()).ToDataRes(types.String)
+	},
+	"openai.codex.plugins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodex).GetPlugins()).ToDataRes(types.Array(types.Resource("openai.codex.plugin")))
+	},
+	"openai.codex.skills": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodex).GetSkills()).ToDataRes(types.Array(types.Resource("openai.codex.skill")))
+	},
+	"openai.codex.mcpServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodex).GetMcpServers()).ToDataRes(types.Array(types.Resource("openai.codex.mcpServer")))
+	},
+	"openai.codex.connectors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodex).GetConnectors()).ToDataRes(types.Array(types.Resource("openai.codex.connector")))
+	},
+	"openai.codex.plugin.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodexPlugin).GetName()).ToDataRes(types.String)
+	},
+	"openai.codex.plugin.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodexPlugin).GetVersion()).ToDataRes(types.String)
+	},
+	"openai.codex.plugin.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodexPlugin).GetDescription()).ToDataRes(types.String)
+	},
+	"openai.codex.plugin.author": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodexPlugin).GetAuthor()).ToDataRes(types.String)
+	},
+	"openai.codex.plugin.category": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodexPlugin).GetCategory()).ToDataRes(types.String)
+	},
+	"openai.codex.plugin.capabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodexPlugin).GetCapabilities()).ToDataRes(types.Array(types.String))
+	},
+	"openai.codex.plugin.skillNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodexPlugin).GetSkillNames()).ToDataRes(types.Array(types.String))
+	},
+	"openai.codex.plugin.hasMcp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodexPlugin).GetHasMcp()).ToDataRes(types.Bool)
+	},
+	"openai.codex.plugin.hasHooks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodexPlugin).GetHasHooks()).ToDataRes(types.Bool)
+	},
+	"openai.codex.skill.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodexSkill).GetName()).ToDataRes(types.String)
+	},
+	"openai.codex.skill.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodexSkill).GetDescription()).ToDataRes(types.String)
+	},
+	"openai.codex.skill.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodexSkill).GetSource()).ToDataRes(types.String)
+	},
+	"openai.codex.skill.plugin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodexSkill).GetPlugin()).ToDataRes(types.String)
+	},
+	"openai.codex.skill.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodexSkill).GetContent()).ToDataRes(types.String)
+	},
+	"openai.codex.mcpServer.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodexMcpServer).GetName()).ToDataRes(types.String)
+	},
+	"openai.codex.mcpServer.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodexMcpServer).GetType()).ToDataRes(types.String)
+	},
+	"openai.codex.mcpServer.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodexMcpServer).GetUrl()).ToDataRes(types.String)
+	},
+	"openai.codex.mcpServer.note": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodexMcpServer).GetNote()).ToDataRes(types.String)
+	},
+	"openai.codex.mcpServer.plugin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodexMcpServer).GetPlugin()).ToDataRes(types.String)
+	},
+	"openai.codex.connector.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodexConnector).GetName()).ToDataRes(types.String)
+	},
+	"openai.codex.connector.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodexConnector).GetId()).ToDataRes(types.String)
+	},
+	"openai.codex.connector.plugin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodexConnector).GetPlugin()).ToDataRes(types.String)
 	},
 }
 
@@ -10034,6 +10273,298 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"zfs.dataset.snapshots": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlZfsDataset).Snapshots, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"claude.code.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCode).__id, ok = v.Value.(string)
+		return
+	},
+	"claude.code.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCode).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.email": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCode).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.organization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCode).Organization, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCode).Role, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.subscription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCode).Subscription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.userId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCode).UserId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.organizationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCode).OrganizationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCode).Settings, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"claude.code.enabledPlugins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCode).EnabledPlugins, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"claude.code.plugins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCode).Plugins, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"claude.code.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCode).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"claude.code.projects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCode).Projects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"claude.code.mcpServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCode).McpServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"claude.code.plugin.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodePlugin).__id, ok = v.Value.(string)
+		return
+	},
+	"claude.code.plugin.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodePlugin).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.plugin.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodePlugin).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.plugin.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodePlugin).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.plugin.installPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodePlugin).InstallPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.plugin.installedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodePlugin).InstalledAt, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.plugin.lastUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodePlugin).LastUpdated, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.plugin.gitCommitSha": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodePlugin).GitCommitSha, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.plugin.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodePlugin).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"claude.code.skill.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeSkill).__id, ok = v.Value.(string)
+		return
+	},
+	"claude.code.skill.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeSkill).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.skill.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeSkill).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.skill.allowedTools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeSkill).AllowedTools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"claude.code.skill.argumentHint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeSkill).ArgumentHint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.skill.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeSkill).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.skill.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeSkill).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.project.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeProject).__id, ok = v.Value.(string)
+		return
+	},
+	"claude.code.project.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeProject).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.project.hasMemory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeProject).HasMemory, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"claude.code.mcpServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeMcpServer).__id, ok = v.Value.(string)
+		return
+	},
+	"claude.code.mcpServer.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeMcpServer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.code.mcpServer.needsAuth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeMcpServer).NeedsAuth, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"claude.code.mcpServer.lastChecked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeMcpServer).LastChecked, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openai.codex.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodex).__id, ok = v.Value.(string)
+		return
+	},
+	"openai.codex.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodex).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openai.codex.authMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodex).AuthMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openai.codex.accountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodex).AccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openai.codex.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodex).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openai.codex.lastRefresh": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodex).LastRefresh, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openai.codex.plugins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodex).Plugins, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openai.codex.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodex).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openai.codex.mcpServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodex).McpServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openai.codex.connectors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodex).Connectors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openai.codex.plugin.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexPlugin).__id, ok = v.Value.(string)
+		return
+	},
+	"openai.codex.plugin.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexPlugin).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openai.codex.plugin.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexPlugin).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openai.codex.plugin.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexPlugin).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openai.codex.plugin.author": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexPlugin).Author, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openai.codex.plugin.category": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexPlugin).Category, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openai.codex.plugin.capabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexPlugin).Capabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openai.codex.plugin.skillNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexPlugin).SkillNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openai.codex.plugin.hasMcp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexPlugin).HasMcp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openai.codex.plugin.hasHooks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexPlugin).HasHooks, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openai.codex.skill.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexSkill).__id, ok = v.Value.(string)
+		return
+	},
+	"openai.codex.skill.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexSkill).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openai.codex.skill.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexSkill).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openai.codex.skill.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexSkill).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openai.codex.skill.plugin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexSkill).Plugin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openai.codex.skill.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexSkill).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openai.codex.mcpServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexMcpServer).__id, ok = v.Value.(string)
+		return
+	},
+	"openai.codex.mcpServer.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexMcpServer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openai.codex.mcpServer.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexMcpServer).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openai.codex.mcpServer.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexMcpServer).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openai.codex.mcpServer.note": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexMcpServer).Note, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openai.codex.mcpServer.plugin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexMcpServer).Plugin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openai.codex.connector.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexConnector).__id, ok = v.Value.(string)
+		return
+	},
+	"openai.codex.connector.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexConnector).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openai.codex.connector.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexConnector).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openai.codex.connector.plugin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexConnector).Plugin, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -27803,4 +28334,879 @@ func (c *mqlZfsDataset) GetSnapshots() *plugin.TValue[[]any] {
 
 		return c.snapshots()
 	})
+}
+
+// mqlClaudeCode for the claude.code resource
+type mqlClaudeCode struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlClaudeCodeInternal it will be used here
+	ConfigPath     plugin.TValue[string]
+	Email          plugin.TValue[string]
+	Organization   plugin.TValue[string]
+	Role           plugin.TValue[string]
+	Subscription   plugin.TValue[string]
+	UserId         plugin.TValue[string]
+	OrganizationId plugin.TValue[string]
+	Settings       plugin.TValue[any]
+	EnabledPlugins plugin.TValue[[]any]
+	Plugins        plugin.TValue[[]any]
+	Skills         plugin.TValue[[]any]
+	Projects       plugin.TValue[[]any]
+	McpServers     plugin.TValue[[]any]
+}
+
+// createClaudeCode creates a new instance of this resource
+func createClaudeCode(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlClaudeCode{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("claude.code", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlClaudeCode) MqlName() string {
+	return "claude.code"
+}
+
+func (c *mqlClaudeCode) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlClaudeCode) GetConfigPath() *plugin.TValue[string] {
+	return &c.ConfigPath
+}
+
+func (c *mqlClaudeCode) GetEmail() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Email, func() (string, error) {
+		return c.email()
+	})
+}
+
+func (c *mqlClaudeCode) GetOrganization() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Organization, func() (string, error) {
+		return c.organization()
+	})
+}
+
+func (c *mqlClaudeCode) GetRole() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Role, func() (string, error) {
+		return c.role()
+	})
+}
+
+func (c *mqlClaudeCode) GetSubscription() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Subscription, func() (string, error) {
+		return c.subscription()
+	})
+}
+
+func (c *mqlClaudeCode) GetUserId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.UserId, func() (string, error) {
+		return c.userId()
+	})
+}
+
+func (c *mqlClaudeCode) GetOrganizationId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.OrganizationId, func() (string, error) {
+		return c.organizationId()
+	})
+}
+
+func (c *mqlClaudeCode) GetSettings() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Settings, func() (any, error) {
+		return c.settings()
+	})
+}
+
+func (c *mqlClaudeCode) GetEnabledPlugins() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EnabledPlugins, func() ([]any, error) {
+		return c.enabledPlugins()
+	})
+}
+
+func (c *mqlClaudeCode) GetPlugins() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Plugins, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("claude.code", c.__id, "plugins")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.plugins()
+	})
+}
+
+func (c *mqlClaudeCode) GetSkills() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Skills, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("claude.code", c.__id, "skills")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.skills()
+	})
+}
+
+func (c *mqlClaudeCode) GetProjects() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Projects, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("claude.code", c.__id, "projects")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.projects()
+	})
+}
+
+func (c *mqlClaudeCode) GetMcpServers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.McpServers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("claude.code", c.__id, "mcpServers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mcpServers()
+	})
+}
+
+// mqlClaudeCodePlugin for the claude.code.plugin resource
+type mqlClaudeCodePlugin struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlClaudeCodePluginInternal it will be used here
+	Name         plugin.TValue[string]
+	Version      plugin.TValue[string]
+	Scope        plugin.TValue[string]
+	InstallPath  plugin.TValue[string]
+	InstalledAt  plugin.TValue[string]
+	LastUpdated  plugin.TValue[string]
+	GitCommitSha plugin.TValue[string]
+	Enabled      plugin.TValue[bool]
+}
+
+// createClaudeCodePlugin creates a new instance of this resource
+func createClaudeCodePlugin(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlClaudeCodePlugin{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("claude.code.plugin", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlClaudeCodePlugin) MqlName() string {
+	return "claude.code.plugin"
+}
+
+func (c *mqlClaudeCodePlugin) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlClaudeCodePlugin) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlClaudeCodePlugin) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlClaudeCodePlugin) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
+func (c *mqlClaudeCodePlugin) GetInstallPath() *plugin.TValue[string] {
+	return &c.InstallPath
+}
+
+func (c *mqlClaudeCodePlugin) GetInstalledAt() *plugin.TValue[string] {
+	return &c.InstalledAt
+}
+
+func (c *mqlClaudeCodePlugin) GetLastUpdated() *plugin.TValue[string] {
+	return &c.LastUpdated
+}
+
+func (c *mqlClaudeCodePlugin) GetGitCommitSha() *plugin.TValue[string] {
+	return &c.GitCommitSha
+}
+
+func (c *mqlClaudeCodePlugin) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+// mqlClaudeCodeSkill for the claude.code.skill resource
+type mqlClaudeCodeSkill struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlClaudeCodeSkillInternal it will be used here
+	Name         plugin.TValue[string]
+	Description  plugin.TValue[string]
+	AllowedTools plugin.TValue[[]any]
+	ArgumentHint plugin.TValue[string]
+	Source       plugin.TValue[string]
+	Content      plugin.TValue[string]
+}
+
+// createClaudeCodeSkill creates a new instance of this resource
+func createClaudeCodeSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlClaudeCodeSkill{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("claude.code.skill", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlClaudeCodeSkill) MqlName() string {
+	return "claude.code.skill"
+}
+
+func (c *mqlClaudeCodeSkill) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlClaudeCodeSkill) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlClaudeCodeSkill) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlClaudeCodeSkill) GetAllowedTools() *plugin.TValue[[]any] {
+	return &c.AllowedTools
+}
+
+func (c *mqlClaudeCodeSkill) GetArgumentHint() *plugin.TValue[string] {
+	return &c.ArgumentHint
+}
+
+func (c *mqlClaudeCodeSkill) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlClaudeCodeSkill) GetContent() *plugin.TValue[string] {
+	return &c.Content
+}
+
+// mqlClaudeCodeProject for the claude.code.project resource
+type mqlClaudeCodeProject struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlClaudeCodeProjectInternal it will be used here
+	Path      plugin.TValue[string]
+	HasMemory plugin.TValue[bool]
+}
+
+// createClaudeCodeProject creates a new instance of this resource
+func createClaudeCodeProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlClaudeCodeProject{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("claude.code.project", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlClaudeCodeProject) MqlName() string {
+	return "claude.code.project"
+}
+
+func (c *mqlClaudeCodeProject) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlClaudeCodeProject) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlClaudeCodeProject) GetHasMemory() *plugin.TValue[bool] {
+	return &c.HasMemory
+}
+
+// mqlClaudeCodeMcpServer for the claude.code.mcpServer resource
+type mqlClaudeCodeMcpServer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlClaudeCodeMcpServerInternal it will be used here
+	Name        plugin.TValue[string]
+	NeedsAuth   plugin.TValue[bool]
+	LastChecked plugin.TValue[string]
+}
+
+// createClaudeCodeMcpServer creates a new instance of this resource
+func createClaudeCodeMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlClaudeCodeMcpServer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("claude.code.mcpServer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlClaudeCodeMcpServer) MqlName() string {
+	return "claude.code.mcpServer"
+}
+
+func (c *mqlClaudeCodeMcpServer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlClaudeCodeMcpServer) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlClaudeCodeMcpServer) GetNeedsAuth() *plugin.TValue[bool] {
+	return &c.NeedsAuth
+}
+
+func (c *mqlClaudeCodeMcpServer) GetLastChecked() *plugin.TValue[string] {
+	return &c.LastChecked
+}
+
+// mqlOpenaiCodex for the openai.codex resource
+type mqlOpenaiCodex struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOpenaiCodexInternal it will be used here
+	ConfigPath  plugin.TValue[string]
+	AuthMode    plugin.TValue[string]
+	AccountId   plugin.TValue[string]
+	Version     plugin.TValue[string]
+	LastRefresh plugin.TValue[string]
+	Plugins     plugin.TValue[[]any]
+	Skills      plugin.TValue[[]any]
+	McpServers  plugin.TValue[[]any]
+	Connectors  plugin.TValue[[]any]
+}
+
+// createOpenaiCodex creates a new instance of this resource
+func createOpenaiCodex(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenaiCodex{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openai.codex", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenaiCodex) MqlName() string {
+	return "openai.codex"
+}
+
+func (c *mqlOpenaiCodex) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenaiCodex) GetConfigPath() *plugin.TValue[string] {
+	return &c.ConfigPath
+}
+
+func (c *mqlOpenaiCodex) GetAuthMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AuthMode, func() (string, error) {
+		return c.authMode()
+	})
+}
+
+func (c *mqlOpenaiCodex) GetAccountId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AccountId, func() (string, error) {
+		return c.accountId()
+	})
+}
+
+func (c *mqlOpenaiCodex) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlOpenaiCodex) GetLastRefresh() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LastRefresh, func() (string, error) {
+		return c.lastRefresh()
+	})
+}
+
+func (c *mqlOpenaiCodex) GetPlugins() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Plugins, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openai.codex", c.__id, "plugins")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.plugins()
+	})
+}
+
+func (c *mqlOpenaiCodex) GetSkills() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Skills, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openai.codex", c.__id, "skills")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.skills()
+	})
+}
+
+func (c *mqlOpenaiCodex) GetMcpServers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.McpServers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openai.codex", c.__id, "mcpServers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mcpServers()
+	})
+}
+
+func (c *mqlOpenaiCodex) GetConnectors() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Connectors, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openai.codex", c.__id, "connectors")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.connectors()
+	})
+}
+
+// mqlOpenaiCodexPlugin for the openai.codex.plugin resource
+type mqlOpenaiCodexPlugin struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOpenaiCodexPluginInternal it will be used here
+	Name         plugin.TValue[string]
+	Version      plugin.TValue[string]
+	Description  plugin.TValue[string]
+	Author       plugin.TValue[string]
+	Category     plugin.TValue[string]
+	Capabilities plugin.TValue[[]any]
+	SkillNames   plugin.TValue[[]any]
+	HasMcp       plugin.TValue[bool]
+	HasHooks     plugin.TValue[bool]
+}
+
+// createOpenaiCodexPlugin creates a new instance of this resource
+func createOpenaiCodexPlugin(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenaiCodexPlugin{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openai.codex.plugin", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenaiCodexPlugin) MqlName() string {
+	return "openai.codex.plugin"
+}
+
+func (c *mqlOpenaiCodexPlugin) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenaiCodexPlugin) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOpenaiCodexPlugin) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlOpenaiCodexPlugin) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOpenaiCodexPlugin) GetAuthor() *plugin.TValue[string] {
+	return &c.Author
+}
+
+func (c *mqlOpenaiCodexPlugin) GetCategory() *plugin.TValue[string] {
+	return &c.Category
+}
+
+func (c *mqlOpenaiCodexPlugin) GetCapabilities() *plugin.TValue[[]any] {
+	return &c.Capabilities
+}
+
+func (c *mqlOpenaiCodexPlugin) GetSkillNames() *plugin.TValue[[]any] {
+	return &c.SkillNames
+}
+
+func (c *mqlOpenaiCodexPlugin) GetHasMcp() *plugin.TValue[bool] {
+	return &c.HasMcp
+}
+
+func (c *mqlOpenaiCodexPlugin) GetHasHooks() *plugin.TValue[bool] {
+	return &c.HasHooks
+}
+
+// mqlOpenaiCodexSkill for the openai.codex.skill resource
+type mqlOpenaiCodexSkill struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOpenaiCodexSkillInternal it will be used here
+	Name        plugin.TValue[string]
+	Description plugin.TValue[string]
+	Source      plugin.TValue[string]
+	Plugin      plugin.TValue[string]
+	Content     plugin.TValue[string]
+}
+
+// createOpenaiCodexSkill creates a new instance of this resource
+func createOpenaiCodexSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenaiCodexSkill{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openai.codex.skill", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenaiCodexSkill) MqlName() string {
+	return "openai.codex.skill"
+}
+
+func (c *mqlOpenaiCodexSkill) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenaiCodexSkill) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOpenaiCodexSkill) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOpenaiCodexSkill) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlOpenaiCodexSkill) GetPlugin() *plugin.TValue[string] {
+	return &c.Plugin
+}
+
+func (c *mqlOpenaiCodexSkill) GetContent() *plugin.TValue[string] {
+	return &c.Content
+}
+
+// mqlOpenaiCodexMcpServer for the openai.codex.mcpServer resource
+type mqlOpenaiCodexMcpServer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOpenaiCodexMcpServerInternal it will be used here
+	Name   plugin.TValue[string]
+	Type   plugin.TValue[string]
+	Url    plugin.TValue[string]
+	Note   plugin.TValue[string]
+	Plugin plugin.TValue[string]
+}
+
+// createOpenaiCodexMcpServer creates a new instance of this resource
+func createOpenaiCodexMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenaiCodexMcpServer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openai.codex.mcpServer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenaiCodexMcpServer) MqlName() string {
+	return "openai.codex.mcpServer"
+}
+
+func (c *mqlOpenaiCodexMcpServer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenaiCodexMcpServer) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOpenaiCodexMcpServer) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlOpenaiCodexMcpServer) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlOpenaiCodexMcpServer) GetNote() *plugin.TValue[string] {
+	return &c.Note
+}
+
+func (c *mqlOpenaiCodexMcpServer) GetPlugin() *plugin.TValue[string] {
+	return &c.Plugin
+}
+
+// mqlOpenaiCodexConnector for the openai.codex.connector resource
+type mqlOpenaiCodexConnector struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOpenaiCodexConnectorInternal it will be used here
+	Name   plugin.TValue[string]
+	Id     plugin.TValue[string]
+	Plugin plugin.TValue[string]
+}
+
+// createOpenaiCodexConnector creates a new instance of this resource
+func createOpenaiCodexConnector(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenaiCodexConnector{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openai.codex.connector", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenaiCodexConnector) MqlName() string {
+	return "openai.codex.connector"
+}
+
+func (c *mqlOpenaiCodexConnector) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenaiCodexConnector) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOpenaiCodexConnector) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOpenaiCodexConnector) GetPlugin() *plugin.TValue[string] {
+	return &c.Plugin
 }

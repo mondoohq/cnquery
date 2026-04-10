@@ -3215,3 +3215,171 @@ zfs.dataset @defaults("name type usedBytes") {
   // Snapshots of this dataset
   snapshots() []zfs.dataset
 }
+
+// Claude Code instance configuration
+claude.code @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Claude Code configuration directory
+  configPath string
+  // Account email
+  email() string
+  // Organization name
+  organization() string
+  // Account role within the organization
+  role() string
+  // Subscription type
+  subscription() string
+  // User ID
+  userId() string
+  // Organization ID
+  organizationId() string
+  // Settings dictionary
+  settings() dict
+  // List of enabled plugin names
+  enabledPlugins() []string
+  // Installed plugins
+  plugins() []claude.code.plugin
+  // Configured skills
+  skills() []claude.code.skill
+  // Projects Claude Code has access to
+  projects() []claude.code.project
+  // MCP servers
+  mcpServers() []claude.code.mcpServer
+}
+
+// Claude Code installed plugin
+private claude.code.plugin @defaults("name") @maturity("preview") {
+  // Plugin name (e.g. "gopls-lsp@claude-plugins-official")
+  name string
+  // Plugin version
+  version string
+  // Installation scope (user or project)
+  scope string
+  // Local install path
+  installPath string
+  // Installation timestamp
+  installedAt string
+  // Last updated timestamp
+  lastUpdated string
+  // Git commit SHA of the installed version
+  gitCommitSha string
+  // Whether the plugin is currently enabled
+  enabled bool
+}
+
+// Claude Code skill
+private claude.code.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+}
+
+// Claude Code project
+private claude.code.project @defaults("path") @maturity("preview") {
+  // Original filesystem path the project maps to
+  path string
+  // Whether the project has persistent memory configured
+  hasMemory bool
+}
+
+// Claude Code MCP server
+private claude.code.mcpServer @defaults("name") @maturity("preview") {
+  // Server name
+  name string
+  // Whether the server needs authentication
+  needsAuth bool
+  // Timestamp of last authentication check
+  lastChecked string
+}
+
+// OpenAI Codex CLI instance configuration
+openai.codex @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Codex configuration directory
+  configPath string
+  // Authentication mode (e.g. "chatgpt")
+  authMode() string
+  // Account ID
+  accountId() string
+  // Installed version
+  version() string
+  // Last refresh timestamp
+  lastRefresh() string
+  // Installed plugins
+  plugins() []openai.codex.plugin
+  // System and plugin skills
+  skills() []openai.codex.skill
+  // MCP servers configured across plugins
+  mcpServers() []openai.codex.mcpServer
+  // OAuth app connectors
+  connectors() []openai.codex.connector
+}
+
+// OpenAI Codex installed plugin
+private openai.codex.plugin @defaults("name") @maturity("preview") {
+  // Plugin name
+  name string
+  // Plugin version
+  version string
+  // Plugin description
+  description string
+  // Plugin author name
+  author string
+  // Plugin category (e.g. "Coding", "Productivity", "Design")
+  category string
+  // Plugin capabilities (e.g. "Read", "Write", "Interactive")
+  capabilities []string
+  // Plugin skill names
+  skillNames []string
+  // Whether the plugin has MCP servers configured
+  hasMcp bool
+  // Whether the plugin has hooks configured
+  hasHooks bool
+}
+
+// OpenAI Codex skill
+private openai.codex.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Source path of the skill definition
+  source string
+  // Plugin that provides this skill (empty for system skills)
+  plugin string
+  // Full content of the skill definition
+  content string
+}
+
+// OpenAI Codex MCP server
+private openai.codex.mcpServer @defaults("name") @maturity("preview") {
+  // Server name
+  name string
+  // Server type (e.g. "http")
+  type string
+  // Server URL
+  url string
+  // Optional note describing the server
+  note string
+  // Plugin that provides this MCP server
+  plugin string
+}
+
+// OpenAI Codex OAuth app connector
+private openai.codex.connector @defaults("name") @maturity("preview") {
+  // Connector name (matches plugin name)
+  name string
+  // Connector ID (e.g. "connector_..." or "asdk_app_...")
+  id string
+  // Plugin that provides this connector
+  plugin string
+}
