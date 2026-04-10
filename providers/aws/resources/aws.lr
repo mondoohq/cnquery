@@ -10911,8 +10911,8 @@ private aws.controltower.enabledBaseline @defaults("arn baselineIdentifier") {
   baselineVersion string
   // Status of the enabled baseline
   status string
-  // Drift status of the enabled baseline
-  driftStatus string
+  // Drift status summary of the enabled baseline
+  driftStatus dict
 }
 
 // Amazon Bedrock

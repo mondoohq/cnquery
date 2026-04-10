@@ -5,7 +5,6 @@ package resources
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -416,7 +415,7 @@ func newMqlVerifiedAccessEndpoint(runtime *plugin.Runtime, ep ec2types.VerifiedA
 	mqlEP := res.(*mqlAwsVerifiedaccessEndpoint)
 	sgArns := make([]string, len(ep.SecurityGroupIds))
 	for i, sgId := range ep.SecurityGroupIds {
-		sgArns[i] = fmt.Sprintf(securityGroupArnPattern, region, conn.AccountId(), sgId)
+		sgArns[i] = NewSecurityGroupArn(region, conn.AccountId(), sgId)
 	}
 	mqlEP.securityGroupIdHandler.setSecurityGroupArns(sgArns)
 	return mqlEP, nil

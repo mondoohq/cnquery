@@ -15958,7 +15958,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsControltowerEnabledBaseline).GetStatus()).ToDataRes(types.String)
 	},
 	"aws.controltower.enabledBaseline.driftStatus": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsControltowerEnabledBaseline).GetDriftStatus()).ToDataRes(types.String)
+		return (r.(*mqlAwsControltowerEnabledBaseline).GetDriftStatus()).ToDataRes(types.Dict)
 	},
 	"aws.bedrock.foundationModels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrock).GetFoundationModels()).ToDataRes(types.Array(types.Resource("aws.bedrock.foundationModel")))
@@ -35960,7 +35960,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"aws.controltower.enabledBaseline.driftStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsControltowerEnabledBaseline).DriftStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlAwsControltowerEnabledBaseline).DriftStatus, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.bedrock.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -86984,7 +86984,7 @@ type mqlAwsControltowerEnabledBaseline struct {
 	TargetIdentifier   plugin.TValue[string]
 	BaselineVersion    plugin.TValue[string]
 	Status             plugin.TValue[string]
-	DriftStatus        plugin.TValue[string]
+	DriftStatus        plugin.TValue[any]
 }
 
 // createAwsControltowerEnabledBaseline creates a new instance of this resource
@@ -87048,7 +87048,7 @@ func (c *mqlAwsControltowerEnabledBaseline) GetStatus() *plugin.TValue[string] {
 	return &c.Status
 }
 
-func (c *mqlAwsControltowerEnabledBaseline) GetDriftStatus() *plugin.TValue[string] {
+func (c *mqlAwsControltowerEnabledBaseline) GetDriftStatus() *plugin.TValue[any] {
 	return &c.DriftStatus
 }
 

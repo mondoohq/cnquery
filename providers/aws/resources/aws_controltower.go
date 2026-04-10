@@ -187,10 +187,7 @@ func (a *mqlAwsControltower) getEnabledBaselines(conn *connection.AwsConnection)
 					if eb.StatusSummary != nil {
 						status = string(eb.StatusSummary.Status)
 					}
-					var driftStatus string
-					if eb.DriftStatusSummary != nil && eb.DriftStatusSummary.Types != nil && eb.DriftStatusSummary.Types.Inheritance != nil {
-						driftStatus = string(eb.DriftStatusSummary.Types.Inheritance.Status)
-					}
+					driftStatus, _ := convert.JsonToDict(eb.DriftStatusSummary)
 
 					mqlEB, err := CreateResource(a.MqlRuntime, "aws.controltower.enabledBaseline",
 						map[string]*llx.RawData{
@@ -201,7 +198,7 @@ func (a *mqlAwsControltower) getEnabledBaselines(conn *connection.AwsConnection)
 							"targetIdentifier":   llx.StringDataPtr(eb.TargetIdentifier),
 							"baselineVersion":    llx.StringDataPtr(eb.BaselineVersion),
 							"status":             llx.StringData(status),
-							"driftStatus":        llx.StringData(driftStatus),
+							"driftStatus":        llx.DictData(driftStatus),
 						})
 					if err != nil {
 						return nil, err
