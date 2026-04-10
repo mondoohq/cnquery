@@ -12,10 +12,13 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/muesli/termenv"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"go.mondoo.com/mql/v13/cli/theme"
+	"go.mondoo.com/mql/v13/cli/theme/colors"
 	"go.mondoo.com/mql/v13/providers"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
 	"go.mondoo.com/mql/v13/utils/sortx"
 )
 
@@ -212,6 +215,17 @@ func printProvider(p *providers.Provider) {
 	if len(conns) != 0 {
 		supports = " with connectors: " + strings.Join(conns, ", ")
 	}
+	maturity := ""
+	if label := resources.MaturityLabel(p.Maturity); label != "" {
+		color := colors.DefaultColorTheme.High
+		switch p.Maturity {
+		case resources.MaturityExperimental, resources.MaturityPreview:
+			color = colors.DefaultColorTheme.Medium
+		case resources.MaturityEOL:
+			color = colors.DefaultColorTheme.Critical
+		}
+		maturity = " " + termenv.String("["+strings.ToLower(label)+"]").Foreground(color).String()
+	}
 
-	fmt.Println("  " + name + " " + p.Version + supports)
+	fmt.Println("  " + name + " " + p.Version + supports + maturity)
 }
