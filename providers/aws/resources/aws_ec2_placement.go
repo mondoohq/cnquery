@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
@@ -270,4 +271,59 @@ func (a *mqlAwsEc2) getInstanceConnectEndpoints(conn *connection.AwsConnection) 
 
 func (a *mqlAwsEc2InstanceConnectEndpoint) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsEc2InstanceConnectEndpoint) subnet() (*mqlAwsVpcSubnet, error) {
+	subnetId := a.SubnetId.Data
+	if subnetId == "" {
+		a.Subnet.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := a.Region.Data
+	subnetArn := fmt.Sprintf(subnetArnPattern, region, conn.AccountId(), subnetId)
+	res, err := NewResource(a.MqlRuntime, "aws.vpc.subnet", map[string]*llx.RawData{"arn": llx.StringData(subnetArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsVpcSubnet), nil
+}
+
+func (a *mqlAwsEc2InstanceConnectEndpoint) vpc() (*mqlAwsVpc, error) {
+	vpcId := a.VpcId.Data
+	if vpcId == "" {
+		a.Vpc.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := a.Region.Data
+	vpcArn := fmt.Sprintf(vpcArnPattern, region, conn.AccountId(), vpcId)
+	res, err := NewResource(a.MqlRuntime, "aws.vpc", map[string]*llx.RawData{"arn": llx.StringData(vpcArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsVpc), nil
+}
+
+func (a *mqlAwsEc2InstanceConnectEndpoint) securityGroups() ([]any, error) {
+	sgIds := a.SecurityGroupIds.Data
+	if len(sgIds) == 0 {
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := a.Region.Data
+	res := []any{}
+	for _, sgIdAny := range sgIds {
+		sgId, ok := sgIdAny.(string)
+		if !ok || sgId == "" {
+			continue
+		}
+		sgArn := NewSecurityGroupArn(region, conn.AccountId(), sgId)
+		mqlSg, err := NewResource(a.MqlRuntime, "aws.ec2.securitygroup", map[string]*llx.RawData{"arn": llx.StringData(sgArn)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlSg)
+	}
+	return res, nil
 }

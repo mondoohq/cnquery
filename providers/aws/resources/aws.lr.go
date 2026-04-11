@@ -4032,6 +4032,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.fsx.filesystem.subnetIds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsFsxFilesystem).GetSubnetIds()).ToDataRes(types.Array(types.String))
 	},
+	"aws.fsx.filesystem.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxFilesystem).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
 	"aws.fsx.filesystem.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsFsxFilesystem).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -4061,6 +4064,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.fsx.cache.subnetIds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsFsxCache).GetSubnetIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.fsx.cache.cacheSubnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxCache).GetCacheSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
 	},
 	"aws.fsx.cache.lustreConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsFsxCache).GetLustreConfiguration()).ToDataRes(types.Dict)
@@ -4523,6 +4529,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.iam.role.permissionsBoundaryArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamRole).GetPermissionsBoundaryArn()).ToDataRes(types.String)
+	},
+	"aws.iam.role.permissionsBoundary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamRole).GetPermissionsBoundary()).ToDataRes(types.Resource("aws.iam.policy"))
 	},
 	"aws.iam.role.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamRole).GetPath()).ToDataRes(types.String)
@@ -6890,6 +6899,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.secretsmanager.secret.replicaRegion.kmsKeyId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecretsmanagerSecretReplicaRegion).GetKmsKeyId()).ToDataRes(types.String)
+	},
+	"aws.secretsmanager.secret.replicaRegion.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecretsmanagerSecretReplicaRegion).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
 	"aws.secretsmanager.secret.replicaRegion.lastAccessedDate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecretsmanagerSecretReplicaRegion).GetLastAccessedDate()).ToDataRes(types.Time)
@@ -10299,6 +10311,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.redshift.eventSubscription.snsTopicArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftEventSubscription).GetSnsTopicArn()).ToDataRes(types.String)
 	},
+	"aws.redshift.eventSubscription.snsTopic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftEventSubscription).GetSnsTopic()).ToDataRes(types.Resource("aws.sns.topic"))
+	},
 	"aws.redshift.eventSubscription.sourceIds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftEventSubscription).GetSourceIds()).ToDataRes(types.Array(types.String))
 	},
@@ -12087,11 +12102,20 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.instanceConnectEndpoint.subnetId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2InstanceConnectEndpoint).GetSubnetId()).ToDataRes(types.String)
 	},
+	"aws.ec2.instanceConnectEndpoint.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2InstanceConnectEndpoint).GetSubnet()).ToDataRes(types.Resource("aws.vpc.subnet"))
+	},
 	"aws.ec2.instanceConnectEndpoint.vpcId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2InstanceConnectEndpoint).GetVpcId()).ToDataRes(types.String)
 	},
+	"aws.ec2.instanceConnectEndpoint.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2InstanceConnectEndpoint).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
 	"aws.ec2.instanceConnectEndpoint.securityGroupIds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2InstanceConnectEndpoint).GetSecurityGroupIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.ec2.instanceConnectEndpoint.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2InstanceConnectEndpoint).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
 	},
 	"aws.ec2.instanceConnectEndpoint.preserveClientIp": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2InstanceConnectEndpoint).GetPreserveClientIp()).ToDataRes(types.Bool)
@@ -14946,11 +14970,20 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.directoryservice.vpcSettings.vpcId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDirectoryserviceVpcSettings).GetVpcId()).ToDataRes(types.String)
 	},
+	"aws.directoryservice.vpcSettings.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceVpcSettings).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
 	"aws.directoryservice.vpcSettings.securityGroupId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDirectoryserviceVpcSettings).GetSecurityGroupId()).ToDataRes(types.String)
 	},
+	"aws.directoryservice.vpcSettings.securityGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceVpcSettings).GetSecurityGroup()).ToDataRes(types.Resource("aws.ec2.securitygroup"))
+	},
 	"aws.directoryservice.vpcSettings.subnetIds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDirectoryserviceVpcSettings).GetSubnetIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.directoryservice.vpcSettings.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceVpcSettings).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
 	},
 	"aws.directoryservice.vpcSettings.availabilityZones": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDirectoryserviceVpcSettings).GetAvailabilityZones()).ToDataRes(types.Array(types.String))
@@ -14958,11 +14991,20 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.directoryservice.connectSettings.vpcId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDirectoryserviceConnectSettings).GetVpcId()).ToDataRes(types.String)
 	},
+	"aws.directoryservice.connectSettings.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceConnectSettings).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
 	"aws.directoryservice.connectSettings.securityGroupId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDirectoryserviceConnectSettings).GetSecurityGroupId()).ToDataRes(types.String)
 	},
+	"aws.directoryservice.connectSettings.securityGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceConnectSettings).GetSecurityGroup()).ToDataRes(types.Resource("aws.ec2.securitygroup"))
+	},
 	"aws.directoryservice.connectSettings.subnetIds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDirectoryserviceConnectSettings).GetSubnetIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.directoryservice.connectSettings.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectoryserviceConnectSettings).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
 	},
 	"aws.directoryservice.connectSettings.availabilityZones": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDirectoryserviceConnectSettings).GetAvailabilityZones()).ToDataRes(types.Array(types.String))
@@ -16260,6 +16302,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.eventSubscription.snsTopicArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsEventSubscription).GetSnsTopicArn()).ToDataRes(types.String)
 	},
+	"aws.rds.eventSubscription.snsTopic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsEventSubscription).GetSnsTopic()).ToDataRes(types.Resource("aws.sns.topic"))
+	},
 	"aws.rds.eventSubscription.sourceType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsEventSubscription).GetSourceType()).ToDataRes(types.String)
 	},
@@ -17169,6 +17214,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cloudwatch.logDestination.roleArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudwatchLogDestination).GetRoleArn()).ToDataRes(types.String)
 	},
+	"aws.cloudwatch.logDestination.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLogDestination).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
 	"aws.cloudwatch.logDestination.accessPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudwatchLogDestination).GetAccessPolicy()).ToDataRes(types.String)
 	},
@@ -17637,6 +17685,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.securitylake.dataLake.s3BucketArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecuritylakeDataLake).GetS3BucketArn()).ToDataRes(types.String)
 	},
+	"aws.securitylake.dataLake.s3Bucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecuritylakeDataLake).GetS3Bucket()).ToDataRes(types.Resource("aws.s3.bucket"))
+	},
 	"aws.securitylake.subscriber.subscriberArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecuritylakeSubscriber).GetSubscriberArn()).ToDataRes(types.String)
 	},
@@ -17661,8 +17712,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.securitylake.subscriber.roleArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecuritylakeSubscriber).GetRoleArn()).ToDataRes(types.String)
 	},
+	"aws.securitylake.subscriber.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecuritylakeSubscriber).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
 	"aws.securitylake.subscriber.s3BucketArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecuritylakeSubscriber).GetS3BucketArn()).ToDataRes(types.String)
+	},
+	"aws.securitylake.subscriber.s3Bucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecuritylakeSubscriber).GetS3Bucket()).ToDataRes(types.Resource("aws.s3.bucket"))
 	},
 	"aws.securitylake.subscriber.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecuritylakeSubscriber).GetCreatedAt()).ToDataRes(types.Time)
@@ -19934,6 +19991,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsFsxFilesystem).SubnetIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.fsx.filesystem.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxFilesystem).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.fsx.filesystem.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsFsxFilesystem).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -19976,6 +20037,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.fsx.cache.subnetIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsFsxCache).SubnetIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.fsx.cache.cacheSubnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxCache).CacheSubnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.fsx.cache.lustreConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20644,6 +20709,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.iam.role.permissionsBoundaryArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamRole).PermissionsBoundaryArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.role.permissionsBoundary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamRole).PermissionsBoundary, ok = plugin.RawToTValue[*mqlAwsIamPolicy](v.Value, v.Error)
 		return
 	},
 	"aws.iam.role.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24124,6 +24193,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.secretsmanager.secret.replicaRegion.kmsKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSecretsmanagerSecretReplicaRegion).KmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.secretsmanager.secret.replicaRegion.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecretsmanagerSecretReplicaRegion).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.secretsmanager.secret.replicaRegion.lastAccessedDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -29182,6 +29255,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsRedshiftEventSubscription).SnsTopicArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.redshift.eventSubscription.snsTopic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftEventSubscription).SnsTopic, ok = plugin.RawToTValue[*mqlAwsSnsTopic](v.Value, v.Error)
+		return
+	},
 	"aws.redshift.eventSubscription.sourceIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRedshiftEventSubscription).SourceIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -31798,12 +31875,24 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2InstanceConnectEndpoint).SubnetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.instanceConnectEndpoint.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2InstanceConnectEndpoint).Subnet, ok = plugin.RawToTValue[*mqlAwsVpcSubnet](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.instanceConnectEndpoint.vpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2InstanceConnectEndpoint).VpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.instanceConnectEndpoint.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2InstanceConnectEndpoint).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.instanceConnectEndpoint.securityGroupIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2InstanceConnectEndpoint).SecurityGroupIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instanceConnectEndpoint.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2InstanceConnectEndpoint).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.instanceConnectEndpoint.preserveClientIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -35954,12 +36043,24 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsDirectoryserviceVpcSettings).VpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.directoryservice.vpcSettings.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceVpcSettings).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
 	"aws.directoryservice.vpcSettings.securityGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDirectoryserviceVpcSettings).SecurityGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.directoryservice.vpcSettings.securityGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceVpcSettings).SecurityGroup, ok = plugin.RawToTValue[*mqlAwsEc2Securitygroup](v.Value, v.Error)
+		return
+	},
 	"aws.directoryservice.vpcSettings.subnetIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDirectoryserviceVpcSettings).SubnetIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.vpcSettings.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceVpcSettings).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.directoryservice.vpcSettings.availabilityZones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -35974,12 +36075,24 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsDirectoryserviceConnectSettings).VpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.directoryservice.connectSettings.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceConnectSettings).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
 	"aws.directoryservice.connectSettings.securityGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDirectoryserviceConnectSettings).SecurityGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.directoryservice.connectSettings.securityGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceConnectSettings).SecurityGroup, ok = plugin.RawToTValue[*mqlAwsEc2Securitygroup](v.Value, v.Error)
+		return
+	},
 	"aws.directoryservice.connectSettings.subnetIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDirectoryserviceConnectSettings).SubnetIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.directoryservice.connectSettings.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectoryserviceConnectSettings).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.directoryservice.connectSettings.availabilityZones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -37874,6 +37987,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsRdsEventSubscription).SnsTopicArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.rds.eventSubscription.snsTopic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsEventSubscription).SnsTopic, ok = plugin.RawToTValue[*mqlAwsSnsTopic](v.Value, v.Error)
+		return
+	},
 	"aws.rds.eventSubscription.sourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsEventSubscription).SourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -39198,6 +39315,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsCloudwatchLogDestination).RoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.cloudwatch.logDestination.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLogDestination).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
 	"aws.cloudwatch.logDestination.accessPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudwatchLogDestination).AccessPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -39914,6 +40035,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSecuritylakeDataLake).S3BucketArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.securitylake.dataLake.s3Bucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecuritylakeDataLake).S3Bucket, ok = plugin.RawToTValue[*mqlAwsS3Bucket](v.Value, v.Error)
+		return
+	},
 	"aws.securitylake.subscriber.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSecuritylakeSubscriber).__id, ok = v.Value.(string)
 		return
@@ -39950,8 +40075,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSecuritylakeSubscriber).RoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.securitylake.subscriber.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecuritylakeSubscriber).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
 	"aws.securitylake.subscriber.s3BucketArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSecuritylakeSubscriber).S3BucketArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securitylake.subscriber.s3Bucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecuritylakeSubscriber).S3Bucket, ok = plugin.RawToTValue[*mqlAwsS3Bucket](v.Value, v.Error)
 		return
 	},
 	"aws.securitylake.subscriber.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -45862,6 +45995,7 @@ type mqlAwsFsxFilesystem struct {
 	VpcId           plugin.TValue[string]
 	Vpc             plugin.TValue[*mqlAwsVpc]
 	SubnetIds       plugin.TValue[[]any]
+	Subnets         plugin.TValue[[]any]
 	Tags            plugin.TValue[map[string]any]
 	CreatedAt       plugin.TValue[*time.Time]
 	Region          plugin.TValue[string]
@@ -45978,6 +46112,22 @@ func (c *mqlAwsFsxFilesystem) GetSubnetIds() *plugin.TValue[[]any] {
 	return &c.SubnetIds
 }
 
+func (c *mqlAwsFsxFilesystem) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.fsx.filesystem", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
+}
+
 func (c *mqlAwsFsxFilesystem) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
@@ -46002,6 +46152,7 @@ type mqlAwsFsxCache struct {
 	VpcId                      plugin.TValue[string]
 	Vpc                        plugin.TValue[*mqlAwsVpc]
 	SubnetIds                  plugin.TValue[[]any]
+	CacheSubnets               plugin.TValue[[]any]
 	LustreConfiguration        plugin.TValue[any]
 	DataRepositoryAssociations plugin.TValue[[]any]
 	Region                     plugin.TValue[string]
@@ -46082,6 +46233,22 @@ func (c *mqlAwsFsxCache) GetVpc() *plugin.TValue[*mqlAwsVpc] {
 
 func (c *mqlAwsFsxCache) GetSubnetIds() *plugin.TValue[[]any] {
 	return &c.SubnetIds
+}
+
+func (c *mqlAwsFsxCache) GetCacheSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CacheSubnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.fsx.cache", c.__id, "cacheSubnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.cacheSubnets()
+	})
 }
 
 func (c *mqlAwsFsxCache) GetLustreConfiguration() *plugin.TValue[any] {
@@ -47700,6 +47867,7 @@ type mqlAwsIamRole struct {
 	LastUsedRegion           plugin.TValue[string]
 	MaxSessionDuration       plugin.TValue[int64]
 	PermissionsBoundaryArn   plugin.TValue[string]
+	PermissionsBoundary      plugin.TValue[*mqlAwsIamPolicy]
 	Path                     plugin.TValue[string]
 	IsServiceLinked          plugin.TValue[bool]
 	AttachedPolicies         plugin.TValue[[]any]
@@ -47785,6 +47953,22 @@ func (c *mqlAwsIamRole) GetMaxSessionDuration() *plugin.TValue[int64] {
 
 func (c *mqlAwsIamRole) GetPermissionsBoundaryArn() *plugin.TValue[string] {
 	return &c.PermissionsBoundaryArn
+}
+
+func (c *mqlAwsIamRole) GetPermissionsBoundary() *plugin.TValue[*mqlAwsIamPolicy] {
+	return plugin.GetOrCompute[*mqlAwsIamPolicy](&c.PermissionsBoundary, func() (*mqlAwsIamPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.role", c.__id, "permissionsBoundary")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamPolicy), nil
+			}
+		}
+
+		return c.permissionsBoundary()
+	})
 }
 
 func (c *mqlAwsIamRole) GetPath() *plugin.TValue[string] {
@@ -56873,6 +57057,7 @@ type mqlAwsSecretsmanagerSecretReplicaRegion struct {
 	Status           plugin.TValue[string]
 	StatusMessage    plugin.TValue[string]
 	KmsKeyId         plugin.TValue[string]
+	KmsKey           plugin.TValue[*mqlAwsKmsKey]
 	LastAccessedDate plugin.TValue[*time.Time]
 }
 
@@ -56926,6 +57111,22 @@ func (c *mqlAwsSecretsmanagerSecretReplicaRegion) GetStatusMessage() *plugin.TVa
 
 func (c *mqlAwsSecretsmanagerSecretReplicaRegion) GetKmsKeyId() *plugin.TValue[string] {
 	return &c.KmsKeyId
+}
+
+func (c *mqlAwsSecretsmanagerSecretReplicaRegion) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.secretsmanager.secret.replicaRegion", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
 }
 
 func (c *mqlAwsSecretsmanagerSecretReplicaRegion) GetLastAccessedDate() *plugin.TValue[*time.Time] {
@@ -63125,7 +63326,9 @@ func (c *mqlAwsCloudtrailChannel) GetName() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsCloudtrailChannel) GetSourceType() *plugin.TValue[string] {
-	return &c.SourceType
+	return plugin.GetOrCompute[string](&c.SourceType, func() (string, error) {
+		return c.sourceType()
+	})
 }
 
 func (c *mqlAwsCloudtrailChannel) GetRegion() *plugin.TValue[string] {
@@ -70150,6 +70353,7 @@ type mqlAwsRedshiftEventSubscription struct {
 	EventCategories plugin.TValue[[]any]
 	Severity        plugin.TValue[string]
 	SnsTopicArn     plugin.TValue[string]
+	SnsTopic        plugin.TValue[*mqlAwsSnsTopic]
 	SourceIds       plugin.TValue[[]any]
 	SourceType      plugin.TValue[string]
 	Status          plugin.TValue[string]
@@ -70216,6 +70420,22 @@ func (c *mqlAwsRedshiftEventSubscription) GetSeverity() *plugin.TValue[string] {
 
 func (c *mqlAwsRedshiftEventSubscription) GetSnsTopicArn() *plugin.TValue[string] {
 	return &c.SnsTopicArn
+}
+
+func (c *mqlAwsRedshiftEventSubscription) GetSnsTopic() *plugin.TValue[*mqlAwsSnsTopic] {
+	return plugin.GetOrCompute[*mqlAwsSnsTopic](&c.SnsTopic, func() (*mqlAwsSnsTopic, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.redshift.eventSubscription", c.__id, "snsTopic")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSnsTopic), nil
+			}
+		}
+
+		return c.snsTopic()
+	})
 }
 
 func (c *mqlAwsRedshiftEventSubscription) GetSourceIds() *plugin.TValue[[]any] {
@@ -76735,8 +76955,11 @@ type mqlAwsEc2InstanceConnectEndpoint struct {
 	Region           plugin.TValue[string]
 	State            plugin.TValue[string]
 	SubnetId         plugin.TValue[string]
+	Subnet           plugin.TValue[*mqlAwsVpcSubnet]
 	VpcId            plugin.TValue[string]
+	Vpc              plugin.TValue[*mqlAwsVpc]
 	SecurityGroupIds plugin.TValue[[]any]
+	SecurityGroups   plugin.TValue[[]any]
 	PreserveClientIp plugin.TValue[bool]
 	DnsName          plugin.TValue[string]
 	FipsDnsName      plugin.TValue[string]
@@ -76801,12 +77024,60 @@ func (c *mqlAwsEc2InstanceConnectEndpoint) GetSubnetId() *plugin.TValue[string] 
 	return &c.SubnetId
 }
 
+func (c *mqlAwsEc2InstanceConnectEndpoint) GetSubnet() *plugin.TValue[*mqlAwsVpcSubnet] {
+	return plugin.GetOrCompute[*mqlAwsVpcSubnet](&c.Subnet, func() (*mqlAwsVpcSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.instanceConnectEndpoint", c.__id, "subnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpcSubnet), nil
+			}
+		}
+
+		return c.subnet()
+	})
+}
+
 func (c *mqlAwsEc2InstanceConnectEndpoint) GetVpcId() *plugin.TValue[string] {
 	return &c.VpcId
 }
 
+func (c *mqlAwsEc2InstanceConnectEndpoint) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.instanceConnectEndpoint", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
 func (c *mqlAwsEc2InstanceConnectEndpoint) GetSecurityGroupIds() *plugin.TValue[[]any] {
 	return &c.SecurityGroupIds
+}
+
+func (c *mqlAwsEc2InstanceConnectEndpoint) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.instanceConnectEndpoint", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
 }
 
 func (c *mqlAwsEc2InstanceConnectEndpoint) GetPreserveClientIp() *plugin.TValue[bool] {
@@ -86763,10 +87034,13 @@ func (c *mqlAwsDirectoryserviceRadiusSettings) GetUseSameUsername() *plugin.TVal
 type mqlAwsDirectoryserviceVpcSettings struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsDirectoryserviceVpcSettingsInternal it will be used here
+	mqlAwsDirectoryserviceVpcSettingsInternal
 	VpcId             plugin.TValue[string]
+	Vpc               plugin.TValue[*mqlAwsVpc]
 	SecurityGroupId   plugin.TValue[string]
+	SecurityGroup     plugin.TValue[*mqlAwsEc2Securitygroup]
 	SubnetIds         plugin.TValue[[]any]
+	Subnets           plugin.TValue[[]any]
 	AvailabilityZones plugin.TValue[[]any]
 }
 
@@ -86811,12 +87085,60 @@ func (c *mqlAwsDirectoryserviceVpcSettings) GetVpcId() *plugin.TValue[string] {
 	return &c.VpcId
 }
 
+func (c *mqlAwsDirectoryserviceVpcSettings) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.directoryservice.vpcSettings", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
 func (c *mqlAwsDirectoryserviceVpcSettings) GetSecurityGroupId() *plugin.TValue[string] {
 	return &c.SecurityGroupId
 }
 
+func (c *mqlAwsDirectoryserviceVpcSettings) GetSecurityGroup() *plugin.TValue[*mqlAwsEc2Securitygroup] {
+	return plugin.GetOrCompute[*mqlAwsEc2Securitygroup](&c.SecurityGroup, func() (*mqlAwsEc2Securitygroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.directoryservice.vpcSettings", c.__id, "securityGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Securitygroup), nil
+			}
+		}
+
+		return c.securityGroup()
+	})
+}
+
 func (c *mqlAwsDirectoryserviceVpcSettings) GetSubnetIds() *plugin.TValue[[]any] {
 	return &c.SubnetIds
+}
+
+func (c *mqlAwsDirectoryserviceVpcSettings) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.directoryservice.vpcSettings", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
 }
 
 func (c *mqlAwsDirectoryserviceVpcSettings) GetAvailabilityZones() *plugin.TValue[[]any] {
@@ -86827,10 +87149,13 @@ func (c *mqlAwsDirectoryserviceVpcSettings) GetAvailabilityZones() *plugin.TValu
 type mqlAwsDirectoryserviceConnectSettings struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsDirectoryserviceConnectSettingsInternal it will be used here
+	mqlAwsDirectoryserviceConnectSettingsInternal
 	VpcId             plugin.TValue[string]
+	Vpc               plugin.TValue[*mqlAwsVpc]
 	SecurityGroupId   plugin.TValue[string]
+	SecurityGroup     plugin.TValue[*mqlAwsEc2Securitygroup]
 	SubnetIds         plugin.TValue[[]any]
+	Subnets           plugin.TValue[[]any]
 	AvailabilityZones plugin.TValue[[]any]
 	ConnectIps        plugin.TValue[[]any]
 	CustomerUserName  plugin.TValue[string]
@@ -86877,12 +87202,60 @@ func (c *mqlAwsDirectoryserviceConnectSettings) GetVpcId() *plugin.TValue[string
 	return &c.VpcId
 }
 
+func (c *mqlAwsDirectoryserviceConnectSettings) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.directoryservice.connectSettings", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
 func (c *mqlAwsDirectoryserviceConnectSettings) GetSecurityGroupId() *plugin.TValue[string] {
 	return &c.SecurityGroupId
 }
 
+func (c *mqlAwsDirectoryserviceConnectSettings) GetSecurityGroup() *plugin.TValue[*mqlAwsEc2Securitygroup] {
+	return plugin.GetOrCompute[*mqlAwsEc2Securitygroup](&c.SecurityGroup, func() (*mqlAwsEc2Securitygroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.directoryservice.connectSettings", c.__id, "securityGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Securitygroup), nil
+			}
+		}
+
+		return c.securityGroup()
+	})
+}
+
 func (c *mqlAwsDirectoryserviceConnectSettings) GetSubnetIds() *plugin.TValue[[]any] {
 	return &c.SubnetIds
+}
+
+func (c *mqlAwsDirectoryserviceConnectSettings) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.directoryservice.connectSettings", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
 }
 
 func (c *mqlAwsDirectoryserviceConnectSettings) GetAvailabilityZones() *plugin.TValue[[]any] {
@@ -91426,6 +91799,7 @@ type mqlAwsRdsEventSubscription struct {
 	Region                   plugin.TValue[string]
 	Status                   plugin.TValue[string]
 	SnsTopicArn              plugin.TValue[string]
+	SnsTopic                 plugin.TValue[*mqlAwsSnsTopic]
 	SourceType               plugin.TValue[string]
 	SourceIds                plugin.TValue[[]any]
 	Enabled                  plugin.TValue[bool]
@@ -91489,6 +91863,22 @@ func (c *mqlAwsRdsEventSubscription) GetStatus() *plugin.TValue[string] {
 
 func (c *mqlAwsRdsEventSubscription) GetSnsTopicArn() *plugin.TValue[string] {
 	return &c.SnsTopicArn
+}
+
+func (c *mqlAwsRdsEventSubscription) GetSnsTopic() *plugin.TValue[*mqlAwsSnsTopic] {
+	return plugin.GetOrCompute[*mqlAwsSnsTopic](&c.SnsTopic, func() (*mqlAwsSnsTopic, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.eventSubscription", c.__id, "snsTopic")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSnsTopic), nil
+			}
+		}
+
+		return c.snsTopic()
+	})
 }
 
 func (c *mqlAwsRdsEventSubscription) GetSourceType() *plugin.TValue[string] {
@@ -94619,6 +95009,7 @@ type mqlAwsCloudwatchLogDestination struct {
 	Region       plugin.TValue[string]
 	TargetArn    plugin.TValue[string]
 	RoleArn      plugin.TValue[string]
+	IamRole      plugin.TValue[*mqlAwsIamRole]
 	AccessPolicy plugin.TValue[string]
 	CreatedAt    plugin.TValue[*time.Time]
 }
@@ -94678,6 +95069,22 @@ func (c *mqlAwsCloudwatchLogDestination) GetTargetArn() *plugin.TValue[string] {
 
 func (c *mqlAwsCloudwatchLogDestination) GetRoleArn() *plugin.TValue[string] {
 	return &c.RoleArn
+}
+
+func (c *mqlAwsCloudwatchLogDestination) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudwatch.logDestination", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
 }
 
 func (c *mqlAwsCloudwatchLogDestination) GetAccessPolicy() *plugin.TValue[string] {
@@ -96717,6 +97124,7 @@ type mqlAwsSecuritylakeDataLake struct {
 	LifecycleConfiguration   plugin.TValue[any]
 	ReplicationConfiguration plugin.TValue[any]
 	S3BucketArn              plugin.TValue[string]
+	S3Bucket                 plugin.TValue[*mqlAwsS3Bucket]
 }
 
 // createAwsSecuritylakeDataLake creates a new instance of this resource
@@ -96796,6 +97204,22 @@ func (c *mqlAwsSecuritylakeDataLake) GetS3BucketArn() *plugin.TValue[string] {
 	return &c.S3BucketArn
 }
 
+func (c *mqlAwsSecuritylakeDataLake) GetS3Bucket() *plugin.TValue[*mqlAwsS3Bucket] {
+	return plugin.GetOrCompute[*mqlAwsS3Bucket](&c.S3Bucket, func() (*mqlAwsS3Bucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.securitylake.dataLake", c.__id, "s3Bucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsS3Bucket), nil
+			}
+		}
+
+		return c.s3Bucket()
+	})
+}
+
 // mqlAwsSecuritylakeSubscriber for the aws.securitylake.subscriber resource
 type mqlAwsSecuritylakeSubscriber struct {
 	MqlRuntime *plugin.Runtime
@@ -96809,7 +97233,9 @@ type mqlAwsSecuritylakeSubscriber struct {
 	AccessTypes        plugin.TValue[[]any]
 	SubscriberStatus   plugin.TValue[string]
 	RoleArn            plugin.TValue[string]
+	IamRole            plugin.TValue[*mqlAwsIamRole]
 	S3BucketArn        plugin.TValue[string]
+	S3Bucket           plugin.TValue[*mqlAwsS3Bucket]
 	CreatedAt          plugin.TValue[*time.Time]
 }
 
@@ -96882,8 +97308,40 @@ func (c *mqlAwsSecuritylakeSubscriber) GetRoleArn() *plugin.TValue[string] {
 	return &c.RoleArn
 }
 
+func (c *mqlAwsSecuritylakeSubscriber) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.securitylake.subscriber", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
 func (c *mqlAwsSecuritylakeSubscriber) GetS3BucketArn() *plugin.TValue[string] {
 	return &c.S3BucketArn
+}
+
+func (c *mqlAwsSecuritylakeSubscriber) GetS3Bucket() *plugin.TValue[*mqlAwsS3Bucket] {
+	return plugin.GetOrCompute[*mqlAwsS3Bucket](&c.S3Bucket, func() (*mqlAwsS3Bucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.securitylake.subscriber", c.__id, "s3Bucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsS3Bucket), nil
+			}
+		}
+
+		return c.s3Bucket()
+	})
 }
 
 func (c *mqlAwsSecuritylakeSubscriber) GetCreatedAt() *plugin.TValue[*time.Time] {

@@ -312,6 +312,20 @@ func (a *mqlAwsSecretsmanagerSecret) deletedAt() (*time.Time, error) {
 	return nil, nil
 }
 
+func (a *mqlAwsSecretsmanagerSecretReplicaRegion) kmsKey() (*mqlAwsKmsKey, error) {
+	kmsKeyId := a.KmsKeyId.Data
+	if kmsKeyId == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{"arn": llx.StringData(kmsKeyId)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
 func secretTagsToMap(tags []secretstypes.Tag) map[string]any {
 	tagsMap := make(map[string]any)
 

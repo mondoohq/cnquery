@@ -148,6 +148,20 @@ func (a *mqlAwsRdsEventSubscription) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+func (a *mqlAwsRdsEventSubscription) snsTopic() (*mqlAwsSnsTopic, error) {
+	arn := a.SnsTopicArn.Data
+	if arn == "" {
+		a.SnsTopic.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlTopic, err := NewResource(a.MqlRuntime, "aws.sns.topic",
+		map[string]*llx.RawData{"arn": llx.StringData(arn)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlTopic.(*mqlAwsSnsTopic), nil
+}
+
 func (a *mqlAwsRds) parameterGroups() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	res := []any{}

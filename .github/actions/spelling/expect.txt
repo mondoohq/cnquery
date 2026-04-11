@@ -23,6 +23,9 @@ autoprovision
 autoreplace
 Autoscalers
 autotrim
+AWSCURRENT
+AWSPENDING
+AWSPREVIOUS
 awsapps
 awslogs
 awsvpc
@@ -215,7 +218,6 @@ openvpn
 openzfs
 orstatement
 ospf
-OTX
 pagerduty
 panos
 parallelquery
@@ -288,7 +290,6 @@ sqlimatchstatement
 sqlserver
 Sspr
 stringx
-STIX
 subscriptionfilter
 superusers
 switchports

@@ -10,6 +10,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
 	"go.mondoo.com/mql/v13/types"
@@ -79,6 +80,20 @@ func (a *mqlAwsCloudwatch) getLogDestinations(conn *connection.AwsConnection) []
 
 func (a *mqlAwsCloudwatchLogDestination) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsCloudwatchLogDestination) iamRole() (*mqlAwsIamRole, error) {
+	arn := a.RoleArn.Data
+	if arn == "" {
+		a.IamRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlRole, err := NewResource(a.MqlRuntime, ResourceAwsIamRole,
+		map[string]*llx.RawData{"arn": llx.StringData(arn)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlRole.(*mqlAwsIamRole), nil
 }
 
 func (a *mqlAwsCloudwatch) logInsightQueries() ([]any, error) {

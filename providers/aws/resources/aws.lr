@@ -1094,7 +1094,10 @@ private aws.fsx.filesystem @defaults("id type region") {
   // VPC where the file system resides
   vpc() aws.vpc
   // Subnet IDs for file system
+  // Deprecated: use subnets() instead
   subnetIds []string
+  // Subnets for the file system
+  subnets() []aws.vpc.subnet
   // Resource tags
   tags map[string]string
   // Creation timestamp
@@ -1119,7 +1122,10 @@ private aws.fsx.cache @defaults("id lifecycle") {
   // VPC where the cache resides
   vpc() aws.vpc
   // Subnet IDs
+  // Deprecated: use cacheSubnets() instead
   subnetIds []string
+  // Subnets for the cache
+  cacheSubnets() []aws.vpc.subnet
   // Lustre-specific configuration
   lustreConfiguration dict
   // S3 data repository associations
@@ -1490,7 +1496,10 @@ private aws.iam.role @defaults("arn name") {
   // Maximum session duration in seconds for the role (3600-43200)
   maxSessionDuration int
   // ARN of the permissions boundary policy attached to the role (empty string if none)
+  // Deprecated: use permissionsBoundary() instead
   permissionsBoundaryArn string
+  // Permissions boundary policy attached to the role
+  permissionsBoundary() aws.iam.policy
   // Path to the role
   path string
   // Whether this is a service-linked role
@@ -3393,8 +3402,11 @@ private aws.secretsmanager.secret.replicaRegion @defaults("region status") {
   status string
   // Status message (additional details about the replication status)
   statusMessage string
-  // KMS key used for encryption in this region
+  // KMS key ID used for encryption in this region
+  // Deprecated: use kmsKey() instead
   kmsKeyId string
+  // KMS key used for encryption in this region
+  kmsKey() aws.kms.key
   // Last date the replica was accessed
   lastAccessedDate time
 }
@@ -4615,7 +4627,7 @@ private aws.cloudtrail.channel @defaults("name sourceType") {
   // Name of the channel
   name string
   // Source type: AWS_SERVICE or CUSTOM
-  sourceType string
+  sourceType() string
   // Region where the channel exists
   region string
   // Source name (e.g., the AWS service name)
@@ -6179,7 +6191,10 @@ private aws.redshift.eventSubscription @defaults("name status") {
   // Event severity filter (ERROR or INFO)
   severity string
   // ARN of the SNS topic for notifications
+  // Deprecated: use snsTopic() instead
   snsTopicArn string
+  // SNS topic for notifications
+  snsTopic() aws.sns.topic
   // List of source IDs the subscription applies to
   sourceIds []string
   // Type of source (cluster, cluster-snapshot, cluster-parameter-group, cluster-security-group, scheduled-action)
@@ -7605,11 +7620,20 @@ private aws.ec2.instanceConnectEndpoint @defaults("id state subnetId") {
   // State: create-in-progress, create-complete, create-failed, delete-in-progress, delete-complete, delete-failed
   state string
   // Subnet ID the endpoint is in
+  // Deprecated: use subnet() instead
   subnetId string
+  // Subnet the endpoint is in
+  subnet() aws.vpc.subnet
   // VPC ID the endpoint is in
+  // Deprecated: use vpc() instead
   vpcId string
-  // Security groups associated with the endpoint
+  // VPC the endpoint is in
+  vpc() aws.vpc
+  // Security group IDs associated with the endpoint
+  // Deprecated: use securityGroups() instead
   securityGroupIds []string
+  // Security groups associated with the endpoint
+  securityGroups() []aws.ec2.securitygroup
   // Whether the endpoint preserves client IP
   preserveClientIp bool
   // DNS name of the endpoint
@@ -9864,11 +9888,20 @@ private aws.directoryservice.radiusSettings @defaults("authenticationProtocol ra
 // VPC settings for a Directory Service directory
 private aws.directoryservice.vpcSettings @defaults("vpcId securityGroupId") {
   // Identifier of the VPC
+  // Deprecated: use vpc() instead
   vpcId string
+  // VPC for the directory
+  vpc() aws.vpc
   // Identifier of the security group for the directory
+  // Deprecated: use securityGroup() instead
   securityGroupId string
+  // Security group for the directory
+  securityGroup() aws.ec2.securitygroup
   // Identifiers of the subnets for the directory
+  // Deprecated: use subnets() instead
   subnetIds []string
+  // Subnets for the directory
+  subnets() []aws.vpc.subnet
   // Availability zones of the directory
   availabilityZones []string
 }
@@ -9876,11 +9909,20 @@ private aws.directoryservice.vpcSettings @defaults("vpcId securityGroupId") {
 // AD Connector settings for a Directory Service directory
 private aws.directoryservice.connectSettings @defaults("vpcId customerUserName") {
   // Identifier of the VPC
+  // Deprecated: use vpc() instead
   vpcId string
+  // VPC for the directory
+  vpc() aws.vpc
   // Identifier of the security group for the directory
+  // Deprecated: use securityGroup() instead
   securityGroupId string
+  // Security group for the directory
+  securityGroup() aws.ec2.securitygroup
   // Identifiers of the subnets for the directory
+  // Deprecated: use subnets() instead
   subnetIds []string
+  // Subnets for the directory
+  subnets() []aws.vpc.subnet
   // Availability zones of the directory
   availabilityZones []string
   // IP addresses of the AD Connector servers
@@ -10909,7 +10951,10 @@ private aws.rds.eventSubscription @defaults("arn name status") {
   // Status of the event subscription: creating, modifying, deleting, active, no-permission, topic-not-exist
   status string
   // SNS topic ARN that events are published to
+  // Deprecated: use snsTopic() instead
   snsTopicArn string
+  // SNS topic that events are published to
+  snsTopic() aws.sns.topic
   // Source type: db-instance, db-cluster, db-parameter-group, db-security-group, db-snapshot, db-cluster-snapshot, custom-availability-zone
   sourceType string
   // List of source IDs for the event subscription
@@ -11627,7 +11672,10 @@ private aws.cloudwatch.logDestination @defaults("name arn") {
   // ARN of the target (Kinesis stream or Firehose delivery stream)
   targetArn string
   // ARN of the IAM role used to write to the target
+  // Deprecated: use iamRole() instead
   roleArn string
+  // IAM role used to write to the target
+  iamRole() aws.iam.role
   // Access policy controlling who can write to this destination
   accessPolicy string
   // Creation time of the destination
@@ -12031,7 +12079,10 @@ private aws.securitylake.dataLake @defaults("dataLakeArn region createStatus") {
   // Replication configuration for the data lake
   replicationConfiguration dict
   // S3 bucket ARN for the data lake
+  // Deprecated: use s3Bucket() instead
   s3BucketArn string
+  // S3 bucket for the data lake
+  s3Bucket() aws.s3.bucket
 }
 
 // AWS Security Lake subscriber
@@ -12051,9 +12102,15 @@ private aws.securitylake.subscriber @defaults("subscriberArn subscriberName subs
   // Status: ACTIVE, DEACTIVATED, PENDING, or READY
   subscriberStatus string
   // IAM role ARN used by the subscriber
+  // Deprecated: use iamRole() instead
   roleArn string
+  // IAM role used by the subscriber
+  iamRole() aws.iam.role
   // S3 bucket ARN for the subscriber
+  // Deprecated: use s3Bucket() instead
   s3BucketArn string
+  // S3 bucket for the subscriber
+  s3Bucket() aws.s3.bucket
   // Date the subscriber was created
   createdAt time
 }

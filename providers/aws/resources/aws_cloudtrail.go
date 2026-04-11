@@ -844,11 +844,10 @@ func (a *mqlAwsCloudtrail) getChannels(conn *connection.AwsConnection) []*jobpoo
 				for _, ch := range page.Channels {
 					mqlCh, err := CreateResource(a.MqlRuntime, "aws.cloudtrail.channel",
 						map[string]*llx.RawData{
-							"__id":       llx.StringData(convert.ToValue(ch.ChannelArn)),
-							"arn":        llx.StringDataPtr(ch.ChannelArn),
-							"name":       llx.StringDataPtr(ch.Name),
-							"sourceType": llx.StringData(""),
-							"region":     llx.StringData(region),
+							"__id":   llx.StringData(convert.ToValue(ch.ChannelArn)),
+							"arn":    llx.StringDataPtr(ch.ChannelArn),
+							"name":   llx.StringDataPtr(ch.Name),
+							"region": llx.StringData(region),
 						})
 					if err != nil {
 						return nil, err
@@ -903,6 +902,14 @@ func (a *mqlAwsCloudtrailChannel) fetchDetail() (*cloudtrail.GetChannelOutput, e
 	a.detail = resp
 	a.fetched = true
 	return resp, nil
+}
+
+func (a *mqlAwsCloudtrailChannel) sourceType() (string, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(detail.Source), nil
 }
 
 func (a *mqlAwsCloudtrailChannel) source() (string, error) {

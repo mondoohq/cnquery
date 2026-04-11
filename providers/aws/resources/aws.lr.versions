@@ -618,6 +618,7 @@ aws.cloudwatch.logDestination 13.6.3
 aws.cloudwatch.logDestination.accessPolicy 13.6.3
 aws.cloudwatch.logDestination.arn 13.6.3
 aws.cloudwatch.logDestination.createdAt 13.6.3
+aws.cloudwatch.logDestination.iamRole 13.12.1
 aws.cloudwatch.logDestination.name 13.6.3
 aws.cloudwatch.logDestination.region 13.6.3
 aws.cloudwatch.logDestination.roleArn 13.6.3
@@ -914,8 +915,11 @@ aws.directoryservice.connectSettings 11.15.6
 aws.directoryservice.connectSettings.availabilityZones 11.15.6
 aws.directoryservice.connectSettings.connectIps 11.15.6
 aws.directoryservice.connectSettings.customerUserName 11.15.6
+aws.directoryservice.connectSettings.securityGroup 13.12.1
 aws.directoryservice.connectSettings.securityGroupId 11.15.6
 aws.directoryservice.connectSettings.subnetIds 11.15.6
+aws.directoryservice.connectSettings.subnets 13.12.1
+aws.directoryservice.connectSettings.vpc 13.12.1
 aws.directoryservice.connectSettings.vpcId 11.15.6
 aws.directoryservice.directories 11.15.6
 aws.directoryservice.directory 11.15.6
@@ -956,8 +960,11 @@ aws.directoryservice.radiusSettings.radiusTimeout 11.15.6
 aws.directoryservice.radiusSettings.useSameUsername 11.15.6
 aws.directoryservice.vpcSettings 11.15.6
 aws.directoryservice.vpcSettings.availabilityZones 11.15.6
+aws.directoryservice.vpcSettings.securityGroup 13.12.1
 aws.directoryservice.vpcSettings.securityGroupId 11.15.6
 aws.directoryservice.vpcSettings.subnetIds 11.15.6
+aws.directoryservice.vpcSettings.subnets 13.12.1
+aws.directoryservice.vpcSettings.vpc 13.12.1
 aws.directoryservice.vpcSettings.vpcId 11.15.6
 aws.dms 11.15.2
 aws.dms.replicationInstances 11.15.2
@@ -1364,9 +1371,12 @@ aws.ec2.instanceConnectEndpoint.id 13.6.3
 aws.ec2.instanceConnectEndpoint.preserveClientIp 13.6.3
 aws.ec2.instanceConnectEndpoint.region 13.6.3
 aws.ec2.instanceConnectEndpoint.securityGroupIds 13.6.3
+aws.ec2.instanceConnectEndpoint.securityGroups 13.12.1
 aws.ec2.instanceConnectEndpoint.state 13.6.3
+aws.ec2.instanceConnectEndpoint.subnet 13.12.1
 aws.ec2.instanceConnectEndpoint.subnetId 13.6.3
 aws.ec2.instanceConnectEndpoint.tags 13.6.3
+aws.ec2.instanceConnectEndpoint.vpc 13.12.1
 aws.ec2.instanceConnectEndpoint.vpcId 13.6.3
 aws.ec2.instanceConnectEndpoints 13.6.3
 aws.ec2.instances 11.15.2
@@ -2485,6 +2495,7 @@ aws.fsx.backup.type 11.15.2
 aws.fsx.backups 11.15.2
 aws.fsx.cache 11.15.2
 aws.fsx.cache.arn 11.15.2
+aws.fsx.cache.cacheSubnets 13.12.1
 aws.fsx.cache.dataRepositoryAssociations 11.15.2
 aws.fsx.cache.id 11.15.2
 aws.fsx.cache.lifecycle 11.15.2
@@ -2508,6 +2519,7 @@ aws.fsx.filesystem.region 11.15.2
 aws.fsx.filesystem.storageCapacity 11.15.2
 aws.fsx.filesystem.storageType 11.15.2
 aws.fsx.filesystem.subnetIds 11.15.2
+aws.fsx.filesystem.subnets 13.12.1
 aws.fsx.filesystem.tags 11.15.2
 aws.fsx.filesystem.type 11.15.2
 aws.fsx.filesystem.vpc 11.16.1
@@ -2802,6 +2814,7 @@ aws.iam.role.lastUsedRegion 11.15.2
 aws.iam.role.maxSessionDuration 11.15.2
 aws.iam.role.name 11.15.2
 aws.iam.role.path 11.15.2
+aws.iam.role.permissionsBoundary 13.12.1
 aws.iam.role.permissionsBoundaryArn 11.15.2
 aws.iam.role.tags 11.15.2
 aws.iam.roles 11.15.2
@@ -3927,6 +3940,7 @@ aws.rds.eventSubscription.enabled 13.6.3
 aws.rds.eventSubscription.eventCategories 13.6.3
 aws.rds.eventSubscription.name 13.6.3
 aws.rds.eventSubscription.region 13.6.3
+aws.rds.eventSubscription.snsTopic 13.12.1
 aws.rds.eventSubscription.snsTopicArn 13.6.3
 aws.rds.eventSubscription.sourceIds 13.6.3
 aws.rds.eventSubscription.sourceType 13.6.3
@@ -4045,6 +4059,7 @@ aws.redshift.eventSubscription.eventCategories 13.12.1
 aws.redshift.eventSubscription.name 13.12.1
 aws.redshift.eventSubscription.region 13.12.1
 aws.redshift.eventSubscription.severity 13.12.1
+aws.redshift.eventSubscription.snsTopic 13.12.1
 aws.redshift.eventSubscription.snsTopicArn 13.12.1
 aws.redshift.eventSubscription.sourceIds 13.12.1
 aws.redshift.eventSubscription.sourceType 13.12.1
@@ -4603,6 +4618,7 @@ aws.secretsmanager.secret.owningService 11.15.2
 aws.secretsmanager.secret.primaryRegion 11.15.2
 aws.secretsmanager.secret.replicaRegion 13.6.3
 aws.secretsmanager.secret.replicaRegion.id 13.6.3
+aws.secretsmanager.secret.replicaRegion.kmsKey 13.12.1
 aws.secretsmanager.secret.replicaRegion.kmsKeyId 13.6.3
 aws.secretsmanager.secret.replicaRegion.lastAccessedDate 13.6.3
 aws.secretsmanager.secret.replicaRegion.region 13.6.3
@@ -4719,12 +4735,15 @@ aws.securitylake.dataLake.encryptionKmsKey 13.10.0
 aws.securitylake.dataLake.lifecycleConfiguration 13.10.0
 aws.securitylake.dataLake.region 13.10.0
 aws.securitylake.dataLake.replicationConfiguration 13.10.0
+aws.securitylake.dataLake.s3Bucket 13.12.1
 aws.securitylake.dataLake.s3BucketArn 13.10.0
 aws.securitylake.dataLakes 13.10.0
 aws.securitylake.subscriber 13.10.0
 aws.securitylake.subscriber.accessTypes 13.10.0
 aws.securitylake.subscriber.createdAt 13.10.0
+aws.securitylake.subscriber.iamRole 13.12.1
 aws.securitylake.subscriber.roleArn 13.10.0
+aws.securitylake.subscriber.s3Bucket 13.12.1
 aws.securitylake.subscriber.s3BucketArn 13.10.0
 aws.securitylake.subscriber.sources 13.10.0
 aws.securitylake.subscriber.subscriberArn 13.10.0

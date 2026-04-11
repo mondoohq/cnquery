@@ -545,6 +545,20 @@ func (a *mqlAwsRedshiftEventSubscription) id() (string, error) {
 	return a.__id, nil
 }
 
+func (a *mqlAwsRedshiftEventSubscription) snsTopic() (*mqlAwsSnsTopic, error) {
+	arn := a.SnsTopicArn.Data
+	if arn == "" {
+		a.SnsTopic.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlTopic, err := NewResource(a.MqlRuntime, "aws.sns.topic",
+		map[string]*llx.RawData{"arn": llx.StringData(arn)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlTopic.(*mqlAwsSnsTopic), nil
+}
+
 // ── Scheduled Actions ───────────────────────────────────────────────────────
 
 func (a *mqlAwsRedshift) scheduledActions() ([]any, error) {

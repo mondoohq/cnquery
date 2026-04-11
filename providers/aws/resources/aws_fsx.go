@@ -193,6 +193,29 @@ func (a *mqlAwsFsxFilesystem) kmsKey() (*mqlAwsKmsKey, error) {
 	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
+func (a *mqlAwsFsxFilesystem) subnets() ([]any, error) {
+	subnetIds := a.SubnetIds.Data
+	if len(subnetIds) == 0 {
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := a.Region.Data
+	res := []any{}
+	for _, idAny := range subnetIds {
+		id, ok := idAny.(string)
+		if !ok || id == "" {
+			continue
+		}
+		subnetArn := fmt.Sprintf(subnetArnPattern, region, conn.AccountId(), id)
+		mqlSubnet, err := NewResource(a.MqlRuntime, "aws.vpc.subnet", map[string]*llx.RawData{"arn": llx.StringData(subnetArn)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlSubnet)
+	}
+	return res, nil
+}
+
 // ========================
 // aws.fsx.cache
 // ========================
@@ -343,6 +366,29 @@ func (a *mqlAwsFsxCache) vpc() (*mqlAwsVpc, error) {
 		return nil, err
 	}
 	return res.(*mqlAwsVpc), nil
+}
+
+func (a *mqlAwsFsxCache) cacheSubnets() ([]any, error) {
+	subnetIds := a.SubnetIds.Data
+	if len(subnetIds) == 0 {
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := a.Region.Data
+	res := []any{}
+	for _, idAny := range subnetIds {
+		id, ok := idAny.(string)
+		if !ok || id == "" {
+			continue
+		}
+		subnetArn := fmt.Sprintf(subnetArnPattern, region, conn.AccountId(), id)
+		mqlSubnet, err := NewResource(a.MqlRuntime, "aws.vpc.subnet", map[string]*llx.RawData{"arn": llx.StringData(subnetArn)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlSubnet)
+	}
+	return res, nil
 }
 
 // ========================

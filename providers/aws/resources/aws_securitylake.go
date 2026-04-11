@@ -143,6 +143,20 @@ func (a *mqlAwsSecuritylakeDataLake) encryptionKmsKey() (*mqlAwsKmsKey, error) {
 	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
+func (a *mqlAwsSecuritylakeDataLake) s3Bucket() (*mqlAwsS3Bucket, error) {
+	arn := a.S3BucketArn.Data
+	if arn == "" {
+		a.S3Bucket.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlBucket, err := NewResource(a.MqlRuntime, "aws.s3.bucket",
+		map[string]*llx.RawData{"arn": llx.StringData(arn)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlBucket.(*mqlAwsS3Bucket), nil
+}
+
 func (a *mqlAwsSecuritylake) subscribers() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	res := []any{}
@@ -233,4 +247,32 @@ func newMqlSecuritylakeSubscriber(runtime *plugin.Runtime, sub sltypes.Subscribe
 
 func (a *mqlAwsSecuritylakeSubscriber) id() (string, error) {
 	return a.SubscriberArn.Data, nil
+}
+
+func (a *mqlAwsSecuritylakeSubscriber) iamRole() (*mqlAwsIamRole, error) {
+	arn := a.RoleArn.Data
+	if arn == "" {
+		a.IamRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlRole, err := NewResource(a.MqlRuntime, ResourceAwsIamRole,
+		map[string]*llx.RawData{"arn": llx.StringData(arn)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlRole.(*mqlAwsIamRole), nil
+}
+
+func (a *mqlAwsSecuritylakeSubscriber) s3Bucket() (*mqlAwsS3Bucket, error) {
+	arn := a.S3BucketArn.Data
+	if arn == "" {
+		a.S3Bucket.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlBucket, err := NewResource(a.MqlRuntime, "aws.s3.bucket",
+		map[string]*llx.RawData{"arn": llx.StringData(arn)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlBucket.(*mqlAwsS3Bucket), nil
 }

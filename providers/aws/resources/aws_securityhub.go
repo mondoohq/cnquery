@@ -270,6 +270,7 @@ func (a *mqlAwsSecurityhubHub) findings() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			mqlFinding.cacheRegion = region
 			res = append(res, mqlFinding)
 		}
 	}

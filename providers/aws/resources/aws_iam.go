@@ -1360,6 +1360,20 @@ func (a *mqlAwsIamRole) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+func (a *mqlAwsIamRole) permissionsBoundary() (*mqlAwsIamPolicy, error) {
+	arn := a.PermissionsBoundaryArn.Data
+	if arn == "" {
+		a.PermissionsBoundary.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlPolicy, err := NewResource(a.MqlRuntime, "aws.iam.policy",
+		map[string]*llx.RawData{"arn": llx.StringData(arn)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlPolicy.(*mqlAwsIamPolicy), nil
+}
+
 func (a *mqlAwsIamRole) attachedPolicies() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 

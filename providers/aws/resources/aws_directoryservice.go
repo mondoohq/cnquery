@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
@@ -202,11 +203,69 @@ func (a *mqlAwsDirectoryserviceDirectory) vpcSettings() (*mqlAwsDirectoryservice
 	if err != nil {
 		return nil, err
 	}
-	return resource.(*mqlAwsDirectoryserviceVpcSettings), nil
+	cast := resource.(*mqlAwsDirectoryserviceVpcSettings)
+	cast.cacheRegion = region
+	return cast, nil
 }
 
 func (a *mqlAwsDirectoryserviceVpcSettings) id() (string, error) {
 	return a.__id, nil
+}
+
+type mqlAwsDirectoryserviceVpcSettingsInternal struct {
+	cacheRegion string
+}
+
+func (a *mqlAwsDirectoryserviceVpcSettings) vpc() (*mqlAwsVpc, error) {
+	vpcId := a.VpcId.Data
+	if vpcId == "" {
+		a.Vpc.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	vpcArn := fmt.Sprintf(vpcArnPattern, a.cacheRegion, conn.AccountId(), vpcId)
+	res, err := NewResource(a.MqlRuntime, "aws.vpc", map[string]*llx.RawData{"arn": llx.StringData(vpcArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsVpc), nil
+}
+
+func (a *mqlAwsDirectoryserviceVpcSettings) securityGroup() (*mqlAwsEc2Securitygroup, error) {
+	sgId := a.SecurityGroupId.Data
+	if sgId == "" {
+		a.SecurityGroup.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	sgArn := NewSecurityGroupArn(a.cacheRegion, conn.AccountId(), sgId)
+	res, err := NewResource(a.MqlRuntime, "aws.ec2.securitygroup", map[string]*llx.RawData{"arn": llx.StringData(sgArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEc2Securitygroup), nil
+}
+
+func (a *mqlAwsDirectoryserviceVpcSettings) subnets() ([]any, error) {
+	subnetIds := a.SubnetIds.Data
+	if len(subnetIds) == 0 {
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	for _, idAny := range subnetIds {
+		id, ok := idAny.(string)
+		if !ok || id == "" {
+			continue
+		}
+		subnetArn := fmt.Sprintf(subnetArnPattern, a.cacheRegion, conn.AccountId(), id)
+		mqlSubnet, err := NewResource(a.MqlRuntime, "aws.vpc.subnet", map[string]*llx.RawData{"arn": llx.StringData(subnetArn)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlSubnet)
+	}
+	return res, nil
 }
 
 func (a *mqlAwsDirectoryserviceDirectory) connectSettings() (*mqlAwsDirectoryserviceConnectSettings, error) {
@@ -231,9 +290,67 @@ func (a *mqlAwsDirectoryserviceDirectory) connectSettings() (*mqlAwsDirectoryser
 	if err != nil {
 		return nil, err
 	}
-	return resource.(*mqlAwsDirectoryserviceConnectSettings), nil
+	csCast := resource.(*mqlAwsDirectoryserviceConnectSettings)
+	csCast.cacheRegion = region
+	return csCast, nil
 }
 
 func (a *mqlAwsDirectoryserviceConnectSettings) id() (string, error) {
 	return a.__id, nil
+}
+
+type mqlAwsDirectoryserviceConnectSettingsInternal struct {
+	cacheRegion string
+}
+
+func (a *mqlAwsDirectoryserviceConnectSettings) vpc() (*mqlAwsVpc, error) {
+	vpcId := a.VpcId.Data
+	if vpcId == "" {
+		a.Vpc.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	vpcArn := fmt.Sprintf(vpcArnPattern, a.cacheRegion, conn.AccountId(), vpcId)
+	res, err := NewResource(a.MqlRuntime, "aws.vpc", map[string]*llx.RawData{"arn": llx.StringData(vpcArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsVpc), nil
+}
+
+func (a *mqlAwsDirectoryserviceConnectSettings) securityGroup() (*mqlAwsEc2Securitygroup, error) {
+	sgId := a.SecurityGroupId.Data
+	if sgId == "" {
+		a.SecurityGroup.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	sgArn := NewSecurityGroupArn(a.cacheRegion, conn.AccountId(), sgId)
+	res, err := NewResource(a.MqlRuntime, "aws.ec2.securitygroup", map[string]*llx.RawData{"arn": llx.StringData(sgArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEc2Securitygroup), nil
+}
+
+func (a *mqlAwsDirectoryserviceConnectSettings) subnets() ([]any, error) {
+	subnetIds := a.SubnetIds.Data
+	if len(subnetIds) == 0 {
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	for _, idAny := range subnetIds {
+		id, ok := idAny.(string)
+		if !ok || id == "" {
+			continue
+		}
+		subnetArn := fmt.Sprintf(subnetArnPattern, a.cacheRegion, conn.AccountId(), id)
+		mqlSubnet, err := NewResource(a.MqlRuntime, "aws.vpc.subnet", map[string]*llx.RawData{"arn": llx.StringData(subnetArn)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlSubnet)
+	}
+	return res, nil
 }

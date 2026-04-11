@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -412,11 +413,12 @@ func (a *mqlAwsIdentitycenterPermissionSet) permissionsBoundary() (map[string]an
 		PermissionSetArn: &psArn,
 	})
 	if err != nil {
-		// No permissions boundary attached returns an error
-		if Is400AccessDeniedError(err) {
+		// No permissions boundary attached returns a ResourceNotFoundException
+		var notFoundErr *ssotypes.ResourceNotFoundException
+		if Is400AccessDeniedError(err) || errors.As(err, &notFoundErr) {
 			return nil, nil
 		}
-		return nil, nil
+		return nil, err
 	}
 	if resp.PermissionsBoundary == nil {
 		return nil, nil
