@@ -81251,7 +81251,7 @@ func (c *mqlAwsEksInsight) GetRegion() *plugin.TValue[string] {
 type mqlAwsEksAddonVersion struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsEksAddonVersionInternal it will be used here
+	mqlAwsEksAddonVersionInternal
 	AddonName              plugin.TValue[string]
 	AddonVersion           plugin.TValue[string]
 	Architectures          plugin.TValue[[]any]

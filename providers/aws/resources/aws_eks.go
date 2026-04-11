@@ -1636,8 +1636,21 @@ func (a *mqlAwsEksCluster) insights() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
-			mqlInsight.(*mqlAwsEksInsight).clusterName = a.Name.Data
-			mqlInsight.(*mqlAwsEksInsight).region = regionVal
+			cast := mqlInsight.(*mqlAwsEksInsight)
+			cast.clusterName = a.Name.Data
+			cast.region = regionVal
+
+			// Eagerly populate fields available from the list summary to avoid
+			// N+1 DescribeInsight calls (especially for @defaults fields).
+			cast.Name = plugin.TValue[string]{Data: convert.ToValue(summary.Name), State: plugin.StateIsSet}
+			cast.Category = plugin.TValue[string]{Data: string(summary.Category), State: plugin.StateIsSet}
+			statusDict, _ := convert.JsonToDict(summary.InsightStatus)
+			cast.InsightStatus = plugin.TValue[any]{Data: statusDict, State: plugin.StateIsSet}
+			cast.KubernetesVersion = plugin.TValue[string]{Data: convert.ToValue(summary.KubernetesVersion), State: plugin.StateIsSet}
+			cast.Description = plugin.TValue[string]{Data: convert.ToValue(summary.Description), State: plugin.StateIsSet}
+			cast.LastRefreshTime = plugin.TValue[*time.Time]{Data: summary.LastRefreshTime, State: plugin.StateIsSet}
+			cast.LastTransitionTime = plugin.TValue[*time.Time]{Data: summary.LastTransitionTime, State: plugin.StateIsSet}
+
 			res = append(res, mqlInsight)
 		}
 	}
@@ -1677,6 +1690,11 @@ func (a *mqlAwsEksInsight) fetchDetails() (*ekstypes.Insight, error) {
 		a.fetchErr = err
 		a.fetched = true
 		return nil, err
+	}
+	if desc.Insight == nil {
+		a.fetchErr = errors.New("DescribeInsight returned nil insight for " + a.Id.Data)
+		a.fetched = true
+		return nil, a.fetchErr
 	}
 	a.details = desc.Insight
 	a.fetched = true
@@ -1814,7 +1832,7 @@ func (a *mqlAwsEksCluster) availableAddonVersions() ([]any, error) {
 
 				mqlAddonVersion, err := CreateResource(a.MqlRuntime, "aws.eks.addonVersion",
 					map[string]*llx.RawData{
-						"__id":                   llx.StringData(fmt.Sprintf("aws.eks.addonVersion/%s/%s", addonName, version)),
+						"__id":                   llx.StringData(fmt.Sprintf("aws.eks.addonVersion/%s/%s/%s", regionVal, addonName, version)),
 						"addonName":              llx.StringData(addonName),
 						"addonVersion":           llx.StringData(version),
 						"architectures":          llx.ArrayData(archs, "\x02"),
@@ -1827,6 +1845,7 @@ func (a *mqlAwsEksCluster) availableAddonVersions() ([]any, error) {
 				}
 				// Set compatibilities eagerly since we already have the data
 				cast := mqlAddonVersion.(*mqlAwsEksAddonVersion)
+				cast.region = regionVal
 				cast.Compatibilities = plugin.TValue[[]any]{Data: compats, State: plugin.StateIsSet}
 				res = append(res, mqlAddonVersion)
 			}
@@ -1835,8 +1854,12 @@ func (a *mqlAwsEksCluster) availableAddonVersions() ([]any, error) {
 	return res, nil
 }
 
+type mqlAwsEksAddonVersionInternal struct {
+	region string
+}
+
 func (a *mqlAwsEksAddonVersion) id() (string, error) {
-	return fmt.Sprintf("aws.eks.addonVersion/%s/%s", a.AddonName.Data, a.AddonVersion.Data), nil
+	return fmt.Sprintf("aws.eks.addonVersion/%s/%s/%s", a.region, a.AddonName.Data, a.AddonVersion.Data), nil
 }
 
 func (a *mqlAwsEksAddonVersion) compatibilities() ([]any, error) {
