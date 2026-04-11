@@ -255,16 +255,32 @@ func (a *mqlAwsEmrCluster) encryptionConfiguration() (*mqlAwsEmrClusterEncryptio
 		return nil, nil
 	}
 
-	atRestEnabled, _ := encConfig["EnableAtRestEncryption"].(bool)
-	inTransitEnabled, _ := encConfig["EnableInTransitEncryption"].(bool)
+	atRestEnabled, ok := encConfig["EnableAtRestEncryption"].(bool)
+	if !ok {
+		if _, exists := encConfig["EnableAtRestEncryption"]; exists {
+			log.Warn().Str("cluster", a.Arn.Data).Msg("unexpected type for EnableAtRestEncryption in security configuration")
+		}
+	}
+	inTransitEnabled, ok := encConfig["EnableInTransitEncryption"].(bool)
+	if !ok {
+		if _, exists := encConfig["EnableInTransitEncryption"]; exists {
+			log.Warn().Str("cluster", a.Arn.Data).Msg("unexpected type for EnableInTransitEncryption in security configuration")
+		}
+	}
 
 	var atRestConfig any
-	if v, ok := encConfig["AtRestEncryptionConfiguration"]; ok {
-		atRestConfig, _ = convert.JsonToDict(v)
+	if v, exists := encConfig["AtRestEncryptionConfiguration"]; exists {
+		atRestConfig, err = convert.JsonToDict(v)
+		if err != nil {
+			return nil, err
+		}
 	}
 	var inTransitConfig any
-	if v, ok := encConfig["InTransitEncryptionConfiguration"]; ok {
-		inTransitConfig, _ = convert.JsonToDict(v)
+	if v, exists := encConfig["InTransitEncryptionConfiguration"]; exists {
+		inTransitConfig, err = convert.JsonToDict(v)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	res, err := CreateResource(a.MqlRuntime, "aws.emr.cluster.encryptionConfiguration",

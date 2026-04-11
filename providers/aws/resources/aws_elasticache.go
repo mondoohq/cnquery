@@ -81,6 +81,31 @@ func (a *mqlAwsElasticache) getCacheClusters(conn *connection.AwsConnection) []*
 					res = append(res, mqlCluster)
 				}
 			}
+
+			// Batch-fetch replication groups to cache KMS key IDs (avoids N+1 on kmsKey()).
+			rgKmsKeys := map[string]*string{}
+			rgPaginator := elasticache.NewDescribeReplicationGroupsPaginator(svc, &elasticache.DescribeReplicationGroupsInput{})
+			for rgPaginator.HasMorePages() {
+				page, err := rgPaginator.NextPage(ctx)
+				if err != nil {
+					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
+						break
+					}
+					return nil, err
+				}
+				for _, rg := range page.ReplicationGroups {
+					if rg.ReplicationGroupId != nil {
+						rgKmsKeys[*rg.ReplicationGroupId] = rg.KmsKeyId
+					}
+				}
+			}
+			for _, r := range res {
+				mqlCluster := r.(*mqlAwsElasticacheCluster)
+				if mqlCluster.cacheReplicationGroupId != nil {
+					mqlCluster.cacheKmsKeyId = rgKmsKeys[*mqlCluster.cacheReplicationGroupId]
+				}
+			}
+
 			return jobpool.JobResult(res), nil
 		}
 		tasks = append(tasks, jobpool.NewJob(f))
@@ -91,6 +116,7 @@ func (a *mqlAwsElasticache) getCacheClusters(conn *connection.AwsConnection) []*
 type mqlAwsElasticacheClusterInternal struct {
 	securityGroupIdHandler
 	cacheReplicationGroupId *string
+	cacheKmsKeyId           *string
 	region                  string
 }
 
@@ -170,26 +196,13 @@ func (a *mqlAwsElasticacheCluster) securityGroups() ([]any, error) {
 }
 
 func (a *mqlAwsElasticacheCluster) kmsKey() (*mqlAwsKmsKey, error) {
-	if a.cacheReplicationGroupId == nil || *a.cacheReplicationGroupId == "" {
-		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
-		return nil, nil
-	}
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	svc := conn.Elasticache(a.region)
-	ctx := context.Background()
-	resp, err := svc.DescribeReplicationGroups(ctx, &elasticache.DescribeReplicationGroupsInput{
-		ReplicationGroupId: a.cacheReplicationGroupId,
-	})
-	if err != nil {
-		return nil, err
-	}
-	if len(resp.ReplicationGroups) == 0 || resp.ReplicationGroups[0].KmsKeyId == nil || *resp.ReplicationGroups[0].KmsKeyId == "" {
+	if a.cacheKmsKeyId == nil || *a.cacheKmsKeyId == "" {
 		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
 	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
 		map[string]*llx.RawData{
-			"arn": llx.StringDataPtr(resp.ReplicationGroups[0].KmsKeyId),
+			"arn": llx.StringDataPtr(a.cacheKmsKeyId),
 		})
 	if err != nil {
 		return nil, err
