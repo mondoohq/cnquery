@@ -257,6 +257,39 @@ func (a *mqlAwsEksCluster) populateFromDescribe(cluster *ekstypes.Cluster) error
 	}
 	a.CertificateAuthority = plugin.TValue[string]{Data: certAuth, State: plugin.StateIsSet}
 
+	// Typed encryption config fields
+	var encryptionResources []any
+	if len(cluster.EncryptionConfig) > 0 && cluster.EncryptionConfig[0].Provider != nil && cluster.EncryptionConfig[0].Provider.KeyArn != nil {
+		keyArn := *cluster.EncryptionConfig[0].Provider.KeyArn
+		mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+			map[string]*llx.RawData{"arn": llx.StringData(keyArn)})
+		if err != nil {
+			return err
+		}
+		a.EncryptionKmsKey = plugin.TValue[*mqlAwsKmsKey]{Data: mqlKey.(*mqlAwsKmsKey), State: plugin.StateIsSet}
+		for _, r := range cluster.EncryptionConfig[0].Resources {
+			encryptionResources = append(encryptionResources, r)
+		}
+	} else {
+		a.EncryptionKmsKey = plugin.TValue[*mqlAwsKmsKey]{State: plugin.StateIsSet | plugin.StateIsNull}
+	}
+	a.EncryptionResources = plugin.TValue[[]any]{Data: encryptionResources, State: plugin.StateIsSet}
+
+	upgradePolicy, _ := convert.JsonToDict(cluster.UpgradePolicy)
+	a.UpgradePolicy = plugin.TValue[any]{Data: upgradePolicy, State: plugin.StateIsSet}
+
+	zonalShiftConfig, _ := convert.JsonToDict(cluster.ZonalShiftConfig)
+	a.ZonalShiftConfig = plugin.TValue[any]{Data: zonalShiftConfig, State: plugin.StateIsSet}
+
+	computeConfig, _ := convert.JsonToDict(cluster.ComputeConfig)
+	a.ComputeConfig = plugin.TValue[any]{Data: computeConfig, State: plugin.StateIsSet}
+
+	storageConfig, _ := convert.JsonToDict(cluster.StorageConfig)
+	a.StorageConfig = plugin.TValue[any]{Data: storageConfig, State: plugin.StateIsSet}
+
+	remoteNetworkConfig, _ := convert.JsonToDict(cluster.RemoteNetworkConfig)
+	a.RemoteNetworkConfig = plugin.TValue[any]{Data: remoteNetworkConfig, State: plugin.StateIsSet}
+
 	a.fetched = true
 	return nil
 }
@@ -282,6 +315,37 @@ func (a *mqlAwsEksCluster) status() (string, error) {
 }
 
 func (a *mqlAwsEksCluster) encryptionConfig() ([]any, error) {
+	return nil, a.fetchDetail()
+}
+
+func (a *mqlAwsEksCluster) encryptionKmsKey() (*mqlAwsKmsKey, error) {
+	if err := a.fetchDetail(); err != nil {
+		return nil, err
+	}
+	return a.EncryptionKmsKey.Data, nil
+}
+
+func (a *mqlAwsEksCluster) encryptionResources() ([]any, error) {
+	return nil, a.fetchDetail()
+}
+
+func (a *mqlAwsEksCluster) upgradePolicy() (map[string]any, error) {
+	return nil, a.fetchDetail()
+}
+
+func (a *mqlAwsEksCluster) zonalShiftConfig() (map[string]any, error) {
+	return nil, a.fetchDetail()
+}
+
+func (a *mqlAwsEksCluster) computeConfig() (map[string]any, error) {
+	return nil, a.fetchDetail()
+}
+
+func (a *mqlAwsEksCluster) storageConfig() (map[string]any, error) {
+	return nil, a.fetchDetail()
+}
+
+func (a *mqlAwsEksCluster) remoteNetworkConfig() (map[string]any, error) {
 	return nil, a.fetchDetail()
 }
 
@@ -726,6 +790,40 @@ func (a *mqlAwsEksNodegroup) nodeVersion() (string, error) {
 		return "", err
 	}
 	return convert.ToValue(ng.Version), nil
+}
+
+func (a *mqlAwsEksNodegroup) nodeRepairEnabled() (bool, error) {
+	ng, err := a.fetchDetails()
+	if err != nil {
+		return false, err
+	}
+	if ng.NodeRepairConfig != nil && ng.NodeRepairConfig.Enabled != nil {
+		return *ng.NodeRepairConfig.Enabled, nil
+	}
+	return false, nil
+}
+
+func (a *mqlAwsEksNodegroup) nodegroupSubnets() ([]any, error) {
+	ng, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	if len(ng.Subnets) == 0 {
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	accountID := conn.AccountId()
+	res := []any{}
+	for _, subnetId := range ng.Subnets {
+		subnetArn := fmt.Sprintf(subnetArnPattern, a.region, accountID, subnetId)
+		mqlSubnet, err := NewResource(a.MqlRuntime, "aws.vpc.subnet",
+			map[string]*llx.RawData{"arn": llx.StringData(subnetArn)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlSubnet)
+	}
+	return res, nil
 }
 
 // AwsEksAddons

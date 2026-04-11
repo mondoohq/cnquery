@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	secretstypes "github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
@@ -188,6 +189,8 @@ func (a *mqlAwsSecretsmanager) getSecrets(conn *connection.AwsConnection) []*job
 					}
 					mqlSecretRes := mqlSecret.(*mqlAwsSecretsmanagerSecret)
 					mqlSecretRes.cacheRegion = region
+					mqlSecretRes.cacheType = convert.ToValue(secret.Type)
+					mqlSecretRes.DeletedAt = plugin.TValue[*time.Time]{Data: secret.DeletedDate, State: plugin.StateIsSet}
 					res = append(res, mqlSecret)
 				}
 			}
@@ -253,6 +256,60 @@ func (a *mqlAwsSecretsmanagerSecret) replicaRegions() ([]any, error) {
 
 type mqlAwsSecretsmanagerSecretInternal struct {
 	cacheRegion string
+	cacheType   string
+}
+
+func (a *mqlAwsSecretsmanagerSecret) compute_type() (string, error) {
+	return a.cacheType, nil
+}
+
+func (a *mqlAwsSecretsmanagerSecret) versions() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := a.cacheRegion
+	svc := conn.Secretsmanager(region)
+	ctx := context.Background()
+	arn := a.Arn.Data
+
+	res := []any{}
+	paginator := secretsmanager.NewListSecretVersionIdsPaginator(svc, &secretsmanager.ListSecretVersionIdsInput{
+		SecretId: &arn,
+	})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, v := range page.Versions {
+			stages := []any{}
+			for _, s := range v.VersionStages {
+				stages = append(stages, s)
+			}
+			kmsKeyIds := []any{}
+			for _, k := range v.KmsKeyIds {
+				kmsKeyIds = append(kmsKeyIds, k)
+			}
+			mqlVersion, err := CreateResource(a.MqlRuntime, "aws.secretsmanager.secret.version",
+				map[string]*llx.RawData{
+					"__id":             llx.StringData(arn + "/version/" + convert.ToValue(v.VersionId)),
+					"versionId":        llx.StringDataPtr(v.VersionId),
+					"versionStages":    llx.ArrayData(stages, types.String),
+					"createdDate":      llx.TimeDataPtr(v.CreatedDate),
+					"lastAccessedDate": llx.TimeDataPtr(v.LastAccessedDate),
+					"kmsKeyIds":        llx.ArrayData(kmsKeyIds, types.String),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlVersion)
+		}
+	}
+	return res, nil
+}
+
+// deletedAt is eagerly populated from ListSecrets during creation.
+// This stub exists for the code generator; it is never called at runtime.
+func (a *mqlAwsSecretsmanagerSecret) deletedAt() (*time.Time, error) {
+	return nil, nil
 }
 
 func secretTagsToMap(tags []secretstypes.Tag) map[string]any {

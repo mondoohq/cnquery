@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.12.0",
-  "generated_at": "2026-04-11T09:37:36-07:00",
+  "generated_at": "2026-04-11T11:29:21-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -55,9 +55,13 @@
     "cloudfront:ListFunctions",
     "cloudfront:ListTagsForResource",
     "cloudtrail:DescribeTrails",
+    "cloudtrail:GetChannel",
+    "cloudtrail:GetEventDataStore",
     "cloudtrail:GetEventSelectors",
     "cloudtrail:GetInsightSelectors",
     "cloudtrail:GetTrailStatus",
+    "cloudtrail:ListChannels",
+    "cloudtrail:ListEventDataStores",
     "cloudtrail:ListTags",
     "cloudwatch:DescribeAlarms",
     "cloudwatch:DescribeAlarmsForMetric",
@@ -259,11 +263,14 @@
     "guardduty:DescribePublishingDestination",
     "guardduty:GetCoverageStatistics",
     "guardduty:GetDetector",
+    "guardduty:GetFilter",
     "guardduty:GetIPSet",
     "guardduty:GetThreatIntelSet",
     "guardduty:ListDetectors",
+    "guardduty:ListFilters",
     "guardduty:ListFindings",
     "guardduty:ListIPSets",
+    "guardduty:ListMembers",
     "guardduty:ListPublishingDestinations",
     "guardduty:ListThreatIntelSets",
     "iam:GenerateCredentialReport",
@@ -299,6 +306,8 @@
     "iam:ListUserPolicies",
     "iam:ListUsers",
     "iam:ListVirtualMFADevices",
+    "identitystore:ListGroups",
+    "identitystore:ListUsers",
     "inspector2:ListCoverage",
     "inspector2:ListFindings",
     "kafka:ListClustersV2",
@@ -465,14 +474,18 @@
     "scheduler:ListSchedules",
     "secretsmanager:DescribeSecret",
     "secretsmanager:GetResourcePolicy",
+    "secretsmanager:ListSecretVersionIds",
     "secretsmanager:ListSecrets",
     "securityhub:BatchGetStandardsControlAssociations",
     "securityhub:DescribeHub",
     "securityhub:GetEnabledStandards",
+    "securityhub:GetFindingHistory",
     "securityhub:GetFindings",
     "securityhub:GetInsightResults",
     "securityhub:GetInsights",
     "securityhub:ListAutomationRules",
+    "securityhub:ListEnabledProductsForImport",
+    "securityhub:ListMembers",
     "securityhub:ListSecurityControlDefinitions",
     "securitylake:ListSubscribers",
     "sfn:ListActivities",
@@ -505,6 +518,7 @@
     "ssm:ListTagsForResource",
     "ssoadmin:ListAccountAssignments",
     "ssoadmin:ListAccountsForProvisionedPermissionSet",
+    "ssoadmin:ListCustomerManagedPolicyReferencesInPermissionSet",
     "ssoadmin:ListInstances",
     "ssoadmin:ListManagedPoliciesInPermissionSet",
     "ssoadmin:ListPermissionSets",
@@ -852,6 +866,18 @@
       "source_file": "aws_cloudtrail.go"
     },
     {
+      "permission": "cloudtrail:GetChannel",
+      "service": "cloudtrail",
+      "action": "GetChannel",
+      "source_file": "aws_cloudtrail.go"
+    },
+    {
+      "permission": "cloudtrail:GetEventDataStore",
+      "service": "cloudtrail",
+      "action": "GetEventDataStore",
+      "source_file": "aws_cloudtrail.go"
+    },
+    {
       "permission": "cloudtrail:GetEventSelectors",
       "service": "cloudtrail",
       "action": "GetEventSelectors",
@@ -867,6 +893,18 @@
       "permission": "cloudtrail:GetTrailStatus",
       "service": "cloudtrail",
       "action": "GetTrailStatus",
+      "source_file": "aws_cloudtrail.go"
+    },
+    {
+      "permission": "cloudtrail:ListChannels",
+      "service": "cloudtrail",
+      "action": "ListChannels",
+      "source_file": "aws_cloudtrail.go"
+    },
+    {
+      "permission": "cloudtrail:ListEventDataStores",
+      "service": "cloudtrail",
+      "action": "ListEventDataStores",
       "source_file": "aws_cloudtrail.go"
     },
     {
@@ -2124,6 +2162,12 @@
       "source_file": "aws_guardduty.go"
     },
     {
+      "permission": "guardduty:GetFilter",
+      "service": "guardduty",
+      "action": "GetFilter",
+      "source_file": "aws_guardduty.go"
+    },
+    {
       "permission": "guardduty:GetIPSet",
       "service": "guardduty",
       "action": "GetIPSet",
@@ -2142,6 +2186,12 @@
       "source_file": "aws_guardduty.go"
     },
     {
+      "permission": "guardduty:ListFilters",
+      "service": "guardduty",
+      "action": "ListFilters",
+      "source_file": "aws_guardduty.go"
+    },
+    {
       "permission": "guardduty:ListFindings",
       "service": "guardduty",
       "action": "ListFindings",
@@ -2151,6 +2201,12 @@
       "permission": "guardduty:ListIPSets",
       "service": "guardduty",
       "action": "ListIPSets",
+      "source_file": "aws_guardduty.go"
+    },
+    {
+      "permission": "guardduty:ListMembers",
+      "service": "guardduty",
+      "action": "ListMembers",
       "source_file": "aws_guardduty.go"
     },
     {
@@ -2368,6 +2424,18 @@
       "service": "iam",
       "action": "ListVirtualMFADevices",
       "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "identitystore:ListGroups",
+      "service": "identitystore",
+      "action": "ListGroups",
+      "source_file": "aws_identitycenter.go"
+    },
+    {
+      "permission": "identitystore:ListUsers",
+      "service": "identitystore",
+      "action": "ListUsers",
+      "source_file": "aws_identitycenter.go"
     },
     {
       "permission": "inspector2:ListCoverage",
@@ -3414,6 +3482,12 @@
       "source_file": "aws_secretsmanager.go"
     },
     {
+      "permission": "secretsmanager:ListSecretVersionIds",
+      "service": "secretsmanager",
+      "action": "ListSecretVersionIds",
+      "source_file": "aws_secretsmanager.go"
+    },
+    {
       "permission": "secretsmanager:ListSecrets",
       "service": "secretsmanager",
       "action": "ListSecrets",
@@ -3438,6 +3512,12 @@
       "source_file": "aws_securityhub.go"
     },
     {
+      "permission": "securityhub:GetFindingHistory",
+      "service": "securityhub",
+      "action": "GetFindingHistory",
+      "source_file": "aws_securityhub.go"
+    },
+    {
       "permission": "securityhub:GetFindings",
       "service": "securityhub",
       "action": "GetFindings",
@@ -3459,6 +3539,18 @@
       "permission": "securityhub:ListAutomationRules",
       "service": "securityhub",
       "action": "ListAutomationRules",
+      "source_file": "aws_securityhub.go"
+    },
+    {
+      "permission": "securityhub:ListEnabledProductsForImport",
+      "service": "securityhub",
+      "action": "ListEnabledProductsForImport",
+      "source_file": "aws_securityhub.go"
+    },
+    {
+      "permission": "securityhub:ListMembers",
+      "service": "securityhub",
+      "action": "ListMembers",
       "source_file": "aws_securityhub.go"
     },
     {
@@ -3657,6 +3749,12 @@
       "permission": "ssoadmin:ListAccountsForProvisionedPermissionSet",
       "service": "ssoadmin",
       "action": "ListAccountsForProvisionedPermissionSet",
+      "source_file": "aws_identitycenter.go"
+    },
+    {
+      "permission": "ssoadmin:ListCustomerManagedPolicyReferencesInPermissionSet",
+      "service": "ssoadmin",
+      "action": "ListCustomerManagedPolicyReferencesInPermissionSet",
       "source_file": "aws_identitycenter.go"
     },
     {

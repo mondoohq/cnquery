@@ -9,10 +9,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/service/identitystore"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	ssotypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
@@ -332,16 +334,18 @@ func (a *mqlAwsIdentitycenterInstance) accountAssignments() ([]any, error) {
 
 						mqlAssignment, err := CreateResource(a.MqlRuntime, "aws.identitycenter.accountAssignment",
 							map[string]*llx.RawData{
-								"__id":             llx.StringData(assignId),
-								"id":               llx.StringData(assignId),
-								"accountId":        llx.StringDataPtr(assignment.AccountId),
-								"permissionSetArn": llx.StringDataPtr(assignment.PermissionSetArn),
-								"principalType":    llx.StringData(string(assignment.PrincipalType)),
-								"principalId":      llx.StringDataPtr(assignment.PrincipalId),
+								"__id":          llx.StringData(assignId),
+								"id":            llx.StringData(assignId),
+								"accountId":     llx.StringDataPtr(assignment.AccountId),
+								"principalType": llx.StringData(string(assignment.PrincipalType)),
+								"principalId":   llx.StringDataPtr(assignment.PrincipalId),
 							})
 						if err != nil {
 							return nil, err
 						}
+						cast := mqlAssignment.(*mqlAwsIdentitycenterAccountAssignment)
+						cast.cacheInstanceArn = instanceArn
+						cast.cachePermissionSetArn = convert.ToValue(assignment.PermissionSetArn)
 						res = append(res, mqlAssignment)
 					}
 				}
@@ -364,3 +368,210 @@ func ssoTagsToMap(tags []ssotypes.Tag) map[string]any {
 	}
 	return tagsMap
 }
+
+// Permission set customer managed policies
+func (a *mqlAwsIdentitycenterPermissionSet) customerManagedPolicies() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.SsoAdmin("")
+	ctx := context.Background()
+
+	instanceArn := a.cacheInstanceArn
+	psArn := a.Arn.Data
+	res := []any{}
+
+	paginator := ssoadmin.NewListCustomerManagedPolicyReferencesInPermissionSetPaginator(svc,
+		&ssoadmin.ListCustomerManagedPolicyReferencesInPermissionSetInput{
+			InstanceArn:      &instanceArn,
+			PermissionSetArn: &psArn,
+		})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, cmp := range page.CustomerManagedPolicyReferences {
+			res = append(res, map[string]any{
+				"name": convert.ToValue(cmp.Name),
+				"path": convert.ToValue(cmp.Path),
+			})
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsIdentitycenterPermissionSet) permissionsBoundary() (map[string]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.SsoAdmin("")
+	ctx := context.Background()
+
+	instanceArn := a.cacheInstanceArn
+	psArn := a.Arn.Data
+
+	resp, err := svc.GetPermissionsBoundaryForPermissionSet(ctx, &ssoadmin.GetPermissionsBoundaryForPermissionSetInput{
+		InstanceArn:      &instanceArn,
+		PermissionSetArn: &psArn,
+	})
+	if err != nil {
+		// No permissions boundary attached returns an error
+		if Is400AccessDeniedError(err) {
+			return nil, nil
+		}
+		return nil, nil
+	}
+	if resp.PermissionsBoundary == nil {
+		return nil, nil
+	}
+	return convert.JsonToDict(resp.PermissionsBoundary)
+}
+
+// Account assignment typed permissionSet reference
+type mqlAwsIdentitycenterAccountAssignmentInternal struct {
+	cacheInstanceArn      string
+	cachePermissionSetArn string
+}
+
+func (a *mqlAwsIdentitycenterAccountAssignment) permissionSet() (*mqlAwsIdentitycenterPermissionSet, error) {
+	if a.cachePermissionSetArn == "" {
+		a.PermissionSet.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlPs, err := NewResource(a.MqlRuntime, "aws.identitycenter.permissionSet",
+		map[string]*llx.RawData{"arn": llx.StringData(a.cachePermissionSetArn)})
+	if err != nil {
+		return nil, err
+	}
+	cast := mqlPs.(*mqlAwsIdentitycenterPermissionSet)
+	if cast.cacheInstanceArn == "" {
+		cast.cacheInstanceArn = a.cacheInstanceArn
+	}
+	return cast, nil
+}
+
+// Identity Center groups
+func (a *mqlAwsIdentitycenterInstance) groups() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	idStoreId := a.IdentityStoreId.Data
+	if idStoreId == "" {
+		return nil, nil
+	}
+
+	svc := conn.IdentityStore("")
+	ctx := context.Background()
+	res := []any{}
+
+	paginator := identitystore.NewListGroupsPaginator(svc, &identitystore.ListGroupsInput{
+		IdentityStoreId: &idStoreId,
+	})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, group := range page.Groups {
+			mqlGroup, err := CreateResource(a.MqlRuntime, "aws.identitycenter.group",
+				map[string]*llx.RawData{
+					"__id":        llx.StringData("identitycenter/group/" + convert.ToValue(group.GroupId)),
+					"groupId":     llx.StringDataPtr(group.GroupId),
+					"displayName": llx.StringDataPtr(group.DisplayName),
+				})
+			if err != nil {
+				return nil, err
+			}
+			cast := mqlGroup.(*mqlAwsIdentitycenterGroup)
+			// Eagerly set description from list response
+			cast.Description = plugin.TValue[string]{Data: convert.ToValue(group.Description), State: plugin.StateIsSet}
+
+			externalIds := []any{}
+			for _, eid := range group.ExternalIds {
+				externalIds = append(externalIds, map[string]any{
+					"issuer": convert.ToValue(eid.Issuer),
+					"id":     convert.ToValue(eid.Id),
+				})
+			}
+			cast.ExternalIds = plugin.TValue[[]any]{Data: externalIds, State: plugin.StateIsSet}
+
+			res = append(res, mqlGroup)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsIdentitycenterGroup) id() (string, error) {
+	return a.__id, nil
+}
+
+// description and externalIds are eagerly populated
+func (a *mqlAwsIdentitycenterGroup) description() (string, error) { return "", nil }
+func (a *mqlAwsIdentitycenterGroup) externalIds() ([]any, error)  { return nil, nil }
+
+// Identity Center users
+func (a *mqlAwsIdentitycenterInstance) users() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	idStoreId := a.IdentityStoreId.Data
+	if idStoreId == "" {
+		return nil, nil
+	}
+
+	svc := conn.IdentityStore("")
+	ctx := context.Background()
+	res := []any{}
+
+	paginator := identitystore.NewListUsersPaginator(svc, &identitystore.ListUsersInput{
+		IdentityStoreId: &idStoreId,
+	})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, user := range page.Users {
+			mqlUser, err := CreateResource(a.MqlRuntime, "aws.identitycenter.user",
+				map[string]*llx.RawData{
+					"__id":        llx.StringData("identitycenter/user/" + convert.ToValue(user.UserId)),
+					"userId":      llx.StringDataPtr(user.UserId),
+					"userName":    llx.StringDataPtr(user.UserName),
+					"displayName": llx.StringDataPtr(user.DisplayName),
+				})
+			if err != nil {
+				return nil, err
+			}
+			cast := mqlUser.(*mqlAwsIdentitycenterUser)
+
+			emails := []any{}
+			for _, email := range user.Emails {
+				emails = append(emails, map[string]any{
+					"value":   convert.ToValue(email.Value),
+					"type":    convert.ToValue(email.Type),
+					"primary": email.Primary,
+				})
+			}
+			cast.Emails = plugin.TValue[[]any]{Data: emails, State: plugin.StateIsSet}
+
+			externalIds := []any{}
+			for _, eid := range user.ExternalIds {
+				externalIds = append(externalIds, map[string]any{
+					"issuer": convert.ToValue(eid.Issuer),
+					"id":     convert.ToValue(eid.Id),
+				})
+			}
+			cast.ExternalIds = plugin.TValue[[]any]{Data: externalIds, State: plugin.StateIsSet}
+
+			res = append(res, mqlUser)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsIdentitycenterUser) id() (string, error) {
+	return a.__id, nil
+}
+
+// emails and externalIds are eagerly populated
+func (a *mqlAwsIdentitycenterUser) emails() ([]any, error)      { return nil, nil }
+func (a *mqlAwsIdentitycenterUser) externalIds() ([]any, error) { return nil, nil }

@@ -675,3 +675,129 @@ func (a *mqlAwsGuarddutyDetectorThreatIntelSet) id() (string, error) {
 func (a *mqlAwsGuarddutyDetectorCoverageStatistic) id() (string, error) {
 	return a.__id, nil
 }
+
+// GuardDuty detector filters
+func (a *mqlAwsGuarddutyDetector) filters() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	detectorId := a.Id.Data
+	region := a.Region.Data
+	svc := conn.Guardduty(region)
+	ctx := context.Background()
+
+	resp, err := svc.ListFilters(ctx, &guardduty.ListFiltersInput{
+		DetectorId: &detectorId,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+
+	res := []any{}
+	for _, filterName := range resp.FilterNames {
+		detail, err := svc.GetFilter(ctx, &guardduty.GetFilterInput{
+			DetectorId: &detectorId,
+			FilterName: &filterName,
+		})
+		if err != nil {
+			log.Warn().Err(err).Str("filter", filterName).Msg("could not get filter details")
+			continue
+		}
+
+		findingCriteria, _ := convert.JsonToDict(detail.FindingCriteria)
+
+		mqlFilter, err := CreateResource(a.MqlRuntime, "aws.guardduty.detector.filter",
+			map[string]*llx.RawData{
+				"__id":   llx.StringData(fmt.Sprintf("%s/%s/filter/%s", region, detectorId, filterName)),
+				"name":   llx.StringDataPtr(detail.Name),
+				"region": llx.StringData(region),
+				"action": llx.StringData(string(detail.Action)),
+			})
+		if err != nil {
+			return nil, err
+		}
+		cast := mqlFilter.(*mqlAwsGuarddutyDetectorFilter)
+		cast.Description = plugin.TValue[string]{Data: convert.ToValue(detail.Description), State: plugin.StateIsSet}
+		cast.Rank = plugin.TValue[int64]{Data: int64(convert.ToValue(detail.Rank)), State: plugin.StateIsSet}
+		cast.FindingCriteria = plugin.TValue[any]{Data: findingCriteria, State: plugin.StateIsSet}
+		cast.Tags = plugin.TValue[map[string]any]{Data: convert.MapToInterfaceMap(detail.Tags), State: plugin.StateIsSet}
+
+		res = append(res, mqlFilter)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsGuarddutyDetectorFilter) id() (string, error) {
+	return a.__id, nil
+}
+
+// description, rank, findingCriteria, tags are eagerly populated
+func (a *mqlAwsGuarddutyDetectorFilter) description() (string, error) { return "", nil }
+func (a *mqlAwsGuarddutyDetectorFilter) rank() (int64, error)         { return 0, nil }
+func (a *mqlAwsGuarddutyDetectorFilter) findingCriteria() (map[string]any, error) {
+	return nil, nil
+}
+func (a *mqlAwsGuarddutyDetectorFilter) tags() (map[string]any, error) { return nil, nil }
+
+// GuardDuty detector members
+func (a *mqlAwsGuarddutyDetector) members() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	detectorId := a.Id.Data
+	region := a.Region.Data
+	svc := conn.Guardduty(region)
+	ctx := context.Background()
+
+	res := []any{}
+	paginator := guardduty.NewListMembersPaginator(svc, &guardduty.ListMembersInput{
+		DetectorId: &detectorId,
+	})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, member := range page.Members {
+			invitedAt := parseGuardDutyTimestamp(member.InvitedAt)
+			updatedAt := parseGuardDutyTimestamp(member.UpdatedAt)
+
+			mqlMember, err := CreateResource(a.MqlRuntime, "aws.guardduty.detector.member",
+				map[string]*llx.RawData{
+					"__id":               llx.StringData(fmt.Sprintf("%s/%s/member/%s", region, detectorId, convert.ToValue(member.AccountId))),
+					"accountId":          llx.StringDataPtr(member.AccountId),
+					"region":             llx.StringData(region),
+					"email":              llx.StringDataPtr(member.Email),
+					"relationshipStatus": llx.StringDataPtr(member.RelationshipStatus),
+					"invitedAt":          llx.TimeDataPtr(invitedAt),
+					"updatedAt":          llx.TimeDataPtr(updatedAt),
+					"administratorId":    llx.StringDataPtr(member.AdministratorId),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlMember)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsGuarddutyDetectorMember) id() (string, error) {
+	return a.__id, nil
+}
+
+// parseGuardDutyTimestamp converts a *string epoch timestamp to *time.Time.
+// GuardDuty member timestamps are formatted as epoch second strings.
+func parseGuardDutyTimestamp(s *string) *time.Time {
+	if s == nil || *s == "" {
+		return nil
+	}
+	var epoch float64
+	if _, err := fmt.Sscanf(*s, "%f", &epoch); err != nil {
+		return nil
+	}
+	t := time.Unix(int64(epoch), 0)
+	return &t
+}

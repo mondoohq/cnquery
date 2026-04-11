@@ -551,3 +551,409 @@ func (a *mqlAwsCloudtrailTrailAdvancedEventSelectorFieldSelector) id() (string, 
 func (a *mqlAwsCloudtrailTrailInsightSelector) id() (string, error) {
 	return a.__id, nil
 }
+
+// CloudTrail event data stores
+func (a *mqlAwsCloudtrail) eventDataStores() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getEventDataStores(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsCloudtrail) getEventDataStores(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			svc := conn.Cloudtrail(region)
+			ctx := context.Background()
+			res := []any{}
+
+			paginator := cloudtrail.NewListEventDataStoresPaginator(svc, &cloudtrail.ListEventDataStoresInput{})
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for CloudTrail event data stores")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, eds := range page.EventDataStores {
+					mqlEds, err := CreateResource(a.MqlRuntime, "aws.cloudtrail.eventDataStore",
+						map[string]*llx.RawData{
+							"__id":   llx.StringData(convert.ToValue(eds.EventDataStoreArn)),
+							"arn":    llx.StringDataPtr(eds.EventDataStoreArn),
+							"name":   llx.StringDataPtr(eds.Name),
+							"status": llx.StringData(string(eds.Status)),
+							"region": llx.StringData(region),
+						})
+					if err != nil {
+						return nil, err
+					}
+					cast := mqlEds.(*mqlAwsCloudtrailEventDataStore)
+					cast.cacheRegion = region
+					res = append(res, mqlEds)
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+type mqlAwsCloudtrailEventDataStoreInternal struct {
+	cacheRegion string
+	detail      *cloudtrail.GetEventDataStoreOutput
+	fetched     bool
+	fetchErr    error
+	lock        sync.Mutex
+}
+
+func (a *mqlAwsCloudtrailEventDataStore) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsCloudtrailEventDataStore) fetchDetail() (*cloudtrail.GetEventDataStoreOutput, error) {
+	if a.fetched {
+		return a.detail, a.fetchErr
+	}
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	if a.fetched {
+		return a.detail, a.fetchErr
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	ctx := context.Background()
+	svc := conn.Cloudtrail(a.cacheRegion)
+	arn := a.Arn.Data
+
+	resp, err := svc.GetEventDataStore(ctx, &cloudtrail.GetEventDataStoreInput{
+		EventDataStore: &arn,
+	})
+	if err != nil {
+		a.fetchErr = err
+		a.fetched = true
+		return nil, err
+	}
+	a.detail = resp
+	a.fetched = true
+	return resp, nil
+}
+
+func (a *mqlAwsCloudtrailEventDataStore) multiRegionEnabled() (bool, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return false, err
+	}
+	return convert.ToValue(detail.MultiRegionEnabled), nil
+}
+
+func (a *mqlAwsCloudtrailEventDataStore) organizationEnabled() (bool, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return false, err
+	}
+	return convert.ToValue(detail.OrganizationEnabled), nil
+}
+
+func (a *mqlAwsCloudtrailEventDataStore) retentionPeriod() (int64, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return 0, err
+	}
+	if detail.RetentionPeriod != nil {
+		return int64(*detail.RetentionPeriod), nil
+	}
+	return 0, nil
+}
+
+func (a *mqlAwsCloudtrailEventDataStore) terminationProtectionEnabled() (bool, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return false, err
+	}
+	return convert.ToValue(detail.TerminationProtectionEnabled), nil
+}
+
+func (a *mqlAwsCloudtrailEventDataStore) createdAt() (*time.Time, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return nil, err
+	}
+	return detail.CreatedTimestamp, nil
+}
+
+func (a *mqlAwsCloudtrailEventDataStore) updatedAt() (*time.Time, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return nil, err
+	}
+	return detail.UpdatedTimestamp, nil
+}
+
+func (a *mqlAwsCloudtrailEventDataStore) advancedEventSelectors() ([]any, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return nil, err
+	}
+	res := []any{}
+	for i, aes := range detail.AdvancedEventSelectors {
+		fieldSelectors := []any{}
+		for j, fs := range aes.FieldSelectors {
+			toAny := func(ss []string) []any {
+				r := make([]any, len(ss))
+				for k, s := range ss {
+					r[k] = s
+				}
+				return r
+			}
+			mqlFs, err := CreateResource(a.MqlRuntime, "aws.cloudtrail.trail.advancedEventSelector.fieldSelector",
+				map[string]*llx.RawData{
+					"__id":          llx.StringData(fmt.Sprintf("%s/aes/%d/fs/%d", a.Arn.Data, i, j)),
+					"field":         llx.StringDataPtr(fs.Field),
+					"equals":        llx.ArrayData(toAny(fs.Equals), mqlTypes.String),
+					"startsWith":    llx.ArrayData(toAny(fs.StartsWith), mqlTypes.String),
+					"endsWith":      llx.ArrayData(toAny(fs.EndsWith), mqlTypes.String),
+					"notEquals":     llx.ArrayData(toAny(fs.NotEquals), mqlTypes.String),
+					"notStartsWith": llx.ArrayData(toAny(fs.NotStartsWith), mqlTypes.String),
+					"notEndsWith":   llx.ArrayData(toAny(fs.NotEndsWith), mqlTypes.String),
+				})
+			if err != nil {
+				return nil, err
+			}
+			fieldSelectors = append(fieldSelectors, mqlFs)
+		}
+		mqlAes, err := CreateResource(a.MqlRuntime, "aws.cloudtrail.trail.advancedEventSelector",
+			map[string]*llx.RawData{
+				"__id":           llx.StringData(fmt.Sprintf("%s/aes/%d", a.Arn.Data, i)),
+				"name":           llx.StringDataPtr(aes.Name),
+				"fieldSelectors": llx.ArrayData(fieldSelectors, mqlTypes.Resource("aws.cloudtrail.trail.advancedEventSelector.fieldSelector")),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlAes)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsCloudtrailEventDataStore) kmsKey() (*mqlAwsKmsKey, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return nil, err
+	}
+	if detail.KmsKeyId == nil || *detail.KmsKeyId == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(detail.KmsKeyId)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
+func (a *mqlAwsCloudtrailEventDataStore) billingMode() (string, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	return string(detail.BillingMode), nil
+}
+
+func (a *mqlAwsCloudtrailEventDataStore) tags() (map[string]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Cloudtrail(a.cacheRegion)
+	ctx := context.Background()
+	arn := a.Arn.Data
+
+	resp, err := svc.ListTags(ctx, &cloudtrail.ListTagsInput{
+		ResourceIdList: []string{arn},
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	tags := map[string]any{}
+	for _, tagList := range resp.ResourceTagList {
+		for _, tag := range tagList.TagsList {
+			tags[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
+		}
+	}
+	return tags, nil
+}
+
+// CloudTrail channels
+func (a *mqlAwsCloudtrail) channels() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getChannels(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsCloudtrail) getChannels(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			svc := conn.Cloudtrail(region)
+			ctx := context.Background()
+			res := []any{}
+
+			paginator := cloudtrail.NewListChannelsPaginator(svc, &cloudtrail.ListChannelsInput{})
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for CloudTrail channels")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, ch := range page.Channels {
+					mqlCh, err := CreateResource(a.MqlRuntime, "aws.cloudtrail.channel",
+						map[string]*llx.RawData{
+							"__id":       llx.StringData(convert.ToValue(ch.ChannelArn)),
+							"arn":        llx.StringDataPtr(ch.ChannelArn),
+							"name":       llx.StringDataPtr(ch.Name),
+							"sourceType": llx.StringData(""),
+							"region":     llx.StringData(region),
+						})
+					if err != nil {
+						return nil, err
+					}
+					cast := mqlCh.(*mqlAwsCloudtrailChannel)
+					cast.cacheRegion = region
+					res = append(res, mqlCh)
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+type mqlAwsCloudtrailChannelInternal struct {
+	cacheRegion string
+	detail      *cloudtrail.GetChannelOutput
+	fetched     bool
+	fetchErr    error
+	lock        sync.Mutex
+}
+
+func (a *mqlAwsCloudtrailChannel) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsCloudtrailChannel) fetchDetail() (*cloudtrail.GetChannelOutput, error) {
+	if a.fetched {
+		return a.detail, a.fetchErr
+	}
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	if a.fetched {
+		return a.detail, a.fetchErr
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	ctx := context.Background()
+	svc := conn.Cloudtrail(a.cacheRegion)
+	arn := a.Arn.Data
+
+	resp, err := svc.GetChannel(ctx, &cloudtrail.GetChannelInput{
+		Channel: &arn,
+	})
+	if err != nil {
+		a.fetchErr = err
+		a.fetched = true
+		return nil, err
+	}
+	a.detail = resp
+	a.fetched = true
+	return resp, nil
+}
+
+func (a *mqlAwsCloudtrailChannel) source() (string, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(detail.Source), nil
+}
+
+func (a *mqlAwsCloudtrailChannel) destinations() ([]any, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return nil, err
+	}
+	dests, err := convert.JsonToDictSlice(detail.Destinations)
+	if err != nil {
+		return nil, err
+	}
+	return dests, nil
+}
+
+func (a *mqlAwsCloudtrailChannel) ingestionStatus() (map[string]any, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(detail.IngestionStatus)
+}
+
+func (a *mqlAwsCloudtrailChannel) tags() (map[string]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Cloudtrail(a.cacheRegion)
+	ctx := context.Background()
+	arn := a.Arn.Data
+
+	resp, err := svc.ListTags(ctx, &cloudtrail.ListTagsInput{
+		ResourceIdList: []string{arn},
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	tags := map[string]any{}
+	for _, tagList := range resp.ResourceTagList {
+		for _, tag := range tagList.TagsList {
+			tags[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
+		}
+	}
+	return tags, nil
+}

@@ -2799,6 +2799,10 @@ private aws.guardduty.detector @defaults("id region") {
   threatIntelSets() []aws.guardduty.detector.threatIntelSet
   // Coverage statistics for runtime monitoring
   coverageStatistics() []aws.guardduty.detector.coverageStatistic
+  // Finding filters configured for the detector
+  filters() []aws.guardduty.detector.filter
+  // Member accounts associated with this detector
+  members() []aws.guardduty.detector.member
 }
 
 // Amazon GuardDuty detector feature configuration
@@ -2865,6 +2869,42 @@ private aws.guardduty.detector.coverageStatistic @defaults("resourceType") {
   resourceType string
   // Number of resources of this type
   count int
+}
+
+// Amazon GuardDuty detector finding filter
+private aws.guardduty.detector.filter @defaults("name action") {
+  // Filter name
+  name string
+  // Region of the detector
+  region string
+  // Filter action: NOOP (publish to default) or ARCHIVE (auto-archive)
+  action string
+  // Description of the filter
+  description() string
+  // Filter rank (1-100, lower ranks are applied first)
+  rank() int
+  // Finding criteria for the filter
+  findingCriteria() dict
+  // Tags associated with the filter
+  tags() map[string]string
+}
+
+// Amazon GuardDuty detector member account
+private aws.guardduty.detector.member @defaults("accountId relationshipStatus") {
+  // AWS account ID of the member
+  accountId string
+  // Region of the detector
+  region string
+  // Email address of the member account
+  email string
+  // Relationship status: INVITED, ENABLED, DISABLED, CREATED, REMOVED, RESIGNED, EMAIL_VERIFICATION_IN_PROGRESS, EMAIL_VERIFICATION_FAILED
+  relationshipStatus string
+  // When the member was invited
+  invitedAt time
+  // When the member was last updated
+  updatedAt time
+  // Detector ID of the administrator
+  administratorId string
 }
 
 // AWS GuardDuty finding
@@ -3033,8 +3073,6 @@ private aws.securityhub.hub @defaults("arn region") {
   subscribedAt string
   // Region where the Security Hub is enabled
   region string
-  // List of enabled security standards (CIS, PCI-DSS, AWS Foundational, etc.)
-  enabledStandards() []dict
   // Typed standard subscriptions with control details
   standardSubscriptions() []aws.securityhub.standardSubscription
   // Active findings (non-archived) in this hub
@@ -3043,6 +3081,10 @@ private aws.securityhub.hub @defaults("arn region") {
   automationRules() []aws.securityhub.automationRule
   // Custom and default insights
   insights() []aws.securityhub.insight
+  // Member accounts associated with this hub
+  members() []aws.securityhub.member
+  // Products enabled for finding import
+  enabledProducts() []aws.securityhub.enabledProduct
 }
 
 // AWS Security Hub enabled standard subscription
@@ -3131,6 +3173,8 @@ private aws.securityhub.finding @defaults("title severity workflowStatus") {
   accountId string
   // Region where the finding was generated
   region string
+  // Finding state change history
+  history() []dict
 }
 
 // AWS Security Hub automation rule
@@ -3175,6 +3219,34 @@ private aws.securityhub.insightResult @defaults("groupByAttributeValue count") {
   groupByAttributeValue string
   // Number of findings matching this value
   count int
+}
+
+// AWS Security Hub member account
+private aws.securityhub.member @defaults("accountId memberStatus") {
+  // AWS account ID of the member
+  accountId string
+  // Email address of the member account
+  email string
+  // Member status: INVITED, ENABLED, ASSOCIATED, DISABLED, REMOVED, RESIGNED
+  memberStatus string
+  // When the member was invited
+  invitedAt time
+  // When the member was last updated
+  updatedAt time
+  // Administrator account ID
+  administratorId string
+  // Region where the hub is enabled
+  region string
+}
+
+// AWS Security Hub enabled product integration
+private aws.securityhub.enabledProduct @defaults("productArn") {
+  // ARN of the product subscription
+  productSubscriptionArn string
+  // ARN of the product
+  productArn string
+  // Region where the product is enabled
+  region string
 }
 
 // AWS Shield Advanced
@@ -3303,6 +3375,12 @@ aws.secretsmanager.secret @defaults("arn name") {
   resourcePolicy() string
   // Regions where the secret is replicated
   replicaRegions() []aws.secretsmanager.secret.replicaRegion
+  // Secret type: USER (user-created) or MANAGED_EXTERNAL (managed by another service)
+  type() string
+  // Version history for the secret
+  versions() []aws.secretsmanager.secret.version
+  // Date the secret is scheduled for deletion (null if not pending deletion)
+  deletedAt() time
 }
 
 // AWS Secrets Manager secret replica region
@@ -3319,6 +3397,20 @@ private aws.secretsmanager.secret.replicaRegion @defaults("region status") {
   kmsKeyId string
   // Last date the replica was accessed
   lastAccessedDate time
+}
+
+// AWS Secrets Manager secret version
+private aws.secretsmanager.secret.version @defaults("versionId versionStages") {
+  // Version identifier
+  versionId string
+  // Version stages: AWSCURRENT, AWSPREVIOUS, AWSPENDING
+  versionStages []string
+  // Date the version was created
+  createdDate time
+  // Date the version was last accessed
+  lastAccessedDate time
+  // KMS key IDs used to encrypt this version
+  kmsKeyIds []string
 }
 
 // AWS Secrets Manager secret rotation rules configuration
@@ -4366,6 +4458,10 @@ private aws.cloudfront.function @defaults("name status") {
 aws.cloudtrail @defaults("trails") {
   // List of CloudTrail trails associated with the account
   trails() []aws.cloudtrail.trail
+  // List of CloudTrail Lake event data stores
+  eventDataStores() []aws.cloudtrail.eventDataStore
+  // List of CloudTrail channels for external event ingestion
+  channels() []aws.cloudtrail.channel
 }
 
 // AWS CloudTrail trail
@@ -4478,6 +4574,58 @@ private aws.cloudtrail.trail.advancedEventSelector.fieldSelector @defaults("fiel
 private aws.cloudtrail.trail.insightSelector @defaults("insightType") {
   // Type of insight: ApiCallRateInsight, ApiErrorRateInsight
   insightType string
+}
+
+// AWS CloudTrail Lake event data store
+private aws.cloudtrail.eventDataStore @defaults("name status") {
+  // ARN of the event data store
+  arn string
+  // Name of the event data store
+  name string
+  // Status: CREATED, ENABLED, PENDING_DELETION, STARTING_INGESTION, STOPPING_INGESTION, STOPPED_INGESTION
+  status string
+  // Region where the event data store exists
+  region string
+  // Whether multi-region event collection is enabled
+  multiRegionEnabled() bool
+  // Whether organization-wide event collection is enabled
+  organizationEnabled() bool
+  // Retention period in days
+  retentionPeriod() int
+  // Whether termination protection is enabled
+  terminationProtectionEnabled() bool
+  // When the event data store was created
+  createdAt() time
+  // When the event data store was last updated
+  updatedAt() time
+  // Advanced event selectors for the event data store
+  advancedEventSelectors() []aws.cloudtrail.trail.advancedEventSelector
+  // KMS key used for encryption
+  kmsKey() aws.kms.key
+  // Billing mode: EXTENDABLE_RETENTION_PRICING or FIXED_RETENTION_PRICING
+  billingMode() string
+  // Tags for the event data store
+  tags() map[string]string
+}
+
+// AWS CloudTrail channel for external event ingestion
+private aws.cloudtrail.channel @defaults("name sourceType") {
+  // ARN of the channel
+  arn string
+  // Name of the channel
+  name string
+  // Source type: AWS_SERVICE or CUSTOM
+  sourceType string
+  // Region where the channel exists
+  region string
+  // Source name (e.g., the AWS service name)
+  source() string
+  // Destinations where events are delivered (account, type, location)
+  destinations() []dict
+  // Ingestion status for the channel
+  ingestionStatus() dict
+  // Tags for the channel
+  tags() map[string]string
 }
 
 // Amazon S3 bucket control
@@ -8487,6 +8635,10 @@ private aws.eks.nodegroup @defaults("name scalingConfig.DesiredSize diskSize sta
   updateConfig() dict
   // Kubernetes version of the node group
   nodeVersion() string
+  // Whether node auto-repair is enabled for the node group
+  nodeRepairEnabled() bool
+  // Subnets associated with the node group
+  nodegroupSubnets() []aws.vpc.subnet
 }
 
 // Amazon EKS add-on
@@ -8536,7 +8688,12 @@ aws.eks.cluster @defaults("arn version status") {
   // Cluster status
   status() string
   // Encryption configuration for the cluster
+  // Deprecated: use encryptionKmsKey() and encryptionResources() instead
   encryptionConfig() []dict
+  // KMS key used for envelope encryption of Kubernetes secrets
+  encryptionKmsKey() aws.kms.key
+  // Resource types encrypted with the KMS key (e.g., "secrets")
+  encryptionResources() []string
   // Cluster logging configuration
   logging() dict
   // Kubernetes network configuration
@@ -8588,6 +8745,16 @@ aws.eks.cluster @defaults("arn version status") {
   insights() []aws.eks.insight
   // Available add-on versions compatible with this cluster's Kubernetes version
   availableAddonVersions() []aws.eks.addonVersion
+  // Upgrade policy for the cluster (contains supportType)
+  upgradePolicy() dict
+  // Zonal shift configuration for the cluster
+  zonalShiftConfig() dict
+  // Compute configuration for Auto Mode clusters
+  computeConfig() dict
+  // Storage configuration for Auto Mode clusters
+  storageConfig() dict
+  // Remote network configuration for hybrid nodes
+  remoteNetworkConfig() dict
 }
 
 // AWS EKS access entry for cluster RBAC
@@ -11717,6 +11884,10 @@ private aws.identitycenter.instance @defaults("arn name status") {
   permissionSets() []aws.identitycenter.permissionSet
   // Account assignments in this instance
   accountAssignments() []aws.identitycenter.accountAssignment
+  // Groups in the identity store
+  groups() []aws.identitycenter.group
+  // Users in the identity store
+  users() []aws.identitycenter.user
 }
 
 // AWS IAM Identity Center permission set
@@ -11737,22 +11908,52 @@ private aws.identitycenter.permissionSet @defaults("arn name") {
   inlinePolicy() string
   // AWS managed policies attached to the permission set
   managedPolicies() []dict
+  // Customer managed policies attached to the permission set
+  customerManagedPolicies() []dict
+  // Permissions boundary attached to the permission set
+  permissionsBoundary() dict
   // Tags for the permission set
   tags() map[string]string
 }
 
 // AWS IAM Identity Center account assignment
-private aws.identitycenter.accountAssignment @defaults("accountId permissionSetArn principalType principalId") {
+private aws.identitycenter.accountAssignment @defaults("accountId principalType principalId") {
   // Unique ID for the assignment
   id string
   // AWS account ID
   accountId string
-  // ARN of the permission set
-  permissionSetArn string
+  // Permission set for this assignment
+  permissionSet() aws.identitycenter.permissionSet
   // Type of principal: USER or GROUP
   principalType string
   // ID of the principal (user or group ID)
   principalId string
+}
+
+// AWS IAM Identity Center group from the identity store
+private aws.identitycenter.group @defaults("displayName") {
+  // Group ID
+  groupId string
+  // Display name of the group
+  displayName string
+  // Description of the group
+  description() string
+  // External IDs from the identity provider
+  externalIds() []dict
+}
+
+// AWS IAM Identity Center user from the identity store
+private aws.identitycenter.user @defaults("userName displayName") {
+  // User ID
+  userId string
+  // User name
+  userName string
+  // Display name of the user
+  displayName string
+  // Email addresses associated with the user
+  emails() []dict
+  // External IDs from the identity provider
+  externalIds() []dict
 }
 
 // AWS Private Certificate Authority (ACM PCA)

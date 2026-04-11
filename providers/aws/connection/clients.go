@@ -54,6 +54,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
+	"github.com/aws/aws-sdk-go-v2/service/identitystore"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
 	"github.com/aws/aws-sdk-go-v2/service/keyspaces"
@@ -2058,6 +2059,23 @@ func (t *AwsConnection) SsoAdmin(region string) *ssoadmin.Client {
 	cfg.Region = region
 	client := ssoadmin.NewFromConfig(cfg)
 
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) IdentityStore(region string) *identitystore.Client {
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_identitystore_" + region
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached identitystore client")
+		return c.Data.(*identitystore.Client)
+	}
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := identitystore.NewFromConfig(cfg)
 	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
 	return client
 }
