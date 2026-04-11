@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.12.0",
-  "generated_at": "2026-04-10T21:24:29-07:00",
+  "generated_at": "2026-04-10T22:02:07-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -449,13 +449,14 @@
     "secretsmanager:DescribeSecret",
     "secretsmanager:GetResourcePolicy",
     "secretsmanager:ListSecrets",
+    "securityhub:BatchGetStandardsControlAssociations",
     "securityhub:DescribeHub",
-    "securityhub:DescribeStandardsControls",
     "securityhub:GetEnabledStandards",
     "securityhub:GetFindings",
     "securityhub:GetInsightResults",
     "securityhub:GetInsights",
     "securityhub:ListAutomationRules",
+    "securityhub:ListSecurityControlDefinitions",
     "securitylake:ListSubscribers",
     "sfn:ListActivities",
     "sfn:ListStateMachines",
@@ -3300,15 +3301,15 @@
       "source_file": "aws_secretsmanager.go"
     },
     {
-      "permission": "securityhub:DescribeHub",
+      "permission": "securityhub:BatchGetStandardsControlAssociations",
       "service": "securityhub",
-      "action": "DescribeHub",
+      "action": "BatchGetStandardsControlAssociations",
       "source_file": "aws_securityhub.go"
     },
     {
-      "permission": "securityhub:DescribeStandardsControls",
+      "permission": "securityhub:DescribeHub",
       "service": "securityhub",
-      "action": "DescribeStandardsControls",
+      "action": "DescribeHub",
       "source_file": "aws_securityhub.go"
     },
     {
@@ -3339,6 +3340,12 @@
       "permission": "securityhub:ListAutomationRules",
       "service": "securityhub",
       "action": "ListAutomationRules",
+      "source_file": "aws_securityhub.go"
+    },
+    {
+      "permission": "securityhub:ListSecurityControlDefinitions",
+      "service": "securityhub",
+      "action": "ListSecurityControlDefinitions",
       "source_file": "aws_securityhub.go"
     },
     {
