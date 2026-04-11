@@ -3801,6 +3801,8 @@ private aws.ecs.taskDefinition.ephemeralStorage {
 aws.emr {
   // List of EMR clusters
   clusters() []aws.emr.cluster
+  // Block public access configuration (account-level)
+  blockPublicAccessConfiguration() dict
 }
 
 // Amazon EMR cluster
@@ -3833,6 +3835,12 @@ private aws.emr.cluster @defaults("arn") {
   masterPublicDnsName() string
   // KMS key used for log encryption
   logEncryptionKmsKey() aws.kms.key
+  // Steps associated with the cluster
+  steps() []aws.emr.cluster.step
+  // Instance groups in the cluster
+  instanceGroups() []aws.emr.cluster.instanceGroup
+  // Bootstrap actions for the cluster
+  bootstrapActions() []aws.emr.cluster.bootstrapAction
 }
 
 // EMR cluster encryption configuration from the security configuration
@@ -3845,6 +3853,62 @@ private aws.emr.cluster.encryptionConfiguration @defaults("atRestEnabled inTrans
   atRestConfiguration dict
   // In-transit encryption configuration details (certificate provider settings)
   inTransitConfiguration dict
+}
+
+// Amazon EMR cluster step
+private aws.emr.cluster.step @defaults("name status") {
+  // Step identifier
+  id string
+  // Step name
+  name string
+  // Action to take on failure: TERMINATE_CLUSTER, CANCEL_AND_WAIT, CONTINUE
+  actionOnFailure string
+  // Step execution state: PENDING, CANCEL_PENDING, RUNNING, COMPLETED, CANCELLED, FAILED, INTERRUPTED
+  status string
+  // Path to the JAR file for the step
+  jar string
+  // Arguments passed to the step
+  args []string
+  // When the step was created
+  createdAt time
+  // When the step started running
+  startedAt time
+  // When the step finished
+  endedAt time
+}
+
+// Amazon EMR cluster instance group
+private aws.emr.cluster.instanceGroup @defaults("name instanceGroupType instanceType") {
+  // Instance group identifier
+  id string
+  // Instance group name
+  name string
+  // Group type: MASTER, CORE, TASK
+  instanceGroupType string
+  // EC2 instance type (e.g., m5.xlarge)
+  instanceType string
+  // Market type: ON_DEMAND, SPOT
+  market string
+  // Target number of instances
+  requestedInstanceCount int
+  // Currently running instances
+  runningInstanceCount int
+  // Instance group state
+  status string
+  // Spot bid price (if market is SPOT)
+  bidPrice string
+  // Whether EBS optimization is enabled
+  ebsOptimized bool
+}
+
+// Amazon EMR cluster bootstrap action
+private aws.emr.cluster.bootstrapAction @defaults("name scriptPath") {
+  // Bootstrap action name
+  name string
+  // Path to the bootstrap script (S3 or local)
+  scriptPath string
+  // Arguments passed to the bootstrap script
+  args []string
 }
 
 // Amazon EventBridge
@@ -5663,6 +5727,14 @@ private aws.elasticache.serverlessCache @defaults("name description status engin
 aws.redshift @defaults("clusters") {
   // List of clusters
   clusters() []aws.redshift.cluster
+  // List of cluster subnet groups
+  subnetGroups() []aws.redshift.subnetGroup
+  // List of event notification subscriptions
+  eventSubscriptions() []aws.redshift.eventSubscription
+  // List of scheduled actions (resize, pause, resume)
+  scheduledActions() []aws.redshift.scheduledAction
+  // List of snapshot schedules
+  snapshotSchedules() []aws.redshift.snapshotSchedule
 }
 
 // Amazon Redshift cluster
@@ -5792,6 +5864,90 @@ private aws.redshift.snapshot @defaults("arn clusterIdentifier status createdAt"
   tags map[string]string
   // KMS key used for the encrypted snapshot
   kmsKey() aws.kms.key
+}
+
+// Amazon Redshift cluster subnet group
+private aws.redshift.subnetGroup @defaults("name status") {
+  // Subnet group name
+  name string
+  // Description of the subnet group
+  description string
+  // Region where the subnet group exists
+  region string
+  // Status of the subnet group (e.g., Complete)
+  status string
+  // Subnets in this group
+  subnets []dict
+  // Supported cluster IP address types
+  supportedClusterIpAddressTypes []string
+  // VPC associated with this subnet group
+  vpc() aws.vpc
+  // Tags for the subnet group
+  tags map[string]string
+}
+
+// Amazon Redshift event notification subscription
+private aws.redshift.eventSubscription @defaults("name status") {
+  // Subscription name
+  name string
+  // Region where the subscription exists
+  region string
+  // Whether the subscription is enabled
+  enabled bool
+  // List of event categories for the subscription
+  eventCategories []string
+  // Event severity filter (ERROR or INFO)
+  severity string
+  // ARN of the SNS topic for notifications
+  snsTopicArn string
+  // List of source IDs the subscription applies to
+  sourceIds []string
+  // Type of source (cluster, cluster-snapshot, cluster-parameter-group, cluster-security-group, scheduled-action)
+  sourceType string
+  // Subscription status (active, no-permission, topic-not-exist)
+  status string
+  // When the subscription was created
+  createdAt time
+  // Tags for the subscription
+  tags map[string]string
+}
+
+// Amazon Redshift scheduled action (resize, pause, resume)
+private aws.redshift.scheduledAction @defaults("name state") {
+  // Scheduled action name
+  name string
+  // Region where the action exists
+  region string
+  // Description of the scheduled action
+  description string
+  // Cron-like schedule expression
+  schedule string
+  // State of the action: ACTIVE, DISABLED
+  state string
+  // IAM role ARN used to run the action
+  iamRole string
+  // Start time of the action schedule
+  startTime time
+  // End time of the action schedule
+  endTime time
+  // Target action details (resize, pause, or resume parameters)
+  targetAction dict
+}
+
+// Amazon Redshift snapshot schedule
+private aws.redshift.snapshotSchedule @defaults("id description") {
+  // Schedule identifier
+  id string
+  // Region where the schedule exists
+  region string
+  // Description of the schedule
+  description string
+  // List of cron-like schedule definitions
+  scheduleDefinitions []string
+  // Number of clusters associated with this schedule
+  associatedClusterCount int
+  // Tags for the schedule
+  tags map[string]string
 }
 
 // Amazon Route 53 DNS service

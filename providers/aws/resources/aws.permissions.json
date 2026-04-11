@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.12.0",
-  "generated_at": "2026-04-10T22:02:07-07:00",
+  "generated_at": "2026-04-10T22:19:05-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -217,8 +217,12 @@
     "elasticloadbalancing:DescribeTargetGroups",
     "emr:DescribeCluster",
     "emr:DescribeSecurityConfiguration",
+    "emr:GetBlockPublicAccessConfiguration",
+    "emr:ListBootstrapActions",
     "emr:ListClusters",
+    "emr:ListInstanceGroups",
     "emr:ListInstances",
+    "emr:ListSteps",
     "es:DescribeDomains",
     "es:DescribeElasticsearchDomain",
     "es:ListDomainNames",
@@ -381,8 +385,12 @@
     "rds:ListTagsForResource",
     "redshift:DescribeClusterParameters",
     "redshift:DescribeClusterSnapshots",
+    "redshift:DescribeClusterSubnetGroups",
     "redshift:DescribeClusters",
+    "redshift:DescribeEventSubscriptions",
     "redshift:DescribeLoggingStatus",
+    "redshift:DescribeScheduledActions",
+    "redshift:DescribeSnapshotSchedules",
     "route53:GetDNSSEC",
     "route53:GetHealthCheck",
     "route53:GetHealthCheckStatus",
@@ -1849,15 +1857,39 @@
       "source_file": "aws_emr.go"
     },
     {
+      "permission": "emr:GetBlockPublicAccessConfiguration",
+      "service": "emr",
+      "action": "GetBlockPublicAccessConfiguration",
+      "source_file": "aws_emr.go"
+    },
+    {
+      "permission": "emr:ListBootstrapActions",
+      "service": "emr",
+      "action": "ListBootstrapActions",
+      "source_file": "aws_emr.go"
+    },
+    {
       "permission": "emr:ListClusters",
       "service": "emr",
       "action": "ListClusters",
       "source_file": "aws_emr.go"
     },
     {
+      "permission": "emr:ListInstanceGroups",
+      "service": "emr",
+      "action": "ListInstanceGroups",
+      "source_file": "aws_emr.go"
+    },
+    {
       "permission": "emr:ListInstances",
       "service": "emr",
       "action": "ListInstances",
+      "source_file": "aws_emr.go"
+    },
+    {
+      "permission": "emr:ListSteps",
+      "service": "emr",
+      "action": "ListSteps",
       "source_file": "aws_emr.go"
     },
     {
@@ -2893,15 +2925,39 @@
       "source_file": "aws_redshift.go"
     },
     {
+      "permission": "redshift:DescribeClusterSubnetGroups",
+      "service": "redshift",
+      "action": "DescribeClusterSubnetGroups",
+      "source_file": "aws_redshift.go"
+    },
+    {
       "permission": "redshift:DescribeClusters",
       "service": "redshift",
       "action": "DescribeClusters",
       "source_file": "aws_redshift.go"
     },
     {
+      "permission": "redshift:DescribeEventSubscriptions",
+      "service": "redshift",
+      "action": "DescribeEventSubscriptions",
+      "source_file": "aws_redshift.go"
+    },
+    {
       "permission": "redshift:DescribeLoggingStatus",
       "service": "redshift",
       "action": "DescribeLoggingStatus",
+      "source_file": "aws_redshift.go"
+    },
+    {
+      "permission": "redshift:DescribeScheduledActions",
+      "service": "redshift",
+      "action": "DescribeScheduledActions",
+      "source_file": "aws_redshift.go"
+    },
+    {
+      "permission": "redshift:DescribeSnapshotSchedules",
+      "service": "redshift",
+      "action": "DescribeSnapshotSchedules",
       "source_file": "aws_redshift.go"
     },
     {

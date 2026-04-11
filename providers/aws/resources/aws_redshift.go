@@ -367,3 +367,325 @@ func (a *mqlAwsRedshiftSnapshot) kmsKey() (*mqlAwsKmsKey, error) {
 	}
 	return mqlKey.(*mqlAwsKmsKey), nil
 }
+
+// ── Subnet Groups ───────────────────────────────────────────────────────────
+
+func (a *mqlAwsRedshift) subnetGroups() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getSubnetGroups(conn), 5)
+	poolOfJobs.Run()
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		if poolOfJobs.Jobs[i].Result != nil {
+			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsRedshift) getSubnetGroups(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			svc := conn.Redshift(region)
+			ctx := context.Background()
+			res := []any{}
+			paginator := redshift.NewDescribeClusterSubnetGroupsPaginator(svc, &redshift.DescribeClusterSubnetGroupsInput{})
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, sg := range page.ClusterSubnetGroups {
+					subnets, err := convert.JsonToDictSlice(sg.Subnets)
+					if err != nil {
+						return nil, err
+					}
+					ipTypes := make([]any, len(sg.SupportedClusterIpAddressTypes))
+					for i, t := range sg.SupportedClusterIpAddressTypes {
+						ipTypes[i] = t
+					}
+					mqlSg, err := CreateResource(a.MqlRuntime, ResourceAwsRedshiftSubnetGroup,
+						map[string]*llx.RawData{
+							"__id":                           llx.StringData(fmt.Sprintf("redshift/subnetgroup/%s/%s", region, convert.ToValue(sg.ClusterSubnetGroupName))),
+							"name":                           llx.StringDataPtr(sg.ClusterSubnetGroupName),
+							"description":                    llx.StringDataPtr(sg.Description),
+							"region":                         llx.StringData(region),
+							"status":                         llx.StringDataPtr(sg.SubnetGroupStatus),
+							"subnets":                        llx.ArrayData(subnets, types.Dict),
+							"supportedClusterIpAddressTypes": llx.ArrayData(ipTypes, types.String),
+							"tags":                           llx.MapData(redshiftTagsToMap(sg.Tags), types.String),
+						})
+					if err != nil {
+						return nil, err
+					}
+					mqlSgRes := mqlSg.(*mqlAwsRedshiftSubnetGroup)
+					mqlSgRes.cacheVpcId = sg.VpcId
+					res = append(res, mqlSgRes)
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+type mqlAwsRedshiftSubnetGroupInternal struct {
+	cacheVpcId *string
+}
+
+func (a *mqlAwsRedshiftSubnetGroup) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAwsRedshiftSubnetGroup) vpc() (*mqlAwsVpc, error) {
+	if a.cacheVpcId == nil || *a.cacheVpcId == "" {
+		a.Vpc.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := a.Region.Data
+	vpcArn := fmt.Sprintf(vpcArnPattern, region, conn.AccountId(), *a.cacheVpcId)
+	res, err := NewResource(a.MqlRuntime, "aws.vpc", map[string]*llx.RawData{"arn": llx.StringData(vpcArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsVpc), nil
+}
+
+// ── Event Subscriptions ─────────────────────────────────────────────────────
+
+func (a *mqlAwsRedshift) eventSubscriptions() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getEventSubscriptions(conn), 5)
+	poolOfJobs.Run()
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		if poolOfJobs.Jobs[i].Result != nil {
+			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsRedshift) getEventSubscriptions(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			svc := conn.Redshift(region)
+			ctx := context.Background()
+			res := []any{}
+			paginator := redshift.NewDescribeEventSubscriptionsPaginator(svc, &redshift.DescribeEventSubscriptionsInput{})
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, sub := range page.EventSubscriptionsList {
+					categories := make([]any, len(sub.EventCategoriesList))
+					for i, c := range sub.EventCategoriesList {
+						categories[i] = c
+					}
+					sourceIds := make([]any, len(sub.SourceIdsList))
+					for i, s := range sub.SourceIdsList {
+						sourceIds[i] = s
+					}
+					mqlSub, err := CreateResource(a.MqlRuntime, ResourceAwsRedshiftEventSubscription,
+						map[string]*llx.RawData{
+							"__id":            llx.StringData(fmt.Sprintf("redshift/eventsubscription/%s/%s", region, convert.ToValue(sub.CustSubscriptionId))),
+							"name":            llx.StringDataPtr(sub.CustSubscriptionId),
+							"region":          llx.StringData(region),
+							"enabled":         llx.BoolDataPtr(sub.Enabled),
+							"eventCategories": llx.ArrayData(categories, types.String),
+							"severity":        llx.StringDataPtr(sub.Severity),
+							"snsTopicArn":     llx.StringDataPtr(sub.SnsTopicArn),
+							"sourceIds":       llx.ArrayData(sourceIds, types.String),
+							"sourceType":      llx.StringDataPtr(sub.SourceType),
+							"status":          llx.StringDataPtr(sub.Status),
+							"createdAt":       llx.TimeDataPtr(sub.SubscriptionCreationTime),
+							"tags":            llx.MapData(redshiftTagsToMap(sub.Tags), types.String),
+						})
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlSub)
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (a *mqlAwsRedshiftEventSubscription) id() (string, error) {
+	return a.__id, nil
+}
+
+// ── Scheduled Actions ───────────────────────────────────────────────────────
+
+func (a *mqlAwsRedshift) scheduledActions() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getScheduledActions(conn), 5)
+	poolOfJobs.Run()
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		if poolOfJobs.Jobs[i].Result != nil {
+			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsRedshift) getScheduledActions(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			svc := conn.Redshift(region)
+			ctx := context.Background()
+			res := []any{}
+			paginator := redshift.NewDescribeScheduledActionsPaginator(svc, &redshift.DescribeScheduledActionsInput{})
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, action := range page.ScheduledActions {
+					targetAction, err := convert.JsonToDict(action.TargetAction)
+					if err != nil {
+						return nil, err
+					}
+					mqlAction, err := CreateResource(a.MqlRuntime, ResourceAwsRedshiftScheduledAction,
+						map[string]*llx.RawData{
+							"__id":         llx.StringData(fmt.Sprintf("redshift/scheduledaction/%s/%s", region, convert.ToValue(action.ScheduledActionName))),
+							"name":         llx.StringDataPtr(action.ScheduledActionName),
+							"region":       llx.StringData(region),
+							"description":  llx.StringDataPtr(action.ScheduledActionDescription),
+							"schedule":     llx.StringDataPtr(action.Schedule),
+							"state":        llx.StringData(string(action.State)),
+							"iamRole":      llx.StringDataPtr(action.IamRole),
+							"startTime":    llx.TimeDataPtr(action.StartTime),
+							"endTime":      llx.TimeDataPtr(action.EndTime),
+							"targetAction": llx.DictData(targetAction),
+						})
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlAction)
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (a *mqlAwsRedshiftScheduledAction) id() (string, error) {
+	return a.__id, nil
+}
+
+// ── Snapshot Schedules ──────────────────────────────────────────────────────
+
+func (a *mqlAwsRedshift) snapshotSchedules() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getSnapshotSchedules(conn), 5)
+	poolOfJobs.Run()
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		if poolOfJobs.Jobs[i].Result != nil {
+			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsRedshift) getSnapshotSchedules(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			svc := conn.Redshift(region)
+			ctx := context.Background()
+			res := []any{}
+			paginator := redshift.NewDescribeSnapshotSchedulesPaginator(svc, &redshift.DescribeSnapshotSchedulesInput{})
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, sched := range page.SnapshotSchedules {
+					defs := make([]any, len(sched.ScheduleDefinitions))
+					for i, d := range sched.ScheduleDefinitions {
+						defs[i] = d
+					}
+					mqlSched, err := CreateResource(a.MqlRuntime, ResourceAwsRedshiftSnapshotSchedule,
+						map[string]*llx.RawData{
+							"__id":                   llx.StringData(fmt.Sprintf("redshift/snapshotschedule/%s/%s", region, convert.ToValue(sched.ScheduleIdentifier))),
+							"id":                     llx.StringDataPtr(sched.ScheduleIdentifier),
+							"region":                 llx.StringData(region),
+							"description":            llx.StringDataPtr(sched.ScheduleDescription),
+							"scheduleDefinitions":    llx.ArrayData(defs, types.String),
+							"associatedClusterCount": llx.IntDataDefault(sched.AssociatedClusterCount, 0),
+							"tags":                   llx.MapData(redshiftTagsToMap(sched.Tags), types.String),
+						})
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlSched)
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (a *mqlAwsRedshiftSnapshotSchedule) id() (string, error) {
+	return a.__id, nil
+}

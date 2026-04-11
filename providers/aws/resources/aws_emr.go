@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/service/emr"
@@ -306,4 +307,213 @@ func (a *mqlAwsEmrCluster) masterInstances() ([]any, error) {
 		res = append(res, instances.Instances...)
 	}
 	return convert.JsonToDictSlice(res)
+}
+
+// ── Block Public Access Configuration ───────────────────────────────────────
+
+func (a *mqlAwsEmr) blockPublicAccessConfiguration() (any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	regions, err := conn.Regions()
+	if err != nil {
+		return nil, err
+	}
+	if len(regions) == 0 {
+		return nil, nil
+	}
+	// Account-level config: fetch from the first available region
+	svc := conn.Emr(regions[0])
+	ctx := context.Background()
+	resp, err := svc.GetBlockPublicAccessConfiguration(ctx, &emr.GetBlockPublicAccessConfigurationInput{})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return convert.JsonToDict(resp.BlockPublicAccessConfiguration)
+}
+
+// ── Steps ───────────────────────────────────────────────────────────────────
+
+func (a *mqlAwsEmrCluster) steps() ([]any, error) {
+	arn := a.Arn.Data
+	clusterId := a.Id.Data
+	region, err := GetRegionFromArn(arn)
+	if err != nil {
+		return nil, err
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Emr(region)
+	ctx := context.Background()
+
+	res := []any{}
+	paginator := emr.NewListStepsPaginator(svc, &emr.ListStepsInput{ClusterId: &clusterId})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, step := range page.Steps {
+			var status string
+			var createdAt, startedAt, endedAt *llx.RawData
+			if step.Status != nil {
+				status = string(step.Status.State)
+				if step.Status.Timeline != nil {
+					createdAt = llx.TimeDataPtr(step.Status.Timeline.CreationDateTime)
+					startedAt = llx.TimeDataPtr(step.Status.Timeline.StartDateTime)
+					endedAt = llx.TimeDataPtr(step.Status.Timeline.EndDateTime)
+				}
+			}
+			if createdAt == nil {
+				createdAt = llx.TimeDataPtr(nil)
+			}
+			if startedAt == nil {
+				startedAt = llx.TimeDataPtr(nil)
+			}
+			if endedAt == nil {
+				endedAt = llx.TimeDataPtr(nil)
+			}
+
+			var jar string
+			var args []any
+			if step.Config != nil {
+				jar = convert.ToValue(step.Config.Jar)
+				args = make([]any, len(step.Config.Args))
+				for i, a := range step.Config.Args {
+					args[i] = a
+				}
+			}
+
+			mqlStep, err := CreateResource(a.MqlRuntime, "aws.emr.cluster.step",
+				map[string]*llx.RawData{
+					"__id":            llx.StringData(fmt.Sprintf("%s/step/%s", arn, convert.ToValue(step.Id))),
+					"id":              llx.StringDataPtr(step.Id),
+					"name":            llx.StringDataPtr(step.Name),
+					"actionOnFailure": llx.StringData(string(step.ActionOnFailure)),
+					"status":          llx.StringData(status),
+					"jar":             llx.StringData(jar),
+					"args":            llx.ArrayData(args, types.String),
+					"createdAt":       createdAt,
+					"startedAt":       startedAt,
+					"endedAt":         endedAt,
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlStep)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsEmrClusterStep) id() (string, error) {
+	return a.__id, nil
+}
+
+// ── Instance Groups ─────────────────────────────────────────────────────────
+
+func (a *mqlAwsEmrCluster) instanceGroups() ([]any, error) {
+	arn := a.Arn.Data
+	clusterId := a.Id.Data
+	region, err := GetRegionFromArn(arn)
+	if err != nil {
+		return nil, err
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Emr(region)
+	ctx := context.Background()
+
+	res := []any{}
+	paginator := emr.NewListInstanceGroupsPaginator(svc, &emr.ListInstanceGroupsInput{ClusterId: &clusterId})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, ig := range page.InstanceGroups {
+			var status string
+			if ig.Status != nil {
+				status = string(ig.Status.State)
+			}
+			mqlIg, err := CreateResource(a.MqlRuntime, "aws.emr.cluster.instanceGroup",
+				map[string]*llx.RawData{
+					"__id":                   llx.StringData(fmt.Sprintf("%s/instanceGroup/%s", arn, convert.ToValue(ig.Id))),
+					"id":                     llx.StringDataPtr(ig.Id),
+					"name":                   llx.StringDataPtr(ig.Name),
+					"instanceGroupType":      llx.StringData(string(ig.InstanceGroupType)),
+					"instanceType":           llx.StringDataPtr(ig.InstanceType),
+					"market":                 llx.StringData(string(ig.Market)),
+					"requestedInstanceCount": llx.IntDataDefault(ig.RequestedInstanceCount, 0),
+					"runningInstanceCount":   llx.IntDataDefault(ig.RunningInstanceCount, 0),
+					"status":                 llx.StringData(status),
+					"bidPrice":               llx.StringDataPtr(ig.BidPrice),
+					"ebsOptimized":           llx.BoolDataPtr(ig.EbsOptimized),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlIg)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsEmrClusterInstanceGroup) id() (string, error) {
+	return a.__id, nil
+}
+
+// ── Bootstrap Actions ───────────────────────────────────────────────────────
+
+func (a *mqlAwsEmrCluster) bootstrapActions() ([]any, error) {
+	arn := a.Arn.Data
+	clusterId := a.Id.Data
+	region, err := GetRegionFromArn(arn)
+	if err != nil {
+		return nil, err
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Emr(region)
+	ctx := context.Background()
+
+	res := []any{}
+	idx := 0
+	paginator := emr.NewListBootstrapActionsPaginator(svc, &emr.ListBootstrapActionsInput{ClusterId: &clusterId})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, cmd := range page.BootstrapActions {
+			args := make([]any, len(cmd.Args))
+			for i, a := range cmd.Args {
+				args[i] = a
+			}
+			mqlBa, err := CreateResource(a.MqlRuntime, "aws.emr.cluster.bootstrapAction",
+				map[string]*llx.RawData{
+					"__id":       llx.StringData(fmt.Sprintf("%s/bootstrapAction/%d", arn, idx)),
+					"name":       llx.StringDataPtr(cmd.Name),
+					"scriptPath": llx.StringDataPtr(cmd.ScriptPath),
+					"args":       llx.ArrayData(args, types.String),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlBa)
+			idx++
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsEmrClusterBootstrapAction) id() (string, error) {
+	return a.__id, nil
 }
