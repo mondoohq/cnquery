@@ -5620,6 +5620,16 @@ aws.elasticache @defaults("cacheClusters") {
   cacheClusters() []aws.elasticache.cluster
   // List of serverless caches
   serverlessCaches() []aws.elasticache.serverlessCache
+  // List of cache parameter groups
+  parameterGroups() []aws.elasticache.parameterGroup
+  // List of cache subnet groups
+  subnetGroups() []aws.elasticache.subnetGroup
+  // List of RBAC users
+  users() []aws.elasticache.user
+  // List of available service updates
+  serviceUpdates() []aws.elasticache.serviceUpdate
+  // List of cache snapshots
+  snapshots() []aws.elasticache.snapshot
 }
 
 // Amazon ElastiCache cluster
@@ -5721,6 +5731,128 @@ private aws.elasticache.serverlessCache @defaults("name description status engin
   createdAt time
   // Subnets associated with the serverless cache
   subnets() []aws.vpc.subnet
+}
+
+// Amazon ElastiCache parameter group
+private aws.elasticache.parameterGroup @defaults("name family") {
+  // ARN of the parameter group
+  arn string
+  // Parameter group name
+  name string
+  // Region where the parameter group exists
+  region string
+  // Engine family (e.g., redis7, memcached1.6)
+  family string
+  // Description of the parameter group
+  description string
+  // Whether the parameter group is associated with a Global datastore
+  isGlobal bool
+}
+
+// Amazon ElastiCache subnet group
+private aws.elasticache.subnetGroup @defaults("name") {
+  // ARN of the subnet group
+  arn string
+  // Subnet group name
+  name string
+  // Region where the subnet group exists
+  region string
+  // Description of the subnet group
+  description string
+  // Subnets in this group
+  subnets []dict
+  // Supported network types (ipv4, ipv6, dual_stack)
+  supportedNetworkTypes []string
+  // VPC associated with this subnet group
+  vpc() aws.vpc
+}
+
+// Amazon ElastiCache RBAC user
+private aws.elasticache.user @defaults("userName status engine") {
+  // ARN of the user
+  arn string
+  // User ID
+  userId string
+  // Username
+  userName string
+  // Region where the user exists
+  region string
+  // Access permissions string
+  accessString string
+  // Engine type (valkey or redis)
+  engine string
+  // Minimum engine version required
+  minimumEngineVersion string
+  // User status: active, modifying, deleting
+  status string
+  // User group IDs the user belongs to
+  userGroupIds []string
+  // Authentication details
+  authentication dict
+}
+
+// Amazon ElastiCache service update
+private aws.elasticache.serviceUpdate @defaults("name severity status") {
+  // Service update name
+  name string
+  // Region where the update was discovered
+  region string
+  // Description of the service update
+  description string
+  // Engine the update applies to (Valkey, Redis, Memcached)
+  engine string
+  // Engine version the update applies to
+  engineVersion string
+  // Severity: critical, important, medium, low
+  severity string
+  // Status: available, cancelled, expired
+  status string
+  // Update type
+  updateType string
+  // Date the update was released
+  releaseDate time
+  // Recommended apply-by date
+  recommendedApplyByDate time
+  // Date after which the update is no longer available
+  endDate time
+  // Estimated time to apply the update
+  estimatedUpdateTime string
+  // Whether update auto-applies after recommended date
+  autoUpdateAfterRecommendedApplyByDate bool
+}
+
+// Amazon ElastiCache snapshot
+private aws.elasticache.snapshot @defaults("name status engine") {
+  // ARN of the snapshot
+  arn string
+  // Snapshot name
+  name string
+  // Region where the snapshot exists
+  region string
+  // Source cluster ID
+  cacheClusterId string
+  // Source replication group ID
+  replicationGroupId string
+  // Snapshot status: creating, available, restoring, copying, deleting
+  status string
+  // Snapshot source: automated or manual
+  snapshotSource string
+  // Cache engine name
+  engine string
+  // Cache engine version
+  engineVersion string
+  // Cache node type
+  cacheNodeType string
+  // Number of cache nodes
+  numCacheNodes int
+  // Snapshot retention limit in days
+  snapshotRetentionLimit int
+  // KMS key used to encrypt the snapshot
+  kmsKey() aws.kms.key
+  // VPC of the cache subnet group
+  vpc() aws.vpc
+  // When the source cluster was created
+  cacheClusterCreatedAt time
 }
 
 // Amazon Redshift
