@@ -624,70 +624,53 @@ func (a *mqlAwsElasticacheUser) id() (string, error) {
 
 func (a *mqlAwsElasticache) serviceUpdates() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	res := []any{}
-	poolOfJobs := jobpool.CreatePool(a.getServiceUpdates(conn), 5)
-	poolOfJobs.Run()
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
+	regions, err := conn.Regions()
+	if err != nil {
+		return nil, err
 	}
-	for i := range poolOfJobs.Jobs {
-		if poolOfJobs.Jobs[i].Result != nil {
-			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+	if len(regions) == 0 {
+		return nil, nil
+	}
+	// Service updates are global; fetch from the first available region.
+	region := regions[0]
+	svc := conn.Elasticache(region)
+	ctx := context.Background()
+	res := []any{}
+	paginator := elasticache.NewDescribeServiceUpdatesPaginator(svc, &elasticache.DescribeServiceUpdatesInput{})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
+				log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, su := range page.ServiceUpdates {
+			mqlSu, err := CreateResource(a.MqlRuntime, ResourceAwsElasticacheServiceUpdate,
+				map[string]*llx.RawData{
+					"__id":                                  llx.StringData(fmt.Sprintf("elasticache/serviceupdate/%s", convert.ToValue(su.ServiceUpdateName))),
+					"name":                                  llx.StringDataPtr(su.ServiceUpdateName),
+					"region":                                llx.StringData(region),
+					"description":                           llx.StringDataPtr(su.ServiceUpdateDescription),
+					"engine":                                llx.StringDataPtr(su.Engine),
+					"engineVersion":                         llx.StringDataPtr(su.EngineVersion),
+					"severity":                              llx.StringData(string(su.ServiceUpdateSeverity)),
+					"status":                                llx.StringData(string(su.ServiceUpdateStatus)),
+					"updateType":                            llx.StringData(string(su.ServiceUpdateType)),
+					"releaseDate":                           llx.TimeDataPtr(su.ServiceUpdateReleaseDate),
+					"recommendedApplyByDate":                llx.TimeDataPtr(su.ServiceUpdateRecommendedApplyByDate),
+					"endDate":                               llx.TimeDataPtr(su.ServiceUpdateEndDate),
+					"estimatedUpdateTime":                   llx.StringDataPtr(su.EstimatedUpdateTime),
+					"autoUpdateAfterRecommendedApplyByDate": llx.BoolDataPtr(su.AutoUpdateAfterRecommendedApplyByDate),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlSu)
 		}
 	}
 	return res, nil
-}
-
-func (a *mqlAwsElasticache) getServiceUpdates(conn *connection.AwsConnection) []*jobpool.Job {
-	tasks := make([]*jobpool.Job, 0)
-	regions, err := conn.Regions()
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
-	for _, region := range regions {
-		f := func() (jobpool.JobResult, error) {
-			svc := conn.Elasticache(region)
-			ctx := context.Background()
-			res := []any{}
-			paginator := elasticache.NewDescribeServiceUpdatesPaginator(svc, &elasticache.DescribeServiceUpdatesInput{})
-			for paginator.HasMorePages() {
-				page, err := paginator.NextPage(ctx)
-				if err != nil {
-					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
-						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
-						return res, nil
-					}
-					return nil, err
-				}
-				for _, su := range page.ServiceUpdates {
-					mqlSu, err := CreateResource(a.MqlRuntime, ResourceAwsElasticacheServiceUpdate,
-						map[string]*llx.RawData{
-							"__id":                                  llx.StringData(fmt.Sprintf("elasticache/serviceupdate/%s/%s", region, convert.ToValue(su.ServiceUpdateName))),
-							"name":                                  llx.StringDataPtr(su.ServiceUpdateName),
-							"region":                                llx.StringData(region),
-							"description":                           llx.StringDataPtr(su.ServiceUpdateDescription),
-							"engine":                                llx.StringDataPtr(su.Engine),
-							"engineVersion":                         llx.StringDataPtr(su.EngineVersion),
-							"severity":                              llx.StringData(string(su.ServiceUpdateSeverity)),
-							"status":                                llx.StringData(string(su.ServiceUpdateStatus)),
-							"updateType":                            llx.StringData(string(su.ServiceUpdateType)),
-							"releaseDate":                           llx.TimeDataPtr(su.ServiceUpdateReleaseDate),
-							"recommendedApplyByDate":                llx.TimeDataPtr(su.ServiceUpdateRecommendedApplyByDate),
-							"endDate":                               llx.TimeDataPtr(su.ServiceUpdateEndDate),
-							"estimatedUpdateTime":                   llx.StringDataPtr(su.EstimatedUpdateTime),
-							"autoUpdateAfterRecommendedApplyByDate": llx.BoolDataPtr(su.AutoUpdateAfterRecommendedApplyByDate),
-						})
-					if err != nil {
-						return nil, err
-					}
-					res = append(res, mqlSu)
-				}
-			}
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
 }
 
 func (a *mqlAwsElasticacheServiceUpdate) id() (string, error) {

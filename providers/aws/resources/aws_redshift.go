@@ -401,7 +401,7 @@ func (a *mqlAwsRedshift) getSubnetGroups(conn *connection.AwsConnection) []*jobp
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
+					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
@@ -498,7 +498,7 @@ func (a *mqlAwsRedshift) getEventSubscriptions(conn *connection.AwsConnection) [
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
+					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
@@ -578,7 +578,7 @@ func (a *mqlAwsRedshift) getScheduledActions(conn *connection.AwsConnection) []*
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
+					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
@@ -652,7 +652,7 @@ func (a *mqlAwsRedshift) getSnapshotSchedules(conn *connection.AwsConnection) []
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
+					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
