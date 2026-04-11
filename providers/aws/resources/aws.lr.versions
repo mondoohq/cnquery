@@ -4394,7 +4394,7 @@ aws.securityhub.finding.resourceId 13.12.1
 aws.securityhub.finding.resourceRegion 13.12.1
 aws.securityhub.finding.resourceType 13.12.1
 aws.securityhub.finding.severity 13.12.1
-aws.securityhub.finding.severityScore 13.12.1
+aws.securityhub.finding.severityNormalized 13.12.1
 aws.securityhub.finding.title 13.12.1
 aws.securityhub.finding.types 13.12.1
 aws.securityhub.finding.updatedAt 13.12.1

@@ -6414,8 +6414,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.securityhub.finding.severity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecurityhubFinding).GetSeverity()).ToDataRes(types.String)
 	},
-	"aws.securityhub.finding.severityScore": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsSecurityhubFinding).GetSeverityScore()).ToDataRes(types.Float)
+	"aws.securityhub.finding.severityNormalized": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubFinding).GetSeverityNormalized()).ToDataRes(types.Int)
 	},
 	"aws.securityhub.finding.recordState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecurityhubFinding).GetRecordState()).ToDataRes(types.String)
@@ -22710,8 +22710,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSecurityhubFinding).Severity, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.securityhub.finding.severityScore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsSecurityhubFinding).SeverityScore, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+	"aws.securityhub.finding.severityNormalized": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubFinding).SeverityNormalized, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.securityhub.finding.recordState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -53398,29 +53398,29 @@ type mqlAwsSecurityhubFinding struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsSecurityhubFindingInternal it will be used here
-	Id               plugin.TValue[string]
-	Title            plugin.TValue[string]
-	Description      plugin.TValue[string]
-	Severity         plugin.TValue[string]
-	SeverityScore    plugin.TValue[float64]
-	RecordState      plugin.TValue[string]
-	ComplianceStatus plugin.TValue[string]
-	WorkflowStatus   plugin.TValue[string]
-	Types            plugin.TValue[[]any]
-	ProductArn       plugin.TValue[string]
-	ProductName      plugin.TValue[string]
-	GeneratorId      plugin.TValue[string]
-	ResourceType     plugin.TValue[string]
-	ResourceId       plugin.TValue[string]
-	ResourceRegion   plugin.TValue[string]
-	CreatedAt        plugin.TValue[*time.Time]
-	UpdatedAt        plugin.TValue[*time.Time]
-	FirstObservedAt  plugin.TValue[*time.Time]
-	LastObservedAt   plugin.TValue[*time.Time]
-	RemediationUrl   plugin.TValue[string]
-	RemediationText  plugin.TValue[string]
-	AccountId        plugin.TValue[string]
-	Region           plugin.TValue[string]
+	Id                 plugin.TValue[string]
+	Title              plugin.TValue[string]
+	Description        plugin.TValue[string]
+	Severity           plugin.TValue[string]
+	SeverityNormalized plugin.TValue[int64]
+	RecordState        plugin.TValue[string]
+	ComplianceStatus   plugin.TValue[string]
+	WorkflowStatus     plugin.TValue[string]
+	Types              plugin.TValue[[]any]
+	ProductArn         plugin.TValue[string]
+	ProductName        plugin.TValue[string]
+	GeneratorId        plugin.TValue[string]
+	ResourceType       plugin.TValue[string]
+	ResourceId         plugin.TValue[string]
+	ResourceRegion     plugin.TValue[string]
+	CreatedAt          plugin.TValue[*time.Time]
+	UpdatedAt          plugin.TValue[*time.Time]
+	FirstObservedAt    plugin.TValue[*time.Time]
+	LastObservedAt     plugin.TValue[*time.Time]
+	RemediationUrl     plugin.TValue[string]
+	RemediationText    plugin.TValue[string]
+	AccountId          plugin.TValue[string]
+	Region             plugin.TValue[string]
 }
 
 // createAwsSecurityhubFinding creates a new instance of this resource
@@ -53476,8 +53476,8 @@ func (c *mqlAwsSecurityhubFinding) GetSeverity() *plugin.TValue[string] {
 	return &c.Severity
 }
 
-func (c *mqlAwsSecurityhubFinding) GetSeverityScore() *plugin.TValue[float64] {
-	return &c.SeverityScore
+func (c *mqlAwsSecurityhubFinding) GetSeverityNormalized() *plugin.TValue[int64] {
+	return &c.SeverityNormalized
 }
 
 func (c *mqlAwsSecurityhubFinding) GetRecordState() *plugin.TValue[string] {

@@ -3093,8 +3093,8 @@ private aws.securityhub.finding @defaults("title severity workflowStatus") {
   description string
   // Normalized severity label: CRITICAL, HIGH, MEDIUM, LOW, INFORMATIONAL
   severity string
-  // Normalized severity score (0-100)
-  severityScore float
+  // Legacy normalized severity (0-100 integer, deprecated in favor of severity label)
+  severityNormalized int
   // Record state: ACTIVE, ARCHIVED
   recordState string
   // Compliance status: PASSED, FAILED, WARNING, NOT_AVAILABLE

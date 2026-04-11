@@ -163,42 +163,88 @@ func (a *mqlAwsSecurityhubStandardSubscription) controls() ([]any, error) {
 	svc := conn.Securityhub(region)
 	ctx := context.Background()
 
-	subscriptionArn := a.Arn.Data
-	res := []any{}
-	paginator := securityhub.NewDescribeStandardsControlsPaginator(svc, &securityhub.DescribeStandardsControlsInput{
-		StandardsSubscriptionArn: &subscriptionArn,
+	standardArn := a.StandardArn.Data
+
+	// Step 1: List all control definitions for this standard
+	var controlDefs []types.SecurityControlDefinition
+	paginator := securityhub.NewListSecurityControlDefinitionsPaginator(svc, &securityhub.ListSecurityControlDefinitionsInput{
+		StandardsArn: &standardArn,
 	})
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
 			if Is400AccessDeniedError(err) {
-				return res, nil
+				return []any{}, nil
 			}
 			return nil, err
 		}
-		for _, ctrl := range page.Controls {
-			relatedReqs := make([]any, len(ctrl.RelatedRequirements))
-			for i, r := range ctrl.RelatedRequirements {
-				relatedReqs[i] = r
-			}
+		controlDefs = append(controlDefs, page.SecurityControlDefinitions...)
+	}
 
-			mqlCtrl, err := CreateResource(a.MqlRuntime, "aws.securityhub.standardControl",
-				map[string]*llx.RawData{
-					"arn":                 llx.StringDataPtr(ctrl.StandardsControlArn),
-					"controlId":           llx.StringDataPtr(ctrl.ControlId),
-					"title":               llx.StringDataPtr(ctrl.Title),
-					"description":         llx.StringDataPtr(ctrl.Description),
-					"controlStatus":       llx.StringData(string(ctrl.ControlStatus)),
-					"severity":            llx.StringData(string(ctrl.SeverityRating)),
-					"disabledReason":      llx.StringDataPtr(ctrl.DisabledReason),
-					"relatedRequirements": llx.ArrayData(relatedReqs, mqlTypes.String),
-					"remediationUrl":      llx.StringDataPtr(ctrl.RemediationUrl),
-				})
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, mqlCtrl)
+	if len(controlDefs) == 0 {
+		return []any{}, nil
+	}
+
+	// Step 2: Batch-fetch per-standard association details (status, relatedRequirements, disabledReason)
+	assocMap := make(map[string]types.StandardsControlAssociationDetail, len(controlDefs))
+	const batchSize = 100
+	for i := 0; i < len(controlDefs); i += batchSize {
+		end := i + batchSize
+		if end > len(controlDefs) {
+			end = len(controlDefs)
 		}
+		ids := make([]types.StandardsControlAssociationId, 0, end-i)
+		for _, def := range controlDefs[i:end] {
+			ids = append(ids, types.StandardsControlAssociationId{
+				SecurityControlId: def.SecurityControlId,
+				StandardsArn:      &standardArn,
+			})
+		}
+		resp, err := svc.BatchGetStandardsControlAssociations(ctx, &securityhub.BatchGetStandardsControlAssociationsInput{
+			StandardsControlAssociationIds: ids,
+		})
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return []any{}, nil
+			}
+			return nil, err
+		}
+		for _, detail := range resp.StandardsControlAssociationDetails {
+			assocMap[convert.ToValue(detail.SecurityControlId)] = detail
+		}
+	}
+
+	// Step 3: Combine definitions + associations into resources
+	res := make([]any, 0, len(controlDefs))
+	for _, def := range controlDefs {
+		controlId := convert.ToValue(def.SecurityControlId)
+		assoc := assocMap[controlId]
+
+		var controlStatus, disabledReason string
+		controlStatus = string(assoc.AssociationStatus)
+		disabledReason = convert.ToValue(assoc.UpdatedReason)
+
+		relatedReqs := make([]any, len(assoc.RelatedRequirements))
+		for j, r := range assoc.RelatedRequirements {
+			relatedReqs[j] = r
+		}
+
+		mqlCtrl, err := CreateResource(a.MqlRuntime, "aws.securityhub.standardControl",
+			map[string]*llx.RawData{
+				"arn":                 llx.StringDataPtr(assoc.SecurityControlArn),
+				"controlId":           llx.StringDataPtr(def.SecurityControlId),
+				"title":               llx.StringDataPtr(def.Title),
+				"description":         llx.StringDataPtr(def.Description),
+				"controlStatus":       llx.StringData(controlStatus),
+				"severity":            llx.StringData(string(def.SeverityRating)),
+				"disabledReason":      llx.StringData(disabledReason),
+				"relatedRequirements": llx.ArrayData(relatedReqs, mqlTypes.String),
+				"remediationUrl":      llx.StringDataPtr(def.RemediationUrl),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlCtrl)
 	}
 	return res, nil
 }
@@ -259,11 +305,11 @@ func (a *mqlAwsSecurityhubHub) findings() ([]any, error) {
 
 func newMqlSecurityHubFinding(runtime *plugin.Runtime, finding *types.AwsSecurityFinding, region string) (*mqlAwsSecurityhubFinding, error) {
 	var severity string
-	var severityScore float64
+	var severityNormalized int64
 	if finding.Severity != nil {
 		severity = string(finding.Severity.Label)
 		if finding.Severity.Normalized != nil {
-			severityScore = float64(*finding.Severity.Normalized)
+			severityNormalized = int64(*finding.Severity.Normalized)
 		}
 	}
 
@@ -299,30 +345,30 @@ func newMqlSecurityHubFinding(runtime *plugin.Runtime, finding *types.AwsSecurit
 
 	res, err := CreateResource(runtime, "aws.securityhub.finding",
 		map[string]*llx.RawData{
-			"__id":             llx.StringData(fmt.Sprintf("securityhub/finding/%s/%s", region, convert.ToValue(finding.Id))),
-			"id":               llx.StringDataPtr(finding.Id),
-			"title":            llx.StringDataPtr(finding.Title),
-			"description":      llx.StringDataPtr(finding.Description),
-			"severity":         llx.StringData(severity),
-			"severityScore":    llx.FloatData(severityScore),
-			"recordState":      llx.StringData(string(finding.RecordState)),
-			"complianceStatus": llx.StringData(complianceStatus),
-			"workflowStatus":   llx.StringData(workflowStatus),
-			"types":            llx.ArrayData(findingTypes, mqlTypes.String),
-			"productArn":       llx.StringDataPtr(finding.ProductArn),
-			"productName":      llx.StringDataPtr(finding.ProductName),
-			"generatorId":      llx.StringDataPtr(finding.GeneratorId),
-			"resourceType":     llx.StringData(resourceType),
-			"resourceId":       llx.StringData(resourceId),
-			"resourceRegion":   llx.StringData(resourceRegion),
-			"createdAt":        llx.TimeDataPtr(parseAwsTimestampPtr(finding.CreatedAt)),
-			"updatedAt":        llx.TimeDataPtr(parseAwsTimestampPtr(finding.UpdatedAt)),
-			"firstObservedAt":  llx.TimeDataPtr(parseAwsTimestampPtr(finding.FirstObservedAt)),
-			"lastObservedAt":   llx.TimeDataPtr(parseAwsTimestampPtr(finding.LastObservedAt)),
-			"remediationUrl":   llx.StringData(remediationUrl),
-			"remediationText":  llx.StringData(remediationText),
-			"accountId":        llx.StringDataPtr(finding.AwsAccountId),
-			"region":           llx.StringData(region),
+			"__id":               llx.StringData(fmt.Sprintf("securityhub/finding/%s/%s", region, convert.ToValue(finding.Id))),
+			"id":                 llx.StringDataPtr(finding.Id),
+			"title":              llx.StringDataPtr(finding.Title),
+			"description":        llx.StringDataPtr(finding.Description),
+			"severity":           llx.StringData(severity),
+			"severityNormalized": llx.IntData(severityNormalized),
+			"recordState":        llx.StringData(string(finding.RecordState)),
+			"complianceStatus":   llx.StringData(complianceStatus),
+			"workflowStatus":     llx.StringData(workflowStatus),
+			"types":              llx.ArrayData(findingTypes, mqlTypes.String),
+			"productArn":         llx.StringDataPtr(finding.ProductArn),
+			"productName":        llx.StringDataPtr(finding.ProductName),
+			"generatorId":        llx.StringDataPtr(finding.GeneratorId),
+			"resourceType":       llx.StringData(resourceType),
+			"resourceId":         llx.StringData(resourceId),
+			"resourceRegion":     llx.StringData(resourceRegion),
+			"createdAt":          llx.TimeDataPtr(parseAwsTimestampPtr(finding.CreatedAt)),
+			"updatedAt":          llx.TimeDataPtr(parseAwsTimestampPtr(finding.UpdatedAt)),
+			"firstObservedAt":    llx.TimeDataPtr(parseAwsTimestampPtr(finding.FirstObservedAt)),
+			"lastObservedAt":     llx.TimeDataPtr(parseAwsTimestampPtr(finding.LastObservedAt)),
+			"remediationUrl":     llx.StringData(remediationUrl),
+			"remediationText":    llx.StringData(remediationText),
+			"accountId":          llx.StringDataPtr(finding.AwsAccountId),
+			"region":             llx.StringData(region),
 		})
 	if err != nil {
 		return nil, err
