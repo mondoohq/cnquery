@@ -4377,7 +4377,6 @@ aws.securityhub.automationRule.ruleStatus 13.12.1
 aws.securityhub.automationRule.updatedAt 13.12.1
 aws.securityhub.finding 13.12.1
 aws.securityhub.finding.accountId 13.12.1
-aws.securityhub.finding.arn 13.12.1
 aws.securityhub.finding.complianceStatus 13.12.1
 aws.securityhub.finding.createdAt 13.12.1
 aws.securityhub.finding.description 13.12.1

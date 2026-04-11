@@ -3087,8 +3087,6 @@ private aws.securityhub.standardControl @defaults("controlId title controlStatus
 private aws.securityhub.finding @defaults("title severity workflowStatus") {
   // Finding identifier
   id string
-  // Finding ARN
-  arn string
   // Finding title
   title string
   // Finding description

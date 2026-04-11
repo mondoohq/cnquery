@@ -7,7 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/rs/zerolog/log"
@@ -132,8 +134,7 @@ func (a *mqlAwsSecurityhubHub) standardSubscriptions() ([]any, error) {
 			return nil, err
 		}
 		for _, std := range page.StandardsSubscriptions {
-			// Extract a readable name from the standard ARN
-			name := convert.ToValue(std.StandardsArn)
+			name := standardNameFromArn(convert.ToValue(std.StandardsArn))
 
 			mqlStd, err := CreateResource(a.MqlRuntime, "aws.securityhub.standardSubscription",
 				map[string]*llx.RawData{
@@ -219,17 +220,17 @@ func (a *mqlAwsSecurityhubHub) findings() ([]any, error) {
 			RecordState: []types.StringFilter{
 				{
 					Comparison: types.StringFilterComparisonEquals,
-					Value:      strPtr("ACTIVE"),
+					Value:      aws.String("ACTIVE"),
 				},
 			},
 			WorkflowStatus: []types.StringFilter{
 				{
 					Comparison: types.StringFilterComparisonNotEquals,
-					Value:      strPtr("SUPPRESSED"),
+					Value:      aws.String("SUPPRESSED"),
 				},
 			},
 		},
-		MaxResults: int32Ptr(100),
+		MaxResults: aws.Int32(100),
 	})
 
 	// Limit to 1000 findings to avoid unbounded API calls
@@ -242,8 +243,11 @@ func (a *mqlAwsSecurityhubHub) findings() ([]any, error) {
 			}
 			return nil, err
 		}
-		for _, finding := range page.Findings {
-			mqlFinding, err := newMqlSecurityHubFinding(a.MqlRuntime, finding, region)
+		for i := range page.Findings {
+			if len(res) >= maxFindings {
+				break
+			}
+			mqlFinding, err := newMqlSecurityHubFinding(a.MqlRuntime, &page.Findings[i], region)
 			if err != nil {
 				return nil, err
 			}
@@ -253,7 +257,7 @@ func (a *mqlAwsSecurityhubHub) findings() ([]any, error) {
 	return res, nil
 }
 
-func newMqlSecurityHubFinding(runtime *plugin.Runtime, finding types.AwsSecurityFinding, region string) (*mqlAwsSecurityhubFinding, error) {
+func newMqlSecurityHubFinding(runtime *plugin.Runtime, finding *types.AwsSecurityFinding, region string) (*mqlAwsSecurityhubFinding, error) {
 	var severity string
 	var severityScore float64
 	if finding.Severity != nil {
@@ -273,6 +277,8 @@ func newMqlSecurityHubFinding(runtime *plugin.Runtime, finding types.AwsSecurity
 		workflowStatus = string(finding.Workflow.Status)
 	}
 
+	// A finding can reference multiple resources, but we expose only the first
+	// (primary) one. Most findings have exactly one resource.
 	var resourceType, resourceId, resourceRegion string
 	if len(finding.Resources) > 0 {
 		resourceType = convert.ToValue(finding.Resources[0].Type)
@@ -295,7 +301,6 @@ func newMqlSecurityHubFinding(runtime *plugin.Runtime, finding types.AwsSecurity
 		map[string]*llx.RawData{
 			"__id":             llx.StringData(fmt.Sprintf("securityhub/finding/%s/%s", region, convert.ToValue(finding.Id))),
 			"id":               llx.StringDataPtr(finding.Id),
-			"arn":              llx.StringDataPtr(finding.ProductArn),
 			"title":            llx.StringDataPtr(finding.Title),
 			"description":      llx.StringDataPtr(finding.Description),
 			"severity":         llx.StringData(severity),
@@ -396,7 +401,10 @@ func (a *mqlAwsSecurityhubHub) insights() ([]any, error) {
 			return nil, err
 		}
 		for _, insight := range page.Insights {
-			filters, _ := convert.JsonToDict(insight.Filters)
+			filters, err := convert.JsonToDict(insight.Filters)
+			if err != nil {
+				return nil, err
+			}
 
 			mqlInsight, err := CreateResource(a.MqlRuntime, "aws.securityhub.insight",
 				map[string]*llx.RawData{
@@ -466,11 +474,18 @@ func (a *mqlAwsSecurityhubInsightResult) id() (string, error) {
 	return a.__id, nil
 }
 
-// Helper functions
-func strPtr(s string) *string {
-	return &s
-}
-
-func int32Ptr(i int32) *int32 {
-	return &i
+// standardNameFromArn extracts a human-readable name from a Security Hub standard ARN.
+// e.g. "arn:aws:securityhub:::standards/aws-foundational-security-best-practices/v/1.0.0"
+// becomes "aws-foundational-security-best-practices".
+func standardNameFromArn(arn string) string {
+	const prefix = "standards/"
+	idx := strings.Index(arn, prefix)
+	if idx == -1 {
+		return arn
+	}
+	name := arn[idx+len(prefix):]
+	if slash := strings.Index(name, "/"); slash != -1 {
+		name = name[:slash]
+	}
+	return name
 }

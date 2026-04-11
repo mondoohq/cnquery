@@ -6405,9 +6405,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.securityhub.finding.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecurityhubFinding).GetId()).ToDataRes(types.String)
 	},
-	"aws.securityhub.finding.arn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsSecurityhubFinding).GetArn()).ToDataRes(types.String)
-	},
 	"aws.securityhub.finding.title": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecurityhubFinding).GetTitle()).ToDataRes(types.String)
 	},
@@ -22699,10 +22696,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.securityhub.finding.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSecurityhubFinding).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.securityhub.finding.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsSecurityhubFinding).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.securityhub.finding.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -53406,7 +53399,6 @@ type mqlAwsSecurityhubFinding struct {
 	__id       string
 	// optional: if you define mqlAwsSecurityhubFindingInternal it will be used here
 	Id               plugin.TValue[string]
-	Arn              plugin.TValue[string]
 	Title            plugin.TValue[string]
 	Description      plugin.TValue[string]
 	Severity         plugin.TValue[string]
@@ -53470,10 +53462,6 @@ func (c *mqlAwsSecurityhubFinding) MqlID() string {
 
 func (c *mqlAwsSecurityhubFinding) GetId() *plugin.TValue[string] {
 	return &c.Id
-}
-
-func (c *mqlAwsSecurityhubFinding) GetArn() *plugin.TValue[string] {
-	return &c.Arn
 }
 
 func (c *mqlAwsSecurityhubFinding) GetTitle() *plugin.TValue[string] {
