@@ -13,7 +13,7 @@ import (
 	"go.mondoo.com/mql/v13/providers/core/resources/classifier"
 )
 
-func hash(input string) string {
+func unicodeInputHash(input string) string {
 	h := sha256.New()
 	h.Write([]byte(input))
 	bs := h.Sum(nil)
@@ -21,7 +21,7 @@ func hash(input string) string {
 }
 
 func (r *mqlUnicode) id() (string, error) {
-	return "unicode/" + hash(r.Input.Data), nil
+	return "unicode/" + unicodeInputHash(r.Input.Data), nil
 }
 
 func (r *mqlUnicode) classification() ([]interface{}, error) {
@@ -33,15 +33,15 @@ func (r *mqlUnicode) classification() ([]interface{}, error) {
 		return nil, err
 	}
 
-	id := hash(r.Input.Data)
+	id := unicodeInputHash(r.Input.Data)
 
 	res := []any{}
 	for i := range characterInfo {
-		r, err := newMqlCharacterInfo(r.MqlRuntime, id, characterInfo[i])
+		ci, err := newMqlCharacterInfo(r.MqlRuntime, id, characterInfo[i])
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, r)
+		res = append(res, ci)
 	}
 
 	return res, nil
@@ -73,7 +73,7 @@ func (r *mqlUnicode) categories() ([]any, error) {
 		return nil, err
 	}
 
-	id := hash(r.Input.Data)
+	id := unicodeInputHash(r.Input.Data)
 
 	res := []any{}
 	for k, v := range summary {
@@ -82,6 +82,7 @@ func (r *mqlUnicode) categories() ([]any, error) {
 				"__id":          llx.StringData(id + "/" + k),
 				"category":      llx.StringData(k),
 				"majorCategory": llx.StringData(string(k[0])),
+				"description":   llx.StringData(classifier.CategoryDescriptions[k]),
 				"count":         llx.IntData(v),
 			})
 		if err != nil {
