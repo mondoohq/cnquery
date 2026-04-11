@@ -586,6 +586,7 @@ CI runs [check-spelling/check-spelling](https://github.com/check-spelling/check-
 - If the word is a legitimate technical term: add it to `expect.txt` (keep sorted)
 - If the word appears in a pattern (ARN, hash, URL): add a regex to `patterns.txt`
 - If it's a genuine typo: fix the spelling
+- Removing words from `expect.txt` is fine as long as the spell check CI job passes
 
 ## 9. Commit Conventions
 
