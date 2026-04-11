@@ -521,17 +521,23 @@ func (a *mqlAwsSecurityhubInsightResult) id() (string, error) {
 }
 
 // standardNameFromArn extracts a human-readable name from a Security Hub standard ARN.
-// e.g. "arn:aws:securityhub:::standards/aws-foundational-security-best-practices/v/1.0.0"
-// becomes "aws-foundational-security-best-practices".
+// Handles both "standards/" and "ruleset/" prefixes:
+//
+//	"arn:aws:securityhub:::standards/aws-foundational-security-best-practices/v/1.0.0"
+//	 → "aws-foundational-security-best-practices"
+//	"arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0"
+//	 → "cis-aws-foundations-benchmark"
 func standardNameFromArn(arn string) string {
-	const prefix = "standards/"
-	idx := strings.Index(arn, prefix)
-	if idx == -1 {
-		return arn
+	for _, prefix := range []string{"standards/", "ruleset/"} {
+		idx := strings.Index(arn, prefix)
+		if idx == -1 {
+			continue
+		}
+		name := arn[idx+len(prefix):]
+		if slash := strings.Index(name, "/"); slash != -1 {
+			name = name[:slash]
+		}
+		return name
 	}
-	name := arn[idx+len(prefix):]
-	if slash := strings.Index(name, "/"); slash != -1 {
-		name = name[:slash]
-	}
-	return name
+	return arn
 }
