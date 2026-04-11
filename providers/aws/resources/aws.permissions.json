@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.12.0",
-  "generated_at": "2026-04-10T22:19:05-07:00",
+  "generated_at": "2026-04-10T22:55:06-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -204,8 +204,13 @@
     "eks:ListNodegroups",
     "eks:ListPodIdentityAssociations",
     "elasticache:DescribeCacheClusters",
+    "elasticache:DescribeCacheParameterGroups",
+    "elasticache:DescribeCacheSubnetGroups",
     "elasticache:DescribeReplicationGroups",
     "elasticache:DescribeServerlessCaches",
+    "elasticache:DescribeServiceUpdates",
+    "elasticache:DescribeSnapshots",
+    "elasticache:DescribeUsers",
     "elasticbeanstalk:DescribeApplications",
     "elasticbeanstalk:DescribeEnvironments",
     "elasticbeanstalk:ListTagsForResource",
@@ -1779,6 +1784,18 @@
       "source_file": "aws_elasticache.go"
     },
     {
+      "permission": "elasticache:DescribeCacheParameterGroups",
+      "service": "elasticache",
+      "action": "DescribeCacheParameterGroups",
+      "source_file": "aws_elasticache.go"
+    },
+    {
+      "permission": "elasticache:DescribeCacheSubnetGroups",
+      "service": "elasticache",
+      "action": "DescribeCacheSubnetGroups",
+      "source_file": "aws_elasticache.go"
+    },
+    {
       "permission": "elasticache:DescribeReplicationGroups",
       "service": "elasticache",
       "action": "DescribeReplicationGroups",
@@ -1788,6 +1805,24 @@
       "permission": "elasticache:DescribeServerlessCaches",
       "service": "elasticache",
       "action": "DescribeServerlessCaches",
+      "source_file": "aws_elasticache.go"
+    },
+    {
+      "permission": "elasticache:DescribeServiceUpdates",
+      "service": "elasticache",
+      "action": "DescribeServiceUpdates",
+      "source_file": "aws_elasticache.go"
+    },
+    {
+      "permission": "elasticache:DescribeSnapshots",
+      "service": "elasticache",
+      "action": "DescribeSnapshots",
+      "source_file": "aws_elasticache.go"
+    },
+    {
+      "permission": "elasticache:DescribeUsers",
+      "service": "elasticache",
+      "action": "DescribeUsers",
       "source_file": "aws_elasticache.go"
     },
     {
