@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.12.0",
-  "generated_at": "2026-04-10T12:51:16-07:00",
+  "generated_at": "2026-04-10T18:49:51-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -58,6 +58,7 @@
     "cloudtrail:GetEventSelectors",
     "cloudtrail:GetInsightSelectors",
     "cloudtrail:GetTrailStatus",
+    "cloudtrail:ListTags",
     "cloudwatch:DescribeAlarms",
     "cloudwatch:DescribeAlarmsForMetric",
     "cloudwatch:GetMetricStatistics",
@@ -81,7 +82,13 @@
     "config:DescribeConfigRules",
     "config:DescribeConfigurationAggregators",
     "config:DescribeConfigurationRecorders",
+    "config:DescribeConformancePackCompliance",
+    "config:DescribeConformancePacks",
+    "config:DescribeDeliveryChannelStatus",
     "config:DescribeDeliveryChannels",
+    "config:DescribeRemediationConfigurations",
+    "config:GetComplianceDetailsByConfigRule",
+    "config:GetConformancePackComplianceSummary",
     "controltower:ListEnabledBaselines",
     "controltower:ListLandingZones",
     "dax:DescribeClusters",
@@ -236,9 +243,16 @@
     "glue:GetTables",
     "glue:GetTags",
     "glue:ListWorkflows",
+    "guardduty:DescribePublishingDestination",
+    "guardduty:GetCoverageStatistics",
     "guardduty:GetDetector",
+    "guardduty:GetIPSet",
+    "guardduty:GetThreatIntelSet",
     "guardduty:ListDetectors",
     "guardduty:ListFindings",
+    "guardduty:ListIPSets",
+    "guardduty:ListPublishingDestinations",
+    "guardduty:ListThreatIntelSets",
     "iam:GenerateCredentialReport",
     "iam:GetAccountPasswordPolicy",
     "iam:GetAccountSummary",
@@ -833,6 +847,12 @@
       "source_file": "aws_cloudtrail.go"
     },
     {
+      "permission": "cloudtrail:ListTags",
+      "service": "cloudtrail",
+      "action": "ListTags",
+      "source_file": "aws_cloudtrail.go"
+    },
+    {
       "permission": "cloudwatch:DescribeAlarms",
       "service": "cloudwatch",
       "action": "DescribeAlarms",
@@ -971,9 +991,45 @@
       "source_file": "aws_config.go"
     },
     {
+      "permission": "config:DescribeConformancePackCompliance",
+      "service": "config",
+      "action": "DescribeConformancePackCompliance",
+      "source_file": "aws_config.go"
+    },
+    {
+      "permission": "config:DescribeConformancePacks",
+      "service": "config",
+      "action": "DescribeConformancePacks",
+      "source_file": "aws_config.go"
+    },
+    {
+      "permission": "config:DescribeDeliveryChannelStatus",
+      "service": "config",
+      "action": "DescribeDeliveryChannelStatus",
+      "source_file": "aws_config.go"
+    },
+    {
       "permission": "config:DescribeDeliveryChannels",
       "service": "config",
       "action": "DescribeDeliveryChannels",
+      "source_file": "aws_config.go"
+    },
+    {
+      "permission": "config:DescribeRemediationConfigurations",
+      "service": "config",
+      "action": "DescribeRemediationConfigurations",
+      "source_file": "aws_config.go"
+    },
+    {
+      "permission": "config:GetComplianceDetailsByConfigRule",
+      "service": "config",
+      "action": "GetComplianceDetailsByConfigRule",
+      "source_file": "aws_config.go"
+    },
+    {
+      "permission": "config:GetConformancePackComplianceSummary",
+      "service": "config",
+      "action": "GetConformancePackComplianceSummary",
       "source_file": "aws_config.go"
     },
     {
@@ -1949,9 +2005,33 @@
       "source_file": "aws_glue.go"
     },
     {
+      "permission": "guardduty:DescribePublishingDestination",
+      "service": "guardduty",
+      "action": "DescribePublishingDestination",
+      "source_file": "aws_guardduty.go"
+    },
+    {
+      "permission": "guardduty:GetCoverageStatistics",
+      "service": "guardduty",
+      "action": "GetCoverageStatistics",
+      "source_file": "aws_guardduty.go"
+    },
+    {
       "permission": "guardduty:GetDetector",
       "service": "guardduty",
       "action": "GetDetector",
+      "source_file": "aws_guardduty.go"
+    },
+    {
+      "permission": "guardduty:GetIPSet",
+      "service": "guardduty",
+      "action": "GetIPSet",
+      "source_file": "aws_guardduty.go"
+    },
+    {
+      "permission": "guardduty:GetThreatIntelSet",
+      "service": "guardduty",
+      "action": "GetThreatIntelSet",
       "source_file": "aws_guardduty.go"
     },
     {
@@ -1964,6 +2044,24 @@
       "permission": "guardduty:ListFindings",
       "service": "guardduty",
       "action": "ListFindings",
+      "source_file": "aws_guardduty.go"
+    },
+    {
+      "permission": "guardduty:ListIPSets",
+      "service": "guardduty",
+      "action": "ListIPSets",
+      "source_file": "aws_guardduty.go"
+    },
+    {
+      "permission": "guardduty:ListPublishingDestinations",
+      "service": "guardduty",
+      "action": "ListPublishingDestinations",
+      "source_file": "aws_guardduty.go"
+    },
+    {
+      "permission": "guardduty:ListThreatIntelSets",
+      "service": "guardduty",
+      "action": "ListThreatIntelSets",
       "source_file": "aws_guardduty.go"
     },
     {
