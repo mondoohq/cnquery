@@ -183,6 +183,45 @@ private product.releaseCycleInformation {
   link string
 }
 
+// Unicode Text Classification
+unicode @maturity("preview") {
+  init(input string)
+  // Input text
+  input string
+  // Classification
+  classification() []unicode.charInfo
+  // Categories
+  categories() []unicode.category
+}
+
+// Unicode Character Information
+private unicode.charInfo @defaults("position category char") {
+  // Position is the zero-based index of the character in the original string
+  position int
+  // Character is the actual Unicode character as a string
+  char string
+  // CodePoint is the Unicode code point in U+XXXX format
+  codePoint string
+  // Major Category is the major Unicode category (single letter)
+  majorCategory string
+  // Category is the Unicode general category code (two-letter code)
+  category string
+  // Description is the human-readable description of the category
+  description string
+}
+
+// Unicode Category Information
+private unicode.category @defaults("category count") {
+  // Category value
+  category string
+  // Major Category
+  majorCategory string
+  // Description
+  description string
+  // Category count
+  count int
+}
+
 // Experimental: Vulnerability Exchange information
 vulnerability.exchange @defaults("id source") {
   // Vulnerability ID, eg. CVE-2025-12345

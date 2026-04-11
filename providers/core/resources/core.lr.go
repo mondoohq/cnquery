@@ -26,6 +26,9 @@ const (
 	ResourceCpe                            string = "cpe"
 	ResourceProduct                        string = "product"
 	ResourceProductReleaseCycleInformation string = "product.releaseCycleInformation"
+	ResourceUnicode                        string = "unicode"
+	ResourceUnicodeCharInfo                string = "unicode.charInfo"
+	ResourceUnicodeCategory                string = "unicode.category"
 	ResourceVulnerabilityExchange          string = "vulnerability.exchange"
 )
 
@@ -72,6 +75,18 @@ func init() {
 		"product.releaseCycleInformation": {
 			// to override args, implement: initProductReleaseCycleInformation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createProductReleaseCycleInformation,
+		},
+		"unicode": {
+			// to override args, implement: initUnicode(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createUnicode,
+		},
+		"unicode.charInfo": {
+			// to override args, implement: initUnicodeCharInfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createUnicodeCharInfo,
+		},
+		"unicode.category": {
+			// to override args, implement: initUnicodeCategory(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createUnicodeCategory,
 		},
 		"vulnerability.exchange": {
 			// to override args, implement: initVulnerabilityExchange(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -345,6 +360,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"product.releaseCycleInformation.link": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlProductReleaseCycleInformation).GetLink()).ToDataRes(types.String)
+	},
+	"unicode.input": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUnicode).GetInput()).ToDataRes(types.String)
+	},
+	"unicode.classification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUnicode).GetClassification()).ToDataRes(types.Array(types.Resource("unicode.charInfo")))
+	},
+	"unicode.categories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUnicode).GetCategories()).ToDataRes(types.Array(types.Resource("unicode.category")))
+	},
+	"unicode.charInfo.position": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUnicodeCharInfo).GetPosition()).ToDataRes(types.Int)
+	},
+	"unicode.charInfo.char": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUnicodeCharInfo).GetChar()).ToDataRes(types.String)
+	},
+	"unicode.charInfo.codePoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUnicodeCharInfo).GetCodePoint()).ToDataRes(types.String)
+	},
+	"unicode.charInfo.majorCategory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUnicodeCharInfo).GetMajorCategory()).ToDataRes(types.String)
+	},
+	"unicode.charInfo.category": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUnicodeCharInfo).GetCategory()).ToDataRes(types.String)
+	},
+	"unicode.charInfo.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUnicodeCharInfo).GetDescription()).ToDataRes(types.String)
+	},
+	"unicode.category.category": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUnicodeCategory).GetCategory()).ToDataRes(types.String)
+	},
+	"unicode.category.majorCategory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUnicodeCategory).GetMajorCategory()).ToDataRes(types.String)
+	},
+	"unicode.category.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUnicodeCategory).GetDescription()).ToDataRes(types.String)
+	},
+	"unicode.category.count": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUnicodeCategory).GetCount()).ToDataRes(types.Int)
 	},
 	"vulnerability.exchange.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVulnerabilityExchange).GetId()).ToDataRes(types.String)
@@ -666,6 +720,70 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"product.releaseCycleInformation.link": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlProductReleaseCycleInformation).Link, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"unicode.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUnicode).__id, ok = v.Value.(string)
+		return
+	},
+	"unicode.input": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUnicode).Input, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"unicode.classification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUnicode).Classification, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"unicode.categories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUnicode).Categories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"unicode.charInfo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUnicodeCharInfo).__id, ok = v.Value.(string)
+		return
+	},
+	"unicode.charInfo.position": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUnicodeCharInfo).Position, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"unicode.charInfo.char": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUnicodeCharInfo).Char, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"unicode.charInfo.codePoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUnicodeCharInfo).CodePoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"unicode.charInfo.majorCategory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUnicodeCharInfo).MajorCategory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"unicode.charInfo.category": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUnicodeCharInfo).Category, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"unicode.charInfo.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUnicodeCharInfo).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"unicode.category.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUnicodeCategory).__id, ok = v.Value.(string)
+		return
+	},
+	"unicode.category.category": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUnicodeCategory).Category, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"unicode.category.majorCategory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUnicodeCategory).MajorCategory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"unicode.category.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUnicodeCategory).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"unicode.category.count": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUnicodeCategory).Count, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"vulnerability.exchange.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1524,6 +1642,217 @@ func (c *mqlProductReleaseCycleInformation) GetEndOfExtendedSupport() *plugin.TV
 
 func (c *mqlProductReleaseCycleInformation) GetLink() *plugin.TValue[string] {
 	return &c.Link
+}
+
+// mqlUnicode for the unicode resource
+type mqlUnicode struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlUnicodeInternal it will be used here
+	Input          plugin.TValue[string]
+	Classification plugin.TValue[[]any]
+	Categories     plugin.TValue[[]any]
+}
+
+// createUnicode creates a new instance of this resource
+func createUnicode(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlUnicode{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("unicode", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlUnicode) MqlName() string {
+	return "unicode"
+}
+
+func (c *mqlUnicode) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlUnicode) GetInput() *plugin.TValue[string] {
+	return &c.Input
+}
+
+func (c *mqlUnicode) GetClassification() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Classification, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("unicode", c.__id, "classification")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.classification()
+	})
+}
+
+func (c *mqlUnicode) GetCategories() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Categories, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("unicode", c.__id, "categories")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.categories()
+	})
+}
+
+// mqlUnicodeCharInfo for the unicode.charInfo resource
+type mqlUnicodeCharInfo struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlUnicodeCharInfoInternal it will be used here
+	Position      plugin.TValue[int64]
+	Char          plugin.TValue[string]
+	CodePoint     plugin.TValue[string]
+	MajorCategory plugin.TValue[string]
+	Category      plugin.TValue[string]
+	Description   plugin.TValue[string]
+}
+
+// createUnicodeCharInfo creates a new instance of this resource
+func createUnicodeCharInfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlUnicodeCharInfo{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("unicode.charInfo", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlUnicodeCharInfo) MqlName() string {
+	return "unicode.charInfo"
+}
+
+func (c *mqlUnicodeCharInfo) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlUnicodeCharInfo) GetPosition() *plugin.TValue[int64] {
+	return &c.Position
+}
+
+func (c *mqlUnicodeCharInfo) GetChar() *plugin.TValue[string] {
+	return &c.Char
+}
+
+func (c *mqlUnicodeCharInfo) GetCodePoint() *plugin.TValue[string] {
+	return &c.CodePoint
+}
+
+func (c *mqlUnicodeCharInfo) GetMajorCategory() *plugin.TValue[string] {
+	return &c.MajorCategory
+}
+
+func (c *mqlUnicodeCharInfo) GetCategory() *plugin.TValue[string] {
+	return &c.Category
+}
+
+func (c *mqlUnicodeCharInfo) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+// mqlUnicodeCategory for the unicode.category resource
+type mqlUnicodeCategory struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlUnicodeCategoryInternal it will be used here
+	Category      plugin.TValue[string]
+	MajorCategory plugin.TValue[string]
+	Description   plugin.TValue[string]
+	Count         plugin.TValue[int64]
+}
+
+// createUnicodeCategory creates a new instance of this resource
+func createUnicodeCategory(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlUnicodeCategory{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("unicode.category", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlUnicodeCategory) MqlName() string {
+	return "unicode.category"
+}
+
+func (c *mqlUnicodeCategory) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlUnicodeCategory) GetCategory() *plugin.TValue[string] {
+	return &c.Category
+}
+
+func (c *mqlUnicodeCategory) GetMajorCategory() *plugin.TValue[string] {
+	return &c.MajorCategory
+}
+
+func (c *mqlUnicodeCategory) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlUnicodeCategory) GetCount() *plugin.TValue[int64] {
+	return &c.Count
 }
 
 // mqlVulnerabilityExchange for the vulnerability.exchange resource
