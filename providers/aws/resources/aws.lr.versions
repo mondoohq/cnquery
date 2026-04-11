@@ -1,4 +1,4 @@
-# Copyright (c) Mondoo, Inc.
+# Copyright Mondoo, Inc. 2024, 2026
 # SPDX-License-Identifier: BUSL-1.1
 
 aws 11.15.2
@@ -805,7 +805,6 @@ aws.config.aggregators 13.5.0
 aws.config.conformancePack 13.12.1
 aws.config.conformancePack.arn 13.12.1
 aws.config.conformancePack.complianceStatus 13.12.1
-aws.config.conformancePack.createdAt 13.12.1
 aws.config.conformancePack.deliveryS3Bucket 13.12.1
 aws.config.conformancePack.deliveryS3KeyPrefix 13.12.1
 aws.config.conformancePack.inputParameters 13.12.1
@@ -857,8 +856,8 @@ aws.config.rule.name 11.15.2
 aws.config.rule.region 11.15.2
 aws.config.rule.remediation 13.12.1
 aws.config.rule.remediation.automatic 13.12.1
-aws.config.rule.remediation.maxConcurrentCount 13.12.1
 aws.config.rule.remediation.maxConcurrentPercentage 13.12.1
+aws.config.rule.remediation.maxErrorPercentage 13.12.1
 aws.config.rule.remediation.parameters 13.12.1
 aws.config.rule.remediation.retryAttemptSeconds 13.12.1
 aws.config.rule.remediation.targetId 13.12.1
@@ -2449,9 +2448,8 @@ aws.glue.workflows 11.16.1
 aws.guardduty 11.15.2
 aws.guardduty.detector 11.15.2
 aws.guardduty.detector.coverageStatistic 13.12.1
-aws.guardduty.detector.coverageStatistic.coveredCount 13.12.1
+aws.guardduty.detector.coverageStatistic.count 13.12.1
 aws.guardduty.detector.coverageStatistic.resourceType 13.12.1
-aws.guardduty.detector.coverageStatistic.uncoveredCount 13.12.1
 aws.guardduty.detector.coverageStatistics 13.12.1
 aws.guardduty.detector.createdAt 11.15.2
 aws.guardduty.detector.feature 13.12.1

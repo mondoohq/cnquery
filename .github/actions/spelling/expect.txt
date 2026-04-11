@@ -145,9 +145,7 @@ kerberoastable
 keyspace
 kqueue
 krbtgt
-KSK
 kustomization
-kustomize
 kubenet
 labelmatchstatement
 launchconfiguration
@@ -213,6 +211,7 @@ openvpn
 openzfs
 orstatement
 ospf
+OTX
 pagerduty
 panos
 parallelquery
@@ -272,7 +271,6 @@ Sflags
 signin
 singlequeryargument
 sizeconstraintstatement
-Slurm
 smbv
 Snat
 SNYK
@@ -286,6 +284,7 @@ sqlimatchstatement
 sqlserver
 Sspr
 stringx
+STIX
 subscriptionfilter
 superusers
 switchports

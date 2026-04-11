@@ -2863,10 +2863,8 @@ private aws.guardduty.detector.threatIntelSet @defaults("name status") {
 private aws.guardduty.detector.coverageStatistic @defaults("resourceType") {
   // Resource type: EC2, ECS, EKS
   resourceType string
-  // Number of covered resources
-  coveredCount int
-  // Number of uncovered resources
-  uncoveredCount int
+  // Number of resources of this type
+  count int
 }
 
 // AWS GuardDuty finding
@@ -7885,8 +7883,8 @@ private aws.config.rule.remediation @defaults("targetType targetId") {
   automatic bool
   // Maximum number of concurrent remediation executions (percentage)
   maxConcurrentPercentage string
-  // Maximum number of concurrent remediation executions (count)
-  maxConcurrentCount string
+  // Maximum error percentage before remediation stops
+  maxErrorPercentage string
   // Number of seconds to wait before retrying a failed remediation
   retryAttemptSeconds int
   // Parameters passed to the remediation target
@@ -7955,8 +7953,6 @@ private aws.config.conformancePack @defaults("name region") {
   deliveryS3KeyPrefix string
   // Input parameters for the conformance pack
   inputParameters []dict
-  // Time when the conformance pack was created
-  createdAt time
   // Time of the last update request
   lastUpdateRequestedTime time
   // Overall compliance status: COMPLIANT, NON_COMPLIANT, INSUFFICIENT_DATA

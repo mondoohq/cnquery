@@ -97,6 +97,9 @@ type mqlAwsGuarddutyDetectorInternal struct {
 }
 
 func (a *mqlAwsGuarddutyDetector) populateData() error {
+	if a.cachedDetector != nil {
+		return nil
+	}
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	// default set values
@@ -630,7 +633,6 @@ func (a *mqlAwsGuarddutyDetector) coverageStatistics() ([]any, error) {
 		DetectorId: &detectorId,
 		StatisticsType: []types.CoverageStatisticsType{
 			types.CoverageStatisticsTypeCountByResourceType,
-			types.CoverageStatisticsTypeCountByCoverageStatus,
 		},
 	})
 	if err != nil {
@@ -645,10 +647,9 @@ func (a *mqlAwsGuarddutyDetector) coverageStatistics() ([]any, error) {
 		for resourceType, count := range resp.CoverageStatistics.CountByResourceType {
 			mqlStat, err := CreateResource(a.MqlRuntime, "aws.guardduty.detector.coverageStatistic",
 				map[string]*llx.RawData{
-					"__id":           llx.StringData(fmt.Sprintf("%s/coverage/%s", detectorId, resourceType)),
-					"resourceType":   llx.StringData(resourceType),
-					"coveredCount":   llx.IntData(count),
-					"uncoveredCount": llx.IntData(0),
+					"__id":         llx.StringData(fmt.Sprintf("%s/coverage/%s", detectorId, resourceType)),
+					"resourceType": llx.StringData(resourceType),
+					"count":        llx.IntData(count),
 				})
 			if err != nil {
 				return nil, err

@@ -322,7 +322,7 @@ func (a *mqlAwsCloudtrailTrail) tags() (map[string]any, error) {
 	})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
-			return nil, nil
+			return map[string]any{}, nil
 		}
 		return nil, err
 	}

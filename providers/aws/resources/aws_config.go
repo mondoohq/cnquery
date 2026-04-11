@@ -264,6 +264,10 @@ func (a *mqlAwsConfig) getRules(conn *connection.AwsConnection) []*jobpool.Job {
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return jobpool.JobResult(res), nil
+					}
 					return nil, err
 				}
 				for _, r := range page.ConfigRules {
@@ -598,7 +602,7 @@ func (a *mqlAwsConfigRule) complianceDetails() ([]any, error) {
 			return nil, err
 		}
 
-		for i, eval := range resp.EvaluationResults {
+		for _, eval := range resp.EvaluationResults {
 			var resourceType, resourceId string
 			var orderingTimestamp *time.Time
 			if eval.EvaluationResultIdentifier != nil {
@@ -611,7 +615,7 @@ func (a *mqlAwsConfigRule) complianceDetails() ([]any, error) {
 
 			mqlDetail, err := CreateResource(a.MqlRuntime, "aws.config.rule.complianceDetail",
 				map[string]*llx.RawData{
-					"__id":               llx.StringData(fmt.Sprintf("%s/complianceDetail/%s/%s/%d", a.Arn.Data, resourceType, resourceId, i)),
+					"__id":               llx.StringData(fmt.Sprintf("%s/complianceDetail/%s/%s/%d", a.Arn.Data, resourceType, resourceId, eval.ResultRecordedTime.UnixNano())),
 					"resourceType":       llx.StringData(resourceType),
 					"resourceId":         llx.StringData(resourceId),
 					"complianceType":     llx.StringData(string(eval.ComplianceType)),
@@ -659,14 +663,14 @@ func (a *mqlAwsConfigRule) remediation() (*mqlAwsConfigRuleRemediation, error) {
 	rem := resp.RemediationConfigurations[0]
 	params, _ := convert.JsonToDict(rem.Parameters)
 
-	var maxConcPct, maxConcCount string
+	var maxConcPct, maxErrPct string
 	var retrySeconds int64
 	if rem.ExecutionControls != nil && rem.ExecutionControls.SsmControls != nil {
 		if rem.ExecutionControls.SsmControls.ConcurrentExecutionRatePercentage != nil {
 			maxConcPct = fmt.Sprintf("%d", *rem.ExecutionControls.SsmControls.ConcurrentExecutionRatePercentage)
 		}
 		if rem.ExecutionControls.SsmControls.ErrorPercentage != nil {
-			maxConcCount = fmt.Sprintf("%d", *rem.ExecutionControls.SsmControls.ErrorPercentage)
+			maxErrPct = fmt.Sprintf("%d", *rem.ExecutionControls.SsmControls.ErrorPercentage)
 		}
 	}
 	if rem.RetryAttemptSeconds != nil {
@@ -680,7 +684,7 @@ func (a *mqlAwsConfigRule) remediation() (*mqlAwsConfigRuleRemediation, error) {
 			"targetId":                llx.StringDataPtr(rem.TargetId),
 			"automatic":               llx.BoolData(rem.Automatic),
 			"maxConcurrentPercentage": llx.StringData(maxConcPct),
-			"maxConcurrentCount":      llx.StringData(maxConcCount),
+			"maxErrorPercentage":      llx.StringData(maxErrPct),
 			"retryAttemptSeconds":     llx.IntData(retrySeconds),
 			"parameters":              llx.MapData(params, types.Any),
 		})
@@ -752,7 +756,6 @@ func (a *mqlAwsConfig) getConformancePacks(conn *connection.AwsConnection) []*jo
 							"deliveryS3Bucket":        llx.StringDataPtr(pack.DeliveryS3Bucket),
 							"deliveryS3KeyPrefix":     llx.StringDataPtr(pack.DeliveryS3KeyPrefix),
 							"inputParameters":         llx.ArrayData(inputParams, types.Dict),
-							"createdAt":               llx.TimeData(time.Time{}),
 							"lastUpdateRequestedTime": llx.TimeDataPtr(pack.LastUpdateRequestedTime),
 						})
 					if err != nil {
@@ -819,10 +822,10 @@ func (a *mqlAwsConfigConformancePack) ruleCompliance() ([]any, error) {
 			return nil, err
 		}
 
-		for i, rule := range resp.ConformancePackRuleComplianceList {
+		for _, rule := range resp.ConformancePackRuleComplianceList {
 			mqlRule, err := CreateResource(a.MqlRuntime, "aws.config.conformancePack.ruleCompliance",
 				map[string]*llx.RawData{
-					"__id":           llx.StringData(fmt.Sprintf("%s/ruleCompliance/%d", a.Arn.Data, i)),
+					"__id":           llx.StringData(fmt.Sprintf("%s/ruleCompliance/%s", a.Arn.Data, convert.ToValue(rule.ConfigRuleName))),
 					"ruleName":       llx.StringDataPtr(rule.ConfigRuleName),
 					"complianceType": llx.StringData(string(rule.ComplianceType)),
 				})
