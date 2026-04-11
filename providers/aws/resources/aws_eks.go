@@ -104,10 +104,12 @@ func (a *mqlAwsEks) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 					if err != nil {
 						return nil, err
 					}
+					cast := mqlCluster.(*mqlAwsEksCluster)
+					cast.accountID = conn.AccountId()
+					cast.region = region
 					// If we already described the cluster for tag filtering, cache it
 					// to avoid a redundant DescribeCluster call in fetchDetail()
 					if cachedDescribe != nil {
-						cast := mqlCluster.(*mqlAwsEksCluster)
 						if err := cast.populateFromDescribe(cachedDescribe); err != nil {
 							return nil, err
 						}
@@ -124,9 +126,15 @@ func (a *mqlAwsEks) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 }
 
 type mqlAwsEksClusterInternal struct {
-	fetched  bool
-	fetchErr error
-	lock     sync.Mutex
+	securityGroupIdHandler
+	fetched          bool
+	fetchErr         error
+	lock             sync.Mutex
+	cacheVpcId       *string
+	cacheSubnetIds   []string
+	cacheClusterSgId *string
+	region           string
+	accountID        string
 }
 
 func (a *mqlAwsEksCluster) fetchDetail() error {
@@ -142,6 +150,9 @@ func (a *mqlAwsEksCluster) fetchDetail() error {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	ctx := context.Background()
 	svc := conn.Eks(a.Region.Data)
+
+	a.accountID = conn.AccountId()
+	a.region = a.Region.Data
 
 	descResp, err := svc.DescribeCluster(ctx, &eks.DescribeClusterInput{
 		Name: aws.String(a.Name.Data),
@@ -180,6 +191,17 @@ func (a *mqlAwsEksCluster) populateFromDescribe(cluster *ekstypes.Cluster) error
 
 	vpcConfig, _ := convert.JsonToDict(cluster.ResourcesVpcConfig)
 	a.ResourcesVpcConfig = plugin.TValue[any]{Data: vpcConfig, State: plugin.StateIsSet}
+
+	if cluster.ResourcesVpcConfig != nil {
+		a.cacheVpcId = cluster.ResourcesVpcConfig.VpcId
+		a.cacheSubnetIds = cluster.ResourcesVpcConfig.SubnetIds
+		a.cacheClusterSgId = cluster.ResourcesVpcConfig.ClusterSecurityGroupId
+		sgArns := make([]string, 0, len(cluster.ResourcesVpcConfig.SecurityGroupIds))
+		for _, sgId := range cluster.ResourcesVpcConfig.SecurityGroupIds {
+			sgArns = append(sgArns, NewSecurityGroupArn(a.region, a.accountID, sgId))
+		}
+		a.setSecurityGroupArns(sgArns)
+	}
 
 	a.CreatedAt = plugin.TValue[*time.Time]{Data: cluster.CreatedAt, State: plugin.StateIsSet}
 
@@ -225,6 +247,15 @@ func (a *mqlAwsEksCluster) populateFromDescribe(cluster *ekstypes.Cluster) error
 	} else {
 		a.IamRole = plugin.TValue[*mqlAwsIamRole]{State: plugin.StateIsSet | plugin.StateIsNull}
 	}
+
+	healthDict, _ := convert.JsonToDict(cluster.Health)
+	a.Health = plugin.TValue[any]{Data: healthDict, State: plugin.StateIsSet}
+
+	certAuth := ""
+	if cluster.CertificateAuthority != nil && cluster.CertificateAuthority.Data != nil {
+		certAuth = *cluster.CertificateAuthority.Data
+	}
+	a.CertificateAuthority = plugin.TValue[string]{Data: certAuth, State: plugin.StateIsSet}
 
 	a.fetched = true
 	return nil
@@ -299,6 +330,74 @@ func (a *mqlAwsEksCluster) endpointPrivateAccess() (bool, error) {
 
 func (a *mqlAwsEksCluster) publicAccessCidrs() ([]any, error) {
 	return nil, a.fetchDetail()
+}
+
+func (a *mqlAwsEksCluster) vpc() (*mqlAwsVpc, error) {
+	if err := a.fetchDetail(); err != nil {
+		return nil, err
+	}
+	if a.cacheVpcId == nil || *a.cacheVpcId == "" {
+		a.Vpc.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	vpcArn := fmt.Sprintf(vpcArnPattern, a.region, a.accountID, *a.cacheVpcId)
+	res, err := NewResource(a.MqlRuntime, "aws.vpc", map[string]*llx.RawData{"arn": llx.StringData(vpcArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsVpc), nil
+}
+
+func (a *mqlAwsEksCluster) clusterSubnets() ([]any, error) {
+	if err := a.fetchDetail(); err != nil {
+		return nil, err
+	}
+	if len(a.cacheSubnetIds) == 0 {
+		return nil, nil
+	}
+	res := []any{}
+	for _, subnetId := range a.cacheSubnetIds {
+		subnetArn := fmt.Sprintf(subnetArnPattern, a.region, a.accountID, subnetId)
+		mqlSubnet, err := NewResource(a.MqlRuntime, "aws.vpc.subnet",
+			map[string]*llx.RawData{"arn": llx.StringData(subnetArn)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlSubnet)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsEksCluster) clusterSecurityGroups() ([]any, error) {
+	if err := a.fetchDetail(); err != nil {
+		return nil, err
+	}
+	return a.securityGroupIdHandler.newSecurityGroupResources(a.MqlRuntime)
+}
+
+func (a *mqlAwsEksCluster) clusterSecurityGroup() (*mqlAwsEc2Securitygroup, error) {
+	if err := a.fetchDetail(); err != nil {
+		return nil, err
+	}
+	if a.cacheClusterSgId == nil || *a.cacheClusterSgId == "" {
+		a.ClusterSecurityGroup.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	sgArn := NewSecurityGroupArn(a.region, a.accountID, *a.cacheClusterSgId)
+	mqlSg, err := NewResource(a.MqlRuntime, "aws.ec2.securitygroup",
+		map[string]*llx.RawData{"arn": llx.StringData(sgArn)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlSg.(*mqlAwsEc2Securitygroup), nil
+}
+
+func (a *mqlAwsEksCluster) health() (map[string]any, error) {
+	return nil, a.fetchDetail()
+}
+
+func (a *mqlAwsEksCluster) certificateAuthority() (string, error) {
+	return "", a.fetchDetail()
 }
 
 func initAwsEksCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -575,6 +674,60 @@ func (a *mqlAwsEksNodegroup) nodeRole() (*mqlAwsIamRole, error) {
 	return mqlIam.(*mqlAwsIamRole), nil
 }
 
+func (a *mqlAwsEksNodegroup) health() (map[string]any, error) {
+	ng, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(ng.Health)
+}
+
+func (a *mqlAwsEksNodegroup) taints() ([]any, error) {
+	ng, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDictSlice(ng.Taints)
+}
+
+func (a *mqlAwsEksNodegroup) releaseVersion() (string, error) {
+	ng, err := a.fetchDetails()
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(ng.ReleaseVersion), nil
+}
+
+func (a *mqlAwsEksNodegroup) remoteAccess() (map[string]any, error) {
+	ng, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	if ng.RemoteAccess == nil {
+		return nil, nil
+	}
+	return convert.JsonToDict(ng.RemoteAccess)
+}
+
+func (a *mqlAwsEksNodegroup) updateConfig() (map[string]any, error) {
+	ng, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	if ng.UpdateConfig == nil {
+		return nil, nil
+	}
+	return convert.JsonToDict(ng.UpdateConfig)
+}
+
+func (a *mqlAwsEksNodegroup) nodeVersion() (string, error) {
+	ng, err := a.fetchDetails()
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(ng.Version), nil
+}
+
 // AwsEksAddons
 func (a *mqlAwsEksCluster) addons() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
@@ -739,6 +892,14 @@ func (a *mqlAwsEksAddon) configurationValues() (string, error) {
 	return *ao.ConfigurationValues, nil
 }
 
+func (a *mqlAwsEksAddon) health() (map[string]any, error) {
+	ao, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(ao.Health)
+}
+
 // Access Entries
 
 func (a *mqlAwsEksCluster) accessEntries() ([]any, error) {
@@ -865,6 +1026,58 @@ func (a *mqlAwsEksAccessEntry) createdAt() (*time.Time, error) {
 	return entry.CreatedAt, nil
 }
 
+func (a *mqlAwsEksAccessEntry) accessPolicies() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	ctx := context.Background()
+	svc := conn.Eks(a.region)
+
+	res := []any{}
+	paginator := eks.NewListAssociatedAccessPoliciesPaginator(svc, &eks.ListAssociatedAccessPoliciesInput{
+		ClusterName:  aws.String(a.clusterName),
+		PrincipalArn: aws.String(a.PrincipalArn.Data),
+	})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, policy := range page.AssociatedAccessPolicies {
+			scopeType := ""
+			var namespaces []any
+			if policy.AccessScope != nil {
+				scopeType = string(policy.AccessScope.Type)
+				for _, ns := range policy.AccessScope.Namespaces {
+					namespaces = append(namespaces, ns)
+				}
+			}
+			mqlPolicy, err := CreateResource(a.MqlRuntime, "aws.eks.accessPolicy",
+				map[string]*llx.RawData{
+					"__id":         llx.StringData(fmt.Sprintf("aws.eks.accessPolicy/%s/%s/%s/%s", a.region, a.clusterName, a.PrincipalArn.Data, convert.ToValue(policy.PolicyArn))),
+					"policyArn":    llx.StringDataPtr(policy.PolicyArn),
+					"scopeType":    llx.StringData(scopeType),
+					"namespaces":   llx.ArrayData(namespaces, "\x02"),
+					"associatedAt": llx.TimeDataPtr(policy.AssociatedAt),
+					"modifiedAt":   llx.TimeDataPtr(policy.ModifiedAt),
+					"clusterName":  llx.StringData(a.clusterName),
+					"principalArn": llx.StringData(a.PrincipalArn.Data),
+					"region":       llx.StringData(a.region),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlPolicy)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsEksAccessPolicy) id() (string, error) {
+	return fmt.Sprintf("aws.eks.accessPolicy/%s/%s/%s/%s", a.Region.Data, a.ClusterName.Data, a.PrincipalArn.Data, a.PolicyArn.Data), nil
+}
+
 // Fargate Profiles
 
 func (a *mqlAwsEksCluster) fargateProfiles() ([]any, error) {
@@ -897,6 +1110,7 @@ func (a *mqlAwsEksCluster) fargateProfiles() ([]any, error) {
 			}
 			mqlProfile.(*mqlAwsEksFargateProfile).clusterName = a.Name.Data
 			mqlProfile.(*mqlAwsEksFargateProfile).region = regionVal
+			mqlProfile.(*mqlAwsEksFargateProfile).accountID = conn.AccountId()
 			res = append(res, mqlProfile)
 		}
 	}
@@ -910,6 +1124,7 @@ type mqlAwsEksFargateProfileInternal struct {
 	region      string
 	lock        sync.Mutex
 	clusterName string
+	accountID   string
 }
 
 func (a *mqlAwsEksFargateProfile) id() (string, error) {
@@ -1013,6 +1228,44 @@ func (a *mqlAwsEksFargateProfile) createdAt() (*time.Time, error) {
 		return nil, err
 	}
 	return fp.CreatedAt, nil
+}
+
+func (a *mqlAwsEksFargateProfile) podExecutionRole() (*mqlAwsIamRole, error) {
+	fp, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	if fp.PodExecutionRoleArn == nil || *fp.PodExecutionRoleArn == "" {
+		a.PodExecutionRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlRole, err := NewResource(a.MqlRuntime, ResourceAwsIamRole,
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(fp.PodExecutionRoleArn)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlRole.(*mqlAwsIamRole), nil
+}
+
+func (a *mqlAwsEksFargateProfile) fargateSubnets() ([]any, error) {
+	fp, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	if len(fp.Subnets) == 0 {
+		return nil, nil
+	}
+	res := []any{}
+	for _, subnetId := range fp.Subnets {
+		subnetArn := fmt.Sprintf(subnetArnPattern, a.region, a.accountID, subnetId)
+		mqlSubnet, err := NewResource(a.MqlRuntime, "aws.vpc.subnet",
+			map[string]*llx.RawData{"arn": llx.StringData(subnetArn)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlSubnet)
+	}
+	return res, nil
 }
 
 // Pod Identity Associations
@@ -1124,6 +1377,39 @@ func (a *mqlAwsEksPodIdentityAssociation) createdAt() (*time.Time, error) {
 		return nil, err
 	}
 	return assoc.CreatedAt, nil
+}
+
+func (a *mqlAwsEksPodIdentityAssociation) iamRole() (*mqlAwsIamRole, error) {
+	assoc, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	if assoc.RoleArn == nil || *assoc.RoleArn == "" {
+		a.IamRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlRole, err := NewResource(a.MqlRuntime, ResourceAwsIamRole,
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(assoc.RoleArn)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlRole.(*mqlAwsIamRole), nil
+}
+
+func (a *mqlAwsEksPodIdentityAssociation) modifiedAt() (*time.Time, error) {
+	assoc, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	return assoc.ModifiedAt, nil
+}
+
+func (a *mqlAwsEksPodIdentityAssociation) ownerArn() (string, error) {
+	assoc, err := a.fetchDetails()
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(assoc.OwnerArn), nil
 }
 
 // OIDC Identity Provider Configs
@@ -1318,4 +1604,242 @@ func (a *mqlAwsEksIdentityProviderConfig) tags() (map[string]any, error) {
 		result[k] = v
 	}
 	return result, nil
+}
+
+// EKS Insights
+
+func (a *mqlAwsEksCluster) insights() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	regionVal := a.Region.Data
+	svc := conn.Eks(regionVal)
+	ctx := context.Background()
+	res := []any{}
+
+	paginator := eks.NewListInsightsPaginator(svc, &eks.ListInsightsInput{ClusterName: aws.String(a.Name.Data)})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, summary := range page.Insights {
+			insightId := convert.ToValue(summary.Id)
+			mqlInsight, err := CreateResource(a.MqlRuntime, "aws.eks.insight",
+				map[string]*llx.RawData{
+					"__id":        llx.StringData(fmt.Sprintf("aws.eks.insight/%s/%s/%s", regionVal, a.Name.Data, insightId)),
+					"id":          llx.StringData(insightId),
+					"clusterName": llx.StringData(a.Name.Data),
+					"region":      llx.StringData(regionVal),
+				})
+			if err != nil {
+				return nil, err
+			}
+			mqlInsight.(*mqlAwsEksInsight).clusterName = a.Name.Data
+			mqlInsight.(*mqlAwsEksInsight).region = regionVal
+			res = append(res, mqlInsight)
+		}
+	}
+	return res, nil
+}
+
+type mqlAwsEksInsightInternal struct {
+	details     *ekstypes.Insight
+	fetchErr    error
+	fetched     bool
+	region      string
+	lock        sync.Mutex
+	clusterName string
+}
+
+func (a *mqlAwsEksInsight) id() (string, error) {
+	return fmt.Sprintf("aws.eks.insight/%s/%s/%s", a.region, a.ClusterName.Data, a.Id.Data), nil
+}
+
+func (a *mqlAwsEksInsight) fetchDetails() (*ekstypes.Insight, error) {
+	if a.fetched {
+		return a.details, a.fetchErr
+	}
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	if a.fetched {
+		return a.details, a.fetchErr
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	ctx := context.Background()
+	svc := conn.Eks(a.region)
+	desc, err := svc.DescribeInsight(ctx, &eks.DescribeInsightInput{
+		ClusterName: aws.String(a.clusterName),
+		Id:          aws.String(a.Id.Data),
+	})
+	if err != nil {
+		a.fetchErr = err
+		a.fetched = true
+		return nil, err
+	}
+	a.details = desc.Insight
+	a.fetched = true
+	return desc.Insight, nil
+}
+
+func (a *mqlAwsEksInsight) name() (string, error) {
+	insight, err := a.fetchDetails()
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(insight.Name), nil
+}
+
+func (a *mqlAwsEksInsight) category() (string, error) {
+	insight, err := a.fetchDetails()
+	if err != nil {
+		return "", err
+	}
+	return string(insight.Category), nil
+}
+
+func (a *mqlAwsEksInsight) description() (string, error) {
+	insight, err := a.fetchDetails()
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(insight.Description), nil
+}
+
+func (a *mqlAwsEksInsight) insightStatus() (map[string]any, error) {
+	insight, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(insight.InsightStatus)
+}
+
+func (a *mqlAwsEksInsight) kubernetesVersion() (string, error) {
+	insight, err := a.fetchDetails()
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(insight.KubernetesVersion), nil
+}
+
+func (a *mqlAwsEksInsight) recommendation() (string, error) {
+	insight, err := a.fetchDetails()
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(insight.Recommendation), nil
+}
+
+func (a *mqlAwsEksInsight) additionalInfo() (map[string]any, error) {
+	insight, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	return toInterfaceMap(insight.AdditionalInfo), nil
+}
+
+func (a *mqlAwsEksInsight) categorySpecificSummary() (map[string]any, error) {
+	insight, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(insight.CategorySpecificSummary)
+}
+
+func (a *mqlAwsEksInsight) resources() ([]any, error) {
+	insight, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDictSlice(insight.Resources)
+}
+
+func (a *mqlAwsEksInsight) lastRefreshTime() (*time.Time, error) {
+	insight, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	return insight.LastRefreshTime, nil
+}
+
+func (a *mqlAwsEksInsight) lastTransitionTime() (*time.Time, error) {
+	insight, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	return insight.LastTransitionTime, nil
+}
+
+// EKS Addon Versions
+
+func (a *mqlAwsEksCluster) availableAddonVersions() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	regionVal := a.Region.Data
+	svc := conn.Eks(regionVal)
+	ctx := context.Background()
+	res := []any{}
+
+	// Get cluster version for filtering
+	if err := a.fetchDetail(); err != nil {
+		return nil, err
+	}
+	clusterVersion := a.Version.Data
+
+	paginator := eks.NewDescribeAddonVersionsPaginator(svc, &eks.DescribeAddonVersionsInput{
+		KubernetesVersion: aws.String(clusterVersion),
+	})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, addonInfo := range page.Addons {
+			addonName := convert.ToValue(addonInfo.AddonName)
+			for _, versionInfo := range addonInfo.AddonVersions {
+				version := convert.ToValue(versionInfo.AddonVersion)
+
+				compats, _ := convert.JsonToDictSlice(versionInfo.Compatibilities)
+				archs := make([]any, 0, len(versionInfo.Architecture))
+				for _, arch := range versionInfo.Architecture {
+					archs = append(archs, arch)
+				}
+				computeTypes := make([]any, 0, len(versionInfo.ComputeTypes))
+				for _, ct := range versionInfo.ComputeTypes {
+					computeTypes = append(computeTypes, ct)
+				}
+
+				mqlAddonVersion, err := CreateResource(a.MqlRuntime, "aws.eks.addonVersion",
+					map[string]*llx.RawData{
+						"__id":                   llx.StringData(fmt.Sprintf("aws.eks.addonVersion/%s/%s", addonName, version)),
+						"addonName":              llx.StringData(addonName),
+						"addonVersion":           llx.StringData(version),
+						"architectures":          llx.ArrayData(archs, "\x02"),
+						"computeTypes":           llx.ArrayData(computeTypes, "\x02"),
+						"requiresConfiguration":  llx.BoolData(versionInfo.RequiresConfiguration),
+						"requiresIamPermissions": llx.BoolData(versionInfo.RequiresIamPermissions),
+					})
+				if err != nil {
+					return nil, err
+				}
+				// Set compatibilities eagerly since we already have the data
+				cast := mqlAddonVersion.(*mqlAwsEksAddonVersion)
+				cast.Compatibilities = plugin.TValue[[]any]{Data: compats, State: plugin.StateIsSet}
+				res = append(res, mqlAddonVersion)
+			}
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsEksAddonVersion) id() (string, error) {
+	return fmt.Sprintf("aws.eks.addonVersion/%s/%s", a.AddonName.Data, a.AddonVersion.Data), nil
+}
+
+func (a *mqlAwsEksAddonVersion) compatibilities() ([]any, error) {
+	// Compatibilities are set eagerly during creation
+	return nil, nil
 }

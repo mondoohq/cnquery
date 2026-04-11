@@ -8475,6 +8475,18 @@ private aws.eks.nodegroup @defaults("name scalingConfig.DesiredSize diskSize sta
   autoscalingGroups() []aws.autoscaling.group
   // Warm pool configuration for the node group
   warmPoolConfig() dict
+  // Health status of the node group (contains issues list)
+  health() dict
+  // Kubernetes taints applied to nodes in the group
+  taints() []dict
+  // AMI release version
+  releaseVersion() string
+  // Remote access configuration for the node group (SSH key, source security groups)
+  remoteAccess() dict
+  // Update configuration for the node group (maxUnavailable settings)
+  updateConfig() dict
+  // Kubernetes version of the node group
+  nodeVersion() string
 }
 
 // Amazon EKS add-on
@@ -8501,6 +8513,8 @@ private aws.eks.addon @defaults("name addonVersion status") {
   configurationValues() string
   // Region where the add-on exists
   region string
+  // Health status of the add-on (contains issues list)
+  health() dict
 }
 
 // Amazon EKS cluster
@@ -8528,6 +8542,7 @@ aws.eks.cluster @defaults("arn version status") {
   // Kubernetes network configuration
   networkConfig() dict
   // VPC configuration
+  // Deprecated: use vpc(), clusterSubnets(), clusterSecurityGroups(), and clusterSecurityGroup() instead
   resourcesVpcConfig() dict
   // Cluster creation timestamp
   createdAt() time
@@ -8557,6 +8572,22 @@ aws.eks.cluster @defaults("arn version status") {
   podIdentityAssociations() []aws.eks.podIdentityAssociation
   // List of OIDC identity provider configurations
   identityProviderConfigs() []aws.eks.identityProviderConfig
+  // VPC the cluster is deployed in
+  vpc() aws.vpc
+  // Subnets associated with the cluster
+  clusterSubnets() []aws.vpc.subnet
+  // Additional security groups associated with the cluster control plane
+  clusterSecurityGroups() []aws.ec2.securitygroup
+  // Cluster security group created by Amazon EKS for control-plane-to-data-plane communication
+  clusterSecurityGroup() aws.ec2.securitygroup
+  // Cluster health status (contains issues list)
+  health() dict
+  // Base64-encoded certificate authority data for the cluster
+  certificateAuthority() string
+  // List of EKS cluster insights (upgrade readiness, best practices)
+  insights() []aws.eks.insight
+  // Available add-on versions compatible with this cluster's Kubernetes version
+  availableAddonVersions() []aws.eks.addonVersion
 }
 
 // AWS EKS access entry for cluster RBAC
@@ -8577,6 +8608,28 @@ private aws.eks.accessEntry @defaults("principalArn type") {
   tags() map[string]string
   // When the access entry was created
   createdAt() time
+  // Access policies associated with the access entry
+  accessPolicies() []aws.eks.accessPolicy
+}
+
+// AWS EKS access policy associated with an access entry
+private aws.eks.accessPolicy @defaults("policyArn scopeType") {
+  // ARN of the access policy
+  policyArn string
+  // Scope type of the access policy: cluster or namespace
+  scopeType string
+  // Kubernetes namespaces in scope (when scopeType is namespace)
+  namespaces []string
+  // When the access policy was associated
+  associatedAt time
+  // When the access policy association was last modified
+  modifiedAt time
+  // Name of the EKS cluster
+  clusterName string
+  // ARN of the IAM principal this policy is associated with
+  principalArn string
+  // Region where the cluster exists
+  region string
 }
 
 // AWS EKS Fargate profile
@@ -8588,11 +8641,17 @@ private aws.eks.fargateProfile @defaults("name status") {
   // Name of the EKS cluster
   clusterName string
   // ARN of the pod execution role
+  // Deprecated: use podExecutionRole() instead
   podExecutionRoleArn() string
+  // IAM role used for Fargate pod execution
+  podExecutionRole() aws.iam.role
   // Selectors that determine which pods run on Fargate (namespace and label matchers)
   selectors() []dict
   // Subnet IDs for the Fargate profile
+  // Deprecated: use fargateSubnets() instead
   subnets() []string
+  // Subnets associated with the Fargate profile
+  fargateSubnets() []aws.vpc.subnet
   // Status of the Fargate profile: CREATING, ACTIVE, DELETING, CREATE_FAILED, DELETE_FAILED
   status() string
   // Region where the cluster exists
@@ -8616,11 +8675,18 @@ private aws.eks.podIdentityAssociation @defaults("associationId namespace servic
   // Kubernetes service account name
   serviceAccount() string
   // ARN of the IAM role to assume
+  // Deprecated: use iamRole() instead
   roleArn() string
+  // IAM role associated with the pod identity
+  iamRole() aws.iam.role
   // Region where the cluster exists
   region string
   // When the association was created
   createdAt() time
+  // When the association was last modified
+  modifiedAt() time
+  // ARN of the owning add-on (if applicable)
+  ownerArn() string
 }
 
 // AWS EKS OIDC identity provider configuration
@@ -8651,6 +8717,56 @@ private aws.eks.identityProviderConfig @defaults("name type status") {
   requiredClaims() map[string]string
   // Tags for the identity provider configuration
   tags() map[string]string
+}
+
+// Amazon EKS cluster insight (upgrade readiness, best practices)
+private aws.eks.insight @defaults("name category insightStatus") {
+  // Unique identifier for the insight
+  id string
+  // Name of the insight
+  name() string
+  // Category of the insight (UPGRADE_READINESS)
+  category() string
+  // Description of the insight (may contain Markdown)
+  description() string
+  // Status of the insight
+  insightStatus() dict
+  // Kubernetes version associated with the insight
+  kubernetesVersion() string
+  // Recommendation for remediation
+  recommendation() string
+  // Additional informational links
+  additionalInfo() map[string]string
+  // Category-specific summary details
+  categorySpecificSummary() dict
+  // Resources affected by the insight
+  resources() []dict
+  // Last time the insight was refreshed
+  lastRefreshTime() time
+  // Last time the insight status changed
+  lastTransitionTime() time
+  // Name of the EKS cluster
+  clusterName string
+  // Region where the cluster exists
+  region string
+}
+
+// Available Amazon EKS add-on version
+private aws.eks.addonVersion @defaults("addonName addonVersion") {
+  // Name of the add-on
+  addonName string
+  // Version string of the add-on
+  addonVersion string
+  // Architectures supported by this version
+  architectures []string
+  // Compute types supported by this version
+  computeTypes []string
+  // Kubernetes version compatibilities
+  compatibilities() []dict
+  // Whether the add-on requires configuration
+  requiresConfiguration bool
+  // Whether the add-on requires IAM permissions
+  requiresIamPermissions bool
 }
 
 // Amazon Neptune

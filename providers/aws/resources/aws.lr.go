@@ -397,9 +397,12 @@ const (
 	ResourceAwsEksAddon                                                         string = "aws.eks.addon"
 	ResourceAwsEksCluster                                                       string = "aws.eks.cluster"
 	ResourceAwsEksAccessEntry                                                   string = "aws.eks.accessEntry"
+	ResourceAwsEksAccessPolicy                                                  string = "aws.eks.accessPolicy"
 	ResourceAwsEksFargateProfile                                                string = "aws.eks.fargateProfile"
 	ResourceAwsEksPodIdentityAssociation                                        string = "aws.eks.podIdentityAssociation"
 	ResourceAwsEksIdentityProviderConfig                                        string = "aws.eks.identityProviderConfig"
+	ResourceAwsEksInsight                                                       string = "aws.eks.insight"
+	ResourceAwsEksAddonVersion                                                  string = "aws.eks.addonVersion"
 	ResourceAwsNeptune                                                          string = "aws.neptune"
 	ResourceAwsNeptuneCluster                                                   string = "aws.neptune.cluster"
 	ResourceAwsNeptuneInstance                                                  string = "aws.neptune.instance"
@@ -2071,6 +2074,10 @@ func init() {
 			// to override args, implement: initAwsEksAccessEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEksAccessEntry,
 		},
+		"aws.eks.accessPolicy": {
+			// to override args, implement: initAwsEksAccessPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEksAccessPolicy,
+		},
 		"aws.eks.fargateProfile": {
 			// to override args, implement: initAwsEksFargateProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEksFargateProfile,
@@ -2082,6 +2089,14 @@ func init() {
 		"aws.eks.identityProviderConfig": {
 			// to override args, implement: initAwsEksIdentityProviderConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEksIdentityProviderConfig,
+		},
+		"aws.eks.insight": {
+			// to override args, implement: initAwsEksInsight(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEksInsight,
+		},
+		"aws.eks.addonVersion": {
+			// to override args, implement: initAwsEksAddonVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEksAddonVersion,
 		},
 		"aws.neptune": {
 			// to override args, implement: initAwsNeptune(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -13113,6 +13128,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.eks.nodegroup.warmPoolConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksNodegroup).GetWarmPoolConfig()).ToDataRes(types.Dict)
 	},
+	"aws.eks.nodegroup.health": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksNodegroup).GetHealth()).ToDataRes(types.Dict)
+	},
+	"aws.eks.nodegroup.taints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksNodegroup).GetTaints()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.eks.nodegroup.releaseVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksNodegroup).GetReleaseVersion()).ToDataRes(types.String)
+	},
+	"aws.eks.nodegroup.remoteAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksNodegroup).GetRemoteAccess()).ToDataRes(types.Dict)
+	},
+	"aws.eks.nodegroup.updateConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksNodegroup).GetUpdateConfig()).ToDataRes(types.Dict)
+	},
+	"aws.eks.nodegroup.nodeVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksNodegroup).GetNodeVersion()).ToDataRes(types.String)
+	},
 	"aws.eks.addon.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksAddon).GetName()).ToDataRes(types.String)
 	},
@@ -13145,6 +13178,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.eks.addon.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksAddon).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.eks.addon.health": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksAddon).GetHealth()).ToDataRes(types.Dict)
 	},
 	"aws.eks.cluster.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksCluster).GetName()).ToDataRes(types.String)
@@ -13224,6 +13260,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.eks.cluster.identityProviderConfigs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksCluster).GetIdentityProviderConfigs()).ToDataRes(types.Array(types.Resource("aws.eks.identityProviderConfig")))
 	},
+	"aws.eks.cluster.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksCluster).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
+	"aws.eks.cluster.clusterSubnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksCluster).GetClusterSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
+	"aws.eks.cluster.clusterSecurityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksCluster).GetClusterSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.eks.cluster.clusterSecurityGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksCluster).GetClusterSecurityGroup()).ToDataRes(types.Resource("aws.ec2.securitygroup"))
+	},
+	"aws.eks.cluster.health": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksCluster).GetHealth()).ToDataRes(types.Dict)
+	},
+	"aws.eks.cluster.certificateAuthority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksCluster).GetCertificateAuthority()).ToDataRes(types.String)
+	},
+	"aws.eks.cluster.insights": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksCluster).GetInsights()).ToDataRes(types.Array(types.Resource("aws.eks.insight")))
+	},
+	"aws.eks.cluster.availableAddonVersions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksCluster).GetAvailableAddonVersions()).ToDataRes(types.Array(types.Resource("aws.eks.addonVersion")))
+	},
 	"aws.eks.accessEntry.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksAccessEntry).GetArn()).ToDataRes(types.String)
 	},
@@ -13248,6 +13308,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.eks.accessEntry.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksAccessEntry).GetCreatedAt()).ToDataRes(types.Time)
 	},
+	"aws.eks.accessEntry.accessPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksAccessEntry).GetAccessPolicies()).ToDataRes(types.Array(types.Resource("aws.eks.accessPolicy")))
+	},
+	"aws.eks.accessPolicy.policyArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksAccessPolicy).GetPolicyArn()).ToDataRes(types.String)
+	},
+	"aws.eks.accessPolicy.scopeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksAccessPolicy).GetScopeType()).ToDataRes(types.String)
+	},
+	"aws.eks.accessPolicy.namespaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksAccessPolicy).GetNamespaces()).ToDataRes(types.Array(types.String))
+	},
+	"aws.eks.accessPolicy.associatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksAccessPolicy).GetAssociatedAt()).ToDataRes(types.Time)
+	},
+	"aws.eks.accessPolicy.modifiedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksAccessPolicy).GetModifiedAt()).ToDataRes(types.Time)
+	},
+	"aws.eks.accessPolicy.clusterName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksAccessPolicy).GetClusterName()).ToDataRes(types.String)
+	},
+	"aws.eks.accessPolicy.principalArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksAccessPolicy).GetPrincipalArn()).ToDataRes(types.String)
+	},
+	"aws.eks.accessPolicy.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksAccessPolicy).GetRegion()).ToDataRes(types.String)
+	},
 	"aws.eks.fargateProfile.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksFargateProfile).GetArn()).ToDataRes(types.String)
 	},
@@ -13260,11 +13347,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.eks.fargateProfile.podExecutionRoleArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksFargateProfile).GetPodExecutionRoleArn()).ToDataRes(types.String)
 	},
+	"aws.eks.fargateProfile.podExecutionRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksFargateProfile).GetPodExecutionRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
 	"aws.eks.fargateProfile.selectors": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksFargateProfile).GetSelectors()).ToDataRes(types.Array(types.Dict))
 	},
 	"aws.eks.fargateProfile.subnets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksFargateProfile).GetSubnets()).ToDataRes(types.Array(types.String))
+	},
+	"aws.eks.fargateProfile.fargateSubnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksFargateProfile).GetFargateSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
 	},
 	"aws.eks.fargateProfile.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksFargateProfile).GetStatus()).ToDataRes(types.String)
@@ -13296,11 +13389,20 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.eks.podIdentityAssociation.roleArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksPodIdentityAssociation).GetRoleArn()).ToDataRes(types.String)
 	},
+	"aws.eks.podIdentityAssociation.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksPodIdentityAssociation).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
 	"aws.eks.podIdentityAssociation.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksPodIdentityAssociation).GetRegion()).ToDataRes(types.String)
 	},
 	"aws.eks.podIdentityAssociation.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksPodIdentityAssociation).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.eks.podIdentityAssociation.modifiedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksPodIdentityAssociation).GetModifiedAt()).ToDataRes(types.Time)
+	},
+	"aws.eks.podIdentityAssociation.ownerArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksPodIdentityAssociation).GetOwnerArn()).ToDataRes(types.String)
 	},
 	"aws.eks.identityProviderConfig.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksIdentityProviderConfig).GetName()).ToDataRes(types.String)
@@ -13340,6 +13442,69 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.eks.identityProviderConfig.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksIdentityProviderConfig).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.eks.insight.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksInsight).GetId()).ToDataRes(types.String)
+	},
+	"aws.eks.insight.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksInsight).GetName()).ToDataRes(types.String)
+	},
+	"aws.eks.insight.category": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksInsight).GetCategory()).ToDataRes(types.String)
+	},
+	"aws.eks.insight.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksInsight).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.eks.insight.insightStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksInsight).GetInsightStatus()).ToDataRes(types.Dict)
+	},
+	"aws.eks.insight.kubernetesVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksInsight).GetKubernetesVersion()).ToDataRes(types.String)
+	},
+	"aws.eks.insight.recommendation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksInsight).GetRecommendation()).ToDataRes(types.String)
+	},
+	"aws.eks.insight.additionalInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksInsight).GetAdditionalInfo()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.eks.insight.categorySpecificSummary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksInsight).GetCategorySpecificSummary()).ToDataRes(types.Dict)
+	},
+	"aws.eks.insight.resources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksInsight).GetResources()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.eks.insight.lastRefreshTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksInsight).GetLastRefreshTime()).ToDataRes(types.Time)
+	},
+	"aws.eks.insight.lastTransitionTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksInsight).GetLastTransitionTime()).ToDataRes(types.Time)
+	},
+	"aws.eks.insight.clusterName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksInsight).GetClusterName()).ToDataRes(types.String)
+	},
+	"aws.eks.insight.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksInsight).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.eks.addonVersion.addonName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksAddonVersion).GetAddonName()).ToDataRes(types.String)
+	},
+	"aws.eks.addonVersion.addonVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksAddonVersion).GetAddonVersion()).ToDataRes(types.String)
+	},
+	"aws.eks.addonVersion.architectures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksAddonVersion).GetArchitectures()).ToDataRes(types.Array(types.String))
+	},
+	"aws.eks.addonVersion.computeTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksAddonVersion).GetComputeTypes()).ToDataRes(types.Array(types.String))
+	},
+	"aws.eks.addonVersion.compatibilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksAddonVersion).GetCompatibilities()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.eks.addonVersion.requiresConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksAddonVersion).GetRequiresConfiguration()).ToDataRes(types.Bool)
+	},
+	"aws.eks.addonVersion.requiresIamPermissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksAddonVersion).GetRequiresIamPermissions()).ToDataRes(types.Bool)
 	},
 	"aws.neptune.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNeptune).GetClusters()).ToDataRes(types.Array(types.Resource("aws.neptune.cluster")))
@@ -32934,6 +33099,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEksNodegroup).WarmPoolConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.eks.nodegroup.health": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksNodegroup).Health, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.eks.nodegroup.taints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksNodegroup).Taints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eks.nodegroup.releaseVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksNodegroup).ReleaseVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eks.nodegroup.remoteAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksNodegroup).RemoteAccess, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.eks.nodegroup.updateConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksNodegroup).UpdateConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.eks.nodegroup.nodeVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksNodegroup).NodeVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.eks.addon.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEksAddon).__id, ok = v.Value.(string)
 		return
@@ -32980,6 +33169,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.eks.addon.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEksAddon).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eks.addon.health": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksAddon).Health, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.eks.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33090,6 +33283,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEksCluster).IdentityProviderConfigs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.eks.cluster.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksCluster).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
+	"aws.eks.cluster.clusterSubnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksCluster).ClusterSubnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eks.cluster.clusterSecurityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksCluster).ClusterSecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eks.cluster.clusterSecurityGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksCluster).ClusterSecurityGroup, ok = plugin.RawToTValue[*mqlAwsEc2Securitygroup](v.Value, v.Error)
+		return
+	},
+	"aws.eks.cluster.health": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksCluster).Health, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.eks.cluster.certificateAuthority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksCluster).CertificateAuthority, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eks.cluster.insights": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksCluster).Insights, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eks.cluster.availableAddonVersions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksCluster).AvailableAddonVersions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.eks.accessEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEksAccessEntry).__id, ok = v.Value.(string)
 		return
@@ -33126,6 +33351,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEksAccessEntry).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"aws.eks.accessEntry.accessPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksAccessEntry).AccessPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eks.accessPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksAccessPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eks.accessPolicy.policyArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksAccessPolicy).PolicyArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eks.accessPolicy.scopeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksAccessPolicy).ScopeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eks.accessPolicy.namespaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksAccessPolicy).Namespaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eks.accessPolicy.associatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksAccessPolicy).AssociatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.eks.accessPolicy.modifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksAccessPolicy).ModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.eks.accessPolicy.clusterName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksAccessPolicy).ClusterName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eks.accessPolicy.principalArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksAccessPolicy).PrincipalArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eks.accessPolicy.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksAccessPolicy).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.eks.fargateProfile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEksFargateProfile).__id, ok = v.Value.(string)
 		return
@@ -33146,12 +33411,20 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEksFargateProfile).PodExecutionRoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.eks.fargateProfile.podExecutionRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksFargateProfile).PodExecutionRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
 	"aws.eks.fargateProfile.selectors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEksFargateProfile).Selectors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.eks.fargateProfile.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEksFargateProfile).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eks.fargateProfile.fargateSubnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksFargateProfile).FargateSubnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.eks.fargateProfile.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33198,12 +33471,24 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEksPodIdentityAssociation).RoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.eks.podIdentityAssociation.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksPodIdentityAssociation).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
 	"aws.eks.podIdentityAssociation.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEksPodIdentityAssociation).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.eks.podIdentityAssociation.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEksPodIdentityAssociation).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.eks.podIdentityAssociation.modifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksPodIdentityAssociation).ModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.eks.podIdentityAssociation.ownerArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksPodIdentityAssociation).OwnerArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.eks.identityProviderConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33260,6 +33545,98 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.eks.identityProviderConfig.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEksIdentityProviderConfig).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.eks.insight.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksInsight).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eks.insight.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksInsight).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eks.insight.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksInsight).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eks.insight.category": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksInsight).Category, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eks.insight.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksInsight).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eks.insight.insightStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksInsight).InsightStatus, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.eks.insight.kubernetesVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksInsight).KubernetesVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eks.insight.recommendation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksInsight).Recommendation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eks.insight.additionalInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksInsight).AdditionalInfo, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.eks.insight.categorySpecificSummary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksInsight).CategorySpecificSummary, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.eks.insight.resources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksInsight).Resources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eks.insight.lastRefreshTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksInsight).LastRefreshTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.eks.insight.lastTransitionTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksInsight).LastTransitionTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.eks.insight.clusterName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksInsight).ClusterName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eks.insight.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksInsight).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eks.addonVersion.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksAddonVersion).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eks.addonVersion.addonName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksAddonVersion).AddonName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eks.addonVersion.addonVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksAddonVersion).AddonVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eks.addonVersion.architectures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksAddonVersion).Architectures, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eks.addonVersion.computeTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksAddonVersion).ComputeTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eks.addonVersion.compatibilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksAddonVersion).Compatibilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eks.addonVersion.requiresConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksAddonVersion).RequiresConfiguration, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.eks.addonVersion.requiresIamPermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksAddonVersion).RequiresIamPermissions, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.neptune.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -79429,6 +79806,12 @@ type mqlAwsEksNodegroup struct {
 	Tags              plugin.TValue[map[string]any]
 	AutoscalingGroups plugin.TValue[[]any]
 	WarmPoolConfig    plugin.TValue[any]
+	Health            plugin.TValue[any]
+	Taints            plugin.TValue[[]any]
+	ReleaseVersion    plugin.TValue[string]
+	RemoteAccess      plugin.TValue[any]
+	UpdateConfig      plugin.TValue[any]
+	NodeVersion       plugin.TValue[string]
 }
 
 // createAwsEksNodegroup creates a new instance of this resource
@@ -79580,6 +79963,42 @@ func (c *mqlAwsEksNodegroup) GetWarmPoolConfig() *plugin.TValue[any] {
 	})
 }
 
+func (c *mqlAwsEksNodegroup) GetHealth() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Health, func() (any, error) {
+		return c.health()
+	})
+}
+
+func (c *mqlAwsEksNodegroup) GetTaints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Taints, func() ([]any, error) {
+		return c.taints()
+	})
+}
+
+func (c *mqlAwsEksNodegroup) GetReleaseVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ReleaseVersion, func() (string, error) {
+		return c.releaseVersion()
+	})
+}
+
+func (c *mqlAwsEksNodegroup) GetRemoteAccess() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.RemoteAccess, func() (any, error) {
+		return c.remoteAccess()
+	})
+}
+
+func (c *mqlAwsEksNodegroup) GetUpdateConfig() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.UpdateConfig, func() (any, error) {
+		return c.updateConfig()
+	})
+}
+
+func (c *mqlAwsEksNodegroup) GetNodeVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.NodeVersion, func() (string, error) {
+		return c.nodeVersion()
+	})
+}
+
 // mqlAwsEksAddon for the aws.eks.addon resource
 type mqlAwsEksAddon struct {
 	MqlRuntime *plugin.Runtime
@@ -79596,6 +80015,7 @@ type mqlAwsEksAddon struct {
 	Owner               plugin.TValue[string]
 	ConfigurationValues plugin.TValue[string]
 	Region              plugin.TValue[string]
+	Health              plugin.TValue[any]
 }
 
 // createAwsEksAddon creates a new instance of this resource
@@ -79692,6 +80112,12 @@ func (c *mqlAwsEksAddon) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
+func (c *mqlAwsEksAddon) GetHealth() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Health, func() (any, error) {
+		return c.health()
+	})
+}
+
 // mqlAwsEksCluster for the aws.eks.cluster resource
 type mqlAwsEksCluster struct {
 	MqlRuntime *plugin.Runtime
@@ -79723,6 +80149,14 @@ type mqlAwsEksCluster struct {
 	FargateProfiles         plugin.TValue[[]any]
 	PodIdentityAssociations plugin.TValue[[]any]
 	IdentityProviderConfigs plugin.TValue[[]any]
+	Vpc                     plugin.TValue[*mqlAwsVpc]
+	ClusterSubnets          plugin.TValue[[]any]
+	ClusterSecurityGroups   plugin.TValue[[]any]
+	ClusterSecurityGroup    plugin.TValue[*mqlAwsEc2Securitygroup]
+	Health                  plugin.TValue[any]
+	CertificateAuthority    plugin.TValue[string]
+	Insights                plugin.TValue[[]any]
+	AvailableAddonVersions  plugin.TValue[[]any]
 }
 
 // createAwsEksCluster creates a new instance of this resource
@@ -79982,6 +80416,114 @@ func (c *mqlAwsEksCluster) GetIdentityProviderConfigs() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsEksCluster) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eks.cluster", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
+func (c *mqlAwsEksCluster) GetClusterSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ClusterSubnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eks.cluster", c.__id, "clusterSubnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.clusterSubnets()
+	})
+}
+
+func (c *mqlAwsEksCluster) GetClusterSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ClusterSecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eks.cluster", c.__id, "clusterSecurityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.clusterSecurityGroups()
+	})
+}
+
+func (c *mqlAwsEksCluster) GetClusterSecurityGroup() *plugin.TValue[*mqlAwsEc2Securitygroup] {
+	return plugin.GetOrCompute[*mqlAwsEc2Securitygroup](&c.ClusterSecurityGroup, func() (*mqlAwsEc2Securitygroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eks.cluster", c.__id, "clusterSecurityGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Securitygroup), nil
+			}
+		}
+
+		return c.clusterSecurityGroup()
+	})
+}
+
+func (c *mqlAwsEksCluster) GetHealth() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Health, func() (any, error) {
+		return c.health()
+	})
+}
+
+func (c *mqlAwsEksCluster) GetCertificateAuthority() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CertificateAuthority, func() (string, error) {
+		return c.certificateAuthority()
+	})
+}
+
+func (c *mqlAwsEksCluster) GetInsights() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Insights, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eks.cluster", c.__id, "insights")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.insights()
+	})
+}
+
+func (c *mqlAwsEksCluster) GetAvailableAddonVersions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AvailableAddonVersions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eks.cluster", c.__id, "availableAddonVersions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.availableAddonVersions()
+	})
+}
+
 // mqlAwsEksAccessEntry for the aws.eks.accessEntry resource
 type mqlAwsEksAccessEntry struct {
 	MqlRuntime *plugin.Runtime
@@ -79995,6 +80537,7 @@ type mqlAwsEksAccessEntry struct {
 	Region           plugin.TValue[string]
 	Tags             plugin.TValue[map[string]any]
 	CreatedAt        plugin.TValue[*time.Time]
+	AccessPolicies   plugin.TValue[[]any]
 }
 
 // createAwsEksAccessEntry creates a new instance of this resource
@@ -80076,6 +80619,106 @@ func (c *mqlAwsEksAccessEntry) GetCreatedAt() *plugin.TValue[*time.Time] {
 	})
 }
 
+func (c *mqlAwsEksAccessEntry) GetAccessPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AccessPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eks.accessEntry", c.__id, "accessPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.accessPolicies()
+	})
+}
+
+// mqlAwsEksAccessPolicy for the aws.eks.accessPolicy resource
+type mqlAwsEksAccessPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEksAccessPolicyInternal it will be used here
+	PolicyArn    plugin.TValue[string]
+	ScopeType    plugin.TValue[string]
+	Namespaces   plugin.TValue[[]any]
+	AssociatedAt plugin.TValue[*time.Time]
+	ModifiedAt   plugin.TValue[*time.Time]
+	ClusterName  plugin.TValue[string]
+	PrincipalArn plugin.TValue[string]
+	Region       plugin.TValue[string]
+}
+
+// createAwsEksAccessPolicy creates a new instance of this resource
+func createAwsEksAccessPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEksAccessPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eks.accessPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEksAccessPolicy) MqlName() string {
+	return "aws.eks.accessPolicy"
+}
+
+func (c *mqlAwsEksAccessPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEksAccessPolicy) GetPolicyArn() *plugin.TValue[string] {
+	return &c.PolicyArn
+}
+
+func (c *mqlAwsEksAccessPolicy) GetScopeType() *plugin.TValue[string] {
+	return &c.ScopeType
+}
+
+func (c *mqlAwsEksAccessPolicy) GetNamespaces() *plugin.TValue[[]any] {
+	return &c.Namespaces
+}
+
+func (c *mqlAwsEksAccessPolicy) GetAssociatedAt() *plugin.TValue[*time.Time] {
+	return &c.AssociatedAt
+}
+
+func (c *mqlAwsEksAccessPolicy) GetModifiedAt() *plugin.TValue[*time.Time] {
+	return &c.ModifiedAt
+}
+
+func (c *mqlAwsEksAccessPolicy) GetClusterName() *plugin.TValue[string] {
+	return &c.ClusterName
+}
+
+func (c *mqlAwsEksAccessPolicy) GetPrincipalArn() *plugin.TValue[string] {
+	return &c.PrincipalArn
+}
+
+func (c *mqlAwsEksAccessPolicy) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
 // mqlAwsEksFargateProfile for the aws.eks.fargateProfile resource
 type mqlAwsEksFargateProfile struct {
 	MqlRuntime *plugin.Runtime
@@ -80085,8 +80728,10 @@ type mqlAwsEksFargateProfile struct {
 	Name                plugin.TValue[string]
 	ClusterName         plugin.TValue[string]
 	PodExecutionRoleArn plugin.TValue[string]
+	PodExecutionRole    plugin.TValue[*mqlAwsIamRole]
 	Selectors           plugin.TValue[[]any]
 	Subnets             plugin.TValue[[]any]
+	FargateSubnets      plugin.TValue[[]any]
 	Status              plugin.TValue[string]
 	Region              plugin.TValue[string]
 	Tags                plugin.TValue[map[string]any]
@@ -80150,6 +80795,22 @@ func (c *mqlAwsEksFargateProfile) GetPodExecutionRoleArn() *plugin.TValue[string
 	})
 }
 
+func (c *mqlAwsEksFargateProfile) GetPodExecutionRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.PodExecutionRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eks.fargateProfile", c.__id, "podExecutionRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.podExecutionRole()
+	})
+}
+
 func (c *mqlAwsEksFargateProfile) GetSelectors() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Selectors, func() ([]any, error) {
 		return c.selectors()
@@ -80159,6 +80820,22 @@ func (c *mqlAwsEksFargateProfile) GetSelectors() *plugin.TValue[[]any] {
 func (c *mqlAwsEksFargateProfile) GetSubnets() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
 		return c.subnets()
+	})
+}
+
+func (c *mqlAwsEksFargateProfile) GetFargateSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FargateSubnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eks.fargateProfile", c.__id, "fargateSubnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.fargateSubnets()
 	})
 }
 
@@ -80195,8 +80872,11 @@ type mqlAwsEksPodIdentityAssociation struct {
 	Namespace      plugin.TValue[string]
 	ServiceAccount plugin.TValue[string]
 	RoleArn        plugin.TValue[string]
+	IamRole        plugin.TValue[*mqlAwsIamRole]
 	Region         plugin.TValue[string]
 	CreatedAt      plugin.TValue[*time.Time]
+	ModifiedAt     plugin.TValue[*time.Time]
+	OwnerArn       plugin.TValue[string]
 }
 
 // createAwsEksPodIdentityAssociation creates a new instance of this resource
@@ -80266,6 +80946,22 @@ func (c *mqlAwsEksPodIdentityAssociation) GetRoleArn() *plugin.TValue[string] {
 	})
 }
 
+func (c *mqlAwsEksPodIdentityAssociation) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eks.podIdentityAssociation", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
 func (c *mqlAwsEksPodIdentityAssociation) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
@@ -80273,6 +80969,18 @@ func (c *mqlAwsEksPodIdentityAssociation) GetRegion() *plugin.TValue[string] {
 func (c *mqlAwsEksPodIdentityAssociation) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
 		return c.createdAt()
+	})
+}
+
+func (c *mqlAwsEksPodIdentityAssociation) GetModifiedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.ModifiedAt, func() (*time.Time, error) {
+		return c.modifiedAt()
+	})
+}
+
+func (c *mqlAwsEksPodIdentityAssociation) GetOwnerArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.OwnerArn, func() (string, error) {
+		return c.ownerArn()
 	})
 }
 
@@ -80401,6 +81109,223 @@ func (c *mqlAwsEksIdentityProviderConfig) GetTags() *plugin.TValue[map[string]an
 	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
 	})
+}
+
+// mqlAwsEksInsight for the aws.eks.insight resource
+type mqlAwsEksInsight struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEksInsightInternal
+	Id                      plugin.TValue[string]
+	Name                    plugin.TValue[string]
+	Category                plugin.TValue[string]
+	Description             plugin.TValue[string]
+	InsightStatus           plugin.TValue[any]
+	KubernetesVersion       plugin.TValue[string]
+	Recommendation          plugin.TValue[string]
+	AdditionalInfo          plugin.TValue[map[string]any]
+	CategorySpecificSummary plugin.TValue[any]
+	Resources               plugin.TValue[[]any]
+	LastRefreshTime         plugin.TValue[*time.Time]
+	LastTransitionTime      plugin.TValue[*time.Time]
+	ClusterName             plugin.TValue[string]
+	Region                  plugin.TValue[string]
+}
+
+// createAwsEksInsight creates a new instance of this resource
+func createAwsEksInsight(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEksInsight{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eks.insight", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEksInsight) MqlName() string {
+	return "aws.eks.insight"
+}
+
+func (c *mqlAwsEksInsight) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEksInsight) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsEksInsight) GetName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Name, func() (string, error) {
+		return c.name()
+	})
+}
+
+func (c *mqlAwsEksInsight) GetCategory() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Category, func() (string, error) {
+		return c.category()
+	})
+}
+
+func (c *mqlAwsEksInsight) GetDescription() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
+		return c.description()
+	})
+}
+
+func (c *mqlAwsEksInsight) GetInsightStatus() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.InsightStatus, func() (any, error) {
+		return c.insightStatus()
+	})
+}
+
+func (c *mqlAwsEksInsight) GetKubernetesVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.KubernetesVersion, func() (string, error) {
+		return c.kubernetesVersion()
+	})
+}
+
+func (c *mqlAwsEksInsight) GetRecommendation() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Recommendation, func() (string, error) {
+		return c.recommendation()
+	})
+}
+
+func (c *mqlAwsEksInsight) GetAdditionalInfo() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.AdditionalInfo, func() (map[string]any, error) {
+		return c.additionalInfo()
+	})
+}
+
+func (c *mqlAwsEksInsight) GetCategorySpecificSummary() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.CategorySpecificSummary, func() (any, error) {
+		return c.categorySpecificSummary()
+	})
+}
+
+func (c *mqlAwsEksInsight) GetResources() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Resources, func() ([]any, error) {
+		return c.resources()
+	})
+}
+
+func (c *mqlAwsEksInsight) GetLastRefreshTime() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LastRefreshTime, func() (*time.Time, error) {
+		return c.lastRefreshTime()
+	})
+}
+
+func (c *mqlAwsEksInsight) GetLastTransitionTime() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LastTransitionTime, func() (*time.Time, error) {
+		return c.lastTransitionTime()
+	})
+}
+
+func (c *mqlAwsEksInsight) GetClusterName() *plugin.TValue[string] {
+	return &c.ClusterName
+}
+
+func (c *mqlAwsEksInsight) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsEksAddonVersion for the aws.eks.addonVersion resource
+type mqlAwsEksAddonVersion struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEksAddonVersionInternal it will be used here
+	AddonName              plugin.TValue[string]
+	AddonVersion           plugin.TValue[string]
+	Architectures          plugin.TValue[[]any]
+	ComputeTypes           plugin.TValue[[]any]
+	Compatibilities        plugin.TValue[[]any]
+	RequiresConfiguration  plugin.TValue[bool]
+	RequiresIamPermissions plugin.TValue[bool]
+}
+
+// createAwsEksAddonVersion creates a new instance of this resource
+func createAwsEksAddonVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEksAddonVersion{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eks.addonVersion", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEksAddonVersion) MqlName() string {
+	return "aws.eks.addonVersion"
+}
+
+func (c *mqlAwsEksAddonVersion) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEksAddonVersion) GetAddonName() *plugin.TValue[string] {
+	return &c.AddonName
+}
+
+func (c *mqlAwsEksAddonVersion) GetAddonVersion() *plugin.TValue[string] {
+	return &c.AddonVersion
+}
+
+func (c *mqlAwsEksAddonVersion) GetArchitectures() *plugin.TValue[[]any] {
+	return &c.Architectures
+}
+
+func (c *mqlAwsEksAddonVersion) GetComputeTypes() *plugin.TValue[[]any] {
+	return &c.ComputeTypes
+}
+
+func (c *mqlAwsEksAddonVersion) GetCompatibilities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Compatibilities, func() ([]any, error) {
+		return c.compatibilities()
+	})
+}
+
+func (c *mqlAwsEksAddonVersion) GetRequiresConfiguration() *plugin.TValue[bool] {
+	return &c.RequiresConfiguration
+}
+
+func (c *mqlAwsEksAddonVersion) GetRequiresIamPermissions() *plugin.TValue[bool] {
+	return &c.RequiresIamPermissions
 }
 
 // mqlAwsNeptune for the aws.neptune resource

@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.12.0",
-  "generated_at": "2026-04-10T22:55:06-07:00",
+  "generated_at": "2026-04-11T09:37:36-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -191,16 +191,20 @@
     "efs:DescribeMountTargets",
     "eks:DescribeAccessEntry",
     "eks:DescribeAddon",
+    "eks:DescribeAddonVersions",
     "eks:DescribeCluster",
     "eks:DescribeFargateProfile",
     "eks:DescribeIdentityProviderConfig",
+    "eks:DescribeInsight",
     "eks:DescribeNodegroup",
     "eks:DescribePodIdentityAssociation",
     "eks:ListAccessEntries",
     "eks:ListAddons",
+    "eks:ListAssociatedAccessPolicies",
     "eks:ListClusters",
     "eks:ListFargateProfiles",
     "eks:ListIdentityProviderConfigs",
+    "eks:ListInsights",
     "eks:ListNodegroups",
     "eks:ListPodIdentityAssociations",
     "elasticache:DescribeCacheClusters",
@@ -1706,6 +1710,12 @@
       "source_file": "aws_eks.go"
     },
     {
+      "permission": "eks:DescribeAddonVersions",
+      "service": "eks",
+      "action": "DescribeAddonVersions",
+      "source_file": "aws_eks.go"
+    },
+    {
       "permission": "eks:DescribeCluster",
       "service": "eks",
       "action": "DescribeCluster",
@@ -1721,6 +1731,12 @@
       "permission": "eks:DescribeIdentityProviderConfig",
       "service": "eks",
       "action": "DescribeIdentityProviderConfig",
+      "source_file": "aws_eks.go"
+    },
+    {
+      "permission": "eks:DescribeInsight",
+      "service": "eks",
+      "action": "DescribeInsight",
       "source_file": "aws_eks.go"
     },
     {
@@ -1748,6 +1764,12 @@
       "source_file": "aws_eks.go"
     },
     {
+      "permission": "eks:ListAssociatedAccessPolicies",
+      "service": "eks",
+      "action": "ListAssociatedAccessPolicies",
+      "source_file": "aws_eks.go"
+    },
+    {
       "permission": "eks:ListClusters",
       "service": "eks",
       "action": "ListClusters",
@@ -1763,6 +1785,12 @@
       "permission": "eks:ListIdentityProviderConfigs",
       "service": "eks",
       "action": "ListIdentityProviderConfigs",
+      "source_file": "aws_eks.go"
+    },
+    {
+      "permission": "eks:ListInsights",
+      "service": "eks",
+      "action": "ListInsights",
       "source_file": "aws_eks.go"
     },
     {
