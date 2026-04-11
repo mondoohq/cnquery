@@ -6519,6 +6519,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.securityhub.hub.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecurityhubHub).GetRegion()).ToDataRes(types.String)
 	},
+	"aws.securityhub.hub.enabledStandards": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubHub).GetEnabledStandards()).ToDataRes(types.Array(types.Dict))
+	},
 	"aws.securityhub.hub.standardSubscriptions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecurityhubHub).GetStandardSubscriptions()).ToDataRes(types.Array(types.Resource("aws.securityhub.standardSubscription")))
 	},
@@ -17556,6 +17559,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.identitycenter.accountAssignment.accountId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIdentitycenterAccountAssignment).GetAccountId()).ToDataRes(types.String)
 	},
+	"aws.identitycenter.accountAssignment.permissionSetArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIdentitycenterAccountAssignment).GetPermissionSetArn()).ToDataRes(types.String)
+	},
 	"aws.identitycenter.accountAssignment.permissionSet": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIdentitycenterAccountAssignment).GetPermissionSet()).ToDataRes(types.Resource("aws.identitycenter.permissionSet"))
 	},
@@ -23617,6 +23623,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.securityhub.hub.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSecurityhubHub).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.hub.enabledStandards": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubHub).EnabledStandards, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.securityhub.hub.standardSubscriptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -39839,6 +39849,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsIdentitycenterAccountAssignment).AccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.identitycenter.accountAssignment.permissionSetArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenterAccountAssignment).PermissionSetArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.identitycenter.accountAssignment.permissionSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIdentitycenterAccountAssignment).PermissionSet, ok = plugin.RawToTValue[*mqlAwsIdentitycenterPermissionSet](v.Value, v.Error)
 		return
@@ -55456,6 +55470,7 @@ type mqlAwsSecurityhubHub struct {
 	Arn                   plugin.TValue[string]
 	SubscribedAt          plugin.TValue[string]
 	Region                plugin.TValue[string]
+	EnabledStandards      plugin.TValue[[]any]
 	StandardSubscriptions plugin.TValue[[]any]
 	Findings              plugin.TValue[[]any]
 	AutomationRules       plugin.TValue[[]any]
@@ -55511,6 +55526,12 @@ func (c *mqlAwsSecurityhubHub) GetSubscribedAt() *plugin.TValue[string] {
 
 func (c *mqlAwsSecurityhubHub) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+func (c *mqlAwsSecurityhubHub) GetEnabledStandards() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EnabledStandards, func() ([]any, error) {
+		return c.enabledStandards()
+	})
 }
 
 func (c *mqlAwsSecurityhubHub) GetStandardSubscriptions() *plugin.TValue[[]any] {
@@ -96599,11 +96620,12 @@ type mqlAwsIdentitycenterAccountAssignment struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsIdentitycenterAccountAssignmentInternal
-	Id            plugin.TValue[string]
-	AccountId     plugin.TValue[string]
-	PermissionSet plugin.TValue[*mqlAwsIdentitycenterPermissionSet]
-	PrincipalType plugin.TValue[string]
-	PrincipalId   plugin.TValue[string]
+	Id               plugin.TValue[string]
+	AccountId        plugin.TValue[string]
+	PermissionSetArn plugin.TValue[string]
+	PermissionSet    plugin.TValue[*mqlAwsIdentitycenterPermissionSet]
+	PrincipalType    plugin.TValue[string]
+	PrincipalId      plugin.TValue[string]
 }
 
 // createAwsIdentitycenterAccountAssignment creates a new instance of this resource
@@ -96649,6 +96671,10 @@ func (c *mqlAwsIdentitycenterAccountAssignment) GetId() *plugin.TValue[string] {
 
 func (c *mqlAwsIdentitycenterAccountAssignment) GetAccountId() *plugin.TValue[string] {
 	return &c.AccountId
+}
+
+func (c *mqlAwsIdentitycenterAccountAssignment) GetPermissionSetArn() *plugin.TValue[string] {
+	return &c.PermissionSetArn
 }
 
 func (c *mqlAwsIdentitycenterAccountAssignment) GetPermissionSet() *plugin.TValue[*mqlAwsIdentitycenterPermissionSet] {

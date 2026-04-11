@@ -2875,6 +2875,7 @@ aws.identitycenter.accountAssignment 13.6.3
 aws.identitycenter.accountAssignment.accountId 13.6.3
 aws.identitycenter.accountAssignment.id 13.6.3
 aws.identitycenter.accountAssignment.permissionSet 13.12.1
+aws.identitycenter.accountAssignment.permissionSetArn 13.6.3
 aws.identitycenter.accountAssignment.principalId 13.6.3
 aws.identitycenter.accountAssignment.principalType 13.6.3
 aws.identitycenter.group 13.12.1
@@ -4686,6 +4687,7 @@ aws.securityhub.hub 11.15.2
 aws.securityhub.hub.arn 11.15.2
 aws.securityhub.hub.automationRules 13.12.1
 aws.securityhub.hub.enabledProducts 13.12.1
+aws.securityhub.hub.enabledStandards 13.6.3
 aws.securityhub.hub.findings 13.12.1
 aws.securityhub.hub.insights 13.12.1
 aws.securityhub.hub.members 13.12.1

@@ -90,6 +90,33 @@ func (a *mqlAwsSecurityhubHub) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+func (a *mqlAwsSecurityhubHub) enabledStandards() ([]any, error) {
+	region := a.Region.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Securityhub(region)
+	ctx := context.Background()
+
+	res := []any{}
+	paginator := securityhub.NewGetEnabledStandardsPaginator(svc, &securityhub.GetEnabledStandardsInput{})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, std := range page.StandardsSubscriptions {
+			d, err := convert.JsonToDict(std)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, d)
+		}
+	}
+	return res, nil
+}
+
 func (a *mqlAwsSecurityhubHub) standardSubscriptions() ([]any, error) {
 	region := a.Region.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)

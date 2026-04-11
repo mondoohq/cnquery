@@ -3082,6 +3082,9 @@ private aws.securityhub.hub @defaults("arn region") {
   subscribedAt string
   // Region where the Security Hub is enabled
   region string
+  // List of enabled security standards (CIS, PCI-DSS, AWS Foundational, etc.)
+  // Deprecated: use standardSubscriptions() instead
+  enabledStandards() []dict
   // Typed standard subscriptions with control details
   standardSubscriptions() []aws.securityhub.standardSubscription
   // Active findings (non-archived) in this hub
@@ -11970,6 +11973,9 @@ private aws.identitycenter.accountAssignment @defaults("accountId principalType 
   id string
   // AWS account ID
   accountId string
+  // ARN of the permission set
+  // Deprecated: use permissionSet() instead
+  permissionSetArn string
   // Permission set for this assignment
   permissionSet() aws.identitycenter.permissionSet
   // Type of principal: USER or GROUP

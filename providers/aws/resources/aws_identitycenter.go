@@ -335,11 +335,12 @@ func (a *mqlAwsIdentitycenterInstance) accountAssignments() ([]any, error) {
 
 						mqlAssignment, err := CreateResource(a.MqlRuntime, "aws.identitycenter.accountAssignment",
 							map[string]*llx.RawData{
-								"__id":          llx.StringData(assignId),
-								"id":            llx.StringData(assignId),
-								"accountId":     llx.StringDataPtr(assignment.AccountId),
-								"principalType": llx.StringData(string(assignment.PrincipalType)),
-								"principalId":   llx.StringDataPtr(assignment.PrincipalId),
+								"__id":             llx.StringData(assignId),
+								"id":               llx.StringData(assignId),
+								"accountId":        llx.StringDataPtr(assignment.AccountId),
+								"permissionSetArn": llx.StringDataPtr(assignment.PermissionSetArn),
+								"principalType":    llx.StringData(string(assignment.PrincipalType)),
+								"principalId":      llx.StringDataPtr(assignment.PrincipalId),
 							})
 						if err != nil {
 							return nil, err
