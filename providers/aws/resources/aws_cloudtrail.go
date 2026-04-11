@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -905,11 +906,14 @@ func (a *mqlAwsCloudtrailChannel) fetchDetail() (*cloudtrail.GetChannelOutput, e
 }
 
 func (a *mqlAwsCloudtrailChannel) sourceType() (string, error) {
-	detail, err := a.fetchDetail()
-	if err != nil {
-		return "", err
+	// The CloudTrail API has no explicit SourceType field.
+	// Service-linked channels (created by AWS services) use the naming convention
+	// "aws-service-channel/<service>/<suffix>".
+	name := a.Name.Data
+	if strings.HasPrefix(name, "aws-service-channel/") {
+		return "AWS_SERVICE", nil
 	}
-	return convert.ToValue(detail.Source), nil
+	return "CUSTOM", nil
 }
 
 func (a *mqlAwsCloudtrailChannel) source() (string, error) {

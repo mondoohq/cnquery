@@ -684,46 +684,48 @@ func (a *mqlAwsGuarddutyDetector) filters() ([]any, error) {
 	svc := conn.Guardduty(region)
 	ctx := context.Background()
 
-	resp, err := svc.ListFilters(ctx, &guardduty.ListFiltersInput{
+	res := []any{}
+	paginator := guardduty.NewListFiltersPaginator(svc, &guardduty.ListFiltersInput{
 		DetectorId: &detectorId,
 	})
-	if err != nil {
-		if Is400AccessDeniedError(err) {
-			return []any{}, nil
-		}
-		return nil, err
-	}
-
-	res := []any{}
-	for _, filterName := range resp.FilterNames {
-		detail, err := svc.GetFilter(ctx, &guardduty.GetFilterInput{
-			DetectorId: &detectorId,
-			FilterName: &filterName,
-		})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
 		if err != nil {
-			log.Warn().Err(err).Str("filter", filterName).Msg("could not get filter details")
-			continue
-		}
-
-		findingCriteria, _ := convert.JsonToDict(detail.FindingCriteria)
-
-		mqlFilter, err := CreateResource(a.MqlRuntime, "aws.guardduty.detector.filter",
-			map[string]*llx.RawData{
-				"__id":   llx.StringData(fmt.Sprintf("%s/%s/filter/%s", region, detectorId, filterName)),
-				"name":   llx.StringDataPtr(detail.Name),
-				"region": llx.StringData(region),
-				"action": llx.StringData(string(detail.Action)),
-			})
-		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return res, nil
+			}
 			return nil, err
 		}
-		cast := mqlFilter.(*mqlAwsGuarddutyDetectorFilter)
-		cast.Description = plugin.TValue[string]{Data: convert.ToValue(detail.Description), State: plugin.StateIsSet}
-		cast.Rank = plugin.TValue[int64]{Data: int64(convert.ToValue(detail.Rank)), State: plugin.StateIsSet}
-		cast.FindingCriteria = plugin.TValue[any]{Data: findingCriteria, State: plugin.StateIsSet}
-		cast.Tags = plugin.TValue[map[string]any]{Data: convert.MapToInterfaceMap(detail.Tags), State: plugin.StateIsSet}
+		for _, filterName := range page.FilterNames {
+			detail, err := svc.GetFilter(ctx, &guardduty.GetFilterInput{
+				DetectorId: &detectorId,
+				FilterName: &filterName,
+			})
+			if err != nil {
+				log.Warn().Err(err).Str("filter", filterName).Msg("could not get filter details")
+				continue
+			}
 
-		res = append(res, mqlFilter)
+			findingCriteria, _ := convert.JsonToDict(detail.FindingCriteria)
+
+			mqlFilter, err := CreateResource(a.MqlRuntime, "aws.guardduty.detector.filter",
+				map[string]*llx.RawData{
+					"__id":   llx.StringData(fmt.Sprintf("%s/%s/filter/%s", region, detectorId, filterName)),
+					"name":   llx.StringDataPtr(detail.Name),
+					"region": llx.StringData(region),
+					"action": llx.StringData(string(detail.Action)),
+				})
+			if err != nil {
+				return nil, err
+			}
+			cast := mqlFilter.(*mqlAwsGuarddutyDetectorFilter)
+			cast.Description = plugin.TValue[string]{Data: convert.ToValue(detail.Description), State: plugin.StateIsSet}
+			cast.Rank = plugin.TValue[int64]{Data: int64(convert.ToValue(detail.Rank)), State: plugin.StateIsSet}
+			cast.FindingCriteria = plugin.TValue[any]{Data: findingCriteria, State: plugin.StateIsSet}
+			cast.Tags = plugin.TValue[map[string]any]{Data: convert.MapToInterfaceMap(detail.Tags), State: plugin.StateIsSet}
+
+			res = append(res, mqlFilter)
+		}
 	}
 	return res, nil
 }
