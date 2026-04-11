@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.12.0",
-  "generated_at": "2026-04-10T18:49:51-07:00",
+  "generated_at": "2026-04-10T21:24:29-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -450,7 +450,12 @@
     "secretsmanager:GetResourcePolicy",
     "secretsmanager:ListSecrets",
     "securityhub:DescribeHub",
+    "securityhub:DescribeStandardsControls",
     "securityhub:GetEnabledStandards",
+    "securityhub:GetFindings",
+    "securityhub:GetInsightResults",
+    "securityhub:GetInsights",
+    "securityhub:ListAutomationRules",
     "securitylake:ListSubscribers",
     "sfn:ListActivities",
     "sfn:ListStateMachines",
@@ -3301,9 +3306,39 @@
       "source_file": "aws_securityhub.go"
     },
     {
+      "permission": "securityhub:DescribeStandardsControls",
+      "service": "securityhub",
+      "action": "DescribeStandardsControls",
+      "source_file": "aws_securityhub.go"
+    },
+    {
       "permission": "securityhub:GetEnabledStandards",
       "service": "securityhub",
       "action": "GetEnabledStandards",
+      "source_file": "aws_securityhub.go"
+    },
+    {
+      "permission": "securityhub:GetFindings",
+      "service": "securityhub",
+      "action": "GetFindings",
+      "source_file": "aws_securityhub.go"
+    },
+    {
+      "permission": "securityhub:GetInsightResults",
+      "service": "securityhub",
+      "action": "GetInsightResults",
+      "source_file": "aws_securityhub.go"
+    },
+    {
+      "permission": "securityhub:GetInsights",
+      "service": "securityhub",
+      "action": "GetInsights",
+      "source_file": "aws_securityhub.go"
+    },
+    {
+      "permission": "securityhub:ListAutomationRules",
+      "service": "securityhub",
+      "action": "ListAutomationRules",
       "source_file": "aws_securityhub.go"
     },
     {

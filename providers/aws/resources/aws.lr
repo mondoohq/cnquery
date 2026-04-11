@@ -3035,6 +3035,148 @@ private aws.securityhub.hub @defaults("arn region") {
   region string
   // List of enabled security standards (CIS, PCI-DSS, AWS Foundational, etc.)
   enabledStandards() []dict
+  // Typed standard subscriptions with control details
+  standardSubscriptions() []aws.securityhub.standardSubscription
+  // Active findings (non-archived) in this hub
+  findings() []aws.securityhub.finding
+  // Automation rules configured in this hub
+  automationRules() []aws.securityhub.automationRule
+  // Custom and default insights
+  insights() []aws.securityhub.insight
+}
+
+// AWS Security Hub enabled standard subscription
+private aws.securityhub.standardSubscription @defaults("name status") {
+  // ARN of the standard subscription
+  arn string
+  // ARN of the standard definition
+  standardArn string
+  // Name of the standard (e.g., CIS AWS Foundations Benchmark)
+  name string
+  // Region for this subscription
+  region string
+  // Subscription status: READY, INCOMPLETE, FAILED, DELETING, PENDING
+  status string
+  // Controls within this standard
+  controls() []aws.securityhub.standardControl
+}
+
+// AWS Security Hub standard control
+private aws.securityhub.standardControl @defaults("controlId title controlStatus") {
+  // Control ARN
+  arn string
+  // Control identifier (e.g., CIS.1.1)
+  controlId string
+  // Control title
+  title string
+  // Description of what the control checks for
+  description string
+  // Control status: ENABLED, DISABLED
+  controlStatus string
+  // Severity: CRITICAL, HIGH, MEDIUM, LOW, INFORMATIONAL
+  severity string
+  // Reason the control was disabled
+  disabledReason string
+  // Related compliance requirements
+  relatedRequirements []string
+  // URL to remediation documentation
+  remediationUrl string
+}
+
+// AWS Security Hub finding (ASFF format)
+private aws.securityhub.finding @defaults("title severity workflowStatus") {
+  // Finding identifier
+  id string
+  // Finding ARN
+  arn string
+  // Finding title
+  title string
+  // Finding description
+  description string
+  // Normalized severity label: CRITICAL, HIGH, MEDIUM, LOW, INFORMATIONAL
+  severity string
+  // Normalized severity score (0-100)
+  severityScore float
+  // Record state: ACTIVE, ARCHIVED
+  recordState string
+  // Compliance status: PASSED, FAILED, WARNING, NOT_AVAILABLE
+  complianceStatus string
+  // Workflow status: NEW, NOTIFIED, RESOLVED, SUPPRESSED
+  workflowStatus string
+  // Finding type categories
+  types []string
+  // ARN of the product that generated the finding
+  productArn string
+  // Name of the product that generated the finding
+  productName string
+  // Identifier for the rule or check that generated the finding
+  generatorId string
+  // Type of the affected resource (e.g., AwsEc2Instance)
+  resourceType string
+  // ID of the affected resource
+  resourceId string
+  // Region of the affected resource
+  resourceRegion string
+  // When the finding was created
+  createdAt time
+  // When the finding was last updated
+  updatedAt time
+  // When the potential issue was first observed
+  firstObservedAt time
+  // When the potential issue was last observed
+  lastObservedAt time
+  // URL to remediation documentation
+  remediationUrl string
+  // Text description of the remediation
+  remediationText string
+  // AWS account ID where the finding was generated
+  accountId string
+  // Region where the finding was generated
+  region string
+}
+
+// AWS Security Hub automation rule
+private aws.securityhub.automationRule @defaults("ruleName ruleStatus") {
+  // Rule ARN
+  arn string
+  // Rule name
+  ruleName string
+  // Rule execution order (1-1000, lower executes first)
+  ruleOrder int
+  // Rule status: ENABLED, DISABLED
+  ruleStatus string
+  // Rule description
+  description string
+  // Whether this rule stops further rule evaluation
+  isTerminal bool
+  // When the rule was created
+  createdAt time
+  // When the rule was last updated
+  updatedAt time
+  // Who created the rule
+  createdBy string
+}
+
+// AWS Security Hub insight (saved filter/aggregation)
+private aws.securityhub.insight @defaults("name") {
+  // Insight ARN
+  arn string
+  // Insight name
+  name string
+  // Attribute that findings are grouped by
+  groupByAttribute string
+  // Filter criteria as dict
+  filters dict
+  // Computed insight results
+  results() []aws.securityhub.insightResult
+}
+
+// AWS Security Hub insight result entry
+private aws.securityhub.insightResult @defaults("groupByAttributeValue count") {
+  // The value of the grouping attribute
+  groupByAttributeValue string
+  // Number of findings matching this value
+  count int
 }
 
 // AWS Shield Advanced

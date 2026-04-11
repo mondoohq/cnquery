@@ -153,6 +153,12 @@ const (
 	ResourceAwsMacieCustomDataIdentifier                                        string = "aws.macie.customDataIdentifier"
 	ResourceAwsSecurityhub                                                      string = "aws.securityhub"
 	ResourceAwsSecurityhubHub                                                   string = "aws.securityhub.hub"
+	ResourceAwsSecurityhubStandardSubscription                                  string = "aws.securityhub.standardSubscription"
+	ResourceAwsSecurityhubStandardControl                                       string = "aws.securityhub.standardControl"
+	ResourceAwsSecurityhubFinding                                               string = "aws.securityhub.finding"
+	ResourceAwsSecurityhubAutomationRule                                        string = "aws.securityhub.automationRule"
+	ResourceAwsSecurityhubInsight                                               string = "aws.securityhub.insight"
+	ResourceAwsSecurityhubInsightResult                                         string = "aws.securityhub.insightResult"
 	ResourceAwsShield                                                           string = "aws.shield"
 	ResourceAwsShieldSubscription                                               string = "aws.shield.subscription"
 	ResourceAwsShieldProtection                                                 string = "aws.shield.protection"
@@ -1076,6 +1082,30 @@ func init() {
 		"aws.securityhub.hub": {
 			// to override args, implement: initAwsSecurityhubHub(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsSecurityhubHub,
+		},
+		"aws.securityhub.standardSubscription": {
+			// to override args, implement: initAwsSecurityhubStandardSubscription(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSecurityhubStandardSubscription,
+		},
+		"aws.securityhub.standardControl": {
+			// to override args, implement: initAwsSecurityhubStandardControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSecurityhubStandardControl,
+		},
+		"aws.securityhub.finding": {
+			// to override args, implement: initAwsSecurityhubFinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSecurityhubFinding,
+		},
+		"aws.securityhub.automationRule": {
+			// to override args, implement: initAwsSecurityhubAutomationRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSecurityhubAutomationRule,
+		},
+		"aws.securityhub.insight": {
+			// to override args, implement: initAwsSecurityhubInsight(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSecurityhubInsight,
+		},
+		"aws.securityhub.insightResult": {
+			// to override args, implement: initAwsSecurityhubInsightResult(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSecurityhubInsightResult,
 		},
 		"aws.shield": {
 			// to override args, implement: initAwsShield(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -6314,6 +6344,183 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.securityhub.hub.enabledStandards": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecurityhubHub).GetEnabledStandards()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.securityhub.hub.standardSubscriptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubHub).GetStandardSubscriptions()).ToDataRes(types.Array(types.Resource("aws.securityhub.standardSubscription")))
+	},
+	"aws.securityhub.hub.findings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubHub).GetFindings()).ToDataRes(types.Array(types.Resource("aws.securityhub.finding")))
+	},
+	"aws.securityhub.hub.automationRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubHub).GetAutomationRules()).ToDataRes(types.Array(types.Resource("aws.securityhub.automationRule")))
+	},
+	"aws.securityhub.hub.insights": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubHub).GetInsights()).ToDataRes(types.Array(types.Resource("aws.securityhub.insight")))
+	},
+	"aws.securityhub.standardSubscription.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubStandardSubscription).GetArn()).ToDataRes(types.String)
+	},
+	"aws.securityhub.standardSubscription.standardArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubStandardSubscription).GetStandardArn()).ToDataRes(types.String)
+	},
+	"aws.securityhub.standardSubscription.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubStandardSubscription).GetName()).ToDataRes(types.String)
+	},
+	"aws.securityhub.standardSubscription.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubStandardSubscription).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.securityhub.standardSubscription.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubStandardSubscription).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.securityhub.standardSubscription.controls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubStandardSubscription).GetControls()).ToDataRes(types.Array(types.Resource("aws.securityhub.standardControl")))
+	},
+	"aws.securityhub.standardControl.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubStandardControl).GetArn()).ToDataRes(types.String)
+	},
+	"aws.securityhub.standardControl.controlId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubStandardControl).GetControlId()).ToDataRes(types.String)
+	},
+	"aws.securityhub.standardControl.title": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubStandardControl).GetTitle()).ToDataRes(types.String)
+	},
+	"aws.securityhub.standardControl.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubStandardControl).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.securityhub.standardControl.controlStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubStandardControl).GetControlStatus()).ToDataRes(types.String)
+	},
+	"aws.securityhub.standardControl.severity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubStandardControl).GetSeverity()).ToDataRes(types.String)
+	},
+	"aws.securityhub.standardControl.disabledReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubStandardControl).GetDisabledReason()).ToDataRes(types.String)
+	},
+	"aws.securityhub.standardControl.relatedRequirements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubStandardControl).GetRelatedRequirements()).ToDataRes(types.Array(types.String))
+	},
+	"aws.securityhub.standardControl.remediationUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubStandardControl).GetRemediationUrl()).ToDataRes(types.String)
+	},
+	"aws.securityhub.finding.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubFinding).GetId()).ToDataRes(types.String)
+	},
+	"aws.securityhub.finding.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubFinding).GetArn()).ToDataRes(types.String)
+	},
+	"aws.securityhub.finding.title": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubFinding).GetTitle()).ToDataRes(types.String)
+	},
+	"aws.securityhub.finding.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubFinding).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.securityhub.finding.severity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubFinding).GetSeverity()).ToDataRes(types.String)
+	},
+	"aws.securityhub.finding.severityScore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubFinding).GetSeverityScore()).ToDataRes(types.Float)
+	},
+	"aws.securityhub.finding.recordState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubFinding).GetRecordState()).ToDataRes(types.String)
+	},
+	"aws.securityhub.finding.complianceStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubFinding).GetComplianceStatus()).ToDataRes(types.String)
+	},
+	"aws.securityhub.finding.workflowStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubFinding).GetWorkflowStatus()).ToDataRes(types.String)
+	},
+	"aws.securityhub.finding.types": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubFinding).GetTypes()).ToDataRes(types.Array(types.String))
+	},
+	"aws.securityhub.finding.productArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubFinding).GetProductArn()).ToDataRes(types.String)
+	},
+	"aws.securityhub.finding.productName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubFinding).GetProductName()).ToDataRes(types.String)
+	},
+	"aws.securityhub.finding.generatorId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubFinding).GetGeneratorId()).ToDataRes(types.String)
+	},
+	"aws.securityhub.finding.resourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubFinding).GetResourceType()).ToDataRes(types.String)
+	},
+	"aws.securityhub.finding.resourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubFinding).GetResourceId()).ToDataRes(types.String)
+	},
+	"aws.securityhub.finding.resourceRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubFinding).GetResourceRegion()).ToDataRes(types.String)
+	},
+	"aws.securityhub.finding.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubFinding).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.securityhub.finding.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubFinding).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.securityhub.finding.firstObservedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubFinding).GetFirstObservedAt()).ToDataRes(types.Time)
+	},
+	"aws.securityhub.finding.lastObservedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubFinding).GetLastObservedAt()).ToDataRes(types.Time)
+	},
+	"aws.securityhub.finding.remediationUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubFinding).GetRemediationUrl()).ToDataRes(types.String)
+	},
+	"aws.securityhub.finding.remediationText": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubFinding).GetRemediationText()).ToDataRes(types.String)
+	},
+	"aws.securityhub.finding.accountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubFinding).GetAccountId()).ToDataRes(types.String)
+	},
+	"aws.securityhub.finding.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubFinding).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.securityhub.automationRule.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubAutomationRule).GetArn()).ToDataRes(types.String)
+	},
+	"aws.securityhub.automationRule.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubAutomationRule).GetRuleName()).ToDataRes(types.String)
+	},
+	"aws.securityhub.automationRule.ruleOrder": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubAutomationRule).GetRuleOrder()).ToDataRes(types.Int)
+	},
+	"aws.securityhub.automationRule.ruleStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubAutomationRule).GetRuleStatus()).ToDataRes(types.String)
+	},
+	"aws.securityhub.automationRule.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubAutomationRule).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.securityhub.automationRule.isTerminal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubAutomationRule).GetIsTerminal()).ToDataRes(types.Bool)
+	},
+	"aws.securityhub.automationRule.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubAutomationRule).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.securityhub.automationRule.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubAutomationRule).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.securityhub.automationRule.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubAutomationRule).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"aws.securityhub.insight.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubInsight).GetArn()).ToDataRes(types.String)
+	},
+	"aws.securityhub.insight.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubInsight).GetName()).ToDataRes(types.String)
+	},
+	"aws.securityhub.insight.groupByAttribute": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubInsight).GetGroupByAttribute()).ToDataRes(types.String)
+	},
+	"aws.securityhub.insight.filters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubInsight).GetFilters()).ToDataRes(types.Dict)
+	},
+	"aws.securityhub.insight.results": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubInsight).GetResults()).ToDataRes(types.Array(types.Resource("aws.securityhub.insightResult")))
+	},
+	"aws.securityhub.insightResult.groupByAttributeValue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubInsightResult).GetGroupByAttributeValue()).ToDataRes(types.String)
+	},
+	"aws.securityhub.insightResult.count": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubInsightResult).GetCount()).ToDataRes(types.Int)
 	},
 	"aws.shield.subscriptionState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsShield).GetSubscriptionState()).ToDataRes(types.String)
@@ -22400,6 +22607,266 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.securityhub.hub.enabledStandards": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSecurityhubHub).EnabledStandards, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.hub.standardSubscriptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubHub).StandardSubscriptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.hub.findings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubHub).Findings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.hub.automationRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubHub).AutomationRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.hub.insights": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubHub).Insights, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.standardSubscription.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubStandardSubscription).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.securityhub.standardSubscription.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubStandardSubscription).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.standardSubscription.standardArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubStandardSubscription).StandardArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.standardSubscription.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubStandardSubscription).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.standardSubscription.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubStandardSubscription).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.standardSubscription.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubStandardSubscription).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.standardSubscription.controls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubStandardSubscription).Controls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.standardControl.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubStandardControl).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.securityhub.standardControl.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubStandardControl).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.standardControl.controlId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubStandardControl).ControlId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.standardControl.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubStandardControl).Title, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.standardControl.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubStandardControl).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.standardControl.controlStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubStandardControl).ControlStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.standardControl.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubStandardControl).Severity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.standardControl.disabledReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubStandardControl).DisabledReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.standardControl.relatedRequirements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubStandardControl).RelatedRequirements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.standardControl.remediationUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubStandardControl).RemediationUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.finding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubFinding).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.securityhub.finding.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubFinding).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.finding.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubFinding).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.finding.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubFinding).Title, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.finding.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubFinding).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.finding.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubFinding).Severity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.finding.severityScore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubFinding).SeverityScore, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.finding.recordState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubFinding).RecordState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.finding.complianceStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubFinding).ComplianceStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.finding.workflowStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubFinding).WorkflowStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.finding.types": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubFinding).Types, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.finding.productArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubFinding).ProductArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.finding.productName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubFinding).ProductName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.finding.generatorId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubFinding).GeneratorId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.finding.resourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubFinding).ResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.finding.resourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubFinding).ResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.finding.resourceRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubFinding).ResourceRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.finding.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubFinding).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.finding.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubFinding).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.finding.firstObservedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubFinding).FirstObservedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.finding.lastObservedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubFinding).LastObservedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.finding.remediationUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubFinding).RemediationUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.finding.remediationText": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubFinding).RemediationText, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.finding.accountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubFinding).AccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.finding.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubFinding).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.automationRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubAutomationRule).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.securityhub.automationRule.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubAutomationRule).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.automationRule.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubAutomationRule).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.automationRule.ruleOrder": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubAutomationRule).RuleOrder, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.automationRule.ruleStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubAutomationRule).RuleStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.automationRule.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubAutomationRule).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.automationRule.isTerminal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubAutomationRule).IsTerminal, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.automationRule.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubAutomationRule).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.automationRule.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubAutomationRule).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.automationRule.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubAutomationRule).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.insight.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubInsight).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.securityhub.insight.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubInsight).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.insight.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubInsight).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.insight.groupByAttribute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubInsight).GroupByAttribute, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.insight.filters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubInsight).Filters, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.insight.results": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubInsight).Results, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.insightResult.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubInsightResult).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.securityhub.insightResult.groupByAttributeValue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubInsightResult).GroupByAttributeValue, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.insightResult.count": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubInsightResult).Count, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.shield.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -52629,10 +53096,14 @@ type mqlAwsSecurityhubHub struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsSecurityhubHubInternal it will be used here
-	Arn              plugin.TValue[string]
-	SubscribedAt     plugin.TValue[string]
-	Region           plugin.TValue[string]
-	EnabledStandards plugin.TValue[[]any]
+	Arn                   plugin.TValue[string]
+	SubscribedAt          plugin.TValue[string]
+	Region                plugin.TValue[string]
+	EnabledStandards      plugin.TValue[[]any]
+	StandardSubscriptions plugin.TValue[[]any]
+	Findings              plugin.TValue[[]any]
+	AutomationRules       plugin.TValue[[]any]
+	Insights              plugin.TValue[[]any]
 }
 
 // createAwsSecurityhubHub creates a new instance of this resource
@@ -52688,6 +53159,633 @@ func (c *mqlAwsSecurityhubHub) GetEnabledStandards() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.EnabledStandards, func() ([]any, error) {
 		return c.enabledStandards()
 	})
+}
+
+func (c *mqlAwsSecurityhubHub) GetStandardSubscriptions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.StandardSubscriptions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.securityhub.hub", c.__id, "standardSubscriptions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.standardSubscriptions()
+	})
+}
+
+func (c *mqlAwsSecurityhubHub) GetFindings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Findings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.securityhub.hub", c.__id, "findings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.findings()
+	})
+}
+
+func (c *mqlAwsSecurityhubHub) GetAutomationRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AutomationRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.securityhub.hub", c.__id, "automationRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.automationRules()
+	})
+}
+
+func (c *mqlAwsSecurityhubHub) GetInsights() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Insights, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.securityhub.hub", c.__id, "insights")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.insights()
+	})
+}
+
+// mqlAwsSecurityhubStandardSubscription for the aws.securityhub.standardSubscription resource
+type mqlAwsSecurityhubStandardSubscription struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsSecurityhubStandardSubscriptionInternal it will be used here
+	Arn         plugin.TValue[string]
+	StandardArn plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Region      plugin.TValue[string]
+	Status      plugin.TValue[string]
+	Controls    plugin.TValue[[]any]
+}
+
+// createAwsSecurityhubStandardSubscription creates a new instance of this resource
+func createAwsSecurityhubStandardSubscription(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSecurityhubStandardSubscription{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.securityhub.standardSubscription", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSecurityhubStandardSubscription) MqlName() string {
+	return "aws.securityhub.standardSubscription"
+}
+
+func (c *mqlAwsSecurityhubStandardSubscription) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSecurityhubStandardSubscription) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSecurityhubStandardSubscription) GetStandardArn() *plugin.TValue[string] {
+	return &c.StandardArn
+}
+
+func (c *mqlAwsSecurityhubStandardSubscription) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSecurityhubStandardSubscription) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSecurityhubStandardSubscription) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsSecurityhubStandardSubscription) GetControls() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Controls, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.securityhub.standardSubscription", c.__id, "controls")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.controls()
+	})
+}
+
+// mqlAwsSecurityhubStandardControl for the aws.securityhub.standardControl resource
+type mqlAwsSecurityhubStandardControl struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsSecurityhubStandardControlInternal it will be used here
+	Arn                 plugin.TValue[string]
+	ControlId           plugin.TValue[string]
+	Title               plugin.TValue[string]
+	Description         plugin.TValue[string]
+	ControlStatus       plugin.TValue[string]
+	Severity            plugin.TValue[string]
+	DisabledReason      plugin.TValue[string]
+	RelatedRequirements plugin.TValue[[]any]
+	RemediationUrl      plugin.TValue[string]
+}
+
+// createAwsSecurityhubStandardControl creates a new instance of this resource
+func createAwsSecurityhubStandardControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSecurityhubStandardControl{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.securityhub.standardControl", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSecurityhubStandardControl) MqlName() string {
+	return "aws.securityhub.standardControl"
+}
+
+func (c *mqlAwsSecurityhubStandardControl) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSecurityhubStandardControl) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSecurityhubStandardControl) GetControlId() *plugin.TValue[string] {
+	return &c.ControlId
+}
+
+func (c *mqlAwsSecurityhubStandardControl) GetTitle() *plugin.TValue[string] {
+	return &c.Title
+}
+
+func (c *mqlAwsSecurityhubStandardControl) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsSecurityhubStandardControl) GetControlStatus() *plugin.TValue[string] {
+	return &c.ControlStatus
+}
+
+func (c *mqlAwsSecurityhubStandardControl) GetSeverity() *plugin.TValue[string] {
+	return &c.Severity
+}
+
+func (c *mqlAwsSecurityhubStandardControl) GetDisabledReason() *plugin.TValue[string] {
+	return &c.DisabledReason
+}
+
+func (c *mqlAwsSecurityhubStandardControl) GetRelatedRequirements() *plugin.TValue[[]any] {
+	return &c.RelatedRequirements
+}
+
+func (c *mqlAwsSecurityhubStandardControl) GetRemediationUrl() *plugin.TValue[string] {
+	return &c.RemediationUrl
+}
+
+// mqlAwsSecurityhubFinding for the aws.securityhub.finding resource
+type mqlAwsSecurityhubFinding struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsSecurityhubFindingInternal it will be used here
+	Id               plugin.TValue[string]
+	Arn              plugin.TValue[string]
+	Title            plugin.TValue[string]
+	Description      plugin.TValue[string]
+	Severity         plugin.TValue[string]
+	SeverityScore    plugin.TValue[float64]
+	RecordState      plugin.TValue[string]
+	ComplianceStatus plugin.TValue[string]
+	WorkflowStatus   plugin.TValue[string]
+	Types            plugin.TValue[[]any]
+	ProductArn       plugin.TValue[string]
+	ProductName      plugin.TValue[string]
+	GeneratorId      plugin.TValue[string]
+	ResourceType     plugin.TValue[string]
+	ResourceId       plugin.TValue[string]
+	ResourceRegion   plugin.TValue[string]
+	CreatedAt        plugin.TValue[*time.Time]
+	UpdatedAt        plugin.TValue[*time.Time]
+	FirstObservedAt  plugin.TValue[*time.Time]
+	LastObservedAt   plugin.TValue[*time.Time]
+	RemediationUrl   plugin.TValue[string]
+	RemediationText  plugin.TValue[string]
+	AccountId        plugin.TValue[string]
+	Region           plugin.TValue[string]
+}
+
+// createAwsSecurityhubFinding creates a new instance of this resource
+func createAwsSecurityhubFinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSecurityhubFinding{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.securityhub.finding", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSecurityhubFinding) MqlName() string {
+	return "aws.securityhub.finding"
+}
+
+func (c *mqlAwsSecurityhubFinding) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSecurityhubFinding) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsSecurityhubFinding) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSecurityhubFinding) GetTitle() *plugin.TValue[string] {
+	return &c.Title
+}
+
+func (c *mqlAwsSecurityhubFinding) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsSecurityhubFinding) GetSeverity() *plugin.TValue[string] {
+	return &c.Severity
+}
+
+func (c *mqlAwsSecurityhubFinding) GetSeverityScore() *plugin.TValue[float64] {
+	return &c.SeverityScore
+}
+
+func (c *mqlAwsSecurityhubFinding) GetRecordState() *plugin.TValue[string] {
+	return &c.RecordState
+}
+
+func (c *mqlAwsSecurityhubFinding) GetComplianceStatus() *plugin.TValue[string] {
+	return &c.ComplianceStatus
+}
+
+func (c *mqlAwsSecurityhubFinding) GetWorkflowStatus() *plugin.TValue[string] {
+	return &c.WorkflowStatus
+}
+
+func (c *mqlAwsSecurityhubFinding) GetTypes() *plugin.TValue[[]any] {
+	return &c.Types
+}
+
+func (c *mqlAwsSecurityhubFinding) GetProductArn() *plugin.TValue[string] {
+	return &c.ProductArn
+}
+
+func (c *mqlAwsSecurityhubFinding) GetProductName() *plugin.TValue[string] {
+	return &c.ProductName
+}
+
+func (c *mqlAwsSecurityhubFinding) GetGeneratorId() *plugin.TValue[string] {
+	return &c.GeneratorId
+}
+
+func (c *mqlAwsSecurityhubFinding) GetResourceType() *plugin.TValue[string] {
+	return &c.ResourceType
+}
+
+func (c *mqlAwsSecurityhubFinding) GetResourceId() *plugin.TValue[string] {
+	return &c.ResourceId
+}
+
+func (c *mqlAwsSecurityhubFinding) GetResourceRegion() *plugin.TValue[string] {
+	return &c.ResourceRegion
+}
+
+func (c *mqlAwsSecurityhubFinding) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSecurityhubFinding) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlAwsSecurityhubFinding) GetFirstObservedAt() *plugin.TValue[*time.Time] {
+	return &c.FirstObservedAt
+}
+
+func (c *mqlAwsSecurityhubFinding) GetLastObservedAt() *plugin.TValue[*time.Time] {
+	return &c.LastObservedAt
+}
+
+func (c *mqlAwsSecurityhubFinding) GetRemediationUrl() *plugin.TValue[string] {
+	return &c.RemediationUrl
+}
+
+func (c *mqlAwsSecurityhubFinding) GetRemediationText() *plugin.TValue[string] {
+	return &c.RemediationText
+}
+
+func (c *mqlAwsSecurityhubFinding) GetAccountId() *plugin.TValue[string] {
+	return &c.AccountId
+}
+
+func (c *mqlAwsSecurityhubFinding) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsSecurityhubAutomationRule for the aws.securityhub.automationRule resource
+type mqlAwsSecurityhubAutomationRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsSecurityhubAutomationRuleInternal it will be used here
+	Arn         plugin.TValue[string]
+	RuleName    plugin.TValue[string]
+	RuleOrder   plugin.TValue[int64]
+	RuleStatus  plugin.TValue[string]
+	Description plugin.TValue[string]
+	IsTerminal  plugin.TValue[bool]
+	CreatedAt   plugin.TValue[*time.Time]
+	UpdatedAt   plugin.TValue[*time.Time]
+	CreatedBy   plugin.TValue[string]
+}
+
+// createAwsSecurityhubAutomationRule creates a new instance of this resource
+func createAwsSecurityhubAutomationRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSecurityhubAutomationRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.securityhub.automationRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSecurityhubAutomationRule) MqlName() string {
+	return "aws.securityhub.automationRule"
+}
+
+func (c *mqlAwsSecurityhubAutomationRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSecurityhubAutomationRule) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSecurityhubAutomationRule) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
+func (c *mqlAwsSecurityhubAutomationRule) GetRuleOrder() *plugin.TValue[int64] {
+	return &c.RuleOrder
+}
+
+func (c *mqlAwsSecurityhubAutomationRule) GetRuleStatus() *plugin.TValue[string] {
+	return &c.RuleStatus
+}
+
+func (c *mqlAwsSecurityhubAutomationRule) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsSecurityhubAutomationRule) GetIsTerminal() *plugin.TValue[bool] {
+	return &c.IsTerminal
+}
+
+func (c *mqlAwsSecurityhubAutomationRule) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSecurityhubAutomationRule) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlAwsSecurityhubAutomationRule) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+// mqlAwsSecurityhubInsight for the aws.securityhub.insight resource
+type mqlAwsSecurityhubInsight struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSecurityhubInsightInternal
+	Arn              plugin.TValue[string]
+	Name             plugin.TValue[string]
+	GroupByAttribute plugin.TValue[string]
+	Filters          plugin.TValue[any]
+	Results          plugin.TValue[[]any]
+}
+
+// createAwsSecurityhubInsight creates a new instance of this resource
+func createAwsSecurityhubInsight(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSecurityhubInsight{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.securityhub.insight", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSecurityhubInsight) MqlName() string {
+	return "aws.securityhub.insight"
+}
+
+func (c *mqlAwsSecurityhubInsight) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSecurityhubInsight) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSecurityhubInsight) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSecurityhubInsight) GetGroupByAttribute() *plugin.TValue[string] {
+	return &c.GroupByAttribute
+}
+
+func (c *mqlAwsSecurityhubInsight) GetFilters() *plugin.TValue[any] {
+	return &c.Filters
+}
+
+func (c *mqlAwsSecurityhubInsight) GetResults() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Results, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.securityhub.insight", c.__id, "results")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.results()
+	})
+}
+
+// mqlAwsSecurityhubInsightResult for the aws.securityhub.insightResult resource
+type mqlAwsSecurityhubInsightResult struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsSecurityhubInsightResultInternal it will be used here
+	GroupByAttributeValue plugin.TValue[string]
+	Count                 plugin.TValue[int64]
+}
+
+// createAwsSecurityhubInsightResult creates a new instance of this resource
+func createAwsSecurityhubInsightResult(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSecurityhubInsightResult{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.securityhub.insightResult", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSecurityhubInsightResult) MqlName() string {
+	return "aws.securityhub.insightResult"
+}
+
+func (c *mqlAwsSecurityhubInsightResult) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSecurityhubInsightResult) GetGroupByAttributeValue() *plugin.TValue[string] {
+	return &c.GroupByAttributeValue
+}
+
+func (c *mqlAwsSecurityhubInsightResult) GetCount() *plugin.TValue[int64] {
+	return &c.Count
 }
 
 // mqlAwsShield for the aws.shield resource
