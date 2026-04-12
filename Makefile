@@ -224,6 +224,7 @@ PROVIDERS := \
 	okta \
 	opcua \
 	os \
+	proxmox \
 	shodan \
 	slack \
 	snowflake \

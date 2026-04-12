@@ -1,0 +1,207 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+package resources
+
+import (
+	"fmt"
+	"strings"
+
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/proxmox/connection"
+)
+
+// vmInfoToResources converts a slice of VMInfo to MQL resources.
+func vmInfoToResources(runtime *plugin.Runtime, vms []connection.VMInfo) ([]any, error) {
+	list := make([]any, len(vms))
+	for i, vm := range vms {
+		res, err := CreateResource(runtime, "proxmox.vm", map[string]*llx.RawData{
+			"id":        llx.IntData(int64(vm.VMID)),
+			"name":      llx.StringData(vm.Name),
+			"node":      llx.StringData(vm.Node),
+			"status":    llx.StringData(vm.Status),
+			"cpu":       llx.FloatData(vm.CPU),
+			"maxcpu":    llx.IntData(int64(vm.MaxCPU)),
+			"mem":       llx.IntData(vm.Mem),
+			"maxmem":    llx.IntData(vm.MaxMem),
+			"disk":      llx.IntData(vm.Disk),
+			"maxdisk":   llx.IntData(vm.MaxDisk),
+			"diskread":  llx.IntData(vm.DiskRead),
+			"diskwrite": llx.IntData(vm.DiskWrite),
+			"netin":     llx.IntData(vm.NetIn),
+			"netout":    llx.IntData(vm.NetOut),
+			"uptime":    llx.IntData(vm.Uptime),
+			"template":  llx.BoolData(vm.Template == 1),
+		})
+		if err != nil {
+			return nil, err
+		}
+		list[i] = res
+	}
+	return list, nil
+}
+
+// storageInfoToResources converts a slice of StorageInfo to MQL resources.
+func storageInfoToResources(runtime *plugin.Runtime, storages []connection.StorageInfo) ([]any, error) {
+	list := make([]any, len(storages))
+	for i, s := range storages {
+		var usagePct float64
+		// Prefer UsedFrac (pre-computed by Proxmox); fall back to manual calculation
+		if s.UsedFrac > 0 {
+			usagePct = s.UsedFrac * 100.0
+		} else if s.Total > 0 {
+			usagePct = float64(s.Used) / float64(s.Total) * 100.0
+		}
+		res, err := CreateResource(runtime, "proxmox.storage", map[string]*llx.RawData{
+			"id":           llx.StringData(s.Storage),
+			"type":         llx.StringData(s.Type),
+			"content":      llx.StringData(s.Content),
+			"path":         llx.StringData(s.Path),
+			"enabled":      llx.BoolData(s.Enabled != 0),
+			"shared":       llx.BoolData(s.Shared != 0),
+			"total":        llx.IntData(s.Total),
+			"used":         llx.IntData(s.Used),
+			"available":    llx.IntData(s.Avail),
+			"usagePercent": llx.FloatData(usagePct),
+		})
+		if err != nil {
+			return nil, err
+		}
+		list[i] = res
+	}
+	return list, nil
+}
+
+// firewallRulesToResources converts firewall rules to MQL resources.
+func firewallRulesToResources(runtime *plugin.Runtime, rules []connection.FirewallRule) ([]any, error) {
+	list := make([]any, len(rules))
+	for i, rule := range rules {
+		res, err := CreateResource(runtime, "proxmox.firewall.rule", map[string]*llx.RawData{
+			"pos":     llx.IntData(int64(rule.Pos)),
+			"type":    llx.StringData(rule.Type),
+			"action":  llx.StringData(rule.Action),
+			"comment": llx.StringData(rule.Comment),
+			"dest":    llx.StringData(rule.Dest),
+			"dport":   llx.StringData(rule.Dport),
+			"enable":  llx.BoolData(rule.Enable == 1),
+			"iface":   llx.StringData(rule.Iface),
+			"log":     llx.StringData(rule.Log),
+			"macro":   llx.StringData(rule.Macro),
+			"proto":   llx.StringData(rule.Proto),
+			"source":  llx.StringData(rule.Source),
+			"sport":   llx.StringData(rule.Sport),
+		})
+		if err != nil {
+			return nil, err
+		}
+		list[i] = res
+	}
+	return list, nil
+}
+
+// parseVMNetworkConfig parses a Proxmox VM network config value.
+// Format: virtio=AA:BB:CC:DD:EE:FF,bridge=vmbr0,firewall=1,tag=100
+func parseVMNetworkConfig(id, val string) map[string]*llx.RawData {
+	model, mac, bridge := "", "", ""
+	firewall := false
+	tag := int64(0)
+
+	for i, part := range strings.Split(val, ",") {
+		kv := strings.SplitN(part, "=", 2)
+		if len(kv) != 2 {
+			continue
+		}
+		switch kv[0] {
+		case "bridge":
+			bridge = kv[1]
+		case "firewall":
+			firewall = kv[1] == "1"
+		case "tag":
+			fmt.Sscanf(kv[1], "%d", &tag)
+		default:
+			// First part is model=macaddr (e.g. virtio=BC:24:11:AA:BB:CC)
+			if i == 0 && looksLikeMAC(kv[1]) {
+				model = kv[0]
+				mac = kv[1]
+			}
+		}
+	}
+
+	return map[string]*llx.RawData{
+		"id":         llx.StringData(id),
+		"model":      llx.StringData(model),
+		"macAddress": llx.StringData(mac),
+		"bridge":     llx.StringData(bridge),
+		"tag":        llx.IntData(tag),
+		"firewall":   llx.BoolData(firewall),
+	}
+}
+
+// parseVMDiskConfig parses a Proxmox VM disk config value.
+func parseVMDiskConfig(id, val string) map[string]*llx.RawData {
+	storage, format, cache := "", "", ""
+	size := int64(0)
+	iothread := false
+	backup := true
+
+	parts := strings.Split(val, ",")
+	if len(parts) > 0 {
+		if idx := strings.Index(parts[0], ":"); idx >= 0 {
+			storage = parts[0][:idx]
+		}
+	}
+	for _, part := range parts[1:] {
+		kv := strings.SplitN(part, "=", 2)
+		if len(kv) != 2 {
+			continue
+		}
+		switch kv[0] {
+		case "size":
+			size = parseSizeToBytes(kv[1])
+		case "format":
+			format = kv[1]
+		case "cache":
+			cache = kv[1]
+		case "iothread":
+			iothread = kv[1] == "1"
+		case "backup":
+			backup = kv[1] != "0"
+		}
+	}
+
+	return map[string]*llx.RawData{
+		"id":       llx.StringData(id),
+		"storage":  llx.StringData(storage),
+		"size":     llx.IntData(size),
+		"format":   llx.StringData(format),
+		"cache":    llx.StringData(cache),
+		"iothread": llx.BoolData(iothread),
+		"backup":   llx.BoolData(backup),
+	}
+}
+
+func looksLikeMAC(s string) bool {
+	return len(s) == 17 && strings.Count(s, ":") == 5
+}
+
+func parseSizeToBytes(s string) int64 {
+	s = strings.TrimSpace(s)
+	multiplier := int64(1)
+	if strings.HasSuffix(s, "T") {
+		multiplier = 1024 * 1024 * 1024 * 1024
+		s = strings.TrimSuffix(s, "T")
+	} else if strings.HasSuffix(s, "G") {
+		multiplier = 1024 * 1024 * 1024
+		s = strings.TrimSuffix(s, "G")
+	} else if strings.HasSuffix(s, "M") {
+		multiplier = 1024 * 1024
+		s = strings.TrimSuffix(s, "M")
+	} else if strings.HasSuffix(s, "K") {
+		multiplier = 1024
+		s = strings.TrimSuffix(s, "K")
+	}
+	var val float64
+	fmt.Sscanf(s, "%f", &val)
+	return int64(val * float64(multiplier))
+}

@@ -498,6 +498,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"proxmox": {
+		Provider: &plugin.Provider{
+			Name:            "proxmox",
+			ID:              "go.mondoo.com/mql/v13/providers/proxmox",
+			ConnectionTypes: []string{"proxmox"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "proxmox",
+					Use:   "proxmox",
+					Short: "a Proxmox VE hypervisor",
+				},
+			},
+		},
+	},
+
 	"shodan": {
 		Provider: &plugin.Provider{
 			Name:            "shodan",

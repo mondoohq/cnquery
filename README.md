@@ -141,6 +141,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | Network scanning              | `nmap`                     | `mql shell nmap --networks 192.168.1.0/24`                                                                                                      |
 | Okta org                      | `okta`                     | `mql shell okta --token TOKEN --organization ORGANIZATION`                                                                                      |
 | Oracle Cloud Interface (OCI)  | `oci`                      | `mql shell oci`                                                                                                                                 |
+| Proxmox VE                    | `proxmox`                  | `mql shell proxmox --host HOST --token TOKEN`                                                                                                   |
 | Palo Alto Networks PAN-OS     | `panos`                    | `mql shell panos --hostname DEVICE_IP --username admin --password PASSWORD`                                                                     |
 | Running containers            | `docker`                   | `mql shell docker CONTAINER_ID`                                                                                                                 |
 | Shodan search engine          | `shodan`                   | `mql shell shodan`                                                                                                                              |

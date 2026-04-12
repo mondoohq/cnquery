@@ -221,6 +221,7 @@ use (
    ./mql/providers/oci
    ./mql/providers/okta
    ./mql/providers/opcua
+   ./mql/providers/proxmox
    ./mql/providers/shodan
    ./mql/providers/slack
    ./mql/providers/snowflake

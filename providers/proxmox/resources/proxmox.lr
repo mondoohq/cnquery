@@ -1,0 +1,509 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/mql/v13/providers/proxmox"
+option go_package = "go.mondoo.com/mql/v13/providers/proxmox/resources"
+
+// Proxmox VE cluster root resource
+proxmox {
+  // Version and system information
+  about() dict
+  // Cluster-level information (HA, quorum, corosync)
+  cluster() proxmox.cluster
+  // All QEMU virtual machines across the cluster
+  vms() []proxmox.vm
+  // All cluster nodes
+  nodes() []proxmox.node
+  // Storage pools configured in the cluster
+  storages() []proxmox.storage
+  // Resource pools
+  pools() []proxmox.pool
+  // Users configured in the cluster
+  users() []proxmox.user
+  // Roles defined in the cluster
+  roles() []proxmox.role
+}
+
+// Proxmox VE cluster information
+proxmox.cluster @defaults("name quorate") {
+  // Cluster name
+  name string
+  // Cluster config version
+  version int
+  // Whether the cluster has quorum
+  quorate bool
+  // Number of nodes in the cluster
+  nodeCount int
+  // High-availability resources
+  haResources() []proxmox.cluster.haResource
+  // Cluster-level firewall rules
+  firewallRules() []proxmox.firewall.rule
+  // Cluster-level options
+  options() dict
+}
+
+// High-availability resource managed by the cluster
+proxmox.cluster.haResource @defaults("id type status") {
+  // Resource ID (e.g. vm:100)
+  id string
+  // Resource type (vm, ct)
+  type string
+  // Current HA status
+  status string
+  // Node the resource is assigned to
+  node string
+  // Maximum restart attempts
+  maxRestart int
+  // Maximum relocate attempts
+  maxRelocate int
+  // Desired state (started, stopped, disabled)
+  state string
+  // HA group
+  group string
+}
+
+// Proxmox VE cluster node (equivalent to ESXi host)
+proxmox.node @defaults("name status") {
+  // Node hostname
+  name string
+  // Current status (online, offline)
+  status string
+  // Node IP address
+  ip string
+
+  // --- Hardware ---
+  // CPU model name
+  cpuModel string
+  // Number of CPU sockets
+  cpuSockets int
+  // Number of CPU cores
+  cpuCores int
+  // Current CPU usage (fraction 0.0-1.0)
+  cpuUsage float
+  // Total memory in bytes
+  memTotal int
+  // Used memory in bytes
+  memUsed int
+  // Free memory in bytes
+  memFree int
+  // Total swap in bytes
+  swapTotal int
+  // Used swap in bytes
+  swapUsed int
+
+  // --- System ---
+  // Running kernel version
+  kernelVersion string
+  // PVE manager version
+  pveVersion string
+  // Uptime in seconds
+  uptime int
+
+  // --- Network ---
+  // Network interfaces (bridges, bonds, physical)
+  networks() []proxmox.network
+  // DNS configuration
+  dns() proxmox.dns
+
+  // --- Services ---
+  // Systemd services
+  services() []proxmox.service
+
+  // --- Time ---
+  // Configured timezone
+  timezone string
+
+  // --- Storage ---
+  // Storage pools available on this node
+  storages() []proxmox.storage
+
+  // --- Certificates ---
+  // TLS/SSL certificates
+  certificates() []proxmox.certificate
+
+  // --- Subscription ---
+  // Proxmox subscription status
+  subscription() proxmox.subscription
+
+  // --- Repositories ---
+  // APT repositories configured on this node
+  repositories() []proxmox.repository
+
+  // --- Updates ---
+  // Available package updates
+  updates() []proxmox.node.update
+
+  // --- Firewall ---
+  // Node-level firewall rules
+  firewallRules() []proxmox.firewall.rule
+
+  // --- VMs ---
+  // VMs running on this node
+  vms() []proxmox.vm
+}
+
+// Package update available on a Proxmox node
+proxmox.node.update @defaults("package newVersion severity") {
+  // Package name
+  package string
+  // Currently installed version
+  installedVersion string
+  // Available new version
+  newVersion string
+  // Update severity (important, recommended, optional)
+  severity string
+}
+
+// Proxmox VE virtual machine (QEMU)
+proxmox.vm @defaults("id name status") {
+  // VMID
+  id int
+  // VM display name
+  name string
+  // Node this VM is running on
+  node string
+  // Current status (running, stopped, paused)
+  status string
+
+  // --- Resource usage ---
+  // Current CPU usage (fraction)
+  cpu float
+  // Number of configured vCPUs
+  maxcpu int
+  // Current memory usage in bytes
+  mem int
+  // Configured maximum memory in bytes
+  maxmem int
+  // Current disk usage in bytes
+  disk int
+  // Configured maximum disk size in bytes
+  maxdisk int
+  // Total bytes read from disk
+  diskread int
+  // Total bytes written to disk
+  diskwrite int
+  // Total incoming network bytes
+  netin int
+  // Total outgoing network bytes
+  netout int
+  // Uptime in seconds
+  uptime int
+  // Whether this VM is a template
+  template bool
+
+  // --- Configuration (lazy-loaded via separate API call) ---
+  // Full VM configuration as dictionary
+  config() dict
+  // OS type (l26, win10, etc.)
+  osType() string
+  // Machine type (pc, q35)
+  machine() string
+  // BIOS type (seabios, ovmf)
+  bios() string
+  // Boot order string
+  bootOrder() string
+  // Whether the QEMU guest agent is enabled
+  agent() bool
+  // Whether the VM is protected from removal
+  protection() bool
+  // VM description/notes
+  description() string
+  // Tags assigned to the VM
+  tags() []string
+
+  // --- Devices ---
+  // Network interfaces attached to the VM
+  networks() []proxmox.vm.network
+  // Disk devices attached to the VM
+  disks() []proxmox.vm.disk
+
+  // --- Snapshots ---
+  // VM snapshots
+  snapshots() []proxmox.vm.snapshot
+
+  // --- Firewall ---
+  // VM-level firewall rules
+  firewallRules() []proxmox.firewall.rule
+
+  // --- Updates (via QEMU Guest Agent) ---
+  // Installed packages and available updates
+  updates() []proxmox.vm.update
+}
+
+// Network interface attached to a VM
+proxmox.vm.network @defaults("id model bridge") {
+  // Interface ID (net0, net1, ...)
+  id string
+  // NIC model (virtio, e1000, etc.)
+  model string
+  // MAC address
+  macAddress string
+  // Bridge this NIC is connected to
+  bridge string
+  // VLAN tag (0 = none)
+  tag int
+  // Whether the firewall is enabled for this NIC
+  firewall bool
+}
+
+// Disk device attached to a VM
+proxmox.vm.disk @defaults("id storage size") {
+  // Disk ID (scsi0, virtio0, ide0, ...)
+  id string
+  // Storage pool name
+  storage string
+  // Disk size in bytes
+  size int
+  // Disk format (qcow2, raw, vmdk)
+  format string
+  // Cache mode (none, writethrough, writeback, etc.)
+  cache string
+  // Whether iothread is enabled
+  iothread bool
+  // Whether backup is enabled for this disk
+  backup bool
+}
+
+// VM snapshot
+proxmox.vm.snapshot @defaults("name snaptime") {
+  // Snapshot name
+  name string
+  // Snapshot description
+  description string
+  // Parent snapshot name
+  parent string
+  // Snapshot creation time (unix timestamp)
+  snaptime int
+  // Whether VM state (RAM) is included
+  vmstate bool
+}
+
+// Software update information for a VM (via QEMU Guest Agent)
+proxmox.vm.update @defaults("name severity upgradable") {
+  // Package name
+  name string
+  // Currently installed version
+  installedVersion string
+  // Available new version (empty if no update)
+  newVersion string
+  // Whether an update is available
+  upgradable bool
+  // Update severity (security, enhancement)
+  severity string
+}
+
+// Proxmox VE storage pool
+proxmox.storage @defaults("id type enabled") {
+  // Storage ID
+  id string
+  // Storage type (dir, lvm, lvmthin, nfs, cifs, zfspool, ceph, etc.)
+  type string
+  // Allowed content types (images, rootdir, vztmpl, backup, iso, snippets)
+  content string
+  // Storage path (for local storage types)
+  path string
+  // Whether the storage is enabled
+  enabled bool
+  // Whether the storage is shared across nodes
+  shared bool
+  // Total capacity in bytes
+  total int
+  // Used space in bytes
+  used int
+  // Available space in bytes
+  available int
+  // Usage percentage
+  usagePercent float
+}
+
+// Resource pool
+proxmox.pool @defaults("id") {
+  // Pool ID
+  id string
+  // Pool comment/description
+  comment string
+}
+
+// Network interface on a node (bridge, bond, physical, VLAN)
+proxmox.network @defaults("iface type active") {
+  // Interface name (e.g. vmbr0, eth0)
+  iface string
+  // Interface type (bridge, bond, eth, vlan, OVSBridge, etc.)
+  type string
+  // Whether the interface is active
+  active bool
+  // Address assignment method (static, dhcp, manual)
+  method string
+  // IP address
+  address string
+  // Network mask
+  netmask string
+  // Default gateway
+  gateway string
+  // Bridge ports (for bridge interfaces)
+  bridgePorts string
+  // CIDR notation
+  cidr string
+  // Whether the interface starts on boot
+  autostart bool
+  // Interface comments
+  comments string
+}
+
+// DNS configuration on a node
+proxmox.dns @defaults("search dns1") {
+  // DNS search domain
+  search string
+  // Primary DNS server
+  dns1 string
+  // Secondary DNS server
+  dns2 string
+  // Tertiary DNS server
+  dns3 string
+}
+
+// Systemd service on a node
+proxmox.service @defaults("name state") {
+  // Service unit name
+  name string
+  // Current state (running, dead, etc.)
+  state string
+  // Service description
+  description string
+  // Unit file state (enabled, disabled, static, masked)
+  unitFileState string
+}
+
+// TLS/SSL certificate on a node
+proxmox.certificate @defaults("subject notAfter") {
+  // Certificate filename
+  filename string
+  // Certificate fingerprint
+  fingerprint string
+  // Certificate issuer
+  issuer string
+  // Expiration date
+  notAfter time
+  // Valid from date
+  notBefore time
+  // Public key size in bits
+  publicKeyBits int
+  // Public key type (rsa, ec)
+  publicKeyType string
+  // Subject Alternative Names
+  san []string
+  // Certificate subject
+  subject string
+}
+
+// Proxmox subscription information
+proxmox.subscription @defaults("status level") {
+  // Subscription status (active, notfound, invalid)
+  status string
+  // Server ID
+  serverId string
+  // Product name
+  productName string
+  // Registration date
+  regDate string
+  // Next due date
+  nextDueDate string
+  // Subscription level (basic, standard, premium)
+  level string
+  // Subscription key
+  key string
+}
+
+// APT repository configured on a node
+proxmox.repository @defaults("name enabled") {
+  // Repository identifier
+  id string
+  // Repository name/description
+  name string
+  // Whether the repository is enabled
+  enabled bool
+  // Repository types (deb, deb-src)
+  types []string
+  // Repository URIs
+  uris []string
+  // Repository suites (e.g. bookworm, stable)
+  suites []string
+  // Repository components (main, contrib, etc.)
+  components []string
+  // File type (sources.list, sources.list.d)
+  fileType string
+}
+
+// Firewall rule
+proxmox.firewall.rule @defaults("pos action") {
+  // Rule position
+  pos int
+  // Rule type (in, out, group)
+  type string
+  // Rule action (ACCEPT, DROP, REJECT)
+  action string
+  // Rule comment
+  comment string
+  // Destination address
+  dest string
+  // Destination port
+  dport string
+  // Whether the rule is enabled
+  enable bool
+  // Network interface
+  iface string
+  // Log level
+  log string
+  // Security macro name
+  macro string
+  // Protocol (tcp, udp, icmp, etc.)
+  proto string
+  // Source address
+  source string
+  // Source port
+  sport string
+}
+
+// Proxmox VE user account
+proxmox.user @defaults("id enable") {
+  // User ID (user@realm)
+  id string
+  // Email address
+  email string
+  // Whether the user is enabled
+  enable bool
+  // Account expiration (unix timestamp, 0 = never)
+  expire int
+  // First name
+  firstname string
+  // Last name
+  lastname string
+  // Groups the user belongs to
+  groups []string
+  // Authentication realm (pam, pve, ldap, ad)
+  realm string
+  // API tokens for this user
+  tokens() []proxmox.token
+}
+
+// API token for a user
+proxmox.token @defaults("id privsep") {
+  // Token ID (user@realm!tokenid)
+  id string
+  // Token comment
+  comment string
+  // Token expiration (unix timestamp, 0 = never)
+  expire int
+  // Whether privilege separation is active
+  privsep bool
+}
+
+// Access control role
+proxmox.role @defaults("id") {
+  // Role ID
+  id string
+  // Privileges assigned to this role
+  privs []string
+  // Whether this is a built-in role
+  special bool
+}
