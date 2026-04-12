@@ -17925,7 +17925,10 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsAppmeshVirtualNode).GetStatus()).ToDataRes(types.String)
 	},
 	"aws.appmesh.virtualNode.backends": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsAppmeshVirtualNode).GetBackends()).ToDataRes(types.Array(types.Dict))
+		return (r.(*mqlAwsAppmeshVirtualNode).GetBackends()).ToDataRes(types.Int)
+	},
+	"aws.appmesh.virtualNode.backendServices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualNode).GetBackendServices()).ToDataRes(types.Array(types.Dict))
 	},
 	"aws.appmesh.virtualNode.serviceDiscovery": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppmeshVirtualNode).GetServiceDiscovery()).ToDataRes(types.Dict)
@@ -40800,7 +40803,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"aws.appmesh.virtualNode.backends": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsAppmeshVirtualNode).Backends, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		r.(*mqlAwsAppmeshVirtualNode).Backends, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualNode.backendServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualNode).BackendServices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.appmesh.virtualNode.serviceDiscovery": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -99027,7 +99034,8 @@ type mqlAwsAppmeshVirtualNode struct {
 	MeshName         plugin.TValue[string]
 	Region           plugin.TValue[string]
 	Status           plugin.TValue[string]
-	Backends         plugin.TValue[[]any]
+	Backends         plugin.TValue[int64]
+	BackendServices  plugin.TValue[[]any]
 	ServiceDiscovery plugin.TValue[any]
 }
 
@@ -99090,9 +99098,15 @@ func (c *mqlAwsAppmeshVirtualNode) GetStatus() *plugin.TValue[string] {
 	})
 }
 
-func (c *mqlAwsAppmeshVirtualNode) GetBackends() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.Backends, func() ([]any, error) {
+func (c *mqlAwsAppmeshVirtualNode) GetBackends() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Backends, func() (int64, error) {
 		return c.backends()
+	})
+}
+
+func (c *mqlAwsAppmeshVirtualNode) GetBackendServices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.BackendServices, func() ([]any, error) {
+		return c.backendServices()
 	})
 }
 

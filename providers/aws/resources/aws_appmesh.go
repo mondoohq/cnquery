@@ -393,7 +393,18 @@ func (a *mqlAwsAppmeshVirtualNode) status() (string, error) {
 	return string(resp.VirtualNode.Status.Status), nil
 }
 
-func (a *mqlAwsAppmeshVirtualNode) backends() ([]any, error) {
+func (a *mqlAwsAppmeshVirtualNode) backends() (int64, error) {
+	resp, err := a.fetchDetail()
+	if err != nil {
+		return 0, err
+	}
+	if resp.VirtualNode == nil || resp.VirtualNode.Spec == nil {
+		return 0, nil
+	}
+	return int64(len(resp.VirtualNode.Spec.Backends)), nil
+}
+
+func (a *mqlAwsAppmeshVirtualNode) backendServices() ([]any, error) {
 	resp, err := a.fetchDetail()
 	if err != nil {
 		return nil, err

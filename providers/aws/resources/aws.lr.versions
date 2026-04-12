@@ -142,6 +142,7 @@ aws.appmesh.route.tags 13.12.1
 aws.appmesh.route.virtualRouterName 13.12.1
 aws.appmesh.virtualNode 13.6.3
 aws.appmesh.virtualNode.arn 13.6.3
+aws.appmesh.virtualNode.backendServices 13.12.1
 aws.appmesh.virtualNode.backends 13.6.3
 aws.appmesh.virtualNode.meshName 13.6.3
 aws.appmesh.virtualNode.name 13.6.3

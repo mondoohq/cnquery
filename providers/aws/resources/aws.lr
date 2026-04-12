@@ -12213,8 +12213,10 @@ private aws.appmesh.virtualNode @defaults("arn name") {
   region string
   // Status of the virtual node: ACTIVE, INACTIVE, DELETED
   status() string
+  // Deprecated: Use backendServices() instead
+  backends() int
   // Backend services this node communicates with
-  backends() []dict
+  backendServices() []dict
   // Service discovery configuration
   serviceDiscovery() dict
 }
