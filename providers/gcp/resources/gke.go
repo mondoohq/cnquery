@@ -243,6 +243,38 @@ func (g *mqlGcpProjectGkeServiceCluster) databaseEncryptionKey() (*mqlGcpProject
 	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
 }
 
+func (g *mqlGcpProjectGkeServiceCluster) networkPolicy() (*mqlGcpProjectGkeServiceClusterNetworkPolicy, error) {
+	if g.NetworkPolicyConfig.Error != nil {
+		return nil, g.NetworkPolicyConfig.Error
+	}
+	npConfig := g.NetworkPolicyConfig.Data
+	if npConfig == nil {
+		g.NetworkPolicy.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	npMap, ok := npConfig.(map[string]any)
+	if !ok {
+		g.NetworkPolicy.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	enabled, _ := npMap["enabled"].(bool)
+	provider, _ := npMap["provider"].(string)
+
+	clusterId := g.Id.Data
+
+	res, err := CreateResource(g.MqlRuntime, "gcp.project.gkeService.cluster.networkPolicy", map[string]*llx.RawData{
+		"id":       llx.StringData(clusterId + "/networkPolicy"),
+		"enabled":  llx.BoolData(enabled),
+		"provider": llx.StringData(provider),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectGkeServiceClusterNetworkPolicy), nil
+}
+
 func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 	// when the service is not enabled, we return nil
 	if !g.serviceEnabled {

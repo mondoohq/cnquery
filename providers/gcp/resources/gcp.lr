@@ -64,6 +64,8 @@ gcp.organization @defaults("name") {
   sccMuteConfigs() []gcp.scc.muteConfig
   // Security Command Center BigQuery export configs
   sccBigQueryExports() []gcp.scc.bigQueryExport
+  // Security Command Center organization settings
+  sccOrganizationSettings() gcp.scc.organizationSettings
   // VPC Service Controls access policies
   accessPolicies() []gcp.accesscontextmanager.accessPolicy
 }
@@ -431,6 +433,8 @@ gcp.project @defaults("name number") {
   auditConfig() []gcp.resourcemanager.auditConfig
   // Organization policies
   orgPolicies() []gcp.orgPolicy
+  // Available organization policy constraints
+  orgPolicyConstraints() []gcp.orgPolicy.constraint
   // List of available and enabled services for the project
   services() []gcp.service
   // List of recommendations
@@ -2161,8 +2165,10 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   confidentialNodesConfig dict
   // Configuration for Identity Service component
   identityServiceConfig dict
-  // Configuration options for the NetworkPolicy feature
+  // Deprecated: Use networkPolicy instead
   networkPolicyConfig dict
+  // Network policy configuration
+  networkPolicy() gcp.project.gkeService.cluster.networkPolicy
   // The release channel that the cluster is subscribed to
   releaseChannel string
   // Whether Cloud TPU integration is enabled
@@ -2215,6 +2221,16 @@ private gcp.project.gkeService.cluster.securityPostureConfig {
   mode string
   // Vulnerability scanning mode (VULNERABILITY_DISABLED, VULNERABILITY_BASIC, VULNERABILITY_ENTERPRISE)
   vulnerabilityMode string
+}
+
+// Google Kubernetes Engine (GKE) cluster network policy configuration
+private gcp.project.gkeService.cluster.networkPolicy @defaults("enabled") {
+  // Internal ID
+  id string
+  // Whether network policy is enabled on the cluster
+  enabled bool
+  // Network policy provider (CALICO)
+  provider string
 }
 
 // Google Kubernetes Engine (GKE) cluster addons config
@@ -2877,6 +2893,8 @@ private gcp.project.loggingservice {
   metrics() []gcp.project.loggingservice.metric
   // List of log sinks
   sinks() []gcp.project.loggingservice.sink
+  // List of log exclusions
+  exclusions() []gcp.project.loggingservice.exclusion
 }
 
 // Google Cloud (GCP) Logging bucket
@@ -2951,6 +2969,22 @@ private gcp.project.loggingservice.sink @defaults("destination") {
   writerIdentity string
   // Whether to allow the sink to export log entries from the organization or folder, plus (recursively) from any contained folders, billings accounts, or projects
   includeChildren bool
+}
+
+// Google Cloud (GCP) Logging exclusion filter
+private gcp.project.loggingservice.exclusion @defaults("name disabled") {
+  // Full resource name
+  name string
+  // Description
+  description string
+  // Advanced logs filter that matches log entries to be excluded
+  filter string
+  // Whether the exclusion is disabled
+  disabled bool
+  // Creation timestamp
+  created time
+  // Last update timestamp
+  updated time
 }
 
 // Google Cloud (GCP) IAM resources
@@ -3625,6 +3659,12 @@ private gcp.project.monitoringService {
   projectId string
   // List of alert policies
   alertPolicies() []gcp.project.monitoringService.alertPolicy
+  // Uptime check configurations
+  uptimeCheckConfigs() []gcp.project.monitoringService.uptimeCheckConfig
+  // Notification channels
+  notificationChannels() []gcp.project.monitoringService.notificationChannel
+  // Resource groups
+  groups() []gcp.project.monitoringService.group
 }
 
 // Google Cloud (GCP) monitoring alert policy
@@ -3661,9 +3701,77 @@ private gcp.project.monitoringService.alertPolicy {
   alertStrategy dict
 }
 
+// Google Cloud (GCP) Monitoring uptime check configuration
+private gcp.project.monitoringService.uptimeCheckConfig @defaults("displayName") {
+  // Full resource name
+  name string
+  // Display name
+  displayName string
+  // Whether the check is disabled
+  disabled bool
+  // Type of checker (STATIC_IP_CHECKERS, VPC_CHECKERS)
+  checkerType string
+  // Check period
+  period string
+  // Check timeout
+  timeout string
+  // Regions from which the check is run
+  selectedRegions []string
+  // HTTP check configuration
+  httpCheck dict
+  // TCP check configuration
+  tcpCheck dict
+  // Content matchers for response validation
+  contentMatchers []dict
+  // Monitored resource
+  monitoredResource dict
+  // Resource group
+  resourceGroup dict
+  // Whether to log check failures
+  logCheckFailures bool
+  // User-defined labels
+  userLabels map[string]string
+}
+
+// Google Cloud (GCP) Monitoring notification channel
+private gcp.project.monitoringService.notificationChannel @defaults("displayName type") {
+  // Full resource name
+  name string
+  // Display name
+  displayName string
+  // Description
+  description string
+  // Channel type (email, sms, slack, pagerduty, webhook_tokenauth, etc.)
+  type string
+  // Whether the channel is enabled
+  enabled bool
+  // Configuration labels (e.g., email_address, channel_name)
+  labels map[string]string
+  // User-defined labels
+  userLabels map[string]string
+  // Verification status (UNVERIFIED, VERIFIED)
+  verificationStatus string
+}
+
+// Google Cloud (GCP) Monitoring resource group
+private gcp.project.monitoringService.group @defaults("displayName") {
+  // Full resource name
+  name string
+  // Display name
+  displayName string
+  // Parent group name
+  parentName string
+  // Filter that determines which monitored resources belong to this group
+  filter string
+  // Whether this is a cluster group
+  isCluster bool
+}
+
 private gcp.project.binaryAuthorizationControl {
   // The policy for container image binary authorization
   policy gcp.project.binaryAuthorizationControl.policy
+  // List of attestors
+  attestors() []gcp.project.binaryAuthorizationControl.attestor
 }
 
 private gcp.project.binaryAuthorizationControl.policy {
@@ -3694,6 +3802,18 @@ private gcp.project.binaryAuthorizationControl.admissionRule {
   enforcementMode string
   // The resource names of the attestors that must attest to a container image
   requireAttestationsBy []string
+}
+
+// Google Cloud (GCP) Binary Authorization attestor
+private gcp.project.binaryAuthorizationControl.attestor @defaults("name") {
+  // Full resource name
+  name string
+  // Description
+  description string
+  // User-owned Grafeas note reference and properties
+  userOwnedGrafeasNote dict
+  // Last update time
+  updated time
 }
 
 // Google Cloud (GCP) Secret Manager
@@ -3802,6 +3922,40 @@ private gcp.project.firestoreService.database @defaults("name") {
   createdAt time
   // Last update time
   updatedAt time
+  // Database indexes
+  indexes() []gcp.project.firestoreService.database.index
+  // Backup schedules
+  backupSchedules() []gcp.project.firestoreService.database.backupSchedule
+}
+
+// Google Cloud (GCP) Firestore database index
+private gcp.project.firestoreService.database.index @defaults("name queryScope") {
+  // Full resource name
+  name string
+  // Query scope (COLLECTION, COLLECTION_GROUP, COLLECTION_RECURSIVE)
+  queryScope string
+  // API scope (DATASTORE_MODE_API, ANY_API)
+  apiScope string
+  // Index fields
+  fields []dict
+  // Index state (CREATING, READY, NEEDS_REPAIR)
+  state string
+}
+
+// Google Cloud (GCP) Firestore database backup schedule
+private gcp.project.firestoreService.database.backupSchedule @defaults("name") {
+  // Full resource name
+  name string
+  // Backup retention period
+  retention string
+  // Daily recurrence config
+  dailyRecurrence dict
+  // Weekly recurrence config
+  weeklyRecurrence dict
+  // Creation time
+  created time
+  // Last update time
+  updated time
 }
 
 // Google Cloud (GCP) Spanner resources
@@ -3876,6 +4030,8 @@ private gcp.project.spannerService.instance.database @defaults("name") {
   reconciling bool
   // Creation time
   createdAt time
+  // Database DDL statements (schema definition)
+  ddl() []string
 }
 
 // Google Cloud (GCP) Spanner backup
@@ -4590,6 +4746,22 @@ private gcp.orgPolicy @defaults("constraintName") {
   etag string
   // Time last updated
   updatedAt time
+}
+
+// Google Cloud (GCP) Organization policy constraint
+private gcp.orgPolicy.constraint @defaults("name") {
+  // Full resource name (e.g., constraints/compute.disableSerialPortAccess)
+  name string
+  // Display name
+  displayName string
+  // Description
+  description string
+  // Default behavior when the constraint is not explicitly set (CONSTRAINT_DEFAULT_ALLOW, CONSTRAINT_DEFAULT_DENY)
+  constraintDefault string
+  // List constraint details (if this is a list constraint)
+  listConstraint dict
+  // Boolean constraint details (if this is a boolean constraint)
+  booleanConstraint dict
 }
 
 // Google Cloud (GCP) Compute instance group
@@ -5534,6 +5706,8 @@ private gcp.project.cloudDeployService.deliveryPipeline @defaults("name") {
   serialPipeline dict
   // Pipeline conditions
   condition dict
+  // Releases created from this pipeline
+  releases() []gcp.project.cloudDeployService.release
 }
 
 // Google Cloud (GCP) Cloud Deploy target
@@ -5564,6 +5738,36 @@ private gcp.project.cloudDeployService.target @defaults("name") {
   customTarget dict
   // Execution configs
   executionConfigs []dict
+}
+
+// Google Cloud (GCP) Cloud Deploy release
+private gcp.project.cloudDeployService.release @defaults("name") {
+  // Full resource name
+  name string
+  // Unique identifier
+  uid string
+  // Description
+  description string
+  // Whether the release was abandoned
+  abandoned bool
+  // Skaffold config URI
+  skaffoldConfigUri string
+  // Skaffold version
+  skaffoldVersion string
+  // Render state (SUCCEEDED, FAILED, IN_PROGRESS)
+  renderState string
+  // Resource annotations
+  annotations map[string]string
+  // Resource labels
+  labels map[string]string
+  // Creation time
+  createTime time
+  // Render start time
+  renderStartTime time
+  // Render end time
+  renderEndTime time
+  // Condition (pipeline readiness, release readiness, Skaffold support state)
+  condition dict
 }
 
 // Google Cloud (GCP) Dataflow service
@@ -5888,6 +6092,14 @@ private gcp.project.vertexaiService {
   datasets() []gcp.project.vertexaiService.dataset
   // List of feature online stores
   featureOnlineStores() []gcp.project.vertexaiService.featureOnlineStore
+  // Tensorboard instances
+  tensorboards() []gcp.project.vertexaiService.tensorboard
+  // Custom training jobs
+  customJobs() []gcp.project.vertexaiService.customJob
+  // Vector search indexes
+  indexes() []gcp.project.vertexaiService.index
+  // Vector search index endpoints
+  indexEndpoints() []gcp.project.vertexaiService.indexEndpoint
 }
 
 // Google Cloud (GCP) Vertex AI model
@@ -6044,6 +6256,116 @@ private gcp.project.vertexaiService.featureOnlineStore @defaults("name state") {
   updatedAt time
 }
 
+// Google Cloud (GCP) Vertex AI Tensorboard instance
+private gcp.project.vertexaiService.tensorboard @defaults("displayName") {
+  // Full resource name
+  name string
+  // Display name
+  displayName string
+  // Description
+  description string
+  // Whether this is the default Tensorboard
+  isDefault bool
+  // Labels
+  labels map[string]string
+  // Encryption spec
+  encryptionSpec dict
+  // Creation time
+  created time
+  // Last update time
+  updated time
+}
+
+// Google Cloud (GCP) Vertex AI custom training job
+private gcp.project.vertexaiService.customJob @defaults("displayName state") {
+  // Full resource name
+  name string
+  // Display name
+  displayName string
+  // Job state (JOB_STATE_QUEUED, JOB_STATE_PENDING, JOB_STATE_RUNNING, JOB_STATE_SUCCEEDED, JOB_STATE_FAILED, JOB_STATE_CANCELLING, JOB_STATE_CANCELLED, JOB_STATE_PAUSED, JOB_STATE_EXPIRED)
+  state string
+  // Job spec (worker pool specs, scheduling, etc.)
+  jobSpec dict
+  // Labels
+  labels map[string]string
+  // Encryption spec
+  encryptionSpec dict
+  // Error details (if failed)
+  error dict
+  // Creation time
+  created time
+  // Last update time
+  updated time
+  // Start time
+  startTime time
+  // End time
+  endTime time
+}
+
+// Google Cloud (GCP) Vertex AI vector search index
+private gcp.project.vertexaiService.index @defaults("displayName") {
+  // Full resource name
+  name string
+  // Display name
+  displayName string
+  // Description
+  description string
+  // Metadata schema URI
+  metadataSchemaUri string
+  // Index metadata
+  metadata dict
+  // Deployed indexes
+  deployedIndexes []dict
+  // Labels
+  labels map[string]string
+  // Encryption spec
+  encryptionSpec dict
+  // Index update method (BATCH_UPDATE, STREAM_UPDATE)
+  indexUpdateMethod string
+  // Index stats (vectors count, shards count)
+  indexStats dict
+  // Creation time
+  created time
+  // Last update time
+  updated time
+}
+
+// Google Cloud (GCP) Vertex AI vector search index endpoint
+private gcp.project.vertexaiService.indexEndpoint @defaults("displayName") {
+  // Full resource name
+  name string
+  // Display name
+  displayName string
+  // Description
+  description string
+  // Deployed indexes
+  deployedIndexes []dict
+  // Network for private endpoints
+  network string
+  // Whether public endpoint is enabled
+  publicEndpointEnabled bool
+  // Public endpoint domain name
+  publicEndpointDomainName string
+  // Labels
+  labels map[string]string
+  // Encryption spec
+  encryptionSpec dict
+  // Creation time
+  created time
+  // Last update time
+  updated time
+}
+
+// Google Cloud Security Command Center organization settings
+private gcp.scc.organizationSettings @defaults("name") {
+  // Full resource name
+  name string
+  // Whether Cloud SCC asset discovery is enabled
+  enableAssetDiscovery bool
+  // Asset discovery configuration
+  assetDiscoveryConfig dict
+}
+
 // Google Cloud Security Command Center source
 private gcp.scc.source @defaults("name displayName") {
   // Full resource name (organizations/{orgId}/sources/{sourceId})
@@ -6184,16 +6506,38 @@ private gcp.accesscontextmanager.servicePerimeter @defaults("name title") {
   description string
   // Perimeter type (PERIMETER_TYPE_REGULAR, PERIMETER_TYPE_BRIDGE)
   perimeterType string
-  // Current enforced status config
+  // Deprecated: Use statusConfig instead
   status dict
-  // Dry-run spec (proposed config)
+  // Deprecated: Use specConfig instead
   spec dict
+  // Enforced perimeter configuration
+  statusConfig() gcp.accesscontextmanager.servicePerimeter.config
+  // Dry-run perimeter configuration (proposed changes)
+  specConfig() gcp.accesscontextmanager.servicePerimeter.config
   // Whether dry-run spec is explicitly set
   useExplicitDryRunSpec bool
   // Create time
   createTime time
   // Update time
   updateTime time
+}
+
+// Google Cloud (GCP) VPC Service Controls perimeter configuration
+private gcp.accesscontextmanager.servicePerimeter.config {
+  // Internal ID
+  id string
+  // Projects inside the perimeter (format: projects/{project_number})
+  resources []string
+  // Google Cloud services subject to perimeter restrictions
+  restrictedServices []string
+  // Access levels granting access to the perimeter
+  accessLevels []string
+  // VPC accessible services configuration
+  vpcAccessibleServices dict
+  // Ingress policies (rules for inbound access)
+  ingressPolicies []dict
+  // Egress policies (rules for outbound access)
+  egressPolicies []dict
 }
 
 // Google Cloud (GCP) Model Armor service

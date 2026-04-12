@@ -13,6 +13,8 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
+	"go.mondoo.com/mql/v13/types"
+	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
 
@@ -141,4 +143,150 @@ func (g *mqlGcpProjectFirestoreServiceDatabase) id() (string, error) {
 		return "", g.Name.Error
 	}
 	return fmt.Sprintf("gcp.project/%s/firestoreService/%s", g.ProjectId.Data, g.Name.Data), nil
+}
+
+func (g *mqlGcpProjectFirestoreServiceDatabaseIndex) id() (string, error) {
+	if g.Name.Error != nil {
+		return "", g.Name.Error
+	}
+	return g.Name.Data, nil
+}
+
+func (g *mqlGcpProjectFirestoreServiceDatabaseBackupSchedule) id() (string, error) {
+	if g.Name.Error != nil {
+		return "", g.Name.Error
+	}
+	return g.Name.Data, nil
+}
+
+func (g *mqlGcpProjectFirestoreServiceDatabase) indexes() ([]any, error) {
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	databaseName := g.Name.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(firestoreadmin.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	client, err := firestoreadmin.NewFirestoreAdminClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	it := client.ListIndexes(ctx, &adminpb.ListIndexesRequest{
+		Parent: databaseName + "/collectionGroups/-",
+	})
+
+	var res []any
+	for {
+		idx, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		fields := make([]any, 0, len(idx.Fields))
+		for _, f := range idx.Fields {
+			fd, err := protoToDict(f)
+			if err != nil {
+				return nil, err
+			}
+			fields = append(fields, fd)
+		}
+
+		mqlIdx, err := CreateResource(g.MqlRuntime, "gcp.project.firestoreService.database.index", map[string]*llx.RawData{
+			"name":       llx.StringData(idx.Name),
+			"queryScope": llx.StringData(idx.QueryScope.String()),
+			"apiScope":   llx.StringData(idx.ApiScope.String()),
+			"fields":     llx.ArrayData(fields, types.Dict),
+			"state":      llx.StringData(idx.State.String()),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlIdx)
+	}
+
+	return res, nil
+}
+
+func (g *mqlGcpProjectFirestoreServiceDatabase) backupSchedules() ([]any, error) {
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	databaseName := g.Name.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(firestoreadmin.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	client, err := firestoreadmin.NewFirestoreAdminClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	resp, err := client.ListBackupSchedules(ctx, &adminpb.ListBackupSchedulesRequest{
+		Parent: databaseName,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]any, 0, len(resp.BackupSchedules))
+	for _, bs := range resp.BackupSchedules {
+		var retention string
+		if bs.Retention != nil {
+			retention = bs.Retention.String()
+		}
+
+		dailyRecurrence, err := protoToDict(bs.GetDailyRecurrence())
+		if err != nil {
+			return nil, err
+		}
+
+		weeklyRecurrence, err := protoToDict(bs.GetWeeklyRecurrence())
+		if err != nil {
+			return nil, err
+		}
+
+		var created *llx.RawData
+		if bs.CreateTime != nil {
+			created = llx.TimeData(bs.CreateTime.AsTime())
+		} else {
+			created = llx.NilData
+		}
+
+		var updated *llx.RawData
+		if bs.UpdateTime != nil {
+			updated = llx.TimeData(bs.UpdateTime.AsTime())
+		} else {
+			updated = llx.NilData
+		}
+
+		mqlBs, err := CreateResource(g.MqlRuntime, "gcp.project.firestoreService.database.backupSchedule", map[string]*llx.RawData{
+			"name":             llx.StringData(bs.Name),
+			"retention":        llx.StringData(retention),
+			"dailyRecurrence":  llx.DictData(dailyRecurrence),
+			"weeklyRecurrence": llx.DictData(weeklyRecurrence),
+			"created":          created,
+			"updated":          updated,
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlBs)
+	}
+
+	return res, nil
 }

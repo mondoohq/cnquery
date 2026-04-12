@@ -239,6 +239,35 @@ func (g *mqlGcpProjectSpannerServiceInstanceDatabase) id() (string, error) {
 	return fmt.Sprintf("gcp.project/%s/spannerService/%s", g.ProjectId.Data, g.Name.Data), nil
 }
 
+func (g *mqlGcpProjectSpannerServiceInstanceDatabase) ddl() ([]any, error) {
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	dbName := g.Name.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(spannerdatabase.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	client, err := spannerdatabase.NewDatabaseAdminClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	resp, err := client.GetDatabaseDdl(ctx, &databasepb.GetDatabaseDdlRequest{
+		Database: dbName,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return convert.SliceAnyToInterface(resp.Statements), nil
+}
+
 func (g *mqlGcpProjectSpannerServiceInstance) backups() ([]any, error) {
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error

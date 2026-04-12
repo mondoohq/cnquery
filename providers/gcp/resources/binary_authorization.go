@@ -13,6 +13,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
 	"go.mondoo.com/mql/v13/types"
+	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
 
@@ -135,4 +136,58 @@ func (g *mqlGcpProject) toMqlBinaryAuthzAdmissionRule(rule *binaryauthorizationp
 		"evaluationMode":        llx.StringData(rule.GetEvaluationMode().String()),
 		"requireAttestationsBy": llx.ArrayData(requiresAttestationsBy, types.String),
 	})
+}
+
+func (g *mqlGcpProjectBinaryAuthorizationControlAttestor) id() (string, error) {
+	return g.Name.Data, g.Name.Error
+}
+
+func (g *mqlGcpProjectBinaryAuthorizationControl) attestors() ([]any, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	projectId := conn.ResourceID()
+
+	credentials, err := conn.Credentials(binaryauthorization.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	c, err := binaryauthorization.NewBinauthzManagementClient(ctx, option.WithCredentials(credentials), option.WithQuotaProject(projectId))
+	if err != nil {
+		return nil, err
+	}
+	defer c.Close()
+
+	it := c.ListAttestors(ctx, &binaryauthorizationpb.ListAttestorsRequest{
+		Parent: fmt.Sprintf("projects/%s", projectId),
+	})
+
+	var res []any
+	for {
+		attestor, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		userOwnedGrafeasNote, err := protoToDict(attestor.GetUserOwnedGrafeasNote())
+		if err != nil {
+			return nil, err
+		}
+
+		mqlAttestor, err := CreateResource(g.MqlRuntime, "gcp.project.binaryAuthorizationControl.attestor", map[string]*llx.RawData{
+			"name":                 llx.StringData(attestor.GetName()),
+			"description":          llx.StringData(attestor.GetDescription()),
+			"userOwnedGrafeasNote": llx.DictData(userOwnedGrafeasNote),
+			"updated":              llx.TimeDataPtr(timestampAsTimePtr(attestor.GetUpdateTime())),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlAttestor)
+	}
+
+	return res, nil
 }

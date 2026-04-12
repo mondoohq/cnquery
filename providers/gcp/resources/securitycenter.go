@@ -368,6 +368,45 @@ func (g *mqlGcpOrganization) sccBigQueryExports() ([]any, error) {
 	return listSCCBigQueryExports(g.MqlRuntime, conn, parent)
 }
 
+func (g *mqlGcpSccOrganizationSettings) id() (string, error) {
+	return g.Name.Data, g.Name.Error
+}
+
+func (g *mqlGcpOrganization) sccOrganizationSettings() (*mqlGcpSccOrganizationSettings, error) {
+	parent, conn, err := g.sccParent()
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := newSCCClient(conn)
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	settings, err := client.GetOrganizationSettings(context.Background(), &sccpb.GetOrganizationSettingsRequest{
+		Name: parent + "/organizationSettings",
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	assetDiscoveryConfig, err := protoToDict(settings.AssetDiscoveryConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := CreateResource(g.MqlRuntime, "gcp.scc.organizationSettings", map[string]*llx.RawData{
+		"name":                 llx.StringData(settings.Name),
+		"enableAssetDiscovery": llx.BoolData(settings.EnableAssetDiscovery),
+		"assetDiscoveryConfig": llx.DictData(assetDiscoveryConfig),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpSccOrganizationSettings), nil
+}
+
 // Project-level method
 
 func (g *mqlGcpProject) sccFindings() ([]any, error) {

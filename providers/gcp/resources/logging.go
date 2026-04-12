@@ -443,3 +443,57 @@ func initGcpProjectLoggingserviceBucket(runtime *plugin.Runtime, args map[string
 func (g *mqlGcpProjectLoggingserviceBucketIndexConfig) id() (string, error) {
 	return g.Id.Data, g.Id.Error
 }
+
+func (g *mqlGcpProjectLoggingservice) exclusions() ([]any, error) {
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	client, err := conn.Client(logging.CloudPlatformReadOnlyScope, logging.LoggingReadScope)
+	if err != nil {
+		return nil, err
+	}
+	ctx := context.Background()
+	loggingSvc, err := logging.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	var mqlExclusions []any
+	req := loggingSvc.Projects.Exclusions.List(fmt.Sprintf("projects/%s", projectId))
+	if err := req.Pages(ctx, func(page *logging.ListExclusionsResponse) error {
+		for _, exclusion := range page.Exclusions {
+			mqlExclusion, err := CreateResource(g.MqlRuntime, "gcp.project.loggingservice.exclusion", map[string]*llx.RawData{
+				"name":        llx.StringData(parseResourceName(exclusion.Name)),
+				"description": llx.StringData(exclusion.Description),
+				"filter":      llx.StringData(exclusion.Filter),
+				"disabled":    llx.BoolData(exclusion.Disabled),
+				"created":     llx.TimeDataPtr(parseTime(exclusion.CreateTime)),
+				"updated":     llx.TimeDataPtr(parseTime(exclusion.UpdateTime)),
+			})
+			if err != nil {
+				return err
+			}
+			mqlExclusions = append(mqlExclusions, mqlExclusion)
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	return mqlExclusions, nil
+}
+
+func (g *mqlGcpProjectLoggingserviceExclusion) id() (string, error) {
+	if g.Name.Error != nil {
+		return "", g.Name.Error
+	}
+	name := g.Name.Data
+	return fmt.Sprintf("gcp.project.loggingservice.exclusion/%s", name), nil
+}

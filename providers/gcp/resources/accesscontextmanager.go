@@ -5,11 +5,15 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
 	accesscontextmanager "cloud.google.com/go/accesscontextmanager/apiv1"
 	acmpb "cloud.google.com/go/accesscontextmanager/apiv1/accesscontextmanagerpb"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
+	"go.mondoo.com/mql/v13/types"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
@@ -184,8 +188,84 @@ func (g *mqlGcpAccesscontextmanagerAccessPolicy) servicePerimeters() ([]any, err
 		if err != nil {
 			return nil, err
 		}
+		mqlP := mqlPerimeter.(*mqlGcpAccesscontextmanagerServicePerimeter)
+		mqlP.cacheStatus = perimeter.Status
+		mqlP.cacheSpec = perimeter.Spec
+
 		res = append(res, mqlPerimeter)
 	}
 
 	return res, nil
+}
+
+// mqlGcpAccesscontextmanagerServicePerimeterInternal caches the proto configs
+// so that statusConfig() and specConfig() can extract typed fields.
+type mqlGcpAccesscontextmanagerServicePerimeterInternal struct {
+	cacheStatus *acmpb.ServicePerimeterConfig
+	cacheSpec   *acmpb.ServicePerimeterConfig
+}
+
+func (g *mqlGcpAccesscontextmanagerServicePerimeterConfig) id() (string, error) {
+	return g.Id.Data, g.Id.Error
+}
+
+// servicePerimeterConfigFromProto creates a gcp.accesscontextmanager.servicePerimeter.config
+// resource from a ServicePerimeterConfig proto. Returns nil (with StateIsNull) when cfg is nil.
+func servicePerimeterConfigFromProto(runtime *plugin.Runtime, id string, cfg *acmpb.ServicePerimeterConfig) (*mqlGcpAccesscontextmanagerServicePerimeterConfig, error) {
+	if cfg == nil {
+		return nil, nil
+	}
+
+	vpcAccessibleServices, err := protoToDict(cfg.VpcAccessibleServices)
+	if err != nil {
+		return nil, err
+	}
+
+	ingressPolicies := make([]any, 0, len(cfg.IngressPolicies))
+	for _, ip := range cfg.IngressPolicies {
+		d, err := protoToDict(ip)
+		if err != nil {
+			return nil, err
+		}
+		ingressPolicies = append(ingressPolicies, d)
+	}
+
+	egressPolicies := make([]any, 0, len(cfg.EgressPolicies))
+	for _, ep := range cfg.EgressPolicies {
+		d, err := protoToDict(ep)
+		if err != nil {
+			return nil, err
+		}
+		egressPolicies = append(egressPolicies, d)
+	}
+
+	res, err := CreateResource(runtime, "gcp.accesscontextmanager.servicePerimeter.config", map[string]*llx.RawData{
+		"id":                    llx.StringData(id),
+		"resources":             llx.ArrayData(convert.SliceAnyToInterface(cfg.Resources), types.String),
+		"restrictedServices":    llx.ArrayData(convert.SliceAnyToInterface(cfg.RestrictedServices), types.String),
+		"accessLevels":          llx.ArrayData(convert.SliceAnyToInterface(cfg.AccessLevels), types.String),
+		"vpcAccessibleServices": llx.DictData(vpcAccessibleServices),
+		"ingressPolicies":       llx.ArrayData(ingressPolicies, types.Dict),
+		"egressPolicies":        llx.ArrayData(egressPolicies, types.Dict),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpAccesscontextmanagerServicePerimeterConfig), nil
+}
+
+func (g *mqlGcpAccesscontextmanagerServicePerimeter) statusConfig() (*mqlGcpAccesscontextmanagerServicePerimeterConfig, error) {
+	if g.cacheStatus == nil {
+		g.StatusConfig.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return servicePerimeterConfigFromProto(g.MqlRuntime, fmt.Sprintf("%s/statusConfig", g.Name.Data), g.cacheStatus)
+}
+
+func (g *mqlGcpAccesscontextmanagerServicePerimeter) specConfig() (*mqlGcpAccesscontextmanagerServicePerimeterConfig, error) {
+	if g.cacheSpec == nil {
+		g.SpecConfig.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return servicePerimeterConfigFromProto(g.MqlRuntime, fmt.Sprintf("%s/specConfig", g.Name.Data), g.cacheSpec)
 }

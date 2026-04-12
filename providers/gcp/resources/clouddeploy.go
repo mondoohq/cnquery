@@ -184,3 +184,68 @@ func (g *mqlGcpProjectCloudDeployService) targets() ([]any, error) {
 func (g *mqlGcpProjectCloudDeployServiceTarget) id() (string, error) {
 	return g.Name.Data, g.Name.Error
 }
+
+func (g *mqlGcpProjectCloudDeployServiceDeliveryPipeline) releases() ([]any, error) {
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	pipelineName := g.Name.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(deploy.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	client, err := deploy.NewCloudDeployClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	it := client.ListReleases(ctx, &deploypb.ListReleasesRequest{
+		Parent: pipelineName,
+	})
+
+	var res []any
+	for {
+		r, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		condition, err := protoToDict(r.GetCondition())
+		if err != nil {
+			return nil, err
+		}
+
+		mqlRelease, err := CreateResource(g.MqlRuntime, "gcp.project.cloudDeployService.release", map[string]*llx.RawData{
+			"name":              llx.StringData(r.Name),
+			"uid":               llx.StringData(r.Uid),
+			"description":       llx.StringData(r.Description),
+			"abandoned":         llx.BoolData(r.Abandoned),
+			"skaffoldConfigUri": llx.StringData(r.SkaffoldConfigUri),
+			"skaffoldVersion":   llx.StringData(r.SkaffoldVersion),
+			"renderState":       llx.StringData(r.RenderState.String()),
+			"annotations":       llx.MapData(convert.MapToInterfaceMap(r.Annotations), types.String),
+			"labels":            llx.MapData(convert.MapToInterfaceMap(r.Labels), types.String),
+			"createTime":        llx.TimeDataPtr(timestampAsTimePtr(r.CreateTime)),
+			"renderStartTime":   llx.TimeDataPtr(timestampAsTimePtr(r.RenderStartTime)),
+			"renderEndTime":     llx.TimeDataPtr(timestampAsTimePtr(r.RenderEndTime)),
+			"condition":         llx.DictData(condition),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlRelease)
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectCloudDeployServiceRelease) id() (string, error) {
+	return g.Name.Data, g.Name.Error
+}

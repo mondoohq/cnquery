@@ -5,36 +5,36 @@ replace go.mondoo.com/mql/v13 => ../..
 go 1.25.8
 
 require (
-	cloud.google.com/go/accessapproval v1.9.0
-	cloud.google.com/go/accesscontextmanager v1.10.0
-	cloud.google.com/go/aiplatform v1.122.0
-	cloud.google.com/go/alloydb v1.22.0
-	cloud.google.com/go/artifactregistry v1.21.0
-	cloud.google.com/go/backupdr v1.10.0
-	cloud.google.com/go/bigquery v1.75.0
-	cloud.google.com/go/bigtable v1.45.0
-	cloud.google.com/go/cloudtasks v1.14.0
+	cloud.google.com/go/accessapproval v1.10.0
+	cloud.google.com/go/accesscontextmanager v1.11.0
+	cloud.google.com/go/aiplatform v1.123.0
+	cloud.google.com/go/alloydb v1.23.0
+	cloud.google.com/go/artifactregistry v1.22.0
+	cloud.google.com/go/backupdr v1.11.0
+	cloud.google.com/go/bigquery v1.76.0
+	cloud.google.com/go/bigtable v1.46.0
+	cloud.google.com/go/cloudtasks v1.15.0
 	cloud.google.com/go/compute v1.59.0
-	cloud.google.com/go/container v1.47.0
-	cloud.google.com/go/deploy v1.28.0
-	cloud.google.com/go/filestore v1.11.0
+	cloud.google.com/go/container v1.48.0
+	cloud.google.com/go/deploy v1.29.0
+	cloud.google.com/go/filestore v1.12.0
 	cloud.google.com/go/firestore v1.21.0
-	cloud.google.com/go/functions v1.20.0
-	cloud.google.com/go/iam v1.7.0
-	cloud.google.com/go/kms v1.27.0
-	cloud.google.com/go/logging v1.14.0
-	cloud.google.com/go/longrunning v0.9.0
-	cloud.google.com/go/modelarmor v0.7.0
-	cloud.google.com/go/monitoring v1.25.0
-	cloud.google.com/go/orgpolicy v1.16.0
+	cloud.google.com/go/functions v1.21.0
+	cloud.google.com/go/iam v1.8.0
+	cloud.google.com/go/kms v1.28.0
+	cloud.google.com/go/logging v1.15.0
+	cloud.google.com/go/longrunning v0.10.0
+	cloud.google.com/go/modelarmor v0.8.0
+	cloud.google.com/go/monitoring v1.26.0
+	cloud.google.com/go/orgpolicy v1.17.0
 	cloud.google.com/go/pubsub v1.50.2
-	cloud.google.com/go/recommender v1.14.0
-	cloud.google.com/go/redis v1.19.0
-	cloud.google.com/go/run v1.17.0
-	cloud.google.com/go/scheduler v1.12.0
-	cloud.google.com/go/security v1.20.0
-	cloud.google.com/go/securitycenter v1.40.0
-	cloud.google.com/go/serviceusage v1.10.0
+	cloud.google.com/go/recommender v1.15.0
+	cloud.google.com/go/redis v1.20.0
+	cloud.google.com/go/run v1.18.0
+	cloud.google.com/go/scheduler v1.13.0
+	cloud.google.com/go/security v1.21.0
+	cloud.google.com/go/securitycenter v1.41.0
+	cloud.google.com/go/serviceusage v1.11.0
 	cloud.google.com/go/spanner v1.89.0
 	github.com/aws/smithy-go v1.24.3
 	github.com/cockroachdb/errors v1.12.0
@@ -56,6 +56,7 @@ require (
 	cloud.google.com/go/pubsub/v2 v2.5.1 // indirect
 	github.com/CycloneDX/cyclonedx-go v0.10.0 // indirect
 	github.com/GoogleCloudPlatform/berglas/v2 v2.0.10 // indirect
+	github.com/GoogleCloudPlatform/grpc-gcp-go/grpcgcp v1.6.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.32.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.56.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.56.0 // indirect
@@ -147,7 +148,7 @@ require (
 	cloud.google.com/go/binaryauthorization v1.11.0
 	cloud.google.com/go/compute/metadata v0.9.0 // indirect
 	cloud.google.com/go/secretmanager v1.18.0
-	cloud.google.com/go/storage v1.61.3 // indirect
+	cloud.google.com/go/storage v1.62.0 // indirect
 	dario.cat/mergo v1.0.2 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect

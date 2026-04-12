@@ -117,3 +117,64 @@ func (g *mqlGcpProject) orgPolicies() ([]any, error) {
 
 	return listOrgPolicies(g.MqlRuntime, conn, "projects/"+projectId)
 }
+
+func (g *mqlGcpOrgPolicyConstraint) id() (string, error) {
+	return g.Name.Data, g.Name.Error
+}
+
+func (g *mqlGcpProject) orgPolicyConstraints() ([]any, error) {
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
+	}
+	projectId := g.Id.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(orgpolicy.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	client, err := orgpolicy.NewClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	var res []any
+	it := client.ListConstraints(ctx, &orgpolicypb.ListConstraintsRequest{
+		Parent: "projects/" + projectId,
+	})
+	for {
+		c, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		listConstraint, err := protoToDict(c.GetListConstraint())
+		if err != nil {
+			return nil, err
+		}
+		booleanConstraint, err := protoToDict(c.GetBooleanConstraint())
+		if err != nil {
+			return nil, err
+		}
+
+		mqlConstraint, err := CreateResource(g.MqlRuntime, "gcp.orgPolicy.constraint", map[string]*llx.RawData{
+			"name":              llx.StringData(c.Name),
+			"displayName":       llx.StringData(c.DisplayName),
+			"description":       llx.StringData(c.Description),
+			"constraintDefault": llx.StringData(c.ConstraintDefault.String()),
+			"listConstraint":    llx.DictData(listConstraint),
+			"booleanConstraint": llx.DictData(booleanConstraint),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlConstraint)
+	}
+	return res, nil
+}

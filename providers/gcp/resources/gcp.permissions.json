@@ -1,14 +1,18 @@
 {
   "provider": "gcp",
   "version": "13.6.0",
-  "generated_at": "2026-04-12T11:59:41-07:00",
+  "generated_at": "2026-04-12T13:47:43-07:00",
   "permissions": [
     "accessapproval.settings.get",
+    "aiplatform.customJobs.list",
     "aiplatform.datasets.list",
     "aiplatform.endpoints.list",
     "aiplatform.featureOnlineStores.list",
+    "aiplatform.indexEndpoints.list",
+    "aiplatform.indexes.list",
     "aiplatform.models.list",
     "aiplatform.pipelineJobs.list",
+    "aiplatform.tensorboards.list",
     "alloydb.backups.list",
     "alloydb.clusters.list",
     "alloydb.instances.list",
@@ -20,8 +24,10 @@
     "backupdr.bvdataSources.list",
     "backupdr.managementServers.list",
     "bigtable.appProfiles.list",
+    "binaryauthorization.attestors.list",
     "binaryauthorization.policy.get",
     "clouddeploy.deliveryPipelines.list",
+    "clouddeploy.releases.list",
     "clouddeploy.targets.list",
     "cloudfunctions.functions.list",
     "cloudkms.cryptoKeyVersions.list",
@@ -80,7 +86,9 @@
     "container.clusters.list",
     "dataflow.jobs.list",
     "dataproc.clusters.list",
+    "datastore.backupSchedules.list",
     "datastore.databases.list",
+    "datastore.indexes.list",
     "dns.managedZones.list",
     "dns.policies.list",
     "dns.resourceRecordSets.list",
@@ -90,8 +98,13 @@
     "iam.serviceAccountKeys.list",
     "iam.serviceAccounts.list",
     "logging.buckets.list",
+    "logging.exclusions.list",
     "modelarmor.templates.list",
     "monitoring.alertPolicies.list",
+    "monitoring.groups.list",
+    "monitoring.notificationChannels.list",
+    "monitoring.uptimeCheckConfigs.list",
+    "orgpolicy.constraints.list",
     "orgpolicy.policies.list",
     "privateca.caPools.list",
     "privateca.certificateAuthorities.list",
@@ -110,6 +123,7 @@
     "serviceusage.services.get",
     "serviceusage.services.list",
     "spanner.backups.list",
+    "spanner.databaseDdl.get",
     "spanner.databases.list",
     "spanner.instances.list",
     "storage.buckets.getIamPolicy",
@@ -121,6 +135,12 @@
       "service": "accessapproval",
       "action": "GetAccessApprovalSettings",
       "source_file": "access_approval.go"
+    },
+    {
+      "permission": "aiplatform.customJobs.list",
+      "service": "aiplatform",
+      "action": "ListCustomJobs",
+      "source_file": "vertexai.go"
     },
     {
       "permission": "aiplatform.datasets.list",
@@ -141,6 +161,18 @@
       "source_file": "vertexai.go"
     },
     {
+      "permission": "aiplatform.indexEndpoints.list",
+      "service": "aiplatform",
+      "action": "ListIndexEndpoints",
+      "source_file": "vertexai.go"
+    },
+    {
+      "permission": "aiplatform.indexes.list",
+      "service": "aiplatform",
+      "action": "ListIndexes",
+      "source_file": "vertexai.go"
+    },
+    {
       "permission": "aiplatform.models.list",
       "service": "aiplatform",
       "action": "ListModels",
@@ -150,6 +182,12 @@
       "permission": "aiplatform.pipelineJobs.list",
       "service": "aiplatform",
       "action": "ListPipelineJobs",
+      "source_file": "vertexai.go"
+    },
+    {
+      "permission": "aiplatform.tensorboards.list",
+      "service": "aiplatform",
+      "action": "ListTensorboards",
       "source_file": "vertexai.go"
     },
     {
@@ -219,6 +257,12 @@
       "source_file": "bigtable.go"
     },
     {
+      "permission": "binaryauthorization.attestors.list",
+      "service": "binaryauthorization",
+      "action": "ListAttestors",
+      "source_file": "binary_authorization.go"
+    },
+    {
       "permission": "binaryauthorization.policy.get",
       "service": "binaryauthorization",
       "action": "GetSystemPolicy",
@@ -228,6 +272,12 @@
       "permission": "clouddeploy.deliveryPipelines.list",
       "service": "clouddeploy",
       "action": "ListDeliveryPipelines",
+      "source_file": "clouddeploy.go"
+    },
+    {
+      "permission": "clouddeploy.releases.list",
+      "service": "clouddeploy",
+      "action": "ListReleases",
       "source_file": "clouddeploy.go"
     },
     {
@@ -597,9 +647,21 @@
       "source_file": "dataproc.go"
     },
     {
+      "permission": "datastore.backupSchedules.list",
+      "service": "datastore",
+      "action": "ListBackupSchedules",
+      "source_file": "firestore.go"
+    },
+    {
       "permission": "datastore.databases.list",
       "service": "datastore",
       "action": "ListDatabases",
+      "source_file": "firestore.go"
+    },
+    {
+      "permission": "datastore.indexes.list",
+      "service": "datastore",
+      "action": "ListIndexes",
       "source_file": "firestore.go"
     },
     {
@@ -657,6 +719,12 @@
       "source_file": "logging.go"
     },
     {
+      "permission": "logging.exclusions.list",
+      "service": "logging",
+      "action": "Exclusions.List",
+      "source_file": "logging.go"
+    },
+    {
       "permission": "modelarmor.templates.list",
       "service": "modelarmor",
       "action": "ListTemplates",
@@ -667,6 +735,30 @@
       "service": "monitoring",
       "action": "ListAlertPolicies",
       "source_file": "monitoring.go"
+    },
+    {
+      "permission": "monitoring.groups.list",
+      "service": "monitoring",
+      "action": "ListGroups",
+      "source_file": "monitoring.go"
+    },
+    {
+      "permission": "monitoring.notificationChannels.list",
+      "service": "monitoring",
+      "action": "ListNotificationChannels",
+      "source_file": "monitoring.go"
+    },
+    {
+      "permission": "monitoring.uptimeCheckConfigs.list",
+      "service": "monitoring",
+      "action": "ListUptimeCheckConfigs",
+      "source_file": "monitoring.go"
+    },
+    {
+      "permission": "orgpolicy.constraints.list",
+      "service": "orgpolicy",
+      "action": "ListConstraints",
+      "source_file": "orgpolicy.go"
     },
     {
       "permission": "orgpolicy.policies.list",
@@ -760,7 +852,7 @@
     {
       "permission": "resourcemanager.projects.list",
       "service": "resourcemanager",
-      "action": "Projects.List",
+      "action": "Projects.Search",
       "source_file": "project.go",
       "scope": "org"
     },
@@ -816,6 +908,12 @@
       "permission": "spanner.backups.list",
       "service": "spanner",
       "action": "ListBackups",
+      "source_file": "spanner.go"
+    },
+    {
+      "permission": "spanner.databaseDdl.get",
+      "service": "spanner",
+      "action": "GetDatabaseDdl",
       "source_file": "spanner.go"
     },
     {
