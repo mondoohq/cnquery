@@ -1713,6 +1713,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.redisService.cluster.serverCaPool": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectRedisServiceCluster).GetServerCaPool()).ToDataRes(types.String)
 	},
+	"gcp.project.redisService.cluster.pscServiceAttachments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceCluster).GetPscServiceAttachments()).ToDataRes(types.Array(types.Dict))
+	},
 	"gcp.project.redisService.cluster.pscConfig.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectRedisServiceClusterPscConfig).GetProjectId()).ToDataRes(types.String)
 	},
@@ -4562,6 +4565,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.gkeService.cluster.nodepool.config.confidentialNodes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceClusterNodepoolConfig).GetConfidentialNodes()).ToDataRes(types.Resource("gcp.project.gkeService.cluster.nodepool.config.confidentialNodes"))
+	},
+	"gcp.project.gkeService.cluster.nodepool.config.gpuDirectConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterNodepoolConfig).GetGpuDirectConfig()).ToDataRes(types.Dict)
 	},
 	"gcp.project.gkeService.cluster.nodepool.config.accelerator.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceClusterNodepoolConfigAccelerator).GetId()).ToDataRes(types.String)
@@ -9411,6 +9417,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.scc.finding.externalExposure": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpSccFinding).GetExternalExposure()).ToDataRes(types.Dict)
 	},
+	"gcp.scc.finding.toxicCombination": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpSccFinding).GetToxicCombination()).ToDataRes(types.Dict)
+	},
 	"gcp.scc.notificationConfig.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpSccNotificationConfig).GetName()).ToDataRes(types.String)
 	},
@@ -10026,6 +10035,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.redisService.cluster.serverCaPool": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectRedisServiceCluster).ServerCaPool, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.pscServiceAttachments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceCluster).PscServiceAttachments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.redisService.cluster.pscConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14114,6 +14127,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.gkeService.cluster.nodepool.config.confidentialNodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfig).ConfidentialNodes, ok = plugin.RawToTValue[*mqlGcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.nodepool.config.gpuDirectConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterNodepoolConfig).GpuDirectConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.gkeService.cluster.nodepool.config.accelerator.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21284,6 +21301,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpSccFinding).ExternalExposure, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.scc.finding.toxicCombination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpSccFinding).ToxicCombination, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"gcp.scc.notificationConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpSccNotificationConfig).__id, ok = v.Value.(string)
 		return
@@ -22437,6 +22458,7 @@ type mqlGcpProjectRedisServiceCluster struct {
 	ClusterEndpoints              plugin.TValue[[]any]
 	ServerCaMode                  plugin.TValue[string]
 	ServerCaPool                  plugin.TValue[string]
+	PscServiceAttachments         plugin.TValue[[]any]
 }
 
 // createGcpProjectRedisServiceCluster creates a new instance of this resource
@@ -22606,6 +22628,10 @@ func (c *mqlGcpProjectRedisServiceCluster) GetServerCaMode() *plugin.TValue[stri
 
 func (c *mqlGcpProjectRedisServiceCluster) GetServerCaPool() *plugin.TValue[string] {
 	return &c.ServerCaPool
+}
+
+func (c *mqlGcpProjectRedisServiceCluster) GetPscServiceAttachments() *plugin.TValue[[]any] {
+	return &c.PscServiceAttachments
 }
 
 // mqlGcpProjectRedisServiceClusterPscConfig for the gcp.project.redisService.cluster.pscConfig resource
@@ -31877,6 +31903,7 @@ type mqlGcpProjectGkeServiceClusterNodepoolConfig struct {
 	GvnicConfig             plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfigGvnicConfig]
 	Spot                    plugin.TValue[bool]
 	ConfidentialNodes       plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes]
+	GpuDirectConfig         plugin.TValue[any]
 }
 
 // createGcpProjectGkeServiceClusterNodepoolConfig creates a new instance of this resource
@@ -32038,6 +32065,10 @@ func (c *mqlGcpProjectGkeServiceClusterNodepoolConfig) GetSpot() *plugin.TValue[
 
 func (c *mqlGcpProjectGkeServiceClusterNodepoolConfig) GetConfidentialNodes() *plugin.TValue[*mqlGcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes] {
 	return &c.ConfidentialNodes
+}
+
+func (c *mqlGcpProjectGkeServiceClusterNodepoolConfig) GetGpuDirectConfig() *plugin.TValue[any] {
+	return &c.GpuDirectConfig
 }
 
 // mqlGcpProjectGkeServiceClusterNodepoolConfigAccelerator for the gcp.project.gkeService.cluster.nodepool.config.accelerator resource
@@ -48934,6 +48965,7 @@ type mqlGcpSccFinding struct {
 	ResourceName     plugin.TValue[string]
 	Chokepoint       plugin.TValue[any]
 	ExternalExposure plugin.TValue[any]
+	ToxicCombination plugin.TValue[any]
 }
 
 // createGcpSccFinding creates a new instance of this resource
@@ -49031,6 +49063,10 @@ func (c *mqlGcpSccFinding) GetChokepoint() *plugin.TValue[any] {
 
 func (c *mqlGcpSccFinding) GetExternalExposure() *plugin.TValue[any] {
 	return &c.ExternalExposure
+}
+
+func (c *mqlGcpSccFinding) GetToxicCombination() *plugin.TValue[any] {
+	return &c.ToxicCombination
 }
 
 // mqlGcpSccNotificationConfig for the gcp.scc.notificationConfig resource

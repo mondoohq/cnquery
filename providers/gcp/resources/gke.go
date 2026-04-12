@@ -968,6 +968,13 @@ func createMqlNodePoolConfig(runtime *plugin.Runtime, np *containerpb.NodePool, 
 		}
 	}
 
+	var gpuDirectConfig map[string]any
+	if cfg.GpuDirectConfig != nil {
+		gpuDirectConfig = map[string]any{
+			"gpuDirectStrategy": cfg.GpuDirectConfig.GetGpuDirectStrategy().String(),
+		}
+	}
+
 	workloadMetadataMode := ""
 	if cfg.WorkloadMetadataConfig != nil {
 		workloadMetadataMode = cfg.WorkloadMetadataConfig.Mode.String()
@@ -1001,6 +1008,7 @@ func createMqlNodePoolConfig(runtime *plugin.Runtime, np *containerpb.NodePool, 
 		"advancedMachineFeatures": llx.ResourceData(mqlAdvancedMachineFeatures, "gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures"),
 		"spot":                    llx.BoolData(cfg.Spot),
 		"confidentialNodes":       llx.ResourceData(mqlConfidentialNodes, "gcp.project.gkeService.cluster.nodepool.config.confidentialNodes"),
+		"gpuDirectConfig":         llx.DictData(gpuDirectConfig),
 	})
 }
 

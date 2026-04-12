@@ -256,6 +256,8 @@ private gcp.project.redisService.cluster @defaults("name") {
   serverCaMode string
   // The CA pool resource for customer-managed CAS
   serverCaPool string
+  // PSC service attachments
+  pscServiceAttachments []dict
 }
 
 // Google Cloud (GCP) Redis Cluster PSC configuration
@@ -2478,6 +2480,8 @@ private gcp.project.gkeService.cluster.nodepool.config @defaults("machineType di
   spot bool
   // Confidential nodes configuration
   confidentialNodes gcp.project.gkeService.cluster.nodepool.config.confidentialNodes
+  // GPU Direct configuration
+  gpuDirectConfig dict
 }
 
 // Google Kubernetes Engine (GKE) node pool hardware accelerators configuration
@@ -6408,6 +6412,8 @@ private gcp.scc.finding @defaults("name category severity") {
   chokepoint dict
   // External exposure details for the finding
   externalExposure dict
+  // Toxic combination details (attack exposure score and related findings)
+  toxicCombination dict
 }
 
 // Google Cloud Security Command Center notification config

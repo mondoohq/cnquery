@@ -138,6 +138,7 @@ func listSCCFindings(runtime *plugin.Runtime, conn *connection.GcpConnection, pa
 			"resourceName":     llx.StringData(f.ResourceName),
 			"chokepoint":       llx.DictData(chokepointToDict(f.Chokepoint)),
 			"externalExposure": llx.DictData(externalExposureToDict(f.ExternalExposure)),
+			"toxicCombination": llx.DictData(toxicCombinationToDict(f.ToxicCombination)),
 		})
 		if err != nil {
 			return nil, err
@@ -188,6 +189,17 @@ func externalExposureToDict(ee *sccpb.ExternalExposure) map[string]any {
 		"backendService":             ee.BackendService,
 		"instanceGroup":              ee.InstanceGroup,
 		"networkEndpointGroup":       ee.NetworkEndpointGroup,
+	}
+}
+
+// toxicCombinationToDict converts a ToxicCombination protobuf to a dict.
+func toxicCombinationToDict(tc *sccpb.ToxicCombination) map[string]any {
+	if tc == nil {
+		return nil
+	}
+	return map[string]any{
+		"attackExposureScore": tc.AttackExposureScore,
+		"relatedFindings":     tc.RelatedFindings,
 	}
 }
 

@@ -2005,6 +2005,7 @@ gcp.project.gkeService.cluster.nodepool.config.diskType 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.gcfsConfig 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.gcfsConfig.enabled 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.gcfsConfig.id 9.0.0
+gcp.project.gkeService.cluster.nodepool.config.gpuDirectConfig 13.6.1
 gcp.project.gkeService.cluster.nodepool.config.gvnicConfig 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.gvnicConfig.enabled 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.gvnicConfig.id 9.0.0
@@ -2417,6 +2418,7 @@ gcp.project.redisService.cluster.pscConnection.pscConnectionId 11.1.0
 gcp.project.redisService.cluster.pscConnection.pscConnectionStatus 11.1.0
 gcp.project.redisService.cluster.pscConnection.serviceAttachment 11.1.0
 gcp.project.redisService.cluster.pscConnections 11.1.0
+gcp.project.redisService.cluster.pscServiceAttachments 13.6.1
 gcp.project.redisService.cluster.redisConfigs 11.1.0
 gcp.project.redisService.cluster.replicaCount 11.1.0
 gcp.project.redisService.cluster.serverCaMode 13.3.5
@@ -2913,6 +2915,7 @@ gcp.scc.finding.securityMarks 13.3.4
 gcp.scc.finding.severity 13.3.4
 gcp.scc.finding.sourceProperties 13.3.4
 gcp.scc.finding.state 13.3.4
+gcp.scc.finding.toxicCombination 13.6.1
 gcp.scc.muteConfig 13.3.4
 gcp.scc.muteConfig.createTime 13.3.4
 gcp.scc.muteConfig.description 13.3.4

@@ -561,6 +561,17 @@ func (g *mqlGcpProjectRedisService) clusters() ([]any, error) {
 			serverCaPool = *cluster.ServerCaPool
 		}
 
+		pscServiceAttachments := make([]any, 0, len(cluster.PscServiceAttachments))
+		for _, psa := range cluster.PscServiceAttachments {
+			if psa == nil {
+				continue
+			}
+			pscServiceAttachments = append(pscServiceAttachments, map[string]any{
+				"serviceAttachment": psa.ServiceAttachment,
+				"connectionType":    psa.ConnectionType.String(),
+			})
+		}
+
 		mqlCluster, err := CreateResource(g.MqlRuntime, "gcp.project.redisService.cluster", map[string]*llx.RawData{
 			"projectId":                     llx.StringData(projectId),
 			"name":                          llx.StringData(cluster.Name),
@@ -601,8 +612,9 @@ func (g *mqlGcpProjectRedisService) clusters() ([]any, error) {
 				clusterConvertClusterEndpoints(g.MqlRuntime, projectId, cluster.Name, cluster.ClusterEndpoints),
 				types.Resource("gcp.project.redisService.cluster.clusterEndpoint"),
 			),
-			"serverCaMode": llx.StringData(serverCaMode),
-			"serverCaPool": llx.StringData(serverCaPool),
+			"serverCaMode":          llx.StringData(serverCaMode),
+			"serverCaPool":          llx.StringData(serverCaPool),
+			"pscServiceAttachments": llx.ArrayData(pscServiceAttachments, types.Dict),
 		})
 		if err != nil {
 			return nil, err
