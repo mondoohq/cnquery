@@ -262,6 +262,9 @@ func (g *mqlGcpProjectGkeServiceCluster) networkPolicy() (*mqlGcpProjectGkeServi
 	enabled, _ := npMap["enabled"].(bool)
 	provider, _ := npMap["provider"].(string)
 
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
+	}
 	clusterId := g.Id.Data
 
 	res, err := CreateResource(g.MqlRuntime, "gcp.project.gkeService.cluster.networkPolicy", map[string]*llx.RawData{

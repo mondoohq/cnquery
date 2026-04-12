@@ -815,9 +815,9 @@ func (g *mqlGcpProjectVertexaiService) indexes() ([]any, error) {
 				return nil, false, err
 			}
 
-			metadata, err := protoToDict(idx.Metadata)
-			if err != nil {
-				return nil, false, err
+			var metadata any
+			if idx.Metadata != nil {
+				metadata = idx.Metadata.AsInterface()
 			}
 			encryptionSpec, err := protoToDict(idx.EncryptionSpec)
 			if err != nil {

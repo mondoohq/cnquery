@@ -13,6 +13,8 @@ import (
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -400,6 +402,10 @@ func (g *mqlGcpOrganization) sccOrganizationSettings() (*mqlGcpSccOrganizationSe
 		Name: parent + "/organizationSettings",
 	})
 	if err != nil {
+		if s, ok := status.FromError(err); ok && (s.Code() == codes.PermissionDenied || s.Code() == codes.NotFound) {
+			g.SccOrganizationSettings.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
 		return nil, err
 	}
 
