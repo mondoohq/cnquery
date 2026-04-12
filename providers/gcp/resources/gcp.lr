@@ -2991,7 +2991,7 @@ private gcp.project.loggingservice.sink @defaults("destination") {
 
 // Google Cloud (GCP) Logging exclusion filter
 private gcp.project.loggingservice.exclusion @defaults("name disabled") {
-  // Full resource name
+  // Exclusion name
   name string
   // Description
   description string

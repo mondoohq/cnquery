@@ -190,15 +190,10 @@ func (g *mqlGcpProjectModelArmorService) floorSetting() (*mqlGcpProjectModelArmo
 		integratedServices = append(integratedServices, is.String())
 	}
 
-	var enforcement bool
-	if fs.EnableFloorSettingEnforcement != nil {
-		enforcement = *fs.EnableFloorSettingEnforcement
-	}
-
 	res, err := CreateResource(g.MqlRuntime, "gcp.project.modelArmorService.floorSetting", map[string]*llx.RawData{
 		"name":                          llx.StringData(fs.Name),
 		"filterConfig":                  llx.DictData(filterConfig),
-		"enableFloorSettingEnforcement": llx.BoolData(enforcement),
+		"enableFloorSettingEnforcement": llx.BoolData(fs.GetEnableFloorSettingEnforcement()),
 		"integratedServices":            llx.ArrayData(integratedServices, types.String),
 		"aiPlatformFloorSetting":        llx.DictData(aiPlatformFloorSetting),
 		"created":                       llx.TimeDataPtr(timestampAsTimePtr(fs.CreateTime)),
