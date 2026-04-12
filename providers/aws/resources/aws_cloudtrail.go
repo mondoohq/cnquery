@@ -162,6 +162,34 @@ func (a *mqlAwsCloudtrail) getTrails(conn *connection.AwsConnection) []*jobpool.
 	return tasks
 }
 
+func (a *mqlAwsCloudtrailTrail) snsTopic() (*mqlAwsSnsTopic, error) {
+	if a.trailCache.SnsTopicARN != nil && *a.trailCache.SnsTopicARN != "" {
+		mqlTopic, err := NewResource(a.MqlRuntime, "aws.sns.topic",
+			map[string]*llx.RawData{"arn": llx.StringDataPtr(a.trailCache.SnsTopicARN)},
+		)
+		if err == nil {
+			return mqlTopic.(*mqlAwsSnsTopic), nil
+		}
+		log.Error().Err(err).Msg("cannot get sns topic")
+	}
+	a.SnsTopic.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
+}
+
+func (a *mqlAwsCloudtrailTrail) cloudWatchLogsRole() (*mqlAwsIamRole, error) {
+	if a.trailCache.CloudWatchLogsRoleArn != nil && *a.trailCache.CloudWatchLogsRoleArn != "" {
+		mqlRole, err := NewResource(a.MqlRuntime, ResourceAwsIamRole,
+			map[string]*llx.RawData{"arn": llx.StringDataPtr(a.trailCache.CloudWatchLogsRoleArn)},
+		)
+		if err == nil {
+			return mqlRole.(*mqlAwsIamRole), nil
+		}
+		log.Error().Err(err).Msg("cannot get cloudwatch logs role")
+	}
+	a.CloudWatchLogsRole.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
+}
+
 func (a *mqlAwsCloudtrailTrail) s3bucket() (*mqlAwsS3Bucket, error) {
 	if a.trailCache.S3BucketName != nil {
 		mqlBucket, err := NewResource(a.MqlRuntime, "aws.s3.bucket",
@@ -494,27 +522,15 @@ func (a *mqlAwsCloudtrailTrail) insightSelectorEntries() ([]any, error) {
 }
 
 func (a *mqlAwsCloudtrailTrail) latestDeliveryTime() (*time.Time, error) {
-	trailstatus, err := a.getTrailStatus()
-	if err != nil {
-		return nil, err
-	}
-	return trailstatus.LatestDeliveryTime, nil
+	return a.latestDeliveredAt()
 }
 
 func (a *mqlAwsCloudtrailTrail) latestNotificationTime() (*time.Time, error) {
-	trailstatus, err := a.getTrailStatus()
-	if err != nil {
-		return nil, err
-	}
-	return trailstatus.LatestNotificationTime, nil
+	return a.latestNotifiedAt()
 }
 
 func (a *mqlAwsCloudtrailTrail) latestCloudWatchLogsDeliveryTime() (*time.Time, error) {
-	trailstatus, err := a.getTrailStatus()
-	if err != nil {
-		return nil, err
-	}
-	return trailstatus.LatestCloudWatchLogsDeliveryTime, nil
+	return a.latestCloudWatchLogsDeliveredAt()
 }
 
 func (a *mqlAwsCloudtrailTrail) latestDeliveryError() (string, error) {
@@ -526,11 +542,71 @@ func (a *mqlAwsCloudtrailTrail) latestDeliveryError() (string, error) {
 }
 
 func (a *mqlAwsCloudtrailTrail) latestDigestDeliveryTime() (*time.Time, error) {
+	return a.latestDigestDeliveredAt()
+}
+
+func (a *mqlAwsCloudtrailTrail) latestDigestDeliveredAt() (*time.Time, error) {
 	trailstatus, err := a.getTrailStatus()
 	if err != nil {
 		return nil, err
 	}
 	return trailstatus.LatestDigestDeliveryTime, nil
+}
+
+func (a *mqlAwsCloudtrailTrail) latestDeliveredAt() (*time.Time, error) {
+	trailstatus, err := a.getTrailStatus()
+	if err != nil {
+		return nil, err
+	}
+	return trailstatus.LatestDeliveryTime, nil
+}
+
+func (a *mqlAwsCloudtrailTrail) latestNotifiedAt() (*time.Time, error) {
+	trailstatus, err := a.getTrailStatus()
+	if err != nil {
+		return nil, err
+	}
+	return trailstatus.LatestNotificationTime, nil
+}
+
+func (a *mqlAwsCloudtrailTrail) latestCloudWatchLogsDeliveredAt() (*time.Time, error) {
+	trailstatus, err := a.getTrailStatus()
+	if err != nil {
+		return nil, err
+	}
+	return trailstatus.LatestCloudWatchLogsDeliveryTime, nil
+}
+
+func (a *mqlAwsCloudtrailTrail) latestDeliveryAttemptedAt() (string, error) {
+	trailstatus, err := a.getTrailStatus()
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(trailstatus.LatestDeliveryAttemptTime), nil
+}
+
+func (a *mqlAwsCloudtrailTrail) latestDeliveryAttemptSucceededAt() (string, error) {
+	trailstatus, err := a.getTrailStatus()
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(trailstatus.LatestDeliveryAttemptSucceeded), nil
+}
+
+func (a *mqlAwsCloudtrailTrail) latestNotificationAttemptedAt() (string, error) {
+	trailstatus, err := a.getTrailStatus()
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(trailstatus.LatestNotificationAttemptTime), nil
+}
+
+func (a *mqlAwsCloudtrailTrail) latestNotificationAttemptSucceededAt() (string, error) {
+	trailstatus, err := a.getTrailStatus()
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(trailstatus.LatestNotificationAttemptSucceeded), nil
 }
 
 func (a *mqlAwsCloudtrailTrailEventSelector) id() (string, error) {
@@ -801,6 +877,33 @@ func (a *mqlAwsCloudtrailEventDataStore) tags() (map[string]any, error) {
 		}
 	}
 	return tags, nil
+}
+
+func (a *mqlAwsCloudtrailEventDataStore) federationStatus() (string, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	return string(detail.FederationStatus), nil
+}
+
+func (a *mqlAwsCloudtrailEventDataStore) federationRole() (*mqlAwsIamRole, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return nil, err
+	}
+	if detail.FederationRoleArn == nil || *detail.FederationRoleArn == "" {
+		a.FederationRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlRole, err := NewResource(a.MqlRuntime, ResourceAwsIamRole,
+		map[string]*llx.RawData{
+			"arn": llx.StringDataPtr(detail.FederationRoleArn),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlRole.(*mqlAwsIamRole), nil
 }
 
 // CloudTrail channels

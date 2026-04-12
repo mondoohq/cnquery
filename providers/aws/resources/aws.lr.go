@@ -4348,8 +4348,35 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.kms.key.origin": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKmsKey).GetOrigin()).ToDataRes(types.String)
 	},
+	"aws.kms.key.rotationPeriodInDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKey).GetRotationPeriodInDays()).ToDataRes(types.Int)
+	},
+	"aws.kms.key.nextRotationDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKey).GetNextRotationDate()).ToDataRes(types.Time)
+	},
+	"aws.kms.key.onDemandRotationStartDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKey).GetOnDemandRotationStartDate()).ToDataRes(types.Time)
+	},
+	"aws.kms.key.encryptionAlgorithms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKey).GetEncryptionAlgorithms()).ToDataRes(types.Array(types.String))
+	},
+	"aws.kms.key.signingAlgorithms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKey).GetSigningAlgorithms()).ToDataRes(types.Array(types.String))
+	},
+	"aws.kms.key.keyAgreementAlgorithms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKey).GetKeyAgreementAlgorithms()).ToDataRes(types.Array(types.String))
+	},
+	"aws.kms.key.expirationModel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKey).GetExpirationModel()).ToDataRes(types.String)
+	},
+	"aws.kms.key.validTo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKey).GetValidTo()).ToDataRes(types.Time)
+	},
 	"aws.kms.grant.grantId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKmsGrant).GetGrantId()).ToDataRes(types.String)
+	},
+	"aws.kms.grant.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsGrant).GetKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
 	"aws.kms.grant.keyArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKmsGrant).GetKeyArn()).ToDataRes(types.String)
@@ -8296,6 +8323,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cloudtrail.trail.s3bucket": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudtrailTrail).GetS3bucket()).ToDataRes(types.Resource("aws.s3.bucket"))
 	},
+	"aws.cloudtrail.trail.snsTopic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudtrailTrail).GetSnsTopic()).ToDataRes(types.Resource("aws.sns.topic"))
+	},
 	"aws.cloudtrail.trail.snsTopicARN": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudtrailTrail).GetSnsTopicARN()).ToDataRes(types.String)
 	},
@@ -8304,6 +8334,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.cloudtrail.trail.logGroup": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudtrailTrail).GetLogGroup()).ToDataRes(types.Resource("aws.cloudwatch.loggroup"))
+	},
+	"aws.cloudtrail.trail.cloudWatchLogsRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudtrailTrail).GetCloudWatchLogsRole()).ToDataRes(types.Resource("aws.iam.role"))
 	},
 	"aws.cloudtrail.trail.cloudWatchLogsRoleArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudtrailTrail).GetCloudWatchLogsRoleArn()).ToDataRes(types.String)
@@ -8341,11 +8374,20 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cloudtrail.trail.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudtrailTrail).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"aws.cloudtrail.trail.latestDeliveredAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudtrailTrail).GetLatestDeliveredAt()).ToDataRes(types.Time)
+	},
 	"aws.cloudtrail.trail.latestDeliveryTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudtrailTrail).GetLatestDeliveryTime()).ToDataRes(types.Time)
 	},
+	"aws.cloudtrail.trail.latestNotifiedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudtrailTrail).GetLatestNotifiedAt()).ToDataRes(types.Time)
+	},
 	"aws.cloudtrail.trail.latestNotificationTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudtrailTrail).GetLatestNotificationTime()).ToDataRes(types.Time)
+	},
+	"aws.cloudtrail.trail.latestCloudWatchLogsDeliveredAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudtrailTrail).GetLatestCloudWatchLogsDeliveredAt()).ToDataRes(types.Time)
 	},
 	"aws.cloudtrail.trail.latestCloudWatchLogsDeliveryTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudtrailTrail).GetLatestCloudWatchLogsDeliveryTime()).ToDataRes(types.Time)
@@ -8353,8 +8395,23 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cloudtrail.trail.latestDeliveryError": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudtrailTrail).GetLatestDeliveryError()).ToDataRes(types.String)
 	},
+	"aws.cloudtrail.trail.latestDigestDeliveredAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudtrailTrail).GetLatestDigestDeliveredAt()).ToDataRes(types.Time)
+	},
 	"aws.cloudtrail.trail.latestDigestDeliveryTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudtrailTrail).GetLatestDigestDeliveryTime()).ToDataRes(types.Time)
+	},
+	"aws.cloudtrail.trail.latestDeliveryAttemptedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudtrailTrail).GetLatestDeliveryAttemptedAt()).ToDataRes(types.String)
+	},
+	"aws.cloudtrail.trail.latestDeliveryAttemptSucceededAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudtrailTrail).GetLatestDeliveryAttemptSucceededAt()).ToDataRes(types.String)
+	},
+	"aws.cloudtrail.trail.latestNotificationAttemptedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudtrailTrail).GetLatestNotificationAttemptedAt()).ToDataRes(types.String)
+	},
+	"aws.cloudtrail.trail.latestNotificationAttemptSucceededAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudtrailTrail).GetLatestNotificationAttemptSucceededAt()).ToDataRes(types.String)
 	},
 	"aws.cloudtrail.trail.eventSelector.readWriteType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudtrailTrailEventSelector).GetReadWriteType()).ToDataRes(types.String)
@@ -8445,6 +8502,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.cloudtrail.eventDataStore.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudtrailEventDataStore).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.cloudtrail.eventDataStore.federationStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudtrailEventDataStore).GetFederationStatus()).ToDataRes(types.String)
+	},
+	"aws.cloudtrail.eventDataStore.federationRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudtrailEventDataStore).GetFederationRole()).ToDataRes(types.Resource("aws.iam.role"))
 	},
 	"aws.cloudtrail.channel.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudtrailChannel).GetArn()).ToDataRes(types.String)
@@ -20623,12 +20686,48 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsKmsKey).Origin, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.kms.key.rotationPeriodInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKey).RotationPeriodInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.kms.key.nextRotationDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKey).NextRotationDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.kms.key.onDemandRotationStartDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKey).OnDemandRotationStartDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.kms.key.encryptionAlgorithms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKey).EncryptionAlgorithms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.kms.key.signingAlgorithms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKey).SigningAlgorithms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.kms.key.keyAgreementAlgorithms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKey).KeyAgreementAlgorithms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.kms.key.expirationModel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKey).ExpirationModel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kms.key.validTo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKey).ValidTo, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.kms.grant.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsKmsGrant).__id, ok = v.Value.(string)
 		return
 	},
 	"aws.kms.grant.grantId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsKmsGrant).GrantId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kms.grant.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsGrant).Key, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.kms.grant.keyArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26483,6 +26582,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsCloudtrailTrail).S3bucket, ok = plugin.RawToTValue[*mqlAwsS3Bucket](v.Value, v.Error)
 		return
 	},
+	"aws.cloudtrail.trail.snsTopic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudtrailTrail).SnsTopic, ok = plugin.RawToTValue[*mqlAwsSnsTopic](v.Value, v.Error)
+		return
+	},
 	"aws.cloudtrail.trail.snsTopicARN": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudtrailTrail).SnsTopicARN, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -26493,6 +26596,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.cloudtrail.trail.logGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudtrailTrail).LogGroup, ok = plugin.RawToTValue[*mqlAwsCloudwatchLoggroup](v.Value, v.Error)
+		return
+	},
+	"aws.cloudtrail.trail.cloudWatchLogsRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudtrailTrail).CloudWatchLogsRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
 		return
 	},
 	"aws.cloudtrail.trail.cloudWatchLogsRoleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26543,12 +26650,24 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsCloudtrailTrail).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"aws.cloudtrail.trail.latestDeliveredAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudtrailTrail).LatestDeliveredAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.cloudtrail.trail.latestDeliveryTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudtrailTrail).LatestDeliveryTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"aws.cloudtrail.trail.latestNotifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudtrailTrail).LatestNotifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.cloudtrail.trail.latestNotificationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudtrailTrail).LatestNotificationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.cloudtrail.trail.latestCloudWatchLogsDeliveredAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudtrailTrail).LatestCloudWatchLogsDeliveredAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.cloudtrail.trail.latestCloudWatchLogsDeliveryTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26559,8 +26678,28 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsCloudtrailTrail).LatestDeliveryError, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.cloudtrail.trail.latestDigestDeliveredAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudtrailTrail).LatestDigestDeliveredAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.cloudtrail.trail.latestDigestDeliveryTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudtrailTrail).LatestDigestDeliveryTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.cloudtrail.trail.latestDeliveryAttemptedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudtrailTrail).LatestDeliveryAttemptedAt, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudtrail.trail.latestDeliveryAttemptSucceededAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudtrailTrail).LatestDeliveryAttemptSucceededAt, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudtrail.trail.latestNotificationAttemptedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudtrailTrail).LatestNotificationAttemptedAt, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudtrail.trail.latestNotificationAttemptSucceededAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudtrailTrail).LatestNotificationAttemptSucceededAt, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.cloudtrail.trail.eventSelector.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26705,6 +26844,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.cloudtrail.eventDataStore.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudtrailEventDataStore).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudtrail.eventDataStore.federationStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudtrailEventDataStore).FederationStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudtrail.eventDataStore.federationRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudtrailEventDataStore).FederationRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
 		return
 	},
 	"aws.cloudtrail.channel.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -47387,26 +47534,34 @@ type mqlAwsKmsKey struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsKmsKeyInternal
-	Id                       plugin.TValue[string]
-	Arn                      plugin.TValue[string]
-	Region                   plugin.TValue[string]
-	KeyRotationEnabled       plugin.TValue[bool]
-	Metadata                 plugin.TValue[any]
-	Tags                     plugin.TValue[map[string]any]
-	Aliases                  plugin.TValue[[]any]
-	KeyState                 plugin.TValue[string]
-	CreatedAt                plugin.TValue[*time.Time]
-	DeletedAt                plugin.TValue[*time.Time]
-	Enabled                  plugin.TValue[bool]
-	Description              plugin.TValue[string]
-	Grants                   plugin.TValue[[]any]
-	KeyManager               plugin.TValue[string]
-	Policy                   plugin.TValue[string]
-	KeySpec                  plugin.TValue[string]
-	KeyUsage                 plugin.TValue[string]
-	MultiRegion              plugin.TValue[bool]
-	MultiRegionConfiguration plugin.TValue[any]
-	Origin                   plugin.TValue[string]
+	Id                        plugin.TValue[string]
+	Arn                       plugin.TValue[string]
+	Region                    plugin.TValue[string]
+	KeyRotationEnabled        plugin.TValue[bool]
+	Metadata                  plugin.TValue[any]
+	Tags                      plugin.TValue[map[string]any]
+	Aliases                   plugin.TValue[[]any]
+	KeyState                  plugin.TValue[string]
+	CreatedAt                 plugin.TValue[*time.Time]
+	DeletedAt                 plugin.TValue[*time.Time]
+	Enabled                   plugin.TValue[bool]
+	Description               plugin.TValue[string]
+	Grants                    plugin.TValue[[]any]
+	KeyManager                plugin.TValue[string]
+	Policy                    plugin.TValue[string]
+	KeySpec                   plugin.TValue[string]
+	KeyUsage                  plugin.TValue[string]
+	MultiRegion               plugin.TValue[bool]
+	MultiRegionConfiguration  plugin.TValue[any]
+	Origin                    plugin.TValue[string]
+	RotationPeriodInDays      plugin.TValue[int64]
+	NextRotationDate          plugin.TValue[*time.Time]
+	OnDemandRotationStartDate plugin.TValue[*time.Time]
+	EncryptionAlgorithms      plugin.TValue[[]any]
+	SigningAlgorithms         plugin.TValue[[]any]
+	KeyAgreementAlgorithms    plugin.TValue[[]any]
+	ExpirationModel           plugin.TValue[string]
+	ValidTo                   plugin.TValue[*time.Time]
 }
 
 // createAwsKmsKey creates a new instance of this resource
@@ -47570,12 +47725,61 @@ func (c *mqlAwsKmsKey) GetOrigin() *plugin.TValue[string] {
 	})
 }
 
+func (c *mqlAwsKmsKey) GetRotationPeriodInDays() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.RotationPeriodInDays, func() (int64, error) {
+		return c.rotationPeriodInDays()
+	})
+}
+
+func (c *mqlAwsKmsKey) GetNextRotationDate() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.NextRotationDate, func() (*time.Time, error) {
+		return c.nextRotationDate()
+	})
+}
+
+func (c *mqlAwsKmsKey) GetOnDemandRotationStartDate() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.OnDemandRotationStartDate, func() (*time.Time, error) {
+		return c.onDemandRotationStartDate()
+	})
+}
+
+func (c *mqlAwsKmsKey) GetEncryptionAlgorithms() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EncryptionAlgorithms, func() ([]any, error) {
+		return c.encryptionAlgorithms()
+	})
+}
+
+func (c *mqlAwsKmsKey) GetSigningAlgorithms() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SigningAlgorithms, func() ([]any, error) {
+		return c.signingAlgorithms()
+	})
+}
+
+func (c *mqlAwsKmsKey) GetKeyAgreementAlgorithms() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.KeyAgreementAlgorithms, func() ([]any, error) {
+		return c.keyAgreementAlgorithms()
+	})
+}
+
+func (c *mqlAwsKmsKey) GetExpirationModel() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ExpirationModel, func() (string, error) {
+		return c.expirationModel()
+	})
+}
+
+func (c *mqlAwsKmsKey) GetValidTo() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.ValidTo, func() (*time.Time, error) {
+		return c.validTo()
+	})
+}
+
 // mqlAwsKmsGrant for the aws.kms.grant resource
 type mqlAwsKmsGrant struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsKmsGrantInternal it will be used here
 	GrantId           plugin.TValue[string]
+	Key               plugin.TValue[*mqlAwsKmsKey]
 	KeyArn            plugin.TValue[string]
 	GranteePrincipal  plugin.TValue[string]
 	RetiringPrincipal plugin.TValue[string]
@@ -47623,6 +47827,22 @@ func (c *mqlAwsKmsGrant) MqlID() string {
 
 func (c *mqlAwsKmsGrant) GetGrantId() *plugin.TValue[string] {
 	return &c.GrantId
+}
+
+func (c *mqlAwsKmsGrant) GetKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.Key, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.kms.grant", c.__id, "key")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.key()
+	})
 }
 
 func (c *mqlAwsKmsGrant) GetKeyArn() *plugin.TValue[string] {
@@ -63367,34 +63587,44 @@ type mqlAwsCloudtrailTrail struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsCloudtrailTrailInternal
-	Arn                              plugin.TValue[string]
-	Name                             plugin.TValue[string]
-	KmsKey                           plugin.TValue[*mqlAwsKmsKey]
-	IsMultiRegionTrail               plugin.TValue[bool]
-	IsOrganizationTrail              plugin.TValue[bool]
-	LogFileValidationEnabled         plugin.TValue[bool]
-	IncludeGlobalServiceEvents       plugin.TValue[bool]
-	S3bucket                         plugin.TValue[*mqlAwsS3Bucket]
-	SnsTopicARN                      plugin.TValue[string]
-	Status                           plugin.TValue[any]
-	LogGroup                         plugin.TValue[*mqlAwsCloudwatchLoggroup]
-	CloudWatchLogsRoleArn            plugin.TValue[string]
-	CloudWatchLogsLogGroupArn        plugin.TValue[string]
-	EventSelectors                   plugin.TValue[[]any]
-	EventSelectorEntries             plugin.TValue[[]any]
-	AdvancedEventSelectors           plugin.TValue[[]any]
-	Region                           plugin.TValue[string]
-	HasInsightSelectors              plugin.TValue[bool]
-	InsightSelectors                 plugin.TValue[[]any]
-	InsightSelectorEntries           plugin.TValue[[]any]
-	HasCustomEventSelectors          plugin.TValue[bool]
-	IsLogging                        plugin.TValue[bool]
-	Tags                             plugin.TValue[map[string]any]
-	LatestDeliveryTime               plugin.TValue[*time.Time]
-	LatestNotificationTime           plugin.TValue[*time.Time]
-	LatestCloudWatchLogsDeliveryTime plugin.TValue[*time.Time]
-	LatestDeliveryError              plugin.TValue[string]
-	LatestDigestDeliveryTime         plugin.TValue[*time.Time]
+	Arn                                  plugin.TValue[string]
+	Name                                 plugin.TValue[string]
+	KmsKey                               plugin.TValue[*mqlAwsKmsKey]
+	IsMultiRegionTrail                   plugin.TValue[bool]
+	IsOrganizationTrail                  plugin.TValue[bool]
+	LogFileValidationEnabled             plugin.TValue[bool]
+	IncludeGlobalServiceEvents           plugin.TValue[bool]
+	S3bucket                             plugin.TValue[*mqlAwsS3Bucket]
+	SnsTopic                             plugin.TValue[*mqlAwsSnsTopic]
+	SnsTopicARN                          plugin.TValue[string]
+	Status                               plugin.TValue[any]
+	LogGroup                             plugin.TValue[*mqlAwsCloudwatchLoggroup]
+	CloudWatchLogsRole                   plugin.TValue[*mqlAwsIamRole]
+	CloudWatchLogsRoleArn                plugin.TValue[string]
+	CloudWatchLogsLogGroupArn            plugin.TValue[string]
+	EventSelectors                       plugin.TValue[[]any]
+	EventSelectorEntries                 plugin.TValue[[]any]
+	AdvancedEventSelectors               plugin.TValue[[]any]
+	Region                               plugin.TValue[string]
+	HasInsightSelectors                  plugin.TValue[bool]
+	InsightSelectors                     plugin.TValue[[]any]
+	InsightSelectorEntries               plugin.TValue[[]any]
+	HasCustomEventSelectors              plugin.TValue[bool]
+	IsLogging                            plugin.TValue[bool]
+	Tags                                 plugin.TValue[map[string]any]
+	LatestDeliveredAt                    plugin.TValue[*time.Time]
+	LatestDeliveryTime                   plugin.TValue[*time.Time]
+	LatestNotifiedAt                     plugin.TValue[*time.Time]
+	LatestNotificationTime               plugin.TValue[*time.Time]
+	LatestCloudWatchLogsDeliveredAt      plugin.TValue[*time.Time]
+	LatestCloudWatchLogsDeliveryTime     plugin.TValue[*time.Time]
+	LatestDeliveryError                  plugin.TValue[string]
+	LatestDigestDeliveredAt              plugin.TValue[*time.Time]
+	LatestDigestDeliveryTime             plugin.TValue[*time.Time]
+	LatestDeliveryAttemptedAt            plugin.TValue[string]
+	LatestDeliveryAttemptSucceededAt     plugin.TValue[string]
+	LatestNotificationAttemptedAt        plugin.TValue[string]
+	LatestNotificationAttemptSucceededAt plugin.TValue[string]
 }
 
 // createAwsCloudtrailTrail creates a new instance of this resource
@@ -63490,6 +63720,22 @@ func (c *mqlAwsCloudtrailTrail) GetS3bucket() *plugin.TValue[*mqlAwsS3Bucket] {
 	})
 }
 
+func (c *mqlAwsCloudtrailTrail) GetSnsTopic() *plugin.TValue[*mqlAwsSnsTopic] {
+	return plugin.GetOrCompute[*mqlAwsSnsTopic](&c.SnsTopic, func() (*mqlAwsSnsTopic, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudtrail.trail", c.__id, "snsTopic")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSnsTopic), nil
+			}
+		}
+
+		return c.snsTopic()
+	})
+}
+
 func (c *mqlAwsCloudtrailTrail) GetSnsTopicARN() *plugin.TValue[string] {
 	return &c.SnsTopicARN
 }
@@ -63513,6 +63759,22 @@ func (c *mqlAwsCloudtrailTrail) GetLogGroup() *plugin.TValue[*mqlAwsCloudwatchLo
 		}
 
 		return c.logGroup()
+	})
+}
+
+func (c *mqlAwsCloudtrailTrail) GetCloudWatchLogsRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.CloudWatchLogsRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudtrail.trail", c.__id, "cloudWatchLogsRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.cloudWatchLogsRole()
 	})
 }
 
@@ -63608,15 +63870,33 @@ func (c *mqlAwsCloudtrailTrail) GetTags() *plugin.TValue[map[string]any] {
 	})
 }
 
+func (c *mqlAwsCloudtrailTrail) GetLatestDeliveredAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LatestDeliveredAt, func() (*time.Time, error) {
+		return c.latestDeliveredAt()
+	})
+}
+
 func (c *mqlAwsCloudtrailTrail) GetLatestDeliveryTime() *plugin.TValue[*time.Time] {
 	return plugin.GetOrCompute[*time.Time](&c.LatestDeliveryTime, func() (*time.Time, error) {
 		return c.latestDeliveryTime()
 	})
 }
 
+func (c *mqlAwsCloudtrailTrail) GetLatestNotifiedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LatestNotifiedAt, func() (*time.Time, error) {
+		return c.latestNotifiedAt()
+	})
+}
+
 func (c *mqlAwsCloudtrailTrail) GetLatestNotificationTime() *plugin.TValue[*time.Time] {
 	return plugin.GetOrCompute[*time.Time](&c.LatestNotificationTime, func() (*time.Time, error) {
 		return c.latestNotificationTime()
+	})
+}
+
+func (c *mqlAwsCloudtrailTrail) GetLatestCloudWatchLogsDeliveredAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LatestCloudWatchLogsDeliveredAt, func() (*time.Time, error) {
+		return c.latestCloudWatchLogsDeliveredAt()
 	})
 }
 
@@ -63632,9 +63912,39 @@ func (c *mqlAwsCloudtrailTrail) GetLatestDeliveryError() *plugin.TValue[string] 
 	})
 }
 
+func (c *mqlAwsCloudtrailTrail) GetLatestDigestDeliveredAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LatestDigestDeliveredAt, func() (*time.Time, error) {
+		return c.latestDigestDeliveredAt()
+	})
+}
+
 func (c *mqlAwsCloudtrailTrail) GetLatestDigestDeliveryTime() *plugin.TValue[*time.Time] {
 	return plugin.GetOrCompute[*time.Time](&c.LatestDigestDeliveryTime, func() (*time.Time, error) {
 		return c.latestDigestDeliveryTime()
+	})
+}
+
+func (c *mqlAwsCloudtrailTrail) GetLatestDeliveryAttemptedAt() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LatestDeliveryAttemptedAt, func() (string, error) {
+		return c.latestDeliveryAttemptedAt()
+	})
+}
+
+func (c *mqlAwsCloudtrailTrail) GetLatestDeliveryAttemptSucceededAt() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LatestDeliveryAttemptSucceededAt, func() (string, error) {
+		return c.latestDeliveryAttemptSucceededAt()
+	})
+}
+
+func (c *mqlAwsCloudtrailTrail) GetLatestNotificationAttemptedAt() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LatestNotificationAttemptedAt, func() (string, error) {
+		return c.latestNotificationAttemptedAt()
+	})
+}
+
+func (c *mqlAwsCloudtrailTrail) GetLatestNotificationAttemptSucceededAt() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LatestNotificationAttemptSucceededAt, func() (string, error) {
+		return c.latestNotificationAttemptSucceededAt()
 	})
 }
 
@@ -63957,6 +64267,8 @@ type mqlAwsCloudtrailEventDataStore struct {
 	KmsKey                       plugin.TValue[*mqlAwsKmsKey]
 	BillingMode                  plugin.TValue[string]
 	Tags                         plugin.TValue[map[string]any]
+	FederationStatus             plugin.TValue[string]
+	FederationRole               plugin.TValue[*mqlAwsIamRole]
 }
 
 // createAwsCloudtrailEventDataStore creates a new instance of this resource
@@ -64089,6 +64401,28 @@ func (c *mqlAwsCloudtrailEventDataStore) GetBillingMode() *plugin.TValue[string]
 func (c *mqlAwsCloudtrailEventDataStore) GetTags() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
+	})
+}
+
+func (c *mqlAwsCloudtrailEventDataStore) GetFederationStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.FederationStatus, func() (string, error) {
+		return c.federationStatus()
+	})
+}
+
+func (c *mqlAwsCloudtrailEventDataStore) GetFederationRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.FederationRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudtrail.eventDataStore", c.__id, "federationRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.federationRole()
 	})
 }
 

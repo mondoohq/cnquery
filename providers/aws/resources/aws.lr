@@ -1315,13 +1315,31 @@ private aws.kms.key @defaults("id region aliases metadata.Description") {
   multiRegionConfiguration() dict
   // Origin of the key material: AWS_KMS, EXTERNAL, AWS_CLOUDHSM, EXTERNAL_KEY_STORE
   origin() string
+  // Number of days between each automatic rotation (default 365)
+  rotationPeriodInDays() int
+  // Next date that KMS will automatically rotate the key material
+  nextRotationDate() time
+  // Date and time an in-progress on-demand rotation was initiated
+  onDemandRotationStartDate() time
+  // Encryption algorithms the key supports (e.g., SYMMETRIC_DEFAULT, RSAES_OAEP_SHA_1, RSAES_OAEP_SHA_256)
+  encryptionAlgorithms() []string
+  // Signing algorithms the key supports (e.g., RSASSA_PSS_SHA_256, ECDSA_SHA_256)
+  signingAlgorithms() []string
+  // Key agreement algorithms the key supports (e.g., ECDH)
+  keyAgreementAlgorithms() []string
+  // Whether imported key material expires: KEY_MATERIAL_EXPIRES or KEY_MATERIAL_DOES_NOT_EXPIRE
+  expirationModel() string
+  // Expiration date for imported key material (null if key material does not expire)
+  validTo() time
 }
 
 // AWS KMS key grant
 private aws.kms.grant @defaults("grantId granteePrincipal") {
   // Unique identifier for the grant
   grantId string
-  // ARN of the KMS key
+  // KMS key the grant applies to
+  key() aws.kms.key
+  // Deprecated: Use key() instead
   keyArn string
   // Principal that receives the grant's permissions
   granteePrincipal string
@@ -4561,15 +4579,19 @@ private aws.cloudtrail.trail @defaults("name region") {
   includeGlobalServiceEvents bool
   // S3 bucket where trail files are delivered
   s3bucket() aws.s3.bucket
-  // ARN of the SNS topic that the trail uses to send notifications
+  // SNS topic the trail uses to send notifications
+  snsTopic() aws.sns.topic
+  // Deprecated: Use snsTopic() instead
   snsTopicARN string
   // Deprecated: Use individual status fields (isLogging, latestDeliveryTime, etc.) instead
   status() dict
   // Log group where trail files are delivered
   logGroup() aws.cloudwatch.loggroup
-  // Role for logs endpoint to assume when writing to log group
+  // IAM role for the logs endpoint to assume when writing to log group
+  cloudWatchLogsRole() aws.iam.role
+  // Deprecated: Use cloudWatchLogsRole() instead
   cloudWatchLogsRoleArn string
-  // Group for logs endpoint to assume when writing to log group
+  // Deprecated: Use logGroup() instead
   cloudWatchLogsLogGroupArn string
   // Deprecated: Use `eventSelectorEntries` instead
   eventSelectors() []dict
@@ -4592,15 +4614,31 @@ private aws.cloudtrail.trail @defaults("name region") {
   // Tags associated with the trail
   tags() map[string]string
   // Time of the most recent delivery of log files to the trail's S3 bucket
+  latestDeliveredAt() time
+  // Deprecated: Use latestDeliveredAt() instead
   latestDeliveryTime() time
   // Time of the most recent notification sent to the trail's SNS topic
+  latestNotifiedAt() time
+  // Deprecated: Use latestNotifiedAt() instead
   latestNotificationTime() time
   // Time of the most recent log delivery to CloudWatch Logs
+  latestCloudWatchLogsDeliveredAt() time
+  // Deprecated: Use latestCloudWatchLogsDeliveredAt() instead
   latestCloudWatchLogsDeliveryTime() time
   // Most recent error message from delivering log files to S3
   latestDeliveryError() string
   // Time of the most recent digest file delivery to the trail's S3 bucket
+  latestDigestDeliveredAt() time
+  // Deprecated: Use latestDigestDeliveredAt() instead
   latestDigestDeliveryTime() time
+  // Time of the most recent delivery attempt to S3
+  latestDeliveryAttemptedAt() string
+  // Whether the most recent delivery attempt to S3 succeeded
+  latestDeliveryAttemptSucceededAt() string
+  // Time of the most recent notification attempt to SNS
+  latestNotificationAttemptedAt() string
+  // Whether the most recent notification attempt to SNS succeeded
+  latestNotificationAttemptSucceededAt() string
 }
 
 // AWS CloudTrail trail event selector
@@ -4685,6 +4723,10 @@ private aws.cloudtrail.eventDataStore @defaults("name status") {
   billingMode() string
   // Tags for the event data store
   tags() map[string]string
+  // Lake query federation status: ENABLED or DISABLED
+  federationStatus() string
+  // IAM role used to access resources for the federated event data store
+  federationRole() aws.iam.role
 }
 
 // AWS CloudTrail channel for external event ingestion

@@ -109,21 +109,77 @@ func (a *mqlAwsKmsKey) metadata() (any, error) {
 	return convert.JsonToDict(md)
 }
 
-func (a *mqlAwsKmsKey) keyRotationEnabled() (bool, error) {
+func (a *mqlAwsKmsKey) getRotationStatus() (*kms.GetKeyRotationStatusOutput, error) {
+	if a.rotationStatusFetched {
+		return a.cachedRotationStatus, nil
+	}
+	a.rotationStatusLock.Lock()
+	defer a.rotationStatusLock.Unlock()
+	if a.rotationStatusFetched {
+		return a.cachedRotationStatus, nil
+	}
+
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	keyId := a.Id.Data
 
 	svc := conn.Kms(a.Region.Data)
 	ctx := context.Background()
 
-	key, err := svc.GetKeyRotationStatus(ctx, &kms.GetKeyRotationStatusInput{KeyId: &keyId})
+	resp, err := svc.GetKeyRotationStatus(ctx, &kms.GetKeyRotationStatusInput{KeyId: &keyId})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
-			return false, nil
+			a.rotationStatusFetched = true
+			return nil, nil
 		}
+		return nil, err
+	}
+	a.cachedRotationStatus = resp
+	a.rotationStatusFetched = true
+	return resp, nil
+}
+
+func (a *mqlAwsKmsKey) keyRotationEnabled() (bool, error) {
+	resp, err := a.getRotationStatus()
+	if err != nil {
 		return false, err
 	}
-	return key.KeyRotationEnabled, nil
+	if resp == nil {
+		return false, nil
+	}
+	return resp.KeyRotationEnabled, nil
+}
+
+func (a *mqlAwsKmsKey) rotationPeriodInDays() (int64, error) {
+	resp, err := a.getRotationStatus()
+	if err != nil {
+		return 0, err
+	}
+	if resp == nil || resp.RotationPeriodInDays == nil {
+		return 0, nil
+	}
+	return int64(*resp.RotationPeriodInDays), nil
+}
+
+func (a *mqlAwsKmsKey) nextRotationDate() (*time.Time, error) {
+	resp, err := a.getRotationStatus()
+	if err != nil {
+		return nil, err
+	}
+	if resp == nil {
+		return nil, nil
+	}
+	return resp.NextRotationDate, nil
+}
+
+func (a *mqlAwsKmsKey) onDemandRotationStartDate() (*time.Time, error) {
+	resp, err := a.getRotationStatus()
+	if err != nil {
+		return nil, err
+	}
+	if resp == nil {
+		return nil, nil
+	}
+	return resp.OnDemandRotationStartDate, nil
 }
 
 func (a *mqlAwsKmsKey) tags() (map[string]any, error) {
@@ -180,8 +236,11 @@ func (a *mqlAwsKmsKey) keyState() (string, error) {
 }
 
 type mqlAwsKmsKeyInternal struct {
-	cachedKeyMetadata *types.KeyMetadata
-	metadataLock      sync.Mutex
+	cachedKeyMetadata     *types.KeyMetadata
+	metadataLock          sync.Mutex
+	cachedRotationStatus  *kms.GetKeyRotationStatusOutput
+	rotationStatusFetched bool
+	rotationStatusLock    sync.Mutex
 }
 
 func (a *mqlAwsKmsKey) getKeyMetadata() (*types.KeyMetadata, error) {
@@ -291,6 +350,58 @@ func (a *mqlAwsKmsKey) origin() (string, error) {
 	return string(md.Origin), nil
 }
 
+func (a *mqlAwsKmsKey) encryptionAlgorithms() ([]any, error) {
+	md, err := a.getKeyMetadata()
+	if err != nil {
+		return nil, err
+	}
+	res := make([]any, len(md.EncryptionAlgorithms))
+	for i, alg := range md.EncryptionAlgorithms {
+		res[i] = string(alg)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsKmsKey) signingAlgorithms() ([]any, error) {
+	md, err := a.getKeyMetadata()
+	if err != nil {
+		return nil, err
+	}
+	res := make([]any, len(md.SigningAlgorithms))
+	for i, alg := range md.SigningAlgorithms {
+		res[i] = string(alg)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsKmsKey) keyAgreementAlgorithms() ([]any, error) {
+	md, err := a.getKeyMetadata()
+	if err != nil {
+		return nil, err
+	}
+	res := make([]any, len(md.KeyAgreementAlgorithms))
+	for i, alg := range md.KeyAgreementAlgorithms {
+		res[i] = string(alg)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsKmsKey) expirationModel() (string, error) {
+	md, err := a.getKeyMetadata()
+	if err != nil {
+		return "", err
+	}
+	return string(md.ExpirationModel), nil
+}
+
+func (a *mqlAwsKmsKey) validTo() (*time.Time, error) {
+	md, err := a.getKeyMetadata()
+	if err != nil {
+		return nil, err
+	}
+	return md.ValidTo, nil
+}
+
 func (a *mqlAwsKmsKey) policy() (string, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	keyArn := a.Arn.Data
@@ -355,6 +466,22 @@ func (a *mqlAwsKmsKey) grants() ([]any, error) {
 
 func (a *mqlAwsKmsGrant) id() (string, error) {
 	return a.KeyArn.Data + "/grant/" + a.GrantId.Data, nil
+}
+
+func (a *mqlAwsKmsGrant) key() (*mqlAwsKmsKey, error) {
+	keyArn := a.KeyArn.Data
+	if keyArn == "" {
+		a.Key.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
+		map[string]*llx.RawData{
+			"arn": llx.StringData(keyArn),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
 func initAwsKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
