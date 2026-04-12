@@ -195,6 +195,30 @@ func (a *mqlAwsElasticacheCluster) securityGroups() ([]any, error) {
 	return a.newSecurityGroupResources(a.MqlRuntime)
 }
 
+func (a *mqlAwsElasticacheCluster) tags() (map[string]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Elasticache(a.region)
+	ctx := context.Background()
+	arnVal := a.Arn.Data
+
+	resp, err := svc.ListTagsForResource(ctx, &elasticache.ListTagsForResourceInput{
+		ResourceName: &arnVal,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	tags := make(map[string]any)
+	for _, t := range resp.TagList {
+		if t.Key != nil && t.Value != nil {
+			tags[*t.Key] = *t.Value
+		}
+	}
+	return tags, nil
+}
+
 func (a *mqlAwsElasticacheCluster) kmsKey() (*mqlAwsKmsKey, error) {
 	if a.cacheKmsKeyId == nil || *a.cacheKmsKeyId == "" {
 		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet

@@ -2261,6 +2261,7 @@ aws.elasticache.cluster.replicationGroupLogDeliveryEnabled 11.15.2
 aws.elasticache.cluster.securityGroups 11.15.2
 aws.elasticache.cluster.snapshotRetentionLimit 11.15.2
 aws.elasticache.cluster.snapshotWindow 11.15.2
+aws.elasticache.cluster.tags 13.12.1
 aws.elasticache.cluster.transitEncryptionEnabled 11.15.2
 aws.elasticache.cluster.transitEncryptionMode 11.15.2
 aws.elasticache.parameterGroup 13.12.1
@@ -5174,6 +5175,7 @@ aws.timestream.liveanalytics.database.kmsKeyId 11.15.2
 aws.timestream.liveanalytics.database.name 11.15.2
 aws.timestream.liveanalytics.database.region 11.15.2
 aws.timestream.liveanalytics.database.tableCount 11.15.2
+aws.timestream.liveanalytics.database.tags 13.12.1
 aws.timestream.liveanalytics.database.updatedAt 11.15.2
 aws.timestream.liveanalytics.databases 11.15.2
 aws.timestream.liveanalytics.table 11.15.2

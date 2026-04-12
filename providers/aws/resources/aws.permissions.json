@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.12.0",
-  "generated_at": "2026-04-11T21:42:15-07:00",
+  "generated_at": "2026-04-11T22:15:02-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -226,6 +226,7 @@
     "elasticache:DescribeServiceUpdates",
     "elasticache:DescribeSnapshots",
     "elasticache:DescribeUsers",
+    "elasticache:ListTagsForResource",
     "elasticbeanstalk:DescribeApplications",
     "elasticbeanstalk:DescribeEnvironments",
     "elasticbeanstalk:ListTagsForResource",
@@ -541,6 +542,7 @@
     "timestream-influxdb:ListTagsForResource",
     "timestream:ListDatabases",
     "timestream:ListTables",
+    "timestream:ListTagsForResource",
     "transfer:ListServers",
     "wafv2:GetIPSet",
     "wafv2:GetLoggingConfiguration",
@@ -1942,6 +1944,12 @@
       "permission": "elasticache:DescribeUsers",
       "service": "elasticache",
       "action": "DescribeUsers",
+      "source_file": "aws_elasticache.go"
+    },
+    {
+      "permission": "elasticache:ListTagsForResource",
+      "service": "elasticache",
+      "action": "ListTagsForResource",
       "source_file": "aws_elasticache.go"
     },
     {
@@ -3904,6 +3912,12 @@
       "permission": "timestream:ListTables",
       "service": "timestream",
       "action": "ListTables",
+      "source_file": "aws_timestream.go"
+    },
+    {
+      "permission": "timestream:ListTagsForResource",
+      "service": "timestream",
+      "action": "ListTagsForResource",
       "source_file": "aws_timestream.go"
     },
     {

@@ -113,6 +113,30 @@ func (a *mqlAwsTimestreamLiveanalytics) getDatabases(conn *connection.AwsConnect
 	return tasks
 }
 
+func (a *mqlAwsTimestreamLiveanalyticsDatabase) tags() (map[string]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.TimestreamLiveAnalytics(a.Region.Data)
+	ctx := context.Background()
+	arnVal := a.Arn.Data
+
+	resp, err := svc.ListTagsForResource(ctx, &timestreamwrite.ListTagsForResourceInput{
+		ResourceARN: &arnVal,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	tags := make(map[string]any)
+	for _, t := range resp.Tags {
+		if t.Key != nil && t.Value != nil {
+			tags[*t.Key] = *t.Value
+		}
+	}
+	return tags, nil
+}
+
 func (a *mqlAwsTimestreamLiveanalyticsDatabase) kmsKey() (*mqlAwsKmsKey, error) {
 	if a.KmsKeyId.Data == "" {
 		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet

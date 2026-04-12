@@ -10145,6 +10145,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.elasticache.cluster.replicationGroupLogDeliveryEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticacheCluster).GetReplicationGroupLogDeliveryEnabled()).ToDataRes(types.Bool)
 	},
+	"aws.elasticache.cluster.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"aws.elasticache.serverlessCache.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticacheServerlessCache).GetArn()).ToDataRes(types.String)
 	},
@@ -14728,6 +14731,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.timestream.liveanalytics.database.tableCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsTimestreamLiveanalyticsDatabase).GetTableCount()).ToDataRes(types.Int)
+	},
+	"aws.timestream.liveanalytics.database.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsTimestreamLiveanalyticsDatabase).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.timestream.liveanalytics.table.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsTimestreamLiveanalyticsTable).GetArn()).ToDataRes(types.String)
@@ -29446,6 +29452,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsElasticacheCluster).ReplicationGroupLogDeliveryEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"aws.elasticache.cluster.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"aws.elasticache.serverlessCache.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElasticacheServerlessCache).__id, ok = v.Value.(string)
 		return
@@ -36112,6 +36122,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.timestream.liveanalytics.database.tableCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsTimestreamLiveanalyticsDatabase).TableCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.timestream.liveanalytics.database.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsTimestreamLiveanalyticsDatabase).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.timestream.liveanalytics.table.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -70784,6 +70798,7 @@ type mqlAwsElasticacheCluster struct {
 	KmsKey                             plugin.TValue[*mqlAwsKmsKey]
 	PreferredMaintenanceWindow         plugin.TValue[string]
 	ReplicationGroupLogDeliveryEnabled plugin.TValue[bool]
+	Tags                               plugin.TValue[map[string]any]
 }
 
 // createAwsElasticacheCluster creates a new instance of this resource
@@ -70964,6 +70979,12 @@ func (c *mqlAwsElasticacheCluster) GetPreferredMaintenanceWindow() *plugin.TValu
 
 func (c *mqlAwsElasticacheCluster) GetReplicationGroupLogDeliveryEnabled() *plugin.TValue[bool] {
 	return &c.ReplicationGroupLogDeliveryEnabled
+}
+
+func (c *mqlAwsElasticacheCluster) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
 }
 
 // mqlAwsElasticacheServerlessCache for the aws.elasticache.serverlessCache resource
@@ -87249,6 +87270,7 @@ type mqlAwsTimestreamLiveanalyticsDatabase struct {
 	CreatedAt  plugin.TValue[*time.Time]
 	UpdatedAt  plugin.TValue[*time.Time]
 	TableCount plugin.TValue[int64]
+	Tags       plugin.TValue[map[string]any]
 }
 
 // createAwsTimestreamLiveanalyticsDatabase creates a new instance of this resource
@@ -87325,6 +87347,12 @@ func (c *mqlAwsTimestreamLiveanalyticsDatabase) GetUpdatedAt() *plugin.TValue[*t
 
 func (c *mqlAwsTimestreamLiveanalyticsDatabase) GetTableCount() *plugin.TValue[int64] {
 	return &c.TableCount
+}
+
+func (c *mqlAwsTimestreamLiveanalyticsDatabase) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
 }
 
 // mqlAwsTimestreamLiveanalyticsTable for the aws.timestream.liveanalytics.table resource

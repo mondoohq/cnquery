@@ -6007,6 +6007,8 @@ private aws.elasticache.cluster @defaults("cacheClusterId region nodeType engine
   preferredMaintenanceWindow string
   // Whether log delivery is enabled for the replication group
   replicationGroupLogDeliveryEnabled bool
+  // Resource tags for the cluster
+  tags() map[string]string
 }
 
 // Amazon ElastiCache serverless cache
@@ -9642,6 +9644,8 @@ private aws.timestream.liveanalytics.database @defaults("name region") {
   updatedAt time
   // Total number of tables in database
   tableCount int
+  // Resource tags
+  tags() map[string]string
 }
 
 // Amazon Timestream for LiveAnalytics table
