@@ -458,6 +458,15 @@ for {
   - `topicArn string` → `topic() aws.sns.topic`
   - `streamArn string` → `stream() aws.kinesis.stream`
   These enable MQL traversal (e.g., `aws.rds.proxy.vpc.cidrBlock`) instead of requiring manual lookups. Store the raw ID/ARN in a `cache*` field on the Internal struct, then implement the typed method using `NewResource`.
+- **GCP: Use typed resource references over raw URL strings.** GCP Compute resources often store references as self-link URLs (e.g., `https://www.googleapis.com/compute/v1/projects/.../networks/my-net`). Always add a typed computed method alongside the raw URL field:
+  - `networkUrl string` → `network() gcp.project.computeService.network`
+  - `subnetworkUrl string` → `subnetwork() gcp.project.computeService.subnetwork`
+  - `routerUrl string` → `router() gcp.project.computeService.router`
+  - `sslPolicyUrl string` → `sslPolicy() gcp.project.computeService.sslPolicy`
+  - `securityPolicyUrl string` → `securityPolicy() gcp.project.computeService.securityPolicy`
+  - `interconnectUrl string` → `interconnect() gcp.project.computeService.interconnect`
+  - `vpnGatewayUrl string` → `vpnGateway() gcp.project.computeService.vpnGateway`
+  Keep the old `*Url` field for backwards compatibility but mark it `// Deprecated: Use X instead`. Implement the typed method using a `get*ByUrl()` helper (see `compute_enrichments.go` and `compute_networking.go` for examples) that loads all resources of that type via the compute service getter, then matches by `SelfLink`. For fields without a `Url` suffix (e.g., `peerExternalGateway`), add a new method with a distinct name (e.g., `peerExternalVpnGateway()`) and deprecate the old field.
 - Every resource and field has an explicit entry in `.lr.versions`. New entries must use the **next patch version** after the provider's current version (e.g., if the provider is at `13.1.1`, new fields should be `13.1.2`). The provider's current version is in `providers/<name>/config/config.go` (look for the `Version` field). Do **not** rely on the highest version in `.lr.versions` — it may be stale from before a major version bump. The `versions` command does this automatically, but verify the result. Existing entries are never overwritten.
 - **Match SDK types faithfully:** If an SDK field is `*bool`, use `bool` in `.lr` and `llx.BoolDataPtr()` in Go — don't cast it to `string`. If an SDK enum has only two states (Enabled/Disabled), prefer `bool`. Use `*type` intermediate variables with `llx.*DataPtr` helpers to preserve nil semantics.
 - **Consistency with existing fields:** Before adding new fields to a resource, check how its existing fields handle pointers, nil checks, and type conversions. Follow the same pattern.

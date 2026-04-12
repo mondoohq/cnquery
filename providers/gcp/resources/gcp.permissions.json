@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
-  "version": "13.5.0",
-  "generated_at": "2026-04-08T15:34:04-07:00",
+  "version": "13.6.0",
+  "generated_at": "2026-04-12T11:59:41-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.datasets.list",
@@ -35,8 +35,10 @@
     "cloudsql.instances.list",
     "cloudtasks.queues.list",
     "compute.addresses.list",
+    "compute.backendBuckets.list",
     "compute.backendServices.list",
     "compute.disks.list",
+    "compute.externalVpnGateways.list",
     "compute.firewallPolicies.get",
     "compute.firewallPolicies.list",
     "compute.firewalls.list",
@@ -45,21 +47,31 @@
     "compute.instanceGroupManagers.list",
     "compute.instanceGroups.list",
     "compute.instances.list",
+    "compute.interconnectAttachments.list",
+    "compute.interconnects.list",
     "compute.machineTypes.get",
     "compute.machineTypes.list",
+    "compute.networkEndpointGroups.list",
     "compute.networks.get",
     "compute.networks.list",
+    "compute.packetMirrorings.list",
     "compute.projects.get",
+    "compute.publicAdvertisedPrefixes.list",
     "compute.regions.list",
     "compute.routers.list",
+    "compute.routes.list",
     "compute.securityPolicies.get",
     "compute.securityPolicies.list",
+    "compute.serviceAttachments.list",
     "compute.snapshots.list",
     "compute.sslCertificates.list",
     "compute.sslPolicies.list",
     "compute.storagePools.list",
     "compute.targetHttpProxies.list",
     "compute.targetHttpsProxies.list",
+    "compute.targetPools.list",
+    "compute.targetSslProxies.list",
+    "compute.targetTcpProxies.list",
     "compute.urlMaps.list",
     "compute.vpnGateways.list",
     "compute.vpnTunnels.list",
@@ -297,6 +309,12 @@
       "source_file": "compute.go"
     },
     {
+      "permission": "compute.backendBuckets.list",
+      "service": "compute",
+      "action": "BackendBuckets.List",
+      "source_file": "compute_networking.go"
+    },
+    {
       "permission": "compute.backendServices.list",
       "service": "compute",
       "action": "BackendServices.AggregatedList",
@@ -307,6 +325,12 @@
       "service": "compute",
       "action": "Disks.List",
       "source_file": "compute.go"
+    },
+    {
+      "permission": "compute.externalVpnGateways.list",
+      "service": "compute",
+      "action": "ExternalVpnGateways.List",
+      "source_file": "compute_networking.go"
     },
     {
       "permission": "compute.firewallPolicies.get",
@@ -357,6 +381,18 @@
       "source_file": "compute.go"
     },
     {
+      "permission": "compute.interconnectAttachments.list",
+      "service": "compute",
+      "action": "InterconnectAttachments.AggregatedList",
+      "source_file": "compute_networking.go"
+    },
+    {
+      "permission": "compute.interconnects.list",
+      "service": "compute",
+      "action": "Interconnects.List",
+      "source_file": "compute_networking.go"
+    },
+    {
       "permission": "compute.machineTypes.get",
       "service": "compute",
       "action": "MachineTypes.Get",
@@ -367,6 +403,12 @@
       "service": "compute",
       "action": "MachineTypes.List",
       "source_file": "compute.go"
+    },
+    {
+      "permission": "compute.networkEndpointGroups.list",
+      "service": "compute",
+      "action": "NetworkEndpointGroups.AggregatedList",
+      "source_file": "compute_networking.go"
     },
     {
       "permission": "compute.networks.get",
@@ -381,10 +423,22 @@
       "source_file": "compute.go"
     },
     {
+      "permission": "compute.packetMirrorings.list",
+      "service": "compute",
+      "action": "PacketMirrorings.AggregatedList",
+      "source_file": "compute_networking.go"
+    },
+    {
       "permission": "compute.projects.get",
       "service": "compute",
       "action": "Projects.Get",
       "source_file": "project.go"
+    },
+    {
+      "permission": "compute.publicAdvertisedPrefixes.list",
+      "service": "compute",
+      "action": "PublicAdvertisedPrefixes.List",
+      "source_file": "compute_networking.go"
     },
     {
       "permission": "compute.regions.list",
@@ -411,6 +465,12 @@
       "source_file": "compute.go"
     },
     {
+      "permission": "compute.routes.list",
+      "service": "compute",
+      "action": "Routes.List",
+      "source_file": "compute_networking.go"
+    },
+    {
       "permission": "compute.securityPolicies.get",
       "service": "compute",
       "action": "SecurityPolicies.Get",
@@ -421,6 +481,12 @@
       "service": "compute",
       "action": "SecurityPolicies.AggregatedList",
       "source_file": "compute.go"
+    },
+    {
+      "permission": "compute.serviceAttachments.list",
+      "service": "compute",
+      "action": "ServiceAttachments.AggregatedList",
+      "source_file": "compute_networking.go"
     },
     {
       "permission": "compute.snapshots.list",
@@ -457,6 +523,24 @@
       "service": "compute",
       "action": "TargetHttpsProxies.AggregatedList",
       "source_file": "compute_enrichments.go"
+    },
+    {
+      "permission": "compute.targetPools.list",
+      "service": "compute",
+      "action": "TargetPools.AggregatedList",
+      "source_file": "compute_networking.go"
+    },
+    {
+      "permission": "compute.targetSslProxies.list",
+      "service": "compute",
+      "action": "TargetSslProxies.List",
+      "source_file": "compute_networking.go"
+    },
+    {
+      "permission": "compute.targetTcpProxies.list",
+      "service": "compute",
+      "action": "TargetTcpProxies.AggregatedList",
+      "source_file": "compute_networking.go"
     },
     {
       "permission": "compute.urlMaps.list",
@@ -636,7 +720,7 @@
     {
       "permission": "resourcemanager.folders.list",
       "service": "resourcemanager",
-      "action": "Folders.Search",
+      "action": "Folders.List",
       "source_file": "folder.go",
       "scope": "org"
     },
@@ -676,7 +760,7 @@
     {
       "permission": "resourcemanager.projects.list",
       "service": "resourcemanager",
-      "action": "Projects.Search",
+      "action": "Projects.List",
       "source_file": "project.go",
       "scope": "org"
     },
