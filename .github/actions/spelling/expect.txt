@@ -255,6 +255,8 @@ richrule
 RODC
 rpo
 RRULE
+RSAES
+RSASSA
 rtsp
 rulegroup
 rulegroupreferencestatement

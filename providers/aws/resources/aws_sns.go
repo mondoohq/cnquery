@@ -488,9 +488,9 @@ func (a *mqlAwsSnsTopic) dataProtectionPolicy() (any, error) {
 	if resp.DataProtectionPolicy == nil || *resp.DataProtectionPolicy == "" {
 		return nil, nil
 	}
-	var policy any
+	var policy map[string]any
 	if err := json.Unmarshal([]byte(*resp.DataProtectionPolicy), &policy); err != nil {
 		return nil, err
 	}
-	return policy, nil
+	return convert.JsonToDict(policy)
 }

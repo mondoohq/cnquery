@@ -18,6 +18,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
 )
@@ -374,9 +375,9 @@ func (a *mqlAwsSqsQueue) redriveAllowPolicy() (any, error) {
 	if policyStr == "" {
 		return nil, nil
 	}
-	var policy any
+	var policy map[string]any
 	if err := json.Unmarshal([]byte(policyStr), &policy); err != nil {
 		return nil, err
 	}
-	return policy, nil
+	return convert.JsonToDict(policy)
 }

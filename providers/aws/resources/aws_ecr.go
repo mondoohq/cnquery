@@ -271,6 +271,7 @@ func (a *mqlAwsEcrRepository) images() ([]any, error) {
 				if err != nil {
 					return nil, err
 				}
+				mqlImage.(*mqlAwsEcrImage).cachePublic = true
 				mqlres = append(mqlres, mqlImage)
 			}
 		}
@@ -656,6 +657,7 @@ func (a *mqlAwsEcrRepository) tags() (map[string]any, error) {
 // ==================== ECR Image Scan Findings ====================
 
 type mqlAwsEcrImageInternal struct {
+	cachePublic             bool
 	scanFetched             bool
 	scanFindingsCache       []ecrtypes.ImageScanFinding
 	scanStatusCache         string
@@ -678,8 +680,7 @@ func (a *mqlAwsEcrImage) fetchScanFindings() error {
 	region := a.Region.Data
 
 	// Public images don't support scan findings
-	registryId := a.RegistryId.Data
-	if registryId == "" {
+	if a.cachePublic {
 		a.scanFetched = true
 		a.scanStatusCache = "NOT_SCANNED"
 		return nil
