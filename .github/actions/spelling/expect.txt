@@ -67,6 +67,7 @@ databricks
 datapath
 datasource
 DATAUSER
+ddl
 ddos
 dedup
 dedupratio
@@ -281,6 +282,7 @@ serviceprincipals
 sfn
 Sflags
 signin
+skaffold
 singlequeryargument
 sizeconstraintstatement
 smbv
@@ -303,10 +305,12 @@ switchports
 tailscale
 targetgroup
 tde
+tensorboard
 testutils
 tgw
 throughputs
 timestream
+tokenauth
 toplevel
 toport
 tpl
