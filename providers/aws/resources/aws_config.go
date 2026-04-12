@@ -581,6 +581,20 @@ type mqlAwsConfigDeliverychannelInternal struct {
 	cacheDeliveryFrequency string
 }
 
+func (a *mqlAwsConfigDeliverychannel) snsTopic() (*mqlAwsSnsTopic, error) {
+	arnVal := a.SnsTopicARN.Data
+	if arnVal == "" {
+		a.SnsTopic.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.sns.topic",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsSnsTopic), nil
+}
+
 func (a *mqlAwsConfigRule) complianceDetails() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	ruleName := a.Name.Data

@@ -393,15 +393,19 @@ func (a *mqlAwsAppmeshVirtualNode) status() (string, error) {
 	return string(resp.VirtualNode.Status.Status), nil
 }
 
-func (a *mqlAwsAppmeshVirtualNode) backends() (int64, error) {
+func (a *mqlAwsAppmeshVirtualNode) backends() ([]any, error) {
 	resp, err := a.fetchDetail()
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 	if resp.VirtualNode == nil || resp.VirtualNode.Spec == nil {
-		return 0, nil
+		return []any{}, nil
 	}
-	return int64(len(resp.VirtualNode.Spec.Backends)), nil
+	res, err := convert.JsonToDictSlice(resp.VirtualNode.Spec.Backends)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
 func (a *mqlAwsAppmeshVirtualNode) serviceDiscovery() (map[string]any, error) {
@@ -426,4 +430,260 @@ func (a *mqlAwsAppmeshVirtualNode) serviceDiscovery() (map[string]any, error) {
 		result["serviceName"] = convert.ToValue(s.Value.ServiceName)
 	}
 	return result, nil
+}
+
+// ==================== Virtual Routers ====================
+
+func (a *mqlAwsAppmeshMesh) virtualRouters() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := a.Region.Data
+	svc := conn.AppMesh(region)
+	ctx := context.Background()
+
+	meshName := a.Name.Data
+	res := []any{}
+	paginator := appmesh.NewListVirtualRoutersPaginator(svc, &appmesh.ListVirtualRoutersInput{
+		MeshName: &meshName,
+	})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, vr := range page.VirtualRouters {
+			mqlVr, err := CreateResource(a.MqlRuntime, "aws.appmesh.virtualRouter",
+				map[string]*llx.RawData{
+					"__id":     llx.StringDataPtr(vr.Arn),
+					"arn":      llx.StringDataPtr(vr.Arn),
+					"name":     llx.StringDataPtr(vr.VirtualRouterName),
+					"meshName": llx.StringData(meshName),
+					"region":   llx.StringData(region),
+				})
+			if err != nil {
+				return nil, err
+			}
+			internal := mqlVr.(*mqlAwsAppmeshVirtualRouter)
+			internal.region = region
+			internal.meshName = meshName
+			res = append(res, mqlVr)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsAppmeshVirtualRouter) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+type mqlAwsAppmeshVirtualRouterInternal struct {
+	fetched  bool
+	lock     sync.Mutex
+	descResp *appmesh.DescribeVirtualRouterOutput
+	region   string
+	meshName string
+}
+
+func (a *mqlAwsAppmeshVirtualRouter) fetchDetail() (*appmesh.DescribeVirtualRouterOutput, error) {
+	if a.fetched {
+		return a.descResp, nil
+	}
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	if a.fetched {
+		return a.descResp, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.AppMesh(a.region)
+	ctx := context.Background()
+
+	routerName := a.Name.Data
+	meshName := a.meshName
+	resp, err := svc.DescribeVirtualRouter(ctx, &appmesh.DescribeVirtualRouterInput{
+		MeshName:          &meshName,
+		VirtualRouterName: &routerName,
+	})
+	if err != nil {
+		return nil, err
+	}
+	a.fetched = true
+	a.descResp = resp
+	return resp, nil
+}
+
+func (a *mqlAwsAppmeshVirtualRouter) status() (string, error) {
+	resp, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	if resp.VirtualRouter == nil || resp.VirtualRouter.Status == nil {
+		return "", nil
+	}
+	return string(resp.VirtualRouter.Status.Status), nil
+}
+
+func (a *mqlAwsAppmeshVirtualRouter) listeners() ([]any, error) {
+	resp, err := a.fetchDetail()
+	if err != nil {
+		return nil, err
+	}
+	if resp.VirtualRouter == nil || resp.VirtualRouter.Spec == nil {
+		return []any{}, nil
+	}
+	listeners, err := convert.JsonToDictSlice(resp.VirtualRouter.Spec.Listeners)
+	if err != nil {
+		return nil, err
+	}
+	return listeners, nil
+}
+
+func (a *mqlAwsAppmeshVirtualRouter) routes() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.AppMesh(a.region)
+	ctx := context.Background()
+
+	meshName := a.meshName
+	routerName := a.Name.Data
+	res := []any{}
+	paginator := appmesh.NewListRoutesPaginator(svc, &appmesh.ListRoutesInput{
+		MeshName:          &meshName,
+		VirtualRouterName: &routerName,
+	})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, r := range page.Routes {
+			mqlRoute, err := CreateResource(a.MqlRuntime, "aws.appmesh.route",
+				map[string]*llx.RawData{
+					"__id":              llx.StringDataPtr(r.Arn),
+					"arn":               llx.StringDataPtr(r.Arn),
+					"name":              llx.StringDataPtr(r.RouteName),
+					"meshName":          llx.StringData(meshName),
+					"virtualRouterName": llx.StringData(routerName),
+					"region":            llx.StringData(a.region),
+				})
+			if err != nil {
+				return nil, err
+			}
+			internal := mqlRoute.(*mqlAwsAppmeshRoute)
+			internal.region = a.region
+			internal.meshName = meshName
+			internal.virtualRouterName = routerName
+			res = append(res, mqlRoute)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsAppmeshVirtualRouter) tags() (map[string]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.AppMesh(a.region)
+	ctx := context.Background()
+
+	arn := a.Arn.Data
+	tags := make(map[string]any)
+	paginator := appmesh.NewListTagsForResourcePaginator(svc, &appmesh.ListTagsForResourceInput{
+		ResourceArn: &arn,
+	})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, tag := range page.Tags {
+			tags[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
+		}
+	}
+	return tags, nil
+}
+
+// ==================== Routes ====================
+
+func (a *mqlAwsAppmeshRoute) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+type mqlAwsAppmeshRouteInternal struct {
+	fetched           bool
+	lock              sync.Mutex
+	descResp          *appmesh.DescribeRouteOutput
+	region            string
+	meshName          string
+	virtualRouterName string
+}
+
+func (a *mqlAwsAppmeshRoute) fetchDetail() (*appmesh.DescribeRouteOutput, error) {
+	if a.fetched {
+		return a.descResp, nil
+	}
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	if a.fetched {
+		return a.descResp, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.AppMesh(a.region)
+	ctx := context.Background()
+
+	routeName := a.Name.Data
+	meshName := a.meshName
+	routerName := a.virtualRouterName
+	resp, err := svc.DescribeRoute(ctx, &appmesh.DescribeRouteInput{
+		MeshName:          &meshName,
+		VirtualRouterName: &routerName,
+		RouteName:         &routeName,
+	})
+	if err != nil {
+		return nil, err
+	}
+	a.fetched = true
+	a.descResp = resp
+	return resp, nil
+}
+
+func (a *mqlAwsAppmeshRoute) status() (string, error) {
+	resp, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	if resp.Route == nil || resp.Route.Status == nil {
+		return "", nil
+	}
+	return string(resp.Route.Status.Status), nil
+}
+
+func (a *mqlAwsAppmeshRoute) spec() (map[string]any, error) {
+	resp, err := a.fetchDetail()
+	if err != nil {
+		return nil, err
+	}
+	if resp.Route == nil || resp.Route.Spec == nil {
+		return map[string]any{}, nil
+	}
+	return convert.JsonToDict(resp.Route.Spec)
+}
+
+func (a *mqlAwsAppmeshRoute) tags() (map[string]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.AppMesh(a.region)
+	ctx := context.Background()
+
+	arn := a.Arn.Data
+	tags := make(map[string]any)
+	paginator := appmesh.NewListTagsForResourcePaginator(svc, &appmesh.ListTagsForResourceInput{
+		ResourceArn: &arn,
+	})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, tag := range page.Tags {
+			tags[convert.ToValue(tag.Key)] = convert.ToValue(tag.Value)
+		}
+	}
+	return tags, nil
 }

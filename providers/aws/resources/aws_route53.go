@@ -615,6 +615,20 @@ func (a *mqlAwsRoute53QueryLoggingConfig) id() (string, error) {
 	return a.Id.Data, nil
 }
 
+func (a *mqlAwsRoute53QueryLoggingConfig) logGroup() (*mqlAwsCloudwatchLoggroup, error) {
+	arnVal := a.CloudWatchLogsLogGroupArn.Data
+	if arnVal == "" {
+		a.LogGroup.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.cloudwatch.loggroup",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsCloudwatchLoggroup), nil
+}
+
 func (a *mqlAwsRoute53QueryLoggingConfig) hostedZone() (*mqlAwsRoute53HostedZone, error) {
 	hostedZoneId := a.HostedZoneId.Data
 	mqlHz, err := NewResource(a.MqlRuntime, "aws.route53.hostedZone",

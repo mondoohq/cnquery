@@ -440,3 +440,59 @@ func (a *mqlAwsBackupPlanRule) id() (string, error) {
 func (a *mqlAwsBackupPlanRuleCopyAction) id() (string, error) {
 	return a.Id.Data, nil
 }
+
+func (a *mqlAwsBackupVault) encryptionKey() (*mqlAwsKmsKey, error) {
+	arnVal := a.EncryptionKeyArn.Data
+	if arnVal == "" {
+		a.EncryptionKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.kms.key",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsKmsKey), nil
+}
+
+func (a *mqlAwsBackupVaultRecoveryPoint) iamRole() (*mqlAwsIamRole, error) {
+	arnVal := a.IamRoleArn.Data
+	if arnVal == "" {
+		a.IamRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.iam.role",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsIamRole), nil
+}
+
+func (a *mqlAwsBackupVaultRecoveryPoint) encryptionKey() (*mqlAwsKmsKey, error) {
+	arnVal := a.EncryptionKeyArn.Data
+	if arnVal == "" {
+		a.EncryptionKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.kms.key",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsKmsKey), nil
+}
+
+func (a *mqlAwsBackupPlanRuleCopyAction) destinationVault() (*mqlAwsBackupVault, error) {
+	arnVal := a.DestinationBackupVaultArn.Data
+	if arnVal == "" {
+		a.DestinationVault.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.backup.vault",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsBackupVault), nil
+}

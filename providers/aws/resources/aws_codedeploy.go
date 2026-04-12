@@ -212,6 +212,20 @@ func (dg *mqlAwsCodedeployDeploymentGroup) id() (string, error) {
 	return dg.Arn.Data, nil
 }
 
+func (dg *mqlAwsCodedeployDeploymentGroup) serviceRole() (*mqlAwsIamRole, error) {
+	arnVal := dg.ServiceRoleArn.Data
+	if arnVal == "" {
+		dg.ServiceRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(dg.MqlRuntime, "aws.iam.role",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsIamRole), nil
+}
+
 func (dg *mqlAwsCodedeployDeploymentGroup) targetRevision() (any, error) {
 	if dg.sdkData.TargetRevision == nil {
 		return nil, nil

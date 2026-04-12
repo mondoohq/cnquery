@@ -150,6 +150,20 @@ func (a *mqlAwsAppstreamFleet) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+func (a *mqlAwsAppstreamFleet) iamRole() (*mqlAwsIamRole, error) {
+	arnVal := a.IamRoleArn.Data
+	if arnVal == "" {
+		a.IamRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.iam.role",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsIamRole), nil
+}
+
 func (a *mqlAwsAppstreamFleet) computeCapacityStatus() (*mqlAwsAppstreamFleetComputeCapacityStatus, error) {
 	ccs := a.cacheComputeCapacityStatus
 	if ccs == nil {
@@ -465,6 +479,20 @@ func newMqlAwsAppstreamImageBuilder(runtime *plugin.Runtime, region string, ib a
 
 func (a *mqlAwsAppstreamImageBuilder) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsAppstreamImageBuilder) iamRole() (*mqlAwsIamRole, error) {
+	arnVal := a.IamRoleArn.Data
+	if arnVal == "" {
+		a.IamRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.iam.role",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsIamRole), nil
 }
 
 func (a *mqlAwsAppstreamImageBuilder) tags() (map[string]any, error) {

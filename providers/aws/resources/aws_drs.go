@@ -15,6 +15,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
@@ -35,6 +36,20 @@ func (a *mqlAwsDrsJob) id() (string, error) {
 
 func (a *mqlAwsDrsReplicationConfiguration) id() (string, error) {
 	return "aws.drs.replicationConfiguration/" + a.SourceServerID.Data, nil
+}
+
+func (a *mqlAwsDrsReplicationConfiguration) ebsEncryptionKey() (*mqlAwsKmsKey, error) {
+	arnVal := a.EbsEncryptionKeyArn.Data
+	if arnVal == "" {
+		a.EbsEncryptionKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.kms.key",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsKmsKey), nil
 }
 
 func (a *mqlAwsDrsLaunchConfiguration) id() (string, error) {

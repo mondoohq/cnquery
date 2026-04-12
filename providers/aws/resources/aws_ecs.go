@@ -2112,3 +2112,77 @@ func createTaskSetNetworkConfigurationResource(runtime *plugin.Runtime, nc *ecst
 			"securityGroups": llx.ArrayData(securityGroups, types.String),
 		})
 }
+
+func (a *mqlAwsEcsContainer) taskDefinition() (*mqlAwsEcsTaskDefinition, error) {
+	arnVal := a.TaskDefinitionArn.Data
+	if arnVal == "" {
+		a.TaskDefinition.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	region, err := GetRegionFromArn(arnVal)
+	if err != nil {
+		return nil, err
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.ecs.taskDefinition",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal), "region": llx.StringData(region)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEcsTaskDefinition), nil
+}
+
+func (a *mqlAwsEcsContainer) task() (*mqlAwsEcsTask, error) {
+	arnVal := a.TaskArn.Data
+	if arnVal == "" {
+		a.Task.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.ecs.task",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEcsTask), nil
+}
+
+func (a *mqlAwsEcsService) cluster() (*mqlAwsEcsCluster, error) {
+	arnVal := a.ClusterArn.Data
+	if arnVal == "" {
+		a.Cluster.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.ecs.cluster",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEcsCluster), nil
+}
+
+func (a *mqlAwsEcsTaskSet) cluster() (*mqlAwsEcsCluster, error) {
+	arnVal := a.ClusterArn.Data
+	if arnVal == "" {
+		a.Cluster.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.ecs.cluster",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEcsCluster), nil
+}
+
+func (a *mqlAwsEcsTaskSet) service() (*mqlAwsEcsService, error) {
+	arnVal := a.ServiceArn.Data
+	if arnVal == "" {
+		a.Service.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.ecs.service",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEcsService), nil
+}

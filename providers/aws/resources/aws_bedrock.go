@@ -197,6 +197,20 @@ func (a *mqlAwsBedrockCustomModel) fetchDetail() (*bedrock.GetCustomModelOutput,
 	return resp, nil
 }
 
+func (a *mqlAwsBedrockCustomModel) baseModel() (*mqlAwsBedrockFoundationModel, error) {
+	arnVal := a.BaseModelArn.Data
+	if arnVal == "" {
+		a.BaseModel.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.bedrock.foundationModel",
+		map[string]*llx.RawData{"modelArn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsBedrockFoundationModel), nil
+}
+
 func (a *mqlAwsBedrockCustomModel) kmsKey() (*mqlAwsKmsKey, error) {
 	resp, err := a.fetchDetail()
 	if err != nil {
@@ -555,4 +569,18 @@ func (a *mqlAwsBedrock) getProvisionedModelThroughputs(conn *connection.AwsConne
 
 func (a *mqlAwsBedrockProvisionedModelThroughput) id() (string, error) {
 	return a.ProvisionedModelArn.Data, nil
+}
+
+func (a *mqlAwsBedrockProvisionedModelThroughput) foundationModel() (*mqlAwsBedrockFoundationModel, error) {
+	arnVal := a.FoundationModelArn.Data
+	if arnVal == "" {
+		a.FoundationModel.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.bedrock.foundationModel",
+		map[string]*llx.RawData{"modelArn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsBedrockFoundationModel), nil
 }

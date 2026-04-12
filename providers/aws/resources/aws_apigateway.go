@@ -203,3 +203,17 @@ func (a *mqlAwsApigatewayRestapi) id() (string, error) {
 func (a *mqlAwsApigatewayStage) id() (string, error) {
 	return a.Arn.Data, nil
 }
+
+func (a *mqlAwsApigatewayStage) webAcl() (*mqlAwsWafAcl, error) {
+	arnVal := a.WebAclArn.Data
+	if arnVal == "" {
+		a.WebAcl.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.waf.acl",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsWafAcl), nil
+}

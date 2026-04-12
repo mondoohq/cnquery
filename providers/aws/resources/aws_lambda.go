@@ -742,6 +742,20 @@ func (a *mqlAwsLambdaEventSourceMapping) id() (string, error) {
 	return a.Uuid.Data, nil
 }
 
+func (a *mqlAwsLambdaEventSourceMapping) function() (*mqlAwsLambdaFunction, error) {
+	arnVal := a.FunctionArn.Data
+	if arnVal == "" {
+		a.Function.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.lambda.function",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsLambdaFunction), nil
+}
+
 // ==================== Per-Function Event Source Mappings ====================
 
 func (a *mqlAwsLambdaFunction) eventSourceMappings() ([]any, error) {

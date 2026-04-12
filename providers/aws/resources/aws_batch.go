@@ -423,15 +423,100 @@ type mqlAwsBatchJobDefinitionInternal struct {
 	cacheTimeout             *batch_types.JobTimeout
 }
 
-func (a *mqlAwsBatchJobDefinition) containerProperties() (any, error) {
-	if a.cacheContainerProperties == nil {
+func (a *mqlAwsBatchJobDefinition) containerProperties() (*mqlAwsBatchJobDefinitionContainerProperties, error) {
+	cp := a.cacheContainerProperties
+	if cp == nil {
+		a.ContainerProperties.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	dict, err := convert.JsonToDict(a.cacheContainerProperties)
+
+	image := convert.ToValue(cp.Image)
+	vcpus := int64(0)
+	if cp.Vcpus != nil {
+		vcpus = int64(*cp.Vcpus)
+	}
+	memory := int64(0)
+	if cp.Memory != nil {
+		memory = int64(*cp.Memory)
+	}
+	command := make([]any, len(cp.Command))
+	for i, c := range cp.Command {
+		command[i] = c
+	}
+
+	env, _ := convert.JsonToDictSlice(cp.Environment)
+	resReqs, _ := convert.JsonToDictSlice(cp.ResourceRequirements)
+	logConfig, _ := convert.JsonToDict(cp.LogConfiguration)
+	linuxParams, _ := convert.JsonToDict(cp.LinuxParameters)
+	fargateConfig, _ := convert.JsonToDict(cp.FargatePlatformConfiguration)
+
+	privileged := false
+	if cp.Privileged != nil {
+		privileged = *cp.Privileged
+	}
+	readonlyRoot := false
+	if cp.ReadonlyRootFilesystem != nil {
+		readonlyRoot = *cp.ReadonlyRootFilesystem
+	}
+
+	res, err := CreateResource(a.MqlRuntime, "aws.batch.jobDefinition.containerProperties",
+		map[string]*llx.RawData{
+			"__id":                   llx.StringData(a.Arn.Data + "/containerProperties"),
+			"image":                  llx.StringData(image),
+			"vcpus":                  llx.IntData(vcpus),
+			"memory":                 llx.IntData(memory),
+			"command":                llx.ArrayData(command, types.String),
+			"environment":            llx.ArrayData(env, types.Dict),
+			"privileged":             llx.BoolData(privileged),
+			"readonlyRootFilesystem": llx.BoolData(readonlyRoot),
+			"resourceRequirements":   llx.ArrayData(resReqs, types.Dict),
+			"logConfiguration":       llx.DictData(logConfig),
+			"linuxParameters":        llx.DictData(linuxParams),
+			"fargateConfig":          llx.DictData(fargateConfig),
+		})
 	if err != nil {
 		return nil, err
 	}
-	return dict, nil
+	mqlCP := res.(*mqlAwsBatchJobDefinitionContainerProperties)
+	mqlCP.cacheJobRoleArn = cp.JobRoleArn
+	mqlCP.cacheExecutionRoleArn = cp.ExecutionRoleArn
+	return mqlCP, nil
+}
+
+type mqlAwsBatchJobDefinitionContainerPropertiesInternal struct {
+	cacheJobRoleArn       *string
+	cacheExecutionRoleArn *string
+}
+
+func (a *mqlAwsBatchJobDefinitionContainerProperties) id() (string, error) {
+	// __id is set via CreateResource args
+	return a.__id, nil
+}
+
+func (a *mqlAwsBatchJobDefinitionContainerProperties) jobRole() (*mqlAwsIamRole, error) {
+	if a.cacheJobRoleArn == nil || *a.cacheJobRoleArn == "" {
+		a.JobRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.iam.role",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheJobRoleArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsIamRole), nil
+}
+
+func (a *mqlAwsBatchJobDefinitionContainerProperties) executionRole() (*mqlAwsIamRole, error) {
+	if a.cacheExecutionRoleArn == nil || *a.cacheExecutionRoleArn == "" {
+		a.ExecutionRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.iam.role",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheExecutionRoleArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsIamRole), nil
 }
 
 func (a *mqlAwsBatchJobDefinition) nodeProperties() (any, error) {
@@ -445,24 +530,60 @@ func (a *mqlAwsBatchJobDefinition) nodeProperties() (any, error) {
 	return dict, nil
 }
 
-func (a *mqlAwsBatchJobDefinition) retryStrategy() (any, error) {
-	if a.cacheRetryStrategy == nil {
+func (a *mqlAwsBatchJobDefinition) retryStrategy() (*mqlAwsBatchJobDefinitionRetryStrategy, error) {
+	rs := a.cacheRetryStrategy
+	if rs == nil {
+		a.RetryStrategy.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	dict, err := convert.JsonToDict(a.cacheRetryStrategy)
+
+	attempts := int64(0)
+	if rs.Attempts != nil {
+		attempts = int64(*rs.Attempts)
+	}
+	evalOnExit, _ := convert.JsonToDictSlice(rs.EvaluateOnExit)
+
+	res, err := CreateResource(a.MqlRuntime, "aws.batch.jobDefinition.retryStrategy",
+		map[string]*llx.RawData{
+			"__id":           llx.StringData(a.Arn.Data + "/retryStrategy"),
+			"attempts":       llx.IntData(attempts),
+			"evaluateOnExit": llx.ArrayData(evalOnExit, types.Dict),
+		})
 	if err != nil {
 		return nil, err
 	}
-	return dict, nil
+	return res.(*mqlAwsBatchJobDefinitionRetryStrategy), nil
 }
 
-func (a *mqlAwsBatchJobDefinition) timeout() (any, error) {
-	if a.cacheTimeout == nil {
+func (a *mqlAwsBatchJobDefinitionRetryStrategy) id() (string, error) {
+	// __id is set via CreateResource args
+	return a.__id, nil
+}
+
+func (a *mqlAwsBatchJobDefinition) timeout() (*mqlAwsBatchJobDefinitionTimeout, error) {
+	t := a.cacheTimeout
+	if t == nil {
+		a.Timeout.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	dict, err := convert.JsonToDict(a.cacheTimeout)
+
+	attemptDuration := int64(0)
+	if t.AttemptDurationSeconds != nil {
+		attemptDuration = int64(*t.AttemptDurationSeconds)
+	}
+
+	res, err := CreateResource(a.MqlRuntime, "aws.batch.jobDefinition.timeout",
+		map[string]*llx.RawData{
+			"__id":                   llx.StringData(a.Arn.Data + "/timeout"),
+			"attemptDurationSeconds": llx.IntData(attemptDuration),
+		})
 	if err != nil {
 		return nil, err
 	}
-	return dict, nil
+	return res.(*mqlAwsBatchJobDefinitionTimeout), nil
+}
+
+func (a *mqlAwsBatchJobDefinitionTimeout) id() (string, error) {
+	// __id is set via CreateResource args
+	return a.__id, nil
 }

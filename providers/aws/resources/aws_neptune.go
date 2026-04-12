@@ -298,6 +298,20 @@ func (a *mqlAwsNeptuneInstance) kmsKey() (*mqlAwsKmsKey, error) {
 	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
+func (a *mqlAwsNeptuneInstance) monitoringRole() (*mqlAwsIamRole, error) {
+	arnVal := a.MonitoringRoleArn.Data
+	if arnVal == "" {
+		a.MonitoringRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.iam.role",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsIamRole), nil
+}
+
 func (a *mqlAwsNeptuneSnapshot) id() (string, error) {
 	return a.Arn.Data, nil
 }

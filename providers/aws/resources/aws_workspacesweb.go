@@ -209,3 +209,17 @@ func newMqlAwsWorkspaceswebUserAccessLoggingSetting(runtime *plugin.Runtime, reg
 func (a *mqlAwsWorkspaceswebUserAccessLoggingSetting) id() (string, error) {
 	return a.UserAccessLoggingSettingsArn.Data, nil
 }
+
+func (a *mqlAwsWorkspaceswebUserAccessLoggingSetting) kinesisStream() (*mqlAwsKinesisStream, error) {
+	arnVal := a.KinesisStreamArn.Data
+	if arnVal == "" {
+		a.KinesisStream.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.kinesis.stream",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsKinesisStream), nil
+}

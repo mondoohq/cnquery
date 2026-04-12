@@ -855,6 +855,20 @@ func (a *mqlAwsCloudwatchLoggroupSubscriptionfilter) id() (string, error) {
 	return a.Id.Data, nil
 }
 
+func (a *mqlAwsCloudwatchLoggroupSubscriptionfilter) iamRole() (*mqlAwsIamRole, error) {
+	arnVal := a.RoleArn.Data
+	if arnVal == "" {
+		a.IamRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.iam.role",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsIamRole), nil
+}
+
 func (a *mqlAwsCloudwatchLoggroup) logStreams() ([]any, error) {
 	arnValue := a.Arn.Data
 

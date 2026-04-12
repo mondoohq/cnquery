@@ -430,6 +430,20 @@ func (a *mqlAwsElbListener) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+func (a *mqlAwsElbListener) loadBalancer() (*mqlAwsElbLoadbalancer, error) {
+	arnVal := a.LoadBalancerArn.Data
+	if arnVal == "" {
+		a.LoadBalancer.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.elb.loadbalancer",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsElbLoadbalancer), nil
+}
+
 func (a *mqlAwsElbLoadbalancer) listeners() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	arnVal := a.Arn.Data
