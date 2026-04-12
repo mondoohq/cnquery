@@ -9707,6 +9707,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.dbcluster.performanceInsightsEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbcluster).GetPerformanceInsightsEnabled()).ToDataRes(types.Bool)
 	},
+	"aws.rds.dbcluster.performanceInsightsRetentionPeriod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetPerformanceInsightsRetentionPeriod()).ToDataRes(types.Int)
+	},
 	"aws.rds.dbcluster.engineMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbcluster).GetEngineMode()).ToDataRes(types.String)
 	},
@@ -9913,6 +9916,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.rds.dbinstance.performanceInsightsKmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetPerformanceInsightsKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.rds.dbinstance.performanceInsightsRetentionPeriod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetPerformanceInsightsRetentionPeriod()).ToDataRes(types.Int)
 	},
 	"aws.rds.dbinstance.licenseModel": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetLicenseModel()).ToDataRes(types.String)
@@ -28836,6 +28842,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsRdsDbcluster).PerformanceInsightsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"aws.rds.dbcluster.performanceInsightsRetentionPeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).PerformanceInsightsRetentionPeriod, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"aws.rds.dbcluster.engineMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbcluster).EngineMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -29118,6 +29128,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.rds.dbinstance.performanceInsightsKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbinstance).PerformanceInsightsKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.performanceInsightsRetentionPeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).PerformanceInsightsRetentionPeriod, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.rds.dbinstance.licenseModel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -69357,56 +69371,57 @@ type mqlAwsRdsDbcluster struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsRdsDbclusterInternal
-	Arn                        plugin.TValue[string]
-	Region                     plugin.TValue[string]
-	Id                         plugin.TValue[string]
-	Members                    plugin.TValue[[]any]
-	Snapshots                  plugin.TValue[[]any]
-	Tags                       plugin.TValue[map[string]any]
-	StorageEncrypted           plugin.TValue[bool]
-	StorageEncryptionType      plugin.TValue[string]
-	StorageAllocated           plugin.TValue[int64]
-	StorageIops                plugin.TValue[int64]
-	StorageType                plugin.TValue[string]
-	Status                     plugin.TValue[string]
-	CreatedAt                  plugin.TValue[*time.Time]
-	BackupRetentionPeriod      plugin.TValue[int64]
-	AutoMinorVersionUpgrade    plugin.TValue[bool]
-	ClusterDbInstanceClass     plugin.TValue[string]
-	Engine                     plugin.TValue[string]
-	EngineVersion              plugin.TValue[string]
-	PubliclyAccessible         plugin.TValue[bool]
-	MultiAZ                    plugin.TValue[bool]
-	DeletionProtection         plugin.TValue[bool]
-	SecurityGroups             plugin.TValue[[]any]
-	AvailabilityZones          plugin.TValue[[]any]
-	Port                       plugin.TValue[int64]
-	Endpoint                   plugin.TValue[string]
-	HostedZoneId               plugin.TValue[string]
-	MasterUsername             plugin.TValue[string]
-	LatestRestorableTime       plugin.TValue[*time.Time]
-	BackupSettings             plugin.TValue[[]any]
-	EngineLifecycleSupport     plugin.TValue[string]
-	CertificateExpiresAt       plugin.TValue[*time.Time]
-	CertificateAuthority       plugin.TValue[string]
-	IamDatabaseAuthentication  plugin.TValue[bool]
-	ActivityStreamMode         plugin.TValue[string]
-	ActivityStreamStatus       plugin.TValue[string]
-	MonitoringInterval         plugin.TValue[int64]
-	NetworkType                plugin.TValue[string]
-	PreferredMaintenanceWindow plugin.TValue[string]
-	PreferredBackupWindow      plugin.TValue[string]
-	HttpEndpointEnabled        plugin.TValue[bool]
-	ParameterGroupName         plugin.TValue[string]
-	GlobalClusterIdentifier    plugin.TValue[string]
-	DatabaseInsightsMode       plugin.TValue[string]
-	KmsKey                     plugin.TValue[*mqlAwsKmsKey]
-	PerformanceInsightsEnabled plugin.TValue[bool]
-	EngineMode                 plugin.TValue[string]
-	EarliestRestorableTime     plugin.TValue[*time.Time]
-	ActivityStreamKmsKey       plugin.TValue[*mqlAwsKmsKey]
-	MasterUserSecret           plugin.TValue[any]
-	CopyTagsToSnapshot         plugin.TValue[bool]
+	Arn                                plugin.TValue[string]
+	Region                             plugin.TValue[string]
+	Id                                 plugin.TValue[string]
+	Members                            plugin.TValue[[]any]
+	Snapshots                          plugin.TValue[[]any]
+	Tags                               plugin.TValue[map[string]any]
+	StorageEncrypted                   plugin.TValue[bool]
+	StorageEncryptionType              plugin.TValue[string]
+	StorageAllocated                   plugin.TValue[int64]
+	StorageIops                        plugin.TValue[int64]
+	StorageType                        plugin.TValue[string]
+	Status                             plugin.TValue[string]
+	CreatedAt                          plugin.TValue[*time.Time]
+	BackupRetentionPeriod              plugin.TValue[int64]
+	AutoMinorVersionUpgrade            plugin.TValue[bool]
+	ClusterDbInstanceClass             plugin.TValue[string]
+	Engine                             plugin.TValue[string]
+	EngineVersion                      plugin.TValue[string]
+	PubliclyAccessible                 plugin.TValue[bool]
+	MultiAZ                            plugin.TValue[bool]
+	DeletionProtection                 plugin.TValue[bool]
+	SecurityGroups                     plugin.TValue[[]any]
+	AvailabilityZones                  plugin.TValue[[]any]
+	Port                               plugin.TValue[int64]
+	Endpoint                           plugin.TValue[string]
+	HostedZoneId                       plugin.TValue[string]
+	MasterUsername                     plugin.TValue[string]
+	LatestRestorableTime               plugin.TValue[*time.Time]
+	BackupSettings                     plugin.TValue[[]any]
+	EngineLifecycleSupport             plugin.TValue[string]
+	CertificateExpiresAt               plugin.TValue[*time.Time]
+	CertificateAuthority               plugin.TValue[string]
+	IamDatabaseAuthentication          plugin.TValue[bool]
+	ActivityStreamMode                 plugin.TValue[string]
+	ActivityStreamStatus               plugin.TValue[string]
+	MonitoringInterval                 plugin.TValue[int64]
+	NetworkType                        plugin.TValue[string]
+	PreferredMaintenanceWindow         plugin.TValue[string]
+	PreferredBackupWindow              plugin.TValue[string]
+	HttpEndpointEnabled                plugin.TValue[bool]
+	ParameterGroupName                 plugin.TValue[string]
+	GlobalClusterIdentifier            plugin.TValue[string]
+	DatabaseInsightsMode               plugin.TValue[string]
+	KmsKey                             plugin.TValue[*mqlAwsKmsKey]
+	PerformanceInsightsEnabled         plugin.TValue[bool]
+	PerformanceInsightsRetentionPeriod plugin.TValue[int64]
+	EngineMode                         plugin.TValue[string]
+	EarliestRestorableTime             plugin.TValue[*time.Time]
+	ActivityStreamKmsKey               plugin.TValue[*mqlAwsKmsKey]
+	MasterUserSecret                   plugin.TValue[any]
+	CopyTagsToSnapshot                 plugin.TValue[bool]
 }
 
 // createAwsRdsDbcluster creates a new instance of this resource
@@ -69674,6 +69689,10 @@ func (c *mqlAwsRdsDbcluster) GetPerformanceInsightsEnabled() *plugin.TValue[bool
 	return &c.PerformanceInsightsEnabled
 }
 
+func (c *mqlAwsRdsDbcluster) GetPerformanceInsightsRetentionPeriod() *plugin.TValue[int64] {
+	return &c.PerformanceInsightsRetentionPeriod
+}
+
 func (c *mqlAwsRdsDbcluster) GetEngineMode() *plugin.TValue[string] {
 	return &c.EngineMode
 }
@@ -69849,63 +69868,64 @@ type mqlAwsRdsDbinstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsRdsDbinstanceInternal
-	Arn                           plugin.TValue[string]
-	Id                            plugin.TValue[string]
-	Name                          plugin.TValue[string]
-	BackupRetentionPeriod         plugin.TValue[int64]
-	Snapshots                     plugin.TValue[[]any]
-	StorageEncrypted              plugin.TValue[bool]
-	StorageEncryptionType         plugin.TValue[string]
-	StorageAllocated              plugin.TValue[int64]
-	StorageIops                   plugin.TValue[int64]
-	StorageType                   plugin.TValue[string]
-	Region                        plugin.TValue[string]
-	AvailabilityZone              plugin.TValue[string]
-	PubliclyAccessible            plugin.TValue[bool]
-	EnabledCloudwatchLogsExports  plugin.TValue[[]any]
-	DeletionProtection            plugin.TValue[bool]
-	MultiAZ                       plugin.TValue[bool]
-	MonitoringInterval            plugin.TValue[int64]
-	EnhancedMonitoringResourceArn plugin.TValue[string]
-	Tags                          plugin.TValue[map[string]any]
-	DbInstanceClass               plugin.TValue[string]
-	DbInstanceIdentifier          plugin.TValue[string]
-	Engine                        plugin.TValue[string]
-	EngineVersion                 plugin.TValue[string]
-	SecurityGroups                plugin.TValue[[]any]
-	Status                        plugin.TValue[string]
-	AutoMinorVersionUpgrade       plugin.TValue[bool]
-	CreatedAt                     plugin.TValue[*time.Time]
-	Port                          plugin.TValue[int64]
-	Endpoint                      plugin.TValue[string]
-	MasterUsername                plugin.TValue[string]
-	LatestRestorableTime          plugin.TValue[*time.Time]
-	BackupSettings                plugin.TValue[[]any]
-	Subnets                       plugin.TValue[[]any]
-	EngineLifecycleSupport        plugin.TValue[string]
-	CertificateExpiresAt          plugin.TValue[*time.Time]
-	CertificateAuthority          plugin.TValue[string]
-	IamDatabaseAuthentication     plugin.TValue[bool]
-	CustomIamInstanceProfile      plugin.TValue[string]
-	ActivityStreamMode            plugin.TValue[string]
-	ActivityStreamStatus          plugin.TValue[string]
-	PendingMaintenanceActions     plugin.TValue[[]any]
-	NetworkType                   plugin.TValue[string]
-	PreferredMaintenanceWindow    plugin.TValue[string]
-	PreferredBackupWindow         plugin.TValue[string]
-	KmsKey                        plugin.TValue[*mqlAwsKmsKey]
-	PerformanceInsightsEnabled    plugin.TValue[bool]
-	CopyTagsToSnapshot            plugin.TValue[bool]
-	PerformanceInsightsKmsKey     plugin.TValue[*mqlAwsKmsKey]
-	LicenseModel                  plugin.TValue[string]
-	MaxAllocatedStorage           plugin.TValue[int64]
-	DedicatedLogVolume            plugin.TValue[bool]
-	DbiResourceId                 plugin.TValue[string]
-	DbClusterIdentifier           plugin.TValue[string]
-	StorageThroughput             plugin.TValue[int64]
-	ActivityStreamKmsKey          plugin.TValue[*mqlAwsKmsKey]
-	MasterUserSecret              plugin.TValue[any]
-	CustomerOwnedIpEnabled        plugin.TValue[bool]
+	Arn                                plugin.TValue[string]
+	Id                                 plugin.TValue[string]
+	Name                               plugin.TValue[string]
+	BackupRetentionPeriod              plugin.TValue[int64]
+	Snapshots                          plugin.TValue[[]any]
+	StorageEncrypted                   plugin.TValue[bool]
+	StorageEncryptionType              plugin.TValue[string]
+	StorageAllocated                   plugin.TValue[int64]
+	StorageIops                        plugin.TValue[int64]
+	StorageType                        plugin.TValue[string]
+	Region                             plugin.TValue[string]
+	AvailabilityZone                   plugin.TValue[string]
+	PubliclyAccessible                 plugin.TValue[bool]
+	EnabledCloudwatchLogsExports       plugin.TValue[[]any]
+	DeletionProtection                 plugin.TValue[bool]
+	MultiAZ                            plugin.TValue[bool]
+	MonitoringInterval                 plugin.TValue[int64]
+	EnhancedMonitoringResourceArn      plugin.TValue[string]
+	Tags                               plugin.TValue[map[string]any]
+	DbInstanceClass                    plugin.TValue[string]
+	DbInstanceIdentifier               plugin.TValue[string]
+	Engine                             plugin.TValue[string]
+	EngineVersion                      plugin.TValue[string]
+	SecurityGroups                     plugin.TValue[[]any]
+	Status                             plugin.TValue[string]
+	AutoMinorVersionUpgrade            plugin.TValue[bool]
+	CreatedAt                          plugin.TValue[*time.Time]
+	Port                               plugin.TValue[int64]
+	Endpoint                           plugin.TValue[string]
+	MasterUsername                     plugin.TValue[string]
+	LatestRestorableTime               plugin.TValue[*time.Time]
+	BackupSettings                     plugin.TValue[[]any]
+	Subnets                            plugin.TValue[[]any]
+	EngineLifecycleSupport             plugin.TValue[string]
+	CertificateExpiresAt               plugin.TValue[*time.Time]
+	CertificateAuthority               plugin.TValue[string]
+	IamDatabaseAuthentication          plugin.TValue[bool]
+	CustomIamInstanceProfile           plugin.TValue[string]
+	ActivityStreamMode                 plugin.TValue[string]
+	ActivityStreamStatus               plugin.TValue[string]
+	PendingMaintenanceActions          plugin.TValue[[]any]
+	NetworkType                        plugin.TValue[string]
+	PreferredMaintenanceWindow         plugin.TValue[string]
+	PreferredBackupWindow              plugin.TValue[string]
+	KmsKey                             plugin.TValue[*mqlAwsKmsKey]
+	PerformanceInsightsEnabled         plugin.TValue[bool]
+	CopyTagsToSnapshot                 plugin.TValue[bool]
+	PerformanceInsightsKmsKey          plugin.TValue[*mqlAwsKmsKey]
+	PerformanceInsightsRetentionPeriod plugin.TValue[int64]
+	LicenseModel                       plugin.TValue[string]
+	MaxAllocatedStorage                plugin.TValue[int64]
+	DedicatedLogVolume                 plugin.TValue[bool]
+	DbiResourceId                      plugin.TValue[string]
+	DbClusterIdentifier                plugin.TValue[string]
+	StorageThroughput                  plugin.TValue[int64]
+	ActivityStreamKmsKey               plugin.TValue[*mqlAwsKmsKey]
+	MasterUserSecret                   plugin.TValue[any]
+	CustomerOwnedIpEnabled             plugin.TValue[bool]
 }
 
 // createAwsRdsDbinstance creates a new instance of this resource
@@ -70219,6 +70239,10 @@ func (c *mqlAwsRdsDbinstance) GetPerformanceInsightsKmsKey() *plugin.TValue[*mql
 
 		return c.performanceInsightsKmsKey()
 	})
+}
+
+func (c *mqlAwsRdsDbinstance) GetPerformanceInsightsRetentionPeriod() *plugin.TValue[int64] {
+	return &c.PerformanceInsightsRetentionPeriod
 }
 
 func (c *mqlAwsRdsDbinstance) GetLicenseModel() *plugin.TValue[string] {

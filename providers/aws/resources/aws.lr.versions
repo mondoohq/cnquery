@@ -3999,6 +3999,7 @@ aws.rds.dbcluster.multiAZ 11.15.2
 aws.rds.dbcluster.networkType 11.15.2
 aws.rds.dbcluster.parameterGroupName 11.15.2
 aws.rds.dbcluster.performanceInsightsEnabled 11.15.2
+aws.rds.dbcluster.performanceInsightsRetentionPeriod 13.12.1
 aws.rds.dbcluster.port 11.15.2
 aws.rds.dbcluster.preferredBackupWindow 11.15.2
 aws.rds.dbcluster.preferredMaintenanceWindow 11.15.2
@@ -4055,6 +4056,7 @@ aws.rds.dbinstance.networkType 11.15.2
 aws.rds.dbinstance.pendingMaintenanceActions 11.15.2
 aws.rds.dbinstance.performanceInsightsEnabled 11.15.2
 aws.rds.dbinstance.performanceInsightsKmsKey 11.15.2
+aws.rds.dbinstance.performanceInsightsRetentionPeriod 13.12.1
 aws.rds.dbinstance.port 11.15.2
 aws.rds.dbinstance.preferredBackupWindow 11.15.2
 aws.rds.dbinstance.preferredMaintenanceWindow 11.15.2
