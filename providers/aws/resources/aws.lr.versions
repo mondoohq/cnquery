@@ -399,6 +399,7 @@ aws.batch.computeEnvironment.type 13.1.1
 aws.batch.computeEnvironments 13.1.1
 aws.batch.jobDefinition 13.1.1
 aws.batch.jobDefinition.arn 13.1.1
+aws.batch.jobDefinition.container 13.12.1
 aws.batch.jobDefinition.containerProperties 13.1.1
 aws.batch.jobDefinition.containerProperties.command 13.12.1
 aws.batch.jobDefinition.containerProperties.environment 13.12.1
@@ -413,9 +414,11 @@ aws.batch.jobDefinition.containerProperties.privileged 13.12.1
 aws.batch.jobDefinition.containerProperties.readonlyRootFilesystem 13.12.1
 aws.batch.jobDefinition.containerProperties.resourceRequirements 13.12.1
 aws.batch.jobDefinition.containerProperties.vcpus 13.12.1
+aws.batch.jobDefinition.jobTimeout 13.12.1
 aws.batch.jobDefinition.name 13.1.1
 aws.batch.jobDefinition.nodeProperties 13.1.1
 aws.batch.jobDefinition.region 13.1.1
+aws.batch.jobDefinition.retry 13.12.1
 aws.batch.jobDefinition.retryStrategy 13.1.1
 aws.batch.jobDefinition.retryStrategy.attempts 13.12.1
 aws.batch.jobDefinition.retryStrategy.evaluateOnExit 13.12.1

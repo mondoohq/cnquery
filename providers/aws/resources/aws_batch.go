@@ -423,10 +423,17 @@ type mqlAwsBatchJobDefinitionInternal struct {
 	cacheTimeout             *batch_types.JobTimeout
 }
 
-func (a *mqlAwsBatchJobDefinition) containerProperties() (*mqlAwsBatchJobDefinitionContainerProperties, error) {
+func (a *mqlAwsBatchJobDefinition) containerProperties() (any, error) {
+	if a.cacheContainerProperties == nil {
+		return nil, nil
+	}
+	return convert.JsonToDict(a.cacheContainerProperties)
+}
+
+func (a *mqlAwsBatchJobDefinition) container() (*mqlAwsBatchJobDefinitionContainerProperties, error) {
 	cp := a.cacheContainerProperties
 	if cp == nil {
-		a.ContainerProperties.State = plugin.StateIsNull | plugin.StateIsSet
+		a.Container.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
 
@@ -545,10 +552,17 @@ func (a *mqlAwsBatchJobDefinition) nodeProperties() (any, error) {
 	return dict, nil
 }
 
-func (a *mqlAwsBatchJobDefinition) retryStrategy() (*mqlAwsBatchJobDefinitionRetryStrategy, error) {
+func (a *mqlAwsBatchJobDefinition) retryStrategy() (any, error) {
+	if a.cacheRetryStrategy == nil {
+		return nil, nil
+	}
+	return convert.JsonToDict(a.cacheRetryStrategy)
+}
+
+func (a *mqlAwsBatchJobDefinition) retry() (*mqlAwsBatchJobDefinitionRetryStrategy, error) {
 	rs := a.cacheRetryStrategy
 	if rs == nil {
-		a.RetryStrategy.State = plugin.StateIsNull | plugin.StateIsSet
+		a.Retry.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
 
@@ -578,10 +592,17 @@ func (a *mqlAwsBatchJobDefinitionRetryStrategy) id() (string, error) {
 	return a.__id, nil
 }
 
-func (a *mqlAwsBatchJobDefinition) timeout() (*mqlAwsBatchJobDefinitionTimeout, error) {
+func (a *mqlAwsBatchJobDefinition) timeout() (any, error) {
+	if a.cacheTimeout == nil {
+		return nil, nil
+	}
+	return convert.JsonToDict(a.cacheTimeout)
+}
+
+func (a *mqlAwsBatchJobDefinition) jobTimeout() (*mqlAwsBatchJobDefinitionTimeout, error) {
 	t := a.cacheTimeout
 	if t == nil {
-		a.Timeout.State = plugin.StateIsNull | plugin.StateIsSet
+		a.JobTimeout.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
 

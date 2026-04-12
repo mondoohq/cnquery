@@ -17018,17 +17018,26 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.batch.jobDefinition.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBatchJobDefinition).GetStatus()).ToDataRes(types.String)
 	},
+	"aws.batch.jobDefinition.container": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinition).GetContainer()).ToDataRes(types.Resource("aws.batch.jobDefinition.containerProperties"))
+	},
 	"aws.batch.jobDefinition.containerProperties": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsBatchJobDefinition).GetContainerProperties()).ToDataRes(types.Resource("aws.batch.jobDefinition.containerProperties"))
+		return (r.(*mqlAwsBatchJobDefinition).GetContainerProperties()).ToDataRes(types.Dict)
 	},
 	"aws.batch.jobDefinition.nodeProperties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBatchJobDefinition).GetNodeProperties()).ToDataRes(types.Dict)
 	},
+	"aws.batch.jobDefinition.retry": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinition).GetRetry()).ToDataRes(types.Resource("aws.batch.jobDefinition.retryStrategy"))
+	},
 	"aws.batch.jobDefinition.retryStrategy": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsBatchJobDefinition).GetRetryStrategy()).ToDataRes(types.Resource("aws.batch.jobDefinition.retryStrategy"))
+		return (r.(*mqlAwsBatchJobDefinition).GetRetryStrategy()).ToDataRes(types.Dict)
+	},
+	"aws.batch.jobDefinition.jobTimeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinition).GetJobTimeout()).ToDataRes(types.Resource("aws.batch.jobDefinition.timeout"))
 	},
 	"aws.batch.jobDefinition.timeout": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsBatchJobDefinition).GetTimeout()).ToDataRes(types.Resource("aws.batch.jobDefinition.timeout"))
+		return (r.(*mqlAwsBatchJobDefinition).GetTimeout()).ToDataRes(types.Dict)
 	},
 	"aws.batch.jobDefinition.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBatchJobDefinition).GetTags()).ToDataRes(types.Map(types.String, types.String))
@@ -39466,20 +39475,32 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsBatchJobDefinition).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.batch.jobDefinition.container": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinition).Container, ok = plugin.RawToTValue[*mqlAwsBatchJobDefinitionContainerProperties](v.Value, v.Error)
+		return
+	},
 	"aws.batch.jobDefinition.containerProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsBatchJobDefinition).ContainerProperties, ok = plugin.RawToTValue[*mqlAwsBatchJobDefinitionContainerProperties](v.Value, v.Error)
+		r.(*mqlAwsBatchJobDefinition).ContainerProperties, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.batch.jobDefinition.nodeProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBatchJobDefinition).NodeProperties, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.batch.jobDefinition.retry": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinition).Retry, ok = plugin.RawToTValue[*mqlAwsBatchJobDefinitionRetryStrategy](v.Value, v.Error)
+		return
+	},
 	"aws.batch.jobDefinition.retryStrategy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsBatchJobDefinition).RetryStrategy, ok = plugin.RawToTValue[*mqlAwsBatchJobDefinitionRetryStrategy](v.Value, v.Error)
+		r.(*mqlAwsBatchJobDefinition).RetryStrategy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.jobTimeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinition).JobTimeout, ok = plugin.RawToTValue[*mqlAwsBatchJobDefinitionTimeout](v.Value, v.Error)
 		return
 	},
 	"aws.batch.jobDefinition.timeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsBatchJobDefinition).Timeout, ok = plugin.RawToTValue[*mqlAwsBatchJobDefinitionTimeout](v.Value, v.Error)
+		r.(*mqlAwsBatchJobDefinition).Timeout, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.batch.jobDefinition.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -95547,10 +95568,13 @@ type mqlAwsBatchJobDefinition struct {
 	Revision            plugin.TValue[int64]
 	Type                plugin.TValue[string]
 	Status              plugin.TValue[string]
-	ContainerProperties plugin.TValue[*mqlAwsBatchJobDefinitionContainerProperties]
+	Container           plugin.TValue[*mqlAwsBatchJobDefinitionContainerProperties]
+	ContainerProperties plugin.TValue[any]
 	NodeProperties      plugin.TValue[any]
-	RetryStrategy       plugin.TValue[*mqlAwsBatchJobDefinitionRetryStrategy]
-	Timeout             plugin.TValue[*mqlAwsBatchJobDefinitionTimeout]
+	Retry               plugin.TValue[*mqlAwsBatchJobDefinitionRetryStrategy]
+	RetryStrategy       plugin.TValue[any]
+	JobTimeout          plugin.TValue[*mqlAwsBatchJobDefinitionTimeout]
+	Timeout             plugin.TValue[any]
 	Tags                plugin.TValue[map[string]any]
 }
 
@@ -95610,10 +95634,10 @@ func (c *mqlAwsBatchJobDefinition) GetStatus() *plugin.TValue[string] {
 	return &c.Status
 }
 
-func (c *mqlAwsBatchJobDefinition) GetContainerProperties() *plugin.TValue[*mqlAwsBatchJobDefinitionContainerProperties] {
-	return plugin.GetOrCompute[*mqlAwsBatchJobDefinitionContainerProperties](&c.ContainerProperties, func() (*mqlAwsBatchJobDefinitionContainerProperties, error) {
+func (c *mqlAwsBatchJobDefinition) GetContainer() *plugin.TValue[*mqlAwsBatchJobDefinitionContainerProperties] {
+	return plugin.GetOrCompute[*mqlAwsBatchJobDefinitionContainerProperties](&c.Container, func() (*mqlAwsBatchJobDefinitionContainerProperties, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.batch.jobDefinition", c.__id, "containerProperties")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.batch.jobDefinition", c.__id, "container")
 			if err != nil {
 				return nil, err
 			}
@@ -95622,6 +95646,12 @@ func (c *mqlAwsBatchJobDefinition) GetContainerProperties() *plugin.TValue[*mqlA
 			}
 		}
 
+		return c.container()
+	})
+}
+
+func (c *mqlAwsBatchJobDefinition) GetContainerProperties() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.ContainerProperties, func() (any, error) {
 		return c.containerProperties()
 	})
 }
@@ -95632,10 +95662,10 @@ func (c *mqlAwsBatchJobDefinition) GetNodeProperties() *plugin.TValue[any] {
 	})
 }
 
-func (c *mqlAwsBatchJobDefinition) GetRetryStrategy() *plugin.TValue[*mqlAwsBatchJobDefinitionRetryStrategy] {
-	return plugin.GetOrCompute[*mqlAwsBatchJobDefinitionRetryStrategy](&c.RetryStrategy, func() (*mqlAwsBatchJobDefinitionRetryStrategy, error) {
+func (c *mqlAwsBatchJobDefinition) GetRetry() *plugin.TValue[*mqlAwsBatchJobDefinitionRetryStrategy] {
+	return plugin.GetOrCompute[*mqlAwsBatchJobDefinitionRetryStrategy](&c.Retry, func() (*mqlAwsBatchJobDefinitionRetryStrategy, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.batch.jobDefinition", c.__id, "retryStrategy")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.batch.jobDefinition", c.__id, "retry")
 			if err != nil {
 				return nil, err
 			}
@@ -95644,14 +95674,20 @@ func (c *mqlAwsBatchJobDefinition) GetRetryStrategy() *plugin.TValue[*mqlAwsBatc
 			}
 		}
 
+		return c.retry()
+	})
+}
+
+func (c *mqlAwsBatchJobDefinition) GetRetryStrategy() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.RetryStrategy, func() (any, error) {
 		return c.retryStrategy()
 	})
 }
 
-func (c *mqlAwsBatchJobDefinition) GetTimeout() *plugin.TValue[*mqlAwsBatchJobDefinitionTimeout] {
-	return plugin.GetOrCompute[*mqlAwsBatchJobDefinitionTimeout](&c.Timeout, func() (*mqlAwsBatchJobDefinitionTimeout, error) {
+func (c *mqlAwsBatchJobDefinition) GetJobTimeout() *plugin.TValue[*mqlAwsBatchJobDefinitionTimeout] {
+	return plugin.GetOrCompute[*mqlAwsBatchJobDefinitionTimeout](&c.JobTimeout, func() (*mqlAwsBatchJobDefinitionTimeout, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.batch.jobDefinition", c.__id, "timeout")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.batch.jobDefinition", c.__id, "jobTimeout")
 			if err != nil {
 				return nil, err
 			}
@@ -95660,6 +95696,12 @@ func (c *mqlAwsBatchJobDefinition) GetTimeout() *plugin.TValue[*mqlAwsBatchJobDe
 			}
 		}
 
+		return c.jobTimeout()
+	})
+}
+
+func (c *mqlAwsBatchJobDefinition) GetTimeout() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Timeout, func() (any, error) {
 		return c.timeout()
 	})
 }

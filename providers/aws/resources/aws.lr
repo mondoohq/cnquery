@@ -11468,14 +11468,20 @@ private aws.batch.jobDefinition @defaults("arn name type status") {
   type string
   // Status: ACTIVE or INACTIVE
   status string
-  // Container properties
-  containerProperties() aws.batch.jobDefinition.containerProperties
+  // Typed container properties with IAM role references
+  container() aws.batch.jobDefinition.containerProperties
+  // Deprecated: Use container() instead
+  containerProperties() dict
   // Node properties for multi-node jobs
   nodeProperties() dict
-  // Retry strategy
-  retryStrategy() aws.batch.jobDefinition.retryStrategy
-  // Timeout configuration
-  timeout() aws.batch.jobDefinition.timeout
+  // Typed retry strategy
+  retry() aws.batch.jobDefinition.retryStrategy
+  // Deprecated: Use retry() instead
+  retryStrategy() dict
+  // Typed timeout configuration
+  jobTimeout() aws.batch.jobDefinition.timeout
+  // Deprecated: Use jobTimeout() instead
+  timeout() dict
   // Tags for the job definition
   tags map[string]string
 }
