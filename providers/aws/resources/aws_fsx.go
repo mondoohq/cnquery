@@ -368,7 +368,7 @@ func (a *mqlAwsFsxCache) vpc() (*mqlAwsVpc, error) {
 	return res.(*mqlAwsVpc), nil
 }
 
-func (a *mqlAwsFsxCache) cacheSubnets() ([]any, error) {
+func (a *mqlAwsFsxCache) subnets() ([]any, error) {
 	subnetIds := a.SubnetIds.Data
 	if len(subnetIds) == 0 {
 		return nil, nil

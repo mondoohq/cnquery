@@ -1122,10 +1122,10 @@ private aws.fsx.cache @defaults("id lifecycle") {
   // VPC where the cache resides
   vpc() aws.vpc
   // Subnet IDs
-  // Deprecated: use cacheSubnets() instead
+  // Deprecated: use subnets() instead
   subnetIds []string
   // Subnets for the cache
-  cacheSubnets() []aws.vpc.subnet
+  subnets() []aws.vpc.subnet
   // Lustre-specific configuration
   lustreConfiguration dict
   // S3 data repository associations

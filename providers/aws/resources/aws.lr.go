@@ -4065,8 +4065,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.fsx.cache.subnetIds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsFsxCache).GetSubnetIds()).ToDataRes(types.Array(types.String))
 	},
-	"aws.fsx.cache.cacheSubnets": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsFsxCache).GetCacheSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	"aws.fsx.cache.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFsxCache).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
 	},
 	"aws.fsx.cache.lustreConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsFsxCache).GetLustreConfiguration()).ToDataRes(types.Dict)
@@ -20045,8 +20045,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsFsxCache).SubnetIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"aws.fsx.cache.cacheSubnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsFsxCache).CacheSubnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"aws.fsx.cache.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFsxCache).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.fsx.cache.lustreConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -46166,7 +46166,7 @@ type mqlAwsFsxCache struct {
 	VpcId                      plugin.TValue[string]
 	Vpc                        plugin.TValue[*mqlAwsVpc]
 	SubnetIds                  plugin.TValue[[]any]
-	CacheSubnets               plugin.TValue[[]any]
+	Subnets                    plugin.TValue[[]any]
 	LustreConfiguration        plugin.TValue[any]
 	DataRepositoryAssociations plugin.TValue[[]any]
 	Region                     plugin.TValue[string]
@@ -46249,10 +46249,10 @@ func (c *mqlAwsFsxCache) GetSubnetIds() *plugin.TValue[[]any] {
 	return &c.SubnetIds
 }
 
-func (c *mqlAwsFsxCache) GetCacheSubnets() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.CacheSubnets, func() ([]any, error) {
+func (c *mqlAwsFsxCache) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.fsx.cache", c.__id, "cacheSubnets")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.fsx.cache", c.__id, "subnets")
 			if err != nil {
 				return nil, err
 			}
@@ -46261,7 +46261,7 @@ func (c *mqlAwsFsxCache) GetCacheSubnets() *plugin.TValue[[]any] {
 			}
 		}
 
-		return c.cacheSubnets()
+		return c.subnets()
 	})
 }
 

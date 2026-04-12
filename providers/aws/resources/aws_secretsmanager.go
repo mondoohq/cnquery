@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
@@ -318,6 +319,12 @@ func (a *mqlAwsSecretsmanagerSecret) deletedAt() (*time.Time, error) {
 func (a *mqlAwsSecretsmanagerSecretReplicaRegion) kmsKey() (*mqlAwsKmsKey, error) {
 	kmsKeyId := a.KmsKeyId.Data
 	if kmsKeyId == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	// KmsKeyId can be an ARN, key ID, or alias. initAwsKmsKey requires a full ARN.
+	if !strings.HasPrefix(kmsKeyId, "arn:") {
+		log.Warn().Str("kmsKeyId", kmsKeyId).Msg("replica region KMS key is not an ARN, cannot resolve as typed resource")
 		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
