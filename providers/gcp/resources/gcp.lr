@@ -5114,9 +5114,9 @@ private gcp.project.computeService.route @defaults("name destRange") {
   nextHopIlb string
   // Next hop Network Connectivity Center hub URL
   nextHopHub string
-  // Route type (STATIC, BGP, SUBNET, TRANSIT)
+  // Route type (STATIC, BGP, SUBNET, TRANSIT); empty for custom static routes
   routeType string
-  // Route status (ACTIVE, INACTIVE, PENDING, DROPPED)
+  // Route status (ACTIVE, INACTIVE, PENDING, DROPPED); empty for custom static routes
   routeStatus string
   // Instance tags this route applies to
   tags []string
