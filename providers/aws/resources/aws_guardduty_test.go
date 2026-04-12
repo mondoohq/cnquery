@@ -52,6 +52,31 @@ func TestParseAwsTimestamp(t *testing.T) {
 		ts := parseAwsTimestamp("not-a-timestamp")
 		assert.Nil(t, ts)
 	})
+
+	t.Run("timestamp with non-RFC3339 timezone offset +0000 (e.g. Lambda layers)", func(t *testing.T) {
+		ts := parseAwsTimestamp("2026-04-12T18:11:01.019+0000")
+		require.NotNil(t, ts)
+		assert.Equal(t, 2026, ts.Year())
+		assert.Equal(t, time.April, ts.Month())
+		assert.Equal(t, 12, ts.Day())
+		assert.Equal(t, 18, ts.Hour())
+		assert.Equal(t, 11, ts.Minute())
+		assert.Equal(t, 1, ts.Second())
+	})
+
+	t.Run("timestamp with non-RFC3339 negative timezone offset", func(t *testing.T) {
+		ts := parseAwsTimestamp("2026-04-12T11:11:01.019-0700")
+		require.NotNil(t, ts)
+		assert.Equal(t, 2026, ts.Year())
+		assert.Equal(t, 11, ts.Hour())
+	})
+
+	t.Run("timestamp with milliseconds and Z suffix", func(t *testing.T) {
+		ts := parseAwsTimestamp("2026-04-12T18:11:01.019Z")
+		require.NotNil(t, ts)
+		assert.Equal(t, 18, ts.Hour())
+		assert.Equal(t, 11, ts.Minute())
+	})
 }
 
 func TestParseAwsTimestampPtr(t *testing.T) {
