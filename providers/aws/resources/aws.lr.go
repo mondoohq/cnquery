@@ -73,6 +73,9 @@ const (
 	ResourceAwsNetworkfirewallRulegroup                                         string = "aws.networkfirewall.rulegroup"
 	ResourceAwsEfs                                                              string = "aws.efs"
 	ResourceAwsEfsFilesystem                                                    string = "aws.efs.filesystem"
+	ResourceAwsEfsFilesystemLifecycleConfiguration                              string = "aws.efs.filesystem.lifecycleConfiguration"
+	ResourceAwsEfsFilesystemReplicationConfiguration                            string = "aws.efs.filesystem.replicationConfiguration"
+	ResourceAwsEfsFilesystemReplicationDestination                              string = "aws.efs.filesystem.replicationDestination"
 	ResourceAwsEfsMountTarget                                                   string = "aws.efs.mountTarget"
 	ResourceAwsEfsAccessPoint                                                   string = "aws.efs.accessPoint"
 	ResourceAwsFsx                                                              string = "aws.fsx"
@@ -314,16 +317,21 @@ const (
 	ResourceAwsEcrLifecyclePolicy                                               string = "aws.ecr.lifecyclePolicy"
 	ResourceAwsEcrLifecyclePolicyRule                                           string = "aws.ecr.lifecyclePolicy.rule"
 	ResourceAwsEcrImage                                                         string = "aws.ecr.image"
+	ResourceAwsEcrImageScanFinding                                              string = "aws.ecr.image.scanFinding"
+	ResourceAwsEcrScanningConfiguration                                         string = "aws.ecr.scanningConfiguration"
+	ResourceAwsEcrScanningConfigurationRule                                     string = "aws.ecr.scanningConfiguration.rule"
 	ResourceAwsDms                                                              string = "aws.dms"
 	ResourceAwsApigateway                                                       string = "aws.apigateway"
 	ResourceAwsApigatewayRestapi                                                string = "aws.apigateway.restapi"
 	ResourceAwsApigatewayStage                                                  string = "aws.apigateway.stage"
 	ResourceAwsLambda                                                           string = "aws.lambda"
 	ResourceAwsLambdaFunction                                                   string = "aws.lambda.function"
+	ResourceAwsLambdaFunctionVersion                                            string = "aws.lambda.function.version"
 	ResourceAwsLambdaFunctionUrlConfig                                          string = "aws.lambda.function.urlConfig"
 	ResourceAwsLambdaFunctionLoggingConfig                                      string = "aws.lambda.function.loggingConfig"
 	ResourceAwsLambdaFunctionLayer                                              string = "aws.lambda.function.layer"
 	ResourceAwsLambdaLayer                                                      string = "aws.lambda.layer"
+	ResourceAwsLambdaLayerVersion                                               string = "aws.lambda.layer.version"
 	ResourceAwsLambdaEventSourceMapping                                         string = "aws.lambda.eventSourceMapping"
 	ResourceAwsLambdaFunctionAlias                                              string = "aws.lambda.function.alias"
 	ResourceAwsLambdaFunctionProvisionedConcurrencyConfig                       string = "aws.lambda.function.provisionedConcurrencyConfig"
@@ -786,6 +794,18 @@ func init() {
 		"aws.efs.filesystem": {
 			Init:   initAwsEfsFilesystem,
 			Create: createAwsEfsFilesystem,
+		},
+		"aws.efs.filesystem.lifecycleConfiguration": {
+			// to override args, implement: initAwsEfsFilesystemLifecycleConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEfsFilesystemLifecycleConfiguration,
+		},
+		"aws.efs.filesystem.replicationConfiguration": {
+			// to override args, implement: initAwsEfsFilesystemReplicationConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEfsFilesystemReplicationConfiguration,
+		},
+		"aws.efs.filesystem.replicationDestination": {
+			// to override args, implement: initAwsEfsFilesystemReplicationDestination(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEfsFilesystemReplicationDestination,
 		},
 		"aws.efs.mountTarget": {
 			// to override args, implement: initAwsEfsMountTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1751,6 +1771,18 @@ func init() {
 			Init:   initAwsEcrImage,
 			Create: createAwsEcrImage,
 		},
+		"aws.ecr.image.scanFinding": {
+			// to override args, implement: initAwsEcrImageScanFinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEcrImageScanFinding,
+		},
+		"aws.ecr.scanningConfiguration": {
+			// to override args, implement: initAwsEcrScanningConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEcrScanningConfiguration,
+		},
+		"aws.ecr.scanningConfiguration.rule": {
+			// to override args, implement: initAwsEcrScanningConfigurationRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEcrScanningConfigurationRule,
+		},
 		"aws.dms": {
 			// to override args, implement: initAwsDms(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsDms,
@@ -1775,6 +1807,10 @@ func init() {
 			Init:   initAwsLambdaFunction,
 			Create: createAwsLambdaFunction,
 		},
+		"aws.lambda.function.version": {
+			// to override args, implement: initAwsLambdaFunctionVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsLambdaFunctionVersion,
+		},
 		"aws.lambda.function.urlConfig": {
 			// to override args, implement: initAwsLambdaFunctionUrlConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsLambdaFunctionUrlConfig,
@@ -1790,6 +1826,10 @@ func init() {
 		"aws.lambda.layer": {
 			// to override args, implement: initAwsLambdaLayer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsLambdaLayer,
+		},
+		"aws.lambda.layer.version": {
+			// to override args, implement: initAwsLambdaLayerVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsLambdaLayerVersion,
 		},
 		"aws.lambda.eventSourceMapping": {
 			// to override args, implement: initAwsLambdaEventSourceMapping(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3930,6 +3970,66 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.efs.filesystem.fileSystemPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsFilesystem).GetFileSystemPolicy()).ToDataRes(types.String)
 	},
+	"aws.efs.filesystem.performanceMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystem).GetPerformanceMode()).ToDataRes(types.String)
+	},
+	"aws.efs.filesystem.throughputMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystem).GetThroughputMode()).ToDataRes(types.String)
+	},
+	"aws.efs.filesystem.sizeInBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystem).GetSizeInBytes()).ToDataRes(types.Int)
+	},
+	"aws.efs.filesystem.lifecycleState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystem).GetLifecycleState()).ToDataRes(types.String)
+	},
+	"aws.efs.filesystem.lifecycleConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystem).GetLifecycleConfiguration()).ToDataRes(types.Resource("aws.efs.filesystem.lifecycleConfiguration"))
+	},
+	"aws.efs.filesystem.replicationConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystem).GetReplicationConfiguration()).ToDataRes(types.Resource("aws.efs.filesystem.replicationConfiguration"))
+	},
+	"aws.efs.filesystem.fileSystemProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystem).GetFileSystemProtection()).ToDataRes(types.Dict)
+	},
+	"aws.efs.filesystem.lifecycleConfiguration.transitionToIA": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystemLifecycleConfiguration).GetTransitionToIA()).ToDataRes(types.String)
+	},
+	"aws.efs.filesystem.lifecycleConfiguration.transitionToArchive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystemLifecycleConfiguration).GetTransitionToArchive()).ToDataRes(types.String)
+	},
+	"aws.efs.filesystem.lifecycleConfiguration.transitionToPrimaryStorageClass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystemLifecycleConfiguration).GetTransitionToPrimaryStorageClass()).ToDataRes(types.String)
+	},
+	"aws.efs.filesystem.replicationConfiguration.sourceFileSystemId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystemReplicationConfiguration).GetSourceFileSystemId()).ToDataRes(types.String)
+	},
+	"aws.efs.filesystem.replicationConfiguration.sourceFileSystemRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystemReplicationConfiguration).GetSourceFileSystemRegion()).ToDataRes(types.String)
+	},
+	"aws.efs.filesystem.replicationConfiguration.sourceFileSystemArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystemReplicationConfiguration).GetSourceFileSystemArn()).ToDataRes(types.String)
+	},
+	"aws.efs.filesystem.replicationConfiguration.originalSourceFileSystemArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystemReplicationConfiguration).GetOriginalSourceFileSystemArn()).ToDataRes(types.String)
+	},
+	"aws.efs.filesystem.replicationConfiguration.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystemReplicationConfiguration).GetCreationTime()).ToDataRes(types.Time)
+	},
+	"aws.efs.filesystem.replicationConfiguration.destinations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystemReplicationConfiguration).GetDestinations()).ToDataRes(types.Array(types.Resource("aws.efs.filesystem.replicationDestination")))
+	},
+	"aws.efs.filesystem.replicationDestination.fileSystemId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystemReplicationDestination).GetFileSystemId()).ToDataRes(types.String)
+	},
+	"aws.efs.filesystem.replicationDestination.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystemReplicationDestination).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.efs.filesystem.replicationDestination.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystemReplicationDestination).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.efs.filesystem.replicationDestination.lastReplicatedTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystemReplicationDestination).GetLastReplicatedTimestamp()).ToDataRes(types.Time)
+	},
 	"aws.efs.mountTarget.mountTargetId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsMountTarget).GetMountTargetId()).ToDataRes(types.String)
 	},
@@ -5489,6 +5589,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.sns.topic.policy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSnsTopic).GetPolicy()).ToDataRes(types.Dict)
+	},
+	"aws.sns.topic.fifoTopic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSnsTopic).GetFifoTopic()).ToDataRes(types.Bool)
+	},
+	"aws.sns.topic.contentBasedDeduplication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSnsTopic).GetContentBasedDeduplication()).ToDataRes(types.Bool)
+	},
+	"aws.sns.topic.dataProtectionPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSnsTopic).GetDataProtectionPolicy()).ToDataRes(types.Dict)
+	},
+	"aws.sns.topic.tracingConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSnsTopic).GetTracingConfig()).ToDataRes(types.String)
+	},
+	"aws.sns.topic.deliveryPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSnsTopic).GetDeliveryPolicy()).ToDataRes(types.Dict)
+	},
+	"aws.sns.topic.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSnsTopic).GetDisplayName()).ToDataRes(types.String)
 	},
 	"aws.sns.subscription.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSnsSubscription).GetArn()).ToDataRes(types.String)
@@ -9255,6 +9373,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.sqs.queue.policy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSqsQueue).GetPolicy()).ToDataRes(types.Dict)
 	},
+	"aws.sqs.queue.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.sqs.queue.contentBasedDeduplication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetContentBasedDeduplication()).ToDataRes(types.Bool)
+	},
+	"aws.sqs.queue.redriveAllowPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSqsQueue).GetRedriveAllowPolicy()).ToDataRes(types.Dict)
+	},
 	"aws.rds.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRds).GetInstances()).ToDataRes(types.Array(types.Resource("aws.rds.dbinstance")))
 	},
@@ -10686,6 +10813,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ecr.replicationConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcr).GetReplicationConfiguration()).ToDataRes(types.Dict)
 	},
+	"aws.ecr.scanningConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcr).GetScanningConfiguration()).ToDataRes(types.Resource("aws.ecr.scanningConfiguration"))
+	},
 	"aws.ecr.repository.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcrRepository).GetArn()).ToDataRes(types.String)
 	},
@@ -10742,6 +10872,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ecr.repository.architectures": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcrRepository).GetArchitectures()).ToDataRes(types.Array(types.String))
+	},
+	"aws.ecr.repository.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrRepository).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.ecr.lifecyclePolicy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcrLifecyclePolicy).GetId()).ToDataRes(types.String)
@@ -10814,6 +10947,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ecr.image.lastRecordedPullTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcrImage).GetLastRecordedPullTime()).ToDataRes(types.Time)
+	},
+	"aws.ecr.image.scanStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrImage).GetScanStatus()).ToDataRes(types.String)
+	},
+	"aws.ecr.image.scanFindings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrImage).GetScanFindings()).ToDataRes(types.Array(types.Resource("aws.ecr.image.scanFinding")))
+	},
+	"aws.ecr.image.scanFindingSeverityCounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrImage).GetScanFindingSeverityCounts()).ToDataRes(types.Dict)
+	},
+	"aws.ecr.image.scanFinding.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrImageScanFinding).GetName()).ToDataRes(types.String)
+	},
+	"aws.ecr.image.scanFinding.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrImageScanFinding).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.ecr.image.scanFinding.uri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrImageScanFinding).GetUri()).ToDataRes(types.String)
+	},
+	"aws.ecr.image.scanFinding.severity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrImageScanFinding).GetSeverity()).ToDataRes(types.String)
+	},
+	"aws.ecr.image.scanFinding.attributes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrImageScanFinding).GetAttributes()).ToDataRes(types.Dict)
+	},
+	"aws.ecr.scanningConfiguration.scanType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrScanningConfiguration).GetScanType()).ToDataRes(types.String)
+	},
+	"aws.ecr.scanningConfiguration.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrScanningConfiguration).GetRules()).ToDataRes(types.Array(types.Resource("aws.ecr.scanningConfiguration.rule")))
+	},
+	"aws.ecr.scanningConfiguration.rule.scanFrequency": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrScanningConfigurationRule).GetScanFrequency()).ToDataRes(types.String)
+	},
+	"aws.ecr.scanningConfiguration.rule.repositoryFilters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrScanningConfigurationRule).GetRepositoryFilters()).ToDataRes(types.Array(types.Dict))
 	},
 	"aws.dms.replicationInstances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDms).GetReplicationInstances()).ToDataRes(types.Array(types.Dict))
@@ -11058,6 +11227,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.lambda.function.runtimeManagementConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunction).GetRuntimeManagementConfig()).ToDataRes(types.Dict)
 	},
+	"aws.lambda.function.versions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetVersions()).ToDataRes(types.Array(types.Resource("aws.lambda.function.version")))
+	},
+	"aws.lambda.function.version.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionVersion).GetArn()).ToDataRes(types.String)
+	},
+	"aws.lambda.function.version.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionVersion).GetVersion()).ToDataRes(types.String)
+	},
+	"aws.lambda.function.version.runtime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionVersion).GetRuntime()).ToDataRes(types.String)
+	},
+	"aws.lambda.function.version.handler": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionVersion).GetHandler()).ToDataRes(types.String)
+	},
+	"aws.lambda.function.version.codeSha256": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionVersion).GetCodeSha256()).ToDataRes(types.String)
+	},
+	"aws.lambda.function.version.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionVersion).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.lambda.function.version.memorySize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionVersion).GetMemorySize()).ToDataRes(types.Int)
+	},
+	"aws.lambda.function.version.timeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionVersion).GetTimeout()).ToDataRes(types.Int)
+	},
+	"aws.lambda.function.version.lastModifiedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionVersion).GetLastModifiedAt()).ToDataRes(types.Time)
+	},
+	"aws.lambda.function.version.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunctionVersion).GetState()).ToDataRes(types.String)
+	},
 	"aws.lambda.function.urlConfig.functionUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunctionUrlConfig).GetFunctionUrl()).ToDataRes(types.String)
 	},
@@ -11138,6 +11340,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.lambda.layer.licenseInfo": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaLayer).GetLicenseInfo()).ToDataRes(types.String)
+	},
+	"aws.lambda.layer.versions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaLayer).GetVersions()).ToDataRes(types.Array(types.Resource("aws.lambda.layer.version")))
+	},
+	"aws.lambda.layer.version.layerVersionArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaLayerVersion).GetLayerVersionArn()).ToDataRes(types.String)
+	},
+	"aws.lambda.layer.version.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaLayerVersion).GetVersion()).ToDataRes(types.Int)
+	},
+	"aws.lambda.layer.version.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaLayerVersion).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.lambda.layer.version.createdDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaLayerVersion).GetCreatedDate()).ToDataRes(types.Time)
+	},
+	"aws.lambda.layer.version.compatibleRuntimes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaLayerVersion).GetCompatibleRuntimes()).ToDataRes(types.Array(types.String))
+	},
+	"aws.lambda.layer.version.compatibleArchitectures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaLayerVersion).GetCompatibleArchitectures()).ToDataRes(types.Array(types.String))
+	},
+	"aws.lambda.layer.version.licenseInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaLayerVersion).GetLicenseInfo()).ToDataRes(types.String)
 	},
 	"aws.lambda.eventSourceMapping.uuid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaEventSourceMapping).GetUuid()).ToDataRes(types.String)
@@ -19845,6 +20071,98 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEfsFilesystem).FileSystemPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.efs.filesystem.performanceMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystem).PerformanceMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.throughputMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystem).ThroughputMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.sizeInBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystem).SizeInBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.lifecycleState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystem).LifecycleState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.lifecycleConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystem).LifecycleConfiguration, ok = plugin.RawToTValue[*mqlAwsEfsFilesystemLifecycleConfiguration](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.replicationConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystem).ReplicationConfiguration, ok = plugin.RawToTValue[*mqlAwsEfsFilesystemReplicationConfiguration](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.fileSystemProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystem).FileSystemProtection, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.lifecycleConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystemLifecycleConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.efs.filesystem.lifecycleConfiguration.transitionToIA": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystemLifecycleConfiguration).TransitionToIA, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.lifecycleConfiguration.transitionToArchive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystemLifecycleConfiguration).TransitionToArchive, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.lifecycleConfiguration.transitionToPrimaryStorageClass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystemLifecycleConfiguration).TransitionToPrimaryStorageClass, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.replicationConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystemReplicationConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.efs.filesystem.replicationConfiguration.sourceFileSystemId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystemReplicationConfiguration).SourceFileSystemId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.replicationConfiguration.sourceFileSystemRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystemReplicationConfiguration).SourceFileSystemRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.replicationConfiguration.sourceFileSystemArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystemReplicationConfiguration).SourceFileSystemArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.replicationConfiguration.originalSourceFileSystemArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystemReplicationConfiguration).OriginalSourceFileSystemArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.replicationConfiguration.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystemReplicationConfiguration).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.replicationConfiguration.destinations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystemReplicationConfiguration).Destinations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.replicationDestination.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystemReplicationDestination).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.efs.filesystem.replicationDestination.fileSystemId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystemReplicationDestination).FileSystemId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.replicationDestination.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystemReplicationDestination).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.replicationDestination.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystemReplicationDestination).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.replicationDestination.lastReplicatedTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystemReplicationDestination).LastReplicatedTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.efs.mountTarget.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEfsMountTarget).__id, ok = v.Value.(string)
 		return
@@ -22111,6 +22429,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.sns.topic.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSnsTopic).Policy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sns.topic.fifoTopic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSnsTopic).FifoTopic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.sns.topic.contentBasedDeduplication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSnsTopic).ContentBasedDeduplication, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.sns.topic.dataProtectionPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSnsTopic).DataProtectionPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sns.topic.tracingConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSnsTopic).TracingConfig, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sns.topic.deliveryPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSnsTopic).DeliveryPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sns.topic.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSnsTopic).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.sns.subscription.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -27765,6 +28107,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSqsQueue).Policy, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.sqs.queue.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.sqs.queue.contentBasedDeduplication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).ContentBasedDeduplication, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.sqs.queue.redriveAllowPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSqsQueue).RedriveAllowPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"aws.rds.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRds).__id, ok = v.Value.(string)
 		return
@@ -29801,6 +30155,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEcr).ReplicationConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.ecr.scanningConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcr).ScanningConfiguration, ok = plugin.RawToTValue[*mqlAwsEcrScanningConfiguration](v.Value, v.Error)
+		return
+	},
 	"aws.ecr.repository.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcrRepository).__id, ok = v.Value.(string)
 		return
@@ -29879,6 +30237,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ecr.repository.architectures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcrRepository).Architectures, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.repository.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrRepository).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.ecr.lifecyclePolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -29987,6 +30349,66 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ecr.image.lastRecordedPullTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcrImage).LastRecordedPullTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.image.scanStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrImage).ScanStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.image.scanFindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrImage).ScanFindings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.image.scanFindingSeverityCounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrImage).ScanFindingSeverityCounts, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.image.scanFinding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrImageScanFinding).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ecr.image.scanFinding.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrImageScanFinding).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.image.scanFinding.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrImageScanFinding).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.image.scanFinding.uri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrImageScanFinding).Uri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.image.scanFinding.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrImageScanFinding).Severity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.image.scanFinding.attributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrImageScanFinding).Attributes, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.scanningConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrScanningConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ecr.scanningConfiguration.scanType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrScanningConfiguration).ScanType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.scanningConfiguration.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrScanningConfiguration).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.scanningConfiguration.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrScanningConfigurationRule).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ecr.scanningConfiguration.rule.scanFrequency": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrScanningConfigurationRule).ScanFrequency, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.scanningConfiguration.rule.repositoryFilters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrScanningConfigurationRule).RepositoryFilters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.dms.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -30337,6 +30759,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsLambdaFunction).RuntimeManagementConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.lambda.function.versions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).Versions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.version.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionVersion).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.lambda.function.version.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionVersion).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.version.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionVersion).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.version.runtime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionVersion).Runtime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.version.handler": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionVersion).Handler, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.version.codeSha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionVersion).CodeSha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.version.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionVersion).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.version.memorySize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionVersion).MemorySize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.version.timeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionVersion).Timeout, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.version.lastModifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionVersion).LastModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.version.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunctionVersion).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.lambda.function.urlConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLambdaFunctionUrlConfig).__id, ok = v.Value.(string)
 		return
@@ -30459,6 +30929,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.lambda.layer.licenseInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLambdaLayer).LicenseInfo, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.layer.versions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaLayer).Versions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.layer.version.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaLayerVersion).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.lambda.layer.version.layerVersionArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaLayerVersion).LayerVersionArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.layer.version.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaLayerVersion).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.layer.version.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaLayerVersion).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.layer.version.createdDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaLayerVersion).CreatedDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.layer.version.compatibleRuntimes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaLayerVersion).CompatibleRuntimes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.layer.version.compatibleArchitectures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaLayerVersion).CompatibleArchitectures, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.layer.version.licenseInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaLayerVersion).LicenseInfo, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.lambda.eventSourceMapping.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -45556,19 +46062,26 @@ type mqlAwsEfsFilesystem struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsEfsFilesystemInternal
-	Name             plugin.TValue[string]
-	Id               plugin.TValue[string]
-	Arn              plugin.TValue[string]
-	Encrypted        plugin.TValue[bool]
-	KmsKey           plugin.TValue[*mqlAwsKmsKey]
-	BackupPolicy     plugin.TValue[any]
-	Region           plugin.TValue[string]
-	AvailabilityZone plugin.TValue[string]
-	Tags             plugin.TValue[map[string]any]
-	CreatedAt        plugin.TValue[*time.Time]
-	MountTargets     plugin.TValue[[]any]
-	AccessPoints     plugin.TValue[[]any]
-	FileSystemPolicy plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	Id                       plugin.TValue[string]
+	Arn                      plugin.TValue[string]
+	Encrypted                plugin.TValue[bool]
+	KmsKey                   plugin.TValue[*mqlAwsKmsKey]
+	BackupPolicy             plugin.TValue[any]
+	Region                   plugin.TValue[string]
+	AvailabilityZone         plugin.TValue[string]
+	Tags                     plugin.TValue[map[string]any]
+	CreatedAt                plugin.TValue[*time.Time]
+	MountTargets             plugin.TValue[[]any]
+	AccessPoints             plugin.TValue[[]any]
+	FileSystemPolicy         plugin.TValue[string]
+	PerformanceMode          plugin.TValue[string]
+	ThroughputMode           plugin.TValue[string]
+	SizeInBytes              plugin.TValue[int64]
+	LifecycleState           plugin.TValue[string]
+	LifecycleConfiguration   plugin.TValue[*mqlAwsEfsFilesystemLifecycleConfiguration]
+	ReplicationConfiguration plugin.TValue[*mqlAwsEfsFilesystemReplicationConfiguration]
+	FileSystemProtection     plugin.TValue[any]
 }
 
 // createAwsEfsFilesystem creates a new instance of this resource
@@ -45698,6 +46211,257 @@ func (c *mqlAwsEfsFilesystem) GetFileSystemPolicy() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.FileSystemPolicy, func() (string, error) {
 		return c.fileSystemPolicy()
 	})
+}
+
+func (c *mqlAwsEfsFilesystem) GetPerformanceMode() *plugin.TValue[string] {
+	return &c.PerformanceMode
+}
+
+func (c *mqlAwsEfsFilesystem) GetThroughputMode() *plugin.TValue[string] {
+	return &c.ThroughputMode
+}
+
+func (c *mqlAwsEfsFilesystem) GetSizeInBytes() *plugin.TValue[int64] {
+	return &c.SizeInBytes
+}
+
+func (c *mqlAwsEfsFilesystem) GetLifecycleState() *plugin.TValue[string] {
+	return &c.LifecycleState
+}
+
+func (c *mqlAwsEfsFilesystem) GetLifecycleConfiguration() *plugin.TValue[*mqlAwsEfsFilesystemLifecycleConfiguration] {
+	return plugin.GetOrCompute[*mqlAwsEfsFilesystemLifecycleConfiguration](&c.LifecycleConfiguration, func() (*mqlAwsEfsFilesystemLifecycleConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.efs.filesystem", c.__id, "lifecycleConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEfsFilesystemLifecycleConfiguration), nil
+			}
+		}
+
+		return c.lifecycleConfiguration()
+	})
+}
+
+func (c *mqlAwsEfsFilesystem) GetReplicationConfiguration() *plugin.TValue[*mqlAwsEfsFilesystemReplicationConfiguration] {
+	return plugin.GetOrCompute[*mqlAwsEfsFilesystemReplicationConfiguration](&c.ReplicationConfiguration, func() (*mqlAwsEfsFilesystemReplicationConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.efs.filesystem", c.__id, "replicationConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEfsFilesystemReplicationConfiguration), nil
+			}
+		}
+
+		return c.replicationConfiguration()
+	})
+}
+
+func (c *mqlAwsEfsFilesystem) GetFileSystemProtection() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.FileSystemProtection, func() (any, error) {
+		return c.fileSystemProtection()
+	})
+}
+
+// mqlAwsEfsFilesystemLifecycleConfiguration for the aws.efs.filesystem.lifecycleConfiguration resource
+type mqlAwsEfsFilesystemLifecycleConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEfsFilesystemLifecycleConfigurationInternal it will be used here
+	TransitionToIA                  plugin.TValue[string]
+	TransitionToArchive             plugin.TValue[string]
+	TransitionToPrimaryStorageClass plugin.TValue[string]
+}
+
+// createAwsEfsFilesystemLifecycleConfiguration creates a new instance of this resource
+func createAwsEfsFilesystemLifecycleConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEfsFilesystemLifecycleConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.efs.filesystem.lifecycleConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEfsFilesystemLifecycleConfiguration) MqlName() string {
+	return "aws.efs.filesystem.lifecycleConfiguration"
+}
+
+func (c *mqlAwsEfsFilesystemLifecycleConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEfsFilesystemLifecycleConfiguration) GetTransitionToIA() *plugin.TValue[string] {
+	return &c.TransitionToIA
+}
+
+func (c *mqlAwsEfsFilesystemLifecycleConfiguration) GetTransitionToArchive() *plugin.TValue[string] {
+	return &c.TransitionToArchive
+}
+
+func (c *mqlAwsEfsFilesystemLifecycleConfiguration) GetTransitionToPrimaryStorageClass() *plugin.TValue[string] {
+	return &c.TransitionToPrimaryStorageClass
+}
+
+// mqlAwsEfsFilesystemReplicationConfiguration for the aws.efs.filesystem.replicationConfiguration resource
+type mqlAwsEfsFilesystemReplicationConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEfsFilesystemReplicationConfigurationInternal it will be used here
+	SourceFileSystemId          plugin.TValue[string]
+	SourceFileSystemRegion      plugin.TValue[string]
+	SourceFileSystemArn         plugin.TValue[string]
+	OriginalSourceFileSystemArn plugin.TValue[string]
+	CreationTime                plugin.TValue[*time.Time]
+	Destinations                plugin.TValue[[]any]
+}
+
+// createAwsEfsFilesystemReplicationConfiguration creates a new instance of this resource
+func createAwsEfsFilesystemReplicationConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEfsFilesystemReplicationConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.efs.filesystem.replicationConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEfsFilesystemReplicationConfiguration) MqlName() string {
+	return "aws.efs.filesystem.replicationConfiguration"
+}
+
+func (c *mqlAwsEfsFilesystemReplicationConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEfsFilesystemReplicationConfiguration) GetSourceFileSystemId() *plugin.TValue[string] {
+	return &c.SourceFileSystemId
+}
+
+func (c *mqlAwsEfsFilesystemReplicationConfiguration) GetSourceFileSystemRegion() *plugin.TValue[string] {
+	return &c.SourceFileSystemRegion
+}
+
+func (c *mqlAwsEfsFilesystemReplicationConfiguration) GetSourceFileSystemArn() *plugin.TValue[string] {
+	return &c.SourceFileSystemArn
+}
+
+func (c *mqlAwsEfsFilesystemReplicationConfiguration) GetOriginalSourceFileSystemArn() *plugin.TValue[string] {
+	return &c.OriginalSourceFileSystemArn
+}
+
+func (c *mqlAwsEfsFilesystemReplicationConfiguration) GetCreationTime() *plugin.TValue[*time.Time] {
+	return &c.CreationTime
+}
+
+func (c *mqlAwsEfsFilesystemReplicationConfiguration) GetDestinations() *plugin.TValue[[]any] {
+	return &c.Destinations
+}
+
+// mqlAwsEfsFilesystemReplicationDestination for the aws.efs.filesystem.replicationDestination resource
+type mqlAwsEfsFilesystemReplicationDestination struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEfsFilesystemReplicationDestinationInternal it will be used here
+	FileSystemId            plugin.TValue[string]
+	Region                  plugin.TValue[string]
+	Status                  plugin.TValue[string]
+	LastReplicatedTimestamp plugin.TValue[*time.Time]
+}
+
+// createAwsEfsFilesystemReplicationDestination creates a new instance of this resource
+func createAwsEfsFilesystemReplicationDestination(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEfsFilesystemReplicationDestination{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.efs.filesystem.replicationDestination", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEfsFilesystemReplicationDestination) MqlName() string {
+	return "aws.efs.filesystem.replicationDestination"
+}
+
+func (c *mqlAwsEfsFilesystemReplicationDestination) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEfsFilesystemReplicationDestination) GetFileSystemId() *plugin.TValue[string] {
+	return &c.FileSystemId
+}
+
+func (c *mqlAwsEfsFilesystemReplicationDestination) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsEfsFilesystemReplicationDestination) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsEfsFilesystemReplicationDestination) GetLastReplicatedTimestamp() *plugin.TValue[*time.Time] {
+	return &c.LastReplicatedTimestamp
 }
 
 // mqlAwsEfsMountTarget for the aws.efs.mountTarget resource
@@ -51585,14 +52349,20 @@ type mqlAwsSnsTopic struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsSnsTopicInternal
-	Arn              plugin.TValue[string]
-	Region           plugin.TValue[string]
-	Subscriptions    plugin.TValue[[]any]
-	Attributes       plugin.TValue[any]
-	Tags             plugin.TValue[map[string]any]
-	SignatureVersion plugin.TValue[string]
-	KmsMasterKey     plugin.TValue[*mqlAwsKmsKey]
-	Policy           plugin.TValue[any]
+	Arn                       plugin.TValue[string]
+	Region                    plugin.TValue[string]
+	Subscriptions             plugin.TValue[[]any]
+	Attributes                plugin.TValue[any]
+	Tags                      plugin.TValue[map[string]any]
+	SignatureVersion          plugin.TValue[string]
+	KmsMasterKey              plugin.TValue[*mqlAwsKmsKey]
+	Policy                    plugin.TValue[any]
+	FifoTopic                 plugin.TValue[bool]
+	ContentBasedDeduplication plugin.TValue[bool]
+	DataProtectionPolicy      plugin.TValue[any]
+	TracingConfig             plugin.TValue[string]
+	DeliveryPolicy            plugin.TValue[any]
+	DisplayName               plugin.TValue[string]
 }
 
 // createAwsSnsTopic creates a new instance of this resource
@@ -51693,6 +52463,42 @@ func (c *mqlAwsSnsTopic) GetKmsMasterKey() *plugin.TValue[*mqlAwsKmsKey] {
 func (c *mqlAwsSnsTopic) GetPolicy() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.Policy, func() (any, error) {
 		return c.policy()
+	})
+}
+
+func (c *mqlAwsSnsTopic) GetFifoTopic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.FifoTopic, func() (bool, error) {
+		return c.fifoTopic()
+	})
+}
+
+func (c *mqlAwsSnsTopic) GetContentBasedDeduplication() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ContentBasedDeduplication, func() (bool, error) {
+		return c.contentBasedDeduplication()
+	})
+}
+
+func (c *mqlAwsSnsTopic) GetDataProtectionPolicy() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.DataProtectionPolicy, func() (any, error) {
+		return c.dataProtectionPolicy()
+	})
+}
+
+func (c *mqlAwsSnsTopic) GetTracingConfig() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TracingConfig, func() (string, error) {
+		return c.tracingConfig()
+	})
+}
+
+func (c *mqlAwsSnsTopic) GetDeliveryPolicy() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.DeliveryPolicy, func() (any, error) {
+		return c.deliveryPolicy()
+	})
+}
+
+func (c *mqlAwsSnsTopic) GetDisplayName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DisplayName, func() (string, error) {
+		return c.displayName()
 	})
 }
 
@@ -66965,6 +67771,9 @@ type mqlAwsSqsQueue struct {
 	DeduplicationScope            plugin.TValue[string]
 	FifoThroughputLimit           plugin.TValue[string]
 	Policy                        plugin.TValue[any]
+	Tags                          plugin.TValue[map[string]any]
+	ContentBasedDeduplication     plugin.TValue[bool]
+	RedriveAllowPolicy            plugin.TValue[any]
 }
 
 // createAwsSqsQueue creates a new instance of this resource
@@ -67125,6 +67934,24 @@ func (c *mqlAwsSqsQueue) GetFifoThroughputLimit() *plugin.TValue[string] {
 func (c *mqlAwsSqsQueue) GetPolicy() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.Policy, func() (any, error) {
 		return c.policy()
+	})
+}
+
+func (c *mqlAwsSqsQueue) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsSqsQueue) GetContentBasedDeduplication() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ContentBasedDeduplication, func() (bool, error) {
+		return c.contentBasedDeduplication()
+	})
+}
+
+func (c *mqlAwsSqsQueue) GetRedriveAllowPolicy() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.RedriveAllowPolicy, func() (any, error) {
+		return c.redriveAllowPolicy()
 	})
 }
 
@@ -71630,6 +72457,7 @@ type mqlAwsEcr struct {
 	PublicRepositories       plugin.TValue[[]any]
 	Images                   plugin.TValue[[]any]
 	ReplicationConfiguration plugin.TValue[any]
+	ScanningConfiguration    plugin.TValue[*mqlAwsEcrScanningConfiguration]
 }
 
 // createAwsEcr creates a new instance of this resource
@@ -71723,6 +72551,22 @@ func (c *mqlAwsEcr) GetReplicationConfiguration() *plugin.TValue[any] {
 	})
 }
 
+func (c *mqlAwsEcr) GetScanningConfiguration() *plugin.TValue[*mqlAwsEcrScanningConfiguration] {
+	return plugin.GetOrCompute[*mqlAwsEcrScanningConfiguration](&c.ScanningConfiguration, func() (*mqlAwsEcrScanningConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecr", c.__id, "scanningConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEcrScanningConfiguration), nil
+			}
+		}
+
+		return c.scanningConfiguration()
+	})
+}
+
 // mqlAwsEcrRepository for the aws.ecr.repository resource
 type mqlAwsEcrRepository struct {
 	MqlRuntime *plugin.Runtime
@@ -71747,6 +72591,7 @@ type mqlAwsEcrRepository struct {
 	CatalogDescription plugin.TValue[string]
 	OperatingSystems   plugin.TValue[[]any]
 	Architectures      plugin.TValue[[]any]
+	Tags               plugin.TValue[map[string]any]
 }
 
 // createAwsEcrRepository creates a new instance of this resource
@@ -71897,6 +72742,12 @@ func (c *mqlAwsEcrRepository) GetOperatingSystems() *plugin.TValue[[]any] {
 func (c *mqlAwsEcrRepository) GetArchitectures() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Architectures, func() ([]any, error) {
 		return c.architectures()
+	})
+}
+
+func (c *mqlAwsEcrRepository) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
 	})
 }
 
@@ -72057,18 +72908,21 @@ func (c *mqlAwsEcrLifecyclePolicyRule) GetActionType() *plugin.TValue[string] {
 type mqlAwsEcrImage struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsEcrImageInternal it will be used here
-	Digest               plugin.TValue[string]
-	MediaType            plugin.TValue[string]
-	Tags                 plugin.TValue[[]any]
-	RegistryId           plugin.TValue[string]
-	RepoName             plugin.TValue[string]
-	Region               plugin.TValue[string]
-	Arn                  plugin.TValue[string]
-	Uri                  plugin.TValue[string]
-	PushedAt             plugin.TValue[*time.Time]
-	SizeInBytes          plugin.TValue[int64]
-	LastRecordedPullTime plugin.TValue[*time.Time]
+	mqlAwsEcrImageInternal
+	Digest                    plugin.TValue[string]
+	MediaType                 plugin.TValue[string]
+	Tags                      plugin.TValue[[]any]
+	RegistryId                plugin.TValue[string]
+	RepoName                  plugin.TValue[string]
+	Region                    plugin.TValue[string]
+	Arn                       plugin.TValue[string]
+	Uri                       plugin.TValue[string]
+	PushedAt                  plugin.TValue[*time.Time]
+	SizeInBytes               plugin.TValue[int64]
+	LastRecordedPullTime      plugin.TValue[*time.Time]
+	ScanStatus                plugin.TValue[string]
+	ScanFindings              plugin.TValue[[]any]
+	ScanFindingSeverityCounts plugin.TValue[any]
 }
 
 // createAwsEcrImage creates a new instance of this resource
@@ -72150,6 +73004,211 @@ func (c *mqlAwsEcrImage) GetSizeInBytes() *plugin.TValue[int64] {
 
 func (c *mqlAwsEcrImage) GetLastRecordedPullTime() *plugin.TValue[*time.Time] {
 	return &c.LastRecordedPullTime
+}
+
+func (c *mqlAwsEcrImage) GetScanStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ScanStatus, func() (string, error) {
+		return c.scanStatus()
+	})
+}
+
+func (c *mqlAwsEcrImage) GetScanFindings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ScanFindings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecr.image", c.__id, "scanFindings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.scanFindings()
+	})
+}
+
+func (c *mqlAwsEcrImage) GetScanFindingSeverityCounts() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.ScanFindingSeverityCounts, func() (any, error) {
+		return c.scanFindingSeverityCounts()
+	})
+}
+
+// mqlAwsEcrImageScanFinding for the aws.ecr.image.scanFinding resource
+type mqlAwsEcrImageScanFinding struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEcrImageScanFindingInternal it will be used here
+	Name        plugin.TValue[string]
+	Description plugin.TValue[string]
+	Uri         plugin.TValue[string]
+	Severity    plugin.TValue[string]
+	Attributes  plugin.TValue[any]
+}
+
+// createAwsEcrImageScanFinding creates a new instance of this resource
+func createAwsEcrImageScanFinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEcrImageScanFinding{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ecr.image.scanFinding", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEcrImageScanFinding) MqlName() string {
+	return "aws.ecr.image.scanFinding"
+}
+
+func (c *mqlAwsEcrImageScanFinding) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEcrImageScanFinding) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsEcrImageScanFinding) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsEcrImageScanFinding) GetUri() *plugin.TValue[string] {
+	return &c.Uri
+}
+
+func (c *mqlAwsEcrImageScanFinding) GetSeverity() *plugin.TValue[string] {
+	return &c.Severity
+}
+
+func (c *mqlAwsEcrImageScanFinding) GetAttributes() *plugin.TValue[any] {
+	return &c.Attributes
+}
+
+// mqlAwsEcrScanningConfiguration for the aws.ecr.scanningConfiguration resource
+type mqlAwsEcrScanningConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEcrScanningConfigurationInternal it will be used here
+	ScanType plugin.TValue[string]
+	Rules    plugin.TValue[[]any]
+}
+
+// createAwsEcrScanningConfiguration creates a new instance of this resource
+func createAwsEcrScanningConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEcrScanningConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ecr.scanningConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEcrScanningConfiguration) MqlName() string {
+	return "aws.ecr.scanningConfiguration"
+}
+
+func (c *mqlAwsEcrScanningConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEcrScanningConfiguration) GetScanType() *plugin.TValue[string] {
+	return &c.ScanType
+}
+
+func (c *mqlAwsEcrScanningConfiguration) GetRules() *plugin.TValue[[]any] {
+	return &c.Rules
+}
+
+// mqlAwsEcrScanningConfigurationRule for the aws.ecr.scanningConfiguration.rule resource
+type mqlAwsEcrScanningConfigurationRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEcrScanningConfigurationRuleInternal it will be used here
+	ScanFrequency     plugin.TValue[string]
+	RepositoryFilters plugin.TValue[[]any]
+}
+
+// createAwsEcrScanningConfigurationRule creates a new instance of this resource
+func createAwsEcrScanningConfigurationRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEcrScanningConfigurationRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ecr.scanningConfiguration.rule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEcrScanningConfigurationRule) MqlName() string {
+	return "aws.ecr.scanningConfiguration.rule"
+}
+
+func (c *mqlAwsEcrScanningConfigurationRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEcrScanningConfigurationRule) GetScanFrequency() *plugin.TValue[string] {
+	return &c.ScanFrequency
+}
+
+func (c *mqlAwsEcrScanningConfigurationRule) GetRepositoryFilters() *plugin.TValue[[]any] {
+	return &c.RepositoryFilters
 }
 
 // mqlAwsDms for the aws.dms resource
@@ -72664,6 +73723,7 @@ type mqlAwsLambdaFunction struct {
 	CodeSigningConfig             plugin.TValue[*mqlAwsLambdaCodeSigningConfig]
 	EventInvokeConfig             plugin.TValue[any]
 	RuntimeManagementConfig       plugin.TValue[any]
+	Versions                      plugin.TValue[[]any]
 }
 
 // createAwsLambdaFunction creates a new instance of this resource
@@ -73013,6 +74073,116 @@ func (c *mqlAwsLambdaFunction) GetRuntimeManagementConfig() *plugin.TValue[any] 
 	})
 }
 
+func (c *mqlAwsLambdaFunction) GetVersions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Versions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.lambda.function", c.__id, "versions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.versions()
+	})
+}
+
+// mqlAwsLambdaFunctionVersion for the aws.lambda.function.version resource
+type mqlAwsLambdaFunctionVersion struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsLambdaFunctionVersionInternal it will be used here
+	Arn            plugin.TValue[string]
+	Version        plugin.TValue[string]
+	Runtime        plugin.TValue[string]
+	Handler        plugin.TValue[string]
+	CodeSha256     plugin.TValue[string]
+	Description    plugin.TValue[string]
+	MemorySize     plugin.TValue[int64]
+	Timeout        plugin.TValue[int64]
+	LastModifiedAt plugin.TValue[*time.Time]
+	State          plugin.TValue[string]
+}
+
+// createAwsLambdaFunctionVersion creates a new instance of this resource
+func createAwsLambdaFunctionVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsLambdaFunctionVersion{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.lambda.function.version", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsLambdaFunctionVersion) MqlName() string {
+	return "aws.lambda.function.version"
+}
+
+func (c *mqlAwsLambdaFunctionVersion) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsLambdaFunctionVersion) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsLambdaFunctionVersion) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlAwsLambdaFunctionVersion) GetRuntime() *plugin.TValue[string] {
+	return &c.Runtime
+}
+
+func (c *mqlAwsLambdaFunctionVersion) GetHandler() *plugin.TValue[string] {
+	return &c.Handler
+}
+
+func (c *mqlAwsLambdaFunctionVersion) GetCodeSha256() *plugin.TValue[string] {
+	return &c.CodeSha256
+}
+
+func (c *mqlAwsLambdaFunctionVersion) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsLambdaFunctionVersion) GetMemorySize() *plugin.TValue[int64] {
+	return &c.MemorySize
+}
+
+func (c *mqlAwsLambdaFunctionVersion) GetTimeout() *plugin.TValue[int64] {
+	return &c.Timeout
+}
+
+func (c *mqlAwsLambdaFunctionVersion) GetLastModifiedAt() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedAt
+}
+
+func (c *mqlAwsLambdaFunctionVersion) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
 // mqlAwsLambdaFunctionUrlConfig for the aws.lambda.function.urlConfig resource
 type mqlAwsLambdaFunctionUrlConfig struct {
 	MqlRuntime *plugin.Runtime
@@ -73249,6 +74419,7 @@ type mqlAwsLambdaLayer struct {
 	CompatibleArchitectures plugin.TValue[[]any]
 	CreatedDate             plugin.TValue[*time.Time]
 	LicenseInfo             plugin.TValue[string]
+	Versions                plugin.TValue[[]any]
 }
 
 // createAwsLambdaLayer creates a new instance of this resource
@@ -73321,6 +74492,101 @@ func (c *mqlAwsLambdaLayer) GetCreatedDate() *plugin.TValue[*time.Time] {
 }
 
 func (c *mqlAwsLambdaLayer) GetLicenseInfo() *plugin.TValue[string] {
+	return &c.LicenseInfo
+}
+
+func (c *mqlAwsLambdaLayer) GetVersions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Versions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.lambda.layer", c.__id, "versions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.versions()
+	})
+}
+
+// mqlAwsLambdaLayerVersion for the aws.lambda.layer.version resource
+type mqlAwsLambdaLayerVersion struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsLambdaLayerVersionInternal it will be used here
+	LayerVersionArn         plugin.TValue[string]
+	Version                 plugin.TValue[int64]
+	Description             plugin.TValue[string]
+	CreatedDate             plugin.TValue[*time.Time]
+	CompatibleRuntimes      plugin.TValue[[]any]
+	CompatibleArchitectures plugin.TValue[[]any]
+	LicenseInfo             plugin.TValue[string]
+}
+
+// createAwsLambdaLayerVersion creates a new instance of this resource
+func createAwsLambdaLayerVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsLambdaLayerVersion{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.lambda.layer.version", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsLambdaLayerVersion) MqlName() string {
+	return "aws.lambda.layer.version"
+}
+
+func (c *mqlAwsLambdaLayerVersion) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsLambdaLayerVersion) GetLayerVersionArn() *plugin.TValue[string] {
+	return &c.LayerVersionArn
+}
+
+func (c *mqlAwsLambdaLayerVersion) GetVersion() *plugin.TValue[int64] {
+	return &c.Version
+}
+
+func (c *mqlAwsLambdaLayerVersion) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsLambdaLayerVersion) GetCreatedDate() *plugin.TValue[*time.Time] {
+	return &c.CreatedDate
+}
+
+func (c *mqlAwsLambdaLayerVersion) GetCompatibleRuntimes() *plugin.TValue[[]any] {
+	return &c.CompatibleRuntimes
+}
+
+func (c *mqlAwsLambdaLayerVersion) GetCompatibleArchitectures() *plugin.TValue[[]any] {
+	return &c.CompatibleArchitectures
+}
+
+func (c *mqlAwsLambdaLayerVersion) GetLicenseInfo() *plugin.TValue[string] {
 	return &c.LicenseInfo
 }
 

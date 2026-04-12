@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.12.0",
-  "generated_at": "2026-04-11T11:29:21-07:00",
+  "generated_at": "2026-04-11T19:24:24-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -167,11 +167,14 @@
     "ec2:GetManagedPrefixListEntries",
     "ec2:GetSerialConsoleAccessStatus",
     "ecr:BatchGetRepositoryScanningConfiguration",
+    "ecr:DescribeImageScanFindings",
     "ecr:DescribeImages",
     "ecr:DescribeRegistry",
     "ecr:DescribeRepositories",
     "ecr:GetLifecyclePolicy",
+    "ecr:GetRegistryScanningConfiguration",
     "ecr:GetRepositoryPolicy",
+    "ecr:ListTagsForResource",
     "ecrpublic:DescribeImages",
     "ecrpublic:DescribeRepositories",
     "ecrpublic:GetRepositoryCatalogData",
@@ -191,8 +194,10 @@
     "efs:DescribeBackupPolicy",
     "efs:DescribeFileSystemPolicy",
     "efs:DescribeFileSystems",
+    "efs:DescribeLifecycleConfiguration",
     "efs:DescribeMountTargetSecurityGroups",
     "efs:DescribeMountTargets",
+    "efs:DescribeReplicationConfigurations",
     "eks:DescribeAccessEntry",
     "eks:DescribeAddon",
     "eks:DescribeAddonVersions",
@@ -336,9 +341,11 @@
     "lambda:ListAliases",
     "lambda:ListEventSourceMappings",
     "lambda:ListFunctions",
+    "lambda:ListLayerVersions",
     "lambda:ListLayers",
     "lambda:ListProvisionedConcurrencyConfigs",
     "lambda:ListTags",
+    "lambda:ListVersionsByFunction",
     "lightsail:GetBuckets",
     "lightsail:GetInstances",
     "lightsail:GetLoadBalancers",
@@ -496,11 +503,13 @@
     "shield:GetSubscriptionState",
     "shield:ListProtectionGroups",
     "shield:ListProtections",
+    "sns:GetDataProtectionPolicy",
     "sns:GetSubscriptionAttributes",
     "sns:GetTopicAttributes",
     "sns:ListSubscriptionsByTopic",
     "sns:ListTopics",
     "sqs:GetQueueAttributes",
+    "sqs:ListQueueTags",
     "sqs:ListQueues",
     "ssm:DescribeDocument",
     "ssm:DescribeDocumentPermission",
@@ -1580,6 +1589,12 @@
       "source_file": "aws_ecr.go"
     },
     {
+      "permission": "ecr:DescribeImageScanFindings",
+      "service": "ecr",
+      "action": "DescribeImageScanFindings",
+      "source_file": "aws_ecr.go"
+    },
+    {
       "permission": "ecr:DescribeImages",
       "service": "ecr",
       "action": "DescribeImages",
@@ -1604,9 +1619,21 @@
       "source_file": "aws_ecr.go"
     },
     {
+      "permission": "ecr:GetRegistryScanningConfiguration",
+      "service": "ecr",
+      "action": "GetRegistryScanningConfiguration",
+      "source_file": "aws_ecr.go"
+    },
+    {
       "permission": "ecr:GetRepositoryPolicy",
       "service": "ecr",
       "action": "GetRepositoryPolicy",
+      "source_file": "aws_ecr.go"
+    },
+    {
+      "permission": "ecr:ListTagsForResource",
+      "service": "ecr",
+      "action": "ListTagsForResource",
       "source_file": "aws_ecr.go"
     },
     {
@@ -1724,6 +1751,12 @@
       "source_file": "aws_efs.go"
     },
     {
+      "permission": "efs:DescribeLifecycleConfiguration",
+      "service": "efs",
+      "action": "DescribeLifecycleConfiguration",
+      "source_file": "aws_efs.go"
+    },
+    {
       "permission": "efs:DescribeMountTargetSecurityGroups",
       "service": "efs",
       "action": "DescribeMountTargetSecurityGroups",
@@ -1733,6 +1766,12 @@
       "permission": "efs:DescribeMountTargets",
       "service": "efs",
       "action": "DescribeMountTargets",
+      "source_file": "aws_efs.go"
+    },
+    {
+      "permission": "efs:DescribeReplicationConfigurations",
+      "service": "efs",
+      "action": "DescribeReplicationConfigurations",
       "source_file": "aws_efs.go"
     },
     {
@@ -2612,6 +2651,12 @@
       "source_file": "aws_lambda.go"
     },
     {
+      "permission": "lambda:ListLayerVersions",
+      "service": "lambda",
+      "action": "ListLayerVersions",
+      "source_file": "aws_lambda.go"
+    },
+    {
       "permission": "lambda:ListLayers",
       "service": "lambda",
       "action": "ListLayers",
@@ -2627,6 +2672,12 @@
       "permission": "lambda:ListTags",
       "service": "lambda",
       "action": "ListTags",
+      "source_file": "aws_lambda.go"
+    },
+    {
+      "permission": "lambda:ListVersionsByFunction",
+      "service": "lambda",
+      "action": "ListVersionsByFunction",
       "source_file": "aws_lambda.go"
     },
     {
@@ -3614,6 +3665,12 @@
       "source_file": "aws_shield.go"
     },
     {
+      "permission": "sns:GetDataProtectionPolicy",
+      "service": "sns",
+      "action": "GetDataProtectionPolicy",
+      "source_file": "aws_sns.go"
+    },
+    {
       "permission": "sns:GetSubscriptionAttributes",
       "service": "sns",
       "action": "GetSubscriptionAttributes",
@@ -3641,6 +3698,12 @@
       "permission": "sqs:GetQueueAttributes",
       "service": "sqs",
       "action": "GetQueueAttributes",
+      "source_file": "aws_sqs.go"
+    },
+    {
+      "permission": "sqs:ListQueueTags",
+      "service": "sqs",
+      "action": "ListQueueTags",
       "source_file": "aws_sqs.go"
     },
     {

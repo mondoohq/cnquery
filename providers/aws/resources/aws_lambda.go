@@ -1032,3 +1032,119 @@ type lambdaPolicyStatement struct {
 	Resource  string              `json:"Resource,omitempty"`
 	Principal awspolicy.Principal `json:"Principal,omitempty"`
 }
+
+// ==================== Per-Function Versions ====================
+
+func (a *mqlAwsLambdaFunction) versions() ([]any, error) {
+	funcName := a.Name.Data
+	region := a.Region.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Lambda(region)
+	ctx := context.Background()
+	res := []any{}
+
+	paginator := lambda.NewListVersionsByFunctionPaginator(svc,
+		&lambda.ListVersionsByFunctionInput{FunctionName: &funcName})
+	for paginator.HasMorePages() {
+		resp, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return res, nil
+			}
+			return nil, errors.Wrap(err, "could not list lambda function versions")
+		}
+		for _, v := range resp.Versions {
+			var lastModifiedAt *time.Time
+			if v.LastModified != nil {
+				if t, err := time.Parse("2006-01-02T15:04:05.000-0700", *v.LastModified); err == nil {
+					lastModifiedAt = &t
+				}
+			}
+
+			mqlVer, err := CreateResource(a.MqlRuntime, "aws.lambda.function.version",
+				map[string]*llx.RawData{
+					"__id":           llx.StringData(convert.ToValue(v.FunctionArn)),
+					"arn":            llx.StringDataPtr(v.FunctionArn),
+					"version":        llx.StringDataPtr(v.Version),
+					"runtime":        llx.StringData(string(v.Runtime)),
+					"handler":        llx.StringDataPtr(v.Handler),
+					"codeSha256":     llx.StringDataPtr(v.CodeSha256),
+					"description":    llx.StringDataPtr(v.Description),
+					"memorySize":     llx.IntDataDefault(v.MemorySize, 0),
+					"timeout":        llx.IntDataDefault(v.Timeout, 3),
+					"lastModifiedAt": llx.TimeDataPtr(lastModifiedAt),
+					"state":          llx.StringData(string(v.State)),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlVer)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsLambdaFunctionVersion) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+// ==================== Per-Layer Versions ====================
+
+func (a *mqlAwsLambdaLayer) versions() ([]any, error) {
+	layerArn := a.Arn.Data
+	parsedArn, err := arn.Parse(layerArn)
+	if err != nil {
+		return nil, err
+	}
+	region := parsedArn.Region
+	layerName := a.Name.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Lambda(region)
+	ctx := context.Background()
+	res := []any{}
+
+	paginator := lambda.NewListLayerVersionsPaginator(svc,
+		&lambda.ListLayerVersionsInput{LayerName: &layerName})
+	for paginator.HasMorePages() {
+		resp, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return res, nil
+			}
+			return nil, errors.Wrap(err, "could not list lambda layer versions")
+		}
+		for _, lv := range resp.LayerVersions {
+			compatRuntimes := make([]any, len(lv.CompatibleRuntimes))
+			for i, rt := range lv.CompatibleRuntimes {
+				compatRuntimes[i] = string(rt)
+			}
+			compatArchs := make([]any, len(lv.CompatibleArchitectures))
+			for i, arch := range lv.CompatibleArchitectures {
+				compatArchs[i] = string(arch)
+			}
+
+			mqlVer, err := CreateResource(a.MqlRuntime, "aws.lambda.layer.version",
+				map[string]*llx.RawData{
+					"__id":                    llx.StringDataPtr(lv.LayerVersionArn),
+					"layerVersionArn":         llx.StringDataPtr(lv.LayerVersionArn),
+					"version":                 llx.IntData(lv.Version),
+					"description":             llx.StringDataPtr(lv.Description),
+					"createdDate":             llx.TimeDataPtr(parseAwsTimestampPtr(lv.CreatedDate)),
+					"compatibleRuntimes":      llx.ArrayData(compatRuntimes, types.String),
+					"compatibleArchitectures": llx.ArrayData(compatArchs, types.String),
+					"licenseInfo":             llx.StringDataPtr(lv.LicenseInfo),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlVer)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsLambdaLayerVersion) id() (string, error) {
+	return a.LayerVersionArn.Data, nil
+}

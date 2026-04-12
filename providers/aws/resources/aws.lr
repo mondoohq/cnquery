@@ -1009,6 +1009,58 @@ private aws.efs.filesystem @defaults("name id region") {
   accessPoints() []aws.efs.accessPoint
   // Resource-based policy document (JSON)
   fileSystemPolicy() string
+  // Performance mode: generalPurpose or maxIO
+  performanceMode string
+  // Throughput mode: bursting, provisioned, or elastic
+  throughputMode string
+  // Current metered size of the file system in bytes
+  sizeInBytes int
+  // Lifecycle state: creating, available, updating, deleting, deleted, error
+  lifecycleState string
+  // Lifecycle configuration for the file system
+  lifecycleConfiguration() aws.efs.filesystem.lifecycleConfiguration
+  // Replication configuration for the file system (null if not replicated)
+  replicationConfiguration() aws.efs.filesystem.replicationConfiguration
+  // File system protection configuration
+  fileSystemProtection() dict
+}
+
+// AWS EFS lifecycle configuration
+private aws.efs.filesystem.lifecycleConfiguration @defaults("transitionToIA") {
+  // Transition to Infrequent Access storage class (e.g., AFTER_7_DAYS, AFTER_14_DAYS, AFTER_30_DAYS, AFTER_60_DAYS, AFTER_90_DAYS, AFTER_180_DAYS, AFTER_270_DAYS, AFTER_365_DAYS)
+  transitionToIA string
+  // Transition to Archive storage class (e.g., AFTER_1_DAY, AFTER_7_DAYS, AFTER_14_DAYS, AFTER_30_DAYS, AFTER_60_DAYS, AFTER_90_DAYS, AFTER_180_DAYS, AFTER_270_DAYS, AFTER_365_DAYS)
+  transitionToArchive string
+  // Transition back to primary storage on access (AFTER_1_ACCESS)
+  transitionToPrimaryStorageClass string
+}
+
+// AWS EFS file system replication configuration
+private aws.efs.filesystem.replicationConfiguration @defaults("sourceFileSystemId") {
+  // Source file system ID
+  sourceFileSystemId string
+  // Source file system region
+  sourceFileSystemRegion string
+  // Source file system ARN
+  sourceFileSystemArn string
+  // Original source file system ARN
+  originalSourceFileSystemArn string
+  // When replication was created
+  creationTime time
+  // Replication destinations
+  destinations []aws.efs.filesystem.replicationDestination
+}
+
+// AWS EFS replication destination
+private aws.efs.filesystem.replicationDestination @defaults("fileSystemId region status") {
+  // Destination file system ID
+  fileSystemId string
+  // Destination region
+  region string
+  // Replication status: ENABLED, ENABLING, DELETING, ERROR, PAUSED, PAUSING
+  status string
+  // Last successful replication timestamp
+  lastReplicatedTimestamp time
 }
 
 // AWS EFS mount target
@@ -2254,6 +2306,18 @@ private aws.sns.topic @defaults("arn") {
   kmsMasterKey() aws.kms.key
   // Access policy for the topic (parsed JSON)
   policy() dict
+  // Whether the topic is a FIFO topic
+  fifoTopic() bool
+  // Whether content-based deduplication is enabled (FIFO topics only)
+  contentBasedDeduplication() bool
+  // Data protection policy for the topic (parsed JSON)
+  dataProtectionPolicy() dict
+  // AWS X-Ray tracing configuration for the topic
+  tracingConfig() string
+  // Delivery policy for HTTP/S subscriptions at the topic level (parsed JSON)
+  deliveryPolicy() dict
+  // Display name used for SMS or email subscriptions
+  displayName() string
 }
 
 // AWS Simple Notification Service (SNS) subscription
@@ -5400,6 +5464,12 @@ private aws.sqs.queue {
   fifoThroughputLimit() string
   // Access policy for the queue (parsed JSON)
   policy() dict
+  // Resource tags for the queue
+  tags() map[string]string
+  // Whether content-based deduplication is enabled (FIFO queues only)
+  contentBasedDeduplication() bool
+  // Redrive allow policy controlling which source queues can use this queue as a dead-letter queue (parsed JSON)
+  redriveAllowPolicy() dict
 }
 
 // Amazon Relational Database Service (RDS)
@@ -6484,6 +6554,8 @@ aws.ecr {
   images() []aws.ecr.image
   // Registry replication configuration
   replicationConfiguration() dict
+  // Registry-level scanning configuration
+  scanningConfiguration() aws.ecr.scanningConfiguration
 }
 
 // AWS Elastic Container Registry repository
@@ -6526,6 +6598,8 @@ private aws.ecr.repository @defaults("uri region") {
   operatingSystems() []string
   // Architectures from catalog data (public repositories only)
   architectures() []string
+  // AWS resource tags for the repository (private repositories only)
+  tags() map[string]string
 }
 
 // AWS ECR repository lifecycle policy
@@ -6586,6 +6660,42 @@ private aws.ecr.image @defaults("uri region") {
   sizeInBytes int
   // Time of the most recent image pull (Amazon only refreshes this data once every 24 hours.)
   lastRecordedPullTime time
+  // Status of the most recent image scan: COMPLETE, FAILED, IN_PROGRESS, UNSUPPORTED_IMAGE, ACTIVE, SCAN_ELIGIBILITY_EXPIRED, FINDINGS_UNAVAILABLE, or NOT_SCANNED
+  scanStatus() string
+  // Findings from the most recent image scan (basic scan findings; private repositories only)
+  scanFindings() []aws.ecr.image.scanFinding
+  // Severity counts from the most recent image scan
+  scanFindingSeverityCounts() dict
+}
+
+// AWS ECR image scan finding
+private aws.ecr.image.scanFinding @defaults("severity name") {
+  // Name of the vulnerability (e.g., CVE ID)
+  name string
+  // Description of the vulnerability
+  description string
+  // URI with more information about the vulnerability
+  uri string
+  // Severity: INFORMATIONAL, LOW, MEDIUM, HIGH, CRITICAL, or UNDEFINED
+  severity string
+  // Attributes associated with the finding (e.g., CVSS score)
+  attributes dict
+}
+
+// AWS ECR registry scanning configuration
+private aws.ecr.scanningConfiguration @defaults("scanType") {
+  // Scan type for the registry: BASIC or ENHANCED
+  scanType string
+  // Scanning rules applied to repositories
+  rules []aws.ecr.scanningConfiguration.rule
+}
+
+// AWS ECR registry scanning configuration rule
+private aws.ecr.scanningConfiguration.rule @defaults("scanFrequency") {
+  // Scan frequency: SCAN_ON_PUSH, CONTINUOUS_SCAN, or MANUAL
+  scanFrequency string
+  // Repository filters applied by this rule
+  repositoryFilters []dict
 }
 
 // AWS Database Migration Service (DMS)
@@ -6774,6 +6884,32 @@ private aws.lambda.function @defaults("arn") {
   eventInvokeConfig() dict
   // Runtime management configuration (update mode and ARN)
   runtimeManagementConfig() dict
+  // Published versions of this function
+  versions() []aws.lambda.function.version
+}
+
+// AWS Lambda function version
+private aws.lambda.function.version @defaults("arn version") {
+  // ARN of this function version
+  arn string
+  // Version number (e.g., "1", "2", "$LATEST")
+  version string
+  // Runtime environment
+  runtime string
+  // Function handler
+  handler string
+  // SHA-256 hash of the deployment package
+  codeSha256 string
+  // Description
+  description string
+  // Memory size in MB
+  memorySize int
+  // Timeout in seconds
+  timeout int
+  // When this version was last modified
+  lastModifiedAt time
+  // State: Active, Inactive, Pending, Failed
+  state string
 }
 
 // AWS Lambda function URL configuration
@@ -6843,6 +6979,26 @@ private aws.lambda.layer @defaults("arn name") {
   // When the latest version was created
   createdDate time
   // License information for the latest version
+  licenseInfo string
+  // All published versions of this layer
+  versions() []aws.lambda.layer.version
+}
+
+// AWS Lambda layer version
+private aws.lambda.layer.version @defaults("layerVersionArn version") {
+  // ARN for this specific layer version
+  layerVersionArn string
+  // Version number
+  version int
+  // Description
+  description string
+  // When this version was created
+  createdDate time
+  // Compatible runtimes
+  compatibleRuntimes []string
+  // Compatible architectures
+  compatibleArchitectures []string
+  // License information
   licenseInfo string
 }
 

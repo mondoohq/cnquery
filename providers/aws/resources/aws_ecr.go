@@ -625,3 +625,225 @@ func (a *mqlAwsEcrRepository) architectures() ([]any, error) {
 	}
 	return convert.SliceAnyToInterface(data.Architectures), nil
 }
+
+func (a *mqlAwsEcrRepository) tags() (map[string]any, error) {
+	if a.Public.Data {
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Ecr(a.Region.Data)
+	ctx := context.Background()
+	arnVal := a.Arn.Data
+
+	resp, err := svc.ListTagsForResource(ctx, &ecr.ListTagsForResourceInput{
+		ResourceArn: &arnVal,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	tags := make(map[string]any)
+	for _, t := range resp.Tags {
+		if t.Key != nil && t.Value != nil {
+			tags[*t.Key] = *t.Value
+		}
+	}
+	return tags, nil
+}
+
+// ==================== ECR Image Scan Findings ====================
+
+type mqlAwsEcrImageInternal struct {
+	scanFetched             bool
+	scanFindingsCache       []ecrtypes.ImageScanFinding
+	scanStatusCache         string
+	scanSeverityCountsCache map[string]int32
+	scanLock                sync.Mutex
+}
+
+func (a *mqlAwsEcrImage) fetchScanFindings() error {
+	if a.scanFetched {
+		return nil
+	}
+	a.scanLock.Lock()
+	defer a.scanLock.Unlock()
+	if a.scanFetched {
+		return nil
+	}
+
+	repoName := a.RepoName.Data
+	digest := a.Digest.Data
+	region := a.Region.Data
+
+	// Public images don't support scan findings
+	registryId := a.RegistryId.Data
+	if registryId == "" {
+		a.scanFetched = true
+		a.scanStatusCache = "NOT_SCANNED"
+		return nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Ecr(region)
+	ctx := context.Background()
+
+	var findings []ecrtypes.ImageScanFinding
+	paginator := ecr.NewDescribeImageScanFindingsPaginator(svc, &ecr.DescribeImageScanFindingsInput{
+		RepositoryName: &repoName,
+		ImageId:        &ecrtypes.ImageIdentifier{ImageDigest: &digest},
+	})
+	for paginator.HasMorePages() {
+		resp, err := paginator.NextPage(ctx)
+		if err != nil {
+			var scanNotFound *ecrtypes.ScanNotFoundException
+			if errors.As(err, &scanNotFound) {
+				a.scanFetched = true
+				a.scanStatusCache = "NOT_SCANNED"
+				return nil
+			}
+			if Is400AccessDeniedError(err) {
+				a.scanFetched = true
+				a.scanStatusCache = ""
+				return nil
+			}
+			return err
+		}
+		if resp.ImageScanStatus != nil {
+			a.scanStatusCache = string(resp.ImageScanStatus.Status)
+		}
+		if resp.ImageScanFindings != nil {
+			findings = append(findings, resp.ImageScanFindings.Findings...)
+			if resp.ImageScanFindings.FindingSeverityCounts != nil {
+				a.scanSeverityCountsCache = make(map[string]int32)
+				for k, v := range resp.ImageScanFindings.FindingSeverityCounts {
+					a.scanSeverityCountsCache[string(k)] = v
+				}
+			}
+		}
+	}
+	a.scanFindingsCache = findings
+	a.scanFetched = true
+	return nil
+}
+
+func (a *mqlAwsEcrImage) scanStatus() (string, error) {
+	if err := a.fetchScanFindings(); err != nil {
+		return "", err
+	}
+	return a.scanStatusCache, nil
+}
+
+func (a *mqlAwsEcrImage) scanFindings() ([]any, error) {
+	if err := a.fetchScanFindings(); err != nil {
+		return nil, err
+	}
+
+	imageArn := a.Arn.Data
+	res := make([]any, 0, len(a.scanFindingsCache))
+	for i, f := range a.scanFindingsCache {
+		attrs := map[string]any{}
+		for _, attr := range f.Attributes {
+			if attr.Key != nil {
+				attrs[*attr.Key] = convert.ToValue(attr.Value)
+			}
+		}
+
+		findingId := fmt.Sprintf("%s/scanFinding/%d", imageArn, i)
+		mqlFinding, err := CreateResource(a.MqlRuntime, "aws.ecr.image.scanFinding",
+			map[string]*llx.RawData{
+				"__id":        llx.StringData(findingId),
+				"name":        llx.StringDataPtr(f.Name),
+				"description": llx.StringDataPtr(f.Description),
+				"uri":         llx.StringDataPtr(f.Uri),
+				"severity":    llx.StringData(string(f.Severity)),
+				"attributes":  llx.DictData(attrs),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlFinding)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsEcrImage) scanFindingSeverityCounts() (any, error) {
+	if err := a.fetchScanFindings(); err != nil {
+		return nil, err
+	}
+	if a.scanSeverityCountsCache == nil {
+		return nil, nil
+	}
+	counts := make(map[string]any)
+	for k, v := range a.scanSeverityCountsCache {
+		counts[k] = int64(v)
+	}
+	return counts, nil
+}
+
+func (a *mqlAwsEcrImageScanFinding) id() (string, error) {
+	return a.__id, nil
+}
+
+// ==================== ECR Registry Scanning Configuration ====================
+
+func (a *mqlAwsEcr) scanningConfiguration() (*mqlAwsEcrScanningConfiguration, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Ecr("")
+	ctx := context.Background()
+
+	resp, err := svc.GetRegistryScanningConfiguration(ctx, &ecr.GetRegistryScanningConfigurationInput{})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			a.ScanningConfiguration.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
+		return nil, err
+	}
+	if resp.ScanningConfiguration == nil {
+		a.ScanningConfiguration.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	rules := make([]any, 0, len(resp.ScanningConfiguration.Rules))
+	for i, rule := range resp.ScanningConfiguration.Rules {
+		filters := make([]any, 0, len(rule.RepositoryFilters))
+		for _, f := range rule.RepositoryFilters {
+			filters = append(filters, map[string]any{
+				"filter":     convert.ToValue(f.Filter),
+				"filterType": string(f.FilterType),
+			})
+		}
+
+		mqlRule, err := CreateResource(a.MqlRuntime, "aws.ecr.scanningConfiguration.rule",
+			map[string]*llx.RawData{
+				"__id":              llx.StringData(fmt.Sprintf("aws.ecr.scanningConfiguration.rule/%d", i)),
+				"scanFrequency":     llx.StringData(string(rule.ScanFrequency)),
+				"repositoryFilters": llx.ArrayData(filters, types.Dict),
+			})
+		if err != nil {
+			return nil, err
+		}
+		rules = append(rules, mqlRule)
+	}
+
+	mqlConfig, err := CreateResource(a.MqlRuntime, "aws.ecr.scanningConfiguration",
+		map[string]*llx.RawData{
+			"__id":     llx.StringData("aws.ecr.scanningConfiguration"),
+			"scanType": llx.StringData(string(resp.ScanningConfiguration.ScanType)),
+			"rules":    llx.ArrayData(rules, types.Resource("aws.ecr.scanningConfiguration.rule")),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlConfig.(*mqlAwsEcrScanningConfiguration), nil
+}
+
+func (a *mqlAwsEcrScanningConfiguration) id() (string, error) {
+	return "aws.ecr.scanningConfiguration", nil
+}
+
+func (a *mqlAwsEcrScanningConfigurationRule) id() (string, error) {
+	return a.__id, nil
+}

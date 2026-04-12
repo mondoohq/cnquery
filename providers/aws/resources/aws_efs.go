@@ -76,6 +76,11 @@ func (a *mqlAwsEfs) getFilesystems(conn *connection.AwsConnection) []*jobpool.Jo
 						continue
 					}
 
+					var sizeInBytes int64
+					if fs.SizeInBytes != nil {
+						sizeInBytes = fs.SizeInBytes.Value
+					}
+
 					args := map[string]*llx.RawData{
 						"id":               llx.StringDataPtr(fs.FileSystemId),
 						"arn":              llx.StringDataPtr(fs.FileSystemArn),
@@ -85,12 +90,17 @@ func (a *mqlAwsEfs) getFilesystems(conn *connection.AwsConnection) []*jobpool.Jo
 						"availabilityZone": llx.StringDataPtr(fs.AvailabilityZoneName),
 						"createdAt":        llx.TimeDataPtr(fs.CreationTime),
 						"tags":             llx.MapData(efsTagsToMap(fs.Tags), types.String),
+						"performanceMode":  llx.StringData(string(fs.PerformanceMode)),
+						"throughputMode":   llx.StringData(string(fs.ThroughputMode)),
+						"sizeInBytes":      llx.IntData(sizeInBytes),
+						"lifecycleState":   llx.StringData(string(fs.LifeCycleState)),
 					}
 					mqlFilesystem, err := CreateResource(a.MqlRuntime, "aws.efs.filesystem", args)
 					if err != nil {
 						return nil, err
 					}
 					mqlFilesystem.(*mqlAwsEfsFilesystem).cacheKmsKeyID = fs.KmsKeyId
+					mqlFilesystem.(*mqlAwsEfsFilesystem).cacheFileSystemProtection = fs.FileSystemProtection
 
 					res = append(res, mqlFilesystem)
 				}
@@ -103,7 +113,8 @@ func (a *mqlAwsEfs) getFilesystems(conn *connection.AwsConnection) []*jobpool.Jo
 }
 
 type mqlAwsEfsFilesystemInternal struct {
-	cacheKmsKeyID *string
+	cacheKmsKeyID             *string
+	cacheFileSystemProtection *efstypes.FileSystemProtectionDescription
 }
 
 func (a *mqlAwsEfsFilesystem) kmsKey() (*mqlAwsKmsKey, error) {
@@ -178,6 +189,149 @@ func (a *mqlAwsEfsFilesystem) backupPolicy() (any, error) {
 		return nil, err
 	}
 	return res, nil
+}
+
+func (a *mqlAwsEfsFilesystem) lifecycleConfiguration() (*mqlAwsEfsFilesystemLifecycleConfiguration, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	id := a.Id.Data
+	region := a.Region.Data
+
+	svc := conn.Efs(region)
+	ctx := context.Background()
+
+	resp, err := svc.DescribeLifecycleConfiguration(ctx, &efs.DescribeLifecycleConfigurationInput{
+		FileSystemId: &id,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			a.LifecycleConfiguration.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
+		var respErr *http.ResponseError
+		if errors.As(err, &respErr) && respErr.HTTPStatusCode() == 404 {
+			a.LifecycleConfiguration.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
+		return nil, err
+	}
+	if len(resp.LifecyclePolicies) == 0 {
+		a.LifecycleConfiguration.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	// Aggregate all policies into a single lifecycle configuration
+	var transitionToIA, transitionToArchive, transitionToPrimary string
+	for _, p := range resp.LifecyclePolicies {
+		if p.TransitionToIA != "" {
+			transitionToIA = string(p.TransitionToIA)
+		}
+		if p.TransitionToArchive != "" {
+			transitionToArchive = string(p.TransitionToArchive)
+		}
+		if p.TransitionToPrimaryStorageClass != "" {
+			transitionToPrimary = string(p.TransitionToPrimaryStorageClass)
+		}
+	}
+
+	configId := a.Arn.Data + "/lifecycleConfiguration"
+	mqlConfig, err := CreateResource(a.MqlRuntime, "aws.efs.filesystem.lifecycleConfiguration",
+		map[string]*llx.RawData{
+			"__id":                            llx.StringData(configId),
+			"transitionToIA":                  llx.StringData(transitionToIA),
+			"transitionToArchive":             llx.StringData(transitionToArchive),
+			"transitionToPrimaryStorageClass": llx.StringData(transitionToPrimary),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlConfig.(*mqlAwsEfsFilesystemLifecycleConfiguration), nil
+}
+
+func (a *mqlAwsEfsFilesystemLifecycleConfiguration) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAwsEfsFilesystem) replicationConfiguration() (*mqlAwsEfsFilesystemReplicationConfiguration, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	id := a.Id.Data
+	region := a.Region.Data
+
+	svc := conn.Efs(region)
+	ctx := context.Background()
+
+	resp, err := svc.DescribeReplicationConfigurations(ctx, &efs.DescribeReplicationConfigurationsInput{
+		FileSystemId: &id,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			a.ReplicationConfiguration.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
+		var respErr *http.ResponseError
+		if errors.As(err, &respErr) && respErr.HTTPStatusCode() == 404 {
+			a.ReplicationConfiguration.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
+		return nil, err
+	}
+	if len(resp.Replications) == 0 {
+		a.ReplicationConfiguration.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	repl := resp.Replications[0]
+
+	// Build destination sub-resources
+	destinations := make([]any, 0, len(repl.Destinations))
+	for _, dest := range repl.Destinations {
+		destId := convert.ToValue(repl.SourceFileSystemArn) + "/replication/" + convert.ToValue(dest.FileSystemId)
+		mqlDest, err := CreateResource(a.MqlRuntime, "aws.efs.filesystem.replicationDestination",
+			map[string]*llx.RawData{
+				"__id":                    llx.StringData(destId),
+				"fileSystemId":            llx.StringDataPtr(dest.FileSystemId),
+				"region":                  llx.StringDataPtr(dest.Region),
+				"status":                  llx.StringData(string(dest.Status)),
+				"lastReplicatedTimestamp": llx.TimeDataPtr(dest.LastReplicatedTimestamp),
+			})
+		if err != nil {
+			return nil, err
+		}
+		destinations = append(destinations, mqlDest)
+	}
+
+	replId := convert.ToValue(repl.SourceFileSystemArn) + "/replication"
+	mqlRepl, err := CreateResource(a.MqlRuntime, "aws.efs.filesystem.replicationConfiguration",
+		map[string]*llx.RawData{
+			"__id":                        llx.StringData(replId),
+			"sourceFileSystemId":          llx.StringDataPtr(repl.SourceFileSystemId),
+			"sourceFileSystemRegion":      llx.StringDataPtr(repl.SourceFileSystemRegion),
+			"sourceFileSystemArn":         llx.StringDataPtr(repl.SourceFileSystemArn),
+			"originalSourceFileSystemArn": llx.StringDataPtr(repl.OriginalSourceFileSystemArn),
+			"creationTime":                llx.TimeDataPtr(repl.CreationTime),
+			"destinations":                llx.ArrayData(destinations, types.Resource("aws.efs.filesystem.replicationDestination")),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlRepl.(*mqlAwsEfsFilesystemReplicationConfiguration), nil
+}
+
+func (a *mqlAwsEfsFilesystemReplicationConfiguration) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAwsEfsFilesystemReplicationDestination) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAwsEfsFilesystem) fileSystemProtection() (any, error) {
+	if a.cacheFileSystemProtection == nil {
+		return nil, nil
+	}
+	result := map[string]any{
+		"replicationOverwriteProtection": string(a.cacheFileSystemProtection.ReplicationOverwriteProtection),
+	}
+	return result, nil
 }
 
 func efsTagsToMap(tags []efstypes.Tag) map[string]any {

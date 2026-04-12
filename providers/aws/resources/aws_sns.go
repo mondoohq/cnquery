@@ -417,3 +417,80 @@ func (a *mqlAwsSnsSubscription) pendingConfirmation() (bool, error) {
 	}
 	return attrs["PendingConfirmation"] == "true", nil
 }
+
+func (a *mqlAwsSnsTopic) fifoTopic() (bool, error) {
+	atts, err := a.fetchTopicAttributes()
+	if err != nil {
+		return false, err
+	}
+	return atts["FifoTopic"] == "true", nil
+}
+
+func (a *mqlAwsSnsTopic) contentBasedDeduplication() (bool, error) {
+	atts, err := a.fetchTopicAttributes()
+	if err != nil {
+		return false, err
+	}
+	return atts["ContentBasedDeduplication"] == "true", nil
+}
+
+func (a *mqlAwsSnsTopic) tracingConfig() (string, error) {
+	atts, err := a.fetchTopicAttributes()
+	if err != nil {
+		return "", err
+	}
+	return atts["TracingConfig"], nil
+}
+
+func (a *mqlAwsSnsTopic) displayName() (string, error) {
+	atts, err := a.fetchTopicAttributes()
+	if err != nil {
+		return "", err
+	}
+	return atts["DisplayName"], nil
+}
+
+func (a *mqlAwsSnsTopic) deliveryPolicy() (any, error) {
+	atts, err := a.fetchTopicAttributes()
+	if err != nil {
+		return nil, err
+	}
+	val, ok := atts["DeliveryPolicy"]
+	if !ok || val == "" {
+		return nil, nil
+	}
+	var result map[string]any
+	if err := json.Unmarshal([]byte(val), &result); err != nil {
+		return nil, err
+	}
+	return convert.JsonToDict(result)
+}
+
+func (a *mqlAwsSnsTopic) dataProtectionPolicy() (any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Sns(a.Region.Data)
+	ctx := context.Background()
+	arnVal := a.Arn.Data
+
+	resp, err := svc.GetDataProtectionPolicy(ctx, &sns.GetDataProtectionPolicyInput{
+		ResourceArn: &arnVal,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return nil, nil
+		}
+		var respErr *http.ResponseError
+		if errors.As(err, &respErr) && respErr.HTTPStatusCode() == 404 {
+			return nil, nil
+		}
+		return nil, err
+	}
+	if resp.DataProtectionPolicy == nil || *resp.DataProtectionPolicy == "" {
+		return nil, nil
+	}
+	var policy any
+	if err := json.Unmarshal([]byte(*resp.DataProtectionPolicy), &policy); err != nil {
+		return nil, err
+	}
+	return policy, nil
+}
