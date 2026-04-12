@@ -2224,7 +2224,7 @@ private gcp.project.gkeService.cluster.securityPostureConfig {
 }
 
 // Google Kubernetes Engine (GKE) cluster network policy configuration
-private gcp.project.gkeService.cluster.networkPolicy @defaults("enabled") {
+private gcp.project.gkeService.cluster.networkPolicy @defaults("enabled provider") {
   // Internal ID
   id string
   // Whether network policy is enabled on the cluster
@@ -3702,13 +3702,11 @@ private gcp.project.monitoringService.alertPolicy {
 }
 
 // Google Cloud (GCP) Monitoring uptime check configuration
-private gcp.project.monitoringService.uptimeCheckConfig @defaults("displayName") {
+private gcp.project.monitoringService.uptimeCheckConfig @defaults("displayName checkerType") {
   // Full resource name
   name string
   // Display name
   displayName string
-  // Whether the check is disabled
-  disabled bool
   // Type of checker (STATIC_IP_CHECKERS, VPC_CHECKERS)
   checkerType string
   // Check period
@@ -3727,8 +3725,6 @@ private gcp.project.monitoringService.uptimeCheckConfig @defaults("displayName")
   monitoredResource dict
   // Resource group
   resourceGroup dict
-  // Whether to log check failures
-  logCheckFailures bool
   // User-defined labels
   userLabels map[string]string
 }

@@ -2272,10 +2272,8 @@ gcp.project.monitoringService.projectId 9.0.0
 gcp.project.monitoringService.uptimeCheckConfig 13.6.1
 gcp.project.monitoringService.uptimeCheckConfig.checkerType 13.6.1
 gcp.project.monitoringService.uptimeCheckConfig.contentMatchers 13.6.1
-gcp.project.monitoringService.uptimeCheckConfig.disabled 13.6.1
 gcp.project.monitoringService.uptimeCheckConfig.displayName 13.6.1
 gcp.project.monitoringService.uptimeCheckConfig.httpCheck 13.6.1
-gcp.project.monitoringService.uptimeCheckConfig.logCheckFailures 13.6.1
 gcp.project.monitoringService.uptimeCheckConfig.monitoredResource 13.6.1
 gcp.project.monitoringService.uptimeCheckConfig.name 13.6.1
 gcp.project.monitoringService.uptimeCheckConfig.period 13.6.1

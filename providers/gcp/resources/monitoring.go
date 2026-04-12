@@ -281,7 +281,6 @@ func (g *mqlGcpProjectMonitoringService) uptimeCheckConfigs() ([]any, error) {
 		mqlCfg, err := CreateResource(g.MqlRuntime, "gcp.project.monitoringService.uptimeCheckConfig", map[string]*llx.RawData{
 			"name":              llx.StringData(cfg.Name),
 			"displayName":       llx.StringData(cfg.DisplayName),
-			"disabled":          llx.BoolData(cfg.IsInternal),
 			"checkerType":       llx.StringData(cfg.CheckerType.String()),
 			"period":            llx.StringData(periodStr),
 			"timeout":           llx.StringData(timeoutStr),
@@ -291,7 +290,6 @@ func (g *mqlGcpProjectMonitoringService) uptimeCheckConfigs() ([]any, error) {
 			"contentMatchers":   llx.ArrayData(contentMatchers, types.Dict),
 			"monitoredResource": llx.DictData(monitoredResource),
 			"resourceGroup":     llx.DictData(resourceGroup),
-			"logCheckFailures":  llx.BoolData(false),
 			"userLabels":        llx.MapData(convert.MapToInterfaceMap(cfg.UserLabels), types.String),
 		})
 		if err != nil {

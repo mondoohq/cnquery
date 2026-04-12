@@ -6015,9 +6015,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.monitoringService.uptimeCheckConfig.displayName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectMonitoringServiceUptimeCheckConfig).GetDisplayName()).ToDataRes(types.String)
 	},
-	"gcp.project.monitoringService.uptimeCheckConfig.disabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectMonitoringServiceUptimeCheckConfig).GetDisabled()).ToDataRes(types.Bool)
-	},
 	"gcp.project.monitoringService.uptimeCheckConfig.checkerType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectMonitoringServiceUptimeCheckConfig).GetCheckerType()).ToDataRes(types.String)
 	},
@@ -6044,9 +6041,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.monitoringService.uptimeCheckConfig.resourceGroup": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectMonitoringServiceUptimeCheckConfig).GetResourceGroup()).ToDataRes(types.Dict)
-	},
-	"gcp.project.monitoringService.uptimeCheckConfig.logCheckFailures": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectMonitoringServiceUptimeCheckConfig).GetLogCheckFailures()).ToDataRes(types.Bool)
 	},
 	"gcp.project.monitoringService.uptimeCheckConfig.userLabels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectMonitoringServiceUptimeCheckConfig).GetUserLabels()).ToDataRes(types.Map(types.String, types.String))
@@ -16319,10 +16313,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectMonitoringServiceUptimeCheckConfig).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"gcp.project.monitoringService.uptimeCheckConfig.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectMonitoringServiceUptimeCheckConfig).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
 	"gcp.project.monitoringService.uptimeCheckConfig.checkerType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectMonitoringServiceUptimeCheckConfig).CheckerType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -16357,10 +16347,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.monitoringService.uptimeCheckConfig.resourceGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectMonitoringServiceUptimeCheckConfig).ResourceGroup, ok = plugin.RawToTValue[any](v.Value, v.Error)
-		return
-	},
-	"gcp.project.monitoringService.uptimeCheckConfig.logCheckFailures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectMonitoringServiceUptimeCheckConfig).LogCheckFailures, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.monitoringService.uptimeCheckConfig.userLabels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -37714,7 +37700,6 @@ type mqlGcpProjectMonitoringServiceUptimeCheckConfig struct {
 	// optional: if you define mqlGcpProjectMonitoringServiceUptimeCheckConfigInternal it will be used here
 	Name              plugin.TValue[string]
 	DisplayName       plugin.TValue[string]
-	Disabled          plugin.TValue[bool]
 	CheckerType       plugin.TValue[string]
 	Period            plugin.TValue[string]
 	Timeout           plugin.TValue[string]
@@ -37724,7 +37709,6 @@ type mqlGcpProjectMonitoringServiceUptimeCheckConfig struct {
 	ContentMatchers   plugin.TValue[[]any]
 	MonitoredResource plugin.TValue[any]
 	ResourceGroup     plugin.TValue[any]
-	LogCheckFailures  plugin.TValue[bool]
 	UserLabels        plugin.TValue[map[string]any]
 }
 
@@ -37773,10 +37757,6 @@ func (c *mqlGcpProjectMonitoringServiceUptimeCheckConfig) GetDisplayName() *plug
 	return &c.DisplayName
 }
 
-func (c *mqlGcpProjectMonitoringServiceUptimeCheckConfig) GetDisabled() *plugin.TValue[bool] {
-	return &c.Disabled
-}
-
 func (c *mqlGcpProjectMonitoringServiceUptimeCheckConfig) GetCheckerType() *plugin.TValue[string] {
 	return &c.CheckerType
 }
@@ -37811,10 +37791,6 @@ func (c *mqlGcpProjectMonitoringServiceUptimeCheckConfig) GetMonitoredResource()
 
 func (c *mqlGcpProjectMonitoringServiceUptimeCheckConfig) GetResourceGroup() *plugin.TValue[any] {
 	return &c.ResourceGroup
-}
-
-func (c *mqlGcpProjectMonitoringServiceUptimeCheckConfig) GetLogCheckFailures() *plugin.TValue[bool] {
-	return &c.LogCheckFailures
 }
 
 func (c *mqlGcpProjectMonitoringServiceUptimeCheckConfig) GetUserLabels() *plugin.TValue[map[string]any] {
