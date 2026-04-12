@@ -4391,11 +4391,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.kms.key.rotationPeriodInDays": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKmsKey).GetRotationPeriodInDays()).ToDataRes(types.Int)
 	},
-	"aws.kms.key.nextRotationDate": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsKmsKey).GetNextRotationDate()).ToDataRes(types.Time)
+	"aws.kms.key.nextRotationAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKey).GetNextRotationAt()).ToDataRes(types.Time)
 	},
-	"aws.kms.key.onDemandRotationStartDate": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsKmsKey).GetOnDemandRotationStartDate()).ToDataRes(types.Time)
+	"aws.kms.key.onDemandRotationStartedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKey).GetOnDemandRotationStartedAt()).ToDataRes(types.Time)
 	},
 	"aws.kms.key.encryptionAlgorithms": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKmsKey).GetEncryptionAlgorithms()).ToDataRes(types.Array(types.String))
@@ -20967,12 +20967,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsKmsKey).RotationPeriodInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"aws.kms.key.nextRotationDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsKmsKey).NextRotationDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"aws.kms.key.nextRotationAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKey).NextRotationAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
-	"aws.kms.key.onDemandRotationStartDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsKmsKey).OnDemandRotationStartDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"aws.kms.key.onDemandRotationStartedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKey).OnDemandRotationStartedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.kms.key.encryptionAlgorithms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -48180,8 +48180,8 @@ type mqlAwsKmsKey struct {
 	MultiRegionConfiguration  plugin.TValue[any]
 	Origin                    plugin.TValue[string]
 	RotationPeriodInDays      plugin.TValue[int64]
-	NextRotationDate          plugin.TValue[*time.Time]
-	OnDemandRotationStartDate plugin.TValue[*time.Time]
+	NextRotationAt            plugin.TValue[*time.Time]
+	OnDemandRotationStartedAt plugin.TValue[*time.Time]
 	EncryptionAlgorithms      plugin.TValue[[]any]
 	SigningAlgorithms         plugin.TValue[[]any]
 	KeyAgreementAlgorithms    plugin.TValue[[]any]
@@ -48356,15 +48356,15 @@ func (c *mqlAwsKmsKey) GetRotationPeriodInDays() *plugin.TValue[int64] {
 	})
 }
 
-func (c *mqlAwsKmsKey) GetNextRotationDate() *plugin.TValue[*time.Time] {
-	return plugin.GetOrCompute[*time.Time](&c.NextRotationDate, func() (*time.Time, error) {
-		return c.nextRotationDate()
+func (c *mqlAwsKmsKey) GetNextRotationAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.NextRotationAt, func() (*time.Time, error) {
+		return c.nextRotationAt()
 	})
 }
 
-func (c *mqlAwsKmsKey) GetOnDemandRotationStartDate() *plugin.TValue[*time.Time] {
-	return plugin.GetOrCompute[*time.Time](&c.OnDemandRotationStartDate, func() (*time.Time, error) {
-		return c.onDemandRotationStartDate()
+func (c *mqlAwsKmsKey) GetOnDemandRotationStartedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.OnDemandRotationStartedAt, func() (*time.Time, error) {
+		return c.onDemandRotationStartedAt()
 	})
 }
 

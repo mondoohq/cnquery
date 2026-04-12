@@ -1318,9 +1318,9 @@ private aws.kms.key @defaults("id region aliases metadata.Description") {
   // Number of days between each automatic rotation (default 365)
   rotationPeriodInDays() int
   // Next date that KMS will automatically rotate the key material
-  nextRotationDate() time
+  nextRotationAt() time
   // Date and time an in-progress on-demand rotation was initiated
-  onDemandRotationStartDate() time
+  onDemandRotationStartedAt() time
   // Encryption algorithms the key supports (e.g., SYMMETRIC_DEFAULT, RSAES_OAEP_SHA_1, RSAES_OAEP_SHA_256)
   encryptionAlgorithms() []string
   // Signing algorithms the key supports (e.g., RSASSA_PSS_SHA_256, ECDSA_SHA_256)

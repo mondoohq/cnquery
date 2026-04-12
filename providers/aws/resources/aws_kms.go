@@ -160,7 +160,7 @@ func (a *mqlAwsKmsKey) rotationPeriodInDays() (int64, error) {
 	return int64(*resp.RotationPeriodInDays), nil
 }
 
-func (a *mqlAwsKmsKey) nextRotationDate() (*time.Time, error) {
+func (a *mqlAwsKmsKey) nextRotationAt() (*time.Time, error) {
 	resp, err := a.getRotationStatus()
 	if err != nil {
 		return nil, err
@@ -171,7 +171,7 @@ func (a *mqlAwsKmsKey) nextRotationDate() (*time.Time, error) {
 	return resp.NextRotationDate, nil
 }
 
-func (a *mqlAwsKmsKey) onDemandRotationStartDate() (*time.Time, error) {
+func (a *mqlAwsKmsKey) onDemandRotationStartedAt() (*time.Time, error) {
 	resp, err := a.getRotationStatus()
 	if err != nil {
 		return nil, err
