@@ -1361,13 +1361,33 @@ func (a *mqlAwsIamRole) id() (string, error) {
 }
 
 func (a *mqlAwsIamRole) permissionsBoundary() (*mqlAwsIamPolicy, error) {
-	arn := a.PermissionsBoundaryArn.Data
-	if arn == "" {
+	// ListRoles (used by roles()) does not populate PermissionsBoundary.
+	// We must call GetRole to get the real value.
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Iam("")
+	ctx := context.Background()
+
+	roleName := a.Name.Data
+	resp, err := svc.GetRole(ctx, &iam.GetRoleInput{RoleName: &roleName})
+	if err != nil {
+		return nil, err
+	}
+
+	var boundaryArn string
+	if resp.Role != nil && resp.Role.PermissionsBoundary != nil {
+		boundaryArn = convert.ToValue(resp.Role.PermissionsBoundary.PermissionsBoundaryArn)
+	}
+
+	if boundaryArn == "" {
 		a.PermissionsBoundary.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
+
+	// Update the cached string field so it's consistent
+	a.PermissionsBoundaryArn = plugin.TValue[string]{Data: boundaryArn, State: plugin.StateIsSet}
+
 	mqlPolicy, err := NewResource(a.MqlRuntime, "aws.iam.policy",
-		map[string]*llx.RawData{"arn": llx.StringData(arn)})
+		map[string]*llx.RawData{"arn": llx.StringData(boundaryArn)})
 	if err != nil {
 		return nil, err
 	}
