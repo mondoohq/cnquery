@@ -3702,11 +3702,13 @@ private gcp.project.monitoringService.alertPolicy {
 }
 
 // Google Cloud (GCP) Monitoring uptime check configuration
-private gcp.project.monitoringService.uptimeCheckConfig @defaults("displayName checkerType") {
+private gcp.project.monitoringService.uptimeCheckConfig @defaults("displayName disabled checkerType") {
   // Full resource name
   name string
   // Display name
   displayName string
+  // Whether the check is disabled
+  disabled bool
   // Type of checker (STATIC_IP_CHECKERS, VPC_CHECKERS)
   checkerType string
   // Check period

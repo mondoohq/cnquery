@@ -18,6 +18,7 @@ import (
 	monitoringpb "cloud.google.com/go/monitoring/apiv3/v2/monitoringpb"
 	"go.mondoo.com/mql/v13/llx"
 	"google.golang.org/api/iterator"
+	monitoringv3 "google.golang.org/api/monitoring/v3"
 	"google.golang.org/api/option"
 )
 
@@ -214,88 +215,80 @@ func (g *mqlGcpProjectMonitoringService) uptimeCheckConfigs() ([]any, error) {
 	projectId := g.ProjectId.Data
 
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
-	creds, err := conn.Credentials(monitoring.DefaultAuthScopes()...)
+
+	// Use REST API (not gRPC) because the gRPC proto doesn't expose the
+	// Disabled field, which is only available via the REST API.
+	client, err := conn.Client(monitoringv3.MonitoringReadScope)
 	if err != nil {
 		return nil, err
 	}
 
 	ctx := context.Background()
-	c, err := monitoring.NewUptimeCheckClient(ctx, option.WithCredentials(creds))
+	monitoringSvc, err := monitoringv3.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
 		return nil, err
 	}
-	defer c.Close()
 
 	var res []any
-	it := c.ListUptimeCheckConfigs(ctx, &monitoringpb.ListUptimeCheckConfigsRequest{
-		Parent: fmt.Sprintf("projects/%s", projectId),
-	})
-	for {
-		cfg, err := it.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			return nil, err
-		}
-
-		httpCheck, err := protoToDict(cfg.GetHttpCheck())
-		if err != nil {
-			return nil, err
-		}
-		tcpCheck, err := protoToDict(cfg.GetTcpCheck())
-		if err != nil {
-			return nil, err
-		}
-		monitoredResource, err := protoToDict(cfg.GetMonitoredResource())
-		if err != nil {
-			return nil, err
-		}
-		resourceGroup, err := protoToDict(cfg.GetResourceGroup())
-		if err != nil {
-			return nil, err
-		}
-
-		contentMatchers := make([]any, 0, len(cfg.ContentMatchers))
-		for _, cm := range cfg.ContentMatchers {
-			d, err := protoToDict(cm)
+	req := monitoringSvc.Projects.UptimeCheckConfigs.List(fmt.Sprintf("projects/%s", projectId))
+	if err := req.Pages(ctx, func(page *monitoringv3.ListUptimeCheckConfigsResponse) error {
+		for _, cfg := range page.UptimeCheckConfigs {
+			httpCheck, err := convert.JsonToDict(cfg.HttpCheck)
 			if err != nil {
-				return nil, err
+				return err
 			}
-			contentMatchers = append(contentMatchers, d)
-		}
+			tcpCheck, err := convert.JsonToDict(cfg.TcpCheck)
+			if err != nil {
+				return err
+			}
+			monitoredResource, err := convert.JsonToDict(cfg.MonitoredResource)
+			if err != nil {
+				return err
+			}
+			resourceGroup, err := convert.JsonToDict(cfg.ResourceGroup)
+			if err != nil {
+				return err
+			}
 
-		selectedRegions := make([]any, 0, len(cfg.SelectedRegions))
-		for _, r := range cfg.SelectedRegions {
-			selectedRegions = append(selectedRegions, r.String())
-		}
+			contentMatchers := make([]any, 0, len(cfg.ContentMatchers))
+			for _, cm := range cfg.ContentMatchers {
+				d, err := convert.JsonToDict(cm)
+				if err != nil {
+					return err
+				}
+				contentMatchers = append(contentMatchers, d)
+			}
 
-		var periodStr, timeoutStr string
-		if cfg.Period != nil {
-			periodStr = cfg.Period.String()
-		}
-		if cfg.Timeout != nil {
-			timeoutStr = cfg.Timeout.String()
-		}
+			selectedRegions := convert.SliceAnyToInterface(cfg.SelectedRegions)
 
-		mqlCfg, err := CreateResource(g.MqlRuntime, "gcp.project.monitoringService.uptimeCheckConfig", map[string]*llx.RawData{
-			"name":              llx.StringData(cfg.Name),
-			"displayName":       llx.StringData(cfg.DisplayName),
-			"checkerType":       llx.StringData(cfg.CheckerType.String()),
-			"period":            llx.StringData(periodStr),
-			"timeout":           llx.StringData(timeoutStr),
-			"selectedRegions":   llx.ArrayData(selectedRegions, types.String),
-			"httpCheck":         llx.DictData(httpCheck),
-			"tcpCheck":          llx.DictData(tcpCheck),
-			"contentMatchers":   llx.ArrayData(contentMatchers, types.Dict),
-			"monitoredResource": llx.DictData(monitoredResource),
-			"resourceGroup":     llx.DictData(resourceGroup),
-			"userLabels":        llx.MapData(convert.MapToInterfaceMap(cfg.UserLabels), types.String),
-		})
-		if err != nil {
-			return nil, err
+			var userLabels map[string]any
+			if cfg.UserLabels != nil {
+				userLabels = convert.MapToInterfaceMap(cfg.UserLabels)
+			}
+
+			mqlCfg, err := CreateResource(g.MqlRuntime, "gcp.project.monitoringService.uptimeCheckConfig", map[string]*llx.RawData{
+				"name":              llx.StringData(cfg.Name),
+				"displayName":       llx.StringData(cfg.DisplayName),
+				"disabled":          llx.BoolData(cfg.Disabled),
+				"checkerType":       llx.StringData(cfg.CheckerType),
+				"period":            llx.StringData(cfg.Period),
+				"timeout":           llx.StringData(cfg.Timeout),
+				"selectedRegions":   llx.ArrayData(selectedRegions, types.String),
+				"httpCheck":         llx.DictData(httpCheck),
+				"tcpCheck":          llx.DictData(tcpCheck),
+				"contentMatchers":   llx.ArrayData(contentMatchers, types.Dict),
+				"monitoredResource": llx.DictData(monitoredResource),
+				"resourceGroup":     llx.DictData(resourceGroup),
+				"userLabels":        llx.MapData(userLabels, types.String),
+			})
+			if err != nil {
+				return err
+			}
+			res = append(res, mqlCfg)
 		}
-		res = append(res, mqlCfg)
+		return nil
+	}); err != nil {
+		return nil, err
 	}
 	return res, nil
 }

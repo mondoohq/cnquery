@@ -6015,6 +6015,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.monitoringService.uptimeCheckConfig.displayName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectMonitoringServiceUptimeCheckConfig).GetDisplayName()).ToDataRes(types.String)
 	},
+	"gcp.project.monitoringService.uptimeCheckConfig.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMonitoringServiceUptimeCheckConfig).GetDisabled()).ToDataRes(types.Bool)
+	},
 	"gcp.project.monitoringService.uptimeCheckConfig.checkerType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectMonitoringServiceUptimeCheckConfig).GetCheckerType()).ToDataRes(types.String)
 	},
@@ -16311,6 +16314,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.monitoringService.uptimeCheckConfig.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectMonitoringServiceUptimeCheckConfig).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.monitoringService.uptimeCheckConfig.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMonitoringServiceUptimeCheckConfig).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.monitoringService.uptimeCheckConfig.checkerType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -37700,6 +37707,7 @@ type mqlGcpProjectMonitoringServiceUptimeCheckConfig struct {
 	// optional: if you define mqlGcpProjectMonitoringServiceUptimeCheckConfigInternal it will be used here
 	Name              plugin.TValue[string]
 	DisplayName       plugin.TValue[string]
+	Disabled          plugin.TValue[bool]
 	CheckerType       plugin.TValue[string]
 	Period            plugin.TValue[string]
 	Timeout           plugin.TValue[string]
@@ -37755,6 +37763,10 @@ func (c *mqlGcpProjectMonitoringServiceUptimeCheckConfig) GetName() *plugin.TVal
 
 func (c *mqlGcpProjectMonitoringServiceUptimeCheckConfig) GetDisplayName() *plugin.TValue[string] {
 	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectMonitoringServiceUptimeCheckConfig) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
 }
 
 func (c *mqlGcpProjectMonitoringServiceUptimeCheckConfig) GetCheckerType() *plugin.TValue[string] {
