@@ -178,7 +178,9 @@ metageneration
 mfs
 mgroup
 minfree
+MACSEC
 MINIMALUSER
+Mirrorings
 mkey
 mlag
 mls
@@ -195,6 +197,7 @@ networkinterface
 nexthop
 nft
 nmap
+noc
 nocerts
 nodegroup
 nodekey
@@ -220,6 +223,7 @@ orstatement
 ospf
 pagerduty
 panos
+pdp
 parallelquery
 PAYG
 persistentvolume

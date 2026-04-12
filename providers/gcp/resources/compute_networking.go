@@ -28,12 +28,14 @@ func getRouterByUrl(routerUrl string, runtime *plugin.Runtime) (*mqlGcpProjectCo
 	if routerUrl == "" {
 		return nil, nil
 	}
+	// URL format: projects/{project}/regions/{region}/routers/{name}
 	params := trimComputeURL(routerUrl)
 	parts := strings.Split(params, "/")
-	if len(parts) < 2 {
+	if len(parts) < 6 {
 		return nil, nil
 	}
 	projectId := parts[1]
+	targetName := parts[5]
 
 	res, err := CreateResource(runtime, "gcp.project.computeService", map[string]*llx.RawData{
 		"projectId": llx.StringData(projectId),
@@ -46,9 +48,12 @@ func getRouterByUrl(routerUrl string, runtime *plugin.Runtime) (*mqlGcpProjectCo
 	if routers.Error != nil {
 		return nil, routers.Error
 	}
+	// Router resource does not store selfLink or regionUrl, so we match by
+	// name within the project. Router names are unique per-region; same-name
+	// routers across regions are rare in practice.
 	for _, r := range routers.Data {
 		router := r.(*mqlGcpProjectComputeServiceRouter)
-		if router.GetName().Data == parts[len(parts)-1] {
+		if router.GetName().Data == targetName {
 			return router, nil
 		}
 	}
@@ -59,12 +64,15 @@ func getVpnGatewayByUrl(gwUrl string, runtime *plugin.Runtime) (*mqlGcpProjectCo
 	if gwUrl == "" {
 		return nil, nil
 	}
+	// URL format: projects/{project}/regions/{region}/vpnGateways/{name}
 	params := trimComputeURL(gwUrl)
 	parts := strings.Split(params, "/")
-	if len(parts) < 2 {
+	if len(parts) < 6 {
 		return nil, nil
 	}
 	projectId := parts[1]
+	targetRegion := parts[3]
+	targetName := parts[5]
 
 	res, err := CreateResource(runtime, "gcp.project.computeService", map[string]*llx.RawData{
 		"projectId": llx.StringData(projectId),
@@ -77,9 +85,10 @@ func getVpnGatewayByUrl(gwUrl string, runtime *plugin.Runtime) (*mqlGcpProjectCo
 	if gateways.Error != nil {
 		return nil, gateways.Error
 	}
+	// VPN gateways are region-scoped and have regionUrl; match by name + region
 	for _, g := range gateways.Data {
 		gw := g.(*mqlGcpProjectComputeServiceVpnGateway)
-		if gw.GetName().Data == parts[len(parts)-1] {
+		if gw.GetName().Data == targetName && strings.HasSuffix(gw.RegionUrl.Data, "/"+targetRegion) {
 			return gw, nil
 		}
 	}
@@ -108,9 +117,10 @@ func getExternalVpnGatewayByUrl(gwUrl string, runtime *plugin.Runtime) (*mqlGcpP
 	if gateways.Error != nil {
 		return nil, gateways.Error
 	}
+	// External VPN gateways are global and have selfLink; match by selfLink
 	for _, g := range gateways.Data {
 		gw := g.(*mqlGcpProjectComputeServiceExternalVpnGateway)
-		if gw.GetName().Data == parts[len(parts)-1] {
+		if gw.SelfLink.Data == gwUrl {
 			return gw, nil
 		}
 	}
@@ -194,7 +204,14 @@ func (g *mqlGcpProjectComputeServiceVpnTunnel) router() (*mqlGcpProjectComputeSe
 		g.Router.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	return getRouterByUrl(routerUrl, g.MqlRuntime)
+	router, err := getRouterByUrl(routerUrl, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if router == nil {
+		g.Router.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return router, nil
 }
 
 func (g *mqlGcpProjectComputeServiceVpnTunnel) vpnGateway() (*mqlGcpProjectComputeServiceVpnGateway, error) {
@@ -206,7 +223,14 @@ func (g *mqlGcpProjectComputeServiceVpnTunnel) vpnGateway() (*mqlGcpProjectCompu
 		g.VpnGateway.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	return getVpnGatewayByUrl(gwUrl, g.MqlRuntime)
+	gw, err := getVpnGatewayByUrl(gwUrl, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if gw == nil {
+		g.VpnGateway.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return gw, nil
 }
 
 func (g *mqlGcpProjectComputeServiceVpnTunnel) peerExternalVpnGateway() (*mqlGcpProjectComputeServiceExternalVpnGateway, error) {
@@ -218,7 +242,14 @@ func (g *mqlGcpProjectComputeServiceVpnTunnel) peerExternalVpnGateway() (*mqlGcp
 		g.PeerExternalVpnGateway.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	return getExternalVpnGatewayByUrl(gwUrl, g.MqlRuntime)
+	gw, err := getExternalVpnGatewayByUrl(gwUrl, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if gw == nil {
+		g.PeerExternalVpnGateway.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return gw, nil
 }
 
 func (g *mqlGcpProjectComputeServiceVpnTunnel) peerGcpVpnGateway() (*mqlGcpProjectComputeServiceVpnGateway, error) {
@@ -230,7 +261,14 @@ func (g *mqlGcpProjectComputeServiceVpnTunnel) peerGcpVpnGateway() (*mqlGcpProje
 		g.PeerGcpVpnGateway.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	return getVpnGatewayByUrl(gwUrl, g.MqlRuntime)
+	gw, err := getVpnGatewayByUrl(gwUrl, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if gw == nil {
+		g.PeerGcpVpnGateway.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return gw, nil
 }
 
 // interconnectAttachment cross-references
@@ -244,7 +282,14 @@ func (g *mqlGcpProjectComputeServiceInterconnectAttachment) interconnect() (*mql
 		g.Interconnect.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	return getInterconnectByUrl(icUrl, g.MqlRuntime)
+	ic, err := getInterconnectByUrl(icUrl, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if ic == nil {
+		g.Interconnect.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return ic, nil
 }
 
 func (g *mqlGcpProjectComputeServiceInterconnectAttachment) router() (*mqlGcpProjectComputeServiceRouter, error) {
@@ -256,7 +301,14 @@ func (g *mqlGcpProjectComputeServiceInterconnectAttachment) router() (*mqlGcpPro
 		g.Router.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	return getRouterByUrl(routerUrl, g.MqlRuntime)
+	router, err := getRouterByUrl(routerUrl, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if router == nil {
+		g.Router.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return router, nil
 }
 
 // backendService cross-references
@@ -270,7 +322,14 @@ func (g *mqlGcpProjectComputeServiceBackendService) network() (*mqlGcpProjectCom
 		g.Network.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	return getNetworkByUrl(networkUrl, g.MqlRuntime)
+	network, err := getNetworkByUrl(networkUrl, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if network == nil {
+		g.Network.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return network, nil
 }
 
 func (g *mqlGcpProjectComputeServiceBackendService) securityPolicy() (*mqlGcpProjectComputeServiceSecurityPolicy, error) {
@@ -282,7 +341,14 @@ func (g *mqlGcpProjectComputeServiceBackendService) securityPolicy() (*mqlGcpPro
 		g.SecurityPolicy.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	return getSecurityPolicyByUrl(policyUrl, g.MqlRuntime)
+	policy, err := getSecurityPolicyByUrl(policyUrl, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if policy == nil {
+		g.SecurityPolicy.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return policy, nil
 }
 
 // ---------------------------------------------------------------
@@ -302,7 +368,14 @@ func (g *mqlGcpProjectComputeServiceRoute) network() (*mqlGcpProjectComputeServi
 		g.Network.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	return getNetworkByUrl(networkUrl, g.MqlRuntime)
+	network, err := getNetworkByUrl(networkUrl, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if network == nil {
+		g.Network.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return network, nil
 }
 
 func (g *mqlGcpProjectComputeService) routes() ([]any, error) {
@@ -486,7 +559,14 @@ func (g *mqlGcpProjectComputeServiceNetworkEndpointGroup) network() (*mqlGcpProj
 		g.Network.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	return getNetworkByUrl(networkUrl, g.MqlRuntime)
+	network, err := getNetworkByUrl(networkUrl, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if network == nil {
+		g.Network.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return network, nil
 }
 
 func (g *mqlGcpProjectComputeServiceNetworkEndpointGroup) subnetwork() (*mqlGcpProjectComputeServiceSubnetwork, error) {
@@ -498,7 +578,14 @@ func (g *mqlGcpProjectComputeServiceNetworkEndpointGroup) subnetwork() (*mqlGcpP
 		g.Subnetwork.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	return getSubnetworkByUrl(subnetUrl, g.MqlRuntime)
+	subnet, err := getSubnetworkByUrl(subnetUrl, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if subnet == nil {
+		g.Subnetwork.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return subnet, nil
 }
 
 func (g *mqlGcpProjectComputeService) networkEndpointGroups() ([]any, error) {
@@ -907,7 +994,14 @@ func (g *mqlGcpProjectComputeServiceTargetSslProxy) sslPolicy() (*mqlGcpProjectC
 		g.SslPolicy.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	return getSslPolicyByUrl(sslPolicyUrl, g.MqlRuntime)
+	policy, err := getSslPolicyByUrl(sslPolicyUrl, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if policy == nil {
+		g.SslPolicy.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return policy, nil
 }
 
 func (g *mqlGcpProjectComputeService) targetSslProxies() ([]any, error) {
