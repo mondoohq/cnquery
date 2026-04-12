@@ -186,7 +186,10 @@ func (a *mqlAwsStepfunctionsStateMachine) loggingConfiguration() (*mqlAwsStepfun
 
 	destinations := []any{}
 	for _, dest := range lc.Destinations {
-		d, _ := convert.JsonToDict(dest)
+		d, err := convert.JsonToDict(dest)
+		if err != nil {
+			return nil, err
+		}
 		destinations = append(destinations, d)
 	}
 

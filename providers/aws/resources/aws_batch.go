@@ -444,11 +444,26 @@ func (a *mqlAwsBatchJobDefinition) containerProperties() (*mqlAwsBatchJobDefinit
 		command[i] = c
 	}
 
-	env, _ := convert.JsonToDictSlice(cp.Environment)
-	resReqs, _ := convert.JsonToDictSlice(cp.ResourceRequirements)
-	logConfig, _ := convert.JsonToDict(cp.LogConfiguration)
-	linuxParams, _ := convert.JsonToDict(cp.LinuxParameters)
-	fargateConfig, _ := convert.JsonToDict(cp.FargatePlatformConfiguration)
+	env, err := convert.JsonToDictSlice(cp.Environment)
+	if err != nil {
+		return nil, err
+	}
+	resReqs, err := convert.JsonToDictSlice(cp.ResourceRequirements)
+	if err != nil {
+		return nil, err
+	}
+	logConfig, err := convert.JsonToDict(cp.LogConfiguration)
+	if err != nil {
+		return nil, err
+	}
+	linuxParams, err := convert.JsonToDict(cp.LinuxParameters)
+	if err != nil {
+		return nil, err
+	}
+	fargateConfig, err := convert.JsonToDict(cp.FargatePlatformConfiguration)
+	if err != nil {
+		return nil, err
+	}
 
 	privileged := false
 	if cp.Privileged != nil {
@@ -541,7 +556,10 @@ func (a *mqlAwsBatchJobDefinition) retryStrategy() (*mqlAwsBatchJobDefinitionRet
 	if rs.Attempts != nil {
 		attempts = int64(*rs.Attempts)
 	}
-	evalOnExit, _ := convert.JsonToDictSlice(rs.EvaluateOnExit)
+	evalOnExit, err := convert.JsonToDictSlice(rs.EvaluateOnExit)
+	if err != nil {
+		return nil, err
+	}
 
 	res, err := CreateResource(a.MqlRuntime, "aws.batch.jobDefinition.retryStrategy",
 		map[string]*llx.RawData{
