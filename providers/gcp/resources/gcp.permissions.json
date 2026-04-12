@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.6.0",
-  "generated_at": "2026-04-12T13:47:43-07:00",
+  "generated_at": "2026-04-12T14:49:55-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.list",
@@ -751,7 +751,7 @@
     {
       "permission": "monitoring.uptimeCheckConfigs.list",
       "service": "monitoring",
-      "action": "ListUptimeCheckConfigs",
+      "action": "UptimeCheckConfigs.List",
       "source_file": "monitoring.go"
     },
     {
