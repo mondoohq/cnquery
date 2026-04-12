@@ -4652,13 +4652,13 @@ private aws.cloudtrail.trail @defaults("name region") {
   latestDigestDeliveredAt() time
   // Deprecated: Use latestDigestDeliveredAt() instead
   latestDigestDeliveryTime() time
-  // Time of the most recent delivery attempt to S3
+  // Time of the most recent delivery attempt to S3 (string-formatted timestamp from AWS legacy API)
   latestDeliveryAttemptedAt() string
-  // Whether the most recent delivery attempt to S3 succeeded
+  // Whether the most recent delivery attempt to S3 succeeded (string-formatted timestamp or empty)
   latestDeliveryAttemptSucceededAt() string
-  // Time of the most recent notification attempt to SNS
+  // Time of the most recent notification attempt to SNS (string-formatted timestamp from AWS legacy API)
   latestNotificationAttemptedAt() string
-  // Whether the most recent notification attempt to SNS succeeded
+  // Whether the most recent notification attempt to SNS succeeded (string-formatted timestamp or empty)
   latestNotificationAttemptSucceededAt() string
 }
 

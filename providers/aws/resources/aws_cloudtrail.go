@@ -163,31 +163,31 @@ func (a *mqlAwsCloudtrail) getTrails(conn *connection.AwsConnection) []*jobpool.
 }
 
 func (a *mqlAwsCloudtrailTrail) snsTopic() (*mqlAwsSnsTopic, error) {
-	if a.trailCache.SnsTopicARN != nil && *a.trailCache.SnsTopicARN != "" {
-		mqlTopic, err := NewResource(a.MqlRuntime, "aws.sns.topic",
-			map[string]*llx.RawData{"arn": llx.StringDataPtr(a.trailCache.SnsTopicARN)},
-		)
-		if err == nil {
-			return mqlTopic.(*mqlAwsSnsTopic), nil
-		}
-		log.Error().Err(err).Msg("cannot get sns topic")
+	if a.trailCache.SnsTopicARN == nil || *a.trailCache.SnsTopicARN == "" {
+		a.SnsTopic.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
-	a.SnsTopic.State = plugin.StateIsSet | plugin.StateIsNull
-	return nil, nil
+	mqlTopic, err := NewResource(a.MqlRuntime, "aws.sns.topic",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.trailCache.SnsTopicARN)},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return mqlTopic.(*mqlAwsSnsTopic), nil
 }
 
 func (a *mqlAwsCloudtrailTrail) cloudWatchLogsRole() (*mqlAwsIamRole, error) {
-	if a.trailCache.CloudWatchLogsRoleArn != nil && *a.trailCache.CloudWatchLogsRoleArn != "" {
-		mqlRole, err := NewResource(a.MqlRuntime, ResourceAwsIamRole,
-			map[string]*llx.RawData{"arn": llx.StringDataPtr(a.trailCache.CloudWatchLogsRoleArn)},
-		)
-		if err == nil {
-			return mqlRole.(*mqlAwsIamRole), nil
-		}
-		log.Error().Err(err).Msg("cannot get cloudwatch logs role")
+	if a.trailCache.CloudWatchLogsRoleArn == nil || *a.trailCache.CloudWatchLogsRoleArn == "" {
+		a.CloudWatchLogsRole.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
-	a.CloudWatchLogsRole.State = plugin.StateIsSet | plugin.StateIsNull
-	return nil, nil
+	mqlRole, err := NewResource(a.MqlRuntime, ResourceAwsIamRole,
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.trailCache.CloudWatchLogsRoleArn)},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return mqlRole.(*mqlAwsIamRole), nil
 }
 
 func (a *mqlAwsCloudtrailTrail) s3bucket() (*mqlAwsS3Bucket, error) {
