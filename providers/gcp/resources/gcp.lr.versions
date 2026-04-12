@@ -2173,6 +2173,12 @@ gcp.project.kmsService.keyring.resourcePath 9.0.0
 gcp.project.kmsService.keyrings 9.0.0
 gcp.project.kmsService.locations 9.0.0
 gcp.project.kmsService.projectId 9.0.0
+gcp.project.kmsService.retiredResource 13.6.1
+gcp.project.kmsService.retiredResource.deleteTime 13.6.1
+gcp.project.kmsService.retiredResource.name 13.6.1
+gcp.project.kmsService.retiredResource.originalResource 13.6.1
+gcp.project.kmsService.retiredResource.resourceType 13.6.1
+gcp.project.kmsService.retiredResources 13.6.1
 gcp.project.labels 9.0.0
 gcp.project.logging 9.0.0
 gcp.project.loggingservice 9.0.0
@@ -2223,6 +2229,14 @@ gcp.project.loggingservice.sink.writerIdentity 9.0.0
 gcp.project.loggingservice.sinks 9.0.0
 gcp.project.modelArmor 13.5.1
 gcp.project.modelArmorService 13.5.1
+gcp.project.modelArmorService.floorSetting 13.6.1
+gcp.project.modelArmorService.floorSetting.aiPlatformFloorSetting 13.6.1
+gcp.project.modelArmorService.floorSetting.created 13.6.1
+gcp.project.modelArmorService.floorSetting.enableFloorSettingEnforcement 13.6.1
+gcp.project.modelArmorService.floorSetting.filterConfig 13.6.1
+gcp.project.modelArmorService.floorSetting.integratedServices 13.6.1
+gcp.project.modelArmorService.floorSetting.name 13.6.1
+gcp.project.modelArmorService.floorSetting.updated 13.6.1
 gcp.project.modelArmorService.projectId 13.5.1
 gcp.project.modelArmorService.template 13.5.1
 gcp.project.modelArmorService.template.createdAt 13.5.1

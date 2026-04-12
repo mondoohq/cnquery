@@ -598,3 +598,69 @@ func cryptoKeyVersionToMql(runtime *plugin.Runtime, v *kmspb.CryptoKeyVersion) (
 		"reimportEligible":               llx.BoolData(v.ReimportEligible),
 	})
 }
+
+func (g *mqlGcpProjectKmsServiceRetiredResource) id() (string, error) {
+	return g.Name.Data, g.Name.Error
+}
+
+func (g *mqlGcpProjectKmsService) retiredResources() ([]any, error) {
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	locations := g.GetLocations()
+	if locations.Error != nil {
+		return nil, locations.Error
+	}
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(kms.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	kmsSvc, err := kms.NewKeyManagementClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer kmsSvc.Close()
+
+	var res []any
+	for _, loc := range locations.Data {
+		locStr, ok := loc.(string)
+		if !ok {
+			continue
+		}
+		it := kmsSvc.ListRetiredResources(ctx, &kmspb.ListRetiredResourcesRequest{
+			Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, locStr),
+		})
+		for {
+			rr, err := it.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				log.Warn().Str("location", locStr).Err(err).Msg("could not list retired KMS resources")
+				break
+			}
+
+			mqlRR, err := CreateResource(g.MqlRuntime, "gcp.project.kmsService.retiredResource", map[string]*llx.RawData{
+				"name":             llx.StringData(rr.Name),
+				"originalResource": llx.StringData(rr.OriginalResource),
+				"resourceType":     llx.StringData(rr.ResourceType),
+				"deleteTime":       llx.TimeDataPtr(timestampAsTimePtr(rr.DeleteTime)),
+			})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlRR)
+		}
+	}
+	return res, nil
+}

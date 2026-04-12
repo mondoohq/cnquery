@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.6.0",
-  "generated_at": "2026-04-12T14:49:55-07:00",
+  "generated_at": "2026-04-12T15:13:51-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.list",
@@ -36,6 +36,7 @@
     "cloudkms.cryptoKeys.list",
     "cloudkms.keyRings.list",
     "cloudkms.locations.list",
+    "cloudkms.retiredResources.list",
     "cloudscheduler.jobs.list",
     "cloudsql.databases.list",
     "cloudsql.instances.list",
@@ -99,6 +100,7 @@
     "iam.serviceAccounts.list",
     "logging.buckets.list",
     "logging.exclusions.list",
+    "modelarmor.floorSetting.get",
     "modelarmor.templates.list",
     "monitoring.alertPolicies.list",
     "monitoring.groups.list",
@@ -326,6 +328,12 @@
       "permission": "cloudkms.locations.list",
       "service": "cloudkms",
       "action": "ListLocations",
+      "source_file": "kms.go"
+    },
+    {
+      "permission": "cloudkms.retiredResources.list",
+      "service": "cloudkms",
+      "action": "ListRetiredResources",
       "source_file": "kms.go"
     },
     {
@@ -723,6 +731,12 @@
       "service": "logging",
       "action": "Exclusions.List",
       "source_file": "logging.go"
+    },
+    {
+      "permission": "modelarmor.floorSetting.get",
+      "service": "modelarmor",
+      "action": "GetFloorSetting",
+      "source_file": "modelarmor.go"
     },
     {
       "permission": "modelarmor.templates.list",

@@ -121,6 +121,7 @@ const (
 	ResourceGcpProjectKmsServiceKeyringCryptokeyVersionAttestation                     string = "gcp.project.kmsService.keyring.cryptokey.version.attestation"
 	ResourceGcpProjectKmsServiceKeyringCryptokeyVersionAttestationCertificatechains    string = "gcp.project.kmsService.keyring.cryptokey.version.attestation.certificatechains"
 	ResourceGcpProjectKmsServiceKeyringCryptokeyVersionExternalProtectionLevelOptions  string = "gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions"
+	ResourceGcpProjectKmsServiceRetiredResource                                        string = "gcp.project.kmsService.retiredResource"
 	ResourceGcpEssentialContact                                                        string = "gcp.essentialContact"
 	ResourceGcpProjectApiKey                                                           string = "gcp.project.apiKey"
 	ResourceGcpProjectApiKeyRestrictions                                               string = "gcp.project.apiKey.restrictions"
@@ -280,6 +281,7 @@ const (
 	ResourceGcpAccesscontextmanagerServicePerimeterConfig                              string = "gcp.accesscontextmanager.servicePerimeter.config"
 	ResourceGcpProjectModelArmorService                                                string = "gcp.project.modelArmorService"
 	ResourceGcpProjectModelArmorServiceTemplate                                        string = "gcp.project.modelArmorService.template"
+	ResourceGcpProjectModelArmorServiceFloorSetting                                    string = "gcp.project.modelArmorService.floorSetting"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -705,6 +707,10 @@ func init() {
 		"gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions": {
 			// to override args, implement: initGcpProjectKmsServiceKeyringCryptokeyVersionExternalProtectionLevelOptions(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectKmsServiceKeyringCryptokeyVersionExternalProtectionLevelOptions,
+		},
+		"gcp.project.kmsService.retiredResource": {
+			// to override args, implement: initGcpProjectKmsServiceRetiredResource(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectKmsServiceRetiredResource,
 		},
 		"gcp.essentialContact": {
 			// to override args, implement: initGcpEssentialContact(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1341,6 +1347,10 @@ func init() {
 		"gcp.project.modelArmorService.template": {
 			// to override args, implement: initGcpProjectModelArmorServiceTemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectModelArmorServiceTemplate,
+		},
+		"gcp.project.modelArmorService.floorSetting": {
+			// to override args, implement: initGcpProjectModelArmorServiceFloorSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectModelArmorServiceFloorSetting,
 		},
 	}
 }
@@ -4800,6 +4810,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.kmsService.keyrings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectKmsService).GetKeyrings()).ToDataRes(types.Array(types.Resource("gcp.project.kmsService.keyring")))
 	},
+	"gcp.project.kmsService.retiredResources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsService).GetRetiredResources()).ToDataRes(types.Array(types.Resource("gcp.project.kmsService.retiredResource")))
+	},
 	"gcp.project.kmsService.keyring.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectKmsServiceKeyring).GetProjectId()).ToDataRes(types.String)
 	},
@@ -4934,6 +4947,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions.ekmConnectionKeyPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersionExternalProtectionLevelOptions).GetEkmConnectionKeyPath()).ToDataRes(types.String)
+	},
+	"gcp.project.kmsService.retiredResource.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceRetiredResource).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.kmsService.retiredResource.originalResource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceRetiredResource).GetOriginalResource()).ToDataRes(types.String)
+	},
+	"gcp.project.kmsService.retiredResource.resourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceRetiredResource).GetResourceType()).ToDataRes(types.String)
+	},
+	"gcp.project.kmsService.retiredResource.deleteTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceRetiredResource).GetDeleteTime()).ToDataRes(types.Time)
 	},
 	"gcp.essentialContact.resourcePath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpEssentialContact).GetResourcePath()).ToDataRes(types.String)
@@ -9576,6 +9601,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.modelArmorService.templates": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectModelArmorService).GetTemplates()).ToDataRes(types.Array(types.Resource("gcp.project.modelArmorService.template")))
 	},
+	"gcp.project.modelArmorService.floorSetting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectModelArmorService).GetFloorSetting()).ToDataRes(types.Resource("gcp.project.modelArmorService.floorSetting"))
+	},
 	"gcp.project.modelArmorService.template.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectModelArmorServiceTemplate).GetName()).ToDataRes(types.String)
 	},
@@ -9596,6 +9624,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.modelArmorService.template.templateMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectModelArmorServiceTemplate).GetTemplateMetadata()).ToDataRes(types.Dict)
+	},
+	"gcp.project.modelArmorService.floorSetting.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectModelArmorServiceFloorSetting).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.modelArmorService.floorSetting.filterConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectModelArmorServiceFloorSetting).GetFilterConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.modelArmorService.floorSetting.enableFloorSettingEnforcement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectModelArmorServiceFloorSetting).GetEnableFloorSettingEnforcement()).ToDataRes(types.Bool)
+	},
+	"gcp.project.modelArmorService.floorSetting.integratedServices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectModelArmorServiceFloorSetting).GetIntegratedServices()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.modelArmorService.floorSetting.aiPlatformFloorSetting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectModelArmorServiceFloorSetting).GetAiPlatformFloorSetting()).ToDataRes(types.Dict)
+	},
+	"gcp.project.modelArmorService.floorSetting.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectModelArmorServiceFloorSetting).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.modelArmorService.floorSetting.updated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectModelArmorServiceFloorSetting).GetUpdated()).ToDataRes(types.Time)
 	},
 }
 
@@ -14521,6 +14570,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectKmsService).Keyrings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.kmsService.retiredResources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsService).RetiredResources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.kmsService.keyring.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectKmsServiceKeyring).__id, ok = v.Value.(string)
 		return
@@ -14723,6 +14776,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions.ekmConnectionKeyPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersionExternalProtectionLevelOptions).EkmConnectionKeyPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.retiredResource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceRetiredResource).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.kmsService.retiredResource.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceRetiredResource).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.retiredResource.originalResource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceRetiredResource).OriginalResource, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.retiredResource.resourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceRetiredResource).ResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.retiredResource.deleteTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceRetiredResource).DeleteTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"gcp.essentialContact.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21545,6 +21618,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectModelArmorService).Templates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.modelArmorService.floorSetting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectModelArmorService).FloorSetting, ok = plugin.RawToTValue[*mqlGcpProjectModelArmorServiceFloorSetting](v.Value, v.Error)
+		return
+	},
 	"gcp.project.modelArmorService.template.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectModelArmorServiceTemplate).__id, ok = v.Value.(string)
 		return
@@ -21575,6 +21652,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.modelArmorService.template.templateMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectModelArmorServiceTemplate).TemplateMetadata, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.modelArmorService.floorSetting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectModelArmorServiceFloorSetting).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.modelArmorService.floorSetting.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectModelArmorServiceFloorSetting).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.modelArmorService.floorSetting.filterConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectModelArmorServiceFloorSetting).FilterConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.modelArmorService.floorSetting.enableFloorSettingEnforcement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectModelArmorServiceFloorSetting).EnableFloorSettingEnforcement, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.modelArmorService.floorSetting.integratedServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectModelArmorServiceFloorSetting).IntegratedServices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.modelArmorService.floorSetting.aiPlatformFloorSetting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectModelArmorServiceFloorSetting).AiPlatformFloorSetting, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.modelArmorService.floorSetting.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectModelArmorServiceFloorSetting).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.modelArmorService.floorSetting.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectModelArmorServiceFloorSetting).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 }
@@ -33366,9 +33475,10 @@ type mqlGcpProjectKmsService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlGcpProjectKmsServiceInternal
-	ProjectId plugin.TValue[string]
-	Locations plugin.TValue[[]any]
-	Keyrings  plugin.TValue[[]any]
+	ProjectId        plugin.TValue[string]
+	Locations        plugin.TValue[[]any]
+	Keyrings         plugin.TValue[[]any]
+	RetiredResources plugin.TValue[[]any]
 }
 
 // createGcpProjectKmsService creates a new instance of this resource
@@ -33431,6 +33541,22 @@ func (c *mqlGcpProjectKmsService) GetKeyrings() *plugin.TValue[[]any] {
 		}
 
 		return c.keyrings()
+	})
+}
+
+func (c *mqlGcpProjectKmsService) GetRetiredResources() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RetiredResources, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.kmsService", c.__id, "retiredResources")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.retiredResources()
 	})
 }
 
@@ -33957,6 +34083,70 @@ func (c *mqlGcpProjectKmsServiceKeyringCryptokeyVersionExternalProtectionLevelOp
 
 func (c *mqlGcpProjectKmsServiceKeyringCryptokeyVersionExternalProtectionLevelOptions) GetEkmConnectionKeyPath() *plugin.TValue[string] {
 	return &c.EkmConnectionKeyPath
+}
+
+// mqlGcpProjectKmsServiceRetiredResource for the gcp.project.kmsService.retiredResource resource
+type mqlGcpProjectKmsServiceRetiredResource struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectKmsServiceRetiredResourceInternal it will be used here
+	Name             plugin.TValue[string]
+	OriginalResource plugin.TValue[string]
+	ResourceType     plugin.TValue[string]
+	DeleteTime       plugin.TValue[*time.Time]
+}
+
+// createGcpProjectKmsServiceRetiredResource creates a new instance of this resource
+func createGcpProjectKmsServiceRetiredResource(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectKmsServiceRetiredResource{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.kmsService.retiredResource", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectKmsServiceRetiredResource) MqlName() string {
+	return "gcp.project.kmsService.retiredResource"
+}
+
+func (c *mqlGcpProjectKmsServiceRetiredResource) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectKmsServiceRetiredResource) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectKmsServiceRetiredResource) GetOriginalResource() *plugin.TValue[string] {
+	return &c.OriginalResource
+}
+
+func (c *mqlGcpProjectKmsServiceRetiredResource) GetResourceType() *plugin.TValue[string] {
+	return &c.ResourceType
+}
+
+func (c *mqlGcpProjectKmsServiceRetiredResource) GetDeleteTime() *plugin.TValue[*time.Time] {
+	return &c.DeleteTime
 }
 
 // mqlGcpEssentialContact for the gcp.essentialContact resource
@@ -49680,8 +49870,9 @@ type mqlGcpProjectModelArmorService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlGcpProjectModelArmorServiceInternal
-	ProjectId plugin.TValue[string]
-	Templates plugin.TValue[[]any]
+	ProjectId    plugin.TValue[string]
+	Templates    plugin.TValue[[]any]
+	FloorSetting plugin.TValue[*mqlGcpProjectModelArmorServiceFloorSetting]
 }
 
 // createGcpProjectModelArmorService creates a new instance of this resource
@@ -49738,6 +49929,22 @@ func (c *mqlGcpProjectModelArmorService) GetTemplates() *plugin.TValue[[]any] {
 		}
 
 		return c.templates()
+	})
+}
+
+func (c *mqlGcpProjectModelArmorService) GetFloorSetting() *plugin.TValue[*mqlGcpProjectModelArmorServiceFloorSetting] {
+	return plugin.GetOrCompute[*mqlGcpProjectModelArmorServiceFloorSetting](&c.FloorSetting, func() (*mqlGcpProjectModelArmorServiceFloorSetting, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.modelArmorService", c.__id, "floorSetting")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectModelArmorServiceFloorSetting), nil
+			}
+		}
+
+		return c.floorSetting()
 	})
 }
 
@@ -49818,4 +50025,83 @@ func (c *mqlGcpProjectModelArmorServiceTemplate) GetFilterConfig() *plugin.TValu
 
 func (c *mqlGcpProjectModelArmorServiceTemplate) GetTemplateMetadata() *plugin.TValue[any] {
 	return &c.TemplateMetadata
+}
+
+// mqlGcpProjectModelArmorServiceFloorSetting for the gcp.project.modelArmorService.floorSetting resource
+type mqlGcpProjectModelArmorServiceFloorSetting struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectModelArmorServiceFloorSettingInternal it will be used here
+	Name                          plugin.TValue[string]
+	FilterConfig                  plugin.TValue[any]
+	EnableFloorSettingEnforcement plugin.TValue[bool]
+	IntegratedServices            plugin.TValue[[]any]
+	AiPlatformFloorSetting        plugin.TValue[any]
+	Created                       plugin.TValue[*time.Time]
+	Updated                       plugin.TValue[*time.Time]
+}
+
+// createGcpProjectModelArmorServiceFloorSetting creates a new instance of this resource
+func createGcpProjectModelArmorServiceFloorSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectModelArmorServiceFloorSetting{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.modelArmorService.floorSetting", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectModelArmorServiceFloorSetting) MqlName() string {
+	return "gcp.project.modelArmorService.floorSetting"
+}
+
+func (c *mqlGcpProjectModelArmorServiceFloorSetting) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectModelArmorServiceFloorSetting) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectModelArmorServiceFloorSetting) GetFilterConfig() *plugin.TValue[any] {
+	return &c.FilterConfig
+}
+
+func (c *mqlGcpProjectModelArmorServiceFloorSetting) GetEnableFloorSettingEnforcement() *plugin.TValue[bool] {
+	return &c.EnableFloorSettingEnforcement
+}
+
+func (c *mqlGcpProjectModelArmorServiceFloorSetting) GetIntegratedServices() *plugin.TValue[[]any] {
+	return &c.IntegratedServices
+}
+
+func (c *mqlGcpProjectModelArmorServiceFloorSetting) GetAiPlatformFloorSetting() *plugin.TValue[any] {
+	return &c.AiPlatformFloorSetting
+}
+
+func (c *mqlGcpProjectModelArmorServiceFloorSetting) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectModelArmorServiceFloorSetting) GetUpdated() *plugin.TValue[*time.Time] {
+	return &c.Updated
 }

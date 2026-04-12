@@ -2715,6 +2715,8 @@ private gcp.project.kmsService {
   locations() []string
   // List of keyrings in the current project
   keyrings() []gcp.project.kmsService.keyring
+  // Retired (deleted) KMS resources
+  retiredResources() []gcp.project.kmsService.retiredResource
 }
 
 // Google Cloud (GCP) KMS keyring
@@ -2829,6 +2831,18 @@ private gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevel
   externalKeyUri string
   // Path to the external key material on the EKM when using EKM connection
   ekmConnectionKeyPath string
+}
+
+// Google Cloud (GCP) KMS retired resource (deleted key tracking)
+private gcp.project.kmsService.retiredResource @defaults("name resourceType") {
+  // Full resource name
+  name string
+  // Original CryptoKey resource name before deletion
+  originalResource string
+  // Resource type (e.g., CryptoKey, CryptoKeyVersion)
+  resourceType string
+  // When the resource was deleted
+  deleteTime time
 }
 
 // Google Cloud (GCP) contact
@@ -6550,6 +6564,8 @@ private gcp.project.modelArmorService {
   projectId string
   // List of Model Armor templates
   templates() []gcp.project.modelArmorService.template
+  // Floor setting (organization-level AI safety configuration)
+  floorSetting() gcp.project.modelArmorService.floorSetting
 }
 
 // Google Cloud (GCP) Model Armor template
@@ -6568,4 +6584,22 @@ private gcp.project.modelArmorService.template @defaults("name") {
   filterConfig dict
   // Template metadata (enforcement type, error settings, multi-language detection)
   templateMetadata dict
+}
+
+// Google Cloud (GCP) Model Armor floor setting
+private gcp.project.modelArmorService.floorSetting @defaults("name") {
+  // Full resource name
+  name string
+  // ModelArmor filter configuration
+  filterConfig dict
+  // Whether floor setting enforcement is enabled
+  enableFloorSettingEnforcement bool
+  // Integrated services for which the floor setting applies
+  integratedServices []string
+  // AI Platform floor setting configuration
+  aiPlatformFloorSetting dict
+  // Creation time
+  created time
+  // Last update time
+  updated time
 }
