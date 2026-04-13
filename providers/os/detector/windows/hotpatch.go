@@ -50,7 +50,15 @@ func ParseWinRegistryClientHotpatch(r io.Reader) (bool, error) {
 // hotpatchSupported checks whether the given platform meets the minimum build
 // requirements for hotpatching:
 //   - Windows Server 2022+ (build 20348+, product-type "2" or "3")
-//   - Windows 11 Enterprise 24H2+ (build 26100+, product-type "1")
+//   - Windows 11 Enterprise 24H2+ (product-type "1"):
+//   - x64 (AMD64/Intel): build 26100.2033+
+//   - arm64: build 26100.4929+
+//
+// Windows 11 client hotpatch requires architecture-specific minimum UBR
+// (Update Build Revision) values on build 26100. Without this check, devices
+// with AllowRebootlessUpdates set via policy but below the prerequisite build
+// would be falsely detected as hotpatch-enrolled.
+// See https://learn.microsoft.com/en-us/windows/client-management/hotpatch
 func hotpatchSupported(pf *inventory.Platform) bool {
 	buildNumber, err := strconv.Atoi(pf.Version)
 	if err != nil {
@@ -62,7 +70,23 @@ func hotpatchSupported(pf *inventory.Platform) bool {
 	productType := pf.Labels["windows.mondoo.com/product-type"]
 	switch productType {
 	case "1": // Workstation (Windows client)
-		return buildNumber >= 26100
+		if buildNumber > 26100 {
+			return true
+		}
+		if buildNumber < 26100 {
+			return false
+		}
+		ubr, err := strconv.Atoi(pf.Build)
+		if err != nil {
+			log.Error().Err(err).Msg("could not parse windows UBR")
+			return false
+		}
+		log.Debug().Int("ubr", ubr).Str("arch", pf.Arch).Msg("parsed windows UBR for client hotpatch check")
+		minUBR := 2033
+		if strings.EqualFold(pf.Arch, "arm64") {
+			minUBR = 4929
+		}
+		return ubr >= minUBR
 	case "2", "3": // Domain Controller or Server
 		return buildNumber >= 20348
 	default:
