@@ -294,6 +294,11 @@ var awsServiceNameOverrides = map[string]string{
 	"elasticbeanstalk":         "elasticbeanstalk",
 	"elasticache":              "elasticache",
 	"accessanalyzer":           "access-analyzer",
+	"acmpca":                   "acm-pca",
+	"ecrpublic":                "ecr-public",
+	"eventbridge":              "events",
+	"sfn":                      "states",
+	"ssoadmin":                 "sso",
 }
 
 func extractAWSPermissions(resourcesDir string) []PermissionDetail {

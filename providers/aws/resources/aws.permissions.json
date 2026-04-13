@@ -1,17 +1,17 @@
 {
   "provider": "aws",
   "version": "13.12.0",
-  "generated_at": "2026-04-11T22:15:02-07:00",
+  "generated_at": "2026-04-13T09:58:50-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
     "account:GetAlternateContact",
     "account:GetContactInformation",
+    "acm-pca:ListCertificateAuthorities",
     "acm:DescribeCertificate",
     "acm:GetCertificate",
     "acm:ListCertificates",
     "acm:ListTagsForCertificate",
-    "acmpca:ListCertificateAuthorities",
     "apigateway:GetRestApis",
     "apigateway:GetStages",
     "application-autoscaling:DescribeScalableTargets",
@@ -168,6 +168,9 @@
     "ec2:GetImageBlockPublicAccessState",
     "ec2:GetManagedPrefixListEntries",
     "ec2:GetSerialConsoleAccessStatus",
+    "ecr-public:DescribeImages",
+    "ecr-public:DescribeRepositories",
+    "ecr-public:GetRepositoryCatalogData",
     "ecr:BatchGetRepositoryScanningConfiguration",
     "ecr:DescribeImageScanFindings",
     "ecr:DescribeImages",
@@ -177,9 +180,6 @@
     "ecr:GetRegistryScanningConfiguration",
     "ecr:GetRepositoryPolicy",
     "ecr:ListTagsForResource",
-    "ecrpublic:DescribeImages",
-    "ecrpublic:DescribeRepositories",
-    "ecrpublic:GetRepositoryCatalogData",
     "ecs:DescribeClusters",
     "ecs:DescribeContainerInstances",
     "ecs:DescribeServices",
@@ -248,10 +248,10 @@
     "es:DescribeElasticsearchDomain",
     "es:ListDomainNames",
     "es:ListTags",
-    "eventbridge:ListEventBuses",
-    "eventbridge:ListRules",
-    "eventbridge:ListTagsForResource",
-    "eventbridge:ListTargetsByRule",
+    "events:ListEventBuses",
+    "events:ListRules",
+    "events:ListTagsForResource",
+    "events:ListTargetsByRule",
     "firehose:DescribeDeliveryStream",
     "firehose:ListDeliveryStreams",
     "firehose:ListTagsForDeliveryStream",
@@ -498,8 +498,6 @@
     "securityhub:ListMembers",
     "securityhub:ListSecurityControlDefinitions",
     "securitylake:ListSubscribers",
-    "sfn:ListActivities",
-    "sfn:ListStateMachines",
     "shield:DescribeDRTAccess",
     "shield:DescribeEmergencyContactSettings",
     "shield:DescribeSubscription",
@@ -528,13 +526,15 @@
     "ssm:ListDocuments",
     "ssm:ListResourceComplianceSummaries",
     "ssm:ListTagsForResource",
-    "ssoadmin:ListAccountAssignments",
-    "ssoadmin:ListAccountsForProvisionedPermissionSet",
-    "ssoadmin:ListCustomerManagedPolicyReferencesInPermissionSet",
-    "ssoadmin:ListInstances",
-    "ssoadmin:ListManagedPoliciesInPermissionSet",
-    "ssoadmin:ListPermissionSets",
-    "ssoadmin:ListTagsForResource",
+    "sso:ListAccountAssignments",
+    "sso:ListAccountsForProvisionedPermissionSet",
+    "sso:ListCustomerManagedPolicyReferencesInPermissionSet",
+    "sso:ListInstances",
+    "sso:ListManagedPoliciesInPermissionSet",
+    "sso:ListPermissionSets",
+    "sso:ListTagsForResource",
+    "states:ListActivities",
+    "states:ListStateMachines",
     "timestream-influxdb:GetDbCluster",
     "timestream-influxdb:GetDbInstance",
     "timestream-influxdb:ListDbClusters",
@@ -591,6 +591,12 @@
       "source_file": "aws_account.go"
     },
     {
+      "permission": "acm-pca:ListCertificateAuthorities",
+      "service": "acm-pca",
+      "action": "ListCertificateAuthorities",
+      "source_file": "aws_privateca.go"
+    },
+    {
       "permission": "acm:DescribeCertificate",
       "service": "acm",
       "action": "DescribeCertificate",
@@ -613,12 +619,6 @@
       "service": "acm",
       "action": "ListTagsForCertificate",
       "source_file": "aws_acm.go"
-    },
-    {
-      "permission": "acmpca:ListCertificateAuthorities",
-      "service": "acmpca",
-      "action": "ListCertificateAuthorities",
-      "source_file": "aws_privateca.go"
     },
     {
       "permission": "apigateway:GetRestApis",
@@ -1599,6 +1599,24 @@
       "source_file": "aws_ec2.go"
     },
     {
+      "permission": "ecr-public:DescribeImages",
+      "service": "ecr-public",
+      "action": "DescribeImages",
+      "source_file": "aws_ecr.go"
+    },
+    {
+      "permission": "ecr-public:DescribeRepositories",
+      "service": "ecr-public",
+      "action": "DescribeRepositories",
+      "source_file": "aws_ecr.go"
+    },
+    {
+      "permission": "ecr-public:GetRepositoryCatalogData",
+      "service": "ecr-public",
+      "action": "GetRepositoryCatalogData",
+      "source_file": "aws_ecr.go"
+    },
+    {
       "permission": "ecr:BatchGetRepositoryScanningConfiguration",
       "service": "ecr",
       "action": "BatchGetRepositoryScanningConfiguration",
@@ -1650,24 +1668,6 @@
       "permission": "ecr:ListTagsForResource",
       "service": "ecr",
       "action": "ListTagsForResource",
-      "source_file": "aws_ecr.go"
-    },
-    {
-      "permission": "ecrpublic:DescribeImages",
-      "service": "ecrpublic",
-      "action": "DescribeImages",
-      "source_file": "aws_ecr.go"
-    },
-    {
-      "permission": "ecrpublic:DescribeRepositories",
-      "service": "ecrpublic",
-      "action": "DescribeRepositories",
-      "source_file": "aws_ecr.go"
-    },
-    {
-      "permission": "ecrpublic:GetRepositoryCatalogData",
-      "service": "ecrpublic",
-      "action": "GetRepositoryCatalogData",
       "source_file": "aws_ecr.go"
     },
     {
@@ -2085,26 +2085,26 @@
       "source_file": "aws_opensearch.go"
     },
     {
-      "permission": "eventbridge:ListEventBuses",
-      "service": "eventbridge",
+      "permission": "events:ListEventBuses",
+      "service": "events",
       "action": "ListEventBuses",
       "source_file": "aws_eventbridge.go"
     },
     {
-      "permission": "eventbridge:ListRules",
-      "service": "eventbridge",
+      "permission": "events:ListRules",
+      "service": "events",
       "action": "ListRules",
       "source_file": "aws_eventbridge.go"
     },
     {
-      "permission": "eventbridge:ListTagsForResource",
-      "service": "eventbridge",
+      "permission": "events:ListTagsForResource",
+      "service": "events",
       "action": "ListTagsForResource",
       "source_file": "aws_eventbridge.go"
     },
     {
-      "permission": "eventbridge:ListTargetsByRule",
-      "service": "eventbridge",
+      "permission": "events:ListTargetsByRule",
+      "service": "events",
       "action": "ListTargetsByRule",
       "source_file": "aws_eventbridge.go"
     },
@@ -3639,24 +3639,6 @@
       "source_file": "aws_securitylake.go"
     },
     {
-      "permission": "sfn:ListActivities",
-      "service": "sfn",
-      "action": "ListActivities",
-      "source_file": "aws_sfn.go"
-    },
-    {
-      "permission": "sfn:ListStateMachines",
-      "service": "sfn",
-      "action": "ListStateMachines",
-      "source_file": "aws_sfn.go"
-    },
-    {
-      "permission": "sfn:ListStateMachines",
-      "service": "sfn",
-      "action": "ListStateMachines",
-      "source_file": "aws_stepfunctions.go"
-    },
-    {
       "permission": "shield:DescribeDRTAccess",
       "service": "shield",
       "action": "DescribeDRTAccess",
@@ -3831,46 +3813,64 @@
       "source_file": "aws_ssm_documents.go"
     },
     {
-      "permission": "ssoadmin:ListAccountAssignments",
-      "service": "ssoadmin",
+      "permission": "sso:ListAccountAssignments",
+      "service": "sso",
       "action": "ListAccountAssignments",
       "source_file": "aws_identitycenter.go"
     },
     {
-      "permission": "ssoadmin:ListAccountsForProvisionedPermissionSet",
-      "service": "ssoadmin",
+      "permission": "sso:ListAccountsForProvisionedPermissionSet",
+      "service": "sso",
       "action": "ListAccountsForProvisionedPermissionSet",
       "source_file": "aws_identitycenter.go"
     },
     {
-      "permission": "ssoadmin:ListCustomerManagedPolicyReferencesInPermissionSet",
-      "service": "ssoadmin",
+      "permission": "sso:ListCustomerManagedPolicyReferencesInPermissionSet",
+      "service": "sso",
       "action": "ListCustomerManagedPolicyReferencesInPermissionSet",
       "source_file": "aws_identitycenter.go"
     },
     {
-      "permission": "ssoadmin:ListInstances",
-      "service": "ssoadmin",
+      "permission": "sso:ListInstances",
+      "service": "sso",
       "action": "ListInstances",
       "source_file": "aws_identitycenter.go"
     },
     {
-      "permission": "ssoadmin:ListManagedPoliciesInPermissionSet",
-      "service": "ssoadmin",
+      "permission": "sso:ListManagedPoliciesInPermissionSet",
+      "service": "sso",
       "action": "ListManagedPoliciesInPermissionSet",
       "source_file": "aws_identitycenter.go"
     },
     {
-      "permission": "ssoadmin:ListPermissionSets",
-      "service": "ssoadmin",
+      "permission": "sso:ListPermissionSets",
+      "service": "sso",
       "action": "ListPermissionSets",
       "source_file": "aws_identitycenter.go"
     },
     {
-      "permission": "ssoadmin:ListTagsForResource",
-      "service": "ssoadmin",
+      "permission": "sso:ListTagsForResource",
+      "service": "sso",
       "action": "ListTagsForResource",
       "source_file": "aws_identitycenter.go"
+    },
+    {
+      "permission": "states:ListActivities",
+      "service": "states",
+      "action": "ListActivities",
+      "source_file": "aws_sfn.go"
+    },
+    {
+      "permission": "states:ListStateMachines",
+      "service": "states",
+      "action": "ListStateMachines",
+      "source_file": "aws_sfn.go"
+    },
+    {
+      "permission": "states:ListStateMachines",
+      "service": "states",
+      "action": "ListStateMachines",
+      "source_file": "aws_stepfunctions.go"
     },
     {
       "permission": "timestream-influxdb:GetDbCluster",
