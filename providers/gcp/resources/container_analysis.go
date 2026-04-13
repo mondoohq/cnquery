@@ -102,7 +102,8 @@ func (g *mqlGcpProjectContainerAnalysisService) occurrences() ([]any, error) {
 	grafeasClient := client.GetGrafeasClient()
 
 	it := grafeasClient.ListOccurrences(ctx, &grafeaspb.ListOccurrencesRequest{
-		Parent: fmt.Sprintf("projects/%s", projectId),
+		Parent:   fmt.Sprintf("projects/%s", projectId),
+		PageSize: 1000,
 	})
 
 	var res []any

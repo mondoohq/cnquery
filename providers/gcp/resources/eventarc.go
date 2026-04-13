@@ -150,7 +150,11 @@ func (g *mqlGcpProjectEventarcService) triggers() ([]any, error) {
 		conditions := make(map[string]any)
 		for k, v := range trigger.Conditions {
 			if v != nil {
-				conditions[k] = v.Code.String() + ": " + v.Message
+				msg := v.Code.String()
+				if v.Message != "" {
+					msg += ": " + v.Message
+				}
+				conditions[k] = msg
 			}
 		}
 
