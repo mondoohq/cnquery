@@ -956,6 +956,18 @@ var gcpPermissionOverrides = map[string]map[string]string{
 		// These can't be auto-derived from the code, so skip the generic form.
 		"ListRecommendations": "",
 	},
+	"containeranalysis": {
+		// GetGrafeasClient is a Go SDK method to obtain a sub-client, not an API call.
+		// The actual API call (ListOccurrences) goes through the Grafeas sub-client.
+		"GetGrafeasClient": "containeranalysis.occurrences.list",
+		"ListOccurrences":  "containeranalysis.occurrences.list",
+	},
+	"spanner": {
+		"GetDatabaseDdl": "spanner.databases.getDdl",
+	},
+	"modelarmor": {
+		"GetFloorSetting": "modelarmor.floorSettings.get",
+	},
 }
 
 // gcpOrgLevelPermissions are permissions that only apply at the organization

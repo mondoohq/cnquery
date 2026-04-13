@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.6.0",
-  "generated_at": "2026-04-12T20:11:36-07:00",
+  "generated_at": "2026-04-13T09:40:36-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.list",
@@ -86,7 +86,7 @@
     "compute.zones.get",
     "compute.zones.list",
     "container.clusters.list",
-    "containeranalysis.grafeasClient.get",
+    "containeranalysis.occurrences.list",
     "dataflow.jobs.list",
     "dataproc.clusters.list",
     "datastore.backupSchedules.list",
@@ -111,7 +111,7 @@
     "ids.endpoints.list",
     "logging.buckets.list",
     "logging.exclusions.list",
-    "modelarmor.floorSetting.get",
+    "modelarmor.floorSettings.get",
     "modelarmor.templates.list",
     "monitoring.alertPolicies.list",
     "monitoring.groups.list",
@@ -136,7 +136,7 @@
     "serviceusage.services.get",
     "serviceusage.services.list",
     "spanner.backups.list",
-    "spanner.databaseDdl.get",
+    "spanner.databases.getDdl",
     "spanner.databases.list",
     "spanner.instances.list",
     "storage.buckets.getIamPolicy",
@@ -660,7 +660,7 @@
       "source_file": "gke.go"
     },
     {
-      "permission": "containeranalysis.grafeasClient.get",
+      "permission": "containeranalysis.occurrences.list",
       "service": "containeranalysis",
       "action": "GetGrafeasClient",
       "source_file": "container_analysis.go"
@@ -810,7 +810,7 @@
       "source_file": "logging.go"
     },
     {
-      "permission": "modelarmor.floorSetting.get",
+      "permission": "modelarmor.floorSettings.get",
       "service": "modelarmor",
       "action": "GetFloorSetting",
       "source_file": "modelarmor.go"
@@ -1002,7 +1002,7 @@
       "source_file": "spanner.go"
     },
     {
-      "permission": "spanner.databaseDdl.get",
+      "permission": "spanner.databases.getDdl",
       "service": "spanner",
       "action": "GetDatabaseDdl",
       "source_file": "spanner.go"
