@@ -6,6 +6,7 @@ package resources
 import (
 	"encoding/json"
 	"errors"
+	"reflect"
 	"strings"
 	"time"
 
@@ -13,6 +14,8 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -20,9 +23,12 @@ import (
 )
 
 // protoToDict converts a protobuf message to a map[string]any suitable for use as a dict field.
-// Returns nil for nil input.
+// Returns nil for nil input, including typed nil interface values.
 func protoToDict(msg proto.Message) (map[string]any, error) {
 	if msg == nil {
+		return nil, nil
+	}
+	if v := reflect.ValueOf(msg); v.Kind() == reflect.Ptr && v.IsNil() {
 		return nil, nil
 	}
 	data, err := protojson.Marshal(msg)
@@ -34,6 +40,18 @@ func protoToDict(msg proto.Message) (map[string]any, error) {
 		return nil, err
 	}
 	return result, nil
+}
+
+// isGRPCSkippable returns true for gRPC errors that indicate the API
+// is not enabled, the caller lacks permission, or the resource is not found.
+func isGRPCSkippable(err error) bool {
+	if s, ok := status.FromError(err); ok {
+		switch s.Code() {
+		case codes.PermissionDenied, codes.Unimplemented, codes.NotFound:
+			return true
+		}
+	}
+	return false
 }
 
 func (g *mqlGcpRetryConfig) id() (string, error) {

@@ -112,6 +112,10 @@ func (g *mqlGcpProjectIdsService) endpoints() ([]any, error) {
 			break
 		}
 		if err != nil {
+			if isGRPCSkippable(err) {
+				log.Warn().Err(err).Msg("could not list Cloud IDS endpoints")
+				return nil, nil
+			}
 			return nil, err
 		}
 

@@ -113,6 +113,10 @@ func (g *mqlGcpProjectContainerAnalysisService) occurrences() ([]any, error) {
 			break
 		}
 		if err != nil {
+			if isGRPCSkippable(err) {
+				log.Warn().Err(err).Msg("could not list Container Analysis occurrences")
+				return nil, nil
+			}
 			return nil, err
 		}
 

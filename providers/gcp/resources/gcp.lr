@@ -6926,6 +6926,8 @@ private gcp.project.gkeBackupService.restorePlan @defaults("name") {
   description string
   // Source backup plan name
   backupPlanName string
+  // Source backup plan
+  backupPlan() gcp.project.gkeBackupService.backupPlan
   // Target GKE cluster name
   cluster string
   // Restore configuration

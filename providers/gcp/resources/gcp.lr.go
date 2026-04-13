@@ -10095,6 +10095,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.gkeBackupService.restorePlan.backupPlanName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeBackupServiceRestorePlan).GetBackupPlanName()).ToDataRes(types.String)
 	},
+	"gcp.project.gkeBackupService.restorePlan.backupPlan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeBackupServiceRestorePlan).GetBackupPlan()).ToDataRes(types.Resource("gcp.project.gkeBackupService.backupPlan"))
+	},
 	"gcp.project.gkeBackupService.restorePlan.cluster": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeBackupServiceRestorePlan).GetCluster()).ToDataRes(types.String)
 	},
@@ -22745,6 +22748,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.gkeBackupService.restorePlan.backupPlanName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeBackupServiceRestorePlan).BackupPlanName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeBackupService.restorePlan.backupPlan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeBackupServiceRestorePlan).BackupPlan, ok = plugin.RawToTValue[*mqlGcpProjectGkeBackupServiceBackupPlan](v.Value, v.Error)
 		return
 	},
 	"gcp.project.gkeBackupService.restorePlan.cluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -52758,6 +52765,7 @@ type mqlGcpProjectGkeBackupServiceRestorePlan struct {
 	Uid            plugin.TValue[string]
 	Description    plugin.TValue[string]
 	BackupPlanName plugin.TValue[string]
+	BackupPlan     plugin.TValue[*mqlGcpProjectGkeBackupServiceBackupPlan]
 	Cluster        plugin.TValue[string]
 	RestoreConfig  plugin.TValue[any]
 	Labels         plugin.TValue[map[string]any]
@@ -52819,6 +52827,22 @@ func (c *mqlGcpProjectGkeBackupServiceRestorePlan) GetDescription() *plugin.TVal
 
 func (c *mqlGcpProjectGkeBackupServiceRestorePlan) GetBackupPlanName() *plugin.TValue[string] {
 	return &c.BackupPlanName
+}
+
+func (c *mqlGcpProjectGkeBackupServiceRestorePlan) GetBackupPlan() *plugin.TValue[*mqlGcpProjectGkeBackupServiceBackupPlan] {
+	return plugin.GetOrCompute[*mqlGcpProjectGkeBackupServiceBackupPlan](&c.BackupPlan, func() (*mqlGcpProjectGkeBackupServiceBackupPlan, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.gkeBackupService.restorePlan", c.__id, "backupPlan")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectGkeBackupServiceBackupPlan), nil
+			}
+		}
+
+		return c.backupPlan()
+	})
 }
 
 func (c *mqlGcpProjectGkeBackupServiceRestorePlan) GetCluster() *plugin.TValue[string] {

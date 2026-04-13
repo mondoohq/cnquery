@@ -115,6 +115,10 @@ func (g *mqlGcpProjectDlpService) inspectTemplates() ([]any, error) {
 			break
 		}
 		if err != nil {
+			if isGRPCSkippable(err) {
+				log.Warn().Err(err).Msg("could not list DLP inspect templates")
+				return nil, nil
+			}
 			return nil, err
 		}
 
@@ -182,6 +186,10 @@ func (g *mqlGcpProjectDlpService) deidentifyTemplates() ([]any, error) {
 			break
 		}
 		if err != nil {
+			if isGRPCSkippable(err) {
+				log.Warn().Err(err).Msg("could not list DLP deidentify templates")
+				return nil, nil
+			}
 			return nil, err
 		}
 
@@ -249,6 +257,10 @@ func (g *mqlGcpProjectDlpService) jobTriggers() ([]any, error) {
 			break
 		}
 		if err != nil {
+			if isGRPCSkippable(err) {
+				log.Warn().Err(err).Msg("could not list DLP job triggers")
+				return nil, nil
+			}
 			return nil, err
 		}
 
@@ -337,6 +349,10 @@ func (g *mqlGcpProjectDlpService) storedInfoTypes() ([]any, error) {
 			break
 		}
 		if err != nil {
+			if isGRPCSkippable(err) {
+				log.Warn().Err(err).Msg("could not list DLP stored info types")
+				return nil, nil
+			}
 			return nil, err
 		}
 

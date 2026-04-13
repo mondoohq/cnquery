@@ -2012,6 +2012,7 @@ gcp.project.gkeBackupService.backupPlan.updated 13.6.1
 gcp.project.gkeBackupService.backupPlans 13.6.1
 gcp.project.gkeBackupService.projectId 13.6.1
 gcp.project.gkeBackupService.restorePlan 13.6.1
+gcp.project.gkeBackupService.restorePlan.backupPlan 13.6.1
 gcp.project.gkeBackupService.restorePlan.backupPlanName 13.6.1
 gcp.project.gkeBackupService.restorePlan.cluster 13.6.1
 gcp.project.gkeBackupService.restorePlan.created 13.6.1

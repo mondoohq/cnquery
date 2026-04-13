@@ -120,6 +120,10 @@ func (g *mqlGcpProjectEventarcService) triggers() ([]any, error) {
 			break
 		}
 		if err != nil {
+			if isGRPCSkippable(err) {
+				log.Warn().Err(err).Msg("could not list Eventarc triggers")
+				return nil, nil
+			}
 			return nil, err
 		}
 
@@ -223,6 +227,10 @@ func (g *mqlGcpProjectEventarcService) channels() ([]any, error) {
 			break
 		}
 		if err != nil {
+			if isGRPCSkippable(err) {
+				log.Warn().Err(err).Msg("could not list Eventarc channels")
+				return nil, nil
+			}
 			return nil, err
 		}
 

@@ -116,6 +116,10 @@ func (g *mqlGcpProjectGkeBackupService) backupPlans() ([]any, error) {
 			break
 		}
 		if err != nil {
+			if isGRPCSkippable(err) {
+				log.Warn().Err(err).Msg("could not list GKE Backup backup plans")
+				return nil, nil
+			}
 			return nil, err
 		}
 
@@ -202,6 +206,10 @@ func (g *mqlGcpProjectGkeBackupService) restorePlans() ([]any, error) {
 			break
 		}
 		if err != nil {
+			if isGRPCSkippable(err) {
+				log.Warn().Err(err).Msg("could not list GKE Backup restore plans")
+				return nil, nil
+			}
 			return nil, err
 		}
 
@@ -231,4 +239,22 @@ func (g *mqlGcpProjectGkeBackupService) restorePlans() ([]any, error) {
 	}
 
 	return res, nil
+}
+
+func (g *mqlGcpProjectGkeBackupServiceRestorePlan) backupPlan() (*mqlGcpProjectGkeBackupServiceBackupPlan, error) {
+	if g.BackupPlanName.Error != nil {
+		return nil, g.BackupPlanName.Error
+	}
+	name := g.BackupPlanName.Data
+	if name == "" {
+		g.BackupPlan.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.gkeBackupService.backupPlan", map[string]*llx.RawData{
+		"name": llx.StringData(name),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectGkeBackupServiceBackupPlan), nil
 }

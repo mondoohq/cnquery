@@ -116,6 +116,10 @@ func (g *mqlGcpProjectBatchService) jobs() ([]any, error) {
 			break
 		}
 		if err != nil {
+			if isGRPCSkippable(err) {
+				log.Warn().Err(err).Msg("could not list Batch jobs")
+				return nil, nil
+			}
 			return nil, err
 		}
 
