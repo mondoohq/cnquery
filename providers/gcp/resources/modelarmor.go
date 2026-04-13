@@ -18,6 +18,8 @@ import (
 	"go.mondoo.com/mql/v13/types"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type mqlGcpProjectModelArmorServiceInternal struct {
@@ -170,10 +172,11 @@ func (g *mqlGcpProjectModelArmorService) floorSetting() (*mqlGcpProjectModelArmo
 		Name: fmt.Sprintf("projects/%s/locations/global/floorSetting", projectId),
 	})
 	if err != nil {
-		// Floor settings may not exist for all projects
-		log.Debug().Str("project", projectId).Err(err).Msg("could not get model armor floor setting")
-		g.FloorSetting.State = plugin.StateIsNull | plugin.StateIsSet
-		return nil, nil
+		if s, ok := status.FromError(err); ok && (s.Code() == codes.NotFound || s.Code() == codes.PermissionDenied) {
+			g.FloorSetting.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
+		return nil, err
 	}
 
 	filterConfig, err := protoToDict(fs.FilterConfig)
