@@ -42,6 +42,12 @@ const (
 	service_storage             = "storage.googleapis.com"
 	service_iam                 = "iam.googleapis.com"
 	service_modelarmor          = "modelarmor.googleapis.com"
+	service_eventarc            = "eventarc.googleapis.com"
+	service_dlp                 = "dlp.googleapis.com"
+	service_batch               = "batch.googleapis.com"
+	service_ids                 = "ids.googleapis.com"
+	service_gkebackup           = "gkebackup.googleapis.com"
+	service_containeranalysis   = "containeranalysis.googleapis.com"
 )
 
 func serviceName(name string) string {

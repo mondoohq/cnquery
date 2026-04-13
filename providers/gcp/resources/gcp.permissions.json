@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.6.0",
-  "generated_at": "2026-04-12T15:13:51-07:00",
+  "generated_at": "2026-04-12T20:11:36-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.list",
@@ -23,6 +23,7 @@
     "backupdr.backupVaults.list",
     "backupdr.bvdataSources.list",
     "backupdr.managementServers.list",
+    "batch.jobs.list",
     "bigtable.appProfiles.list",
     "binaryauthorization.attestors.list",
     "binaryauthorization.policy.get",
@@ -85,19 +86,29 @@
     "compute.zones.get",
     "compute.zones.list",
     "container.clusters.list",
+    "containeranalysis.grafeasClient.get",
     "dataflow.jobs.list",
     "dataproc.clusters.list",
     "datastore.backupSchedules.list",
     "datastore.databases.list",
     "datastore.indexes.list",
+    "dlp.deidentifyTemplates.list",
+    "dlp.inspectTemplates.list",
+    "dlp.jobTriggers.list",
+    "dlp.storedInfoTypes.list",
     "dns.managedZones.list",
     "dns.policies.list",
     "dns.resourceRecordSets.list",
     "essentialcontacts.contacts.list",
+    "eventarc.channels.list",
+    "eventarc.triggers.list",
     "file.instances.list",
+    "gkebackup.backupPlans.list",
+    "gkebackup.restorePlans.list",
     "iam.roles.list",
     "iam.serviceAccountKeys.list",
     "iam.serviceAccounts.list",
+    "ids.endpoints.list",
     "logging.buckets.list",
     "logging.exclusions.list",
     "modelarmor.floorSetting.get",
@@ -251,6 +262,12 @@
       "service": "backupdr",
       "action": "ListManagementServers",
       "source_file": "backupdr.go"
+    },
+    {
+      "permission": "batch.jobs.list",
+      "service": "batch",
+      "action": "ListJobs",
+      "source_file": "batch.go"
     },
     {
       "permission": "bigtable.appProfiles.list",
@@ -643,6 +660,12 @@
       "source_file": "gke.go"
     },
     {
+      "permission": "containeranalysis.grafeasClient.get",
+      "service": "containeranalysis",
+      "action": "GetGrafeasClient",
+      "source_file": "container_analysis.go"
+    },
+    {
       "permission": "dataflow.jobs.list",
       "service": "dataflow",
       "action": "Jobs.Aggregated",
@@ -673,6 +696,30 @@
       "source_file": "firestore.go"
     },
     {
+      "permission": "dlp.deidentifyTemplates.list",
+      "service": "dlp",
+      "action": "ListDeidentifyTemplates",
+      "source_file": "dlp.go"
+    },
+    {
+      "permission": "dlp.inspectTemplates.list",
+      "service": "dlp",
+      "action": "ListInspectTemplates",
+      "source_file": "dlp.go"
+    },
+    {
+      "permission": "dlp.jobTriggers.list",
+      "service": "dlp",
+      "action": "ListJobTriggers",
+      "source_file": "dlp.go"
+    },
+    {
+      "permission": "dlp.storedInfoTypes.list",
+      "service": "dlp",
+      "action": "ListStoredInfoTypes",
+      "source_file": "dlp.go"
+    },
+    {
       "permission": "dns.managedZones.list",
       "service": "dns",
       "action": "ManagedZones.List",
@@ -697,10 +744,34 @@
       "source_file": "essential_contacts.go"
     },
     {
+      "permission": "eventarc.channels.list",
+      "service": "eventarc",
+      "action": "ListChannels",
+      "source_file": "eventarc.go"
+    },
+    {
+      "permission": "eventarc.triggers.list",
+      "service": "eventarc",
+      "action": "ListTriggers",
+      "source_file": "eventarc.go"
+    },
+    {
       "permission": "file.instances.list",
       "service": "file",
       "action": "ListInstances",
       "source_file": "filestore.go"
+    },
+    {
+      "permission": "gkebackup.backupPlans.list",
+      "service": "gkebackup",
+      "action": "ListBackupPlans",
+      "source_file": "gke_backup.go"
+    },
+    {
+      "permission": "gkebackup.restorePlans.list",
+      "service": "gkebackup",
+      "action": "ListRestorePlans",
+      "source_file": "gke_backup.go"
     },
     {
       "permission": "iam.roles.list",
@@ -719,6 +790,12 @@
       "service": "iam",
       "action": "ListServiceAccounts",
       "source_file": "iam.go"
+    },
+    {
+      "permission": "ids.endpoints.list",
+      "service": "ids",
+      "action": "ListEndpoints",
+      "source_file": "ids.go"
     },
     {
       "permission": "logging.buckets.list",
@@ -866,7 +943,7 @@
     {
       "permission": "resourcemanager.projects.list",
       "service": "resourcemanager",
-      "action": "Projects.Search",
+      "action": "Projects.List",
       "source_file": "project.go",
       "scope": "org"
     },

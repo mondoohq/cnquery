@@ -11,16 +11,22 @@ require (
 	cloud.google.com/go/alloydb v1.23.0
 	cloud.google.com/go/artifactregistry v1.22.0
 	cloud.google.com/go/backupdr v1.11.0
+	cloud.google.com/go/batch v1.16.0
 	cloud.google.com/go/bigquery v1.76.0
 	cloud.google.com/go/bigtable v1.46.0
 	cloud.google.com/go/cloudtasks v1.15.0
 	cloud.google.com/go/compute v1.59.0
 	cloud.google.com/go/container v1.48.0
+	cloud.google.com/go/containeranalysis v0.16.0
 	cloud.google.com/go/deploy v1.29.0
+	cloud.google.com/go/dlp v1.31.0
+	cloud.google.com/go/eventarc v1.20.0
 	cloud.google.com/go/filestore v1.12.0
 	cloud.google.com/go/firestore v1.21.0
 	cloud.google.com/go/functions v1.21.0
+	cloud.google.com/go/gkebackup v1.10.0
 	cloud.google.com/go/iam v1.8.0
+	cloud.google.com/go/ids v1.7.0
 	cloud.google.com/go/kms v1.28.0
 	cloud.google.com/go/logging v1.15.0
 	cloud.google.com/go/longrunning v0.10.0
@@ -53,6 +59,7 @@ require (
 
 require (
 	cel.dev/expr v0.25.1 // indirect
+	cloud.google.com/go/grafeas v0.3.17 // indirect
 	cloud.google.com/go/pubsub/v2 v2.5.1 // indirect
 	github.com/CycloneDX/cyclonedx-go v0.10.0 // indirect
 	github.com/GoogleCloudPlatform/berglas/v2 v2.0.10 // indirect

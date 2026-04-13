@@ -515,6 +515,18 @@ gcp.project @defaults("name number") {
   modelArmor() gcp.project.modelArmorService
   // Security Command Center findings for this project (active findings only)
   sccFindings() []gcp.scc.finding
+  // GCP Eventarc resources
+  eventarc() gcp.project.eventarcService
+  // GCP Cloud DLP resources
+  dlp() gcp.project.dlpService
+  // GCP Batch resources
+  batch() gcp.project.batchService
+  // GCP Cloud IDS resources
+  ids() gcp.project.idsService
+  // GCP GKE Backup resources
+  gkeBackup() gcp.project.gkeBackupService
+  // GCP Container Analysis resources
+  containerAnalysis() gcp.project.containerAnalysisService
 }
 
 // Google Cloud (GCP) service
@@ -6598,6 +6610,384 @@ private gcp.project.modelArmorService.floorSetting @defaults("name") {
   integratedServices []string
   // AI Platform floor setting configuration
   aiPlatformFloorSetting dict
+  // Creation time
+  created time
+  // Last update time
+  updated time
+}
+
+// ============================================================
+// Eventarc
+// ============================================================
+
+// Google Cloud (GCP) Eventarc service
+private gcp.project.eventarcService {
+  // Project ID
+  projectId string
+  // Eventarc triggers
+  triggers() []gcp.project.eventarcService.trigger
+  // Eventarc channels
+  channels() []gcp.project.eventarcService.channel
+}
+
+// Google Cloud (GCP) Eventarc trigger
+private gcp.project.eventarcService.trigger @defaults("name") {
+  // Full resource name
+  name string
+  // Unique identifier
+  uid string
+  // Event filters
+  eventFilters []gcp.project.eventarcService.trigger.eventFilter
+  // Service account email used by the trigger
+  serviceAccount string
+  // Destination configuration
+  destination dict
+  // Transport configuration
+  transport dict
+  // Channel name (if using a channel)
+  channelName string
+  // Labels
+  labels map[string]string
+  // Trigger condition
+  conditions map[string]string
+  // Event data content type
+  eventDataContentType string
+  // Creation time
+  created time
+  // Last update time
+  updated time
+}
+
+// Google Cloud (GCP) Eventarc event filter
+private gcp.project.eventarcService.trigger.eventFilter @defaults("attribute value") {
+  // Internal ID
+  id string
+  // CloudEvents attribute name (e.g., type, source)
+  attribute string
+  // Attribute value to match
+  value string
+  // Match operator (empty for exact, path_pattern, match-path-pattern)
+  operator string
+}
+
+// Google Cloud (GCP) Eventarc channel
+private gcp.project.eventarcService.channel @defaults("name state") {
+  // Full resource name
+  name string
+  // Unique identifier
+  uid string
+  // Provider name
+  provider string
+  // Pub/Sub topic name
+  pubsubTopic string
+  // Channel state (PENDING, ACTIVE, INACTIVE)
+  state string
+  // Crypto key name for CMEK
+  cryptoKeyName string
+  // Creation time
+  created time
+  // Last update time
+  updated time
+}
+
+// ============================================================
+// Cloud DLP
+// ============================================================
+
+// Google Cloud (GCP) Cloud DLP service
+private gcp.project.dlpService {
+  // Project ID
+  projectId string
+  // Inspect templates
+  inspectTemplates() []gcp.project.dlpService.inspectTemplate
+  // Deidentify templates
+  deidentifyTemplates() []gcp.project.dlpService.deidentifyTemplate
+  // Job triggers
+  jobTriggers() []gcp.project.dlpService.jobTrigger
+  // Stored info types
+  storedInfoTypes() []gcp.project.dlpService.storedInfoType
+}
+
+// Google Cloud (GCP) Cloud DLP inspect template
+private gcp.project.dlpService.inspectTemplate @defaults("name displayName") {
+  // Full resource name
+  name string
+  // Display name
+  displayName string
+  // Description
+  description string
+  // Inspect configuration (info types, rules, limits)
+  inspectConfig dict
+  // Creation time
+  created time
+  // Last update time
+  updated time
+}
+
+// Google Cloud (GCP) Cloud DLP deidentify template
+private gcp.project.dlpService.deidentifyTemplate @defaults("name displayName") {
+  // Full resource name
+  name string
+  // Display name
+  displayName string
+  // Description
+  description string
+  // Deidentify configuration
+  deidentifyConfig dict
+  // Creation time
+  created time
+  // Last update time
+  updated time
+}
+
+// Google Cloud (GCP) Cloud DLP job trigger
+private gcp.project.dlpService.jobTrigger @defaults("name displayName status") {
+  // Full resource name
+  name string
+  // Display name
+  displayName string
+  // Description
+  description string
+  // Trigger status (HEALTHY, PAUSED, CANCELLED)
+  status string
+  // Inspect job configuration
+  inspectJob dict
+  // Trigger schedule/conditions
+  triggers []dict
+  // Errors from recent activations
+  errors []dict
+  // Labels
+  labels map[string]string
+  // Creation time
+  created time
+  // Last update time
+  updated time
+}
+
+// Google Cloud (GCP) Cloud DLP stored info type
+private gcp.project.dlpService.storedInfoType @defaults("name") {
+  // Full resource name
+  name string
+  // Current version info (config, stats, state)
+  currentVersion dict
+  // Pending versions (if being updated)
+  pendingVersions []dict
+}
+
+// ============================================================
+// Batch
+// ============================================================
+
+// Google Cloud (GCP) Batch service
+private gcp.project.batchService {
+  // Project ID
+  projectId string
+  // Batch jobs
+  jobs() []gcp.project.batchService.job
+}
+
+// Google Cloud (GCP) Batch job
+private gcp.project.batchService.job @defaults("name") {
+  // Full resource name
+  name string
+  // Unique identifier
+  uid string
+  // Job priority (0-100)
+  priority int
+  // Task groups
+  taskGroups []gcp.project.batchService.job.taskGroup
+  // Resource allocation policy
+  allocationPolicy dict
+  // Job status
+  status dict
+  // Labels
+  labels map[string]string
+  // Logs policy
+  logsPolicy dict
+  // Creation time
+  created time
+  // Last update time
+  updated time
+}
+
+// Google Cloud (GCP) Batch job task group
+private gcp.project.batchService.job.taskGroup @defaults("name taskCount") {
+  // Full resource name
+  name string
+  // Task specification
+  taskSpec dict
+  // Number of tasks
+  taskCount int
+  // Max parallel tasks
+  parallelism int
+  // Scheduling policy (AS_SOON_AS_POSSIBLE, IN_ORDER)
+  schedulingPolicy string
+  // Max tasks per VM
+  taskCountPerNode int
+  // Whether tasks require Docker (vs VM)
+  requireHostsFile bool
+  // Permissive SSH access between tasks
+  permissiveSsh bool
+}
+
+// ============================================================
+// Cloud IDS
+// ============================================================
+
+// Google Cloud (GCP) Cloud IDS service
+private gcp.project.idsService {
+  // Project ID
+  projectId string
+  // IDS endpoints
+  endpoints() []gcp.project.idsService.endpoint
+}
+
+// Google Cloud (GCP) Cloud IDS endpoint
+private gcp.project.idsService.endpoint @defaults("name severity state") {
+  // Full resource name
+  name string
+  // Description
+  description string
+  // Network URL
+  networkUrl string
+  // Network resource
+  network() gcp.project.computeService.network
+  // Endpoint forwarding rule URL
+  endpointForwardingRule string
+  // Endpoint IP address
+  endpointIp string
+  // Minimum threat severity (INFORMATIONAL, LOW, MEDIUM, HIGH, CRITICAL)
+  severity string
+  // Endpoint state (CREATING, READY, DELETING, UPDATING)
+  state string
+  // Threat exception IDs
+  threatExceptions []string
+  // Whether traffic logs are enabled
+  trafficLogs bool
+  // Labels
+  labels map[string]string
+  // Creation time
+  created time
+  // Last update time
+  updated time
+}
+
+// ============================================================
+// GKE Backup
+// ============================================================
+
+// Google Cloud (GCP) GKE Backup service
+private gcp.project.gkeBackupService {
+  // Project ID
+  projectId string
+  // Backup plans
+  backupPlans() []gcp.project.gkeBackupService.backupPlan
+  // Restore plans
+  restorePlans() []gcp.project.gkeBackupService.restorePlan
+}
+
+// Google Cloud (GCP) GKE Backup plan
+private gcp.project.gkeBackupService.backupPlan @defaults("name") {
+  // Full resource name
+  name string
+  // Unique identifier
+  uid string
+  // Description
+  description string
+  // Source GKE cluster name
+  cluster string
+  // Retention policy
+  retentionPolicy dict
+  // Backup schedule
+  backupSchedule dict
+  // Backup configuration scope
+  backupConfig dict
+  // Whether the plan is deactivated
+  deactivated bool
+  // Labels
+  labels map[string]string
+  // State (CLUSTER_PENDING, PROVISIONING, READY, FAILED, DEACTIVATED, DELETING)
+  state string
+  // State reason
+  stateReason string
+  // Protected pod count
+  protectedPodCount int
+  // Number of completed backups from this plan
+  backupCount int
+  // Etag
+  etag string
+  // Creation time
+  created time
+  // Last update time
+  updated time
+}
+
+// Google Cloud (GCP) GKE Backup restore plan
+private gcp.project.gkeBackupService.restorePlan @defaults("name") {
+  // Full resource name
+  name string
+  // Unique identifier
+  uid string
+  // Description
+  description string
+  // Source backup plan name
+  backupPlanName string
+  // Target GKE cluster name
+  cluster string
+  // Restore configuration
+  restoreConfig dict
+  // Labels
+  labels map[string]string
+  // State (CLUSTER_PENDING, READY, FAILED, DELETING)
+  state string
+  // State reason
+  stateReason string
+  // Etag
+  etag string
+  // Creation time
+  created time
+  // Last update time
+  updated time
+}
+
+// ============================================================
+// Container Analysis
+// ============================================================
+
+// Google Cloud (GCP) Container Analysis service
+private gcp.project.containerAnalysisService {
+  // Project ID
+  projectId string
+  // Vulnerability occurrences
+  occurrences() []gcp.project.containerAnalysisService.occurrence
+}
+
+// Google Cloud (GCP) Container Analysis occurrence (vulnerability finding)
+private gcp.project.containerAnalysisService.occurrence @defaults("name kind") {
+  // Full resource name
+  name string
+  // Resource URI the occurrence applies to
+  resourceUri string
+  // Note name this occurrence is associated with
+  noteName string
+  // Occurrence kind (VULNERABILITY, BUILD, IMAGE, PACKAGE, DEPLOYMENT, DISCOVERY, ATTESTATION, UPGRADE, COMPLIANCE, SBOM_REFERENCE)
+  kind string
+  // Remediation details
+  remediation string
+  // Vulnerability details (if kind is VULNERABILITY)
+  vulnerability dict
+  // Build details (if kind is BUILD)
+  build dict
+  // Image details (if kind is IMAGE)
+  image dict
+  // Package details (if kind is PACKAGE)
+  packageInfo dict
+  // Deployment details (if kind is DEPLOYMENT)
+  deployment dict
+  // Discovery details (if kind is DISCOVERY)
+  discovery dict
+  // Attestation details (if kind is ATTESTATION)
+  attestation dict
   // Creation time
   created time
   // Last update time
