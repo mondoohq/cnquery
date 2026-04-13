@@ -131,10 +131,18 @@ func (c *PveConnection) apiPostForm(path string, form url.Values, result any) er
 	}
 
 	var wrapper struct {
-		Data json.RawMessage `json:"data"`
+		Data    json.RawMessage `json:"data"`
+		Message string          `json:"message"`
 	}
 	if err := json.Unmarshal(body, &wrapper); err != nil {
+		if resp.StatusCode >= 400 {
+			return fmt.Errorf("proxmox API error %d for POST %s", resp.StatusCode, path)
+		}
 		return fmt.Errorf("POST JSON parsing failed: %w", err)
+	}
+
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("proxmox API error %d: %s", resp.StatusCode, wrapper.Message)
 	}
 
 	if result != nil {

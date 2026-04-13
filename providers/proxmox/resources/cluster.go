@@ -48,7 +48,7 @@ func (r *mqlProxmoxCluster) firewallRules() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	return firewallRulesToResources(r.MqlRuntime, rules)
+	return firewallRulesToResources(r.MqlRuntime, rules, "cluster")
 }
 
 func (r *mqlProxmoxCluster) options() (any, error) {

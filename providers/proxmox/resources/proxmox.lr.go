@@ -3568,7 +3568,7 @@ func (c *mqlProxmoxRepository) GetFileType() *plugin.TValue[string] {
 type mqlProxmoxFirewallRule struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlProxmoxFirewallRuleInternal it will be used here
+	mqlProxmoxFirewallRuleInternal
 	Pos     plugin.TValue[int64]
 	Type    plugin.TValue[string]
 	Action  plugin.TValue[string]

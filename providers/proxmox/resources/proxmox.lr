@@ -106,7 +106,7 @@ proxmox.node @defaults("name status") {
   dns() proxmox.dns
 
   // --- Services ---
-  // Systemd services
+  // systemd services
   services() []proxmox.service
 
   // --- Time ---
@@ -362,7 +362,7 @@ proxmox.dns @defaults("search dns1") {
   dns3 string
 }
 
-// Systemd service on a node
+// systemd service on a node
 proxmox.service @defaults("name state") {
   // Service unit name
   name string

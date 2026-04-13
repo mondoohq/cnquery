@@ -74,7 +74,9 @@ func storageInfoToResources(runtime *plugin.Runtime, storages []connection.Stora
 }
 
 // firewallRulesToResources converts firewall rules to MQL resources.
-func firewallRulesToResources(runtime *plugin.Runtime, rules []connection.FirewallRule) ([]any, error) {
+// scope identifies the owner (e.g. "cluster", "node/pve1", "vm/100") to
+// prevent cache-key collisions when identical rules exist at different levels.
+func firewallRulesToResources(runtime *plugin.Runtime, rules []connection.FirewallRule, scope string) ([]any, error) {
 	list := make([]any, len(rules))
 	for i, rule := range rules {
 		res, err := CreateResource(runtime, "proxmox.firewall.rule", map[string]*llx.RawData{
@@ -95,6 +97,7 @@ func firewallRulesToResources(runtime *plugin.Runtime, rules []connection.Firewa
 		if err != nil {
 			return nil, err
 		}
+		res.(*mqlProxmoxFirewallRule).scope = scope
 		list[i] = res
 	}
 	return list, nil

@@ -44,9 +44,9 @@ type NodeStatus struct {
 		Free  int64 `json:"free"`
 	} `json:"swap"`
 	// System
-	KVersion string  `json:"kversion"`
-	PVEVer   string  `json:"pveversion"`
-	Uptime   int64   `json:"uptime"`
+	KVersion string   `json:"kversion"`
+	PVEVer   string   `json:"pveversion"`
+	Uptime   int64    `json:"uptime"`
 	LoadAvg  []string `json:"loadavg"`
 }
 
@@ -150,15 +150,15 @@ func (c *PveConnection) GetNodeTime(node string) (*TimeInfo, error) {
 // ---------------------------------------------------------------------------
 
 type CertInfo struct {
-	Filename       string   `json:"filename"`
-	Fingerprint    string   `json:"fingerprint"`
-	Issuer         string   `json:"issuer"`
-	NotAfter       int64    `json:"notafter"`
-	NotBefore      int64    `json:"notbefore"`
-	PublicKeyBits  int      `json:"public-key-bits"`
-	PublicKeyType  string   `json:"public-key-type"`
-	San            []string `json:"san"`
-	Subject        string   `json:"subject"`
+	Filename      string   `json:"filename"`
+	Fingerprint   string   `json:"fingerprint"`
+	Issuer        string   `json:"issuer"`
+	NotAfter      int64    `json:"notafter"`
+	NotBefore     int64    `json:"notbefore"`
+	PublicKeyBits int      `json:"public-key-bits"`
+	PublicKeyType string   `json:"public-key-type"`
+	San           []string `json:"san"`
+	Subject       string   `json:"subject"`
 }
 
 func (c *PveConnection) GetNodeCertificates(node string) ([]CertInfo, error) {

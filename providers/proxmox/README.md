@@ -47,7 +47,7 @@ cnquery shell proxmox --host https://192.168.1.10:8006 \
 | `proxmox.pool`              | Resource pool                                       |
 | `proxmox.network`           | Node network interface (bridge, bond, VLAN)         |
 | `proxmox.dns`               | DNS configuration on a node                         |
-| `proxmox.service`           | Systemd service on a node                           |
+| `proxmox.service`           | systemd service on a node                           |
 | `proxmox.certificate`       | TLS/SSL certificate on a node                       |
 | `proxmox.subscription`      | Proxmox subscription status                         |
 | `proxmox.repository`        | APT repository configured on a node                 |

@@ -107,6 +107,17 @@ func (r *mqlProxmoxVmUpdate) id() (string, error) {
 	return fmt.Sprintf("proxmox.vm.update/%d/%s", r.parentVmid, r.Name.Data), nil
 }
 
+// --- Firewall rules (scoped to cluster/node/VM to prevent collisions) ---
+
+type mqlProxmoxFirewallRuleInternal struct {
+	scope string // e.g. "cluster", "node/pve1", "vm/100"
+}
+
+func (r *mqlProxmoxFirewallRule) id() (string, error) {
+	return fmt.Sprintf("proxmox.firewall.rule/%s/%d/%s/%s/%s/%s",
+		r.scope, r.Pos.Data, r.Type.Data, r.Action.Data, r.Source.Data, r.Dest.Data), nil
+}
+
 // --- Globally unique (id field is already unique) ---
 
 func (r *mqlProxmoxStorage) id() (string, error) {
@@ -115,11 +126,6 @@ func (r *mqlProxmoxStorage) id() (string, error) {
 
 func (r *mqlProxmoxPool) id() (string, error) {
 	return "proxmox.pool/" + r.Id.Data, nil
-}
-
-func (r *mqlProxmoxFirewallRule) id() (string, error) {
-	return fmt.Sprintf("proxmox.firewall.rule/%d/%s/%s/%s/%s",
-		r.Pos.Data, r.Type.Data, r.Action.Data, r.Source.Data, r.Dest.Data), nil
 }
 
 func (r *mqlProxmoxUser) id() (string, error) {
