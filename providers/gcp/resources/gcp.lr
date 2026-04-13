@@ -6756,8 +6756,6 @@ private gcp.project.dlpService.jobTrigger @defaults("name displayName status") {
   triggers []dict
   // Errors from recent activations
   errors []dict
-  // Labels
-  labels map[string]string
   // Creation time
   created time
   // Last update time
@@ -6860,8 +6858,6 @@ private gcp.project.idsService.endpoint @defaults("name severity state") {
   severity string
   // Endpoint state (CREATING, READY, DELETING, UPDATING)
   state string
-  // Threat exception IDs
-  threatExceptions []string
   // Whether traffic logs are enabled
   trafficLogs bool
   // Labels
@@ -6912,8 +6908,6 @@ private gcp.project.gkeBackupService.backupPlan @defaults("name") {
   stateReason string
   // Protected pod count
   protectedPodCount int
-  // Number of completed backups from this plan
-  backupCount int
   // Etag
   etag string
   // Creation time

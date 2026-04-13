@@ -1845,7 +1845,6 @@ gcp.project.dlpService.jobTrigger.description 13.6.1
 gcp.project.dlpService.jobTrigger.displayName 13.6.1
 gcp.project.dlpService.jobTrigger.errors 13.6.1
 gcp.project.dlpService.jobTrigger.inspectJob 13.6.1
-gcp.project.dlpService.jobTrigger.labels 13.6.1
 gcp.project.dlpService.jobTrigger.name 13.6.1
 gcp.project.dlpService.jobTrigger.status 13.6.1
 gcp.project.dlpService.jobTrigger.triggers 13.6.1
@@ -1996,7 +1995,6 @@ gcp.project.gkeBackup 13.6.1
 gcp.project.gkeBackupService 13.6.1
 gcp.project.gkeBackupService.backupPlan 13.6.1
 gcp.project.gkeBackupService.backupPlan.backupConfig 13.6.1
-gcp.project.gkeBackupService.backupPlan.backupCount 13.6.1
 gcp.project.gkeBackupService.backupPlan.backupSchedule 13.6.1
 gcp.project.gkeBackupService.backupPlan.cluster 13.6.1
 gcp.project.gkeBackupService.backupPlan.created 13.6.1
@@ -2278,7 +2276,6 @@ gcp.project.idsService.endpoint.network 13.6.1
 gcp.project.idsService.endpoint.networkUrl 13.6.1
 gcp.project.idsService.endpoint.severity 13.6.1
 gcp.project.idsService.endpoint.state 13.6.1
-gcp.project.idsService.endpoint.threatExceptions 13.6.1
 gcp.project.idsService.endpoint.trafficLogs 13.6.1
 gcp.project.idsService.endpoint.updated 13.6.1
 gcp.project.idsService.endpoints 13.6.1

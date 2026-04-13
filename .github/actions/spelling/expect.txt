@@ -96,6 +96,7 @@ ekm
 eku
 elbv
 endpointslice
+eventarc
 exo
 failback
 fargate

@@ -9912,9 +9912,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.dlpService.jobTrigger.errors": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDlpServiceJobTrigger).GetErrors()).ToDataRes(types.Array(types.Dict))
 	},
-	"gcp.project.dlpService.jobTrigger.labels": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectDlpServiceJobTrigger).GetLabels()).ToDataRes(types.Map(types.String, types.String))
-	},
 	"gcp.project.dlpService.jobTrigger.created": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDlpServiceJobTrigger).GetCreated()).ToDataRes(types.Time)
 	},
@@ -10020,9 +10017,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.idsService.endpoint.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIdsServiceEndpoint).GetState()).ToDataRes(types.String)
 	},
-	"gcp.project.idsService.endpoint.threatExceptions": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectIdsServiceEndpoint).GetThreatExceptions()).ToDataRes(types.Array(types.String))
-	},
 	"gcp.project.idsService.endpoint.trafficLogs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIdsServiceEndpoint).GetTrafficLogs()).ToDataRes(types.Bool)
 	},
@@ -10079,9 +10073,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.gkeBackupService.backupPlan.protectedPodCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeBackupServiceBackupPlan).GetProtectedPodCount()).ToDataRes(types.Int)
-	},
-	"gcp.project.gkeBackupService.backupPlan.backupCount": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectGkeBackupServiceBackupPlan).GetBackupCount()).ToDataRes(types.Int)
 	},
 	"gcp.project.gkeBackupService.backupPlan.etag": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeBackupServiceBackupPlan).GetEtag()).ToDataRes(types.String)
@@ -22476,10 +22467,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectDlpServiceJobTrigger).Errors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"gcp.project.dlpService.jobTrigger.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectDlpServiceJobTrigger).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
-		return
-	},
 	"gcp.project.dlpService.jobTrigger.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDlpServiceJobTrigger).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -22644,10 +22631,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectIdsServiceEndpoint).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"gcp.project.idsService.endpoint.threatExceptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectIdsServiceEndpoint).ThreatExceptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
 	"gcp.project.idsService.endpoint.trafficLogs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectIdsServiceEndpoint).TrafficLogs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -22730,10 +22713,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.gkeBackupService.backupPlan.protectedPodCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeBackupServiceBackupPlan).ProtectedPodCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"gcp.project.gkeBackupService.backupPlan.backupCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectGkeBackupServiceBackupPlan).BackupCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"gcp.project.gkeBackupService.backupPlan.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -52006,7 +51985,6 @@ type mqlGcpProjectDlpServiceJobTrigger struct {
 	InspectJob  plugin.TValue[any]
 	Triggers    plugin.TValue[[]any]
 	Errors      plugin.TValue[[]any]
-	Labels      plugin.TValue[map[string]any]
 	Created     plugin.TValue[*time.Time]
 	Updated     plugin.TValue[*time.Time]
 }
@@ -52074,10 +52052,6 @@ func (c *mqlGcpProjectDlpServiceJobTrigger) GetTriggers() *plugin.TValue[[]any] 
 
 func (c *mqlGcpProjectDlpServiceJobTrigger) GetErrors() *plugin.TValue[[]any] {
 	return &c.Errors
-}
-
-func (c *mqlGcpProjectDlpServiceJobTrigger) GetLabels() *plugin.TValue[map[string]any] {
-	return &c.Labels
 }
 
 func (c *mqlGcpProjectDlpServiceJobTrigger) GetCreated() *plugin.TValue[*time.Time] {
@@ -52470,7 +52444,6 @@ type mqlGcpProjectIdsServiceEndpoint struct {
 	EndpointIp             plugin.TValue[string]
 	Severity               plugin.TValue[string]
 	State                  plugin.TValue[string]
-	ThreatExceptions       plugin.TValue[[]any]
 	TrafficLogs            plugin.TValue[bool]
 	Labels                 plugin.TValue[map[string]any]
 	Created                plugin.TValue[*time.Time]
@@ -52556,10 +52529,6 @@ func (c *mqlGcpProjectIdsServiceEndpoint) GetSeverity() *plugin.TValue[string] {
 
 func (c *mqlGcpProjectIdsServiceEndpoint) GetState() *plugin.TValue[string] {
 	return &c.State
-}
-
-func (c *mqlGcpProjectIdsServiceEndpoint) GetThreatExceptions() *plugin.TValue[[]any] {
-	return &c.ThreatExceptions
 }
 
 func (c *mqlGcpProjectIdsServiceEndpoint) GetTrafficLogs() *plugin.TValue[bool] {
@@ -52678,7 +52647,6 @@ type mqlGcpProjectGkeBackupServiceBackupPlan struct {
 	State             plugin.TValue[string]
 	StateReason       plugin.TValue[string]
 	ProtectedPodCount plugin.TValue[int64]
-	BackupCount       plugin.TValue[int64]
 	Etag              plugin.TValue[string]
 	Created           plugin.TValue[*time.Time]
 	Updated           plugin.TValue[*time.Time]
@@ -52767,10 +52735,6 @@ func (c *mqlGcpProjectGkeBackupServiceBackupPlan) GetStateReason() *plugin.TValu
 
 func (c *mqlGcpProjectGkeBackupServiceBackupPlan) GetProtectedPodCount() *plugin.TValue[int64] {
 	return &c.ProtectedPodCount
-}
-
-func (c *mqlGcpProjectGkeBackupServiceBackupPlan) GetBackupCount() *plugin.TValue[int64] {
-	return &c.BackupCount
 }
 
 func (c *mqlGcpProjectGkeBackupServiceBackupPlan) GetEtag() *plugin.TValue[string] {
