@@ -84,8 +84,14 @@ slack.user @defaults("id name") {
   isStranger bool
   // Whether the user is an app bot
   isAppUser bool
+  // Whether the user is a connector bot
+  isConnectorBot bool
+  // Whether the user is a workflow bot
+  isWorkflowBot bool
   // Whether a user has been invited but has not yet signed in
   isInvitedUser bool
+  // Whether the user's email has been confirmed
+  isEmailConfirmed bool
   // Whether two-factor authentication is enabled for the user
   has2FA bool
   // Type of two-factor authentication the user is using

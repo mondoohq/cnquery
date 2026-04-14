@@ -4487,7 +4487,13 @@ aws.sagemaker.clusterInstanceGroup 13.12.0
 aws.sagemaker.clusterInstanceGroup.currentCount 13.12.0
 aws.sagemaker.clusterInstanceGroup.iamRole 13.12.0
 aws.sagemaker.clusterInstanceGroup.instanceGroupName 13.12.0
+aws.sagemaker.clusterInstanceGroup.instanceRequirements 13.12.2
 aws.sagemaker.clusterInstanceGroup.instanceType 13.12.0
+aws.sagemaker.clusterInstanceGroup.instanceTypeDetail 13.12.2
+aws.sagemaker.clusterInstanceGroup.instanceTypeDetail.currentCount 13.12.2
+aws.sagemaker.clusterInstanceGroup.instanceTypeDetail.instanceType 13.12.2
+aws.sagemaker.clusterInstanceGroup.instanceTypeDetail.threadsPerCore 13.12.2
+aws.sagemaker.clusterInstanceGroup.instanceTypeDetails 13.12.2
 aws.sagemaker.clusterInstanceGroup.lifecycleConfig 13.12.0
 aws.sagemaker.clusterInstanceGroup.region 13.12.0
 aws.sagemaker.clusterInstanceGroup.status 13.12.0

@@ -234,8 +234,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"slack.user.isAppUser": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSlackUser).GetIsAppUser()).ToDataRes(types.Bool)
 	},
+	"slack.user.isConnectorBot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSlackUser).GetIsConnectorBot()).ToDataRes(types.Bool)
+	},
+	"slack.user.isWorkflowBot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSlackUser).GetIsWorkflowBot()).ToDataRes(types.Bool)
+	},
 	"slack.user.isInvitedUser": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSlackUser).GetIsInvitedUser()).ToDataRes(types.Bool)
+	},
+	"slack.user.isEmailConfirmed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSlackUser).GetIsEmailConfirmed()).ToDataRes(types.Bool)
 	},
 	"slack.user.has2FA": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSlackUser).GetHas2FA()).ToDataRes(types.Bool)
@@ -565,8 +574,20 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlSlackUser).IsAppUser, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"slack.user.isConnectorBot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSlackUser).IsConnectorBot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"slack.user.isWorkflowBot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSlackUser).IsWorkflowBot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"slack.user.isInvitedUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSlackUser).IsInvitedUser, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"slack.user.isEmailConfirmed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSlackUser).IsEmailConfirmed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"slack.user.has2FA": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1238,7 +1259,10 @@ type mqlSlackUser struct {
 	IsUltraRestricted plugin.TValue[bool]
 	IsStranger        plugin.TValue[bool]
 	IsAppUser         plugin.TValue[bool]
+	IsConnectorBot    plugin.TValue[bool]
+	IsWorkflowBot     plugin.TValue[bool]
 	IsInvitedUser     plugin.TValue[bool]
+	IsEmailConfirmed  plugin.TValue[bool]
 	Has2FA            plugin.TValue[bool]
 	TwoFactorType     plugin.TValue[string]
 	HasFiles          plugin.TValue[bool]
@@ -1353,8 +1377,20 @@ func (c *mqlSlackUser) GetIsAppUser() *plugin.TValue[bool] {
 	return &c.IsAppUser
 }
 
+func (c *mqlSlackUser) GetIsConnectorBot() *plugin.TValue[bool] {
+	return &c.IsConnectorBot
+}
+
+func (c *mqlSlackUser) GetIsWorkflowBot() *plugin.TValue[bool] {
+	return &c.IsWorkflowBot
+}
+
 func (c *mqlSlackUser) GetIsInvitedUser() *plugin.TValue[bool] {
 	return &c.IsInvitedUser
+}
+
+func (c *mqlSlackUser) GetIsEmailConfirmed() *plugin.TValue[bool] {
+	return &c.IsEmailConfirmed
 }
 
 func (c *mqlSlackUser) GetHas2FA() *plugin.TValue[bool] {

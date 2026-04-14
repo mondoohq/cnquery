@@ -113,6 +113,7 @@ const (
 	ResourceAwsSagemakerInferenceComponent                                      string = "aws.sagemaker.inferenceComponent"
 	ResourceAwsSagemakerCluster                                                 string = "aws.sagemaker.cluster"
 	ResourceAwsSagemakerClusterInstanceGroup                                    string = "aws.sagemaker.clusterInstanceGroup"
+	ResourceAwsSagemakerClusterInstanceGroupInstanceTypeDetail                  string = "aws.sagemaker.clusterInstanceGroup.instanceTypeDetail"
 	ResourceAwsSagemakerClusterNode                                             string = "aws.sagemaker.clusterNode"
 	ResourceAwsSagemakerFeatureGroup                                            string = "aws.sagemaker.featureGroup"
 	ResourceAwsSagemakerFeatureDefinition                                       string = "aws.sagemaker.featureDefinition"
@@ -962,6 +963,10 @@ func init() {
 		"aws.sagemaker.clusterInstanceGroup": {
 			// to override args, implement: initAwsSagemakerClusterInstanceGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsSagemakerClusterInstanceGroup,
+		},
+		"aws.sagemaker.clusterInstanceGroup.instanceTypeDetail": {
+			// to override args, implement: initAwsSagemakerClusterInstanceGroupInstanceTypeDetail(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerClusterInstanceGroupInstanceTypeDetail,
 		},
 		"aws.sagemaker.clusterNode": {
 			// to override args, implement: initAwsSagemakerClusterNode(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -5359,6 +5364,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.sagemaker.clusterInstanceGroup.lifecycleConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerClusterInstanceGroup).GetLifecycleConfig()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.clusterInstanceGroup.instanceRequirements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterInstanceGroup).GetInstanceRequirements()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.clusterInstanceGroup.instanceTypeDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterInstanceGroup).GetInstanceTypeDetails()).ToDataRes(types.Array(types.Resource("aws.sagemaker.clusterInstanceGroup.instanceTypeDetail")))
+	},
+	"aws.sagemaker.clusterInstanceGroup.instanceTypeDetail.instanceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterInstanceGroupInstanceTypeDetail).GetInstanceType()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.clusterInstanceGroup.instanceTypeDetail.currentCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterInstanceGroupInstanceTypeDetail).GetCurrentCount()).ToDataRes(types.Int)
+	},
+	"aws.sagemaker.clusterInstanceGroup.instanceTypeDetail.threadsPerCore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterInstanceGroupInstanceTypeDetail).GetThreadsPerCore()).ToDataRes(types.Int)
 	},
 	"aws.sagemaker.clusterNode.instanceId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerClusterNode).GetInstanceId()).ToDataRes(types.String)
@@ -22369,6 +22389,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.sagemaker.clusterInstanceGroup.lifecycleConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerClusterInstanceGroup).LifecycleConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterInstanceGroup.instanceRequirements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterInstanceGroup).InstanceRequirements, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterInstanceGroup.instanceTypeDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterInstanceGroup).InstanceTypeDetails, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterInstanceGroup.instanceTypeDetail.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterInstanceGroupInstanceTypeDetail).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.clusterInstanceGroup.instanceTypeDetail.instanceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterInstanceGroupInstanceTypeDetail).InstanceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterInstanceGroup.instanceTypeDetail.currentCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterInstanceGroupInstanceTypeDetail).CurrentCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterInstanceGroup.instanceTypeDetail.threadsPerCore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterInstanceGroupInstanceTypeDetail).ThreadsPerCore, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.clusterNode.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -52076,15 +52120,17 @@ type mqlAwsSagemakerClusterInstanceGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsSagemakerClusterInstanceGroupInternal
-	InstanceGroupName plugin.TValue[string]
-	InstanceType      plugin.TValue[string]
-	Region            plugin.TValue[string]
-	Status            plugin.TValue[string]
-	CurrentCount      plugin.TValue[int64]
-	TargetCount       plugin.TValue[int64]
-	ThreadsPerCore    plugin.TValue[int64]
-	IamRole           plugin.TValue[*mqlAwsIamRole]
-	LifecycleConfig   plugin.TValue[any]
+	InstanceGroupName    plugin.TValue[string]
+	InstanceType         plugin.TValue[string]
+	Region               plugin.TValue[string]
+	Status               plugin.TValue[string]
+	CurrentCount         plugin.TValue[int64]
+	TargetCount          plugin.TValue[int64]
+	ThreadsPerCore       plugin.TValue[int64]
+	IamRole              plugin.TValue[*mqlAwsIamRole]
+	LifecycleConfig      plugin.TValue[any]
+	InstanceRequirements plugin.TValue[any]
+	InstanceTypeDetails  plugin.TValue[[]any]
 }
 
 // createAwsSagemakerClusterInstanceGroup creates a new instance of this resource
@@ -52172,6 +52218,73 @@ func (c *mqlAwsSagemakerClusterInstanceGroup) GetLifecycleConfig() *plugin.TValu
 	return plugin.GetOrCompute[any](&c.LifecycleConfig, func() (any, error) {
 		return c.lifecycleConfig()
 	})
+}
+
+func (c *mqlAwsSagemakerClusterInstanceGroup) GetInstanceRequirements() *plugin.TValue[any] {
+	return &c.InstanceRequirements
+}
+
+func (c *mqlAwsSagemakerClusterInstanceGroup) GetInstanceTypeDetails() *plugin.TValue[[]any] {
+	return &c.InstanceTypeDetails
+}
+
+// mqlAwsSagemakerClusterInstanceGroupInstanceTypeDetail for the aws.sagemaker.clusterInstanceGroup.instanceTypeDetail resource
+type mqlAwsSagemakerClusterInstanceGroupInstanceTypeDetail struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsSagemakerClusterInstanceGroupInstanceTypeDetailInternal it will be used here
+	InstanceType   plugin.TValue[string]
+	CurrentCount   plugin.TValue[int64]
+	ThreadsPerCore plugin.TValue[int64]
+}
+
+// createAwsSagemakerClusterInstanceGroupInstanceTypeDetail creates a new instance of this resource
+func createAwsSagemakerClusterInstanceGroupInstanceTypeDetail(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerClusterInstanceGroupInstanceTypeDetail{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.clusterInstanceGroup.instanceTypeDetail", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerClusterInstanceGroupInstanceTypeDetail) MqlName() string {
+	return "aws.sagemaker.clusterInstanceGroup.instanceTypeDetail"
+}
+
+func (c *mqlAwsSagemakerClusterInstanceGroupInstanceTypeDetail) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerClusterInstanceGroupInstanceTypeDetail) GetInstanceType() *plugin.TValue[string] {
+	return &c.InstanceType
+}
+
+func (c *mqlAwsSagemakerClusterInstanceGroupInstanceTypeDetail) GetCurrentCount() *plugin.TValue[int64] {
+	return &c.CurrentCount
+}
+
+func (c *mqlAwsSagemakerClusterInstanceGroupInstanceTypeDetail) GetThreadsPerCore() *plugin.TValue[int64] {
+	return &c.ThreadsPerCore
 }
 
 // mqlAwsSagemakerClusterNode for the aws.sagemaker.clusterNode resource

@@ -2086,6 +2086,20 @@ private aws.sagemaker.clusterInstanceGroup @defaults("instanceGroupName instance
   iamRole() aws.iam.role
   // Lifecycle configuration
   lifecycleConfig() dict
+  // Instance requirements for flexible instance groups (multiple instance types with priority fallback)
+  instanceRequirements dict
+  // Breakdown of instance types and counts within a flexible instance group
+  instanceTypeDetails []aws.sagemaker.clusterInstanceGroup.instanceTypeDetail
+}
+
+// Instance type detail within a flexible SageMaker HyperPod instance group
+private aws.sagemaker.clusterInstanceGroup.instanceTypeDetail @defaults("instanceType currentCount") {
+  // ML instance type
+  instanceType string
+  // Number of instances of this type currently running
+  currentCount int
+  // Threads per CPU core for this instance type
+  threadsPerCore int
 }
 
 // AWS SageMaker HyperPod cluster node

@@ -1969,15 +1969,41 @@ func (a *mqlAwsSagemakerCluster) instanceGroups() ([]any, error) {
 		if ig.ThreadsPerCore != nil {
 			threadsPerCore = int64(*ig.ThreadsPerCore)
 		}
+		instanceRequirements, err := convert.JsonToDict(ig.InstanceRequirements)
+		if err != nil {
+			return nil, err
+		}
+		var instanceTypeDetails []any
+		for _, itd := range ig.InstanceTypeDetails {
+			var itdCurrentCount, itdThreadsPerCore int64
+			if itd.CurrentCount != nil {
+				itdCurrentCount = int64(*itd.CurrentCount)
+			}
+			if itd.ThreadsPerCore != nil {
+				itdThreadsPerCore = int64(*itd.ThreadsPerCore)
+			}
+			mqlITD, err := CreateResource(a.MqlRuntime, "aws.sagemaker.clusterInstanceGroup.instanceTypeDetail",
+				map[string]*llx.RawData{
+					"instanceType":   llx.StringData(string(itd.InstanceType)),
+					"currentCount":   llx.IntData(itdCurrentCount),
+					"threadsPerCore": llx.IntData(itdThreadsPerCore),
+				})
+			if err != nil {
+				return nil, err
+			}
+			instanceTypeDetails = append(instanceTypeDetails, mqlITD)
+		}
 		mqlIG, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerClusterInstanceGroup,
 			map[string]*llx.RawData{
-				"instanceGroupName": llx.StringDataPtr(ig.InstanceGroupName),
-				"instanceType":      llx.StringData(string(ig.InstanceType)),
-				"region":            llx.StringData(a.Region.Data),
-				"status":            llx.StringData(string(ig.Status)),
-				"currentCount":      llx.IntData(currentCount),
-				"targetCount":       llx.IntData(targetCount),
-				"threadsPerCore":    llx.IntData(threadsPerCore),
+				"instanceGroupName":    llx.StringDataPtr(ig.InstanceGroupName),
+				"instanceType":         llx.StringData(string(ig.InstanceType)),
+				"region":               llx.StringData(a.Region.Data),
+				"status":               llx.StringData(string(ig.Status)),
+				"currentCount":         llx.IntData(currentCount),
+				"targetCount":          llx.IntData(targetCount),
+				"threadsPerCore":       llx.IntData(threadsPerCore),
+				"instanceRequirements": llx.DictData(instanceRequirements),
+				"instanceTypeDetails":  llx.ArrayData(instanceTypeDetails, types.Resource("aws.sagemaker.clusterInstanceGroup.instanceTypeDetail")),
 			})
 		if err != nil {
 			return nil, err
@@ -2111,6 +2137,10 @@ func (a *mqlAwsSagemakerClusterInstanceGroup) lifecycleConfig() (map[string]any,
 		return nil, nil
 	}
 	return convert.JsonToDict(a.cacheLifecycleConfig)
+}
+
+func (a *mqlAwsSagemakerClusterInstanceGroupInstanceTypeDetail) id() (string, error) {
+	return "instanceTypeDetail/" + a.InstanceType.Data, nil
 }
 
 type mqlAwsSagemakerClusterNodeInternal struct {

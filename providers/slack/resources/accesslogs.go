@@ -20,21 +20,28 @@ func (s *mqlSlack) accessLogs() ([]any, error) {
 		return nil, errors.New("cannot retrieve new data while using a mock connection")
 	}
 
-	accessLogs, _, err := client.GetAccessLogs(slack.AccessLogParameters{
-		Limit: 999, // use maximum, must be lower than 1000
-	})
-	if err != nil {
-		return nil, err
-	}
-	list := []any{}
-	for i := range accessLogs {
-		mqlUser, err := newMqlSlackLogin(s.MqlRuntime, accessLogs[i])
+	var list []any
+	var cursor string
+	for {
+		accessLogs, nextCursor, err := client.GetAccessLogs(slack.AccessLogParameters{
+			Limit:  999, // use maximum, must be lower than 1000
+			Cursor: cursor,
+		})
 		if err != nil {
 			return nil, err
 		}
-		list = append(list, mqlUser)
+		for i := range accessLogs {
+			mqlUser, err := newMqlSlackLogin(s.MqlRuntime, accessLogs[i])
+			if err != nil {
+				return nil, err
+			}
+			list = append(list, mqlUser)
+		}
+		if nextCursor == "" {
+			break
+		}
+		cursor = nextCursor
 	}
-
 	return list, nil
 }
 
