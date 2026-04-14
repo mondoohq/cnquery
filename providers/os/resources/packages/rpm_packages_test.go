@@ -106,7 +106,7 @@ func TestRedhat8Parser(t *testing.T) {
 		Epoch:       "1",
 		Arch:        "x86_64",
 		Description: "A general purpose cryptography library with TLS implementation",
-		PUrl:        "pkg:rpm/redhat/openssl-libs@1%3A1.1.1g-15.el8_3?arch=x86_64&distro=rhel-8.4&epoch=1",
+		PUrl:        "pkg:rpm/redhat/openssl-libs@1:1.1.1g-15.el8_3?arch=x86_64&distro=rhel-8.4&epoch=1",
 		CPEs: []string{
 			"cpe:2.3:a:red_hat\\,_inc.:openssl-libs:1.1.1g-15.el8_3:1:*:*:*:*:x86_64:*",
 			"cpe:2.3:a:red_hat\\,_inc.:openssl-libs:1.1.1g-15:1:*:*:*:*:x86_64:*",
@@ -130,7 +130,7 @@ func TestRedhat8Parser(t *testing.T) {
 		Epoch:       "1",
 		Arch:        "x86_64",
 		Description: "Libraries for accessing D-BUS",
-		PUrl:        "pkg:rpm/redhat/dbus-libs@1%3A1.12.8-12.el8_4.2?arch=x86_64&distro=rhel-8.4&epoch=1",
+		PUrl:        "pkg:rpm/redhat/dbus-libs@1:1.12.8-12.el8_4.2?arch=x86_64&distro=rhel-8.4&epoch=1",
 		CPEs: []string{
 			"cpe:2.3:a:red_hat\\,_inc.:dbus-libs:1.12.8-12.el8_4.2:1:*:*:*:*:x86_64:*",
 			"cpe:2.3:a:red_hat\\,_inc.:dbus-libs:1.12.8-12:1:*:*:*:*:x86_64:*",
@@ -416,7 +416,7 @@ func TestOracleParser(t *testing.T) {
 
 	p := Package{
 		Name: "ruby",
-		PUrl: "pkg:rpm/oraclelinux/ruby@3.1.7-146.module%2Bel9.5.0%2B90564%2B273a1edd?arch=x86_64&distro=oraclelinux-9&rpmmod=ruby%3A3.1%3A9050020250506050702%3A2e2f0e1c",
+		PUrl: "pkg:rpm/oraclelinux/ruby@3.1.7-146.module%2Bel9.5.0%2B90564%2B273a1edd?arch=x86_64&distro=oraclelinux-9&rpmmod=ruby:3.1:9050020250506050702:2e2f0e1c",
 	}
 	fPkg := findPkg(m, p.Name)
 	assert.Equal(t, p.PUrl, fPkg.PUrl)
@@ -455,7 +455,7 @@ func TestAlmaLinuxParser(t *testing.T) {
 
 	p := Package{
 		Name: "php-cli",
-		PUrl: "pkg:rpm/almalinux/php-cli@7.4.33-2.module_el8.10.0%2B3935%2B28808425?arch=aarch64&distro=almalinux-8.10&rpmmod=php%3A7.4%3A8100020241212065510%3Aeb0869e2",
+		PUrl: "pkg:rpm/almalinux/php-cli@7.4.33-2.module_el8.10.0%2B3935%2B28808425?arch=aarch64&distro=almalinux-8.10&rpmmod=php:7.4:8100020241212065510:eb0869e2",
 	}
 	fPkg := findPkg(m, p.Name)
 	assert.Equal(t, p.PUrl, fPkg.PUrl)
@@ -488,7 +488,7 @@ func TestRedHatModularParser(t *testing.T) {
 	// Verify modular package has rpmmod qualifier
 	p := Package{
 		Name: "php-cli",
-		PUrl: "pkg:rpm/redhat/php-cli@7.4.33-3.module%2Bel8.10.0%2B23902%2Bd3c8dd8f?arch=aarch64&distro=rhel-8.10&rpmmod=php%3A7.4%3A8100020260119075152%3Af7998665",
+		PUrl: "pkg:rpm/redhat/php-cli@7.4.33-3.module%2Bel8.10.0%2B23902%2Bd3c8dd8f?arch=aarch64&distro=rhel-8.10&rpmmod=php:7.4:8100020260119075152:f7998665",
 	}
 	fPkg := findPkg(m, p.Name)
 	assert.Equal(t, p.PUrl, fPkg.PUrl)

@@ -73,7 +73,7 @@ The sfdisk utility is mostly for automation and scripting uses.`,
 The audit-libs package contains the dynamic libraries needed for
 applications to use the audit framework. It is used to monitor systems for
 security related events.`,
-		PUrl: "pkg:deb/ubuntu/libaudit1@1%3A2.4-1%2Bb1?arch=amd64&distro=ubuntu-18.04",
+		PUrl: "pkg:deb/ubuntu/libaudit1@1:2.4-1%2Bb1?arch=amd64&distro=ubuntu-18.04",
 		CPEs: []string{
 			"cpe:2.3:a:libaudit1:libaudit1:2.4-1\\+b1:*:*:*:*:*:amd64:*",
 			"cpe:2.3:a:libaudit1:libaudit1:2.4:*:*:*:*:*:amd64:*",
