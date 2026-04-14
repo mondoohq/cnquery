@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/cockroachdb/errors"
+	"github.com/go-viper/mapstructure/v2"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -225,6 +226,32 @@ func Read() (*Config, error) {
 	}
 
 	return &opts, nil
+}
+
+// ConfigToMap encodes a Config struct into a flat map, respecting mapstructure tags.
+func ConfigToMap(cfg *Config) (map[string]any, error) {
+	m := make(map[string]any)
+	dec, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+		TagName: "mapstructure",
+		Result:  &m,
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create config encoder")
+	}
+	if err := dec.Decode(cfg); err != nil {
+		return nil, errors.Wrap(err, "failed to encode config")
+	}
+	return m, nil
+}
+
+// ApplyConfig sets all values from the given Config into viper,
+// allowing programmatic configuration without a config file.
+func ApplyConfig(cfg *Config) error {
+	m, err := ConfigToMap(cfg)
+	if err != nil {
+		return err
+	}
+	return viper.MergeConfigMap(m)
 }
 
 type Config struct {

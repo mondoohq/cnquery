@@ -226,6 +226,74 @@ space_mrn: //captain.api.mondoo.app/spaces/musing-saha-952142
 		assert.Equal(t, "https://api.example.com", cfg.APIEndpoint)
 	})
 
+	t.Run("test ApplyConfig sets viper values from config", func(t *testing.T) {
+		viper.Reset()
+		viper.SetConfigType("yaml")
+		viper.SetOptions(viper.KeyDelimiter("\\"))
+
+		cfg := &Config{
+			CommonOpts: CommonOpts{
+				AgentMrn:          "//agents.api.mondoo.app/spaces/test/agents/abc",
+				ServiceAccountMrn: "//agents.api.mondoo.app/spaces/test/serviceaccounts/xyz",
+				APIEndpoint:       "https://custom.api.mondoo.com",
+				APIProxy:          "http://proxy:3128",
+				Features:          []string{"feature1", "feature2"},
+				Labels:            map[string]string{"env": "test"},
+				Annotations:       map[string]string{"team": "platform"},
+			},
+			Category:               "cicd",
+			AutoDetectCICDCategory: true,
+		}
+
+		err := ApplyConfig(cfg)
+		require.NoError(t, err)
+
+		assert.Equal(t, "//agents.api.mondoo.app/spaces/test/agents/abc", viper.GetString("agent_mrn"))
+		assert.Equal(t, "//agents.api.mondoo.app/spaces/test/serviceaccounts/xyz", viper.GetString("mrn"))
+		assert.Equal(t, "https://custom.api.mondoo.com", viper.GetString("api_endpoint"))
+		assert.Equal(t, "http://proxy:3128", viper.GetString("api_proxy"))
+		assert.Equal(t, []string{"feature1", "feature2"}, viper.GetStringSlice("features"))
+		assert.Equal(t, "cicd", viper.GetString("category"))
+		assert.Equal(t, true, viper.GetBool("detect-cicd"))
+
+		// Verify round-trip: ApplyConfig then Read should return equivalent config
+		readCfg, err := Read()
+		require.NoError(t, err)
+		assert.Equal(t, cfg.AgentMrn, readCfg.AgentMrn)
+		assert.Equal(t, cfg.ServiceAccountMrn, readCfg.ServiceAccountMrn)
+		assert.Equal(t, cfg.APIEndpoint, readCfg.APIEndpoint)
+		assert.Equal(t, cfg.APIProxy, readCfg.APIProxy)
+		assert.Equal(t, cfg.Features, readCfg.Features)
+		assert.Equal(t, cfg.Category, readCfg.Category)
+		assert.Equal(t, cfg.AutoDetectCICDCategory, readCfg.AutoDetectCICDCategory)
+		assert.Equal(t, cfg.Labels, readCfg.Labels)
+		assert.Equal(t, cfg.Annotations, readCfg.Annotations)
+	})
+
+	t.Run("test ConfigToMap produces correct keys", func(t *testing.T) {
+		cfg := &Config{
+			CommonOpts: CommonOpts{
+				AgentMrn:    "agent-123",
+				APIEndpoint: "https://api.example.com",
+				WIF: WIF{
+					Audience: "//captain.api.mondoo.app/spaces/test",
+				},
+			},
+			Category: "server",
+		}
+
+		m, err := ConfigToMap(cfg)
+		require.NoError(t, err)
+
+		// CommonOpts fields should be squashed to top level
+		assert.Equal(t, "agent-123", m["agent_mrn"])
+		assert.Equal(t, "https://api.example.com", m["api_endpoint"])
+		// WIF fields should also be squashed
+		assert.Equal(t, "//captain.api.mondoo.app/spaces/test", m["audience"])
+		// Config-level fields
+		assert.Equal(t, "server", m["category"])
+	})
+
 	t.Run("test config with annotations", func(t *testing.T) {
 		data := `
 agent_mrn: //agents.api.mondoo.app/spaces/musing-saha-952142/agents/1zDY7auR20SgrFfiGUT5qZWx6mE
