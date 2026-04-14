@@ -127,15 +127,19 @@ type userProfile struct {
 	RealNameNormalized    string     `json:"realNameNormalized"`
 	DisplayName           string     `json:"displayName"`
 	DisplayNameNormalized string     `json:"displayNameNormalized"`
+	Pronouns              string     `json:"pronouns,omitempty"`
 	Email                 string     `json:"email"`
 	Skype                 string     `json:"skype"`
 	Phone                 string     `json:"phone"`
 	Title                 string     `json:"title"`
 	BotID                 string     `json:"botId,omitempty"`
 	ApiAppID              string     `json:"apiAppId,omitempty"`
+	AlwaysActive          bool       `json:"alwaysActive"`
 	StatusText            string     `json:"statusText,omitempty"`
 	StatusEmoji           string     `json:"statusEmoji,omitempty"`
 	StatusExpiration      *time.Time `json:"statusExpiration"`
+	StartDate             string     `json:"startDate,omitempty"`
+	GuestInvitedBy        string     `json:"guestInvitedBy,omitempty"`
 	Team                  string     `json:"team"`
 }
 
@@ -149,15 +153,19 @@ func newUserProfile(u slack.UserProfile) userProfile {
 		RealNameNormalized:    u.RealNameNormalized,
 		DisplayName:           u.DisplayName,
 		DisplayNameNormalized: u.DisplayNameNormalized,
+		Pronouns:              u.Pronouns,
 		Email:                 u.Email,
 		Skype:                 u.Skype,
 		Phone:                 u.Phone,
 		Title:                 u.Title,
 		BotID:                 u.BotID,
 		ApiAppID:              u.ApiAppID,
+		AlwaysActive:          u.AlwaysActive,
 		StatusText:            u.StatusText,
 		StatusEmoji:           u.StatusEmoji,
 		StatusExpiration:      &statusExpiration,
+		StartDate:             u.StartDate,
+		GuestInvitedBy:        u.GuestInvitedBy,
 		Team:                  u.Team,
 	}
 }
