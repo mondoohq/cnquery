@@ -166,7 +166,10 @@ func (a *mqlAwsSnsTopic) kmsMasterKey() (*mqlAwsKmsKey, error) {
 	keyId := atts["KmsMasterKeyId"]
 	if keyId != "" {
 		mqlKeyResource, err := NewResource(a.MqlRuntime, "aws.kms.key",
-			map[string]*llx.RawData{"arn": llx.StringData(keyId)},
+			map[string]*llx.RawData{
+				"arn":    llx.StringData(keyId),
+				"region": llx.StringData(a.Region.Data),
+			},
 		)
 		if err != nil {
 			return nil, err

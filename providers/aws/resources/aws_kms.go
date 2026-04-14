@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/kms/types"
+	"github.com/aws/smithy-go"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -25,8 +26,101 @@ import (
 )
 
 const (
-	kmsKeyArnPattern = "arn:aws:kms:%s:%s:key/%s"
+	kmsKeyArnPattern       = "arn:aws:kms:%s:%s:key/%s"
+	kmsAliasResourcePrefix = "alias/"
+	kmsKeyResourcePrefix   = "key/"
+	kmsMrkPrefix           = "mrk-"
 )
+
+// NormalizeKmsKeyRef normalizes KMS key identifiers that can be converted to a
+// key or alias ARN without making an AWS API call.
+func NormalizeKmsKeyRef(s, region, accountId string) (arn.ARN, error) {
+	if strings.HasPrefix(s, "arn:") {
+		parsed, err := arn.Parse(s)
+		if err != nil {
+			return arn.ARN{}, fmt.Errorf("invalid ARN %q: %w", s, err)
+		}
+		if parsed.Service != "kms" {
+			return arn.ARN{}, fmt.Errorf("expected a KMS key or alias ARN but got %q (service=%q)", s, parsed.Service)
+		}
+		if !strings.HasPrefix(parsed.Resource, kmsKeyResourcePrefix) && !strings.HasPrefix(parsed.Resource, kmsAliasResourcePrefix) {
+			return arn.ARN{}, fmt.Errorf("expected a KMS key or alias ARN but got %q (resource=%q)", s, parsed.Resource)
+		}
+		return parsed, nil
+	}
+
+	if !isKmsKeyID(s) {
+		return arn.ARN{}, fmt.Errorf("invalid KMS key reference %q", s)
+	}
+	if region == "" {
+		return arn.ARN{}, fmt.Errorf("cannot normalize KMS key ID %q without a region", s)
+	}
+	if accountId == "" {
+		return arn.ARN{}, fmt.Errorf("cannot normalize KMS key ID %q without an account ID", s)
+	}
+
+	return arn.ARN{
+		Partition: kmsPartitionForRegion(region),
+		Service:   "kms",
+		Region:    region,
+		AccountID: accountId,
+		Resource:  kmsKeyResourcePrefix + s,
+	}, nil
+}
+
+func isKmsKeyID(s string) bool {
+	return isUUIDKeyID(s) || isMultiRegionKeyID(s)
+}
+
+func isUUIDKeyID(s string) bool {
+	if len(s) != 36 {
+		return false
+	}
+
+	for i := range s {
+		switch i {
+		case 8, 13, 18, 23:
+			if s[i] != '-' {
+				return false
+			}
+		default:
+			if !isHexByte(s[i]) {
+				return false
+			}
+		}
+	}
+
+	return true
+}
+
+func isMultiRegionKeyID(s string) bool {
+	if !strings.HasPrefix(s, kmsMrkPrefix) || len(s) != len(kmsMrkPrefix)+32 {
+		return false
+	}
+
+	for i := len(kmsMrkPrefix); i < len(s); i++ {
+		if !isHexByte(s[i]) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func isHexByte(b byte) bool {
+	return (b >= '0' && b <= '9') || (b >= 'a' && b <= 'f') || (b >= 'A' && b <= 'F')
+}
+
+func kmsPartitionForRegion(region string) string {
+	switch {
+	case strings.HasPrefix(region, "us-gov-"):
+		return "aws-us-gov"
+	case strings.HasPrefix(region, "cn-"):
+		return "aws-cn"
+	default:
+		return "aws"
+	}
+}
 
 func (a *mqlAwsKms) id() (string, error) {
 	return "aws.kms", nil
@@ -120,12 +214,12 @@ func (a *mqlAwsKmsKey) getRotationStatus() (*kms.GetKeyRotationStatusOutput, err
 	}
 
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	keyId := a.Id.Data
+	keyArn := a.Arn.Data
 
 	svc := conn.Kms(a.Region.Data)
 	ctx := context.Background()
 
-	resp, err := svc.GetKeyRotationStatus(ctx, &kms.GetKeyRotationStatusInput{KeyId: &keyId})
+	resp, err := svc.GetKeyRotationStatus(ctx, &kms.GetKeyRotationStatusInput{KeyId: &keyArn})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
 			a.rotationStatusFetched = true
@@ -500,55 +594,227 @@ func initAwsKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 	if r == nil {
 		return nil, nil, errors.New("arn required to fetch aws kms key")
 	}
-	a, ok := r.Value.(string)
+	keyRef, ok := r.Value.(string)
 	if !ok {
 		return nil, nil, errors.New("invalid arn")
 	}
-	arnVal, err := arn.Parse(a)
-	if err != nil {
-		return nil, nil, fmt.Errorf("invalid ARN %q: %w", a, err)
-	}
-	// Guard against non-KMS ARNs being passed in. This happens when scanning
-	// individual assets (e.g., S3 buckets or CloudTrail trails) and a policy
-	// includes a bare `aws.kms.key { ... }` query: initAwsKmsKey is called with
-	// no args, falls back to getAssetIdentifier, and the asset's own ARN (which
-	// is not a KMS ARN) ends up here. Without this check those ARNs hit the
-	// cross-account code path below (S3 ARNs have no account ID, trail ARNs
-	// belong to the org account) and produce misleading "cross-account KMS keys
-	// are not supported yet" warnings.
-	if arnVal.Service != "kms" {
-		return nil, nil, fmt.Errorf("expected a KMS key ARN but got %q (service=%q)", a, arnVal.Service)
-	}
-	if arnVal.AccountID != runtime.Connection.(*connection.AwsConnection).AccountId() {
-		// Cross-account key: we can't fetch details, but we should still return the ARN
-		// so security tools can see which KMS key is referenced
-		log.Warn().Str("arn", a).Str("currentAccount", runtime.Connection.(*connection.AwsConnection).AccountId()).Str("keyAccount", arnVal.AccountID).Msg("cross-account KMS keys are not supported yet, returning ARN only")
-		// Extract key ID from the ARN resource part (e.g., "key/uuid" -> "uuid")
-		keyId := arnVal.Resource
-		if strings.HasPrefix(keyId, "key/") {
-			keyId = keyId[4:]
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+	region := rawStringArg(args["region"])
+
+	if strings.HasPrefix(keyRef, "arn:") {
+		normalized, err := NormalizeKmsKeyRef(keyRef, region, conn.AccountId())
+		if err != nil {
+			return nil, nil, err
 		}
-		args["id"] = llx.StringData(keyId)
-		args["arn"] = llx.StringData(a)
-		args["region"] = llx.StringData(arnVal.Region)
+
+		if strings.HasPrefix(normalized.Resource, kmsAliasResourcePrefix) {
+			metadata, err := resolveKmsKeyMetadata(conn, keyRef, normalized.Region)
+			if err != nil {
+				return nil, nil, err
+			}
+			resolved, err := arn.Parse(convert.ToValue(metadata.Arn))
+			if err != nil {
+				return nil, nil, fmt.Errorf("invalid KMS key ARN %q returned by DescribeKey: %w", convert.ToValue(metadata.Arn), err)
+			}
+			if key, err := findKmsKeyInCache(runtime, keyRef, resolved.String(), resolved.Region); err != nil {
+				return nil, nil, err
+			} else if key != nil {
+				applyCachedKmsKeyArgs(args, key)
+				return args, key, nil
+			}
+			applyKmsKeyArnArgs(args, resolved)
+			return args, nil, nil
+		}
+
+		if key, err := findKmsKeyInCache(runtime, keyRef, normalized.String(), normalized.Region); err != nil {
+			return nil, nil, err
+		} else if key != nil {
+			applyCachedKmsKeyArgs(args, key)
+			return args, key, nil
+		}
+
+		applyKmsKeyArnArgs(args, normalized)
 		return args, nil, nil
 	}
 
-	obj, err := CreateResource(runtime, ResourceAwsKms, map[string]*llx.RawData{})
-	if err != nil {
-		return nil, nil, err
-	}
-	kms := obj.(*mqlAwsKms)
-
-	rawResources := kms.GetKeys()
-	if rawResources.Error != nil {
-		return nil, nil, rawResources.Error
-	}
-	for _, rawResource := range rawResources.Data {
-		key := rawResource.(*mqlAwsKmsKey)
-		if key.Arn.Data == a {
+	if strings.HasPrefix(keyRef, kmsAliasResourcePrefix) {
+		metadata, err := resolveKmsKeyMetadata(conn, keyRef, region)
+		if err != nil {
+			return nil, nil, err
+		}
+		resolved, err := arn.Parse(convert.ToValue(metadata.Arn))
+		if err != nil {
+			return nil, nil, fmt.Errorf("invalid KMS key ARN %q returned by DescribeKey: %w", convert.ToValue(metadata.Arn), err)
+		}
+		if key, err := findKmsKeyInCache(runtime, keyRef, resolved.String(), resolved.Region); err != nil {
+			return nil, nil, err
+		} else if key != nil {
+			applyCachedKmsKeyArgs(args, key)
 			return args, key, nil
 		}
+		applyKmsKeyArnArgs(args, resolved)
+		return args, nil, nil
 	}
-	return nil, nil, errors.New("key not found")
+
+	if !isKmsKeyID(keyRef) {
+		return nil, nil, fmt.Errorf("invalid KMS key reference %q", keyRef)
+	}
+
+	if key, err := findKmsKeyInCache(runtime, keyRef, "", region); err != nil {
+		return nil, nil, err
+	} else if key != nil {
+		applyCachedKmsKeyArgs(args, key)
+		return args, key, nil
+	}
+
+	metadata, err := resolveKmsKeyMetadata(conn, keyRef, region)
+	if err != nil {
+		if region == "" {
+			return nil, nil, err
+		}
+		normalized, normalizeErr := NormalizeKmsKeyRef(keyRef, region, conn.AccountId())
+		if normalizeErr != nil {
+			return nil, nil, normalizeErr
+		}
+		if Is400AccessDeniedError(err) {
+			applyKmsKeyArnArgs(args, normalized)
+			return args, nil, nil
+		}
+		return nil, nil, err
+	}
+
+	resolved, err := arn.Parse(convert.ToValue(metadata.Arn))
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid KMS key ARN %q returned by DescribeKey: %w", convert.ToValue(metadata.Arn), err)
+	}
+
+	if key, err := findKmsKeyInCache(runtime, keyRef, resolved.String(), resolved.Region); err != nil {
+		return nil, nil, err
+	} else if key != nil {
+		applyCachedKmsKeyArgs(args, key)
+		return args, key, nil
+	}
+
+	applyKmsKeyArnArgs(args, resolved)
+	return args, nil, nil
+}
+
+func resolveKmsKeyMetadata(conn *connection.AwsConnection, keyRef, region string) (*types.KeyMetadata, error) {
+	if region != "" {
+		return describeKmsKeyInRegion(conn, keyRef, region)
+	}
+
+	regions, err := conn.Regions()
+	if err != nil {
+		return nil, err
+	}
+
+	matches := make(map[string]*types.KeyMetadata)
+	for _, region := range regions {
+		metadata, err := describeKmsKeyInRegion(conn, keyRef, region)
+		if err != nil {
+			if Is400AccessDeniedError(err) || isKmsNotFoundError(err) {
+				continue
+			}
+			return nil, err
+		}
+		if metadata == nil || metadata.Arn == nil {
+			continue
+		}
+		matches[*metadata.Arn] = metadata
+	}
+
+	switch len(matches) {
+	case 0:
+		return nil, fmt.Errorf("could not resolve KMS key reference %q in accessible regions", keyRef)
+	case 1:
+		for _, metadata := range matches {
+			return metadata, nil
+		}
+	}
+
+	return nil, fmt.Errorf("KMS key reference %q matches multiple regions; provide a region to disambiguate it", keyRef)
+}
+
+func describeKmsKeyInRegion(conn *connection.AwsConnection, keyRef, region string) (*types.KeyMetadata, error) {
+	svc := conn.Kms(region)
+	resp, err := svc.DescribeKey(context.Background(), &kms.DescribeKeyInput{KeyId: &keyRef})
+	if err != nil {
+		return nil, err
+	}
+	return resp.KeyMetadata, nil
+}
+
+func findKmsKeyInCache(runtime *plugin.Runtime, rawRef, normalizedArn, region string) (*mqlAwsKmsKey, error) {
+	obj, err := CreateResource(runtime, ResourceAwsKms, map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	kmsResource := obj.(*mqlAwsKms)
+
+	rawResources := kmsResource.GetKeys()
+	if rawResources.Error != nil {
+		return nil, rawResources.Error
+	}
+
+	matches := make([]*mqlAwsKmsKey, 0)
+	for _, rawResource := range rawResources.Data {
+		key := rawResource.(*mqlAwsKmsKey)
+		if key.Arn.Data == rawRef || key.Arn.Data == normalizedArn || key.Id.Data == rawRef {
+			matches = append(matches, key)
+		}
+	}
+
+	switch len(matches) {
+	case 0:
+		return nil, nil
+	case 1:
+		return matches[0], nil
+	}
+
+	if region != "" {
+		for _, key := range matches {
+			if key.Region.Data == region {
+				return key, nil
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("KMS key reference %q matches multiple regions; provide a region to disambiguate it", rawRef)
+}
+
+func applyKmsKeyArnArgs(args map[string]*llx.RawData, keyArn arn.ARN) {
+	args["arn"] = llx.StringData(keyArn.String())
+	args["region"] = llx.StringData(keyArn.Region)
+	if strings.HasPrefix(keyArn.Resource, kmsKeyResourcePrefix) {
+		args["id"] = llx.StringData(extractKmsKeyId(keyArn.Resource))
+	}
+}
+
+func applyCachedKmsKeyArgs(args map[string]*llx.RawData, key *mqlAwsKmsKey) {
+	args["arn"] = llx.StringData(key.Arn.Data)
+	args["region"] = llx.StringData(key.Region.Data)
+	args["id"] = llx.StringData(key.Id.Data)
+}
+
+func rawStringArg(arg *llx.RawData) string {
+	if arg == nil {
+		return ""
+	}
+	v, ok := arg.Value.(string)
+	if !ok {
+		return ""
+	}
+	return v
+}
+
+func isKmsNotFoundError(err error) bool {
+	var apiErr smithy.APIError
+	return errors.As(err, &apiErr) && apiErr.ErrorCode() == "NotFoundException"
+}
+
+// extractKmsKeyId extracts the key ID from an ARN resource string like "key/uuid".
+func extractKmsKeyId(resource string) string {
+	return strings.TrimPrefix(resource, kmsKeyResourcePrefix)
 }

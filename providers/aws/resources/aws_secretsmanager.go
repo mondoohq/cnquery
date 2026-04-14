@@ -133,7 +133,8 @@ func (a *mqlAwsSecretsmanager) getSecrets(conn *connection.AwsConnection) []*job
 					if secret.KmsKeyId != nil {
 						mqlKeyResource, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
 							map[string]*llx.RawData{
-								"arn": llx.StringDataPtr(secret.KmsKeyId),
+								"arn":    llx.StringDataPtr(secret.KmsKeyId),
+								"region": llx.StringData(region),
 							})
 						if err != nil {
 							args["kmsKey"] = &llx.RawData{Type: types.Resource(ResourceAwsKmsKey), Error: err}
