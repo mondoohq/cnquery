@@ -905,6 +905,8 @@ gcp.project.computeService.instance @defaults("name id") {
   scheduling dict
   // Shielded Instance configuration
   shieldedInstanceConfig gcp.project.computeService.instance.shieldedInstanceConfig
+  // Shielded VM integrity monitoring auto-learn policy (updateAutoLearnPolicy)
+  shieldedInstanceIntegrityPolicy dict
   // Deprecated: Use shieldedInstanceConfig.enableIntegrityMonitoring instead
   enableIntegrityMonitoring bool
   // Deprecated: Use shieldedInstanceConfig.enableSecureBoot instead
@@ -1187,6 +1189,8 @@ private gcp.project.computeService.firewall @defaults("name") {
   targetTags []string
   // Whether firewall logging is enabled for this rule
   loggingEnabled bool
+  // Full firewall log configuration (enable, metadata)
+  logConfig dict
   // Network resource for this firewall rule
   network() gcp.project.computeService.network
 }
@@ -1519,6 +1523,14 @@ private gcp.project.storageService.bucket @defaults("id") {
   publicAccessPrevention string
   // Metadata generation of the bucket
   metageneration int
+  // Uniform bucket-level access configuration (enabled, lockedTime)
+  uniformBucketLevelAccess dict
+  // Soft delete policy (retentionDurationSeconds, effectiveTime)
+  softDeletePolicy dict
+  // Object retention mode (Enabled or empty)
+  objectRetentionMode string
+  // Automatic storage class management (enabled, toggleTime, terminalStorageClass)
+  autoclass dict
 }
 
 // Google Cloud bucket's lifecycle configuration
@@ -1655,6 +1667,8 @@ private gcp.project.sqlService.instance @defaults("name") {
   users() []gcp.project.sqlService.instance.user
   // List of SSL/TLS certificates for the current SQL instance
   sslCerts() []gcp.project.sqlService.instance.sslCert
+  // Replica configuration (failoverTarget, cascadableReplica, mysqlReplicaConfiguration)
+  replicaConfiguration dict
   // Whether the instance satisfies Google's Protected Zone Integration requirements
   satisfiesPzi bool
   // Whether the instance satisfies Google's Protected Zone Separation requirements
@@ -2249,6 +2263,10 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   securityPostureConfig gcp.project.gkeService.cluster.securityPostureConfig
   // Maintenance policy for the cluster
   maintenancePolicy gcp.project.gkeService.cluster.maintenancePolicy
+  // Service mesh certificate configuration
+  meshCertificates dict
+  // Cluster notification configuration
+  notificationConfig gcp.project.gkeService.cluster.notificationConfig
   // ETag for optimistic locking
   etag string
   // The initial number of nodes for the cluster
@@ -2264,6 +2282,20 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
 }
 
 // Google Kubernetes Engine (GKE) cluster maintenance policy
+// Google Cloud (GCP) GKE cluster notification configuration
+private gcp.project.gkeService.cluster.notificationConfig @defaults("pubsubEnabled") {
+  // Internal ID
+  id string
+  // Whether Pub/Sub notifications are enabled
+  pubsubEnabled bool
+  // Pub/Sub topic for notifications
+  pubsubTopic string
+  // Pub/Sub topic resource
+  topic() gcp.project.pubsubService.topic
+  // Event type filters
+  filterEventTypes []string
+}
+
 private gcp.project.gkeService.cluster.maintenancePolicy {
   // Internal ID
   id string
@@ -2700,6 +2732,24 @@ private gcp.project.pubsubService.topic.config @defaults("kmsKeyName messageStor
   state string
   // How long a published message is retained (0 means not set)
   retentionDuration time
+  // Schema validation settings for published messages
+  schemaSettings gcp.project.pubsubService.topic.config.schemaSettings
+}
+
+// Google Cloud (GCP) Pub/Sub topic schema settings
+private gcp.project.pubsubService.topic.config.schemaSettings @defaults("schema encoding") {
+  // Internal ID
+  id string
+  // Full schema resource name (projects/{project}/schemas/{schema})
+  schema string
+  // Schema resource
+  schemaResource() gcp.project.pubsubService.schema
+  // Message encoding (JSON, BINARY)
+  encoding string
+  // First revision ID to validate against
+  firstRevisionId string
+  // Last revision ID to validate against
+  lastRevisionId string
 }
 
 // Google Cloud (GCP) Pub/Sub topic message storage policy
@@ -2754,6 +2804,10 @@ private gcp.project.pubsubService.subscription.config @defaults("topic.name ackD
   state string
   // The minimum duration the topic retains messages after publishing
   topicMessageRetentionDuration time
+  // Dead-letter queue configuration (deadLetterTopic, maxDeliveryAttempts)
+  deadLetterPolicy dict
+  // Message retry backoff configuration (minimumBackoff, maximumBackoff)
+  retryPolicy dict
 }
 
 // GCP Pub/Sub configuration for subscriptions that operate in push mode
@@ -2848,6 +2902,8 @@ private gcp.project.kmsService.keyring.cryptokey @defaults("name purpose") {
   destroyScheduledDuration time
   // Resource name of the backend environment where the key material for all crypto key versions reside
   cryptoKeyBackend string
+  // Key access justifications policy (allowedAccessReasons)
+  keyAccessJustificationsPolicy dict
   // List of cryptokey versions
   versions() []gcp.project.kmsService.keyring.cryptokey.version
   // Crypto key IAM policy
@@ -3715,6 +3771,8 @@ private gcp.project.cloudRunService.service @defaults("name") {
   defaultUriDisabled bool
   // Whether the service satisfies Google's Protected Zone Separation requirements
   satisfiesPzs bool
+  // Binary authorization configuration (useDefault, policy, breakglassJustification)
+  binaryAuthorization dict
   // Unique identifier
   uid string
   // ETag for optimistic locking

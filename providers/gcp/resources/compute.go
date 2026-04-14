@@ -590,6 +590,10 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 	if err != nil {
 		return nil, err
 	}
+	shieldedIntegrityPolicy, err := convert.JsonToDict(instance.ShieldedInstanceIntegrityPolicy)
+	if err != nil {
+		return nil, err
+	}
 
 	var totalEgressBandwidthTier string
 	if instance.NetworkPerformanceConfig != nil {
@@ -627,48 +631,49 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 	}
 
 	entry, err := CreateResource(runtime, "gcp.project.computeService.instance", map[string]*llx.RawData{
-		"id":                         llx.StringData(instanceId),
-		"projectId":                  llx.StringData(projectId),
-		"name":                       llx.StringData(instance.Name),
-		"description":                llx.StringData(instance.Description),
-		"confidentialInstanceConfig": llx.DictData(mqlConfCompute),
-		"canIpForward":               llx.BoolData(instance.CanIpForward),
-		"cpuPlatform":                llx.StringData(instance.CpuPlatform),
-		"created":                    llx.TimeDataPtr(parseTime(instance.CreationTimestamp)),
-		"deletionProtection":         llx.BoolData(instance.DeletionProtection),
-		"enableDisplay":              llx.BoolData(enableDisplay),
-		"guestAccelerators":          llx.ArrayData(guestAccelerators, types.Dict),
-		"fingerprint":                llx.StringData(instance.Fingerprint),
-		"hostname":                   llx.StringData(instance.Hostname),
-		"keyRevocationActionType":    llx.StringData(instance.KeyRevocationActionType),
-		"labels":                     llx.MapData(convert.MapToInterfaceMap(instance.Labels), types.String),
-		"lastStartTimestamp":         llx.TimeDataPtr(parseTime(instance.LastStartTimestamp)),
-		"lastStopTimestamp":          llx.TimeDataPtr(parseTime(instance.LastStopTimestamp)),
-		"lastSuspendedTimestamp":     llx.TimeDataPtr(parseTime(instance.LastSuspendedTimestamp)),
-		"metadata":                   llx.MapData(convert.MapToInterfaceMap(metadata), types.String),
-		"minCpuPlatform":             llx.StringData(instance.MinCpuPlatform),
-		"networkInterfaces":          llx.ArrayData(networkInterfaces, types.Dict),
-		"privateIpv6GoogleAccess":    llx.StringData(instance.PrivateIpv6GoogleAccess),
-		"reservationAffinity":        llx.DictData(reservationAffinity),
-		"resourcePolicies":           llx.ArrayData(convert.SliceAnyToInterface(instance.ResourcePolicies), types.String),
-		"physicalHostResourceStatus": llx.StringData(physicalHost),
-		"scheduling":                 llx.DictData(scheduling),
-		"shieldedInstanceConfig":     llx.ResourceData(mqlShieldedInstanceConfig, "gcp.project.computeService.instance.shieldedInstanceConfig"),
-		"enableIntegrityMonitoring":  llx.BoolData(enableIntegrityMonitoring),
-		"enableSecureBoot":           llx.BoolData(enableSecureBoot),
-		"enableVtpm":                 llx.BoolData(enableVtpm),
-		"startRestricted":            llx.BoolData(instance.StartRestricted),
-		"status":                     llx.StringData(instance.Status),
-		"statusMessage":              llx.StringData(instance.StatusMessage),
-		"sourceMachineImage":         llx.StringData(instance.SourceMachineImage),
-		"tags":                       llx.ArrayData(convert.SliceAnyToInterface(tagsItems), types.String),
-		"totalEgressBandwidthTier":   llx.StringData(totalEgressBandwidthTier),
-		"serviceAccounts":            llx.ArrayData(mqlServiceAccounts, types.Resource("gcp.project.computeService.serviceaccount")),
-		"disks":                      llx.ArrayData(attachedDisks, types.Resource("gcp.project.computeService.attachedDisk")),
-		"zone":                       llx.ResourceData(zone, "gcp.project.computeService.zone"),
-		"satisfiesPzi":               llx.BoolData(instance.SatisfiesPzi),
-		"satisfiesPzs":               llx.BoolData(instance.SatisfiesPzs),
-		"workloadIdentityConfig":     llx.DictData(mqlWorkloadIdentityConfig),
+		"id":                              llx.StringData(instanceId),
+		"projectId":                       llx.StringData(projectId),
+		"name":                            llx.StringData(instance.Name),
+		"description":                     llx.StringData(instance.Description),
+		"confidentialInstanceConfig":      llx.DictData(mqlConfCompute),
+		"canIpForward":                    llx.BoolData(instance.CanIpForward),
+		"cpuPlatform":                     llx.StringData(instance.CpuPlatform),
+		"created":                         llx.TimeDataPtr(parseTime(instance.CreationTimestamp)),
+		"deletionProtection":              llx.BoolData(instance.DeletionProtection),
+		"enableDisplay":                   llx.BoolData(enableDisplay),
+		"guestAccelerators":               llx.ArrayData(guestAccelerators, types.Dict),
+		"fingerprint":                     llx.StringData(instance.Fingerprint),
+		"hostname":                        llx.StringData(instance.Hostname),
+		"keyRevocationActionType":         llx.StringData(instance.KeyRevocationActionType),
+		"labels":                          llx.MapData(convert.MapToInterfaceMap(instance.Labels), types.String),
+		"lastStartTimestamp":              llx.TimeDataPtr(parseTime(instance.LastStartTimestamp)),
+		"lastStopTimestamp":               llx.TimeDataPtr(parseTime(instance.LastStopTimestamp)),
+		"lastSuspendedTimestamp":          llx.TimeDataPtr(parseTime(instance.LastSuspendedTimestamp)),
+		"metadata":                        llx.MapData(convert.MapToInterfaceMap(metadata), types.String),
+		"minCpuPlatform":                  llx.StringData(instance.MinCpuPlatform),
+		"networkInterfaces":               llx.ArrayData(networkInterfaces, types.Dict),
+		"privateIpv6GoogleAccess":         llx.StringData(instance.PrivateIpv6GoogleAccess),
+		"reservationAffinity":             llx.DictData(reservationAffinity),
+		"resourcePolicies":                llx.ArrayData(convert.SliceAnyToInterface(instance.ResourcePolicies), types.String),
+		"physicalHostResourceStatus":      llx.StringData(physicalHost),
+		"scheduling":                      llx.DictData(scheduling),
+		"shieldedInstanceConfig":          llx.ResourceData(mqlShieldedInstanceConfig, "gcp.project.computeService.instance.shieldedInstanceConfig"),
+		"shieldedInstanceIntegrityPolicy": llx.DictData(shieldedIntegrityPolicy),
+		"enableIntegrityMonitoring":       llx.BoolData(enableIntegrityMonitoring),
+		"enableSecureBoot":                llx.BoolData(enableSecureBoot),
+		"enableVtpm":                      llx.BoolData(enableVtpm),
+		"startRestricted":                 llx.BoolData(instance.StartRestricted),
+		"status":                          llx.StringData(instance.Status),
+		"statusMessage":                   llx.StringData(instance.StatusMessage),
+		"sourceMachineImage":              llx.StringData(instance.SourceMachineImage),
+		"tags":                            llx.ArrayData(convert.SliceAnyToInterface(tagsItems), types.String),
+		"totalEgressBandwidthTier":        llx.StringData(totalEgressBandwidthTier),
+		"serviceAccounts":                 llx.ArrayData(mqlServiceAccounts, types.Resource("gcp.project.computeService.serviceaccount")),
+		"disks":                           llx.ArrayData(attachedDisks, types.Resource("gcp.project.computeService.attachedDisk")),
+		"zone":                            llx.ResourceData(zone, "gcp.project.computeService.zone"),
+		"satisfiesPzi":                    llx.BoolData(instance.SatisfiesPzi),
+		"satisfiesPzs":                    llx.BoolData(instance.SatisfiesPzs),
+		"workloadIdentityConfig":          llx.DictData(mqlWorkloadIdentityConfig),
 	})
 	if err != nil {
 		return nil, err
@@ -1084,6 +1089,10 @@ func (g *mqlGcpProjectComputeService) firewalls() ([]any, error) {
 			if err != nil {
 				return err
 			}
+			firewallLogConfigDict, err := convert.JsonToDict(firewall.LogConfig)
+			if err != nil {
+				return err
+			}
 
 			mqlFirewall, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.firewall", map[string]*llx.RawData{
 				"id":                    llx.StringData(strconv.FormatUint(firewall.Id, 10)),
@@ -1103,6 +1112,7 @@ func (g *mqlGcpProjectComputeService) firewalls() ([]any, error) {
 				"denied":                llx.ArrayData(deniedDict, types.Dict),
 				"targetTags":            llx.ArrayData(convert.SliceAnyToInterface(firewall.TargetTags), types.String),
 				"loggingEnabled":        llx.BoolData(firewall.LogConfig != nil && firewall.LogConfig.Enable),
+				"logConfig":             llx.DictData(firewallLogConfigDict),
 			})
 			if err != nil {
 				return err

@@ -462,6 +462,7 @@ func (g *mqlGcpProjectCloudRunService) services() ([]any, error) {
 					})
 				}
 
+				baDict, _ := protoToDict(s.BinaryAuthorization)
 				mqlS, err := CreateResource(g.MqlRuntime, "gcp.project.cloudRunService.service", map[string]*llx.RawData{
 					"id":                    llx.StringData(s.Name),
 					"projectId":             llx.StringData(projectId),
@@ -494,6 +495,7 @@ func (g *mqlGcpProjectCloudRunService) services() ([]any, error) {
 					"satisfiesPzs":          llx.BoolData(s.SatisfiesPzs),
 					"uid":                   llx.StringData(s.Uid),
 					"etag":                  llx.StringData(s.Etag),
+					"binaryAuthorization":   llx.DictData(baDict),
 				})
 				if err != nil {
 					log.Error().Err(err).Send()

@@ -127,8 +127,28 @@ func (g *mqlGcpProjectStorageService) buckets() ([]any, error) {
 		}
 
 		publicAccessPrevention := ""
+		var uniformBucketLevelAccess map[string]any
 		if bucket.IamConfiguration != nil {
 			publicAccessPrevention = bucket.IamConfiguration.PublicAccessPrevention
+			uniformBucketLevelAccess, err = convert.JsonToDict(bucket.IamConfiguration.UniformBucketLevelAccess)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		softDeletePolicy, err := convert.JsonToDict(bucket.SoftDeletePolicy)
+		if err != nil {
+			return nil, err
+		}
+
+		objectRetentionMode := ""
+		if bucket.ObjectRetention != nil {
+			objectRetentionMode = bucket.ObjectRetention.Mode
+		}
+
+		autoclass, err := convert.JsonToDict(bucket.Autoclass)
+		if err != nil {
+			return nil, err
 		}
 
 		mqlInstance, err := CreateResource(g.MqlRuntime, "gcp.project.storageService.bucket", map[string]*llx.RawData{
@@ -149,12 +169,16 @@ func (g *mqlGcpProjectStorageService) buckets() ([]any, error) {
 				storageLifecycleRulesToArrayInterface(g.MqlRuntime, bucket.Id, bucket.Lifecycle),
 				types.Resource("gcp.project.storageService.bucket.lifecycleRule"),
 			),
-			"defaultEventBasedHold":  llx.BoolData(bucket.DefaultEventBasedHold),
-			"rpo":                    llx.StringData(bucket.Rpo),
-			"satisfiesPZS":           llx.BoolData(bucket.SatisfiesPZS),
-			"versioningEnabled":      llx.BoolData(bucket.Versioning != nil && bucket.Versioning.Enabled),
-			"publicAccessPrevention": llx.StringData(publicAccessPrevention),
-			"metageneration":         llx.IntData(bucket.Metageneration),
+			"defaultEventBasedHold":    llx.BoolData(bucket.DefaultEventBasedHold),
+			"rpo":                      llx.StringData(bucket.Rpo),
+			"satisfiesPZS":             llx.BoolData(bucket.SatisfiesPZS),
+			"versioningEnabled":        llx.BoolData(bucket.Versioning != nil && bucket.Versioning.Enabled),
+			"publicAccessPrevention":   llx.StringData(publicAccessPrevention),
+			"metageneration":           llx.IntData(bucket.Metageneration),
+			"uniformBucketLevelAccess": llx.DictData(uniformBucketLevelAccess),
+			"softDeletePolicy":         llx.DictData(softDeletePolicy),
+			"objectRetentionMode":      llx.StringData(objectRetentionMode),
+			"autoclass":                llx.DictData(autoclass),
 		})
 		if err != nil {
 			return nil, err

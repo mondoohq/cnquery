@@ -443,19 +443,21 @@ func (g *mqlGcpProjectKmsServiceKeyring) cryptokeys() ([]any, error) {
 			mqlDestroyScheduledDuration = &v
 		}
 
+		kajpDict, _ := protoToDict(k.KeyAccessJustificationsPolicy)
 		mqlKey, err := CreateResource(g.MqlRuntime, "gcp.project.kmsService.keyring.cryptokey", map[string]*llx.RawData{
-			"resourcePath":             llx.StringData(k.Name),
-			"name":                     llx.StringData(parseResourceName(k.Name)),
-			"primary":                  llx.ResourceData(mqlPrimary, "gcp.project.kmsService.keyring.cryptokey.version"),
-			"purpose":                  llx.StringData(k.Purpose.String()),
-			"created":                  llx.TimeData(k.CreateTime.AsTime()),
-			"nextRotation":             llx.TimeData(k.NextRotationTime.AsTime()),
-			"rotationPeriod":           llx.TimeDataPtr(mqlRotationPeriod),
-			"versionTemplate":          llx.DictData(versionTemplate),
-			"labels":                   llx.MapData(convert.MapToInterfaceMap(k.Labels), types.String),
-			"importOnly":               llx.BoolData(k.ImportOnly),
-			"destroyScheduledDuration": llx.TimeDataPtr(mqlDestroyScheduledDuration),
-			"cryptoKeyBackend":         llx.StringData(k.CryptoKeyBackend),
+			"resourcePath":                  llx.StringData(k.Name),
+			"name":                          llx.StringData(parseResourceName(k.Name)),
+			"primary":                       llx.ResourceData(mqlPrimary, "gcp.project.kmsService.keyring.cryptokey.version"),
+			"purpose":                       llx.StringData(k.Purpose.String()),
+			"created":                       llx.TimeData(k.CreateTime.AsTime()),
+			"nextRotation":                  llx.TimeData(k.NextRotationTime.AsTime()),
+			"rotationPeriod":                llx.TimeDataPtr(mqlRotationPeriod),
+			"versionTemplate":               llx.DictData(versionTemplate),
+			"labels":                        llx.MapData(convert.MapToInterfaceMap(k.Labels), types.String),
+			"importOnly":                    llx.BoolData(k.ImportOnly),
+			"destroyScheduledDuration":      llx.TimeDataPtr(mqlDestroyScheduledDuration),
+			"cryptoKeyBackend":              llx.StringData(k.CryptoKeyBackend),
+			"keyAccessJustificationsPolicy": llx.DictData(kajpDict),
 		})
 
 		keys = append(keys, mqlKey)

@@ -685,6 +685,16 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 			enabledK8sBetaApis = convert.SliceAnyToInterface(c.EnableK8SBetaApis.EnabledApis)
 		}
 
+		meshCertificates, err := protoToDict(c.MeshCertificates)
+		if err != nil {
+			return nil, err
+		}
+
+		notificationConfig, err := buildGKENotificationConfig(g.MqlRuntime, c.Name, c.NotificationConfig)
+		if err != nil {
+			return nil, err
+		}
+
 		mqlCluster, err := CreateResource(g.MqlRuntime, "gcp.project.gkeService.cluster", map[string]*llx.RawData{
 			"projectId":                      llx.StringData(projectId),
 			"id":                             llx.StringData(c.Id),
@@ -734,6 +744,8 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 			"nodeIpv4CidrSize":               llx.IntData(int64(c.NodeIpv4CidrSize)),
 			"tpuIpv4CidrBlock":               llx.StringData(c.TpuIpv4CidrBlock),
 			"enabledK8sBetaApis":             llx.ArrayData(enabledK8sBetaApis, types.String),
+			"meshCertificates":               llx.DictData(meshCertificates),
+			"notificationConfig":             llx.ResourceData(notificationConfig, "gcp.project.gkeService.cluster.notificationConfig"),
 		})
 		if err != nil {
 			return nil, err
@@ -1135,4 +1147,53 @@ func (g *mqlGcpProjectGkeServiceClusterSecurityPostureConfig) id() (string, erro
 
 func (g *mqlGcpProjectGkeServiceClusterNodepoolUpgradeSettings) id() (string, error) {
 	return g.Id.Data, g.Id.Error
+}
+
+func buildGKENotificationConfig(runtime *plugin.Runtime, parentName string, nc *containerpb.NotificationConfig) (*mqlGcpProjectGkeServiceClusterNotificationConfig, error) {
+	if nc == nil || nc.Pubsub == nil {
+		return nil, nil
+	}
+
+	var filterEventTypes []any
+	if nc.Pubsub.Filter != nil {
+		for _, et := range nc.Pubsub.Filter.EventType {
+			filterEventTypes = append(filterEventTypes, et.String())
+		}
+	}
+
+	res, err := CreateResource(runtime, "gcp.project.gkeService.cluster.notificationConfig", map[string]*llx.RawData{
+		"id":               llx.StringData(parentName + "/notificationConfig"),
+		"pubsubEnabled":    llx.BoolData(nc.Pubsub.Enabled),
+		"pubsubTopic":      llx.StringData(nc.Pubsub.Topic),
+		"filterEventTypes": llx.ArrayData(filterEventTypes, types.String),
+	})
+	if err != nil {
+		return nil, err
+	}
+	r := res.(*mqlGcpProjectGkeServiceClusterNotificationConfig)
+	r.cacheTopic = nc.Pubsub.Topic
+	return r, nil
+}
+
+func (g *mqlGcpProjectGkeServiceClusterNotificationConfig) id() (string, error) {
+	return g.Id.Data, g.Id.Error
+}
+
+type mqlGcpProjectGkeServiceClusterNotificationConfigInternal struct {
+	cacheTopic string
+}
+
+func (g *mqlGcpProjectGkeServiceClusterNotificationConfig) topic() (*mqlGcpProjectPubsubServiceTopic, error) {
+	topicName := g.cacheTopic
+	if topicName == "" {
+		g.Topic.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.pubsubService.topic", map[string]*llx.RawData{
+		"name": llx.StringData(topicName),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectPubsubServiceTopic), nil
 }

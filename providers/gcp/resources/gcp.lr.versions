@@ -867,6 +867,7 @@ gcp.project.cloudRunService.projectId 9.0.0
 gcp.project.cloudRunService.regions 9.0.0
 gcp.project.cloudRunService.service 9.0.0
 gcp.project.cloudRunService.service.annotations 9.0.0
+gcp.project.cloudRunService.service.binaryAuthorization 13.7.2
 gcp.project.cloudRunService.service.conditions 9.0.0
 gcp.project.cloudRunService.service.created 9.0.0
 gcp.project.cloudRunService.service.creator 9.0.0
@@ -1115,6 +1116,7 @@ gcp.project.computeService.firewall.destinationRanges 9.0.0
 gcp.project.computeService.firewall.direction 9.0.0
 gcp.project.computeService.firewall.disabled 9.0.0
 gcp.project.computeService.firewall.id 9.0.0
+gcp.project.computeService.firewall.logConfig 13.7.2
 gcp.project.computeService.firewall.loggingEnabled 11.6.6
 gcp.project.computeService.firewall.name 9.0.0
 gcp.project.computeService.firewall.network 13.1.2
@@ -1268,6 +1270,7 @@ gcp.project.computeService.instance.shieldedInstanceConfig.enableIntegrityMonito
 gcp.project.computeService.instance.shieldedInstanceConfig.enableSecureBoot 11.6.3
 gcp.project.computeService.instance.shieldedInstanceConfig.enableVtpm 11.6.3
 gcp.project.computeService.instance.shieldedInstanceConfig.id 11.6.3
+gcp.project.computeService.instance.shieldedInstanceIntegrityPolicy 13.7.2
 gcp.project.computeService.instance.sourceMachineImage 9.0.0
 gcp.project.computeService.instance.startRestricted 9.0.0
 gcp.project.computeService.instance.status 9.0.0
@@ -2231,6 +2234,7 @@ gcp.project.gkeService.cluster.maintenancePolicy.recurringWindowStartTime 11.6.6
 gcp.project.gkeService.cluster.maintenancePolicy.resourceVersion 11.6.6
 gcp.project.gkeService.cluster.masterAuth 9.0.0
 gcp.project.gkeService.cluster.masterAuthorizedNetworksConfig 9.0.0
+gcp.project.gkeService.cluster.meshCertificates 13.7.2
 gcp.project.gkeService.cluster.monitoringService 9.0.0
 gcp.project.gkeService.cluster.name 9.0.0
 gcp.project.gkeService.cluster.network 9.0.0
@@ -2353,6 +2357,12 @@ gcp.project.gkeService.cluster.nodepool.upgradeSettings.maxSurge 11.6.6
 gcp.project.gkeService.cluster.nodepool.upgradeSettings.maxUnavailable 11.6.6
 gcp.project.gkeService.cluster.nodepool.upgradeSettings.strategy 11.6.6
 gcp.project.gkeService.cluster.nodepool.version 9.0.0
+gcp.project.gkeService.cluster.notificationConfig 13.7.2
+gcp.project.gkeService.cluster.notificationConfig.filterEventTypes 13.7.2
+gcp.project.gkeService.cluster.notificationConfig.id 13.7.2
+gcp.project.gkeService.cluster.notificationConfig.pubsubEnabled 13.7.2
+gcp.project.gkeService.cluster.notificationConfig.pubsubTopic 13.7.2
+gcp.project.gkeService.cluster.notificationConfig.topic 13.7.2
 gcp.project.gkeService.cluster.privateClusterConfig 9.0.0
 gcp.project.gkeService.cluster.projectId 9.0.0
 gcp.project.gkeService.cluster.releaseChannel 9.0.0
@@ -2445,6 +2455,7 @@ gcp.project.kmsService.keyring.cryptokey.cryptoKeyBackend 9.0.0
 gcp.project.kmsService.keyring.cryptokey.destroyScheduledDuration 9.0.0
 gcp.project.kmsService.keyring.cryptokey.iamPolicy 9.0.0
 gcp.project.kmsService.keyring.cryptokey.importOnly 9.0.0
+gcp.project.kmsService.keyring.cryptokey.keyAccessJustificationsPolicy 13.7.2
 gcp.project.kmsService.keyring.cryptokey.labels 9.0.0
 gcp.project.kmsService.keyring.cryptokey.name 9.0.0
 gcp.project.kmsService.keyring.cryptokey.nextRotation 9.0.0
@@ -2672,6 +2683,7 @@ gcp.project.pubsubService.snapshots 9.0.0
 gcp.project.pubsubService.subscription 9.0.0
 gcp.project.pubsubService.subscription.config 9.0.0
 gcp.project.pubsubService.subscription.config.ackDeadline 9.0.0
+gcp.project.pubsubService.subscription.config.deadLetterPolicy 13.7.2
 gcp.project.pubsubService.subscription.config.detached 11.0.146
 gcp.project.pubsubService.subscription.config.enableExactlyOnceDelivery 11.0.146
 gcp.project.pubsubService.subscription.config.enableMessageOrdering 11.0.146
@@ -2686,6 +2698,7 @@ gcp.project.pubsubService.subscription.config.pushconfig.configId 9.0.0
 gcp.project.pubsubService.subscription.config.pushconfig.endpoint 9.0.0
 gcp.project.pubsubService.subscription.config.retainAckedMessages 9.0.0
 gcp.project.pubsubService.subscription.config.retentionDuration 9.0.0
+gcp.project.pubsubService.subscription.config.retryPolicy 13.7.2
 gcp.project.pubsubService.subscription.config.state 11.0.146
 gcp.project.pubsubService.subscription.config.subscriptionName 9.0.0
 gcp.project.pubsubService.subscription.config.topic 9.0.0
@@ -2704,6 +2717,13 @@ gcp.project.pubsubService.topic.config.messagestoragepolicy.allowedPersistenceRe
 gcp.project.pubsubService.topic.config.messagestoragepolicy.configId 9.0.0
 gcp.project.pubsubService.topic.config.projectId 9.0.0
 gcp.project.pubsubService.topic.config.retentionDuration 11.6.6
+gcp.project.pubsubService.topic.config.schemaSettings 13.7.2
+gcp.project.pubsubService.topic.config.schemaSettings.encoding 13.7.2
+gcp.project.pubsubService.topic.config.schemaSettings.firstRevisionId 13.7.2
+gcp.project.pubsubService.topic.config.schemaSettings.id 13.7.2
+gcp.project.pubsubService.topic.config.schemaSettings.lastRevisionId 13.7.2
+gcp.project.pubsubService.topic.config.schemaSettings.schema 13.7.2
+gcp.project.pubsubService.topic.config.schemaSettings.schemaResource 13.7.2
 gcp.project.pubsubService.topic.config.state 11.0.146
 gcp.project.pubsubService.topic.config.topicName 9.0.0
 gcp.project.pubsubService.topic.iamPolicy 11.0.146
@@ -2997,6 +3017,7 @@ gcp.project.sqlService.instance.primaryDnsName 11.6.6
 gcp.project.sqlService.instance.projectId 9.0.0
 gcp.project.sqlService.instance.pscServiceAttachmentLink 11.6.6
 gcp.project.sqlService.instance.region 9.0.0
+gcp.project.sqlService.instance.replicaConfiguration 13.7.2
 gcp.project.sqlService.instance.replicaNames 9.0.0
 gcp.project.sqlService.instance.satisfiesPzi 11.6.6
 gcp.project.sqlService.instance.satisfiesPzs 11.6.6
@@ -3099,6 +3120,7 @@ gcp.project.state 9.0.0
 gcp.project.storage 9.0.0
 gcp.project.storageService 9.0.0
 gcp.project.storageService.bucket 9.0.0
+gcp.project.storageService.bucket.autoclass 13.7.2
 gcp.project.storageService.bucket.created 9.0.0
 gcp.project.storageService.bucket.defaultEventBasedHold 11.6.6
 gcp.project.storageService.bucket.defaultKmsKey 13.2.3
@@ -3131,13 +3153,16 @@ gcp.project.storageService.bucket.location 9.0.0
 gcp.project.storageService.bucket.locationType 9.0.0
 gcp.project.storageService.bucket.metageneration 13.1.2
 gcp.project.storageService.bucket.name 9.0.0
+gcp.project.storageService.bucket.objectRetentionMode 13.7.2
 gcp.project.storageService.bucket.projectId 9.0.0
 gcp.project.storageService.bucket.projectNumber 9.0.0
 gcp.project.storageService.bucket.publicAccessPrevention 13.1.2
 gcp.project.storageService.bucket.retentionPolicy 9.0.0
 gcp.project.storageService.bucket.rpo 11.6.6
 gcp.project.storageService.bucket.satisfiesPZS 11.6.6
+gcp.project.storageService.bucket.softDeletePolicy 13.7.2
 gcp.project.storageService.bucket.storageClass 9.0.0
+gcp.project.storageService.bucket.uniformBucketLevelAccess 13.7.2
 gcp.project.storageService.bucket.updated 9.0.0
 gcp.project.storageService.bucket.versioningEnabled 11.6.6
 gcp.project.storageService.buckets 9.0.0

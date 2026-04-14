@@ -440,6 +440,11 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 				return err
 			}
 
+			replicaConfigDict, err := convert.JsonToDict(instance.ReplicaConfiguration)
+			if err != nil {
+				return err
+			}
+
 			mqlInstance, err := CreateResource(g.MqlRuntime, "gcp.project.sqlService.instance", map[string]*llx.RawData{
 				"availableMaintenanceVersions": llx.ArrayData(convert.SliceAnyToInterface(instance.AvailableMaintenanceVersions), types.String),
 				"backendType":                  llx.StringData(instance.BackendType),
@@ -474,6 +479,7 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 				"pscServiceAttachmentLink": llx.StringData(instance.PscServiceAttachmentLink),
 				"currentDiskSize":          llx.IntData(instance.CurrentDiskSize),
 				"etag":                     llx.StringData(instance.Etag),
+				"replicaConfiguration":     llx.DictData(replicaConfigDict),
 			})
 			if err != nil {
 				return err
