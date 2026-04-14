@@ -623,7 +623,7 @@ func initAwsKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 				applyCachedKmsKeyArgs(args, key)
 				return args, key, nil
 			}
-			applyKmsKeyArnArgs(args, resolved)
+			applyKmsKeyArnArgs(args, resolved, conn.AccountId())
 			return args, nil, nil
 		}
 
@@ -634,7 +634,7 @@ func initAwsKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 			return args, key, nil
 		}
 
-		applyKmsKeyArnArgs(args, normalized)
+		applyKmsKeyArnArgs(args, normalized, conn.AccountId())
 		return args, nil, nil
 	}
 
@@ -653,7 +653,7 @@ func initAwsKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 			applyCachedKmsKeyArgs(args, key)
 			return args, key, nil
 		}
-		applyKmsKeyArnArgs(args, resolved)
+		applyKmsKeyArnArgs(args, resolved, conn.AccountId())
 		return args, nil, nil
 	}
 
@@ -678,7 +678,7 @@ func initAwsKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 			return nil, nil, normalizeErr
 		}
 		if Is400AccessDeniedError(err) {
-			applyKmsKeyArnArgs(args, normalized)
+			applyKmsKeyArnArgs(args, normalized, conn.AccountId())
 			return args, nil, nil
 		}
 		return nil, nil, err
@@ -696,7 +696,7 @@ func initAwsKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 		return args, key, nil
 	}
 
-	applyKmsKeyArnArgs(args, resolved)
+	applyKmsKeyArnArgs(args, resolved, conn.AccountId())
 	return args, nil, nil
 }
 
@@ -784,7 +784,10 @@ func findKmsKeyInCache(runtime *plugin.Runtime, rawRef, normalizedArn, region st
 	return nil, fmt.Errorf("KMS key reference %q matches multiple regions; provide a region to disambiguate it", rawRef)
 }
 
-func applyKmsKeyArnArgs(args map[string]*llx.RawData, keyArn arn.ARN) {
+func applyKmsKeyArnArgs(args map[string]*llx.RawData, keyArn arn.ARN, connAccountId string) {
+	if keyArn.AccountID != "" && keyArn.AccountID != connAccountId {
+		log.Warn().Str("arn", keyArn.String()).Str("currentAccount", connAccountId).Str("keyAccount", keyArn.AccountID).Msg("cross-account KMS key reference, returning ARN only")
+	}
 	args["arn"] = llx.StringData(keyArn.String())
 	args["region"] = llx.StringData(keyArn.Region)
 	if strings.HasPrefix(keyArn.Resource, kmsKeyResourcePrefix) {
