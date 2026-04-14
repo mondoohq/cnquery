@@ -2093,7 +2093,6 @@ func initAwsEc2Volume(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 
 	if len(args) == 0 {
 		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["id"] = llx.StringData(ids.name)
 			args["arn"] = llx.StringData(ids.arn)
 		}
 	}

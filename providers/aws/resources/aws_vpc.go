@@ -1103,7 +1103,9 @@ func initAwsVpc(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 
 	if len(args) == 0 {
 		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["id"] = llx.StringData(ids.name)
+			// Only use the ARN from asset identifiers. The asset name may be
+			// the VPC's "Name" tag (e.g. "my-vpc") rather than the VPC ID
+			// (e.g. "vpc-0abc123"), so it cannot be used as the "id" arg.
 			args["arn"] = llx.StringData(ids.arn)
 		}
 	}
@@ -1126,15 +1128,15 @@ func initAwsVpc(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 
 	var match func(vpc *mqlAwsVpc) bool
 
-	if args["id"] != nil {
-		idVal := args["id"].Value.(string)
-		match = func(vpc *mqlAwsVpc) bool {
-			return vpc.Id.Data == idVal
-		}
-	} else if args["arn"] != nil {
+	if args["arn"] != nil {
 		arnVal := args["arn"].Value.(string)
 		match = func(vpc *mqlAwsVpc) bool {
 			return vpc.Arn.Data == arnVal
+		}
+	} else if args["id"] != nil {
+		idVal := args["id"].Value.(string)
+		match = func(vpc *mqlAwsVpc) bool {
+			return vpc.Id.Data == idVal
 		}
 	}
 
