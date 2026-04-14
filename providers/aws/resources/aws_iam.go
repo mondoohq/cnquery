@@ -908,9 +908,7 @@ func (a *mqlAwsIamUser) attachedPolicies() ([]any, error) {
 
 		for _, attachedPolicy := range userAttachedPolicies.AttachedPolicies {
 			mqlAwsIamPolicy, err := CreateResource(a.MqlRuntime, ResourceAwsIamPolicy,
-				// this isn't correct for the id, this is the name. we need to remove "id" from the policy type.
-				// it is creating a conflict bc we cannot make it optional, as it then bumps up against the internal id
-				map[string]*llx.RawData{"arn": llx.StringDataPtr(attachedPolicy.PolicyArn), "id": llx.StringDataPtr(attachedPolicy.PolicyArn)})
+				map[string]*llx.RawData{"arn": llx.StringDataPtr(attachedPolicy.PolicyArn)})
 			if err != nil {
 				return nil, err
 			}
