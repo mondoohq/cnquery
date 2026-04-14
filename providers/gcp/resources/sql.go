@@ -785,15 +785,17 @@ func (g *mqlGcpProjectSqlServiceInstance) sslCerts() ([]any, error) {
 	for _, cert := range resp.Items {
 		var createTime, expirationTime *time.Time
 		if cert.CreateTime != "" {
-			t, err := time.Parse(time.RFC3339, cert.CreateTime)
-			if err == nil {
+			if t, err := time.Parse(time.RFC3339, cert.CreateTime); err == nil {
 				createTime = &t
+			} else {
+				log.Warn().Err(err).Str("instance", instanceName).Msg("failed to parse SSL cert createTime")
 			}
 		}
 		if cert.ExpirationTime != "" {
-			t, err := time.Parse(time.RFC3339, cert.ExpirationTime)
-			if err == nil {
+			if t, err := time.Parse(time.RFC3339, cert.ExpirationTime); err == nil {
 				expirationTime = &t
+			} else {
+				log.Warn().Err(err).Str("instance", instanceName).Msg("failed to parse SSL cert expirationTime")
 			}
 		}
 

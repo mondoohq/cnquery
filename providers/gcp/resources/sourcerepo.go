@@ -52,29 +52,29 @@ func (g *mqlGcpProjectSourceRepositoriesService) repos() ([]any, error) {
 		return nil, err
 	}
 
-	resp, err := svc.Projects.Repos.List(fmt.Sprintf("projects/%s", projectId)).Context(ctx).Do()
-	if err != nil {
-		return nil, err
-	}
-
 	var res []any
-	for _, repo := range resp.Repos {
-		mirrorConfig, err := buildRepoMirrorConfig(g.MqlRuntime, repo.Name, repo.MirrorConfig)
-		if err != nil {
-			return nil, err
-		}
+	if err := svc.Projects.Repos.List(fmt.Sprintf("projects/%s", projectId)).Context(ctx).Pages(ctx, func(resp *sourcerepo.ListReposResponse) error {
+		for _, repo := range resp.Repos {
+			mirrorConfig, err := buildRepoMirrorConfig(g.MqlRuntime, repo.Name, repo.MirrorConfig)
+			if err != nil {
+				return err
+			}
 
-		mqlRepo, err := CreateResource(g.MqlRuntime, "gcp.project.sourceRepositoriesService.repo", map[string]*llx.RawData{
-			"projectId":    llx.StringData(projectId),
-			"name":         llx.StringData(repo.Name),
-			"url":          llx.StringData(repo.Url),
-			"size":         llx.IntData(repo.Size),
-			"mirrorConfig": llx.ResourceData(mirrorConfig, "gcp.project.sourceRepositoriesService.repo.mirrorConfig"),
-		})
-		if err != nil {
-			return nil, err
+			mqlRepo, err := CreateResource(g.MqlRuntime, "gcp.project.sourceRepositoriesService.repo", map[string]*llx.RawData{
+				"projectId":    llx.StringData(projectId),
+				"name":         llx.StringData(repo.Name),
+				"url":          llx.StringData(repo.Url),
+				"size":         llx.IntData(repo.Size),
+				"mirrorConfig": llx.ResourceData(mirrorConfig, "gcp.project.sourceRepositoriesService.repo.mirrorConfig"),
+			})
+			if err != nil {
+				return err
+			}
+			res = append(res, mqlRepo)
 		}
-		res = append(res, mqlRepo)
+		return nil
+	}); err != nil {
+		return nil, err
 	}
 
 	return res, nil
