@@ -48,6 +48,9 @@ const (
 	service_ids                 = "ids.googleapis.com"
 	service_gkebackup           = "gkebackup.googleapis.com"
 	service_containeranalysis   = "containeranalysis.googleapis.com"
+	service_cloudbuild          = "cloudbuild.googleapis.com"
+	service_iap                 = "iap.googleapis.com"
+	service_sourcerepo          = "sourcerepo.googleapis.com"
 )
 
 func serviceName(name string) string {

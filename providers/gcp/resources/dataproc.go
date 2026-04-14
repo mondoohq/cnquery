@@ -851,3 +851,223 @@ func instanceGroupConfigToMql(runtime *plugin.Runtime, igc *dataproc.InstanceGro
 		"preemptibility":     llx.StringData(igc.Preemptibility),
 	})
 }
+
+func (g *mqlGcpProjectDataprocService) jobs() ([]any, error) {
+	if g.Enabled.Error != nil {
+		return nil, g.Enabled.Error
+	}
+	if !g.Enabled.Data {
+		return []any{}, nil
+	}
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	regions := g.GetRegions()
+	if regions.Error != nil {
+		return nil, regions.Error
+	}
+
+	client, err := conn.Client(dataproc.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	dataprocSvc, err := dataproc.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	var wg sync.WaitGroup
+	var mqlJobs []any
+	wg.Add(len(regions.Data))
+	mux := &sync.Mutex{}
+	for _, region := range regions.Data {
+		go func(projectId, regionName string) {
+			defer wg.Done()
+			err := dataprocSvc.Projects.Regions.Jobs.List(projectId, regionName).Pages(ctx, func(resp *dataproc.ListJobsResponse) error {
+				for _, job := range resp.Jobs {
+					jobId := ""
+					if job.Reference != nil {
+						jobId = job.Reference.JobId
+					}
+
+					status := ""
+					statusDetail := ""
+					if job.Status != nil {
+						status = job.Status.State
+						statusDetail = job.Status.Details
+					}
+
+					clusterName := ""
+					if job.Placement != nil {
+						clusterName = job.Placement.ClusterName
+					}
+
+					jobType := determineDataprocJobType(job)
+
+					mqlJob, err := CreateResource(g.MqlRuntime, "gcp.project.dataprocService.job", map[string]*llx.RawData{
+						"projectId":               llx.StringData(projectId),
+						"name":                    llx.StringData(fmt.Sprintf("projects/%s/regions/%s/jobs/%s", projectId, regionName, jobId)),
+						"jobUuid":                 llx.StringData(job.JobUuid),
+						"status":                  llx.StringData(status),
+						"statusDetail":            llx.StringData(statusDetail),
+						"jobType":                 llx.StringData(jobType),
+						"clusterName":             llx.StringData(clusterName),
+						"labels":                  llx.MapData(convert.MapToInterfaceMap(job.Labels), types.String),
+						"done":                    llx.BoolData(job.Done),
+						"driverOutputResourceUri": llx.StringData(job.DriverOutputResourceUri),
+					})
+					if err != nil {
+						log.Error().Err(err).Send()
+						continue
+					}
+					mux.Lock()
+					mqlJobs = append(mqlJobs, mqlJob)
+					mux.Unlock()
+				}
+				return nil
+			})
+			if err != nil {
+				log.Error().Str("region", regionName).Err(err).Send()
+			}
+		}(projectId, region.(string))
+	}
+	wg.Wait()
+	return mqlJobs, nil
+}
+
+func (g *mqlGcpProjectDataprocServiceJob) id() (string, error) {
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
+	}
+	if g.JobUuid.Error != nil {
+		return "", g.JobUuid.Error
+	}
+	return fmt.Sprintf("gcp.project/%s/dataprocService.job/%s", g.ProjectId.Data, g.JobUuid.Data), nil
+}
+
+func determineDataprocJobType(job *dataproc.Job) string {
+	switch {
+	case job.HadoopJob != nil:
+		return "hadoop"
+	case job.SparkJob != nil:
+		return "spark"
+	case job.PysparkJob != nil:
+		return "pyspark"
+	case job.HiveJob != nil:
+		return "hive"
+	case job.PigJob != nil:
+		return "pig"
+	case job.SparkRJob != nil:
+		return "sparkR"
+	case job.SparkSqlJob != nil:
+		return "sparkSql"
+	case job.PrestoJob != nil:
+		return "presto"
+	case job.FlinkJob != nil:
+		return "flink"
+	case job.TrinoJob != nil:
+		return "trino"
+	default:
+		return "unknown"
+	}
+}
+
+func (g *mqlGcpProjectDataprocService) autoscalingPolicies() ([]any, error) {
+	if g.Enabled.Error != nil {
+		return nil, g.Enabled.Error
+	}
+	if !g.Enabled.Data {
+		return []any{}, nil
+	}
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	regions := g.GetRegions()
+	if regions.Error != nil {
+		return nil, regions.Error
+	}
+
+	client, err := conn.Client(dataproc.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	dataprocSvc, err := dataproc.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	var wg sync.WaitGroup
+	var mqlPolicies []any
+	wg.Add(len(regions.Data))
+	mux := &sync.Mutex{}
+	for _, region := range regions.Data {
+		go func(projectId, regionName string) {
+			defer wg.Done()
+			parent := fmt.Sprintf("projects/%s/regions/%s", projectId, regionName)
+			err := dataprocSvc.Projects.Regions.AutoscalingPolicies.List(parent).Pages(ctx, func(resp *dataproc.ListAutoscalingPoliciesResponse) error {
+				for _, policy := range resp.Policies {
+					workerConfig, err := convert.JsonToDict(policy.WorkerConfig)
+					if err != nil {
+						log.Error().Err(err).Send()
+						continue
+					}
+
+					secondaryWorkerConfig, err := convert.JsonToDict(policy.SecondaryWorkerConfig)
+					if err != nil {
+						log.Error().Err(err).Send()
+						continue
+					}
+
+					basicAlgorithm, err := convert.JsonToDict(policy.BasicAlgorithm)
+					if err != nil {
+						log.Error().Err(err).Send()
+						continue
+					}
+
+					mqlPolicy, err := CreateResource(g.MqlRuntime, "gcp.project.dataprocService.autoscalingPolicy", map[string]*llx.RawData{
+						"projectId":             llx.StringData(projectId),
+						"name":                  llx.StringData(policy.Name),
+						"workerConfig":          llx.DictData(workerConfig),
+						"secondaryWorkerConfig": llx.DictData(secondaryWorkerConfig),
+						"basicAlgorithm":        llx.DictData(basicAlgorithm),
+					})
+					if err != nil {
+						log.Error().Err(err).Send()
+						continue
+					}
+					mux.Lock()
+					mqlPolicies = append(mqlPolicies, mqlPolicy)
+					mux.Unlock()
+				}
+				return nil
+			})
+			if err != nil {
+				log.Error().Str("region", regionName).Err(err).Send()
+			}
+		}(projectId, region.(string))
+	}
+	wg.Wait()
+	return mqlPolicies, nil
+}
+
+func (g *mqlGcpProjectDataprocServiceAutoscalingPolicy) id() (string, error) {
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
+	}
+	if g.Name.Error != nil {
+		return "", g.Name.Error
+	}
+	return fmt.Sprintf("gcp.project/%s/dataprocService.autoscalingPolicy/%s", g.ProjectId.Data, g.Name.Data), nil
+}

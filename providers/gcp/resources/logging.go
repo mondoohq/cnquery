@@ -497,3 +497,51 @@ func (g *mqlGcpProjectLoggingserviceExclusion) id() (string, error) {
 	name := g.Name.Data
 	return fmt.Sprintf("gcp.project.loggingservice.exclusion/%s", name), nil
 }
+
+func (g *mqlGcpProjectLoggingserviceBucket) views() ([]any, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	client, err := conn.Client(logging.CloudPlatformReadOnlyScope, logging.LoggingReadScope)
+	if err != nil {
+		return nil, err
+	}
+	ctx := context.Background()
+	loggingSvc, err := logging.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	bucketName := g.Name.Data
+
+	var res []any
+	req := loggingSvc.Projects.Locations.Buckets.Views.List(bucketName)
+	if err := req.Pages(ctx, func(page *logging.ListViewsResponse) error {
+		for _, view := range page.Views {
+			mqlView, err := CreateResource(g.MqlRuntime, "gcp.project.loggingservice.bucket.view", map[string]*llx.RawData{
+				"id":          llx.StringData(view.Name),
+				"name":        llx.StringData(view.Name),
+				"description": llx.StringData(view.Description),
+				"filter":      llx.StringData(view.Filter),
+				"createTime":  llx.TimeDataPtr(parseTime(view.CreateTime)),
+				"updateTime":  llx.TimeDataPtr(parseTime(view.UpdateTime)),
+			})
+			if err != nil {
+				return err
+			}
+			res = append(res, mqlView)
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectLoggingserviceBucketView) id() (string, error) {
+	if g.Id.Error != nil {
+		return "", g.Id.Error
+	}
+	return fmt.Sprintf("gcp.project.loggingservice.bucket.view/%s", g.Id.Data), nil
+}

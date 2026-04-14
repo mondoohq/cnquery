@@ -64,6 +64,8 @@ const (
 	ResourceGcpProjectSqlService                                                       string = "gcp.project.sqlService"
 	ResourceGcpProjectSqlServiceInstance                                               string = "gcp.project.sqlService.instance"
 	ResourceGcpProjectSqlServiceInstanceDatabase                                       string = "gcp.project.sqlService.instance.database"
+	ResourceGcpProjectSqlServiceInstanceUser                                           string = "gcp.project.sqlService.instance.user"
+	ResourceGcpProjectSqlServiceInstanceSslCert                                        string = "gcp.project.sqlService.instance.sslCert"
 	ResourceGcpProjectSqlServiceInstanceIpMapping                                      string = "gcp.project.sqlService.instance.ipMapping"
 	ResourceGcpProjectSqlServiceInstanceSettings                                       string = "gcp.project.sqlService.instance.settings"
 	ResourceGcpProjectSqlServiceInstanceSettingsBackupconfiguration                    string = "gcp.project.sqlService.instance.settings.backupconfiguration"
@@ -114,6 +116,7 @@ const (
 	ResourceGcpProjectPubsubServiceSubscriptionConfig                                  string = "gcp.project.pubsubService.subscription.config"
 	ResourceGcpProjectPubsubServiceSubscriptionConfigPushconfig                        string = "gcp.project.pubsubService.subscription.config.pushconfig"
 	ResourceGcpProjectPubsubServiceSnapshot                                            string = "gcp.project.pubsubService.snapshot"
+	ResourceGcpProjectPubsubServiceSchema                                              string = "gcp.project.pubsubService.schema"
 	ResourceGcpProjectKmsService                                                       string = "gcp.project.kmsService"
 	ResourceGcpProjectKmsServiceKeyring                                                string = "gcp.project.kmsService.keyring"
 	ResourceGcpProjectKmsServiceKeyringCryptokey                                       string = "gcp.project.kmsService.keyring.cryptokey"
@@ -127,6 +130,7 @@ const (
 	ResourceGcpProjectApiKeyRestrictions                                               string = "gcp.project.apiKey.restrictions"
 	ResourceGcpProjectLoggingservice                                                   string = "gcp.project.loggingservice"
 	ResourceGcpProjectLoggingserviceBucket                                             string = "gcp.project.loggingservice.bucket"
+	ResourceGcpProjectLoggingserviceBucketView                                         string = "gcp.project.loggingservice.bucket.view"
 	ResourceGcpProjectLoggingserviceBucketIndexConfig                                  string = "gcp.project.loggingservice.bucket.indexConfig"
 	ResourceGcpProjectLoggingserviceMetric                                             string = "gcp.project.loggingservice.metric"
 	ResourceGcpProjectLoggingserviceSink                                               string = "gcp.project.loggingservice.sink"
@@ -136,6 +140,10 @@ const (
 	ResourceGcpProjectIamServiceServiceAccount                                         string = "gcp.project.iamService.serviceAccount"
 	ResourceGcpProjectIamServiceServiceAccountKey                                      string = "gcp.project.iamService.serviceAccount.key"
 	ResourceGcpProjectCloudFunction                                                    string = "gcp.project.cloudFunction"
+	ResourceGcpProjectCloudFunctionV2                                                  string = "gcp.project.cloudFunctionV2"
+	ResourceGcpProjectCloudFunctionV2BuildConfig                                       string = "gcp.project.cloudFunctionV2.buildConfig"
+	ResourceGcpProjectCloudFunctionV2ServiceConfig                                     string = "gcp.project.cloudFunctionV2.serviceConfig"
+	ResourceGcpProjectCloudFunctionV2EventTrigger                                      string = "gcp.project.cloudFunctionV2.eventTrigger"
 	ResourceGcpProjectDataprocService                                                  string = "gcp.project.dataprocService"
 	ResourceGcpProjectDataprocServiceCluster                                           string = "gcp.project.dataprocService.cluster"
 	ResourceGcpProjectDataprocServiceClusterConfig                                     string = "gcp.project.dataprocService.cluster.config"
@@ -148,6 +156,8 @@ const (
 	ResourceGcpProjectDataprocServiceClusterConfigInstanceDiskConfig                   string = "gcp.project.dataprocService.cluster.config.instance.diskConfig"
 	ResourceGcpProjectDataprocServiceClusterStatus                                     string = "gcp.project.dataprocService.cluster.status"
 	ResourceGcpProjectDataprocServiceClusterVirtualClusterConfig                       string = "gcp.project.dataprocService.cluster.virtualClusterConfig"
+	ResourceGcpProjectDataprocServiceJob                                               string = "gcp.project.dataprocService.job"
+	ResourceGcpProjectDataprocServiceAutoscalingPolicy                                 string = "gcp.project.dataprocService.autoscalingPolicy"
 	ResourceGcpProjectCloudRunService                                                  string = "gcp.project.cloudRunService"
 	ResourceGcpProjectCloudRunServiceOperation                                         string = "gcp.project.cloudRunService.operation"
 	ResourceGcpProjectCloudRunServiceService                                           string = "gcp.project.cloudRunService.service"
@@ -164,6 +174,9 @@ const (
 	ResourceGcpProjectMonitoringServiceUptimeCheckConfig                               string = "gcp.project.monitoringService.uptimeCheckConfig"
 	ResourceGcpProjectMonitoringServiceNotificationChannel                             string = "gcp.project.monitoringService.notificationChannel"
 	ResourceGcpProjectMonitoringServiceGroup                                           string = "gcp.project.monitoringService.group"
+	ResourceGcpProjectMonitoringServiceDashboard                                       string = "gcp.project.monitoringService.dashboard"
+	ResourceGcpProjectMonitoringServiceService                                         string = "gcp.project.monitoringService.service"
+	ResourceGcpProjectMonitoringServiceServiceSlo                                      string = "gcp.project.monitoringService.service.slo"
 	ResourceGcpProjectBinaryAuthorizationControl                                       string = "gcp.project.binaryAuthorizationControl"
 	ResourceGcpProjectBinaryAuthorizationControlPolicy                                 string = "gcp.project.binaryAuthorizationControl.policy"
 	ResourceGcpProjectBinaryAuthorizationControlAdmissionRule                          string = "gcp.project.binaryAuthorizationControl.admissionRule"
@@ -179,6 +192,7 @@ const (
 	ResourceGcpProjectSpannerServiceInstance                                           string = "gcp.project.spannerService.instance"
 	ResourceGcpProjectSpannerServiceInstanceDatabase                                   string = "gcp.project.spannerService.instance.database"
 	ResourceGcpProjectSpannerServiceInstanceBackup                                     string = "gcp.project.spannerService.instance.backup"
+	ResourceGcpProjectSpannerServiceInstanceConfig                                     string = "gcp.project.spannerService.instanceConfig"
 	ResourceGcpProjectBigtableService                                                  string = "gcp.project.bigtableService"
 	ResourceGcpProjectBigtableServiceInstance                                          string = "gcp.project.bigtableService.instance"
 	ResourceGcpProjectBigtableServiceCluster                                           string = "gcp.project.bigtableService.cluster"
@@ -239,6 +253,7 @@ const (
 	ResourceGcpProjectComputeServiceBackendBucket                                      string = "gcp.project.computeService.backendBucket"
 	ResourceGcpProjectComputeServiceTargetPool                                         string = "gcp.project.computeService.targetPool"
 	ResourceGcpProjectComputeServicePublicAdvertisedPrefix                             string = "gcp.project.computeService.publicAdvertisedPrefix"
+	ResourceGcpProjectComputeServiceInstanceTemplate                                   string = "gcp.project.computeService.instanceTemplate"
 	ResourceGcpProjectCloudDeployService                                               string = "gcp.project.cloudDeployService"
 	ResourceGcpProjectCloudDeployServiceDeliveryPipeline                               string = "gcp.project.cloudDeployService.deliveryPipeline"
 	ResourceGcpProjectCloudDeployServiceTarget                                         string = "gcp.project.cloudDeployService.target"
@@ -301,6 +316,21 @@ const (
 	ResourceGcpProjectGkeBackupServiceRestorePlan                                      string = "gcp.project.gkeBackupService.restorePlan"
 	ResourceGcpProjectContainerAnalysisService                                         string = "gcp.project.containerAnalysisService"
 	ResourceGcpProjectContainerAnalysisServiceOccurrence                               string = "gcp.project.containerAnalysisService.occurrence"
+	ResourceGcpProjectCloudBuildService                                                string = "gcp.project.cloudBuildService"
+	ResourceGcpProjectCloudBuildServiceTrigger                                         string = "gcp.project.cloudBuildService.trigger"
+	ResourceGcpProjectCloudBuildServiceTriggerGithubEventsConfig                       string = "gcp.project.cloudBuildService.trigger.githubEventsConfig"
+	ResourceGcpProjectCloudBuildServiceTriggerPubsubConfig                             string = "gcp.project.cloudBuildService.trigger.pubsubConfig"
+	ResourceGcpProjectCloudBuildServiceTriggerWebhookConfig                            string = "gcp.project.cloudBuildService.trigger.webhookConfig"
+	ResourceGcpProjectCloudBuildServiceTriggerRepositoryEventConfig                    string = "gcp.project.cloudBuildService.trigger.repositoryEventConfig"
+	ResourceGcpProjectCloudBuildServiceWorkerPool                                      string = "gcp.project.cloudBuildService.workerPool"
+	ResourceGcpProjectCloudBuildServiceWorkerPoolWorkerConfig                          string = "gcp.project.cloudBuildService.workerPool.workerConfig"
+	ResourceGcpProjectCloudBuildServiceWorkerPoolNetworkConfig                         string = "gcp.project.cloudBuildService.workerPool.networkConfig"
+	ResourceGcpProjectIapService                                                       string = "gcp.project.iapService"
+	ResourceGcpProjectIapServiceBrand                                                  string = "gcp.project.iapService.brand"
+	ResourceGcpProjectIapServiceTunnelDestGroup                                        string = "gcp.project.iapService.tunnelDestGroup"
+	ResourceGcpProjectSourceRepositoriesService                                        string = "gcp.project.sourceRepositoriesService"
+	ResourceGcpProjectSourceRepositoriesServiceRepo                                    string = "gcp.project.sourceRepositoriesService.repo"
+	ResourceGcpProjectSourceRepositoriesServiceRepoMirrorConfig                        string = "gcp.project.sourceRepositoriesService.repo.mirrorConfig"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -498,6 +528,14 @@ func init() {
 		"gcp.project.sqlService.instance.database": {
 			// to override args, implement: initGcpProjectSqlServiceInstanceDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectSqlServiceInstanceDatabase,
+		},
+		"gcp.project.sqlService.instance.user": {
+			// to override args, implement: initGcpProjectSqlServiceInstanceUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectSqlServiceInstanceUser,
+		},
+		"gcp.project.sqlService.instance.sslCert": {
+			// to override args, implement: initGcpProjectSqlServiceInstanceSslCert(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectSqlServiceInstanceSslCert,
 		},
 		"gcp.project.sqlService.instance.ipMapping": {
 			// to override args, implement: initGcpProjectSqlServiceInstanceIpMapping(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -699,6 +737,10 @@ func init() {
 			Init:   initGcpProjectPubsubServiceSnapshot,
 			Create: createGcpProjectPubsubServiceSnapshot,
 		},
+		"gcp.project.pubsubService.schema": {
+			// to override args, implement: initGcpProjectPubsubServiceSchema(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectPubsubServiceSchema,
+		},
 		"gcp.project.kmsService": {
 			Init:   initGcpProjectKmsService,
 			Create: createGcpProjectKmsService,
@@ -751,6 +793,10 @@ func init() {
 			Init:   initGcpProjectLoggingserviceBucket,
 			Create: createGcpProjectLoggingserviceBucket,
 		},
+		"gcp.project.loggingservice.bucket.view": {
+			// to override args, implement: initGcpProjectLoggingserviceBucketView(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectLoggingserviceBucketView,
+		},
 		"gcp.project.loggingservice.bucket.indexConfig": {
 			// to override args, implement: initGcpProjectLoggingserviceBucketIndexConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectLoggingserviceBucketIndexConfig,
@@ -786,6 +832,22 @@ func init() {
 		"gcp.project.cloudFunction": {
 			Init:   initGcpProjectCloudFunction,
 			Create: createGcpProjectCloudFunction,
+		},
+		"gcp.project.cloudFunctionV2": {
+			// to override args, implement: initGcpProjectCloudFunctionV2(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectCloudFunctionV2,
+		},
+		"gcp.project.cloudFunctionV2.buildConfig": {
+			// to override args, implement: initGcpProjectCloudFunctionV2BuildConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectCloudFunctionV2BuildConfig,
+		},
+		"gcp.project.cloudFunctionV2.serviceConfig": {
+			// to override args, implement: initGcpProjectCloudFunctionV2ServiceConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectCloudFunctionV2ServiceConfig,
+		},
+		"gcp.project.cloudFunctionV2.eventTrigger": {
+			// to override args, implement: initGcpProjectCloudFunctionV2EventTrigger(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectCloudFunctionV2EventTrigger,
 		},
 		"gcp.project.dataprocService": {
 			// to override args, implement: initGcpProjectDataprocService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -834,6 +896,14 @@ func init() {
 		"gcp.project.dataprocService.cluster.virtualClusterConfig": {
 			// to override args, implement: initGcpProjectDataprocServiceClusterVirtualClusterConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectDataprocServiceClusterVirtualClusterConfig,
+		},
+		"gcp.project.dataprocService.job": {
+			// to override args, implement: initGcpProjectDataprocServiceJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectDataprocServiceJob,
+		},
+		"gcp.project.dataprocService.autoscalingPolicy": {
+			// to override args, implement: initGcpProjectDataprocServiceAutoscalingPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectDataprocServiceAutoscalingPolicy,
 		},
 		"gcp.project.cloudRunService": {
 			Init:   initGcpProjectCloudRunService,
@@ -899,6 +969,18 @@ func init() {
 			// to override args, implement: initGcpProjectMonitoringServiceGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectMonitoringServiceGroup,
 		},
+		"gcp.project.monitoringService.dashboard": {
+			// to override args, implement: initGcpProjectMonitoringServiceDashboard(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectMonitoringServiceDashboard,
+		},
+		"gcp.project.monitoringService.service": {
+			// to override args, implement: initGcpProjectMonitoringServiceService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectMonitoringServiceService,
+		},
+		"gcp.project.monitoringService.service.slo": {
+			// to override args, implement: initGcpProjectMonitoringServiceServiceSlo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectMonitoringServiceServiceSlo,
+		},
 		"gcp.project.binaryAuthorizationControl": {
 			// to override args, implement: initGcpProjectBinaryAuthorizationControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectBinaryAuthorizationControl,
@@ -958,6 +1040,10 @@ func init() {
 		"gcp.project.spannerService.instance.backup": {
 			// to override args, implement: initGcpProjectSpannerServiceInstanceBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectSpannerServiceInstanceBackup,
+		},
+		"gcp.project.spannerService.instanceConfig": {
+			Init:   initGcpProjectSpannerServiceInstanceConfig,
+			Create: createGcpProjectSpannerServiceInstanceConfig,
 		},
 		"gcp.project.bigtableService": {
 			Init:   initGcpProjectBigtableService,
@@ -1198,6 +1284,10 @@ func init() {
 		"gcp.project.computeService.publicAdvertisedPrefix": {
 			// to override args, implement: initGcpProjectComputeServicePublicAdvertisedPrefix(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectComputeServicePublicAdvertisedPrefix,
+		},
+		"gcp.project.computeService.instanceTemplate": {
+			// to override args, implement: initGcpProjectComputeServiceInstanceTemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectComputeServiceInstanceTemplate,
 		},
 		"gcp.project.cloudDeployService": {
 			// to override args, implement: initGcpProjectCloudDeployService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1446,6 +1536,66 @@ func init() {
 		"gcp.project.containerAnalysisService.occurrence": {
 			// to override args, implement: initGcpProjectContainerAnalysisServiceOccurrence(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectContainerAnalysisServiceOccurrence,
+		},
+		"gcp.project.cloudBuildService": {
+			// to override args, implement: initGcpProjectCloudBuildService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectCloudBuildService,
+		},
+		"gcp.project.cloudBuildService.trigger": {
+			// to override args, implement: initGcpProjectCloudBuildServiceTrigger(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectCloudBuildServiceTrigger,
+		},
+		"gcp.project.cloudBuildService.trigger.githubEventsConfig": {
+			// to override args, implement: initGcpProjectCloudBuildServiceTriggerGithubEventsConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectCloudBuildServiceTriggerGithubEventsConfig,
+		},
+		"gcp.project.cloudBuildService.trigger.pubsubConfig": {
+			// to override args, implement: initGcpProjectCloudBuildServiceTriggerPubsubConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectCloudBuildServiceTriggerPubsubConfig,
+		},
+		"gcp.project.cloudBuildService.trigger.webhookConfig": {
+			// to override args, implement: initGcpProjectCloudBuildServiceTriggerWebhookConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectCloudBuildServiceTriggerWebhookConfig,
+		},
+		"gcp.project.cloudBuildService.trigger.repositoryEventConfig": {
+			// to override args, implement: initGcpProjectCloudBuildServiceTriggerRepositoryEventConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectCloudBuildServiceTriggerRepositoryEventConfig,
+		},
+		"gcp.project.cloudBuildService.workerPool": {
+			// to override args, implement: initGcpProjectCloudBuildServiceWorkerPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectCloudBuildServiceWorkerPool,
+		},
+		"gcp.project.cloudBuildService.workerPool.workerConfig": {
+			// to override args, implement: initGcpProjectCloudBuildServiceWorkerPoolWorkerConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectCloudBuildServiceWorkerPoolWorkerConfig,
+		},
+		"gcp.project.cloudBuildService.workerPool.networkConfig": {
+			// to override args, implement: initGcpProjectCloudBuildServiceWorkerPoolNetworkConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectCloudBuildServiceWorkerPoolNetworkConfig,
+		},
+		"gcp.project.iapService": {
+			// to override args, implement: initGcpProjectIapService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectIapService,
+		},
+		"gcp.project.iapService.brand": {
+			// to override args, implement: initGcpProjectIapServiceBrand(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectIapServiceBrand,
+		},
+		"gcp.project.iapService.tunnelDestGroup": {
+			// to override args, implement: initGcpProjectIapServiceTunnelDestGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectIapServiceTunnelDestGroup,
+		},
+		"gcp.project.sourceRepositoriesService": {
+			// to override args, implement: initGcpProjectSourceRepositoriesService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectSourceRepositoriesService,
+		},
+		"gcp.project.sourceRepositoriesService.repo": {
+			// to override args, implement: initGcpProjectSourceRepositoriesServiceRepo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectSourceRepositoriesServiceRepo,
+		},
+		"gcp.project.sourceRepositoriesService.repo.mirrorConfig": {
+			// to override args, implement: initGcpProjectSourceRepositoriesServiceRepoMirrorConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectSourceRepositoriesServiceRepoMirrorConfig,
 		},
 	}
 }
@@ -2082,6 +2232,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.cloudFunctions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetCloudFunctions()).ToDataRes(types.Array(types.Resource("gcp.project.cloudFunction")))
 	},
+	"gcp.project.cloudFunctionsV2": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetCloudFunctionsV2()).ToDataRes(types.Array(types.Resource("gcp.project.cloudFunctionV2")))
+	},
 	"gcp.project.dataproc": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetDataproc()).ToDataRes(types.Resource("gcp.project.dataprocService"))
 	},
@@ -2171,6 +2324,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.containerAnalysis": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetContainerAnalysis()).ToDataRes(types.Resource("gcp.project.containerAnalysisService"))
+	},
+	"gcp.project.cloudBuild": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetCloudBuild()).ToDataRes(types.Resource("gcp.project.cloudBuildService"))
+	},
+	"gcp.project.iap": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetIap()).ToDataRes(types.Resource("gcp.project.iapService"))
+	},
+	"gcp.project.sourceRepositories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetSourceRepositories()).ToDataRes(types.Resource("gcp.project.sourceRepositoriesService"))
 	},
 	"gcp.service.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpService).GetProjectId()).ToDataRes(types.String)
@@ -2357,6 +2519,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.publicAdvertisedPrefixes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeService).GetPublicAdvertisedPrefixes()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.publicAdvertisedPrefix")))
+	},
+	"gcp.project.computeService.instanceTemplates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeService).GetInstanceTemplates()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.instanceTemplate")))
 	},
 	"gcp.project.computeService.address.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceAddress).GetId()).ToDataRes(types.String)
@@ -3615,6 +3780,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.sqlService.instance.databases": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstance).GetDatabases()).ToDataRes(types.Array(types.Resource("gcp.project.sqlService.instance.database")))
 	},
+	"gcp.project.sqlService.instance.users": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstance).GetUsers()).ToDataRes(types.Array(types.Resource("gcp.project.sqlService.instance.user")))
+	},
+	"gcp.project.sqlService.instance.sslCerts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstance).GetSslCerts()).ToDataRes(types.Array(types.Resource("gcp.project.sqlService.instance.sslCert")))
+	},
 	"gcp.project.sqlService.instance.satisfiesPzi": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstance).GetSatisfiesPzi()).ToDataRes(types.Bool)
 	},
@@ -3668,6 +3839,57 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.sqlService.instance.database.sqlserverDatabaseDetails": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstanceDatabase).GetSqlserverDatabaseDetails()).ToDataRes(types.Dict)
+	},
+	"gcp.project.sqlService.instance.user.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceUser).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.sqlService.instance.user.instanceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceUser).GetInstanceName()).ToDataRes(types.String)
+	},
+	"gcp.project.sqlService.instance.user.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceUser).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.sqlService.instance.user.host": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceUser).GetHost()).ToDataRes(types.String)
+	},
+	"gcp.project.sqlService.instance.user.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceUser).GetType()).ToDataRes(types.String)
+	},
+	"gcp.project.sqlService.instance.user.iamEmail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceUser).GetIamEmail()).ToDataRes(types.String)
+	},
+	"gcp.project.sqlService.instance.user.databaseRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceUser).GetDatabaseRoles()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.sqlService.instance.user.dualPasswordType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceUser).GetDualPasswordType()).ToDataRes(types.String)
+	},
+	"gcp.project.sqlService.instance.user.passwordPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceUser).GetPasswordPolicy()).ToDataRes(types.Dict)
+	},
+	"gcp.project.sqlService.instance.sslCert.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceSslCert).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.sqlService.instance.sslCert.instanceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceSslCert).GetInstanceName()).ToDataRes(types.String)
+	},
+	"gcp.project.sqlService.instance.sslCert.commonName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceSslCert).GetCommonName()).ToDataRes(types.String)
+	},
+	"gcp.project.sqlService.instance.sslCert.sha1Fingerprint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceSslCert).GetSha1Fingerprint()).ToDataRes(types.String)
+	},
+	"gcp.project.sqlService.instance.sslCert.certSerialNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceSslCert).GetCertSerialNumber()).ToDataRes(types.String)
+	},
+	"gcp.project.sqlService.instance.sslCert.cert": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceSslCert).GetCert()).ToDataRes(types.String)
+	},
+	"gcp.project.sqlService.instance.sslCert.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceSslCert).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.sqlService.instance.sslCert.expirationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceSslCert).GetExpirationTime()).ToDataRes(types.Time)
 	},
 	"gcp.project.sqlService.instance.ipMapping.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstanceIpMapping).GetId()).ToDataRes(types.String)
@@ -4797,6 +5019,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.pubsubService.snapshots": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectPubsubService).GetSnapshots()).ToDataRes(types.Array(types.Resource("gcp.project.pubsubService.snapshot")))
 	},
+	"gcp.project.pubsubService.schemas": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPubsubService).GetSchemas()).ToDataRes(types.Array(types.Resource("gcp.project.pubsubService.schema")))
+	},
 	"gcp.project.pubsubService.topic.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectPubsubServiceTopic).GetProjectId()).ToDataRes(types.String)
 	},
@@ -4913,6 +5138,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.pubsubService.snapshot.expiration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectPubsubServiceSnapshot).GetExpiration()).ToDataRes(types.Time)
+	},
+	"gcp.project.pubsubService.schema.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPubsubServiceSchema).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.pubsubService.schema.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPubsubServiceSchema).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.pubsubService.schema.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPubsubServiceSchema).GetType()).ToDataRes(types.String)
+	},
+	"gcp.project.pubsubService.schema.definition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPubsubServiceSchema).GetDefinition()).ToDataRes(types.String)
+	},
+	"gcp.project.pubsubService.schema.revisionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPubsubServiceSchema).GetRevisionId()).ToDataRes(types.String)
+	},
+	"gcp.project.pubsubService.schema.revisionCreateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPubsubServiceSchema).GetRevisionCreateTime()).ToDataRes(types.Time)
 	},
 	"gcp.project.kmsService.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectKmsService).GetProjectId()).ToDataRes(types.String)
@@ -5193,6 +5436,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.loggingservice.bucket.logAnalyticsEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectLoggingserviceBucket).GetLogAnalyticsEnabled()).ToDataRes(types.Bool)
 	},
+	"gcp.project.loggingservice.bucket.views": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectLoggingserviceBucket).GetViews()).ToDataRes(types.Array(types.Resource("gcp.project.loggingservice.bucket.view")))
+	},
+	"gcp.project.loggingservice.bucket.view.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectLoggingserviceBucketView).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.loggingservice.bucket.view.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectLoggingserviceBucketView).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.loggingservice.bucket.view.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectLoggingserviceBucketView).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.loggingservice.bucket.view.filter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectLoggingserviceBucketView).GetFilter()).ToDataRes(types.String)
+	},
+	"gcp.project.loggingservice.bucket.view.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectLoggingserviceBucketView).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.loggingservice.bucket.view.updateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectLoggingserviceBucketView).GetUpdateTime()).ToDataRes(types.Time)
+	},
 	"gcp.project.loggingservice.bucket.indexConfig.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectLoggingserviceBucketIndexConfig).GetId()).ToDataRes(types.String)
 	},
@@ -5442,6 +5706,150 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.cloudFunction.dockerRegistry": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudFunction).GetDockerRegistry()).ToDataRes(types.String)
 	},
+	"gcp.project.cloudFunctionV2.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudFunctionV2.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudFunctionV2.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudFunctionV2.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudFunctionV2.environment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2).GetEnvironment()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudFunctionV2.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2).GetUrl()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudFunctionV2.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.cloudFunctionV2.kmsKeyName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2).GetKmsKeyName()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudFunctionV2.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
+	"gcp.project.cloudFunctionV2.buildConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2).GetBuildConfig()).ToDataRes(types.Resource("gcp.project.cloudFunctionV2.buildConfig"))
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2).GetServiceConfig()).ToDataRes(types.Resource("gcp.project.cloudFunctionV2.serviceConfig"))
+	},
+	"gcp.project.cloudFunctionV2.eventTrigger": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2).GetEventTrigger()).ToDataRes(types.Resource("gcp.project.cloudFunctionV2.eventTrigger"))
+	},
+	"gcp.project.cloudFunctionV2.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.cloudFunctionV2.updateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2).GetUpdateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.cloudFunctionV2.buildConfig.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2BuildConfig).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudFunctionV2.buildConfig.runtime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2BuildConfig).GetRuntime()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudFunctionV2.buildConfig.entryPoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2BuildConfig).GetEntryPoint()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudFunctionV2.buildConfig.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2BuildConfig).GetSource()).ToDataRes(types.Dict)
+	},
+	"gcp.project.cloudFunctionV2.buildConfig.buildWorkerPool": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2BuildConfig).GetBuildWorkerPool()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudFunctionV2.buildConfig.environmentVariables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2BuildConfig).GetEnvironmentVariables()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.cloudFunctionV2.buildConfig.dockerRepository": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2BuildConfig).GetDockerRepository()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudFunctionV2.buildConfig.serviceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2BuildConfig).GetServiceAccount()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.service": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).GetService()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.timeoutSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).GetTimeoutSeconds()).ToDataRes(types.Int)
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.availableMemory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).GetAvailableMemory()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.availableCpu": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).GetAvailableCpu()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.environmentVariables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).GetEnvironmentVariables()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.maxInstanceCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).GetMaxInstanceCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.minInstanceCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).GetMinInstanceCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.vpcConnector": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).GetVpcConnector()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.vpcConnectorEgressSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).GetVpcConnectorEgressSettings()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.ingressSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).GetIngressSettings()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.serviceAccountEmail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).GetServiceAccountEmail()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.iamServiceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).GetIamServiceAccount()).ToDataRes(types.Resource("gcp.project.iamService.serviceAccount"))
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.allTrafficOnLatestRevision": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).GetAllTrafficOnLatestRevision()).ToDataRes(types.Bool)
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.secretEnvironmentVariables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).GetSecretEnvironmentVariables()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.secretVolumes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).GetSecretVolumes()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.cloudFunctionV2.eventTrigger.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2EventTrigger).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudFunctionV2.eventTrigger.trigger": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2EventTrigger).GetTrigger()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudFunctionV2.eventTrigger.triggerRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2EventTrigger).GetTriggerRegion()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudFunctionV2.eventTrigger.eventType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2EventTrigger).GetEventType()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudFunctionV2.eventTrigger.eventFilters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2EventTrigger).GetEventFilters()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.cloudFunctionV2.eventTrigger.pubsubTopic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2EventTrigger).GetPubsubTopic()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudFunctionV2.eventTrigger.topic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2EventTrigger).GetTopic()).ToDataRes(types.Resource("gcp.project.pubsubService.topic"))
+	},
+	"gcp.project.cloudFunctionV2.eventTrigger.serviceAccountEmail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2EventTrigger).GetServiceAccountEmail()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudFunctionV2.eventTrigger.retryPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2EventTrigger).GetRetryPolicy()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudFunctionV2.eventTrigger.channel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2EventTrigger).GetChannel()).ToDataRes(types.String)
+	},
 	"gcp.project.dataprocService.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataprocService).GetProjectId()).ToDataRes(types.String)
 	},
@@ -5453,6 +5861,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.dataprocService.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataprocService).GetClusters()).ToDataRes(types.Array(types.Resource("gcp.project.dataprocService.cluster")))
+	},
+	"gcp.project.dataprocService.jobs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataprocService).GetJobs()).ToDataRes(types.Array(types.Resource("gcp.project.dataprocService.job")))
+	},
+	"gcp.project.dataprocService.autoscalingPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataprocService).GetAutoscalingPolicies()).ToDataRes(types.Array(types.Resource("gcp.project.dataprocService.autoscalingPolicy")))
 	},
 	"gcp.project.dataprocService.cluster.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataprocServiceCluster).GetProjectId()).ToDataRes(types.String)
@@ -5708,6 +6122,51 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.dataprocService.cluster.virtualClusterConfig.stagingBucket": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDataprocServiceClusterVirtualClusterConfig).GetStagingBucket()).ToDataRes(types.String)
+	},
+	"gcp.project.dataprocService.job.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataprocServiceJob).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.dataprocService.job.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataprocServiceJob).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.dataprocService.job.jobUuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataprocServiceJob).GetJobUuid()).ToDataRes(types.String)
+	},
+	"gcp.project.dataprocService.job.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataprocServiceJob).GetStatus()).ToDataRes(types.String)
+	},
+	"gcp.project.dataprocService.job.statusDetail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataprocServiceJob).GetStatusDetail()).ToDataRes(types.String)
+	},
+	"gcp.project.dataprocService.job.jobType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataprocServiceJob).GetJobType()).ToDataRes(types.String)
+	},
+	"gcp.project.dataprocService.job.clusterName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataprocServiceJob).GetClusterName()).ToDataRes(types.String)
+	},
+	"gcp.project.dataprocService.job.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataprocServiceJob).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.dataprocService.job.done": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataprocServiceJob).GetDone()).ToDataRes(types.Bool)
+	},
+	"gcp.project.dataprocService.job.driverOutputResourceUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataprocServiceJob).GetDriverOutputResourceUri()).ToDataRes(types.String)
+	},
+	"gcp.project.dataprocService.autoscalingPolicy.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataprocServiceAutoscalingPolicy).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.dataprocService.autoscalingPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataprocServiceAutoscalingPolicy).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.dataprocService.autoscalingPolicy.workerConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataprocServiceAutoscalingPolicy).GetWorkerConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.dataprocService.autoscalingPolicy.secondaryWorkerConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataprocServiceAutoscalingPolicy).GetSecondaryWorkerConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.dataprocService.autoscalingPolicy.basicAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDataprocServiceAutoscalingPolicy).GetBasicAlgorithm()).ToDataRes(types.Dict)
 	},
 	"gcp.project.cloudRunService.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudRunService).GetProjectId()).ToDataRes(types.String)
@@ -6108,6 +6567,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.monitoringService.groups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectMonitoringService).GetGroups()).ToDataRes(types.Array(types.Resource("gcp.project.monitoringService.group")))
 	},
+	"gcp.project.monitoringService.dashboards": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMonitoringService).GetDashboards()).ToDataRes(types.Array(types.Resource("gcp.project.monitoringService.dashboard")))
+	},
+	"gcp.project.monitoringService.services": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMonitoringService).GetServices()).ToDataRes(types.Array(types.Resource("gcp.project.monitoringService.service")))
+	},
 	"gcp.project.monitoringService.alertPolicy.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectMonitoringServiceAlertPolicy).GetProjectId()).ToDataRes(types.String)
 	},
@@ -6230,6 +6695,63 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.monitoringService.group.isCluster": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectMonitoringServiceGroup).GetIsCluster()).ToDataRes(types.Bool)
+	},
+	"gcp.project.monitoringService.dashboard.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMonitoringServiceDashboard).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.monitoringService.dashboard.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMonitoringServiceDashboard).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.monitoringService.dashboard.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMonitoringServiceDashboard).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.monitoringService.dashboard.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMonitoringServiceDashboard).GetEtag()).ToDataRes(types.String)
+	},
+	"gcp.project.monitoringService.dashboard.layout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMonitoringServiceDashboard).GetLayout()).ToDataRes(types.Dict)
+	},
+	"gcp.project.monitoringService.service.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMonitoringServiceService).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.monitoringService.service.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMonitoringServiceService).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.monitoringService.service.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMonitoringServiceService).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.monitoringService.service.telemetry": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMonitoringServiceService).GetTelemetry()).ToDataRes(types.Dict)
+	},
+	"gcp.project.monitoringService.service.userLabels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMonitoringServiceService).GetUserLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.monitoringService.service.slos": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMonitoringServiceService).GetSlos()).ToDataRes(types.Array(types.Resource("gcp.project.monitoringService.service.slo")))
+	},
+	"gcp.project.monitoringService.service.slo.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMonitoringServiceServiceSlo).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.monitoringService.service.slo.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMonitoringServiceServiceSlo).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.monitoringService.service.slo.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMonitoringServiceServiceSlo).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.monitoringService.service.slo.goal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMonitoringServiceServiceSlo).GetGoal()).ToDataRes(types.Float)
+	},
+	"gcp.project.monitoringService.service.slo.serviceLevelIndicator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMonitoringServiceServiceSlo).GetServiceLevelIndicator()).ToDataRes(types.Dict)
+	},
+	"gcp.project.monitoringService.service.slo.rollingPeriod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMonitoringServiceServiceSlo).GetRollingPeriod()).ToDataRes(types.String)
+	},
+	"gcp.project.monitoringService.service.slo.calendarPeriod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMonitoringServiceServiceSlo).GetCalendarPeriod()).ToDataRes(types.String)
+	},
+	"gcp.project.monitoringService.service.slo.userLabels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMonitoringServiceServiceSlo).GetUserLabels()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"gcp.project.binaryAuthorizationControl.policy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBinaryAuthorizationControl).GetPolicy()).ToDataRes(types.Resource("gcp.project.binaryAuthorizationControl.policy"))
@@ -6462,6 +6984,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.spannerService.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSpannerService).GetInstances()).ToDataRes(types.Array(types.Resource("gcp.project.spannerService.instance")))
 	},
+	"gcp.project.spannerService.instanceConfigs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerService).GetInstanceConfigs()).ToDataRes(types.Array(types.Resource("gcp.project.spannerService.instanceConfig")))
+	},
 	"gcp.project.spannerService.instance.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSpannerServiceInstance).GetProjectId()).ToDataRes(types.String)
 	},
@@ -6473,6 +6998,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.spannerService.instance.config": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSpannerServiceInstance).GetConfig()).ToDataRes(types.String)
+	},
+	"gcp.project.spannerService.instance.instanceConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstance).GetInstanceConfig()).ToDataRes(types.Resource("gcp.project.spannerService.instanceConfig"))
 	},
 	"gcp.project.spannerService.instance.nodeCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSpannerServiceInstance).GetNodeCount()).ToDataRes(types.Int)
@@ -6587,6 +7115,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.spannerService.instance.backup.maxExpireTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSpannerServiceInstanceBackup).GetMaxExpireTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.spannerService.instanceConfig.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceConfig).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.spannerService.instanceConfig.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceConfig).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.spannerService.instanceConfig.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceConfig).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.spannerService.instanceConfig.replicas": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceConfig).GetReplicas()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.spannerService.instanceConfig.leaderOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceConfig).GetLeaderOptions()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.spannerService.instanceConfig.baseConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceConfig).GetBaseConfig()).ToDataRes(types.String)
+	},
+	"gcp.project.spannerService.instanceConfig.configType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceConfig).GetConfigType()).ToDataRes(types.String)
+	},
+	"gcp.project.spannerService.instanceConfig.freeInstanceAvailability": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceConfig).GetFreeInstanceAvailability()).ToDataRes(types.String)
+	},
+	"gcp.project.spannerService.instanceConfig.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceConfig).GetLabels()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"gcp.project.bigtableService.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBigtableService).GetProjectId()).ToDataRes(types.String)
@@ -8643,6 +9198,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.publicAdvertisedPrefix.created": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServicePublicAdvertisedPrefix).GetCreated()).ToDataRes(types.Time)
 	},
+	"gcp.project.computeService.instanceTemplate.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceTemplate).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instanceTemplate.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceTemplate).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instanceTemplate.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceTemplate).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instanceTemplate.selfLink": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceTemplate).GetSelfLink()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instanceTemplate.sourceInstance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceTemplate).GetSourceInstance()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instanceTemplate.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceTemplate).GetProperties()).ToDataRes(types.Dict)
+	},
+	"gcp.project.computeService.instanceTemplate.creationTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceTemplate).GetCreationTimestamp()).ToDataRes(types.Time)
+	},
 	"gcp.project.cloudDeployService.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudDeployService).GetProjectId()).ToDataRes(types.String)
 	},
@@ -10170,6 +10746,240 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.containerAnalysisService.occurrence.updated": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).GetUpdated()).ToDataRes(types.Time)
 	},
+	"gcp.project.cloudBuildService.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildService).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.triggers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildService).GetTriggers()).ToDataRes(types.Array(types.Resource("gcp.project.cloudBuildService.trigger")))
+	},
+	"gcp.project.cloudBuildService.workerPools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildService).GetWorkerPools()).ToDataRes(types.Array(types.Resource("gcp.project.cloudBuildService.workerPool")))
+	},
+	"gcp.project.cloudBuildService.trigger.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTrigger).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.trigger.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTrigger).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.trigger.triggerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTrigger).GetTriggerId()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.trigger.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTrigger).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.trigger.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTrigger).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.cloudBuildService.trigger.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTrigger).GetTags()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.cloudBuildService.trigger.filename": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTrigger).GetFilename()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.trigger.filter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTrigger).GetFilter()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.trigger.substitutions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTrigger).GetSubstitutions()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.cloudBuildService.trigger.serviceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTrigger).GetServiceAccount()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.trigger.iamServiceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTrigger).GetIamServiceAccount()).ToDataRes(types.Resource("gcp.project.iamService.serviceAccount"))
+	},
+	"gcp.project.cloudBuildService.trigger.github": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTrigger).GetGithub()).ToDataRes(types.Resource("gcp.project.cloudBuildService.trigger.githubEventsConfig"))
+	},
+	"gcp.project.cloudBuildService.trigger.pubsubConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTrigger).GetPubsubConfig()).ToDataRes(types.Resource("gcp.project.cloudBuildService.trigger.pubsubConfig"))
+	},
+	"gcp.project.cloudBuildService.trigger.webhookConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTrigger).GetWebhookConfig()).ToDataRes(types.Resource("gcp.project.cloudBuildService.trigger.webhookConfig"))
+	},
+	"gcp.project.cloudBuildService.trigger.repositoryEventConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTrigger).GetRepositoryEventConfig()).ToDataRes(types.Resource("gcp.project.cloudBuildService.trigger.repositoryEventConfig"))
+	},
+	"gcp.project.cloudBuildService.trigger.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTrigger).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.cloudBuildService.trigger.githubEventsConfig.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTriggerGithubEventsConfig).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.trigger.githubEventsConfig.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTriggerGithubEventsConfig).GetOwner()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.trigger.githubEventsConfig.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTriggerGithubEventsConfig).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.trigger.githubEventsConfig.installationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTriggerGithubEventsConfig).GetInstallationId()).ToDataRes(types.Int)
+	},
+	"gcp.project.cloudBuildService.trigger.githubEventsConfig.push": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTriggerGithubEventsConfig).GetPush()).ToDataRes(types.Dict)
+	},
+	"gcp.project.cloudBuildService.trigger.githubEventsConfig.pullRequest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTriggerGithubEventsConfig).GetPullRequest()).ToDataRes(types.Dict)
+	},
+	"gcp.project.cloudBuildService.trigger.pubsubConfig.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTriggerPubsubConfig).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.trigger.pubsubConfig.topic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTriggerPubsubConfig).GetTopic()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.trigger.pubsubConfig.pubsubTopic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTriggerPubsubConfig).GetPubsubTopic()).ToDataRes(types.Resource("gcp.project.pubsubService.topic"))
+	},
+	"gcp.project.cloudBuildService.trigger.pubsubConfig.subscription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTriggerPubsubConfig).GetSubscription()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.trigger.pubsubConfig.serviceAccountEmail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTriggerPubsubConfig).GetServiceAccountEmail()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.trigger.pubsubConfig.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTriggerPubsubConfig).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.trigger.webhookConfig.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTriggerWebhookConfig).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.trigger.webhookConfig.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTriggerWebhookConfig).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.trigger.repositoryEventConfig.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTriggerRepositoryEventConfig).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.trigger.repositoryEventConfig.repository": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTriggerRepositoryEventConfig).GetRepository()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.trigger.repositoryEventConfig.repositoryType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTriggerRepositoryEventConfig).GetRepositoryType()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.trigger.repositoryEventConfig.push": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTriggerRepositoryEventConfig).GetPush()).ToDataRes(types.Dict)
+	},
+	"gcp.project.cloudBuildService.trigger.repositoryEventConfig.pullRequest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTriggerRepositoryEventConfig).GetPullRequest()).ToDataRes(types.Dict)
+	},
+	"gcp.project.cloudBuildService.workerPool.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceWorkerPool).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.workerPool.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceWorkerPool).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.workerPool.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceWorkerPool).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.workerPool.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceWorkerPool).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.workerPool.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceWorkerPool).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.cloudBuildService.workerPool.workerConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceWorkerPool).GetWorkerConfig()).ToDataRes(types.Resource("gcp.project.cloudBuildService.workerPool.workerConfig"))
+	},
+	"gcp.project.cloudBuildService.workerPool.networkConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceWorkerPool).GetNetworkConfig()).ToDataRes(types.Resource("gcp.project.cloudBuildService.workerPool.networkConfig"))
+	},
+	"gcp.project.cloudBuildService.workerPool.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceWorkerPool).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.cloudBuildService.workerPool.updateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceWorkerPool).GetUpdateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.cloudBuildService.workerPool.workerConfig.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceWorkerPoolWorkerConfig).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.workerPool.workerConfig.machineType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceWorkerPoolWorkerConfig).GetMachineType()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.workerPool.workerConfig.diskSizeGb": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceWorkerPoolWorkerConfig).GetDiskSizeGb()).ToDataRes(types.Int)
+	},
+	"gcp.project.cloudBuildService.workerPool.workerConfig.enableNestedVirtualization": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceWorkerPoolWorkerConfig).GetEnableNestedVirtualization()).ToDataRes(types.Bool)
+	},
+	"gcp.project.cloudBuildService.workerPool.networkConfig.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.workerPool.networkConfig.peeredNetwork": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig).GetPeeredNetwork()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.workerPool.networkConfig.peeredNetworkIpRange": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig).GetPeeredNetworkIpRange()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.workerPool.networkConfig.egressOption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig).GetEgressOption()).ToDataRes(types.String)
+	},
+	"gcp.project.iapService.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIapService).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.iapService.brands": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIapService).GetBrands()).ToDataRes(types.Array(types.Resource("gcp.project.iapService.brand")))
+	},
+	"gcp.project.iapService.tunnelDestGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIapService).GetTunnelDestGroups()).ToDataRes(types.Array(types.Resource("gcp.project.iapService.tunnelDestGroup")))
+	},
+	"gcp.project.iapService.brand.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIapServiceBrand).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.iapService.brand.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIapServiceBrand).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.iapService.brand.applicationTitle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIapServiceBrand).GetApplicationTitle()).ToDataRes(types.String)
+	},
+	"gcp.project.iapService.brand.supportEmail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIapServiceBrand).GetSupportEmail()).ToDataRes(types.String)
+	},
+	"gcp.project.iapService.brand.orgInternalOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIapServiceBrand).GetOrgInternalOnly()).ToDataRes(types.Bool)
+	},
+	"gcp.project.iapService.tunnelDestGroup.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIapServiceTunnelDestGroup).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.iapService.tunnelDestGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIapServiceTunnelDestGroup).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.iapService.tunnelDestGroup.cidrs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIapServiceTunnelDestGroup).GetCidrs()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.iapService.tunnelDestGroup.fqdns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIapServiceTunnelDestGroup).GetFqdns()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.sourceRepositoriesService.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSourceRepositoriesService).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.sourceRepositoriesService.repos": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSourceRepositoriesService).GetRepos()).ToDataRes(types.Array(types.Resource("gcp.project.sourceRepositoriesService.repo")))
+	},
+	"gcp.project.sourceRepositoriesService.repo.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSourceRepositoriesServiceRepo).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.sourceRepositoriesService.repo.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSourceRepositoriesServiceRepo).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.sourceRepositoriesService.repo.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSourceRepositoriesServiceRepo).GetUrl()).ToDataRes(types.String)
+	},
+	"gcp.project.sourceRepositoriesService.repo.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSourceRepositoriesServiceRepo).GetSize()).ToDataRes(types.Int)
+	},
+	"gcp.project.sourceRepositoriesService.repo.mirrorConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSourceRepositoriesServiceRepo).GetMirrorConfig()).ToDataRes(types.Resource("gcp.project.sourceRepositoriesService.repo.mirrorConfig"))
+	},
+	"gcp.project.sourceRepositoriesService.repo.mirrorConfig.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSourceRepositoriesServiceRepoMirrorConfig).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.sourceRepositoriesService.repo.mirrorConfig.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSourceRepositoriesServiceRepoMirrorConfig).GetUrl()).ToDataRes(types.String)
+	},
+	"gcp.project.sourceRepositoriesService.repo.mirrorConfig.deployKeyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSourceRepositoriesServiceRepoMirrorConfig).GetDeployKeyId()).ToDataRes(types.String)
+	},
+	"gcp.project.sourceRepositoriesService.repo.mirrorConfig.webhookId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSourceRepositoriesServiceRepoMirrorConfig).GetWebhookId()).ToDataRes(types.String)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -10998,6 +11808,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProject).CloudFunctions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.cloudFunctionsV2": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).CloudFunctionsV2, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.dataproc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProject).Dataproc, ok = plugin.RawToTValue[*mqlGcpProjectDataprocService](v.Value, v.Error)
 		return
@@ -11116,6 +11930,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.containerAnalysis": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProject).ContainerAnalysis, ok = plugin.RawToTValue[*mqlGcpProjectContainerAnalysisService](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuild": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).CloudBuild, ok = plugin.RawToTValue[*mqlGcpProjectCloudBuildService](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iap": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).Iap, ok = plugin.RawToTValue[*mqlGcpProjectIapService](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sourceRepositories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).SourceRepositories, ok = plugin.RawToTValue[*mqlGcpProjectSourceRepositoriesService](v.Value, v.Error)
 		return
 	},
 	"gcp.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11380,6 +12206,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.publicAdvertisedPrefixes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeService).PublicAdvertisedPrefixes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceTemplates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeService).InstanceTemplates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.address.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13166,6 +13996,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectSqlServiceInstance).Databases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.sqlService.instance.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstance).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.sslCerts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstance).SslCerts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.sqlService.instance.satisfiesPzi": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSqlServiceInstance).SatisfiesPzi, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -13240,6 +14078,82 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.sqlService.instance.database.sqlserverDatabaseDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSqlServiceInstanceDatabase).SqlserverDatabaseDetails, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceUser).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.sqlService.instance.user.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceUser).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.user.instanceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceUser).InstanceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.user.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceUser).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.user.host": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceUser).Host, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.user.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceUser).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.user.iamEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceUser).IamEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.user.databaseRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceUser).DatabaseRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.user.dualPasswordType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceUser).DualPasswordType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.user.passwordPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceUser).PasswordPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.sslCert.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceSslCert).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.sqlService.instance.sslCert.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceSslCert).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.sslCert.instanceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceSslCert).InstanceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.sslCert.commonName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceSslCert).CommonName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.sslCert.sha1Fingerprint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceSslCert).Sha1Fingerprint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.sslCert.certSerialNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceSslCert).CertSerialNumber, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.sslCert.cert": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceSslCert).Cert, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.sslCert.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceSslCert).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.sslCert.expirationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceSslCert).ExpirationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"gcp.project.sqlService.instance.ipMapping.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14918,6 +15832,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectPubsubService).Snapshots, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.pubsubService.schemas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPubsubService).Schemas, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.pubsubService.topic.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectPubsubServiceTopic).__id, ok = v.Value.(string)
 		return
@@ -15100,6 +16018,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.pubsubService.snapshot.expiration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectPubsubServiceSnapshot).Expiration, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.pubsubService.schema.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPubsubServiceSchema).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.pubsubService.schema.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPubsubServiceSchema).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.pubsubService.schema.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPubsubServiceSchema).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.pubsubService.schema.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPubsubServiceSchema).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.pubsubService.schema.definition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPubsubServiceSchema).Definition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.pubsubService.schema.revisionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPubsubServiceSchema).RevisionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.pubsubService.schema.revisionCreateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPubsubServiceSchema).RevisionCreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"gcp.project.kmsService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15526,6 +16472,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectLoggingserviceBucket).LogAnalyticsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"gcp.project.loggingservice.bucket.views": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectLoggingserviceBucket).Views, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.loggingservice.bucket.view.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectLoggingserviceBucketView).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.loggingservice.bucket.view.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectLoggingserviceBucketView).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.loggingservice.bucket.view.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectLoggingserviceBucketView).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.loggingservice.bucket.view.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectLoggingserviceBucketView).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.loggingservice.bucket.view.filter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectLoggingserviceBucketView).Filter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.loggingservice.bucket.view.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectLoggingserviceBucketView).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.loggingservice.bucket.view.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectLoggingserviceBucketView).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"gcp.project.loggingservice.bucket.indexConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectLoggingserviceBucketIndexConfig).__id, ok = v.Value.(string)
 		return
@@ -15894,6 +16872,214 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectCloudFunction).DockerRegistry, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.cloudFunctionV2.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.cloudFunctionV2.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.environment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2).Environment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.kmsKeyName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2).KmsKeyName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.buildConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2).BuildConfig, ok = plugin.RawToTValue[*mqlGcpProjectCloudFunctionV2BuildConfig](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2).ServiceConfig, ok = plugin.RawToTValue[*mqlGcpProjectCloudFunctionV2ServiceConfig](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.eventTrigger": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2).EventTrigger, ok = plugin.RawToTValue[*mqlGcpProjectCloudFunctionV2EventTrigger](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.buildConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2BuildConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.cloudFunctionV2.buildConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2BuildConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.buildConfig.runtime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2BuildConfig).Runtime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.buildConfig.entryPoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2BuildConfig).EntryPoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.buildConfig.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2BuildConfig).Source, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.buildConfig.buildWorkerPool": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2BuildConfig).BuildWorkerPool, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.buildConfig.environmentVariables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2BuildConfig).EnvironmentVariables, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.buildConfig.dockerRepository": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2BuildConfig).DockerRepository, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.buildConfig.serviceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2BuildConfig).ServiceAccount, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.service": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).Service, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.timeoutSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).TimeoutSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.availableMemory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).AvailableMemory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.availableCpu": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).AvailableCpu, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.environmentVariables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).EnvironmentVariables, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.maxInstanceCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).MaxInstanceCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.minInstanceCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).MinInstanceCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.vpcConnector": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).VpcConnector, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.vpcConnectorEgressSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).VpcConnectorEgressSettings, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.ingressSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).IngressSettings, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.serviceAccountEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).ServiceAccountEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.iamServiceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).IamServiceAccount, ok = plugin.RawToTValue[*mqlGcpProjectIamServiceServiceAccount](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.allTrafficOnLatestRevision": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).AllTrafficOnLatestRevision, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.secretEnvironmentVariables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).SecretEnvironmentVariables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.secretVolumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).SecretVolumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.eventTrigger.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2EventTrigger).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.cloudFunctionV2.eventTrigger.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2EventTrigger).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.eventTrigger.trigger": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2EventTrigger).Trigger, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.eventTrigger.triggerRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2EventTrigger).TriggerRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.eventTrigger.eventType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2EventTrigger).EventType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.eventTrigger.eventFilters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2EventTrigger).EventFilters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.eventTrigger.pubsubTopic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2EventTrigger).PubsubTopic, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.eventTrigger.topic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2EventTrigger).Topic, ok = plugin.RawToTValue[*mqlGcpProjectPubsubServiceTopic](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.eventTrigger.serviceAccountEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2EventTrigger).ServiceAccountEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.eventTrigger.retryPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2EventTrigger).RetryPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.eventTrigger.channel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2EventTrigger).Channel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.dataprocService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDataprocService).__id, ok = v.Value.(string)
 		return
@@ -15912,6 +17098,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.dataprocService.clusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDataprocService).Clusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataprocService.jobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocService).Jobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataprocService.autoscalingPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocService).AutoscalingPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.dataprocService.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16296,6 +17490,74 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.dataprocService.cluster.virtualClusterConfig.stagingBucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDataprocServiceClusterVirtualClusterConfig).StagingBucket, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataprocService.job.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocServiceJob).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.dataprocService.job.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocServiceJob).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataprocService.job.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocServiceJob).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataprocService.job.jobUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocServiceJob).JobUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataprocService.job.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocServiceJob).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataprocService.job.statusDetail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocServiceJob).StatusDetail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataprocService.job.jobType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocServiceJob).JobType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataprocService.job.clusterName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocServiceJob).ClusterName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataprocService.job.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocServiceJob).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataprocService.job.done": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocServiceJob).Done, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataprocService.job.driverOutputResourceUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocServiceJob).DriverOutputResourceUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataprocService.autoscalingPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocServiceAutoscalingPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.dataprocService.autoscalingPolicy.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocServiceAutoscalingPolicy).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataprocService.autoscalingPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocServiceAutoscalingPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataprocService.autoscalingPolicy.workerConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocServiceAutoscalingPolicy).WorkerConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataprocService.autoscalingPolicy.secondaryWorkerConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocServiceAutoscalingPolicy).SecondaryWorkerConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataprocService.autoscalingPolicy.basicAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDataprocServiceAutoscalingPolicy).BasicAlgorithm, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.cloudRunService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16878,6 +18140,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectMonitoringService).Groups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.monitoringService.dashboards": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMonitoringService).Dashboards, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.monitoringService.services": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMonitoringService).Services, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.monitoringService.alertPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectMonitoringServiceAlertPolicy).__id, ok = v.Value.(string)
 		return
@@ -17056,6 +18326,94 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.monitoringService.group.isCluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectMonitoringServiceGroup).IsCluster, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.monitoringService.dashboard.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMonitoringServiceDashboard).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.monitoringService.dashboard.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMonitoringServiceDashboard).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.monitoringService.dashboard.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMonitoringServiceDashboard).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.monitoringService.dashboard.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMonitoringServiceDashboard).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.monitoringService.dashboard.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMonitoringServiceDashboard).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.monitoringService.dashboard.layout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMonitoringServiceDashboard).Layout, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.monitoringService.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMonitoringServiceService).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.monitoringService.service.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMonitoringServiceService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.monitoringService.service.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMonitoringServiceService).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.monitoringService.service.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMonitoringServiceService).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.monitoringService.service.telemetry": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMonitoringServiceService).Telemetry, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.monitoringService.service.userLabels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMonitoringServiceService).UserLabels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.monitoringService.service.slos": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMonitoringServiceService).Slos, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.monitoringService.service.slo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMonitoringServiceServiceSlo).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.monitoringService.service.slo.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMonitoringServiceServiceSlo).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.monitoringService.service.slo.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMonitoringServiceServiceSlo).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.monitoringService.service.slo.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMonitoringServiceServiceSlo).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.monitoringService.service.slo.goal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMonitoringServiceServiceSlo).Goal, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.monitoringService.service.slo.serviceLevelIndicator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMonitoringServiceServiceSlo).ServiceLevelIndicator, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.monitoringService.service.slo.rollingPeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMonitoringServiceServiceSlo).RollingPeriod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.monitoringService.service.slo.calendarPeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMonitoringServiceServiceSlo).CalendarPeriod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.monitoringService.service.slo.userLabels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMonitoringServiceServiceSlo).UserLabels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.binaryAuthorizationControl.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -17414,6 +18772,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectSpannerService).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.spannerService.instanceConfigs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerService).InstanceConfigs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.spannerService.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSpannerServiceInstance).__id, ok = v.Value.(string)
 		return
@@ -17432,6 +18794,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.spannerService.instance.config": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSpannerServiceInstance).Config, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.instanceConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstance).InstanceConfig, ok = plugin.RawToTValue[*mqlGcpProjectSpannerServiceInstanceConfig](v.Value, v.Error)
 		return
 	},
 	"gcp.project.spannerService.instance.nodeCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -17592,6 +18958,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.spannerService.instance.backup.maxExpireTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSpannerServiceInstanceBackup).MaxExpireTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instanceConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.spannerService.instanceConfig.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceConfig).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instanceConfig.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceConfig).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instanceConfig.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceConfig).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instanceConfig.replicas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceConfig).Replicas, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instanceConfig.leaderOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceConfig).LeaderOptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instanceConfig.baseConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceConfig).BaseConfig, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instanceConfig.configType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceConfig).ConfigType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instanceConfig.freeInstanceAvailability": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceConfig).FreeInstanceAvailability, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instanceConfig.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceConfig).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.bigtableService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20574,6 +21980,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServicePublicAdvertisedPrefix).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.instanceTemplate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceTemplate).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.computeService.instanceTemplate.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceTemplate).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceTemplate.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceTemplate).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceTemplate.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceTemplate).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceTemplate.selfLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceTemplate).SelfLink, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceTemplate.sourceInstance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceTemplate).SourceInstance, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceTemplate.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceTemplate).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceTemplate.creationTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceTemplate).CreationTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"gcp.project.cloudDeployService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudDeployService).__id, ok = v.Value.(string)
 		return
@@ -22858,6 +24296,378 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectContainerAnalysisServiceOccurrence).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"gcp.project.cloudBuildService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildService).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.cloudBuildService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.triggers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildService).Triggers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.workerPools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildService).WorkerPools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTrigger).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTrigger).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTrigger).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.triggerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTrigger).TriggerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTrigger).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTrigger).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTrigger).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.filename": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTrigger).Filename, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.filter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTrigger).Filter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.substitutions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTrigger).Substitutions, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.serviceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTrigger).ServiceAccount, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.iamServiceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTrigger).IamServiceAccount, ok = plugin.RawToTValue[*mqlGcpProjectIamServiceServiceAccount](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.github": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTrigger).Github, ok = plugin.RawToTValue[*mqlGcpProjectCloudBuildServiceTriggerGithubEventsConfig](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.pubsubConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTrigger).PubsubConfig, ok = plugin.RawToTValue[*mqlGcpProjectCloudBuildServiceTriggerPubsubConfig](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.webhookConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTrigger).WebhookConfig, ok = plugin.RawToTValue[*mqlGcpProjectCloudBuildServiceTriggerWebhookConfig](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.repositoryEventConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTrigger).RepositoryEventConfig, ok = plugin.RawToTValue[*mqlGcpProjectCloudBuildServiceTriggerRepositoryEventConfig](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTrigger).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.githubEventsConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTriggerGithubEventsConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.githubEventsConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTriggerGithubEventsConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.githubEventsConfig.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTriggerGithubEventsConfig).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.githubEventsConfig.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTriggerGithubEventsConfig).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.githubEventsConfig.installationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTriggerGithubEventsConfig).InstallationId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.githubEventsConfig.push": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTriggerGithubEventsConfig).Push, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.githubEventsConfig.pullRequest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTriggerGithubEventsConfig).PullRequest, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.pubsubConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTriggerPubsubConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.pubsubConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTriggerPubsubConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.pubsubConfig.topic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTriggerPubsubConfig).Topic, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.pubsubConfig.pubsubTopic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTriggerPubsubConfig).PubsubTopic, ok = plugin.RawToTValue[*mqlGcpProjectPubsubServiceTopic](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.pubsubConfig.subscription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTriggerPubsubConfig).Subscription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.pubsubConfig.serviceAccountEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTriggerPubsubConfig).ServiceAccountEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.pubsubConfig.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTriggerPubsubConfig).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.webhookConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTriggerWebhookConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.webhookConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTriggerWebhookConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.webhookConfig.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTriggerWebhookConfig).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.repositoryEventConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTriggerRepositoryEventConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.repositoryEventConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTriggerRepositoryEventConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.repositoryEventConfig.repository": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTriggerRepositoryEventConfig).Repository, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.repositoryEventConfig.repositoryType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTriggerRepositoryEventConfig).RepositoryType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.repositoryEventConfig.push": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTriggerRepositoryEventConfig).Push, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.repositoryEventConfig.pullRequest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTriggerRepositoryEventConfig).PullRequest, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.workerPool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceWorkerPool).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.cloudBuildService.workerPool.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceWorkerPool).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.workerPool.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceWorkerPool).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.workerPool.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceWorkerPool).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.workerPool.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceWorkerPool).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.workerPool.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceWorkerPool).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.workerPool.workerConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceWorkerPool).WorkerConfig, ok = plugin.RawToTValue[*mqlGcpProjectCloudBuildServiceWorkerPoolWorkerConfig](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.workerPool.networkConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceWorkerPool).NetworkConfig, ok = plugin.RawToTValue[*mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.workerPool.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceWorkerPool).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.workerPool.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceWorkerPool).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.workerPool.workerConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceWorkerPoolWorkerConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.cloudBuildService.workerPool.workerConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceWorkerPoolWorkerConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.workerPool.workerConfig.machineType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceWorkerPoolWorkerConfig).MachineType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.workerPool.workerConfig.diskSizeGb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceWorkerPoolWorkerConfig).DiskSizeGb, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.workerPool.workerConfig.enableNestedVirtualization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceWorkerPoolWorkerConfig).EnableNestedVirtualization, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.workerPool.networkConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.cloudBuildService.workerPool.networkConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.workerPool.networkConfig.peeredNetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig).PeeredNetwork, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.workerPool.networkConfig.peeredNetworkIpRange": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig).PeeredNetworkIpRange, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.workerPool.networkConfig.egressOption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig).EgressOption, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iapService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIapService).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.iapService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIapService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iapService.brands": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIapService).Brands, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iapService.tunnelDestGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIapService).TunnelDestGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iapService.brand.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIapServiceBrand).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.iapService.brand.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIapServiceBrand).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iapService.brand.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIapServiceBrand).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iapService.brand.applicationTitle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIapServiceBrand).ApplicationTitle, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iapService.brand.supportEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIapServiceBrand).SupportEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iapService.brand.orgInternalOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIapServiceBrand).OrgInternalOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iapService.tunnelDestGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIapServiceTunnelDestGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.iapService.tunnelDestGroup.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIapServiceTunnelDestGroup).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iapService.tunnelDestGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIapServiceTunnelDestGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iapService.tunnelDestGroup.cidrs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIapServiceTunnelDestGroup).Cidrs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iapService.tunnelDestGroup.fqdns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIapServiceTunnelDestGroup).Fqdns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sourceRepositoriesService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSourceRepositoriesService).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.sourceRepositoriesService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSourceRepositoriesService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sourceRepositoriesService.repos": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSourceRepositoriesService).Repos, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sourceRepositoriesService.repo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSourceRepositoriesServiceRepo).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.sourceRepositoriesService.repo.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSourceRepositoriesServiceRepo).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sourceRepositoriesService.repo.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSourceRepositoriesServiceRepo).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sourceRepositoriesService.repo.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSourceRepositoriesServiceRepo).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sourceRepositoriesService.repo.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSourceRepositoriesServiceRepo).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sourceRepositoriesService.repo.mirrorConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSourceRepositoriesServiceRepo).MirrorConfig, ok = plugin.RawToTValue[*mqlGcpProjectSourceRepositoriesServiceRepoMirrorConfig](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sourceRepositoriesService.repo.mirrorConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSourceRepositoriesServiceRepoMirrorConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.sourceRepositoriesService.repo.mirrorConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSourceRepositoriesServiceRepoMirrorConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sourceRepositoriesService.repo.mirrorConfig.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSourceRepositoriesServiceRepoMirrorConfig).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sourceRepositoriesService.repo.mirrorConfig.deployKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSourceRepositoriesServiceRepoMirrorConfig).DeployKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sourceRepositoriesService.repo.mirrorConfig.webhookId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSourceRepositoriesServiceRepoMirrorConfig).WebhookId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -24647,6 +26457,7 @@ type mqlGcpProject struct {
 	Dns                    plugin.TValue[*mqlGcpProjectDnsService]
 	Bigquery               plugin.TValue[*mqlGcpProjectBigqueryService]
 	CloudFunctions         plugin.TValue[[]any]
+	CloudFunctionsV2       plugin.TValue[[]any]
 	Dataproc               plugin.TValue[*mqlGcpProjectDataprocService]
 	CloudRun               plugin.TValue[*mqlGcpProjectCloudRunService]
 	AccessApprovalSettings plugin.TValue[*mqlGcpAccessApprovalSettings]
@@ -24677,6 +26488,9 @@ type mqlGcpProject struct {
 	Ids                    plugin.TValue[*mqlGcpProjectIdsService]
 	GkeBackup              plugin.TValue[*mqlGcpProjectGkeBackupService]
 	ContainerAnalysis      plugin.TValue[*mqlGcpProjectContainerAnalysisService]
+	CloudBuild             plugin.TValue[*mqlGcpProjectCloudBuildService]
+	Iap                    plugin.TValue[*mqlGcpProjectIapService]
+	SourceRepositories     plugin.TValue[*mqlGcpProjectSourceRepositoriesService]
 }
 
 // createGcpProject creates a new instance of this resource
@@ -25053,6 +26867,22 @@ func (c *mqlGcpProject) GetCloudFunctions() *plugin.TValue[[]any] {
 		}
 
 		return c.cloudFunctions()
+	})
+}
+
+func (c *mqlGcpProject) GetCloudFunctionsV2() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CloudFunctionsV2, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project", c.__id, "cloudFunctionsV2")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.cloudFunctionsV2()
 	})
 }
 
@@ -25536,6 +27366,54 @@ func (c *mqlGcpProject) GetContainerAnalysis() *plugin.TValue[*mqlGcpProjectCont
 	})
 }
 
+func (c *mqlGcpProject) GetCloudBuild() *plugin.TValue[*mqlGcpProjectCloudBuildService] {
+	return plugin.GetOrCompute[*mqlGcpProjectCloudBuildService](&c.CloudBuild, func() (*mqlGcpProjectCloudBuildService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project", c.__id, "cloudBuild")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectCloudBuildService), nil
+			}
+		}
+
+		return c.cloudBuild()
+	})
+}
+
+func (c *mqlGcpProject) GetIap() *plugin.TValue[*mqlGcpProjectIapService] {
+	return plugin.GetOrCompute[*mqlGcpProjectIapService](&c.Iap, func() (*mqlGcpProjectIapService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project", c.__id, "iap")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectIapService), nil
+			}
+		}
+
+		return c.iap()
+	})
+}
+
+func (c *mqlGcpProject) GetSourceRepositories() *plugin.TValue[*mqlGcpProjectSourceRepositoriesService] {
+	return plugin.GetOrCompute[*mqlGcpProjectSourceRepositoriesService](&c.SourceRepositories, func() (*mqlGcpProjectSourceRepositoriesService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project", c.__id, "sourceRepositories")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectSourceRepositoriesService), nil
+			}
+		}
+
+		return c.sourceRepositories()
+	})
+}
+
 // mqlGcpService for the gcp.service resource
 type mqlGcpService struct {
 	MqlRuntime *plugin.Runtime
@@ -25821,6 +27699,7 @@ type mqlGcpProjectComputeService struct {
 	BackendBuckets           plugin.TValue[[]any]
 	TargetPools              plugin.TValue[[]any]
 	PublicAdvertisedPrefixes plugin.TValue[[]any]
+	InstanceTemplates        plugin.TValue[[]any]
 }
 
 // createGcpProjectComputeService creates a new instance of this resource
@@ -26491,6 +28370,22 @@ func (c *mqlGcpProjectComputeService) GetPublicAdvertisedPrefixes() *plugin.TVal
 		}
 
 		return c.publicAdvertisedPrefixes()
+	})
+}
+
+func (c *mqlGcpProjectComputeService) GetInstanceTemplates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InstanceTemplates, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService", c.__id, "instanceTemplates")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.instanceTemplates()
 	})
 }
 
@@ -29910,6 +31805,8 @@ type mqlGcpProjectSqlServiceInstance struct {
 	ServiceAccountEmailAddress                 plugin.TValue[string]
 	State                                      plugin.TValue[string]
 	Databases                                  plugin.TValue[[]any]
+	Users                                      plugin.TValue[[]any]
+	SslCerts                                   plugin.TValue[[]any]
 	SatisfiesPzi                               plugin.TValue[bool]
 	SatisfiesPzs                               plugin.TValue[bool]
 	DnsName                                    plugin.TValue[string]
@@ -30081,6 +31978,38 @@ func (c *mqlGcpProjectSqlServiceInstance) GetDatabases() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlGcpProjectSqlServiceInstance) GetUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Users, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.sqlService.instance", c.__id, "users")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.users()
+	})
+}
+
+func (c *mqlGcpProjectSqlServiceInstance) GetSslCerts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SslCerts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.sqlService.instance", c.__id, "sslCerts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sslCerts()
+	})
+}
+
 func (c *mqlGcpProjectSqlServiceInstance) GetSatisfiesPzi() *plugin.TValue[bool] {
 	return &c.SatisfiesPzi
 }
@@ -30213,6 +32142,179 @@ func (c *mqlGcpProjectSqlServiceInstanceDatabase) GetName() *plugin.TValue[strin
 
 func (c *mqlGcpProjectSqlServiceInstanceDatabase) GetSqlserverDatabaseDetails() *plugin.TValue[any] {
 	return &c.SqlserverDatabaseDetails
+}
+
+// mqlGcpProjectSqlServiceInstanceUser for the gcp.project.sqlService.instance.user resource
+type mqlGcpProjectSqlServiceInstanceUser struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectSqlServiceInstanceUserInternal it will be used here
+	ProjectId        plugin.TValue[string]
+	InstanceName     plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Host             plugin.TValue[string]
+	Type             plugin.TValue[string]
+	IamEmail         plugin.TValue[string]
+	DatabaseRoles    plugin.TValue[[]any]
+	DualPasswordType plugin.TValue[string]
+	PasswordPolicy   plugin.TValue[any]
+}
+
+// createGcpProjectSqlServiceInstanceUser creates a new instance of this resource
+func createGcpProjectSqlServiceInstanceUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectSqlServiceInstanceUser{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.sqlService.instance.user", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceUser) MqlName() string {
+	return "gcp.project.sqlService.instance.user"
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceUser) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceUser) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceUser) GetInstanceName() *plugin.TValue[string] {
+	return &c.InstanceName
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceUser) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceUser) GetHost() *plugin.TValue[string] {
+	return &c.Host
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceUser) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceUser) GetIamEmail() *plugin.TValue[string] {
+	return &c.IamEmail
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceUser) GetDatabaseRoles() *plugin.TValue[[]any] {
+	return &c.DatabaseRoles
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceUser) GetDualPasswordType() *plugin.TValue[string] {
+	return &c.DualPasswordType
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceUser) GetPasswordPolicy() *plugin.TValue[any] {
+	return &c.PasswordPolicy
+}
+
+// mqlGcpProjectSqlServiceInstanceSslCert for the gcp.project.sqlService.instance.sslCert resource
+type mqlGcpProjectSqlServiceInstanceSslCert struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectSqlServiceInstanceSslCertInternal it will be used here
+	ProjectId        plugin.TValue[string]
+	InstanceName     plugin.TValue[string]
+	CommonName       plugin.TValue[string]
+	Sha1Fingerprint  plugin.TValue[string]
+	CertSerialNumber plugin.TValue[string]
+	Cert             plugin.TValue[string]
+	CreateTime       plugin.TValue[*time.Time]
+	ExpirationTime   plugin.TValue[*time.Time]
+}
+
+// createGcpProjectSqlServiceInstanceSslCert creates a new instance of this resource
+func createGcpProjectSqlServiceInstanceSslCert(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectSqlServiceInstanceSslCert{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.sqlService.instance.sslCert", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceSslCert) MqlName() string {
+	return "gcp.project.sqlService.instance.sslCert"
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceSslCert) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceSslCert) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceSslCert) GetInstanceName() *plugin.TValue[string] {
+	return &c.InstanceName
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceSslCert) GetCommonName() *plugin.TValue[string] {
+	return &c.CommonName
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceSslCert) GetSha1Fingerprint() *plugin.TValue[string] {
+	return &c.Sha1Fingerprint
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceSslCert) GetCertSerialNumber() *plugin.TValue[string] {
+	return &c.CertSerialNumber
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceSslCert) GetCert() *plugin.TValue[string] {
+	return &c.Cert
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceSslCert) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceSslCert) GetExpirationTime() *plugin.TValue[*time.Time] {
+	return &c.ExpirationTime
 }
 
 // mqlGcpProjectSqlServiceInstanceIpMapping for the gcp.project.sqlService.instance.ipMapping resource
@@ -34102,6 +36204,7 @@ type mqlGcpProjectPubsubService struct {
 	Topics        plugin.TValue[[]any]
 	Subscriptions plugin.TValue[[]any]
 	Snapshots     plugin.TValue[[]any]
+	Schemas       plugin.TValue[[]any]
 }
 
 // createGcpProjectPubsubService creates a new instance of this resource
@@ -34190,6 +36293,22 @@ func (c *mqlGcpProjectPubsubService) GetSnapshots() *plugin.TValue[[]any] {
 		}
 
 		return c.snapshots()
+	})
+}
+
+func (c *mqlGcpProjectPubsubService) GetSchemas() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Schemas, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.pubsubService", c.__id, "schemas")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.schemas()
 	})
 }
 
@@ -34742,6 +36861,80 @@ func (c *mqlGcpProjectPubsubServiceSnapshot) GetTopic() *plugin.TValue[*mqlGcpPr
 
 func (c *mqlGcpProjectPubsubServiceSnapshot) GetExpiration() *plugin.TValue[*time.Time] {
 	return &c.Expiration
+}
+
+// mqlGcpProjectPubsubServiceSchema for the gcp.project.pubsubService.schema resource
+type mqlGcpProjectPubsubServiceSchema struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectPubsubServiceSchemaInternal it will be used here
+	ProjectId          plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Type               plugin.TValue[string]
+	Definition         plugin.TValue[string]
+	RevisionId         plugin.TValue[string]
+	RevisionCreateTime plugin.TValue[*time.Time]
+}
+
+// createGcpProjectPubsubServiceSchema creates a new instance of this resource
+func createGcpProjectPubsubServiceSchema(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectPubsubServiceSchema{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.pubsubService.schema", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectPubsubServiceSchema) MqlName() string {
+	return "gcp.project.pubsubService.schema"
+}
+
+func (c *mqlGcpProjectPubsubServiceSchema) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectPubsubServiceSchema) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectPubsubServiceSchema) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectPubsubServiceSchema) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlGcpProjectPubsubServiceSchema) GetDefinition() *plugin.TValue[string] {
+	return &c.Definition
+}
+
+func (c *mqlGcpProjectPubsubServiceSchema) GetRevisionId() *plugin.TValue[string] {
+	return &c.RevisionId
+}
+
+func (c *mqlGcpProjectPubsubServiceSchema) GetRevisionCreateTime() *plugin.TValue[*time.Time] {
+	return &c.RevisionCreateTime
 }
 
 // mqlGcpProjectKmsService for the gcp.project.kmsService resource
@@ -35800,6 +37993,7 @@ type mqlGcpProjectLoggingserviceBucket struct {
 	RetentionDays       plugin.TValue[int64]
 	Updated             plugin.TValue[*time.Time]
 	LogAnalyticsEnabled plugin.TValue[bool]
+	Views               plugin.TValue[[]any]
 }
 
 // createGcpProjectLoggingserviceBucket creates a new instance of this resource
@@ -35889,6 +38083,96 @@ func (c *mqlGcpProjectLoggingserviceBucket) GetUpdated() *plugin.TValue[*time.Ti
 
 func (c *mqlGcpProjectLoggingserviceBucket) GetLogAnalyticsEnabled() *plugin.TValue[bool] {
 	return &c.LogAnalyticsEnabled
+}
+
+func (c *mqlGcpProjectLoggingserviceBucket) GetViews() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Views, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.loggingservice.bucket", c.__id, "views")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.views()
+	})
+}
+
+// mqlGcpProjectLoggingserviceBucketView for the gcp.project.loggingservice.bucket.view resource
+type mqlGcpProjectLoggingserviceBucketView struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectLoggingserviceBucketViewInternal it will be used here
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Description plugin.TValue[string]
+	Filter      plugin.TValue[string]
+	CreateTime  plugin.TValue[*time.Time]
+	UpdateTime  plugin.TValue[*time.Time]
+}
+
+// createGcpProjectLoggingserviceBucketView creates a new instance of this resource
+func createGcpProjectLoggingserviceBucketView(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectLoggingserviceBucketView{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.loggingservice.bucket.view", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectLoggingserviceBucketView) MqlName() string {
+	return "gcp.project.loggingservice.bucket.view"
+}
+
+func (c *mqlGcpProjectLoggingserviceBucketView) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectLoggingserviceBucketView) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectLoggingserviceBucketView) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectLoggingserviceBucketView) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectLoggingserviceBucketView) GetFilter() *plugin.TValue[string] {
+	return &c.Filter
+}
+
+func (c *mqlGcpProjectLoggingserviceBucketView) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlGcpProjectLoggingserviceBucketView) GetUpdateTime() *plugin.TValue[*time.Time] {
+	return &c.UpdateTime
 }
 
 // mqlGcpProjectLoggingserviceBucketIndexConfig for the gcp.project.loggingservice.bucket.indexConfig resource
@@ -36774,15 +39058,469 @@ func (c *mqlGcpProjectCloudFunction) GetDockerRegistry() *plugin.TValue[string] 
 	return &c.DockerRegistry
 }
 
+// mqlGcpProjectCloudFunctionV2 for the gcp.project.cloudFunctionV2 resource
+type mqlGcpProjectCloudFunctionV2 struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectCloudFunctionV2Internal
+	ProjectId     plugin.TValue[string]
+	Name          plugin.TValue[string]
+	Description   plugin.TValue[string]
+	State         plugin.TValue[string]
+	Environment   plugin.TValue[string]
+	Url           plugin.TValue[string]
+	Labels        plugin.TValue[map[string]any]
+	KmsKeyName    plugin.TValue[string]
+	KmsKey        plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	BuildConfig   plugin.TValue[*mqlGcpProjectCloudFunctionV2BuildConfig]
+	ServiceConfig plugin.TValue[*mqlGcpProjectCloudFunctionV2ServiceConfig]
+	EventTrigger  plugin.TValue[*mqlGcpProjectCloudFunctionV2EventTrigger]
+	CreateTime    plugin.TValue[*time.Time]
+	UpdateTime    plugin.TValue[*time.Time]
+}
+
+// createGcpProjectCloudFunctionV2 creates a new instance of this resource
+func createGcpProjectCloudFunctionV2(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectCloudFunctionV2{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.cloudFunctionV2", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectCloudFunctionV2) MqlName() string {
+	return "gcp.project.cloudFunctionV2"
+}
+
+func (c *mqlGcpProjectCloudFunctionV2) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectCloudFunctionV2) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectCloudFunctionV2) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectCloudFunctionV2) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectCloudFunctionV2) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectCloudFunctionV2) GetEnvironment() *plugin.TValue[string] {
+	return &c.Environment
+}
+
+func (c *mqlGcpProjectCloudFunctionV2) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlGcpProjectCloudFunctionV2) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectCloudFunctionV2) GetKmsKeyName() *plugin.TValue[string] {
+	return &c.KmsKeyName
+}
+
+func (c *mqlGcpProjectCloudFunctionV2) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.cloudFunctionV2", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlGcpProjectCloudFunctionV2) GetBuildConfig() *plugin.TValue[*mqlGcpProjectCloudFunctionV2BuildConfig] {
+	return &c.BuildConfig
+}
+
+func (c *mqlGcpProjectCloudFunctionV2) GetServiceConfig() *plugin.TValue[*mqlGcpProjectCloudFunctionV2ServiceConfig] {
+	return &c.ServiceConfig
+}
+
+func (c *mqlGcpProjectCloudFunctionV2) GetEventTrigger() *plugin.TValue[*mqlGcpProjectCloudFunctionV2EventTrigger] {
+	return &c.EventTrigger
+}
+
+func (c *mqlGcpProjectCloudFunctionV2) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlGcpProjectCloudFunctionV2) GetUpdateTime() *plugin.TValue[*time.Time] {
+	return &c.UpdateTime
+}
+
+// mqlGcpProjectCloudFunctionV2BuildConfig for the gcp.project.cloudFunctionV2.buildConfig resource
+type mqlGcpProjectCloudFunctionV2BuildConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectCloudFunctionV2BuildConfigInternal it will be used here
+	Id                   plugin.TValue[string]
+	Runtime              plugin.TValue[string]
+	EntryPoint           plugin.TValue[string]
+	Source               plugin.TValue[any]
+	BuildWorkerPool      plugin.TValue[string]
+	EnvironmentVariables plugin.TValue[map[string]any]
+	DockerRepository     plugin.TValue[string]
+	ServiceAccount       plugin.TValue[string]
+}
+
+// createGcpProjectCloudFunctionV2BuildConfig creates a new instance of this resource
+func createGcpProjectCloudFunctionV2BuildConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectCloudFunctionV2BuildConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.cloudFunctionV2.buildConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectCloudFunctionV2BuildConfig) MqlName() string {
+	return "gcp.project.cloudFunctionV2.buildConfig"
+}
+
+func (c *mqlGcpProjectCloudFunctionV2BuildConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectCloudFunctionV2BuildConfig) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectCloudFunctionV2BuildConfig) GetRuntime() *plugin.TValue[string] {
+	return &c.Runtime
+}
+
+func (c *mqlGcpProjectCloudFunctionV2BuildConfig) GetEntryPoint() *plugin.TValue[string] {
+	return &c.EntryPoint
+}
+
+func (c *mqlGcpProjectCloudFunctionV2BuildConfig) GetSource() *plugin.TValue[any] {
+	return &c.Source
+}
+
+func (c *mqlGcpProjectCloudFunctionV2BuildConfig) GetBuildWorkerPool() *plugin.TValue[string] {
+	return &c.BuildWorkerPool
+}
+
+func (c *mqlGcpProjectCloudFunctionV2BuildConfig) GetEnvironmentVariables() *plugin.TValue[map[string]any] {
+	return &c.EnvironmentVariables
+}
+
+func (c *mqlGcpProjectCloudFunctionV2BuildConfig) GetDockerRepository() *plugin.TValue[string] {
+	return &c.DockerRepository
+}
+
+func (c *mqlGcpProjectCloudFunctionV2BuildConfig) GetServiceAccount() *plugin.TValue[string] {
+	return &c.ServiceAccount
+}
+
+// mqlGcpProjectCloudFunctionV2ServiceConfig for the gcp.project.cloudFunctionV2.serviceConfig resource
+type mqlGcpProjectCloudFunctionV2ServiceConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectCloudFunctionV2ServiceConfigInternal
+	Id                         plugin.TValue[string]
+	Service                    plugin.TValue[string]
+	TimeoutSeconds             plugin.TValue[int64]
+	AvailableMemory            plugin.TValue[string]
+	AvailableCpu               plugin.TValue[string]
+	EnvironmentVariables       plugin.TValue[map[string]any]
+	MaxInstanceCount           plugin.TValue[int64]
+	MinInstanceCount           plugin.TValue[int64]
+	VpcConnector               plugin.TValue[string]
+	VpcConnectorEgressSettings plugin.TValue[string]
+	IngressSettings            plugin.TValue[string]
+	ServiceAccountEmail        plugin.TValue[string]
+	IamServiceAccount          plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
+	AllTrafficOnLatestRevision plugin.TValue[bool]
+	SecretEnvironmentVariables plugin.TValue[[]any]
+	SecretVolumes              plugin.TValue[[]any]
+}
+
+// createGcpProjectCloudFunctionV2ServiceConfig creates a new instance of this resource
+func createGcpProjectCloudFunctionV2ServiceConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectCloudFunctionV2ServiceConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.cloudFunctionV2.serviceConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectCloudFunctionV2ServiceConfig) MqlName() string {
+	return "gcp.project.cloudFunctionV2.serviceConfig"
+}
+
+func (c *mqlGcpProjectCloudFunctionV2ServiceConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectCloudFunctionV2ServiceConfig) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectCloudFunctionV2ServiceConfig) GetService() *plugin.TValue[string] {
+	return &c.Service
+}
+
+func (c *mqlGcpProjectCloudFunctionV2ServiceConfig) GetTimeoutSeconds() *plugin.TValue[int64] {
+	return &c.TimeoutSeconds
+}
+
+func (c *mqlGcpProjectCloudFunctionV2ServiceConfig) GetAvailableMemory() *plugin.TValue[string] {
+	return &c.AvailableMemory
+}
+
+func (c *mqlGcpProjectCloudFunctionV2ServiceConfig) GetAvailableCpu() *plugin.TValue[string] {
+	return &c.AvailableCpu
+}
+
+func (c *mqlGcpProjectCloudFunctionV2ServiceConfig) GetEnvironmentVariables() *plugin.TValue[map[string]any] {
+	return &c.EnvironmentVariables
+}
+
+func (c *mqlGcpProjectCloudFunctionV2ServiceConfig) GetMaxInstanceCount() *plugin.TValue[int64] {
+	return &c.MaxInstanceCount
+}
+
+func (c *mqlGcpProjectCloudFunctionV2ServiceConfig) GetMinInstanceCount() *plugin.TValue[int64] {
+	return &c.MinInstanceCount
+}
+
+func (c *mqlGcpProjectCloudFunctionV2ServiceConfig) GetVpcConnector() *plugin.TValue[string] {
+	return &c.VpcConnector
+}
+
+func (c *mqlGcpProjectCloudFunctionV2ServiceConfig) GetVpcConnectorEgressSettings() *plugin.TValue[string] {
+	return &c.VpcConnectorEgressSettings
+}
+
+func (c *mqlGcpProjectCloudFunctionV2ServiceConfig) GetIngressSettings() *plugin.TValue[string] {
+	return &c.IngressSettings
+}
+
+func (c *mqlGcpProjectCloudFunctionV2ServiceConfig) GetServiceAccountEmail() *plugin.TValue[string] {
+	return &c.ServiceAccountEmail
+}
+
+func (c *mqlGcpProjectCloudFunctionV2ServiceConfig) GetIamServiceAccount() *plugin.TValue[*mqlGcpProjectIamServiceServiceAccount] {
+	return plugin.GetOrCompute[*mqlGcpProjectIamServiceServiceAccount](&c.IamServiceAccount, func() (*mqlGcpProjectIamServiceServiceAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.cloudFunctionV2.serviceConfig", c.__id, "iamServiceAccount")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectIamServiceServiceAccount), nil
+			}
+		}
+
+		return c.iamServiceAccount()
+	})
+}
+
+func (c *mqlGcpProjectCloudFunctionV2ServiceConfig) GetAllTrafficOnLatestRevision() *plugin.TValue[bool] {
+	return &c.AllTrafficOnLatestRevision
+}
+
+func (c *mqlGcpProjectCloudFunctionV2ServiceConfig) GetSecretEnvironmentVariables() *plugin.TValue[[]any] {
+	return &c.SecretEnvironmentVariables
+}
+
+func (c *mqlGcpProjectCloudFunctionV2ServiceConfig) GetSecretVolumes() *plugin.TValue[[]any] {
+	return &c.SecretVolumes
+}
+
+// mqlGcpProjectCloudFunctionV2EventTrigger for the gcp.project.cloudFunctionV2.eventTrigger resource
+type mqlGcpProjectCloudFunctionV2EventTrigger struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectCloudFunctionV2EventTriggerInternal
+	Id                  plugin.TValue[string]
+	Trigger             plugin.TValue[string]
+	TriggerRegion       plugin.TValue[string]
+	EventType           plugin.TValue[string]
+	EventFilters        plugin.TValue[[]any]
+	PubsubTopic         plugin.TValue[string]
+	Topic               plugin.TValue[*mqlGcpProjectPubsubServiceTopic]
+	ServiceAccountEmail plugin.TValue[string]
+	RetryPolicy         plugin.TValue[string]
+	Channel             plugin.TValue[string]
+}
+
+// createGcpProjectCloudFunctionV2EventTrigger creates a new instance of this resource
+func createGcpProjectCloudFunctionV2EventTrigger(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectCloudFunctionV2EventTrigger{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.cloudFunctionV2.eventTrigger", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectCloudFunctionV2EventTrigger) MqlName() string {
+	return "gcp.project.cloudFunctionV2.eventTrigger"
+}
+
+func (c *mqlGcpProjectCloudFunctionV2EventTrigger) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectCloudFunctionV2EventTrigger) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectCloudFunctionV2EventTrigger) GetTrigger() *plugin.TValue[string] {
+	return &c.Trigger
+}
+
+func (c *mqlGcpProjectCloudFunctionV2EventTrigger) GetTriggerRegion() *plugin.TValue[string] {
+	return &c.TriggerRegion
+}
+
+func (c *mqlGcpProjectCloudFunctionV2EventTrigger) GetEventType() *plugin.TValue[string] {
+	return &c.EventType
+}
+
+func (c *mqlGcpProjectCloudFunctionV2EventTrigger) GetEventFilters() *plugin.TValue[[]any] {
+	return &c.EventFilters
+}
+
+func (c *mqlGcpProjectCloudFunctionV2EventTrigger) GetPubsubTopic() *plugin.TValue[string] {
+	return &c.PubsubTopic
+}
+
+func (c *mqlGcpProjectCloudFunctionV2EventTrigger) GetTopic() *plugin.TValue[*mqlGcpProjectPubsubServiceTopic] {
+	return plugin.GetOrCompute[*mqlGcpProjectPubsubServiceTopic](&c.Topic, func() (*mqlGcpProjectPubsubServiceTopic, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.cloudFunctionV2.eventTrigger", c.__id, "topic")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectPubsubServiceTopic), nil
+			}
+		}
+
+		return c.topic()
+	})
+}
+
+func (c *mqlGcpProjectCloudFunctionV2EventTrigger) GetServiceAccountEmail() *plugin.TValue[string] {
+	return &c.ServiceAccountEmail
+}
+
+func (c *mqlGcpProjectCloudFunctionV2EventTrigger) GetRetryPolicy() *plugin.TValue[string] {
+	return &c.RetryPolicy
+}
+
+func (c *mqlGcpProjectCloudFunctionV2EventTrigger) GetChannel() *plugin.TValue[string] {
+	return &c.Channel
+}
+
 // mqlGcpProjectDataprocService for the gcp.project.dataprocService resource
 type mqlGcpProjectDataprocService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectDataprocServiceInternal it will be used here
-	ProjectId plugin.TValue[string]
-	Enabled   plugin.TValue[bool]
-	Regions   plugin.TValue[[]any]
-	Clusters  plugin.TValue[[]any]
+	ProjectId           plugin.TValue[string]
+	Enabled             plugin.TValue[bool]
+	Regions             plugin.TValue[[]any]
+	Clusters            plugin.TValue[[]any]
+	Jobs                plugin.TValue[[]any]
+	AutoscalingPolicies plugin.TValue[[]any]
 }
 
 // createGcpProjectDataprocService creates a new instance of this resource
@@ -36849,6 +39587,38 @@ func (c *mqlGcpProjectDataprocService) GetClusters() *plugin.TValue[[]any] {
 		}
 
 		return c.clusters()
+	})
+}
+
+func (c *mqlGcpProjectDataprocService) GetJobs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Jobs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.dataprocService", c.__id, "jobs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.jobs()
+	})
+}
+
+func (c *mqlGcpProjectDataprocService) GetAutoscalingPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AutoscalingPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.dataprocService", c.__id, "autoscalingPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.autoscalingPolicies()
 	})
 }
 
@@ -37771,6 +40541,169 @@ func (c *mqlGcpProjectDataprocServiceClusterVirtualClusterConfig) GetKubernetesC
 
 func (c *mqlGcpProjectDataprocServiceClusterVirtualClusterConfig) GetStagingBucket() *plugin.TValue[string] {
 	return &c.StagingBucket
+}
+
+// mqlGcpProjectDataprocServiceJob for the gcp.project.dataprocService.job resource
+type mqlGcpProjectDataprocServiceJob struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectDataprocServiceJobInternal it will be used here
+	ProjectId               plugin.TValue[string]
+	Name                    plugin.TValue[string]
+	JobUuid                 plugin.TValue[string]
+	Status                  plugin.TValue[string]
+	StatusDetail            plugin.TValue[string]
+	JobType                 plugin.TValue[string]
+	ClusterName             plugin.TValue[string]
+	Labels                  plugin.TValue[map[string]any]
+	Done                    plugin.TValue[bool]
+	DriverOutputResourceUri plugin.TValue[string]
+}
+
+// createGcpProjectDataprocServiceJob creates a new instance of this resource
+func createGcpProjectDataprocServiceJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectDataprocServiceJob{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.dataprocService.job", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectDataprocServiceJob) MqlName() string {
+	return "gcp.project.dataprocService.job"
+}
+
+func (c *mqlGcpProjectDataprocServiceJob) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectDataprocServiceJob) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectDataprocServiceJob) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectDataprocServiceJob) GetJobUuid() *plugin.TValue[string] {
+	return &c.JobUuid
+}
+
+func (c *mqlGcpProjectDataprocServiceJob) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlGcpProjectDataprocServiceJob) GetStatusDetail() *plugin.TValue[string] {
+	return &c.StatusDetail
+}
+
+func (c *mqlGcpProjectDataprocServiceJob) GetJobType() *plugin.TValue[string] {
+	return &c.JobType
+}
+
+func (c *mqlGcpProjectDataprocServiceJob) GetClusterName() *plugin.TValue[string] {
+	return &c.ClusterName
+}
+
+func (c *mqlGcpProjectDataprocServiceJob) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectDataprocServiceJob) GetDone() *plugin.TValue[bool] {
+	return &c.Done
+}
+
+func (c *mqlGcpProjectDataprocServiceJob) GetDriverOutputResourceUri() *plugin.TValue[string] {
+	return &c.DriverOutputResourceUri
+}
+
+// mqlGcpProjectDataprocServiceAutoscalingPolicy for the gcp.project.dataprocService.autoscalingPolicy resource
+type mqlGcpProjectDataprocServiceAutoscalingPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectDataprocServiceAutoscalingPolicyInternal it will be used here
+	ProjectId             plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	WorkerConfig          plugin.TValue[any]
+	SecondaryWorkerConfig plugin.TValue[any]
+	BasicAlgorithm        plugin.TValue[any]
+}
+
+// createGcpProjectDataprocServiceAutoscalingPolicy creates a new instance of this resource
+func createGcpProjectDataprocServiceAutoscalingPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectDataprocServiceAutoscalingPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.dataprocService.autoscalingPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectDataprocServiceAutoscalingPolicy) MqlName() string {
+	return "gcp.project.dataprocService.autoscalingPolicy"
+}
+
+func (c *mqlGcpProjectDataprocServiceAutoscalingPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectDataprocServiceAutoscalingPolicy) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectDataprocServiceAutoscalingPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectDataprocServiceAutoscalingPolicy) GetWorkerConfig() *plugin.TValue[any] {
+	return &c.WorkerConfig
+}
+
+func (c *mqlGcpProjectDataprocServiceAutoscalingPolicy) GetSecondaryWorkerConfig() *plugin.TValue[any] {
+	return &c.SecondaryWorkerConfig
+}
+
+func (c *mqlGcpProjectDataprocServiceAutoscalingPolicy) GetBasicAlgorithm() *plugin.TValue[any] {
+	return &c.BasicAlgorithm
 }
 
 // mqlGcpProjectCloudRunService for the gcp.project.cloudRunService resource
@@ -38969,6 +41902,8 @@ type mqlGcpProjectMonitoringService struct {
 	UptimeCheckConfigs   plugin.TValue[[]any]
 	NotificationChannels plugin.TValue[[]any]
 	Groups               plugin.TValue[[]any]
+	Dashboards           plugin.TValue[[]any]
+	Services             plugin.TValue[[]any]
 }
 
 // createGcpProjectMonitoringService creates a new instance of this resource
@@ -39073,6 +42008,38 @@ func (c *mqlGcpProjectMonitoringService) GetGroups() *plugin.TValue[[]any] {
 		}
 
 		return c.groups()
+	})
+}
+
+func (c *mqlGcpProjectMonitoringService) GetDashboards() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Dashboards, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.monitoringService", c.__id, "dashboards")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.dashboards()
+	})
+}
+
+func (c *mqlGcpProjectMonitoringService) GetServices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Services, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.monitoringService", c.__id, "services")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.services()
 	})
 }
 
@@ -39455,6 +42422,245 @@ func (c *mqlGcpProjectMonitoringServiceGroup) GetFilter() *plugin.TValue[string]
 
 func (c *mqlGcpProjectMonitoringServiceGroup) GetIsCluster() *plugin.TValue[bool] {
 	return &c.IsCluster
+}
+
+// mqlGcpProjectMonitoringServiceDashboard for the gcp.project.monitoringService.dashboard resource
+type mqlGcpProjectMonitoringServiceDashboard struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectMonitoringServiceDashboardInternal it will be used here
+	ProjectId   plugin.TValue[string]
+	Name        plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	Etag        plugin.TValue[string]
+	Layout      plugin.TValue[any]
+}
+
+// createGcpProjectMonitoringServiceDashboard creates a new instance of this resource
+func createGcpProjectMonitoringServiceDashboard(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectMonitoringServiceDashboard{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.monitoringService.dashboard", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectMonitoringServiceDashboard) MqlName() string {
+	return "gcp.project.monitoringService.dashboard"
+}
+
+func (c *mqlGcpProjectMonitoringServiceDashboard) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectMonitoringServiceDashboard) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectMonitoringServiceDashboard) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectMonitoringServiceDashboard) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectMonitoringServiceDashboard) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlGcpProjectMonitoringServiceDashboard) GetLayout() *plugin.TValue[any] {
+	return &c.Layout
+}
+
+// mqlGcpProjectMonitoringServiceService for the gcp.project.monitoringService.service resource
+type mqlGcpProjectMonitoringServiceService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectMonitoringServiceServiceInternal it will be used here
+	ProjectId   plugin.TValue[string]
+	Name        plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	Telemetry   plugin.TValue[any]
+	UserLabels  plugin.TValue[map[string]any]
+	Slos        plugin.TValue[[]any]
+}
+
+// createGcpProjectMonitoringServiceService creates a new instance of this resource
+func createGcpProjectMonitoringServiceService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectMonitoringServiceService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.monitoringService.service", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectMonitoringServiceService) MqlName() string {
+	return "gcp.project.monitoringService.service"
+}
+
+func (c *mqlGcpProjectMonitoringServiceService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectMonitoringServiceService) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectMonitoringServiceService) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectMonitoringServiceService) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectMonitoringServiceService) GetTelemetry() *plugin.TValue[any] {
+	return &c.Telemetry
+}
+
+func (c *mqlGcpProjectMonitoringServiceService) GetUserLabels() *plugin.TValue[map[string]any] {
+	return &c.UserLabels
+}
+
+func (c *mqlGcpProjectMonitoringServiceService) GetSlos() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Slos, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.monitoringService.service", c.__id, "slos")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.slos()
+	})
+}
+
+// mqlGcpProjectMonitoringServiceServiceSlo for the gcp.project.monitoringService.service.slo resource
+type mqlGcpProjectMonitoringServiceServiceSlo struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectMonitoringServiceServiceSloInternal it will be used here
+	ProjectId             plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	DisplayName           plugin.TValue[string]
+	Goal                  plugin.TValue[float64]
+	ServiceLevelIndicator plugin.TValue[any]
+	RollingPeriod         plugin.TValue[string]
+	CalendarPeriod        plugin.TValue[string]
+	UserLabels            plugin.TValue[map[string]any]
+}
+
+// createGcpProjectMonitoringServiceServiceSlo creates a new instance of this resource
+func createGcpProjectMonitoringServiceServiceSlo(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectMonitoringServiceServiceSlo{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.monitoringService.service.slo", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectMonitoringServiceServiceSlo) MqlName() string {
+	return "gcp.project.monitoringService.service.slo"
+}
+
+func (c *mqlGcpProjectMonitoringServiceServiceSlo) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectMonitoringServiceServiceSlo) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectMonitoringServiceServiceSlo) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectMonitoringServiceServiceSlo) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectMonitoringServiceServiceSlo) GetGoal() *plugin.TValue[float64] {
+	return &c.Goal
+}
+
+func (c *mqlGcpProjectMonitoringServiceServiceSlo) GetServiceLevelIndicator() *plugin.TValue[any] {
+	return &c.ServiceLevelIndicator
+}
+
+func (c *mqlGcpProjectMonitoringServiceServiceSlo) GetRollingPeriod() *plugin.TValue[string] {
+	return &c.RollingPeriod
+}
+
+func (c *mqlGcpProjectMonitoringServiceServiceSlo) GetCalendarPeriod() *plugin.TValue[string] {
+	return &c.CalendarPeriod
+}
+
+func (c *mqlGcpProjectMonitoringServiceServiceSlo) GetUserLabels() *plugin.TValue[map[string]any] {
+	return &c.UserLabels
 }
 
 // mqlGcpProjectBinaryAuthorizationControl for the gcp.project.binaryAuthorizationControl resource
@@ -40390,8 +43596,9 @@ type mqlGcpProjectSpannerService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectSpannerServiceInternal it will be used here
-	ProjectId plugin.TValue[string]
-	Instances plugin.TValue[[]any]
+	ProjectId       plugin.TValue[string]
+	Instances       plugin.TValue[[]any]
+	InstanceConfigs plugin.TValue[[]any]
 }
 
 // createGcpProjectSpannerService creates a new instance of this resource
@@ -40451,6 +43658,22 @@ func (c *mqlGcpProjectSpannerService) GetInstances() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlGcpProjectSpannerService) GetInstanceConfigs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InstanceConfigs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.spannerService", c.__id, "instanceConfigs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.instanceConfigs()
+	})
+}
+
 // mqlGcpProjectSpannerServiceInstance for the gcp.project.spannerService.instance resource
 type mqlGcpProjectSpannerServiceInstance struct {
 	MqlRuntime *plugin.Runtime
@@ -40460,6 +43683,7 @@ type mqlGcpProjectSpannerServiceInstance struct {
 	Name                      plugin.TValue[string]
 	DisplayName               plugin.TValue[string]
 	Config                    plugin.TValue[string]
+	InstanceConfig            plugin.TValue[*mqlGcpProjectSpannerServiceInstanceConfig]
 	NodeCount                 plugin.TValue[int64]
 	ProcessingUnits           plugin.TValue[int64]
 	State                     plugin.TValue[string]
@@ -40525,6 +43749,22 @@ func (c *mqlGcpProjectSpannerServiceInstance) GetDisplayName() *plugin.TValue[st
 
 func (c *mqlGcpProjectSpannerServiceInstance) GetConfig() *plugin.TValue[string] {
 	return &c.Config
+}
+
+func (c *mqlGcpProjectSpannerServiceInstance) GetInstanceConfig() *plugin.TValue[*mqlGcpProjectSpannerServiceInstanceConfig] {
+	return plugin.GetOrCompute[*mqlGcpProjectSpannerServiceInstanceConfig](&c.InstanceConfig, func() (*mqlGcpProjectSpannerServiceInstanceConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.spannerService.instance", c.__id, "instanceConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectSpannerServiceInstanceConfig), nil
+			}
+		}
+
+		return c.instanceConfig()
+	})
 }
 
 func (c *mqlGcpProjectSpannerServiceInstance) GetNodeCount() *plugin.TValue[int64] {
@@ -40817,6 +44057,95 @@ func (c *mqlGcpProjectSpannerServiceInstanceBackup) GetDatabaseDialect() *plugin
 
 func (c *mqlGcpProjectSpannerServiceInstanceBackup) GetMaxExpireTime() *plugin.TValue[*time.Time] {
 	return &c.MaxExpireTime
+}
+
+// mqlGcpProjectSpannerServiceInstanceConfig for the gcp.project.spannerService.instanceConfig resource
+type mqlGcpProjectSpannerServiceInstanceConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectSpannerServiceInstanceConfigInternal it will be used here
+	ProjectId                plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	DisplayName              plugin.TValue[string]
+	Replicas                 plugin.TValue[[]any]
+	LeaderOptions            plugin.TValue[[]any]
+	BaseConfig               plugin.TValue[string]
+	ConfigType               plugin.TValue[string]
+	FreeInstanceAvailability plugin.TValue[string]
+	Labels                   plugin.TValue[map[string]any]
+}
+
+// createGcpProjectSpannerServiceInstanceConfig creates a new instance of this resource
+func createGcpProjectSpannerServiceInstanceConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectSpannerServiceInstanceConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.spannerService.instanceConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceConfig) MqlName() string {
+	return "gcp.project.spannerService.instanceConfig"
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceConfig) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceConfig) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceConfig) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceConfig) GetReplicas() *plugin.TValue[[]any] {
+	return &c.Replicas
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceConfig) GetLeaderOptions() *plugin.TValue[[]any] {
+	return &c.LeaderOptions
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceConfig) GetBaseConfig() *plugin.TValue[string] {
+	return &c.BaseConfig
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceConfig) GetConfigType() *plugin.TValue[string] {
+	return &c.ConfigType
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceConfig) GetFreeInstanceAvailability() *plugin.TValue[string] {
+	return &c.FreeInstanceAvailability
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceConfig) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
 }
 
 // mqlGcpProjectBigtableService for the gcp.project.bigtableService resource
@@ -47316,6 +50645,85 @@ func (c *mqlGcpProjectComputeServicePublicAdvertisedPrefix) GetCreated() *plugin
 	return &c.Created
 }
 
+// mqlGcpProjectComputeServiceInstanceTemplate for the gcp.project.computeService.instanceTemplate resource
+type mqlGcpProjectComputeServiceInstanceTemplate struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectComputeServiceInstanceTemplateInternal it will be used here
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Description       plugin.TValue[string]
+	SelfLink          plugin.TValue[string]
+	SourceInstance    plugin.TValue[string]
+	Properties        plugin.TValue[any]
+	CreationTimestamp plugin.TValue[*time.Time]
+}
+
+// createGcpProjectComputeServiceInstanceTemplate creates a new instance of this resource
+func createGcpProjectComputeServiceInstanceTemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectComputeServiceInstanceTemplate{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.computeService.instanceTemplate", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceTemplate) MqlName() string {
+	return "gcp.project.computeService.instanceTemplate"
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceTemplate) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceTemplate) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceTemplate) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceTemplate) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceTemplate) GetSelfLink() *plugin.TValue[string] {
+	return &c.SelfLink
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceTemplate) GetSourceInstance() *plugin.TValue[string] {
+	return &c.SourceInstance
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceTemplate) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceTemplate) GetCreationTimestamp() *plugin.TValue[*time.Time] {
+	return &c.CreationTimestamp
+}
+
 // mqlGcpProjectCloudDeployService for the gcp.project.cloudDeployService resource
 type mqlGcpProjectCloudDeployService struct {
 	MqlRuntime *plugin.Runtime
@@ -53055,4 +56463,1138 @@ func (c *mqlGcpProjectContainerAnalysisServiceOccurrence) GetCreated() *plugin.T
 
 func (c *mqlGcpProjectContainerAnalysisServiceOccurrence) GetUpdated() *plugin.TValue[*time.Time] {
 	return &c.Updated
+}
+
+// mqlGcpProjectCloudBuildService for the gcp.project.cloudBuildService resource
+type mqlGcpProjectCloudBuildService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectCloudBuildServiceInternal it will be used here
+	ProjectId   plugin.TValue[string]
+	Triggers    plugin.TValue[[]any]
+	WorkerPools plugin.TValue[[]any]
+}
+
+// createGcpProjectCloudBuildService creates a new instance of this resource
+func createGcpProjectCloudBuildService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectCloudBuildService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.cloudBuildService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectCloudBuildService) MqlName() string {
+	return "gcp.project.cloudBuildService"
+}
+
+func (c *mqlGcpProjectCloudBuildService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectCloudBuildService) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectCloudBuildService) GetTriggers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Triggers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.cloudBuildService", c.__id, "triggers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.triggers()
+	})
+}
+
+func (c *mqlGcpProjectCloudBuildService) GetWorkerPools() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.WorkerPools, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.cloudBuildService", c.__id, "workerPools")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.workerPools()
+	})
+}
+
+// mqlGcpProjectCloudBuildServiceTrigger for the gcp.project.cloudBuildService.trigger resource
+type mqlGcpProjectCloudBuildServiceTrigger struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectCloudBuildServiceTriggerInternal
+	ProjectId             plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	TriggerId             plugin.TValue[string]
+	Description           plugin.TValue[string]
+	Disabled              plugin.TValue[bool]
+	Tags                  plugin.TValue[[]any]
+	Filename              plugin.TValue[string]
+	Filter                plugin.TValue[string]
+	Substitutions         plugin.TValue[map[string]any]
+	ServiceAccount        plugin.TValue[string]
+	IamServiceAccount     plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
+	Github                plugin.TValue[*mqlGcpProjectCloudBuildServiceTriggerGithubEventsConfig]
+	PubsubConfig          plugin.TValue[*mqlGcpProjectCloudBuildServiceTriggerPubsubConfig]
+	WebhookConfig         plugin.TValue[*mqlGcpProjectCloudBuildServiceTriggerWebhookConfig]
+	RepositoryEventConfig plugin.TValue[*mqlGcpProjectCloudBuildServiceTriggerRepositoryEventConfig]
+	CreateTime            plugin.TValue[*time.Time]
+}
+
+// createGcpProjectCloudBuildServiceTrigger creates a new instance of this resource
+func createGcpProjectCloudBuildServiceTrigger(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectCloudBuildServiceTrigger{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.cloudBuildService.trigger", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTrigger) MqlName() string {
+	return "gcp.project.cloudBuildService.trigger"
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTrigger) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTrigger) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTrigger) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTrigger) GetTriggerId() *plugin.TValue[string] {
+	return &c.TriggerId
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTrigger) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTrigger) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTrigger) GetTags() *plugin.TValue[[]any] {
+	return &c.Tags
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTrigger) GetFilename() *plugin.TValue[string] {
+	return &c.Filename
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTrigger) GetFilter() *plugin.TValue[string] {
+	return &c.Filter
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTrigger) GetSubstitutions() *plugin.TValue[map[string]any] {
+	return &c.Substitutions
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTrigger) GetServiceAccount() *plugin.TValue[string] {
+	return &c.ServiceAccount
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTrigger) GetIamServiceAccount() *plugin.TValue[*mqlGcpProjectIamServiceServiceAccount] {
+	return plugin.GetOrCompute[*mqlGcpProjectIamServiceServiceAccount](&c.IamServiceAccount, func() (*mqlGcpProjectIamServiceServiceAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.cloudBuildService.trigger", c.__id, "iamServiceAccount")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectIamServiceServiceAccount), nil
+			}
+		}
+
+		return c.iamServiceAccount()
+	})
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTrigger) GetGithub() *plugin.TValue[*mqlGcpProjectCloudBuildServiceTriggerGithubEventsConfig] {
+	return &c.Github
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTrigger) GetPubsubConfig() *plugin.TValue[*mqlGcpProjectCloudBuildServiceTriggerPubsubConfig] {
+	return &c.PubsubConfig
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTrigger) GetWebhookConfig() *plugin.TValue[*mqlGcpProjectCloudBuildServiceTriggerWebhookConfig] {
+	return &c.WebhookConfig
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTrigger) GetRepositoryEventConfig() *plugin.TValue[*mqlGcpProjectCloudBuildServiceTriggerRepositoryEventConfig] {
+	return &c.RepositoryEventConfig
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTrigger) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+// mqlGcpProjectCloudBuildServiceTriggerGithubEventsConfig for the gcp.project.cloudBuildService.trigger.githubEventsConfig resource
+type mqlGcpProjectCloudBuildServiceTriggerGithubEventsConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectCloudBuildServiceTriggerGithubEventsConfigInternal it will be used here
+	Id             plugin.TValue[string]
+	Owner          plugin.TValue[string]
+	Name           plugin.TValue[string]
+	InstallationId plugin.TValue[int64]
+	Push           plugin.TValue[any]
+	PullRequest    plugin.TValue[any]
+}
+
+// createGcpProjectCloudBuildServiceTriggerGithubEventsConfig creates a new instance of this resource
+func createGcpProjectCloudBuildServiceTriggerGithubEventsConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectCloudBuildServiceTriggerGithubEventsConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.cloudBuildService.trigger.githubEventsConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTriggerGithubEventsConfig) MqlName() string {
+	return "gcp.project.cloudBuildService.trigger.githubEventsConfig"
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTriggerGithubEventsConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTriggerGithubEventsConfig) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTriggerGithubEventsConfig) GetOwner() *plugin.TValue[string] {
+	return &c.Owner
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTriggerGithubEventsConfig) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTriggerGithubEventsConfig) GetInstallationId() *plugin.TValue[int64] {
+	return &c.InstallationId
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTriggerGithubEventsConfig) GetPush() *plugin.TValue[any] {
+	return &c.Push
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTriggerGithubEventsConfig) GetPullRequest() *plugin.TValue[any] {
+	return &c.PullRequest
+}
+
+// mqlGcpProjectCloudBuildServiceTriggerPubsubConfig for the gcp.project.cloudBuildService.trigger.pubsubConfig resource
+type mqlGcpProjectCloudBuildServiceTriggerPubsubConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectCloudBuildServiceTriggerPubsubConfigInternal
+	Id                  plugin.TValue[string]
+	Topic               plugin.TValue[string]
+	PubsubTopic         plugin.TValue[*mqlGcpProjectPubsubServiceTopic]
+	Subscription        plugin.TValue[string]
+	ServiceAccountEmail plugin.TValue[string]
+	State               plugin.TValue[string]
+}
+
+// createGcpProjectCloudBuildServiceTriggerPubsubConfig creates a new instance of this resource
+func createGcpProjectCloudBuildServiceTriggerPubsubConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectCloudBuildServiceTriggerPubsubConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.cloudBuildService.trigger.pubsubConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTriggerPubsubConfig) MqlName() string {
+	return "gcp.project.cloudBuildService.trigger.pubsubConfig"
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTriggerPubsubConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTriggerPubsubConfig) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTriggerPubsubConfig) GetTopic() *plugin.TValue[string] {
+	return &c.Topic
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTriggerPubsubConfig) GetPubsubTopic() *plugin.TValue[*mqlGcpProjectPubsubServiceTopic] {
+	return plugin.GetOrCompute[*mqlGcpProjectPubsubServiceTopic](&c.PubsubTopic, func() (*mqlGcpProjectPubsubServiceTopic, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.cloudBuildService.trigger.pubsubConfig", c.__id, "pubsubTopic")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectPubsubServiceTopic), nil
+			}
+		}
+
+		return c.pubsubTopic()
+	})
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTriggerPubsubConfig) GetSubscription() *plugin.TValue[string] {
+	return &c.Subscription
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTriggerPubsubConfig) GetServiceAccountEmail() *plugin.TValue[string] {
+	return &c.ServiceAccountEmail
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTriggerPubsubConfig) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+// mqlGcpProjectCloudBuildServiceTriggerWebhookConfig for the gcp.project.cloudBuildService.trigger.webhookConfig resource
+type mqlGcpProjectCloudBuildServiceTriggerWebhookConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectCloudBuildServiceTriggerWebhookConfigInternal it will be used here
+	Id    plugin.TValue[string]
+	State plugin.TValue[string]
+}
+
+// createGcpProjectCloudBuildServiceTriggerWebhookConfig creates a new instance of this resource
+func createGcpProjectCloudBuildServiceTriggerWebhookConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectCloudBuildServiceTriggerWebhookConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.cloudBuildService.trigger.webhookConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTriggerWebhookConfig) MqlName() string {
+	return "gcp.project.cloudBuildService.trigger.webhookConfig"
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTriggerWebhookConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTriggerWebhookConfig) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTriggerWebhookConfig) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+// mqlGcpProjectCloudBuildServiceTriggerRepositoryEventConfig for the gcp.project.cloudBuildService.trigger.repositoryEventConfig resource
+type mqlGcpProjectCloudBuildServiceTriggerRepositoryEventConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectCloudBuildServiceTriggerRepositoryEventConfigInternal it will be used here
+	Id             plugin.TValue[string]
+	Repository     plugin.TValue[string]
+	RepositoryType plugin.TValue[string]
+	Push           plugin.TValue[any]
+	PullRequest    plugin.TValue[any]
+}
+
+// createGcpProjectCloudBuildServiceTriggerRepositoryEventConfig creates a new instance of this resource
+func createGcpProjectCloudBuildServiceTriggerRepositoryEventConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectCloudBuildServiceTriggerRepositoryEventConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.cloudBuildService.trigger.repositoryEventConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTriggerRepositoryEventConfig) MqlName() string {
+	return "gcp.project.cloudBuildService.trigger.repositoryEventConfig"
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTriggerRepositoryEventConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTriggerRepositoryEventConfig) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTriggerRepositoryEventConfig) GetRepository() *plugin.TValue[string] {
+	return &c.Repository
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTriggerRepositoryEventConfig) GetRepositoryType() *plugin.TValue[string] {
+	return &c.RepositoryType
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTriggerRepositoryEventConfig) GetPush() *plugin.TValue[any] {
+	return &c.Push
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTriggerRepositoryEventConfig) GetPullRequest() *plugin.TValue[any] {
+	return &c.PullRequest
+}
+
+// mqlGcpProjectCloudBuildServiceWorkerPool for the gcp.project.cloudBuildService.workerPool resource
+type mqlGcpProjectCloudBuildServiceWorkerPool struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectCloudBuildServiceWorkerPoolInternal it will be used here
+	ProjectId     plugin.TValue[string]
+	Name          plugin.TValue[string]
+	DisplayName   plugin.TValue[string]
+	State         plugin.TValue[string]
+	Annotations   plugin.TValue[map[string]any]
+	WorkerConfig  plugin.TValue[*mqlGcpProjectCloudBuildServiceWorkerPoolWorkerConfig]
+	NetworkConfig plugin.TValue[*mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig]
+	CreateTime    plugin.TValue[*time.Time]
+	UpdateTime    plugin.TValue[*time.Time]
+}
+
+// createGcpProjectCloudBuildServiceWorkerPool creates a new instance of this resource
+func createGcpProjectCloudBuildServiceWorkerPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectCloudBuildServiceWorkerPool{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.cloudBuildService.workerPool", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectCloudBuildServiceWorkerPool) MqlName() string {
+	return "gcp.project.cloudBuildService.workerPool"
+}
+
+func (c *mqlGcpProjectCloudBuildServiceWorkerPool) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectCloudBuildServiceWorkerPool) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectCloudBuildServiceWorkerPool) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectCloudBuildServiceWorkerPool) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectCloudBuildServiceWorkerPool) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectCloudBuildServiceWorkerPool) GetAnnotations() *plugin.TValue[map[string]any] {
+	return &c.Annotations
+}
+
+func (c *mqlGcpProjectCloudBuildServiceWorkerPool) GetWorkerConfig() *plugin.TValue[*mqlGcpProjectCloudBuildServiceWorkerPoolWorkerConfig] {
+	return &c.WorkerConfig
+}
+
+func (c *mqlGcpProjectCloudBuildServiceWorkerPool) GetNetworkConfig() *plugin.TValue[*mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig] {
+	return &c.NetworkConfig
+}
+
+func (c *mqlGcpProjectCloudBuildServiceWorkerPool) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlGcpProjectCloudBuildServiceWorkerPool) GetUpdateTime() *plugin.TValue[*time.Time] {
+	return &c.UpdateTime
+}
+
+// mqlGcpProjectCloudBuildServiceWorkerPoolWorkerConfig for the gcp.project.cloudBuildService.workerPool.workerConfig resource
+type mqlGcpProjectCloudBuildServiceWorkerPoolWorkerConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectCloudBuildServiceWorkerPoolWorkerConfigInternal it will be used here
+	Id                         plugin.TValue[string]
+	MachineType                plugin.TValue[string]
+	DiskSizeGb                 plugin.TValue[int64]
+	EnableNestedVirtualization plugin.TValue[bool]
+}
+
+// createGcpProjectCloudBuildServiceWorkerPoolWorkerConfig creates a new instance of this resource
+func createGcpProjectCloudBuildServiceWorkerPoolWorkerConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectCloudBuildServiceWorkerPoolWorkerConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.cloudBuildService.workerPool.workerConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectCloudBuildServiceWorkerPoolWorkerConfig) MqlName() string {
+	return "gcp.project.cloudBuildService.workerPool.workerConfig"
+}
+
+func (c *mqlGcpProjectCloudBuildServiceWorkerPoolWorkerConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectCloudBuildServiceWorkerPoolWorkerConfig) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectCloudBuildServiceWorkerPoolWorkerConfig) GetMachineType() *plugin.TValue[string] {
+	return &c.MachineType
+}
+
+func (c *mqlGcpProjectCloudBuildServiceWorkerPoolWorkerConfig) GetDiskSizeGb() *plugin.TValue[int64] {
+	return &c.DiskSizeGb
+}
+
+func (c *mqlGcpProjectCloudBuildServiceWorkerPoolWorkerConfig) GetEnableNestedVirtualization() *plugin.TValue[bool] {
+	return &c.EnableNestedVirtualization
+}
+
+// mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig for the gcp.project.cloudBuildService.workerPool.networkConfig resource
+type mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfigInternal it will be used here
+	Id                   plugin.TValue[string]
+	PeeredNetwork        plugin.TValue[string]
+	PeeredNetworkIpRange plugin.TValue[string]
+	EgressOption         plugin.TValue[string]
+}
+
+// createGcpProjectCloudBuildServiceWorkerPoolNetworkConfig creates a new instance of this resource
+func createGcpProjectCloudBuildServiceWorkerPoolNetworkConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.cloudBuildService.workerPool.networkConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig) MqlName() string {
+	return "gcp.project.cloudBuildService.workerPool.networkConfig"
+}
+
+func (c *mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig) GetPeeredNetwork() *plugin.TValue[string] {
+	return &c.PeeredNetwork
+}
+
+func (c *mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig) GetPeeredNetworkIpRange() *plugin.TValue[string] {
+	return &c.PeeredNetworkIpRange
+}
+
+func (c *mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig) GetEgressOption() *plugin.TValue[string] {
+	return &c.EgressOption
+}
+
+// mqlGcpProjectIapService for the gcp.project.iapService resource
+type mqlGcpProjectIapService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectIapServiceInternal it will be used here
+	ProjectId        plugin.TValue[string]
+	Brands           plugin.TValue[[]any]
+	TunnelDestGroups plugin.TValue[[]any]
+}
+
+// createGcpProjectIapService creates a new instance of this resource
+func createGcpProjectIapService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectIapService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.iapService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectIapService) MqlName() string {
+	return "gcp.project.iapService"
+}
+
+func (c *mqlGcpProjectIapService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectIapService) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectIapService) GetBrands() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Brands, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.iapService", c.__id, "brands")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.brands()
+	})
+}
+
+func (c *mqlGcpProjectIapService) GetTunnelDestGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TunnelDestGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.iapService", c.__id, "tunnelDestGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tunnelDestGroups()
+	})
+}
+
+// mqlGcpProjectIapServiceBrand for the gcp.project.iapService.brand resource
+type mqlGcpProjectIapServiceBrand struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectIapServiceBrandInternal it will be used here
+	ProjectId        plugin.TValue[string]
+	Name             plugin.TValue[string]
+	ApplicationTitle plugin.TValue[string]
+	SupportEmail     plugin.TValue[string]
+	OrgInternalOnly  plugin.TValue[bool]
+}
+
+// createGcpProjectIapServiceBrand creates a new instance of this resource
+func createGcpProjectIapServiceBrand(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectIapServiceBrand{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.iapService.brand", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectIapServiceBrand) MqlName() string {
+	return "gcp.project.iapService.brand"
+}
+
+func (c *mqlGcpProjectIapServiceBrand) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectIapServiceBrand) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectIapServiceBrand) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectIapServiceBrand) GetApplicationTitle() *plugin.TValue[string] {
+	return &c.ApplicationTitle
+}
+
+func (c *mqlGcpProjectIapServiceBrand) GetSupportEmail() *plugin.TValue[string] {
+	return &c.SupportEmail
+}
+
+func (c *mqlGcpProjectIapServiceBrand) GetOrgInternalOnly() *plugin.TValue[bool] {
+	return &c.OrgInternalOnly
+}
+
+// mqlGcpProjectIapServiceTunnelDestGroup for the gcp.project.iapService.tunnelDestGroup resource
+type mqlGcpProjectIapServiceTunnelDestGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectIapServiceTunnelDestGroupInternal it will be used here
+	ProjectId plugin.TValue[string]
+	Name      plugin.TValue[string]
+	Cidrs     plugin.TValue[[]any]
+	Fqdns     plugin.TValue[[]any]
+}
+
+// createGcpProjectIapServiceTunnelDestGroup creates a new instance of this resource
+func createGcpProjectIapServiceTunnelDestGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectIapServiceTunnelDestGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.iapService.tunnelDestGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectIapServiceTunnelDestGroup) MqlName() string {
+	return "gcp.project.iapService.tunnelDestGroup"
+}
+
+func (c *mqlGcpProjectIapServiceTunnelDestGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectIapServiceTunnelDestGroup) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectIapServiceTunnelDestGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectIapServiceTunnelDestGroup) GetCidrs() *plugin.TValue[[]any] {
+	return &c.Cidrs
+}
+
+func (c *mqlGcpProjectIapServiceTunnelDestGroup) GetFqdns() *plugin.TValue[[]any] {
+	return &c.Fqdns
+}
+
+// mqlGcpProjectSourceRepositoriesService for the gcp.project.sourceRepositoriesService resource
+type mqlGcpProjectSourceRepositoriesService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectSourceRepositoriesServiceInternal it will be used here
+	ProjectId plugin.TValue[string]
+	Repos     plugin.TValue[[]any]
+}
+
+// createGcpProjectSourceRepositoriesService creates a new instance of this resource
+func createGcpProjectSourceRepositoriesService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectSourceRepositoriesService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.sourceRepositoriesService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectSourceRepositoriesService) MqlName() string {
+	return "gcp.project.sourceRepositoriesService"
+}
+
+func (c *mqlGcpProjectSourceRepositoriesService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectSourceRepositoriesService) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectSourceRepositoriesService) GetRepos() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Repos, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.sourceRepositoriesService", c.__id, "repos")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.repos()
+	})
+}
+
+// mqlGcpProjectSourceRepositoriesServiceRepo for the gcp.project.sourceRepositoriesService.repo resource
+type mqlGcpProjectSourceRepositoriesServiceRepo struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectSourceRepositoriesServiceRepoInternal it will be used here
+	ProjectId    plugin.TValue[string]
+	Name         plugin.TValue[string]
+	Url          plugin.TValue[string]
+	Size         plugin.TValue[int64]
+	MirrorConfig plugin.TValue[*mqlGcpProjectSourceRepositoriesServiceRepoMirrorConfig]
+}
+
+// createGcpProjectSourceRepositoriesServiceRepo creates a new instance of this resource
+func createGcpProjectSourceRepositoriesServiceRepo(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectSourceRepositoriesServiceRepo{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.sourceRepositoriesService.repo", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectSourceRepositoriesServiceRepo) MqlName() string {
+	return "gcp.project.sourceRepositoriesService.repo"
+}
+
+func (c *mqlGcpProjectSourceRepositoriesServiceRepo) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectSourceRepositoriesServiceRepo) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectSourceRepositoriesServiceRepo) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectSourceRepositoriesServiceRepo) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlGcpProjectSourceRepositoriesServiceRepo) GetSize() *plugin.TValue[int64] {
+	return &c.Size
+}
+
+func (c *mqlGcpProjectSourceRepositoriesServiceRepo) GetMirrorConfig() *plugin.TValue[*mqlGcpProjectSourceRepositoriesServiceRepoMirrorConfig] {
+	return &c.MirrorConfig
+}
+
+// mqlGcpProjectSourceRepositoriesServiceRepoMirrorConfig for the gcp.project.sourceRepositoriesService.repo.mirrorConfig resource
+type mqlGcpProjectSourceRepositoriesServiceRepoMirrorConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectSourceRepositoriesServiceRepoMirrorConfigInternal it will be used here
+	Id          plugin.TValue[string]
+	Url         plugin.TValue[string]
+	DeployKeyId plugin.TValue[string]
+	WebhookId   plugin.TValue[string]
+}
+
+// createGcpProjectSourceRepositoriesServiceRepoMirrorConfig creates a new instance of this resource
+func createGcpProjectSourceRepositoriesServiceRepoMirrorConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectSourceRepositoriesServiceRepoMirrorConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.sourceRepositoriesService.repo.mirrorConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectSourceRepositoriesServiceRepoMirrorConfig) MqlName() string {
+	return "gcp.project.sourceRepositoriesService.repo.mirrorConfig"
+}
+
+func (c *mqlGcpProjectSourceRepositoriesServiceRepoMirrorConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectSourceRepositoriesServiceRepoMirrorConfig) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectSourceRepositoriesServiceRepoMirrorConfig) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlGcpProjectSourceRepositoriesServiceRepoMirrorConfig) GetDeployKeyId() *plugin.TValue[string] {
+	return &c.DeployKeyId
+}
+
+func (c *mqlGcpProjectSourceRepositoriesServiceRepoMirrorConfig) GetWebhookId() *plugin.TValue[string] {
+	return &c.WebhookId
 }

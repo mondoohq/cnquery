@@ -703,3 +703,77 @@ func optionalDurationToTime(d any) time.Time {
 func pubsubConfigId(projectId, parentName string) string {
 	return fmt.Sprintf("%s/%s/config", projectId, parentName)
 }
+
+func (g *mqlGcpProjectPubsubService) schemas() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(pubsub.ScopePubSub)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	schemaClient, err := pubsub.NewSchemaClient(ctx, projectId, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer schemaClient.Close()
+
+	it := schemaClient.Schemas(ctx, pubsub.SchemaViewFull)
+
+	var res []any
+	for {
+		schema, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			if s, ok := status.FromError(err); ok && s.Code() == codes.NotFound {
+				break
+			}
+			return nil, err
+		}
+
+		var revisionCreateTime *time.Time
+		if !schema.RevisionCreateTime.IsZero() {
+			revisionCreateTime = &schema.RevisionCreateTime
+		}
+
+		mqlSchema, err := CreateResource(g.MqlRuntime, "gcp.project.pubsubService.schema", map[string]*llx.RawData{
+			"projectId":          llx.StringData(projectId),
+			"name":               llx.StringData(schema.Name),
+			"type":               llx.StringData(pubsubSchemaTypeString(schema.Type)),
+			"definition":         llx.StringData(schema.Definition),
+			"revisionId":         llx.StringData(schema.RevisionID),
+			"revisionCreateTime": llx.TimeDataPtr(revisionCreateTime),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlSchema)
+	}
+
+	return res, nil
+}
+
+func pubsubSchemaTypeString(t pubsub.SchemaType) string {
+	switch t {
+	case pubsub.SchemaProtocolBuffer:
+		return "PROTOCOL_BUFFER"
+	case pubsub.SchemaAvro:
+		return "AVRO"
+	default:
+		return "TYPE_UNSPECIFIED"
+	}
+}
+
+func (g *mqlGcpProjectPubsubServiceSchema) id() (string, error) {
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
+	}
+	return fmt.Sprintf("gcp.project/%s/pubsubService.schema/%s", g.ProjectId.Data, g.Name.Data), nil
+}

@@ -973,6 +973,24 @@ var gcpPermissionOverrides = map[string]map[string]string{
 	"modelarmor": {
 		"GetFloorSetting": "modelarmor.floorSettings.get",
 	},
+	"cloudbuild": {
+		// Cloud Build triggers use the builds permission, not a separate triggers permission
+		"ListBuildTriggers": "cloudbuild.builds.list",
+		// WorkerPools IAM permission uses lowercase 'p'
+		"ListWorkerPools": "cloudbuild.workerpools.list",
+	},
+	"iap": {
+		// IAP brands are accessed via project settings, not a dedicated brands permission
+		"ListBrands": "iap.projects.getSettings",
+	},
+	"monitoring": {
+		// SLOs use the short permission name, not the full resource name
+		"ListServiceLevelObjectives": "monitoring.slos.list",
+	},
+	"sourcerepo": {
+		// Source Repositories uses "source.repos" not "sourcerepo.repos"
+		"Repos.List": "source.repos.list",
+	},
 }
 
 // gcpOrgLevelPermissions are permissions that only apply at the organization

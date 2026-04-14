@@ -14,6 +14,7 @@ require (
 	cloud.google.com/go/batch v1.16.0
 	cloud.google.com/go/bigquery v1.76.0
 	cloud.google.com/go/bigtable v1.46.0
+	cloud.google.com/go/cloudbuild v1.28.0
 	cloud.google.com/go/cloudtasks v1.15.0
 	cloud.google.com/go/compute v1.59.0
 	cloud.google.com/go/container v1.48.0
@@ -26,6 +27,7 @@ require (
 	cloud.google.com/go/functions v1.21.0
 	cloud.google.com/go/gkebackup v1.10.0
 	cloud.google.com/go/iam v1.8.0
+	cloud.google.com/go/iap v1.15.0
 	cloud.google.com/go/ids v1.7.0
 	cloud.google.com/go/kms v1.28.0
 	cloud.google.com/go/logging v1.15.0

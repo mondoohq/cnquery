@@ -1,0 +1,438 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+package resources
+
+import (
+	"context"
+	"fmt"
+	"strings"
+	"time"
+
+	cloudbuild "cloud.google.com/go/cloudbuild/apiv1/v2"
+	"cloud.google.com/go/cloudbuild/apiv1/v2/cloudbuildpb"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/gcp/connection"
+	"go.mondoo.com/mql/v13/types"
+	"google.golang.org/api/iterator"
+	"google.golang.org/api/option"
+)
+
+func (g *mqlGcpProject) cloudBuild() (*mqlGcpProjectCloudBuildService, error) {
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
+	}
+	res, err := CreateResource(g.MqlRuntime, "gcp.project.cloudBuildService", map[string]*llx.RawData{
+		"projectId": llx.StringData(g.Id.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectCloudBuildService), nil
+}
+
+func (g *mqlGcpProjectCloudBuildService) id() (string, error) {
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
+	}
+	return fmt.Sprintf("gcp.project/%s/cloudBuildService", g.ProjectId.Data), nil
+}
+
+func (g *mqlGcpProjectCloudBuildService) triggers() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(cloudbuild.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	client, err := cloudbuild.NewClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	it := client.ListBuildTriggers(ctx, &cloudbuildpb.ListBuildTriggersRequest{
+		Parent: fmt.Sprintf("projects/%s/locations/-", projectId),
+	})
+
+	var res []any
+	for {
+		trigger, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		var createTime *time.Time
+		if trigger.CreateTime != nil {
+			t := trigger.CreateTime.AsTime()
+			createTime = &t
+		}
+
+		// Convert tags to []any
+		tags := make([]any, len(trigger.Tags))
+		for i, t := range trigger.Tags {
+			tags[i] = t
+		}
+
+		// Convert substitutions to map[string]any
+		var substitutions map[string]any
+		if len(trigger.Substitutions) > 0 {
+			substitutions = make(map[string]any, len(trigger.Substitutions))
+			for k, v := range trigger.Substitutions {
+				substitutions[k] = v
+			}
+		}
+
+		// Build GitHub events config sub-resource
+		github, err := buildTriggerGithubConfig(g.MqlRuntime, trigger.Name, trigger.GetGithub())
+		if err != nil {
+			return nil, err
+		}
+
+		// Build Pub/Sub config sub-resource
+		pubsubConfig, err := buildTriggerPubsubConfig(g.MqlRuntime, trigger.Name, trigger.GetPubsubConfig())
+		if err != nil {
+			return nil, err
+		}
+
+		// Build webhook config sub-resource
+		webhookConfig, err := buildTriggerWebhookConfig(g.MqlRuntime, trigger.Name, trigger.GetWebhookConfig())
+		if err != nil {
+			return nil, err
+		}
+
+		// Build repository event config sub-resource
+		repoEventConfig, err := buildTriggerRepoEventConfig(g.MqlRuntime, trigger.Name, trigger.GetRepositoryEventConfig())
+		if err != nil {
+			return nil, err
+		}
+
+		mqlTrigger, err := CreateResource(g.MqlRuntime, "gcp.project.cloudBuildService.trigger", map[string]*llx.RawData{
+			"projectId":             llx.StringData(projectId),
+			"name":                  llx.StringData(trigger.Name),
+			"triggerId":             llx.StringData(trigger.Id),
+			"description":           llx.StringData(trigger.Description),
+			"disabled":              llx.BoolData(trigger.Disabled),
+			"tags":                  llx.ArrayData(tags, types.String),
+			"filename":              llx.StringData(trigger.GetFilename()),
+			"filter":                llx.StringData(trigger.Filter),
+			"substitutions":         llx.MapData(substitutions, types.String),
+			"serviceAccount":        llx.StringData(trigger.ServiceAccount),
+			"github":                llx.ResourceData(github, "gcp.project.cloudBuildService.trigger.githubEventsConfig"),
+			"pubsubConfig":          llx.ResourceData(pubsubConfig, "gcp.project.cloudBuildService.trigger.pubsubConfig"),
+			"webhookConfig":         llx.ResourceData(webhookConfig, "gcp.project.cloudBuildService.trigger.webhookConfig"),
+			"repositoryEventConfig": llx.ResourceData(repoEventConfig, "gcp.project.cloudBuildService.trigger.repositoryEventConfig"),
+			"createTime":            llx.TimeDataPtr(createTime),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		// Populate Internal struct cache for cross-references
+		t := mqlTrigger.(*mqlGcpProjectCloudBuildServiceTrigger)
+		t.cacheServiceAccount = trigger.ServiceAccount
+
+		res = append(res, mqlTrigger)
+	}
+
+	return res, nil
+}
+
+func (g *mqlGcpProjectCloudBuildServiceTrigger) id() (string, error) {
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
+	}
+	return fmt.Sprintf("gcp.project/%s/cloudBuildService.trigger/%s", g.ProjectId.Data, g.Name.Data), nil
+}
+
+type mqlGcpProjectCloudBuildServiceTriggerInternal struct {
+	cacheServiceAccount string
+}
+
+func (g *mqlGcpProjectCloudBuildServiceTrigger) iamServiceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	sa := g.cacheServiceAccount
+	if sa == "" {
+		g.IamServiceAccount.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	// Extract email from resource name: projects/{project}/serviceAccounts/{email}
+	email := sa
+	if idx := strings.LastIndex(sa, "/"); idx != -1 {
+		email = sa[idx+1:]
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount", map[string]*llx.RawData{
+		"email": llx.StringData(email),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectIamServiceServiceAccount), nil
+}
+
+func buildTriggerGithubConfig(runtime *plugin.Runtime, parentName string, cfg *cloudbuildpb.GitHubEventsConfig) (*mqlGcpProjectCloudBuildServiceTriggerGithubEventsConfig, error) {
+	if cfg == nil {
+		return nil, nil
+	}
+
+	pushDict, err := protoToDict(cfg.GetPush())
+	if err != nil {
+		return nil, err
+	}
+	prDict, err := protoToDict(cfg.GetPullRequest())
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := CreateResource(runtime, "gcp.project.cloudBuildService.trigger.githubEventsConfig", map[string]*llx.RawData{
+		"id":             llx.StringData(parentName + "/github"),
+		"owner":          llx.StringData(cfg.Owner),
+		"name":           llx.StringData(cfg.Name),
+		"installationId": llx.IntData(cfg.InstallationId),
+		"push":           llx.DictData(pushDict),
+		"pullRequest":    llx.DictData(prDict),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectCloudBuildServiceTriggerGithubEventsConfig), nil
+}
+
+func (g *mqlGcpProjectCloudBuildServiceTriggerGithubEventsConfig) id() (string, error) {
+	return g.Id.Data, g.Id.Error
+}
+
+func buildTriggerPubsubConfig(runtime *plugin.Runtime, parentName string, cfg *cloudbuildpb.PubsubConfig) (*mqlGcpProjectCloudBuildServiceTriggerPubsubConfig, error) {
+	if cfg == nil {
+		return nil, nil
+	}
+
+	res, err := CreateResource(runtime, "gcp.project.cloudBuildService.trigger.pubsubConfig", map[string]*llx.RawData{
+		"id":                  llx.StringData(parentName + "/pubsubConfig"),
+		"topic":               llx.StringData(cfg.Topic),
+		"subscription":        llx.StringData(cfg.Subscription),
+		"serviceAccountEmail": llx.StringData(cfg.ServiceAccountEmail),
+		"state":               llx.StringData(cfg.State.String()),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Populate Internal struct cache for cross-reference
+	pc := res.(*mqlGcpProjectCloudBuildServiceTriggerPubsubConfig)
+	pc.cacheTopic = cfg.Topic
+
+	return pc, nil
+}
+
+func (g *mqlGcpProjectCloudBuildServiceTriggerPubsubConfig) id() (string, error) {
+	return g.Id.Data, g.Id.Error
+}
+
+type mqlGcpProjectCloudBuildServiceTriggerPubsubConfigInternal struct {
+	cacheTopic string
+}
+
+func (g *mqlGcpProjectCloudBuildServiceTriggerPubsubConfig) pubsubTopic() (*mqlGcpProjectPubsubServiceTopic, error) {
+	topic := g.cacheTopic
+	if topic == "" {
+		g.PubsubTopic.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.pubsubService.topic", map[string]*llx.RawData{
+		"name": llx.StringData(topic),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectPubsubServiceTopic), nil
+}
+
+func buildTriggerWebhookConfig(runtime *plugin.Runtime, parentName string, cfg *cloudbuildpb.WebhookConfig) (*mqlGcpProjectCloudBuildServiceTriggerWebhookConfig, error) {
+	if cfg == nil {
+		return nil, nil
+	}
+
+	res, err := CreateResource(runtime, "gcp.project.cloudBuildService.trigger.webhookConfig", map[string]*llx.RawData{
+		"id":    llx.StringData(parentName + "/webhookConfig"),
+		"state": llx.StringData(cfg.State.String()),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectCloudBuildServiceTriggerWebhookConfig), nil
+}
+
+func (g *mqlGcpProjectCloudBuildServiceTriggerWebhookConfig) id() (string, error) {
+	return g.Id.Data, g.Id.Error
+}
+
+func buildTriggerRepoEventConfig(runtime *plugin.Runtime, parentName string, cfg *cloudbuildpb.RepositoryEventConfig) (*mqlGcpProjectCloudBuildServiceTriggerRepositoryEventConfig, error) {
+	if cfg == nil {
+		return nil, nil
+	}
+
+	pushDict, err := protoToDict(cfg.GetPush())
+	if err != nil {
+		return nil, err
+	}
+	prDict, err := protoToDict(cfg.GetPullRequest())
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := CreateResource(runtime, "gcp.project.cloudBuildService.trigger.repositoryEventConfig", map[string]*llx.RawData{
+		"id":             llx.StringData(parentName + "/repositoryEventConfig"),
+		"repository":     llx.StringData(cfg.Repository),
+		"repositoryType": llx.StringData(cfg.RepositoryType.String()),
+		"push":           llx.DictData(pushDict),
+		"pullRequest":    llx.DictData(prDict),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectCloudBuildServiceTriggerRepositoryEventConfig), nil
+}
+
+func (g *mqlGcpProjectCloudBuildServiceTriggerRepositoryEventConfig) id() (string, error) {
+	return g.Id.Data, g.Id.Error
+}
+
+func (g *mqlGcpProjectCloudBuildService) workerPools() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(cloudbuild.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	client, err := cloudbuild.NewClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	it := client.ListWorkerPools(ctx, &cloudbuildpb.ListWorkerPoolsRequest{
+		Parent: fmt.Sprintf("projects/%s/locations/-", projectId),
+	})
+
+	var res []any
+	for {
+		wp, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		var createTime, updateTime *time.Time
+		if wp.CreateTime != nil {
+			t := wp.CreateTime.AsTime()
+			createTime = &t
+		}
+		if wp.UpdateTime != nil {
+			t := wp.UpdateTime.AsTime()
+			updateTime = &t
+		}
+
+		var annotations map[string]any
+		if len(wp.Annotations) > 0 {
+			annotations = make(map[string]any, len(wp.Annotations))
+			for k, v := range wp.Annotations {
+				annotations[k] = v
+			}
+		}
+
+		workerConfig, err := buildWorkerPoolWorkerConfig(g.MqlRuntime, wp.Name, wp.GetPrivatePoolV1Config())
+		if err != nil {
+			return nil, err
+		}
+
+		networkConfig, err := buildWorkerPoolNetworkConfig(g.MqlRuntime, wp.Name, wp.GetPrivatePoolV1Config())
+		if err != nil {
+			return nil, err
+		}
+
+		mqlWP, err := CreateResource(g.MqlRuntime, "gcp.project.cloudBuildService.workerPool", map[string]*llx.RawData{
+			"projectId":     llx.StringData(projectId),
+			"name":          llx.StringData(wp.Name),
+			"displayName":   llx.StringData(wp.DisplayName),
+			"state":         llx.StringData(wp.State.String()),
+			"annotations":   llx.MapData(annotations, types.String),
+			"workerConfig":  llx.ResourceData(workerConfig, "gcp.project.cloudBuildService.workerPool.workerConfig"),
+			"networkConfig": llx.ResourceData(networkConfig, "gcp.project.cloudBuildService.workerPool.networkConfig"),
+			"createTime":    llx.TimeDataPtr(createTime),
+			"updateTime":    llx.TimeDataPtr(updateTime),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlWP)
+	}
+
+	return res, nil
+}
+
+func (g *mqlGcpProjectCloudBuildServiceWorkerPool) id() (string, error) {
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
+	}
+	return fmt.Sprintf("gcp.project/%s/cloudBuildService.workerPool/%s", g.ProjectId.Data, g.Name.Data), nil
+}
+
+func buildWorkerPoolWorkerConfig(runtime *plugin.Runtime, parentName string, cfg *cloudbuildpb.PrivatePoolV1Config) (*mqlGcpProjectCloudBuildServiceWorkerPoolWorkerConfig, error) {
+	if cfg == nil || cfg.WorkerConfig == nil {
+		return nil, nil
+	}
+	wc := cfg.WorkerConfig
+	res, err := CreateResource(runtime, "gcp.project.cloudBuildService.workerPool.workerConfig", map[string]*llx.RawData{
+		"id":                         llx.StringData(parentName + "/workerConfig"),
+		"machineType":                llx.StringData(wc.MachineType),
+		"diskSizeGb":                 llx.IntData(wc.DiskSizeGb),
+		"enableNestedVirtualization": llx.BoolDataPtr(wc.EnableNestedVirtualization),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectCloudBuildServiceWorkerPoolWorkerConfig), nil
+}
+
+func (g *mqlGcpProjectCloudBuildServiceWorkerPoolWorkerConfig) id() (string, error) {
+	return g.Id.Data, g.Id.Error
+}
+
+func buildWorkerPoolNetworkConfig(runtime *plugin.Runtime, parentName string, cfg *cloudbuildpb.PrivatePoolV1Config) (*mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig, error) {
+	if cfg == nil || cfg.NetworkConfig == nil {
+		return nil, nil
+	}
+	nc := cfg.NetworkConfig
+	res, err := CreateResource(runtime, "gcp.project.cloudBuildService.workerPool.networkConfig", map[string]*llx.RawData{
+		"id":                   llx.StringData(parentName + "/networkConfig"),
+		"peeredNetwork":        llx.StringData(nc.PeeredNetwork),
+		"peeredNetworkIpRange": llx.StringData(nc.PeeredNetworkIpRange),
+		"egressOption":         llx.StringData(nc.EgressOption.String()),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig), nil
+}
+
+func (g *mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig) id() (string, error) {
+	return g.Id.Data, g.Id.Error
+}

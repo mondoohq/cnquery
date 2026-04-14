@@ -370,3 +370,139 @@ func (g *mqlGcpProjectSpannerServiceInstanceBackup) id() (string, error) {
 	}
 	return fmt.Sprintf("gcp.project/%s/spannerService/%s", g.ProjectId.Data, g.Name.Data), nil
 }
+
+func (g *mqlGcpProjectSpannerService) instanceConfigs() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(spannerinstance.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	client, err := spannerinstance.NewInstanceAdminClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	it := client.ListInstanceConfigs(ctx, &instancepb.ListInstanceConfigsRequest{
+		Parent: fmt.Sprintf("projects/%s", projectId),
+	})
+
+	var res []any
+	for {
+		cfg, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		replicas := make([]any, 0, len(cfg.Replicas))
+		for _, r := range cfg.Replicas {
+			replicaDict, err := protoToDict(r)
+			if err != nil {
+				return nil, err
+			}
+			replicas = append(replicas, replicaDict)
+		}
+
+		mqlCfg, err := CreateResource(g.MqlRuntime, "gcp.project.spannerService.instanceConfig", map[string]*llx.RawData{
+			"projectId":                llx.StringData(projectId),
+			"name":                     llx.StringData(cfg.Name),
+			"displayName":              llx.StringData(cfg.DisplayName),
+			"replicas":                 llx.ArrayData(replicas, types.Dict),
+			"leaderOptions":            llx.ArrayData(convert.SliceAnyToInterface(cfg.LeaderOptions), types.String),
+			"baseConfig":               llx.StringData(cfg.BaseConfig),
+			"configType":               llx.StringData(cfg.ConfigType.String()),
+			"freeInstanceAvailability": llx.StringData(cfg.FreeInstanceAvailability.String()),
+			"labels":                   llx.MapData(convert.MapToInterfaceMap(cfg.Labels), types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlCfg)
+	}
+
+	return res, nil
+}
+
+func (g *mqlGcpProjectSpannerServiceInstanceConfig) id() (string, error) {
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
+	}
+	if g.Name.Error != nil {
+		return "", g.Name.Error
+	}
+	return fmt.Sprintf("gcp.project/%s/spannerService/instanceConfig/%s", g.ProjectId.Data, g.Name.Data), nil
+}
+
+func initGcpProjectSpannerServiceInstanceConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	nameRaw, ok := args["name"]
+	if !ok {
+		return args, nil, nil
+	}
+	name := nameRaw.Value.(string)
+
+	projectIdRaw, ok := args["projectId"]
+	if !ok {
+		return args, nil, nil
+	}
+	projectId := projectIdRaw.Value.(string)
+
+	obj, err := CreateResource(runtime, "gcp.project.spannerService", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	svc := obj.(*mqlGcpProjectSpannerService)
+	configs := svc.GetInstanceConfigs()
+	if configs.Error != nil {
+		return nil, nil, configs.Error
+	}
+
+	for _, c := range configs.Data {
+		cfg := c.(*mqlGcpProjectSpannerServiceInstanceConfig)
+		if cfg.Name.Data == name {
+			return args, cfg, nil
+		}
+	}
+
+	return nil, nil, fmt.Errorf("spanner instance config %q not found in project %q", name, projectId)
+}
+
+func (g *mqlGcpProjectSpannerServiceInstance) instanceConfig() (*mqlGcpProjectSpannerServiceInstanceConfig, error) {
+	if g.Config.Error != nil {
+		return nil, g.Config.Error
+	}
+	configName := g.Config.Data
+	if configName == "" {
+		g.InstanceConfig.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	res, err := NewResource(g.MqlRuntime, "gcp.project.spannerService.instanceConfig", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
+		"name":      llx.StringData(configName),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectSpannerServiceInstanceConfig), nil
+}

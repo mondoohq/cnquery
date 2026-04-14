@@ -1,0 +1,320 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+package resources
+
+import (
+	"context"
+	"fmt"
+	"strings"
+	"time"
+
+	functions "cloud.google.com/go/functions/apiv2"
+	"cloud.google.com/go/functions/apiv2/functionspb"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/gcp/connection"
+	"go.mondoo.com/mql/v13/types"
+	"google.golang.org/api/iterator"
+	"google.golang.org/api/option"
+)
+
+func (g *mqlGcpProject) cloudFunctionsV2() ([]any, error) {
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
+	}
+	projectId := g.Id.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(functions.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	client, err := functions.NewFunctionClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	it := client.ListFunctions(ctx, &functionspb.ListFunctionsRequest{
+		Parent: fmt.Sprintf("projects/%s/locations/-", projectId),
+	})
+
+	var res []any
+	for {
+		fn, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		var createTime, updateTime *time.Time
+		if fn.CreateTime != nil {
+			t := fn.CreateTime.AsTime()
+			createTime = &t
+		}
+		if fn.UpdateTime != nil {
+			t := fn.UpdateTime.AsTime()
+			updateTime = &t
+		}
+
+		var labels map[string]any
+		if len(fn.Labels) > 0 {
+			labels = make(map[string]any, len(fn.Labels))
+			for k, v := range fn.Labels {
+				labels[k] = v
+			}
+		}
+
+		buildConfig, err := fnV2BuildConfig(g.MqlRuntime, fn.Name, fn.BuildConfig)
+		if err != nil {
+			return nil, err
+		}
+
+		serviceConfig, err := fnV2ServiceConfig(g.MqlRuntime, fn.Name, fn.ServiceConfig)
+		if err != nil {
+			return nil, err
+		}
+
+		eventTrigger, err := fnV2EventTrigger(g.MqlRuntime, fn.Name, fn.EventTrigger)
+		if err != nil {
+			return nil, err
+		}
+
+		mqlFn, err := CreateResource(g.MqlRuntime, "gcp.project.cloudFunctionV2", map[string]*llx.RawData{
+			"projectId":     llx.StringData(projectId),
+			"name":          llx.StringData(fn.Name),
+			"description":   llx.StringData(fn.Description),
+			"state":         llx.StringData(fn.State.String()),
+			"environment":   llx.StringData(fn.Environment.String()),
+			"url":           llx.StringData(fn.Url),
+			"labels":        llx.MapData(labels, types.String),
+			"kmsKeyName":    llx.StringData(fn.KmsKeyName),
+			"buildConfig":   llx.ResourceData(buildConfig, "gcp.project.cloudFunctionV2.buildConfig"),
+			"serviceConfig": llx.ResourceData(serviceConfig, "gcp.project.cloudFunctionV2.serviceConfig"),
+			"eventTrigger":  llx.ResourceData(eventTrigger, "gcp.project.cloudFunctionV2.eventTrigger"),
+			"createTime":    llx.TimeDataPtr(createTime),
+			"updateTime":    llx.TimeDataPtr(updateTime),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlFn)
+	}
+
+	return res, nil
+}
+
+type mqlGcpProjectCloudFunctionV2Internal struct {
+	cacheKmsKeyName string
+}
+
+func (g *mqlGcpProjectCloudFunctionV2) id() (string, error) {
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
+	}
+	return fmt.Sprintf("gcp.project/%s/cloudFunctionV2/%s", g.ProjectId.Data, g.Name.Data), nil
+}
+
+func (g *mqlGcpProjectCloudFunctionV2) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	keyName := g.cacheKmsKeyName
+	if keyName == "" {
+		g.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.kmsService.keyring.cryptokey", map[string]*llx.RawData{
+		"resourceName": llx.StringData(keyName),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+}
+
+func fnV2BuildConfig(runtime *plugin.Runtime, parentName string, cfg *functionspb.BuildConfig) (*mqlGcpProjectCloudFunctionV2BuildConfig, error) {
+	if cfg == nil {
+		return nil, nil
+	}
+
+	sourceDict, err := protoToDict(cfg.GetSource())
+	if err != nil {
+		return nil, err
+	}
+
+	var envVars map[string]any
+	if len(cfg.EnvironmentVariables) > 0 {
+		envVars = make(map[string]any, len(cfg.EnvironmentVariables))
+		for k, v := range cfg.EnvironmentVariables {
+			envVars[k] = v
+		}
+	}
+
+	res, err := CreateResource(runtime, "gcp.project.cloudFunctionV2.buildConfig", map[string]*llx.RawData{
+		"id":                   llx.StringData(parentName + "/buildConfig"),
+		"runtime":              llx.StringData(cfg.Runtime),
+		"entryPoint":           llx.StringData(cfg.EntryPoint),
+		"source":               llx.DictData(sourceDict),
+		"buildWorkerPool":      llx.StringData(cfg.WorkerPool),
+		"environmentVariables": llx.MapData(envVars, types.String),
+		"dockerRepository":     llx.StringData(cfg.DockerRepository),
+		"serviceAccount":       llx.StringData(cfg.ServiceAccount),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectCloudFunctionV2BuildConfig), nil
+}
+
+func (g *mqlGcpProjectCloudFunctionV2BuildConfig) id() (string, error) {
+	return g.Id.Data, g.Id.Error
+}
+
+func fnV2ServiceConfig(runtime *plugin.Runtime, parentName string, cfg *functionspb.ServiceConfig) (*mqlGcpProjectCloudFunctionV2ServiceConfig, error) {
+	if cfg == nil {
+		return nil, nil
+	}
+
+	var envVars map[string]any
+	if len(cfg.EnvironmentVariables) > 0 {
+		envVars = make(map[string]any, len(cfg.EnvironmentVariables))
+		for k, v := range cfg.EnvironmentVariables {
+			envVars[k] = v
+		}
+	}
+
+	var secretEnvVars []any
+	for _, sev := range cfg.SecretEnvironmentVariables {
+		d, err := protoToDict(sev)
+		if err != nil {
+			return nil, err
+		}
+		secretEnvVars = append(secretEnvVars, d)
+	}
+
+	var secretVolumes []any
+	for _, sv := range cfg.SecretVolumes {
+		d, err := protoToDict(sv)
+		if err != nil {
+			return nil, err
+		}
+		secretVolumes = append(secretVolumes, d)
+	}
+
+	res, err := CreateResource(runtime, "gcp.project.cloudFunctionV2.serviceConfig", map[string]*llx.RawData{
+		"id":                         llx.StringData(parentName + "/serviceConfig"),
+		"service":                    llx.StringData(cfg.Service),
+		"timeoutSeconds":             llx.IntData(int64(cfg.TimeoutSeconds)),
+		"availableMemory":            llx.StringData(cfg.AvailableMemory),
+		"availableCpu":               llx.StringData(cfg.AvailableCpu),
+		"environmentVariables":       llx.MapData(envVars, types.String),
+		"maxInstanceCount":           llx.IntData(int64(cfg.MaxInstanceCount)),
+		"minInstanceCount":           llx.IntData(int64(cfg.MinInstanceCount)),
+		"vpcConnector":               llx.StringData(cfg.VpcConnector),
+		"vpcConnectorEgressSettings": llx.StringData(cfg.VpcConnectorEgressSettings.String()),
+		"ingressSettings":            llx.StringData(cfg.IngressSettings.String()),
+		"serviceAccountEmail":        llx.StringData(cfg.ServiceAccountEmail),
+		"allTrafficOnLatestRevision": llx.BoolData(cfg.AllTrafficOnLatestRevision),
+		"secretEnvironmentVariables": llx.ArrayData(secretEnvVars, types.Dict),
+		"secretVolumes":              llx.ArrayData(secretVolumes, types.Dict),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Populate Internal struct for cross-reference
+	sc := res.(*mqlGcpProjectCloudFunctionV2ServiceConfig)
+	sc.cacheServiceAccountEmail = cfg.ServiceAccountEmail
+
+	return sc, nil
+}
+
+func (g *mqlGcpProjectCloudFunctionV2ServiceConfig) id() (string, error) {
+	return g.Id.Data, g.Id.Error
+}
+
+type mqlGcpProjectCloudFunctionV2ServiceConfigInternal struct {
+	cacheServiceAccountEmail string
+}
+
+func (g *mqlGcpProjectCloudFunctionV2ServiceConfig) iamServiceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	email := g.cacheServiceAccountEmail
+	if email == "" {
+		g.IamServiceAccount.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount", map[string]*llx.RawData{
+		"email": llx.StringData(email),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectIamServiceServiceAccount), nil
+}
+
+func fnV2EventTrigger(runtime *plugin.Runtime, parentName string, cfg *functionspb.EventTrigger) (*mqlGcpProjectCloudFunctionV2EventTrigger, error) {
+	if cfg == nil {
+		return nil, nil
+	}
+
+	var eventFilters []any
+	for _, ef := range cfg.EventFilters {
+		d, err := protoToDict(ef)
+		if err != nil {
+			return nil, err
+		}
+		eventFilters = append(eventFilters, d)
+	}
+
+	res, err := CreateResource(runtime, "gcp.project.cloudFunctionV2.eventTrigger", map[string]*llx.RawData{
+		"id":                  llx.StringData(parentName + "/eventTrigger"),
+		"trigger":             llx.StringData(cfg.Trigger),
+		"triggerRegion":       llx.StringData(cfg.TriggerRegion),
+		"eventType":           llx.StringData(cfg.EventType),
+		"eventFilters":        llx.ArrayData(eventFilters, types.Dict),
+		"pubsubTopic":         llx.StringData(cfg.PubsubTopic),
+		"serviceAccountEmail": llx.StringData(cfg.ServiceAccountEmail),
+		"retryPolicy":         llx.StringData(cfg.RetryPolicy.String()),
+		"channel":             llx.StringData(cfg.Channel),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Populate Internal struct for cross-reference
+	et := res.(*mqlGcpProjectCloudFunctionV2EventTrigger)
+	et.cachePubsubTopic = cfg.PubsubTopic
+
+	return et, nil
+}
+
+func (g *mqlGcpProjectCloudFunctionV2EventTrigger) id() (string, error) {
+	return g.Id.Data, g.Id.Error
+}
+
+type mqlGcpProjectCloudFunctionV2EventTriggerInternal struct {
+	cachePubsubTopic string
+}
+
+func (g *mqlGcpProjectCloudFunctionV2EventTrigger) topic() (*mqlGcpProjectPubsubServiceTopic, error) {
+	topicName := g.cachePubsubTopic
+	if topicName == "" {
+		g.Topic.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	// Extract short topic ID from full name (projects/{project}/topics/{topic})
+	parts := strings.Split(topicName, "/")
+	topicID := parts[len(parts)-1]
+	_ = topicID // the full name is used as the lookup key
+
+	res, err := NewResource(g.MqlRuntime, "gcp.project.pubsubService.topic", map[string]*llx.RawData{
+		"name": llx.StringData(topicName),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectPubsubServiceTopic), nil
+}

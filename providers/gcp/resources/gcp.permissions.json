@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
-  "version": "13.6.0",
-  "generated_at": "2026-04-13T09:40:36-07:00",
+  "version": "13.7.1",
+  "generated_at": "2026-04-14T21:28:47+03:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.list",
@@ -27,6 +27,8 @@
     "bigtable.appProfiles.list",
     "binaryauthorization.attestors.list",
     "binaryauthorization.policy.get",
+    "cloudbuild.builds.list",
+    "cloudbuild.workerpools.list",
     "clouddeploy.deliveryPipelines.list",
     "clouddeploy.releases.list",
     "clouddeploy.targets.list",
@@ -41,6 +43,8 @@
     "cloudscheduler.jobs.list",
     "cloudsql.databases.list",
     "cloudsql.instances.list",
+    "cloudsql.sslCerts.list",
+    "cloudsql.users.list",
     "cloudtasks.queues.list",
     "compute.addresses.list",
     "compute.backendBuckets.list",
@@ -54,6 +58,7 @@
     "compute.images.list",
     "compute.instanceGroupManagers.list",
     "compute.instanceGroups.list",
+    "compute.instanceTemplates.list",
     "compute.instances.list",
     "compute.interconnectAttachments.list",
     "compute.interconnects.list",
@@ -88,7 +93,9 @@
     "container.clusters.list",
     "containeranalysis.occurrences.list",
     "dataflow.jobs.list",
+    "dataproc.autoscalingPolicies.list",
     "dataproc.clusters.list",
+    "dataproc.jobs.list",
     "datastore.backupSchedules.list",
     "datastore.databases.list",
     "datastore.indexes.list",
@@ -108,14 +115,20 @@
     "iam.roles.list",
     "iam.serviceAccountKeys.list",
     "iam.serviceAccounts.list",
+    "iap.projects.getSettings",
+    "iap.tunnelDestGroups.list",
     "ids.endpoints.list",
     "logging.buckets.list",
     "logging.exclusions.list",
+    "logging.views.list",
     "modelarmor.floorSettings.get",
     "modelarmor.templates.list",
     "monitoring.alertPolicies.list",
+    "monitoring.dashboards.list",
     "monitoring.groups.list",
     "monitoring.notificationChannels.list",
+    "monitoring.services.list",
+    "monitoring.slos.list",
     "monitoring.uptimeCheckConfigs.list",
     "orgpolicy.constraints.list",
     "orgpolicy.policies.list",
@@ -135,9 +148,11 @@
     "secretmanager.versions.list",
     "serviceusage.services.get",
     "serviceusage.services.list",
+    "source.repos.list",
     "spanner.backups.list",
     "spanner.databases.getDdl",
     "spanner.databases.list",
+    "spanner.instanceConfigs.list",
     "spanner.instances.list",
     "storage.buckets.getIamPolicy",
     "storage.buckets.list"
@@ -288,6 +303,18 @@
       "source_file": "binary_authorization.go"
     },
     {
+      "permission": "cloudbuild.builds.list",
+      "service": "cloudbuild",
+      "action": "ListBuildTriggers",
+      "source_file": "cloudbuild.go"
+    },
+    {
+      "permission": "cloudbuild.workerpools.list",
+      "service": "cloudbuild",
+      "action": "ListWorkerPools",
+      "source_file": "cloudbuild.go"
+    },
+    {
       "permission": "clouddeploy.deliveryPipelines.list",
       "service": "clouddeploy",
       "action": "ListDeliveryPipelines",
@@ -310,6 +337,12 @@
       "service": "cloudfunctions",
       "action": "ListFunctions",
       "source_file": "cloud_functions.go"
+    },
+    {
+      "permission": "cloudfunctions.functions.list",
+      "service": "cloudfunctions",
+      "action": "ListFunctions",
+      "source_file": "cloud_functions_v2.go"
     },
     {
       "permission": "cloudkms.cryptoKeyVersions.list",
@@ -369,6 +402,18 @@
       "permission": "cloudsql.instances.list",
       "service": "cloudsql",
       "action": "Instances.List",
+      "source_file": "sql.go"
+    },
+    {
+      "permission": "cloudsql.sslCerts.list",
+      "service": "cloudsql",
+      "action": "SslCerts.List",
+      "source_file": "sql.go"
+    },
+    {
+      "permission": "cloudsql.users.list",
+      "service": "cloudsql",
+      "action": "Users.List",
       "source_file": "sql.go"
     },
     {
@@ -448,6 +493,12 @@
       "service": "compute",
       "action": "InstanceGroups.AggregatedList",
       "source_file": "compute_instance_groups_firewall_policies.go"
+    },
+    {
+      "permission": "compute.instanceTemplates.list",
+      "service": "compute",
+      "action": "InstanceTemplates.List",
+      "source_file": "compute_instance_templates.go"
     },
     {
       "permission": "compute.instances.list",
@@ -672,9 +723,21 @@
       "source_file": "dataflow.go"
     },
     {
+      "permission": "dataproc.autoscalingPolicies.list",
+      "service": "dataproc",
+      "action": "AutoscalingPolicies.List",
+      "source_file": "dataproc.go"
+    },
+    {
       "permission": "dataproc.clusters.list",
       "service": "dataproc",
       "action": "Clusters.List",
+      "source_file": "dataproc.go"
+    },
+    {
+      "permission": "dataproc.jobs.list",
+      "service": "dataproc",
+      "action": "Jobs.List",
       "source_file": "dataproc.go"
     },
     {
@@ -792,6 +855,18 @@
       "source_file": "iam.go"
     },
     {
+      "permission": "iap.projects.getSettings",
+      "service": "iap",
+      "action": "ListBrands",
+      "source_file": "iap.go"
+    },
+    {
+      "permission": "iap.tunnelDestGroups.list",
+      "service": "iap",
+      "action": "ListTunnelDestGroups",
+      "source_file": "iap.go"
+    },
+    {
       "permission": "ids.endpoints.list",
       "service": "ids",
       "action": "ListEndpoints",
@@ -807,6 +882,12 @@
       "permission": "logging.exclusions.list",
       "service": "logging",
       "action": "Exclusions.List",
+      "source_file": "logging.go"
+    },
+    {
+      "permission": "logging.views.list",
+      "service": "logging",
+      "action": "Views.List",
       "source_file": "logging.go"
     },
     {
@@ -828,6 +909,12 @@
       "source_file": "monitoring.go"
     },
     {
+      "permission": "monitoring.dashboards.list",
+      "service": "monitoring",
+      "action": "ListDashboards",
+      "source_file": "monitoring.go"
+    },
+    {
       "permission": "monitoring.groups.list",
       "service": "monitoring",
       "action": "ListGroups",
@@ -837,6 +924,18 @@
       "permission": "monitoring.notificationChannels.list",
       "service": "monitoring",
       "action": "ListNotificationChannels",
+      "source_file": "monitoring.go"
+    },
+    {
+      "permission": "monitoring.services.list",
+      "service": "monitoring",
+      "action": "ListServices",
+      "source_file": "monitoring.go"
+    },
+    {
+      "permission": "monitoring.slos.list",
+      "service": "monitoring",
+      "action": "ListServiceLevelObjectives",
       "source_file": "monitoring.go"
     },
     {
@@ -903,7 +1002,7 @@
     {
       "permission": "resourcemanager.folders.list",
       "service": "resourcemanager",
-      "action": "Folders.List",
+      "action": "Folders.Search",
       "source_file": "folder.go",
       "scope": "org"
     },
@@ -943,7 +1042,7 @@
     {
       "permission": "resourcemanager.projects.list",
       "service": "resourcemanager",
-      "action": "Projects.List",
+      "action": "Projects.Search",
       "source_file": "project.go",
       "scope": "org"
     },
@@ -996,6 +1095,12 @@
       "source_file": "services.go"
     },
     {
+      "permission": "source.repos.list",
+      "service": "sourcerepo",
+      "action": "Repos.List",
+      "source_file": "sourcerepo.go"
+    },
+    {
       "permission": "spanner.backups.list",
       "service": "spanner",
       "action": "ListBackups",
@@ -1011,6 +1116,12 @@
       "permission": "spanner.databases.list",
       "service": "spanner",
       "action": "ListDatabases",
+      "source_file": "spanner.go"
+    },
+    {
+      "permission": "spanner.instanceConfigs.list",
+      "service": "spanner",
+      "action": "ListInstanceConfigs",
       "source_file": "spanner.go"
     },
     {

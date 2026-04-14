@@ -61,6 +61,8 @@ cloud.google.com/go/bigtable v1.46.0 h1:Bd6vITx01s6gsdEPvjIGJL/oMMdKvraGI34UiixR
 cloud.google.com/go/bigtable v1.46.0/go.mod h1:GUM6PdkG3rrDse9kugqvX5+ktwo3ldfLtLi1VFn5Wj4=
 cloud.google.com/go/binaryauthorization v1.12.0 h1:dWY+Vq1Y/aIz01okcLU5S4herPtkU/8r9KGsrwzqe7s=
 cloud.google.com/go/binaryauthorization v1.12.0/go.mod h1:+0CndCJPtcHuVCNok+qQskWvbP5Sp5m6eGL8Vpu5mss=
+cloud.google.com/go/cloudbuild v1.28.0 h1:rOfVbca71Be0MjV+PCg2Nacqdjlh8UZw4bdg5PvZZtI=
+cloud.google.com/go/cloudbuild v1.28.0/go.mod h1:rg52xEmndQQPiC9NV/8sCaVtKxHMU9D9MeU+oE9VGKA=
 cloud.google.com/go/cloudtasks v1.15.0 h1:hVjZUqEbqrTl9GPLcGl1jEyd48YXOn8F4Y5HA7OYYEA=
 cloud.google.com/go/cloudtasks v1.15.0/go.mod h1:3KeCxwtGEyaySL7CR3lMmEa2I4mq1ynXdgmfNiO4RYE=
 cloud.google.com/go/compute v1.59.0 h1:xz0v0Rk9YEvxBzrDZ3oV1twQv2VGlELhyA2R5kkqVuI=
@@ -94,6 +96,8 @@ cloud.google.com/go/grafeas v0.3.17 h1:eTq1l4Czo48O39e2ZKSvaRwn0klCeUPf4CvbA+2R4
 cloud.google.com/go/grafeas v0.3.17/go.mod h1:MLYFFap01tm1Rbcd0AT6V2NW1ho45dbX+AxNEcprExY=
 cloud.google.com/go/iam v1.8.0 h1:e5QOdN1zQ3MTWYtXIf2buX+jxqvo2sKqBCOLrteLd1M=
 cloud.google.com/go/iam v1.8.0/go.mod h1:IkWUaEeLK91WQqTKa/fi5xdHJbL49kv2j/vlAZQSJ+k=
+cloud.google.com/go/iap v1.15.0 h1:Qc70Lj88C4A9GwKYdb0cRLR0Gg1SsUf0k8uNDeFmRMk=
+cloud.google.com/go/iap v1.15.0/go.mod h1:b+r+yjrss2WmAEzNrQQjlEdD5E9B8c47mOF7XnqT+z0=
 cloud.google.com/go/ids v1.7.0 h1:0mCN95Cemgur3U6n6TuX3phJ3HsGysG1JzykcOG1dbI=
 cloud.google.com/go/ids v1.7.0/go.mod h1:uCSFrXfCnRUKBl5PdE/ZqBNp1+vKSKPWpdYGa61WjpQ=
 cloud.google.com/go/kms v1.28.0 h1:TeBvmmVF3EtrXXC8hiBo0uV8ntX8QBbZeEQFnVpE70k=

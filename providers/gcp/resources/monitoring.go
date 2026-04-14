@@ -16,10 +16,13 @@ import (
 	kms "cloud.google.com/go/kms/apiv1"
 	monitoring "cloud.google.com/go/monitoring/apiv3/v2"
 	monitoringpb "cloud.google.com/go/monitoring/apiv3/v2/monitoringpb"
+	dashboard "cloud.google.com/go/monitoring/dashboard/apiv1"
+	"cloud.google.com/go/monitoring/dashboard/apiv1/dashboardpb"
 	"go.mondoo.com/mql/v13/llx"
 	"google.golang.org/api/iterator"
 	monitoringv3 "google.golang.org/api/monitoring/v3"
 	"google.golang.org/api/option"
+	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 func (g *mqlGcpProjectMonitoringService) id() (string, error) {
@@ -404,4 +407,230 @@ func (g *mqlGcpProjectMonitoringService) groups() ([]any, error) {
 		res = append(res, mqlGrp)
 	}
 	return res, nil
+}
+
+func (g *mqlGcpProjectMonitoringService) dashboards() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(monitoring.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	client, err := dashboard.NewDashboardsClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	it := client.ListDashboards(ctx, &dashboardpb.ListDashboardsRequest{
+		Parent: fmt.Sprintf("projects/%s", projectId),
+	})
+
+	var res []any
+	for {
+		db, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		layoutDict, err := protoToDict(db)
+		if err != nil {
+			layoutDict = nil
+		}
+		// Extract just the layout portion from the full dashboard dict
+		var layout map[string]any
+		if layoutDict != nil {
+			// Remove non-layout fields from the dict
+			for k, v := range layoutDict {
+				if k == "gridLayout" || k == "mosaicLayout" || k == "rowLayout" || k == "columnLayout" {
+					layout = map[string]any{k: v}
+					break
+				}
+			}
+		}
+
+		mqlDashboard, err := CreateResource(g.MqlRuntime, "gcp.project.monitoringService.dashboard", map[string]*llx.RawData{
+			"projectId":   llx.StringData(projectId),
+			"name":        llx.StringData(db.Name),
+			"displayName": llx.StringData(db.DisplayName),
+			"etag":        llx.StringData(db.Etag),
+			"layout":      llx.DictData(layout),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlDashboard)
+	}
+
+	return res, nil
+}
+
+func (g *mqlGcpProjectMonitoringServiceDashboard) id() (string, error) {
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
+	}
+	return fmt.Sprintf("gcp.project/%s/monitoringService.dashboard/%s", g.ProjectId.Data, g.Name.Data), nil
+}
+
+func (g *mqlGcpProjectMonitoringService) services() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(monitoring.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	client, err := monitoring.NewServiceMonitoringClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	it := client.ListServices(ctx, &monitoringpb.ListServicesRequest{
+		Parent: fmt.Sprintf("projects/%s", projectId),
+	})
+
+	var res []any
+	for {
+		svc, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		telemetryDict, err := protoToDict(svc.Telemetry)
+		if err != nil {
+			telemetryDict = nil
+		}
+
+		var userLabels map[string]any
+		if len(svc.UserLabels) > 0 {
+			userLabels = make(map[string]any, len(svc.UserLabels))
+			for k, v := range svc.UserLabels {
+				userLabels[k] = v
+			}
+		}
+
+		mqlSvc, err := CreateResource(g.MqlRuntime, "gcp.project.monitoringService.service", map[string]*llx.RawData{
+			"projectId":   llx.StringData(projectId),
+			"name":        llx.StringData(svc.Name),
+			"displayName": llx.StringData(svc.DisplayName),
+			"telemetry":   llx.DictData(telemetryDict),
+			"userLabels":  llx.MapData(userLabels, types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlSvc)
+	}
+
+	return res, nil
+}
+
+func (g *mqlGcpProjectMonitoringServiceService) id() (string, error) {
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
+	}
+	return fmt.Sprintf("gcp.project/%s/monitoringService.service/%s", g.ProjectId.Data, g.Name.Data), nil
+}
+
+func (g *mqlGcpProjectMonitoringServiceService) slos() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	serviceName := g.Name.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(monitoring.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	client, err := monitoring.NewServiceMonitoringClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	it := client.ListServiceLevelObjectives(ctx, &monitoringpb.ListServiceLevelObjectivesRequest{
+		Parent: serviceName,
+	})
+
+	var res []any
+	for {
+		slo, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		sliDict, err := protoToDict(slo.ServiceLevelIndicator)
+		if err != nil {
+			sliDict = nil
+		}
+
+		var rollingPeriod, calendarPeriod string
+		if rp, ok := slo.Period.(*monitoringpb.ServiceLevelObjective_RollingPeriod); ok && rp.RollingPeriod != nil {
+			rollingPeriod = durationpb.New(rp.RollingPeriod.AsDuration()).String()
+		}
+		if cp, ok := slo.Period.(*monitoringpb.ServiceLevelObjective_CalendarPeriod); ok {
+			calendarPeriod = cp.CalendarPeriod.String()
+		}
+
+		var userLabels map[string]any
+		if len(slo.UserLabels) > 0 {
+			userLabels = make(map[string]any, len(slo.UserLabels))
+			for k, v := range slo.UserLabels {
+				userLabels[k] = v
+			}
+		}
+
+		mqlSlo, err := CreateResource(g.MqlRuntime, "gcp.project.monitoringService.service.slo", map[string]*llx.RawData{
+			"projectId":             llx.StringData(projectId),
+			"name":                  llx.StringData(slo.Name),
+			"displayName":           llx.StringData(slo.DisplayName),
+			"goal":                  llx.FloatData(slo.Goal),
+			"serviceLevelIndicator": llx.DictData(sliDict),
+			"rollingPeriod":         llx.StringData(rollingPeriod),
+			"calendarPeriod":        llx.StringData(calendarPeriod),
+			"userLabels":            llx.MapData(userLabels, types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlSlo)
+	}
+
+	return res, nil
+}
+
+func (g *mqlGcpProjectMonitoringServiceServiceSlo) id() (string, error) {
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
+	}
+	return fmt.Sprintf("gcp.project/%s/monitoringService.service.slo/%s", g.ProjectId.Data, g.Name.Data), nil
 }

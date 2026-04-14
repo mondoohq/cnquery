@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
@@ -676,4 +677,148 @@ func (g *mqlGcpProjectSqlServiceInstanceSettingsMaintenanceWindow) id() (string,
 
 func (g *mqlGcpProjectSqlServiceInstanceSettingsPasswordValidationPolicy) id() (string, error) {
 	return g.Id.Data, g.Id.Error
+}
+
+func (g *mqlGcpProjectSqlServiceInstance) users() ([]any, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	instanceName := g.Name.Data
+
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, sqladmin.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	sqladminSvc, err := sqladmin.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := sqladminSvc.Users.List(projectId, instanceName).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	var res []any
+	for _, user := range resp.Items {
+		databaseRoles := make([]any, len(user.DatabaseRoles))
+		for i, r := range user.DatabaseRoles {
+			databaseRoles[i] = r
+		}
+
+		var passwordPolicy map[string]any
+		if user.PasswordPolicy != nil {
+			passwordPolicy = map[string]any{
+				"allowedFailedAttempts":      user.PasswordPolicy.AllowedFailedAttempts,
+				"passwordExpirationDuration": user.PasswordPolicy.PasswordExpirationDuration,
+				"enableFailedAttemptsCheck":  user.PasswordPolicy.EnableFailedAttemptsCheck,
+				"enablePasswordVerification": user.PasswordPolicy.EnablePasswordVerification,
+			}
+		}
+
+		mqlUser, err := CreateResource(g.MqlRuntime, "gcp.project.sqlService.instance.user", map[string]*llx.RawData{
+			"projectId":        llx.StringData(projectId),
+			"instanceName":     llx.StringData(instanceName),
+			"name":             llx.StringData(user.Name),
+			"host":             llx.StringData(user.Host),
+			"type":             llx.StringData(user.Type),
+			"iamEmail":         llx.StringData(user.IamEmail),
+			"databaseRoles":    llx.ArrayData(databaseRoles, types.String),
+			"dualPasswordType": llx.StringData(user.DualPasswordType),
+			"passwordPolicy":   llx.DictData(passwordPolicy),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlUser)
+	}
+
+	return res, nil
+}
+
+func (g *mqlGcpProjectSqlServiceInstanceUser) id() (string, error) {
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
+	}
+	return fmt.Sprintf("gcp.project/%s/sqlService.instance/%s/user/%s@%s", g.ProjectId.Data, g.InstanceName.Data, g.Name.Data, g.Host.Data), nil
+}
+
+func (g *mqlGcpProjectSqlServiceInstance) sslCerts() ([]any, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	instanceName := g.Name.Data
+
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, sqladmin.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	sqladminSvc, err := sqladmin.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := sqladminSvc.SslCerts.List(projectId, instanceName).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	var res []any
+	for _, cert := range resp.Items {
+		var createTime, expirationTime *time.Time
+		if cert.CreateTime != "" {
+			t, err := time.Parse(time.RFC3339, cert.CreateTime)
+			if err == nil {
+				createTime = &t
+			}
+		}
+		if cert.ExpirationTime != "" {
+			t, err := time.Parse(time.RFC3339, cert.ExpirationTime)
+			if err == nil {
+				expirationTime = &t
+			}
+		}
+
+		mqlCert, err := CreateResource(g.MqlRuntime, "gcp.project.sqlService.instance.sslCert", map[string]*llx.RawData{
+			"projectId":        llx.StringData(projectId),
+			"instanceName":     llx.StringData(instanceName),
+			"commonName":       llx.StringData(cert.CommonName),
+			"sha1Fingerprint":  llx.StringData(cert.Sha1Fingerprint),
+			"certSerialNumber": llx.StringData(cert.CertSerialNumber),
+			"cert":             llx.StringData(cert.Cert),
+			"createTime":       llx.TimeDataPtr(createTime),
+			"expirationTime":   llx.TimeDataPtr(expirationTime),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlCert)
+	}
+
+	return res, nil
+}
+
+func (g *mqlGcpProjectSqlServiceInstanceSslCert) id() (string, error) {
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
+	}
+	return fmt.Sprintf("gcp.project/%s/sqlService.instance/%s/sslCert/%s", g.ProjectId.Data, g.InstanceName.Data, g.Sha1Fingerprint.Data), nil
 }
