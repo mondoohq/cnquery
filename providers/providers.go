@@ -597,6 +597,16 @@ func InstallIO(reader io.ReadCloser, conf InstallConf) ([]*Provider, error) {
 		return nil, errors.Wrap(err, "failed to create temporary directory to unpack files")
 	}
 
+	// Clean up the temporary directory when we're done, regardless of success or failure.
+	defer func() {
+		err := osRetry(func() error {
+			return os.RemoveAll(tmpdir)
+		}, maxInstallConfRetries)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to remove temporary folder for unpacked provider")
+		}
+	}()
+
 	log.Debug().Str("path", tmpdir).Msg("unpacking providers")
 	files := map[string]struct{}{}
 	err = walkTarXz(reader, func(reader *tar.Reader, header *tar.Header) error {
@@ -615,19 +625,6 @@ func InstallIO(reader io.ReadCloser, conf InstallConf) ([]*Provider, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	// If for any reason we drop here, it's best to clean up all temporary files
-	// so we don't spam the system with unnecessary data. Optionally we could
-	// keep them and re-use them, so they don't have to download again.
-	defer func() {
-		// We don't set a max retry, since we can indefinitely try to remove this
-		err := osRetry(func() error {
-			return os.RemoveAll(tmpdir)
-		}, maxInstallConfRetries)
-		if err != nil {
-			log.Error().Err(err).Msg("failed to remove temporary folder for unpacked provider")
-		}
-	}()
 
 	log.Debug().Msg("move provider to destination")
 	providerDirs := []string{}
