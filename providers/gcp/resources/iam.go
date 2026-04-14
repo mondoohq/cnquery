@@ -71,7 +71,7 @@ func (g *mqlGcpProjectIamServiceServiceAccount) id() (string, error) {
 		if !g.Email.IsNull() && g.Email.Data != "" {
 			return "gcp.project.iamService.serviceAccount/email/" + g.Email.Data, nil
 		}
-		return "", nil
+		return "", errors.New("service account has no uniqueId or email for cache key")
 	}
 	return g.UniqueId.Data, nil
 }
@@ -141,6 +141,16 @@ func initGcpProjectIamServiceServiceAccount(runtime *plugin.Runtime, args map[st
 		}
 	}
 
+	// Capture the original lookup values before we null out missing fields,
+	// so the "not found" log reflects what we actually searched for.
+	var lookupEmail, lookupUniqueId any
+	if args["email"] != nil {
+		lookupEmail = args["email"].Value
+	}
+	if args["uniqueId"] != nil {
+		lookupUniqueId = args["uniqueId"].Value
+	}
+
 	// Not found: null out all fields so downstream field access returns null
 	// instead of hitting "cannot convert primitive with NO type information".
 	if args["name"] == nil {
@@ -165,8 +175,8 @@ func initGcpProjectIamServiceServiceAccount(runtime *plugin.Runtime, args map[st
 		args["disabled"] = llx.NilData
 	}
 	log.Error().
-		Interface("email", args["email"].Value).
-		Interface("uniqueId", args["uniqueId"].Value).
+		Interface("email", lookupEmail).
+		Interface("uniqueId", lookupUniqueId).
 		Err(errors.New("service account not found")).
 		Send()
 	return args, nil, nil
