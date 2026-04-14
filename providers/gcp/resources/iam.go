@@ -59,7 +59,21 @@ func (g *mqlGcpProject) iam() (*mqlGcpProjectIamService, error) {
 }
 
 func (g *mqlGcpProjectIamServiceServiceAccount) id() (string, error) {
-	return g.UniqueId.Data, g.UniqueId.Error
+	if g.UniqueId.Error != nil {
+		return "", g.UniqueId.Error
+	}
+	if g.UniqueId.IsNull() || g.UniqueId.Data == "" {
+		// Fall back to email so not-found / asset-context instances still get a
+		// stable, non-colliding cache key.
+		if g.Email.Error != nil {
+			return "", g.Email.Error
+		}
+		if !g.Email.IsNull() && g.Email.Data != "" {
+			return "gcp.project.iamService.serviceAccount/email/" + g.Email.Data, nil
+		}
+		return "", nil
+	}
+	return g.UniqueId.Data, nil
 }
 
 func (g *mqlGcpProjectIamServiceServiceAccountKey) id() (string, error) {
@@ -71,7 +85,23 @@ func initGcpProjectIamServiceServiceAccount(runtime *plugin.Runtime, args map[st
 		return args, nil, nil
 	}
 
-	if args["projectId"] == nil || args["email"] == nil {
+	// If no args are set, try reading them from the platform ID. This happens
+	// when the resource is initialized from a gcp-iam-service-account asset.
+	// The platform ID encodes the service account's uniqueId as the name segment
+	// (see discovery.go and NewResourcePlatformID).
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["projectId"] = llx.StringData(ids.project)
+			args["uniqueId"] = llx.StringData(ids.name)
+		} else {
+			return nil, nil, errors.New("no asset identifier found")
+		}
+	}
+
+	if args["projectId"] == nil {
+		return args, nil, nil
+	}
+	if args["email"] == nil && args["uniqueId"] == nil {
 		return args, nil, nil
 	}
 
@@ -89,23 +119,56 @@ func initGcpProjectIamServiceServiceAccount(runtime *plugin.Runtime, args map[st
 
 	for _, s := range sas.Data {
 		sa := s.(*mqlGcpProjectIamServiceServiceAccount)
-		email := sa.GetEmail()
-		if email.Error != nil {
-			return nil, nil, email.Error
+
+		if args["email"] != nil {
+			email := sa.GetEmail()
+			if email.Error != nil {
+				return nil, nil, email.Error
+			}
+			if email.Data == args["email"].Value {
+				return args, sa, nil
+			}
 		}
 
-		if email.Data == args["email"].Value {
-			return args, sa, nil
+		if args["uniqueId"] != nil {
+			uniqueId := sa.GetUniqueId()
+			if uniqueId.Error != nil {
+				return nil, nil, uniqueId.Error
+			}
+			if uniqueId.Data == args["uniqueId"].Value {
+				return args, sa, nil
+			}
 		}
 	}
 
-	args["name"] = llx.NilData
-	args["uniqueId"] = llx.NilData
-	args["displayName"] = llx.NilData
-	args["description"] = llx.NilData
-	args["oauth2ClientId"] = llx.NilData
-	args["disabled"] = llx.NilData
-	log.Error().Interface("email", args["email"].Value).Err(errors.New("service account not found")).Send()
+	// Not found: null out all fields so downstream field access returns null
+	// instead of hitting "cannot convert primitive with NO type information".
+	if args["name"] == nil {
+		args["name"] = llx.NilData
+	}
+	if args["uniqueId"] == nil {
+		args["uniqueId"] = llx.NilData
+	}
+	if args["email"] == nil {
+		args["email"] = llx.NilData
+	}
+	if args["displayName"] == nil {
+		args["displayName"] = llx.NilData
+	}
+	if args["description"] == nil {
+		args["description"] = llx.NilData
+	}
+	if args["oauth2ClientId"] == nil {
+		args["oauth2ClientId"] = llx.NilData
+	}
+	if args["disabled"] == nil {
+		args["disabled"] = llx.NilData
+	}
+	log.Error().
+		Interface("email", args["email"].Value).
+		Interface("uniqueId", args["uniqueId"].Value).
+		Err(errors.New("service account not found")).
+		Send()
 	return args, nil, nil
 }
 
