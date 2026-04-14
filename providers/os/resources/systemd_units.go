@@ -83,6 +83,9 @@ func missingSystemdTimerResource(runtime *plugin.Runtime, name string) plugin.Re
 	res.Enabled = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
 	res.Masked = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
 	res.Static = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
+	res.Activates.State = plugin.StateIsSet | plugin.StateIsNull
+	res.OnCalendar.State = plugin.StateIsSet | plugin.StateIsNull
+	res.Persistent = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
 	res.__id, _ = res.id()
 	return res
 }
@@ -231,6 +234,9 @@ func missingSystemdSocketResource(runtime *plugin.Runtime, name string) plugin.R
 	res.Enabled = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
 	res.Masked = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
 	res.Static = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
+	res.Activates.State = plugin.StateIsSet | plugin.StateIsNull
+	res.ListenAddresses.State = plugin.StateIsSet | plugin.StateIsNull
+	res.Accept = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
 	res.__id, _ = res.id()
 	return res
 }
