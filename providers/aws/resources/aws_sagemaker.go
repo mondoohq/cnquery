@@ -1973,7 +1973,8 @@ func (a *mqlAwsSagemakerCluster) instanceGroups() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		var instanceTypeDetails []any
+		instanceTypeDetails := make([]any, 0, len(ig.InstanceTypeDetails))
+		igName := convert.ToValue(ig.InstanceGroupName)
 		for _, itd := range ig.InstanceTypeDetails {
 			var itdCurrentCount, itdThreadsPerCore int64
 			if itd.CurrentCount != nil {
@@ -1991,6 +1992,8 @@ func (a *mqlAwsSagemakerCluster) instanceGroups() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			itdRes := mqlITD.(*mqlAwsSagemakerClusterInstanceGroupInstanceTypeDetail)
+			itdRes.cacheParentGroupID = a.Region.Data + "/" + a.Name.Data + "/" + igName
 			instanceTypeDetails = append(instanceTypeDetails, mqlITD)
 		}
 		mqlIG, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerClusterInstanceGroup,
@@ -2139,8 +2142,12 @@ func (a *mqlAwsSagemakerClusterInstanceGroup) lifecycleConfig() (map[string]any,
 	return convert.JsonToDict(a.cacheLifecycleConfig)
 }
 
+type mqlAwsSagemakerClusterInstanceGroupInstanceTypeDetailInternal struct {
+	cacheParentGroupID string
+}
+
 func (a *mqlAwsSagemakerClusterInstanceGroupInstanceTypeDetail) id() (string, error) {
-	return "instanceTypeDetail/" + a.InstanceType.Data, nil
+	return a.cacheParentGroupID + "/instanceTypeDetail/" + a.InstanceType.Data, nil
 }
 
 type mqlAwsSagemakerClusterNodeInternal struct {

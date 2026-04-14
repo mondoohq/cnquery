@@ -52232,7 +52232,7 @@ func (c *mqlAwsSagemakerClusterInstanceGroup) GetInstanceTypeDetails() *plugin.T
 type mqlAwsSagemakerClusterInstanceGroupInstanceTypeDetail struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsSagemakerClusterInstanceGroupInstanceTypeDetailInternal it will be used here
+	mqlAwsSagemakerClusterInstanceGroupInstanceTypeDetailInternal
 	InstanceType   plugin.TValue[string]
 	CurrentCount   plugin.TValue[int64]
 	ThreadsPerCore plugin.TValue[int64]
