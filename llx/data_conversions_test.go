@@ -23,6 +23,35 @@ func TestVersion_Conversions(t *testing.T) {
 	})
 }
 
+// Regression: a RawData that reaches Result() with a malformed type (e.g. a
+// bare types.ArrayLike with no element type) must not panic. It should surface
+// as a serialization error on the Result, letting the scan continue.
+func TestRawDataResult_MalformedArrayType(t *testing.T) {
+	t.Run("bare ArrayLike with values", func(t *testing.T) {
+		raw := &llx.RawData{
+			Type:  types.ArrayLike,
+			Value: []any{"a", "b"},
+		}
+		require.NotPanics(t, func() {
+			res := raw.Result()
+			require.NotNil(t, res)
+			require.NotEmpty(t, res.Error)
+		})
+	})
+
+	t.Run("empty type with non-nil value", func(t *testing.T) {
+		raw := &llx.RawData{
+			Type:  types.Type(""),
+			Value: "hello",
+		}
+		require.NotPanics(t, func() {
+			res := raw.Result()
+			require.NotNil(t, res)
+			require.NotEmpty(t, res.Error)
+		})
+	})
+}
+
 func TestResultRawConversions(t *testing.T) {
 	tests := []struct {
 		raw *llx.RawData

@@ -278,6 +278,12 @@ func array2result(value any, typ types.Type) (*Primitive, error) {
 	}
 	res := make([]*Primitive, len(arr))
 	ct := typ.Child()
+	// Guard against malformed array types with no element type (e.g. bare
+	// types.ArrayLike). Rather than panicking deep in raw2primitive, fall
+	// back to types.Any so the element is serialized best-effort.
+	if len(ct) == 0 {
+		ct = types.Any
+	}
 	var err error
 	for i := range arr {
 		res[i], err = raw2primitive(arr[i], ct)
@@ -366,6 +372,13 @@ func raw2primitive(value any, typ types.Type) (*Primitive, error) {
 		default:
 			return NilPrimitive, nil
 		}
+	}
+
+	// A type with no information reaching this point means an upstream
+	// producer lost the type metadata. Return a nil primitive instead of
+	// panicking on typ[0] in Underlying below.
+	if len(typ) == 0 {
+		return NilPrimitive, errors.New("cannot serialize value without type information")
 	}
 
 	utyp := typ.Underlying()

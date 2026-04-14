@@ -156,7 +156,7 @@ func Array(typ Type) Type {
 
 // IsArray checks if this type is an array
 func (typ Type) IsArray() bool {
-	return typ[0] == byteArray
+	return len(typ) > 0 && typ[0] == byteArray
 }
 
 // Map for an association of keys and values
@@ -169,7 +169,7 @@ func Map(key, value Type) Type {
 
 // IsMap checks if this type is a map
 func (typ Type) IsMap() bool {
-	return typ[0] == byteMap
+	return len(typ) > 0 && typ[0] == byteMap
 }
 
 // Resource for complex data structures
@@ -211,11 +211,16 @@ func Function(required rune, args []Type) Type {
 
 // IsFunction checks if this type is a map
 func (typ Type) IsFunction() bool {
-	return typ[0] == byteFunction
+	return len(typ) > 0 && typ[0] == byteFunction
 }
 
 // Underlying returns the basic type, e.g. types.MapLike instead of types.Map(..)
+// Returns Unset if the type has no information, rather than panicking, so that a
+// malformed type from a serialization edge case fails gracefully downstream.
 func (typ Type) Underlying() Type {
+	if len(typ) == 0 {
+		return Unset
+	}
 	return Type(typ[0])
 }
 
@@ -244,12 +249,18 @@ func Enforce(left, right Type) (Type, bool) {
 
 // Child returns the child type of arrays and maps
 func (typ Type) Child() Type {
+	if len(typ) == 0 {
+		return NoType
+	}
 	switch typ[0] {
 	case byteDict:
 		return Dict
 	case byteArray:
 		return typ[1:]
 	case byteMap:
+		if len(typ) < 2 {
+			return NoType
+		}
 		return typ[2:]
 	}
 	panic("cannot determine child type of " + typ.Label())
@@ -257,7 +268,7 @@ func (typ Type) Child() Type {
 
 // Key returns the key type of a map
 func (typ Type) Key() Type {
-	if typ[0] != byteMap {
+	if len(typ) < 2 || typ[0] != byteMap {
 		panic("cannot retrieve key type of non-map type " + typ.Label())
 	}
 	return Type(typ[1])
@@ -266,7 +277,7 @@ func (typ Type) Key() Type {
 // ResourceName return the name of a resource. Has to be a resource type,
 // otherwise this call panics.
 func (typ Type) ResourceName() string {
-	if typ[0] == byteResource {
+	if len(typ) > 0 && typ[0] == byteResource {
 		return string(typ[1:])
 	}
 	panic("cannot determine type name of " + typ.Label())

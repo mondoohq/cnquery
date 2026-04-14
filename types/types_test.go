@@ -43,3 +43,27 @@ func TestTypes(t *testing.T) {
 		assert.Equal(t, test.ExpectedLabel, test.T.Label())
 	}
 }
+
+func TestType_EmptyTypeAccessorsDoNotPanic(t *testing.T) {
+	empty := Type("")
+	bareArray := ArrayLike
+
+	assert.NotPanics(t, func() {
+		assert.Equal(t, Unset, empty.Underlying())
+	})
+	assert.NotPanics(t, func() {
+		assert.Equal(t, NoType, empty.Child())
+	})
+	assert.NotPanics(t, func() {
+		assert.False(t, empty.IsArray())
+	})
+	assert.NotPanics(t, func() {
+		assert.False(t, empty.IsFunction())
+	})
+
+	// A bare ArrayLike (byteArray with no element type) reports an empty
+	// child type rather than panicking when sliced.
+	assert.NotPanics(t, func() {
+		assert.Equal(t, NoType, bareArray.Child())
+	})
+}
