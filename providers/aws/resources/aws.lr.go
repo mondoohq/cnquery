@@ -56668,7 +56668,7 @@ func (c *mqlAwsIamUsercredentialreportentry) GetCreatedAt() *plugin.TValue[*time
 type mqlAwsIamUser struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsIamUserInternal it will be used here
+	mqlAwsIamUserInternal
 	Arn              plugin.TValue[string]
 	Id               plugin.TValue[string]
 	Name             plugin.TValue[string]

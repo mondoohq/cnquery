@@ -825,6 +825,28 @@ func initAwsIamUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	return args, nil, nil
 }
 
+type mqlAwsIamUserInternal struct {
+	accessKeysFetched bool
+	accessKeysCache   []any
+	accessKeysLock    sync.Mutex
+
+	policiesFetched bool
+	policiesCache   []any
+	policiesLock    sync.Mutex
+
+	attachedPoliciesFetched bool
+	attachedPoliciesCache   []any
+	attachedPoliciesLock    sync.Mutex
+
+	groupsFetched bool
+	groupsCache   []any
+	groupsLock    sync.Mutex
+
+	loginProfileFetched bool
+	loginProfileCache   *mqlAwsIamLoginProfile
+	loginProfileLock    sync.Mutex
+}
+
 func (a *mqlAwsIamUser) id() (string, error) {
 	if a.Arn.Error != nil {
 		return "", a.Arn.Error
@@ -833,6 +855,15 @@ func (a *mqlAwsIamUser) id() (string, error) {
 }
 
 func (a *mqlAwsIamUser) accessKeys() ([]any, error) {
+	if a.accessKeysFetched {
+		return a.accessKeysCache, nil
+	}
+	a.accessKeysLock.Lock()
+	defer a.accessKeysLock.Unlock()
+	if a.accessKeysFetched {
+		return a.accessKeysCache, nil
+	}
+
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Iam("")
@@ -857,10 +888,21 @@ func (a *mqlAwsIamUser) accessKeys() ([]any, error) {
 		res = append(res, metadata)
 	}
 
+	a.accessKeysCache = res
+	a.accessKeysFetched = true
 	return res, nil
 }
 
 func (a *mqlAwsIamUser) policies() ([]any, error) {
+	if a.policiesFetched {
+		return a.policiesCache, nil
+	}
+	a.policiesLock.Lock()
+	defer a.policiesLock.Unlock()
+	if a.policiesFetched {
+		return a.policiesCache, nil
+	}
+
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Iam("")
@@ -884,10 +926,21 @@ func (a *mqlAwsIamUser) policies() ([]any, error) {
 		}
 	}
 
+	a.policiesCache = res
+	a.policiesFetched = true
 	return res, nil
 }
 
 func (a *mqlAwsIamUser) attachedPolicies() ([]any, error) {
+	if a.attachedPoliciesFetched {
+		return a.attachedPoliciesCache, nil
+	}
+	a.attachedPoliciesLock.Lock()
+	defer a.attachedPoliciesLock.Unlock()
+	if a.attachedPoliciesFetched {
+		return a.attachedPoliciesCache, nil
+	}
+
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Iam("")
@@ -917,6 +970,8 @@ func (a *mqlAwsIamUser) attachedPolicies() ([]any, error) {
 		}
 	}
 
+	a.attachedPoliciesCache = res
+	a.attachedPoliciesFetched = true
 	return res, nil
 }
 
@@ -1560,6 +1615,15 @@ func (a *mqlAwsIamGroup) inlinePolicies() ([]any, error) {
 }
 
 func (a *mqlAwsIamUser) groups() ([]any, error) {
+	if a.groupsFetched {
+		return a.groupsCache, nil
+	}
+	a.groupsLock.Lock()
+	defer a.groupsLock.Unlock()
+	if a.groupsFetched {
+		return a.groupsCache, nil
+	}
+
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Iam("")
@@ -1583,10 +1647,29 @@ func (a *mqlAwsIamUser) groups() ([]any, error) {
 		}
 	}
 
+	a.groupsCache = res
+	a.groupsFetched = true
 	return res, nil
 }
 
 func (a *mqlAwsIamUser) loginProfile() (*mqlAwsIamLoginProfile, error) {
+	if a.loginProfileFetched {
+		if a.loginProfileCache == nil {
+			a.LoginProfile.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return a.loginProfileCache, nil
+	}
+	a.loginProfileLock.Lock()
+	defer a.loginProfileLock.Unlock()
+	if a.loginProfileFetched {
+		if a.loginProfileCache == nil {
+			a.LoginProfile.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return a.loginProfileCache, nil
+	}
+
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Iam("")
@@ -1600,6 +1683,7 @@ func (a *mqlAwsIamUser) loginProfile() (*mqlAwsIamLoginProfile, error) {
 	var ae smithy.APIError
 	if errors.As(err, &ae) {
 		if ae.ErrorCode() == "NoSuchEntity" {
+			a.loginProfileFetched = true
 			a.LoginProfile.State = plugin.StateIsSet | plugin.StateIsNull
 			return nil, nil
 		}
@@ -1620,7 +1704,9 @@ func (a *mqlAwsIamUser) loginProfile() (*mqlAwsIamLoginProfile, error) {
 	if err != nil {
 		return nil, err
 	}
-	return o.(*mqlAwsIamLoginProfile), nil
+	a.loginProfileCache = o.(*mqlAwsIamLoginProfile)
+	a.loginProfileFetched = true
+	return a.loginProfileCache, nil
 }
 
 func (a *mqlAwsIamLoginProfile) init() (string, error) {
