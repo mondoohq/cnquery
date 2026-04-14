@@ -270,7 +270,7 @@ space_mrn: //captain.api.mondoo.app/spaces/musing-saha-952142
 		assert.Equal(t, cfg.Annotations, readCfg.Annotations)
 	})
 
-	t.Run("test ConfigToMap produces correct keys", func(t *testing.T) {
+	t.Run("test configToMap produces correct keys", func(t *testing.T) {
 		cfg := &Config{
 			CommonOpts: CommonOpts{
 				AgentMrn:    "agent-123",
@@ -282,7 +282,7 @@ space_mrn: //captain.api.mondoo.app/spaces/musing-saha-952142
 			Category: "server",
 		}
 
-		m, err := ConfigToMap(cfg)
+		m, err := configToMap(cfg)
 		require.NoError(t, err)
 
 		// CommonOpts fields should be squashed to top level

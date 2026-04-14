@@ -228,8 +228,8 @@ func Read() (*Config, error) {
 	return &opts, nil
 }
 
-// ConfigToMap encodes a Config struct into a flat map, respecting mapstructure tags.
-func ConfigToMap(cfg *Config) (map[string]any, error) {
+// configToMap encodes a Config struct into a flat map, respecting mapstructure tags.
+func configToMap(cfg *Config) (map[string]any, error) {
 	m := make(map[string]any)
 	dec, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
 		TagName: "mapstructure",
@@ -247,7 +247,7 @@ func ConfigToMap(cfg *Config) (map[string]any, error) {
 // ApplyConfig sets all values from the given Config into viper,
 // allowing programmatic configuration without a config file.
 func ApplyConfig(cfg *Config) error {
-	m, err := ConfigToMap(cfg)
+	m, err := configToMap(cfg)
 	if err != nil {
 		return err
 	}
