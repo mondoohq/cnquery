@@ -16,6 +16,7 @@ asdk
 atlassian
 auditlog
 Auths
+AVRO
 autoaccept
 autoclose
 autoexpand
@@ -107,6 +108,8 @@ fips
 firefox
 firestore
 firstname
+flink
+fqdns
 FLEXGROUP
 FLEXVOL
 fortios
@@ -265,6 +268,7 @@ proxmox
 psc
 PTn
 pushconfig
+pyspark
 pve
 PVEAPI
 pzi
@@ -317,6 +321,7 @@ signin
 singlequeryargument
 sizeconstraintstatement
 skaffold
+slo
 smbv
 snaptime
 Snat
