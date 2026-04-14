@@ -49,4 +49,3 @@ func TestBuildTopicSchemaSettings(t *testing.T) {
 		assert.Nil(t, result)
 	})
 }
-

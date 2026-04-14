@@ -27,3 +27,4 @@ providers/os/connection/snapshot/mock_volumemounter.go
 settings.local.json
 *.lr.manifest.json
 .claude/worktrees/
+.claude/scheduled_tasks.lock

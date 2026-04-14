@@ -8,8 +8,8 @@ import (
 
 	monitoringpb "cloud.google.com/go/monitoring/apiv3/v2/monitoringpb"
 	"github.com/stretchr/testify/assert"
-	"google.golang.org/protobuf/types/known/durationpb"
 	calendarperiodpb "google.golang.org/genproto/googleapis/type/calendarperiod"
+	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 func TestSLORollingPeriodExtraction(t *testing.T) {
