@@ -4066,3 +4066,49 @@ private goose.skill @defaults("name") @maturity("preview") {
   // SHA-256 hash of the skill content
   sha256() string
 }
+
+// Gemini CLI instance configuration
+// URL: https://github.com/google-gemini/gemini-cli
+gemini @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Gemini configuration directory
+  configPath string
+  // Authentication type
+  authType() string
+  // Settings dictionary
+  settings() dict
+  // MCP servers
+  mcpServers() []gemini.mcpServer
+  // Installed skills
+  skills() []gemini.skill
+}
+
+// Gemini MCP server configuration
+private gemini.mcpServer @defaults("name") @maturity("preview") {
+  // Server name
+  name string
+  // Server command
+  command string
+  // Server arguments
+  args []string
+  // Whether environment variables are configured
+  hasEnv bool
+}
+
+// Gemini skill
+private gemini.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}

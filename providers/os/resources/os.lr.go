@@ -281,6 +281,9 @@ const (
 	ResourceGoose                        string = "goose"
 	ResourceGooseExtension               string = "goose.extension"
 	ResourceGooseSkill                   string = "goose.skill"
+	ResourceGemini                       string = "gemini"
+	ResourceGeminiMcpServer              string = "gemini.mcpServer"
+	ResourceGeminiSkill                  string = "gemini.skill"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -1346,6 +1349,18 @@ func init() {
 		"goose.skill": {
 			// to override args, implement: initGooseSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGooseSkill,
+		},
+		"gemini": {
+			Init:   initGemini,
+			Create: createGemini,
+		},
+		"gemini.mcpServer": {
+			// to override args, implement: initGeminiMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGeminiMcpServer,
+		},
+		"gemini.skill": {
+			// to override args, implement: initGeminiSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGeminiSkill,
 		},
 	}
 }
@@ -5743,6 +5758,54 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"goose.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGooseSkill).GetSha256()).ToDataRes(types.String)
+	},
+	"gemini.configPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGemini).GetConfigPath()).ToDataRes(types.String)
+	},
+	"gemini.authType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGemini).GetAuthType()).ToDataRes(types.String)
+	},
+	"gemini.settings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGemini).GetSettings()).ToDataRes(types.Dict)
+	},
+	"gemini.mcpServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGemini).GetMcpServers()).ToDataRes(types.Array(types.Resource("gemini.mcpServer")))
+	},
+	"gemini.skills": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGemini).GetSkills()).ToDataRes(types.Array(types.Resource("gemini.skill")))
+	},
+	"gemini.mcpServer.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGeminiMcpServer).GetName()).ToDataRes(types.String)
+	},
+	"gemini.mcpServer.command": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGeminiMcpServer).GetCommand()).ToDataRes(types.String)
+	},
+	"gemini.mcpServer.args": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGeminiMcpServer).GetArgs()).ToDataRes(types.Array(types.String))
+	},
+	"gemini.mcpServer.hasEnv": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGeminiMcpServer).GetHasEnv()).ToDataRes(types.Bool)
+	},
+	"gemini.skill.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGeminiSkill).GetName()).ToDataRes(types.String)
+	},
+	"gemini.skill.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGeminiSkill).GetDescription()).ToDataRes(types.String)
+	},
+	"gemini.skill.allowedTools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGeminiSkill).GetAllowedTools()).ToDataRes(types.Array(types.String))
+	},
+	"gemini.skill.argumentHint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGeminiSkill).GetArgumentHint()).ToDataRes(types.String)
+	},
+	"gemini.skill.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGeminiSkill).GetSource()).ToDataRes(types.String)
+	},
+	"gemini.skill.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGeminiSkill).GetContent()).ToDataRes(types.String)
+	},
+	"gemini.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGeminiSkill).GetSha256()).ToDataRes(types.String)
 	},
 }
 
@@ -12582,6 +12645,82 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"goose.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGooseSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gemini.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGemini).__id, ok = v.Value.(string)
+		return
+	},
+	"gemini.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGemini).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gemini.authType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGemini).AuthType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gemini.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGemini).Settings, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gemini.mcpServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGemini).McpServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gemini.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGemini).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gemini.mcpServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGeminiMcpServer).__id, ok = v.Value.(string)
+		return
+	},
+	"gemini.mcpServer.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGeminiMcpServer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gemini.mcpServer.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGeminiMcpServer).Command, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gemini.mcpServer.args": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGeminiMcpServer).Args, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gemini.mcpServer.hasEnv": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGeminiMcpServer).HasEnv, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gemini.skill.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGeminiSkill).__id, ok = v.Value.(string)
+		return
+	},
+	"gemini.skill.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGeminiSkill).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gemini.skill.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGeminiSkill).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gemini.skill.allowedTools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGeminiSkill).AllowedTools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gemini.skill.argumentHint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGeminiSkill).ArgumentHint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gemini.skill.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGeminiSkill).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gemini.skill.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGeminiSkill).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gemini.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGeminiSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -34949,6 +35088,248 @@ func (c *mqlGooseSkill) GetContent() *plugin.TValue[string] {
 }
 
 func (c *mqlGooseSkill) GetSha256() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
+		return c.sha256()
+	})
+}
+
+// mqlGemini for the gemini resource
+type mqlGemini struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGeminiInternal it will be used here
+	ConfigPath plugin.TValue[string]
+	AuthType   plugin.TValue[string]
+	Settings   plugin.TValue[any]
+	McpServers plugin.TValue[[]any]
+	Skills     plugin.TValue[[]any]
+}
+
+// createGemini creates a new instance of this resource
+func createGemini(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGemini{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gemini", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGemini) MqlName() string {
+	return "gemini"
+}
+
+func (c *mqlGemini) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGemini) GetConfigPath() *plugin.TValue[string] {
+	return &c.ConfigPath
+}
+
+func (c *mqlGemini) GetAuthType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AuthType, func() (string, error) {
+		return c.authType()
+	})
+}
+
+func (c *mqlGemini) GetSettings() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Settings, func() (any, error) {
+		return c.settings()
+	})
+}
+
+func (c *mqlGemini) GetMcpServers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.McpServers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gemini", c.__id, "mcpServers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mcpServers()
+	})
+}
+
+func (c *mqlGemini) GetSkills() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Skills, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gemini", c.__id, "skills")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.skills()
+	})
+}
+
+// mqlGeminiMcpServer for the gemini.mcpServer resource
+type mqlGeminiMcpServer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGeminiMcpServerInternal it will be used here
+	Name    plugin.TValue[string]
+	Command plugin.TValue[string]
+	Args    plugin.TValue[[]any]
+	HasEnv  plugin.TValue[bool]
+}
+
+// createGeminiMcpServer creates a new instance of this resource
+func createGeminiMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGeminiMcpServer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gemini.mcpServer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGeminiMcpServer) MqlName() string {
+	return "gemini.mcpServer"
+}
+
+func (c *mqlGeminiMcpServer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGeminiMcpServer) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGeminiMcpServer) GetCommand() *plugin.TValue[string] {
+	return &c.Command
+}
+
+func (c *mqlGeminiMcpServer) GetArgs() *plugin.TValue[[]any] {
+	return &c.Args
+}
+
+func (c *mqlGeminiMcpServer) GetHasEnv() *plugin.TValue[bool] {
+	return &c.HasEnv
+}
+
+// mqlGeminiSkill for the gemini.skill resource
+type mqlGeminiSkill struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGeminiSkillInternal it will be used here
+	Name         plugin.TValue[string]
+	Description  plugin.TValue[string]
+	AllowedTools plugin.TValue[[]any]
+	ArgumentHint plugin.TValue[string]
+	Source       plugin.TValue[string]
+	Content      plugin.TValue[string]
+	Sha256       plugin.TValue[string]
+}
+
+// createGeminiSkill creates a new instance of this resource
+func createGeminiSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGeminiSkill{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gemini.skill", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGeminiSkill) MqlName() string {
+	return "gemini.skill"
+}
+
+func (c *mqlGeminiSkill) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGeminiSkill) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGeminiSkill) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGeminiSkill) GetAllowedTools() *plugin.TValue[[]any] {
+	return &c.AllowedTools
+}
+
+func (c *mqlGeminiSkill) GetArgumentHint() *plugin.TValue[string] {
+	return &c.ArgumentHint
+}
+
+func (c *mqlGeminiSkill) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlGeminiSkill) GetContent() *plugin.TValue[string] {
+	return &c.Content
+}
+
+func (c *mqlGeminiSkill) GetSha256() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
 		return c.sha256()
 	})
