@@ -1697,6 +1697,10 @@ yum.repo.size 9.0.1
 yum.repo.status 9.0.1
 yum.repos 9.0.1
 yum.vars 9.0.1
+zed 13.13.1
+zed.configPath 13.13.1
+zed.extensions 13.13.1
+zed.settings 13.13.1
 zfs 13.1.2
 zfs.dataset 13.1.2
 zfs.dataset.availableBytes 13.1.2

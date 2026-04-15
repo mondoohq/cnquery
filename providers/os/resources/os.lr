@@ -4166,3 +4166,15 @@ private windsurf.skill @defaults("name") @maturity("preview") {
   // SHA-256 hash of the skill content
   sha256() string
 }
+
+// Zed editor instance configuration
+// URL: https://zed.dev/
+zed @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Zed configuration directory
+  configPath string
+  // Settings dictionary
+  settings() dict
+  // Extension names installed
+  extensions() []string
+}

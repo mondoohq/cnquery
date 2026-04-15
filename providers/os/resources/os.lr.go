@@ -288,6 +288,7 @@ const (
 	ResourceWindsurfRule                 string = "windsurf.rule"
 	ResourceWindsurfMcpServer            string = "windsurf.mcpServer"
 	ResourceWindsurfSkill                string = "windsurf.skill"
+	ResourceZed                          string = "zed"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -1381,6 +1382,10 @@ func init() {
 		"windsurf.skill": {
 			// to override args, implement: initWindsurfSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindsurfSkill,
+		},
+		"zed": {
+			Init:   initZed,
+			Create: createZed,
 		},
 	}
 }
@@ -5880,6 +5885,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windsurf.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindsurfSkill).GetSha256()).ToDataRes(types.String)
+	},
+	"zed.configPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZed).GetConfigPath()).ToDataRes(types.String)
+	},
+	"zed.settings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZed).GetSettings()).ToDataRes(types.Dict)
+	},
+	"zed.extensions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZed).GetExtensions()).ToDataRes(types.Array(types.String))
 	},
 }
 
@@ -12883,6 +12897,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windsurf.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindsurfSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"zed.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZed).__id, ok = v.Value.(string)
+		return
+	},
+	"zed.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZed).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"zed.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZed).Settings, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"zed.extensions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZed).Extensions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 }
@@ -35798,5 +35828,68 @@ func (c *mqlWindsurfSkill) GetContent() *plugin.TValue[string] {
 func (c *mqlWindsurfSkill) GetSha256() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
 		return c.sha256()
+	})
+}
+
+// mqlZed for the zed resource
+type mqlZed struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlZedInternal it will be used here
+	ConfigPath plugin.TValue[string]
+	Settings   plugin.TValue[any]
+	Extensions plugin.TValue[[]any]
+}
+
+// createZed creates a new instance of this resource
+func createZed(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlZed{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("zed", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlZed) MqlName() string {
+	return "zed"
+}
+
+func (c *mqlZed) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlZed) GetConfigPath() *plugin.TValue[string] {
+	return &c.ConfigPath
+}
+
+func (c *mqlZed) GetSettings() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Settings, func() (any, error) {
+		return c.settings()
+	})
+}
+
+func (c *mqlZed) GetExtensions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Extensions, func() ([]any, error) {
+		return c.extensions()
 	})
 }
