@@ -59,6 +59,7 @@ Cmk
 cmnd
 cname
 compressratio
+computeagent
 cooldown
 corosync
 cpe
@@ -99,6 +100,7 @@ ekm
 eku
 elbv
 endpointslice
+ERPCLOUD
 eventarc
 exo
 failback
@@ -133,6 +135,7 @@ grafana
 groupname
 gvnic
 hadoop
+HCMCLOUD
 headerorder
 hec
 Hns
@@ -229,6 +232,7 @@ nodepool
 nokeys
 notebookinstancedetails
 nproc
+nsg
 nsrecord
 nss
 nullgroup
@@ -381,7 +385,9 @@ vmbr
 vmdk
 VMID
 vmstate
+Vnic
 vnet
+vpus
 vrf
 vtpm
 vulnerabilityassessmentsettings
