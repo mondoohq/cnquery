@@ -689,10 +689,13 @@ func initAwsCloudwatchLoggroup(runtime *plugin.Runtime, args map[string]*llx.Raw
 	if parsedArn, parseErr := arn.Parse(arnVal); parseErr == nil && parsedArn.AccountID != conn.AccountId() {
 		log.Warn().Str("arn", arnVal).Str("currentAccount", conn.AccountId()).Str("logGroupAccount", parsedArn.AccountID).Msg("cross-account CloudWatch log group reference")
 		region, groupName := parseLogGroupArn(arnVal)
+		if region == "" || groupName == "" {
+			return nil, nil, errors.New("cloudwatch log group does not exist")
+		}
 		args["name"] = llx.StringData(groupName)
 		args["region"] = llx.StringData(region)
-		args["retentionInDays"] = llx.IntData(0)
-		args["storedBytes"] = llx.IntData(0)
+		args["retentionInDays"] = llx.IntData(-1)
+		args["storedBytes"] = llx.IntData(-1)
 		args["dataProtectionStatus"] = llx.StringData("")
 		args["deletionProtectionEnabled"] = llx.BoolData(false)
 		args["logGroupClass"] = llx.StringData("")

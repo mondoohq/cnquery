@@ -233,6 +233,11 @@ func (a *mqlAwsS3Bucket) id() (string, error) {
 }
 
 func (a *mqlAwsS3Bucket) policy() (*mqlAwsS3BucketPolicy, error) {
+	// Placeholder buckets (e.g., cross-account references) can't be queried
+	if !a.Exists.Data {
+		a.Policy.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	bucketname := a.Name.Data
@@ -277,6 +282,10 @@ func (a *mqlAwsS3Bucket) policy() (*mqlAwsS3BucketPolicy, error) {
 }
 
 func (a *mqlAwsS3Bucket) tags() (map[string]any, error) {
+	// Placeholder buckets (e.g., cross-account references) can't be queried
+	if !a.Exists.Data {
+		return nil, nil
+	}
 	bucketname := a.Name.Data
 	location := a.Location.Data
 
@@ -337,6 +346,10 @@ func (a *mqlAwsS3Bucket) location() (string, error) {
 }
 
 func (a *mqlAwsS3Bucket) gatherAcl() (*s3.GetBucketAclOutput, error) {
+	// Placeholder buckets (e.g., cross-account references) can't be queried
+	if !a.Exists.Data {
+		return nil, nil
+	}
 	a.aclOnce.Do(func() {
 		bucketname := a.Name.Data
 		location := a.Location.Data
@@ -545,6 +558,10 @@ func (a *mqlAwsS3Bucket) public() (bool, error) {
 }
 
 func (a *mqlAwsS3Bucket) cors() ([]any, error) {
+	// Placeholder buckets (e.g., cross-account references) can't be queried
+	if !a.Exists.Data {
+		return nil, nil
+	}
 	bucketname := a.Name.Data
 	location := a.Location.Data
 
@@ -625,6 +642,10 @@ func (a *mqlAwsS3Bucket) logging() (map[string]any, error) {
 }
 
 func (a *mqlAwsS3Bucket) versioning() (map[string]any, error) {
+	// Placeholder buckets (e.g., cross-account references) can't be queried
+	if !a.Exists.Data {
+		return nil, nil
+	}
 	bucketname := a.Name.Data
 	location := a.Location.Data
 
@@ -672,6 +693,10 @@ type mqlAwsS3BucketInternal struct {
 }
 
 func (a *mqlAwsS3Bucket) fetchReplicationConfig() (*s3types.ReplicationConfiguration, error) {
+	// Placeholder buckets (e.g., cross-account references) can't be queried
+	if !a.Exists.Data {
+		return nil, nil
+	}
 	a.replicationOnce.Do(func() {
 		bucketname := a.Name.Data
 		region := a.Location.Data
@@ -695,6 +720,10 @@ func (a *mqlAwsS3Bucket) fetchReplicationConfig() (*s3types.ReplicationConfigura
 }
 
 func (a *mqlAwsS3Bucket) fetchEncryptionConfig() (*s3types.ServerSideEncryptionConfiguration, error) {
+	// Placeholder buckets (e.g., cross-account references) can't be queried
+	if !a.Exists.Data {
+		return nil, nil
+	}
 	a.encryptionOnce.Do(func() {
 		bucketname := a.Name.Data
 		region := a.Location.Data
@@ -869,6 +898,10 @@ func (a *mqlAwsS3BucketMetricsConfiguration) id() (string, error) {
 }
 
 func (a *mqlAwsS3Bucket) metricsConfigurations() ([]any, error) {
+	// Placeholder buckets (e.g., cross-account references) can't be queried
+	if !a.Exists.Data {
+		return nil, nil
+	}
 	bucketName := a.Name.Data
 	region := a.Location.Data
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
@@ -916,6 +949,10 @@ func (a *mqlAwsS3Bucket) metricsConfigurations() ([]any, error) {
 }
 
 func (a *mqlAwsS3Bucket) fetchObjectLockConfig() (*s3types.ObjectLockConfiguration, error) {
+	// Placeholder buckets (e.g., cross-account references) can't be queried
+	if !a.Exists.Data {
+		return nil, nil
+	}
 	a.objectLockOnce.Do(func() {
 		bucketname := a.Name.Data
 		region := a.Location.Data
@@ -977,6 +1014,11 @@ func (a *mqlAwsS3Bucket) staticWebsiteHosting() (map[string]any, error) {
 }
 
 func (a *mqlAwsS3Bucket) website() (*mqlAwsS3BucketWebsiteConfiguration, error) {
+	// Placeholder buckets (e.g., cross-account references) can't be queried
+	if !a.Exists.Data {
+		a.Website.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
 	bucketname := a.Name.Data
 	region := a.Location.Data
 
@@ -1132,6 +1174,10 @@ func (a *mqlAwsS3Bucket) fetchLifecycleConfig() ([]s3types.LifecycleRule, error)
 }
 
 func (a *mqlAwsS3Bucket) lifecycleRules() ([]any, error) {
+	// Placeholder buckets (e.g., cross-account references) can't be queried
+	if !a.Exists.Data {
+		return nil, nil
+	}
 	bucketArn := a.Arn.Data
 
 	rules, err := a.fetchLifecycleConfig()
@@ -1221,6 +1267,10 @@ func (a *mqlAwsS3BucketLifecycleRule) id() (string, error) {
 }
 
 func (a *mqlAwsS3Bucket) notificationConfiguration() (any, error) {
+	// Placeholder buckets (e.g., cross-account references) can't be queried
+	if !a.Exists.Data {
+		return nil, nil
+	}
 	bucketname := a.Name.Data
 	region := a.Location.Data
 
@@ -1271,6 +1321,10 @@ func (a *mqlAwsS3Bucket) notificationConfiguration() (any, error) {
 }
 
 func (a *mqlAwsS3Bucket) ownershipControls() (string, error) {
+	// Placeholder buckets (e.g., cross-account references) can't be queried
+	if !a.Exists.Data {
+		return "", nil
+	}
 	bucketname := a.Name.Data
 	region := a.Location.Data
 
