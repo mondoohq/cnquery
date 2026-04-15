@@ -89,8 +89,11 @@ func (c *mqlAwsAccount) tags() (map[string]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.AwsConnection)
 	client := conn.Organizations("") // no region for orgs, use configured region
 
+	// c.Id.Data is the internal MQL id (e.g. "aws.account/123456789012"); AWS
+	// Organizations expects the bare account id.
+	accountId := trimAwsAccountIdToJustId(c.Id.Data)
 	input := &organizations.ListTagsForResourceInput{
-		ResourceId: &c.Id.Data,
+		ResourceId: &accountId,
 	}
 
 	// Note: This operation can only be called from the organization's management
