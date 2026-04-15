@@ -18,6 +18,6 @@ func TestArrayFlat(t *testing.T) {
 		}, nil, 0)
 		require.NoError(t, err)
 		require.Equal(t, uint64(0), ref)
-		require.Equal(t, ArrayData(nil, types.Any), res)
+		require.Equal(t, ArrayData([]any{}, types.Any), res)
 	})
 }

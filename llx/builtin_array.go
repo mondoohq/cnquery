@@ -494,7 +494,7 @@ func arrayFlat(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawD
 		return &RawData{Type: bind.Type, Error: errors.New("incorrect type, no array data found")}, 0, nil
 	}
 
-	var res []any
+	res := make([]any, 0)
 	for i := range list {
 		res = append(res, flatten(list[i])...)
 	}
