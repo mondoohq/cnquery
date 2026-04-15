@@ -246,6 +246,7 @@ func accountAsset(conn *connection.AwsConnection, awsAccount *mqlAwsAccount) *in
 		PlatformIds: []string{id, accountArn},
 		Name:        name,
 		Platform:    connection.GetPlatformForObject("", accountId),
+		Labels:      map[string]string{},
 		Connections: []*inventory.Config{clonedConfig},
 		Options:     conn.ConnectionOptions(),
 	}
