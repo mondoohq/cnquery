@@ -276,6 +276,9 @@ const (
 	ResourceGithubCopilotAccount         string = "github.copilot.account"
 	ResourceGithubCopilotMcpServer       string = "github.copilot.mcpServer"
 	ResourceGithubCopilotSkill           string = "github.copilot.skill"
+	ResourceGoose                        string = "goose"
+	ResourceGooseExtension               string = "goose.extension"
+	ResourceGooseSkill                   string = "goose.skill"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -1321,6 +1324,18 @@ func init() {
 		"github.copilot.skill": {
 			// to override args, implement: initGithubCopilotSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGithubCopilotSkill,
+		},
+		"goose": {
+			Init:   initGoose,
+			Create: createGoose,
+		},
+		"goose.extension": {
+			// to override args, implement: initGooseExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGooseExtension,
+		},
+		"goose.skill": {
+			// to override args, implement: initGooseSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGooseSkill,
 		},
 	}
 }
@@ -5628,6 +5643,63 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"github.copilot.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubCopilotSkill).GetSha256()).ToDataRes(types.String)
+	},
+	"goose.configPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoose).GetConfigPath()).ToDataRes(types.String)
+	},
+	"goose.provider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoose).GetProvider()).ToDataRes(types.String)
+	},
+	"goose.model": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoose).GetModel()).ToDataRes(types.String)
+	},
+	"goose.telemetryEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoose).GetTelemetryEnabled()).ToDataRes(types.Bool)
+	},
+	"goose.extensions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoose).GetExtensions()).ToDataRes(types.Array(types.Resource("goose.extension")))
+	},
+	"goose.skills": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoose).GetSkills()).ToDataRes(types.Array(types.Resource("goose.skill")))
+	},
+	"goose.extension.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGooseExtension).GetName()).ToDataRes(types.String)
+	},
+	"goose.extension.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGooseExtension).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"goose.extension.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGooseExtension).GetType()).ToDataRes(types.String)
+	},
+	"goose.extension.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGooseExtension).GetDescription()).ToDataRes(types.String)
+	},
+	"goose.extension.bundled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGooseExtension).GetBundled()).ToDataRes(types.Bool)
+	},
+	"goose.extension.timeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGooseExtension).GetTimeout()).ToDataRes(types.Int)
+	},
+	"goose.skill.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGooseSkill).GetName()).ToDataRes(types.String)
+	},
+	"goose.skill.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGooseSkill).GetDescription()).ToDataRes(types.String)
+	},
+	"goose.skill.allowedTools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGooseSkill).GetAllowedTools()).ToDataRes(types.Array(types.String))
+	},
+	"goose.skill.argumentHint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGooseSkill).GetArgumentHint()).ToDataRes(types.String)
+	},
+	"goose.skill.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGooseSkill).GetSource()).ToDataRes(types.String)
+	},
+	"goose.skill.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGooseSkill).GetContent()).ToDataRes(types.String)
+	},
+	"goose.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGooseSkill).GetSha256()).ToDataRes(types.String)
 	},
 }
 
@@ -12327,6 +12399,94 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"github.copilot.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubCopilotSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"goose.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoose).__id, ok = v.Value.(string)
+		return
+	},
+	"goose.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoose).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"goose.provider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoose).Provider, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"goose.model": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoose).Model, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"goose.telemetryEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoose).TelemetryEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"goose.extensions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoose).Extensions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"goose.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoose).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"goose.extension.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGooseExtension).__id, ok = v.Value.(string)
+		return
+	},
+	"goose.extension.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGooseExtension).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"goose.extension.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGooseExtension).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"goose.extension.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGooseExtension).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"goose.extension.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGooseExtension).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"goose.extension.bundled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGooseExtension).Bundled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"goose.extension.timeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGooseExtension).Timeout, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"goose.skill.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGooseSkill).__id, ok = v.Value.(string)
+		return
+	},
+	"goose.skill.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGooseSkill).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"goose.skill.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGooseSkill).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"goose.skill.allowedTools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGooseSkill).AllowedTools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"goose.skill.argumentHint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGooseSkill).ArgumentHint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"goose.skill.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGooseSkill).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"goose.skill.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGooseSkill).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"goose.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGooseSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -34214,6 +34374,265 @@ func (c *mqlGithubCopilotSkill) GetContent() *plugin.TValue[string] {
 }
 
 func (c *mqlGithubCopilotSkill) GetSha256() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
+		return c.sha256()
+	})
+}
+
+// mqlGoose for the goose resource
+type mqlGoose struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGooseInternal it will be used here
+	ConfigPath       plugin.TValue[string]
+	Provider         plugin.TValue[string]
+	Model            plugin.TValue[string]
+	TelemetryEnabled plugin.TValue[bool]
+	Extensions       plugin.TValue[[]any]
+	Skills           plugin.TValue[[]any]
+}
+
+// createGoose creates a new instance of this resource
+func createGoose(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGoose{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("goose", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGoose) MqlName() string {
+	return "goose"
+}
+
+func (c *mqlGoose) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGoose) GetConfigPath() *plugin.TValue[string] {
+	return &c.ConfigPath
+}
+
+func (c *mqlGoose) GetProvider() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Provider, func() (string, error) {
+		return c.provider()
+	})
+}
+
+func (c *mqlGoose) GetModel() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Model, func() (string, error) {
+		return c.model()
+	})
+}
+
+func (c *mqlGoose) GetTelemetryEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.TelemetryEnabled, func() (bool, error) {
+		return c.telemetryEnabled()
+	})
+}
+
+func (c *mqlGoose) GetExtensions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Extensions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("goose", c.__id, "extensions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.extensions()
+	})
+}
+
+func (c *mqlGoose) GetSkills() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Skills, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("goose", c.__id, "skills")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.skills()
+	})
+}
+
+// mqlGooseExtension for the goose.extension resource
+type mqlGooseExtension struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGooseExtensionInternal it will be used here
+	Name        plugin.TValue[string]
+	Enabled     plugin.TValue[bool]
+	Type        plugin.TValue[string]
+	Description plugin.TValue[string]
+	Bundled     plugin.TValue[bool]
+	Timeout     plugin.TValue[int64]
+}
+
+// createGooseExtension creates a new instance of this resource
+func createGooseExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGooseExtension{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("goose.extension", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGooseExtension) MqlName() string {
+	return "goose.extension"
+}
+
+func (c *mqlGooseExtension) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGooseExtension) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGooseExtension) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlGooseExtension) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlGooseExtension) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGooseExtension) GetBundled() *plugin.TValue[bool] {
+	return &c.Bundled
+}
+
+func (c *mqlGooseExtension) GetTimeout() *plugin.TValue[int64] {
+	return &c.Timeout
+}
+
+// mqlGooseSkill for the goose.skill resource
+type mqlGooseSkill struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGooseSkillInternal it will be used here
+	Name         plugin.TValue[string]
+	Description  plugin.TValue[string]
+	AllowedTools plugin.TValue[[]any]
+	ArgumentHint plugin.TValue[string]
+	Source       plugin.TValue[string]
+	Content      plugin.TValue[string]
+	Sha256       plugin.TValue[string]
+}
+
+// createGooseSkill creates a new instance of this resource
+func createGooseSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGooseSkill{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("goose.skill", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGooseSkill) MqlName() string {
+	return "goose.skill"
+}
+
+func (c *mqlGooseSkill) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGooseSkill) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGooseSkill) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGooseSkill) GetAllowedTools() *plugin.TValue[[]any] {
+	return &c.AllowedTools
+}
+
+func (c *mqlGooseSkill) GetArgumentHint() *plugin.TValue[string] {
+	return &c.ArgumentHint
+}
+
+func (c *mqlGooseSkill) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlGooseSkill) GetContent() *plugin.TValue[string] {
+	return &c.Content
+}
+
+func (c *mqlGooseSkill) GetSha256() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
 		return c.sha256()
 	})

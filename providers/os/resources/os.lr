@@ -3979,3 +3979,55 @@ private github.copilot.skill @defaults("name") @maturity("preview") {
   // SHA-256 hash of the skill content
   sha256() string
 }
+
+// Goose AI agent configuration
+// URL: https://block.github.io/goose/
+goose @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Goose configuration directory
+  configPath string
+  // Active AI provider name
+  provider() string
+  // Active model name
+  model() string
+  // Whether telemetry is enabled
+  telemetryEnabled() bool
+  // Configured extensions
+  extensions() []goose.extension
+  // Installed skills
+  skills() []goose.skill
+}
+
+// Goose extension
+private goose.extension @defaults("name") @maturity("preview") {
+  // Extension name
+  name string
+  // Whether the extension is enabled
+  enabled bool
+  // Extension type (platform or builtin)
+  type string
+  // Extension description
+  description string
+  // Whether the extension is bundled with Goose
+  bundled bool
+  // Extension timeout in seconds (0 = no timeout)
+  timeout int
+}
+
+// Goose skill
+private goose.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
