@@ -60,7 +60,7 @@ func (a *mqlAwsDynamodb) getDaxClusters(conn *connection.AwsConnection) []*jobpo
 				})
 				if err != nil {
 					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) || isDaxAccessDeniedError(err) {
-						log.Warn().Str("region", region).Msg("error accessing region for AWS DAX API")
+						log.Debug().Str("region", region).Msg("skipping DAX: service not available or access denied in region")
 						return res, nil
 					}
 					return nil, err
