@@ -7,6 +7,7 @@ package resources
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"regexp"
 	"slices"
 	"strings"
@@ -192,6 +193,13 @@ func (s *mqlAuditdRules) load(path string) error {
 		s.parse(content.Data, &errors)
 	}
 
+	// Set state after all parsing is complete. Setting state inside parse()
+	// creates a race: concurrent GetOrCompute callers see IsSet()==true while
+	// data is still being appended, returning partially populated slices.
+	s.Syscalls.State = plugin.StateIsSet
+	s.Files.State = plugin.StateIsSet
+	s.Controls.State = plugin.StateIsSet
+
 	s.loadError = errors.Deduplicate()
 	s.loaded = true
 	return s.loadError
@@ -262,10 +270,6 @@ func parseKeyVal(line string) (string, string, int) {
 var reOperator = regexp.MustCompile(`(!=|<=|>=|=|>|<)`)
 
 func (s *mqlAuditdRules) parse(content string, errors *multierr.Errors) {
-	s.Syscalls.State = plugin.StateIsSet
-	s.Files.State = plugin.StateIsSet
-	s.Controls.State = plugin.StateIsSet
-
 	lines := strings.Split(content, "\n")
 	for _, rawline := range lines {
 		line := strings.TrimSpace(rawline)
@@ -434,14 +438,14 @@ func (s *mqlAuditdRuleSyscall) id() (string, error) {
 	}
 	for i := range s.Fields.Data {
 		c := s.Fields.Data[i].(map[string]any)
-		for k, v := range c {
-			f = f.Add(k).Add(v.(string))
+		for _, k := range slices.Sorted(maps.Keys(c)) {
+			f = f.Add(k).Add(c[k].(string))
 		}
 	}
 	for i := range s.Comparisons.Data {
 		c := s.Comparisons.Data[i].(map[string]any)
-		for k, v := range c {
-			f = f.Add(k).Add(v.(string))
+		for _, k := range slices.Sorted(maps.Keys(c)) {
+			f = f.Add(k).Add(c[k].(string))
 		}
 	}
 
