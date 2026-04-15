@@ -198,6 +198,7 @@ func resourceFields(r *Resource, ast *LR) (map[string]*resources.Field, error) {
 		}
 
 		f.Comments = SanitizeComments(f.Comments)
+		f.Comments = lastCommentGroup(f.Comments)
 		title, desc := extractTitleAndDescription(f.Comments)
 		fields[f.BasicField.ID] = &resources.Field{
 			Name:        f.BasicField.ID,

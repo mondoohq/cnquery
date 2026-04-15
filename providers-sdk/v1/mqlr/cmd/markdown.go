@@ -152,7 +152,7 @@ func (l *lrSchemaRenderer) renderToc(packName string, description string, resour
 
 	for i := range resources {
 		resource := resources[i]
-		rows = append(rows, []string{"[" + resource.ID + "](" + mdRef(resource.ID) + ")", strings.Join(sanitizeComments([]string{schema.Resources[resource.ID].Title}), " ")})
+		rows = append(rows, []string{"[" + resource.ID + "](" + mdRef(resource.ID) + ")", sanitizeMarkdownText(schema.Resources[resource.ID].Title)})
 	}
 
 	table := tablewriter.NewTable(builder,
@@ -206,7 +206,7 @@ func (l *lrSchemaRenderer) renderResourcePage(resource *lrcore.Resource, schema 
 	builder.WriteString("sidebar_label: " + resource.ID + "\n")
 	builder.WriteString("displayed_sidebar: MQL\n")
 
-	headerDesc := strings.Join(sanitizeComments([]string{schema.Resources[resource.ID].Title}), " ")
+	headerDesc := sanitizeMarkdownText(schema.Resources[resource.ID].Title)
 	if headerDesc != "" {
 		builder.WriteString("description: " + trimColon(headerDesc) + "\n")
 	}
@@ -223,7 +223,7 @@ func (l *lrSchemaRenderer) renderResourcePage(resource *lrcore.Resource, schema 
 
 	if schema.Resources[resource.ID].Title != "" {
 		builder.WriteString("**Description**\n\n")
-		builder.WriteString(strings.Join(sanitizeComments([]string{schema.Resources[resource.ID].Title}), "\n"))
+		builder.WriteString(sanitizeMarkdownText(schema.Resources[resource.ID].Title))
 		builder.WriteString("\n\n")
 	}
 
@@ -250,7 +250,7 @@ func (l *lrSchemaRenderer) renderResourcePage(resource *lrcore.Resource, schema 
 	}
 
 	basicFields := []*lrcore.BasicField{}
-	comments := [][]string{}
+	comments := [][]lrcore.CommentToken{}
 	for _, f := range resource.Body.Fields {
 		if f.BasicField != nil {
 			basicFields = append(basicFields, f.BasicField)
@@ -341,18 +341,19 @@ func renderLrType(t lrcore.Type, resourceHrefMap map[string]bool) string {
 	}
 }
 
-func sanitizeComments(comments []string) []string {
+func sanitizeMarkdownText(s string) string {
+	s = strings.TrimPrefix(s, "// ")
+	// Unescape pre-escaped pipes so all | are uniform, then re-escape them.
+	// Doing it in two passes avoids double-escaping (\\|).
+	s = strings.ReplaceAll(s, `\|`, `|`)
+	s = strings.ReplaceAll(s, `|`, `\|`)
+	return s
+}
+
+func sanitizeComments(comments []lrcore.CommentToken) []string {
 	sanitizedComments := []string{}
 	for _, c := range comments {
-		sanitized := strings.TrimPrefix(c, "// ")
-		// if the comment is pre-escaped, we unescape so that all | are uniform (unescaped)
-		// and get properly escaped in the next 'ReplaceAll'
-		// if we directly try to replace '|' with '\|' for pre-escaped comments
-		// it would look like '\\|' which would break the table.
-		sanitized = strings.ReplaceAll(sanitized, `\|`, `|`)
-		sanitized = strings.ReplaceAll(sanitized, `|`, `\|`)
-		sanitizedComments = append(sanitizedComments, sanitized)
+		sanitizedComments = append(sanitizedComments, sanitizeMarkdownText(c.Text))
 	}
-
 	return sanitizedComments
 }

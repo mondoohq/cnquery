@@ -7,22 +7,23 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/mqlr/lrcore"
 )
 
 func TestSanitizeComments(t *testing.T) {
-	comments := []string{
-		"",
-		"// ",
-		"// normal comment",
-		"// normal comment | delimiter",
-		"// normal comment \\| pre-escaped delimiter",
+	comments := []lrcore.CommentToken{
+		{Text: ""},
+		{Text: "// "},
+		{Text: "// normal comment"},
+		{Text: "// normal comment | delimiter"},
+		{Text: `// normal comment \| pre-escaped delimiter`},
 	}
 	expected := []string{
 		"",
 		"",
 		"normal comment",
-		"normal comment \\| delimiter",
-		"normal comment \\| pre-escaped delimiter",
+		`normal comment \| delimiter`,
+		`normal comment \| pre-escaped delimiter`,
 	}
 
 	actual := sanitizeComments(comments)

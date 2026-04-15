@@ -122,21 +122,69 @@ func TestParse(t *testing.T) {
 		}
 		`)
 		assert.Equal(t, "name", res.Resources[0].ID)
-		// TODO: needs to be fixed
-		// assert.Equal(t, "resource-docs", res.Resources[0].title)
-		// assert.Equal(t, "with multiline", res.Resources[0].desc)
+		// Note: resource title/desc are empty because LR.Comments greedily
+		// captures all leading comments when there's no option/import before
+		// the first resource. In real .lr files, "option provider = ..." breaks
+		// the sequence so resource comments are attributed correctly.
 
-		f := []*Field{
-			{
-				BasicField: &BasicField{
-					ID:   "field",
-					Args: nil,
-					Type: Type{SimpleType: &SimpleType{"type"}},
-				},
-				Comments: []string{"// field docs..."},
-			},
-		}
-		assert.Equal(t, f, res.Resources[0].Body.Fields)
+		require.Len(t, res.Resources[0].Body.Fields, 1)
+		f := res.Resources[0].Body.Fields[0]
+		assert.Equal(t, &BasicField{
+			ID:   "field",
+			Args: nil,
+			Type: Type{SimpleType: &SimpleType{"type"}},
+		}, f.BasicField)
+		require.Len(t, f.Comments, 1)
+		assert.Equal(t, "// field docs...", f.Comments[0].Text)
+	})
+
+	t.Run("section separator comments don't bleed into resource title", func(t *testing.T) {
+		res := parse(t, `
+option provider = "test"
+
+// ============================================================
+// Section Header
+// ============================================================
+
+// Actual resource description
+name {
+	field type
+}
+`)
+		require.Len(t, res.Resources, 1)
+		assert.Equal(t, "name", res.Resources[0].ID)
+		assert.Equal(t, "Actual resource description", res.Resources[0].title)
+		assert.Equal(t, "", res.Resources[0].desc)
+	})
+
+	t.Run("multiple resources with section separators", func(t *testing.T) {
+		res := parse(t, `
+option provider = "test"
+
+// ============================================================
+// Section A
+// ============================================================
+
+// First resource
+first {
+	val type
+}
+
+// ============================================================
+// Section B
+// ============================================================
+
+// Second resource
+// with extra detail
+second {
+	val type
+}
+`)
+		require.Len(t, res.Resources, 2)
+		assert.Equal(t, "First resource", res.Resources[0].title)
+		assert.Equal(t, "", res.Resources[0].desc)
+		assert.Equal(t, "Second resource", res.Resources[1].title)
+		assert.Equal(t, "with extra detail", res.Resources[1].desc)
 	})
 
 	t.Run("resource with a list type", func(t *testing.T) {
@@ -302,26 +350,26 @@ func TestParse(t *testing.T) {
 		field map[string]int
 	}`)
 
-		fields := []*Field{
-			{
-				BasicField: &BasicField{
-					ID:   "field",
-					Type: Type{MapType: &MapType{Key: SimpleType{"string"}, Value: Type{SimpleType: &SimpleType{"int"}}}},
-				},
-			},
-			{
-				BasicField: &BasicField{
-					ID:   "context",
-					Type: Type{SimpleType: &SimpleType{"file.context"}},
-					Args: &FieldArgs{},
-				},
-				Comments: []string{"# Contextual info, where this resource is located and defined"},
-			},
-		}
 		require.NotEmpty(t, res.Resources)
 		assert.Equal(t, "sth", res.Resources[0].ID)
 		assert.Equal(t, "file.context", res.Resources[0].Context)
-		assert.Equal(t, fields, res.Resources[0].Body.Fields)
+
+		require.Len(t, res.Resources[0].Body.Fields, 2)
+
+		f0 := res.Resources[0].Body.Fields[0]
+		assert.Equal(t, &BasicField{
+			ID:   "field",
+			Type: Type{MapType: &MapType{Key: SimpleType{"string"}, Value: Type{SimpleType: &SimpleType{"int"}}}},
+		}, f0.BasicField)
+
+		f1 := res.Resources[0].Body.Fields[1]
+		assert.Equal(t, &BasicField{
+			ID:   "context",
+			Type: Type{SimpleType: &SimpleType{"file.context"}},
+			Args: &FieldArgs{},
+		}, f1.BasicField)
+		require.Len(t, f1.Comments, 1)
+		assert.Equal(t, "# Contextual info, where this resource is located and defined", f1.Comments[0].Text)
 	})
 }
 

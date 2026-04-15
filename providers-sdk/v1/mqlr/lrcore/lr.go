@@ -24,6 +24,13 @@ type Float float64
 // Bool for true/false
 type Bool bool
 
+// CommentToken captures a comment along with its source position,
+// enabling detection of blank-line gaps between comment groups.
+type CommentToken struct {
+	Pos  lexer.Position
+	Text string `@Comment` //nolint:govet // participle grammar tag
+}
+
 var CONTEXT_FIELD = "context"
 
 // Capture a Bool type for participle
@@ -55,11 +62,11 @@ type Alias struct {
 // LR are MQL resources parsed into an AST
 // nolint: govet
 type LR struct {
-	Comments  []string    `{ @Comment }`
-	Imports   []string    `{ "import" @String }`
-	Options   Map         `{ "option" @(Ident '=' String) }`
-	Aliases   []Alias     `{ "alias" @@ }`
-	Resources []*Resource `{ @@ }`
+	Comments  []CommentToken `{ @@ }`
+	Imports   []string       `{ "import" @String }`
+	Options   Map            `{ "option" @(Ident '=' String) }`
+	Aliases   []Alias        `{ "alias" @@ }`
+	Resources []*Resource    `{ @@ }`
 	imports   map[string]map[string]struct{}
 	packPaths map[string]string
 	aliases   map[string]*Resource
@@ -68,7 +75,7 @@ type LR struct {
 // Resource in LR
 // nolint: govet
 type Resource struct {
-	Comments    []string       `{ @Comment }`
+	Comments    []CommentToken `{ @@ }`
 	IsPrivate   bool           `@"private"?`
 	IsExtension bool           `@"extend"?`
 	ID          string         `@Ident { @'.' @Ident }`
@@ -137,10 +144,10 @@ type ResourceDef struct {
 // ResourceDef carrying the definition of the field
 // nolint: govet
 type Field struct {
-	Comments   []string    `{ @Comment }`
-	Init       *Init       `( @@ `
-	Embeddable *Embeddable `| @@`
-	BasicField *BasicField `| @@ )?`
+	Comments   []CommentToken `{ @@ }`
+	Init       *Init          `( @@ `
+	Embeddable *Embeddable    `| @@`
+	BasicField *BasicField    `| @@ )?`
 }
 
 // Init field definition
@@ -214,13 +221,13 @@ func (r *Resource) GetInitFields() []*Init {
 	return inits
 }
 
-func SanitizeComments(raw []string) []string {
+func SanitizeComments(raw []CommentToken) []CommentToken {
 	todoStart := -1
 	for i := range raw {
-		if raw[i] != "" {
-			raw[i] = strings.Trim(raw[i][2:], " \t\n")
+		if raw[i].Text != "" {
+			raw[i].Text = strings.Trim(raw[i].Text[2:], " \t\n")
 		}
-		if todoStart == -1 && strings.HasPrefix(raw[i], "TODO") {
+		if todoStart == -1 && strings.HasPrefix(raw[i].Text, "TODO") {
 			todoStart = i
 		}
 	}
@@ -230,14 +237,32 @@ func SanitizeComments(raw []string) []string {
 	return raw
 }
 
-func extractTitleAndDescription(raw []string) (string, string) {
+// lastCommentGroup returns only the final contiguous group of comments,
+// splitting on blank-line gaps (non-consecutive source lines). This prevents
+// section-separator comment blocks from bleeding into resource/field titles.
+func lastCommentGroup(comments []CommentToken) []CommentToken {
+	if len(comments) <= 1 {
+		return comments
+	}
+	lastGap := 0
+	for i := 1; i < len(comments); i++ {
+		if comments[i].Pos.Line != comments[i-1].Pos.Line+1 {
+			lastGap = i
+		}
+	}
+	return comments[lastGap:]
+}
+
+func extractTitleAndDescription(raw []CommentToken) (string, string) {
 	if len(raw) == 0 {
 		return "", ""
 	}
-	title, rest := raw[0], raw[1:]
-
+	title := raw[0].Text
+	rest := make([]string, len(raw)-1)
+	for i, c := range raw[1:] {
+		rest[i] = c.Text
+	}
 	desc := strings.Join(rest, " ")
-
 	return title, desc
 }
 
@@ -256,6 +281,7 @@ func Parse(input string) (*LR, error) {
 	for i := range res.Resources {
 		resource := res.Resources[i]
 		resource.Comments = SanitizeComments(resource.Comments)
+		resource.Comments = lastCommentGroup(resource.Comments)
 		resource.title, resource.desc = extractTitleAndDescription(resource.Comments)
 		resource.Comments = nil
 
@@ -330,7 +356,7 @@ func Parse(input string) (*LR, error) {
 
 		if resource.Context != "" {
 			resource.Body.Fields = append(resource.Body.Fields, &Field{
-				Comments: []string{"# Contextual info, where this resource is located and defined"},
+				Comments: []CommentToken{{Text: "# Contextual info, where this resource is located and defined"}},
 				BasicField: &BasicField{
 					ID:         CONTEXT_FIELD,
 					Args:       &FieldArgs{},
