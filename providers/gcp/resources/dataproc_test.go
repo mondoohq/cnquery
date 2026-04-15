@@ -74,3 +74,55 @@ func TestDetermineDataprocJobType(t *testing.T) {
 		assert.Equal(t, "hadoop", determineDataprocJobType(job))
 	})
 }
+
+func TestNodePoolTargetToMql(t *testing.T) {
+	t.Run("nil NodePoolConfig does not panic", func(t *testing.T) {
+		npt := &dataproc.GkeNodePoolTarget{
+			NodePool:       "my-pool",
+			NodePoolConfig: nil,
+			Roles:          []string{"DEFAULT"},
+		}
+		result := nodePoolTargetToMql(npt)
+		assert.Equal(t, "my-pool", result.NodePool)
+		assert.Equal(t, []string{"DEFAULT"}, result.Roles)
+	})
+
+	t.Run("nil Config and Autoscaling within NodePoolConfig", func(t *testing.T) {
+		npt := &dataproc.GkeNodePoolTarget{
+			NodePool: "my-pool",
+			NodePoolConfig: &dataproc.GkeNodePoolConfig{
+				Config:      nil,
+				Autoscaling: nil,
+				Locations:   []string{"us-central1-a"},
+			},
+			Roles: []string{"DEFAULT"},
+		}
+		result := nodePoolTargetToMql(npt)
+		assert.Equal(t, "my-pool", result.NodePool)
+		assert.Equal(t, []string{"us-central1-a"}, result.NodePoolConfig.Locations)
+	})
+
+	t.Run("fully populated does not panic", func(t *testing.T) {
+		npt := &dataproc.GkeNodePoolTarget{
+			NodePool: "my-pool",
+			NodePoolConfig: &dataproc.GkeNodePoolConfig{
+				Config: &dataproc.GkeNodeConfig{
+					MachineType: "e2-standard-4",
+					Accelerators: []*dataproc.GkeNodePoolAcceleratorConfig{
+						{AcceleratorCount: 1, AcceleratorType: "nvidia-tesla-t4"},
+					},
+				},
+				Autoscaling: &dataproc.GkeNodePoolAutoscalingConfig{
+					MinNodeCount: 1,
+					MaxNodeCount: 10,
+				},
+			},
+			Roles: []string{"DEFAULT"},
+		}
+		result := nodePoolTargetToMql(npt)
+		assert.Equal(t, "e2-standard-4", result.NodePoolConfig.Config.MachineType)
+		assert.Equal(t, int64(1), result.NodePoolConfig.Autoscaling.MinNodeCount)
+		assert.Equal(t, int64(10), result.NodePoolConfig.Autoscaling.MaxNodeCount)
+		assert.Len(t, result.NodePoolConfig.Config.Accelerators, 1)
+	})
+}

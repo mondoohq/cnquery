@@ -60,6 +60,10 @@ func (g *mqlGcpProjectCloudBuildService) triggers() ([]any, error) {
 	}
 	defer client.Close()
 
+	// NOTE: The Cloud Build ListBuildTriggers API does not support the
+	// locations/- wildcard (returns InvalidArgument). This means only global
+	// triggers are returned; regional triggers require enumerating locations
+	// individually, which is not yet implemented.
 	it := client.ListBuildTriggers(ctx, &cloudbuildpb.ListBuildTriggersRequest{
 		Parent:    fmt.Sprintf("projects/%s/locations/global", projectId),
 		ProjectId: projectId,
