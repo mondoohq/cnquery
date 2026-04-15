@@ -5,6 +5,7 @@ package resources
 
 import (
 	"errors"
+	"strings"
 	"sync"
 
 	"github.com/rs/zerolog/log"
@@ -73,10 +74,14 @@ func createSystemdTimerResource(runtime *plugin.Runtime, timer *services.Systemd
 	})
 }
 
+func normalizeSystemdUnitLookupName(name string, suffix string) string {
+	return strings.TrimSuffix(name, suffix)
+}
+
 func missingSystemdTimerResource(runtime *plugin.Runtime, name string) plugin.Resource {
 	res := &mqlSystemdTimer{}
 	res.MqlRuntime = runtime
-	res.Name = plugin.TValue[string]{Data: name, State: plugin.StateIsSet}
+	res.Name = plugin.TValue[string]{Data: normalizeSystemdUnitLookupName(name, ".timer"), State: plugin.StateIsSet}
 	res.Description.State = plugin.StateIsSet | plugin.StateIsNull
 	res.Installed = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
 	res.Running = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
@@ -227,7 +232,7 @@ func createSystemdSocketResource(runtime *plugin.Runtime, socket *services.Syste
 func missingSystemdSocketResource(runtime *plugin.Runtime, name string) plugin.Resource {
 	res := &mqlSystemdSocket{}
 	res.MqlRuntime = runtime
-	res.Name = plugin.TValue[string]{Data: name, State: plugin.StateIsSet}
+	res.Name = plugin.TValue[string]{Data: normalizeSystemdUnitLookupName(name, ".socket"), State: plugin.StateIsSet}
 	res.Description.State = plugin.StateIsSet | plugin.StateIsNull
 	res.Installed = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
 	res.Running = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
