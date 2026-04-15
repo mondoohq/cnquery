@@ -355,6 +355,9 @@ func Parse(input string) (*LR, error) {
 		}
 
 		if resource.Context != "" {
+			// Synthetic token: Pos is intentionally zero-value since this comment
+			// has no source location. Safe for lastCommentGroup (single-element
+			// slice short-circuits before Pos is read).
 			resource.Body.Fields = append(resource.Body.Fields, &Field{
 				Comments: []CommentToken{{Text: "# Contextual info, where this resource is located and defined"}},
 				BasicField: &BasicField{
