@@ -308,6 +308,11 @@ func (a *mqlAwsS3Bucket) tags() (map[string]any, error) {
 }
 
 func (a *mqlAwsS3Bucket) location() (string, error) {
+	// Placeholder buckets (e.g., cross-account references) can't be queried for location
+	if !a.Exists.Data {
+		return "", nil
+	}
+
 	bucketname := a.Name.Data
 
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
@@ -393,6 +398,10 @@ func (a *mqlAwsS3Bucket) acl() ([]any, error) {
 }
 
 func (a *mqlAwsS3Bucket) fetchPublicAccessBlock() (*s3types.PublicAccessBlockConfiguration, error) {
+	// Placeholder buckets (e.g., cross-account references) can't be queried
+	if !a.Exists.Data {
+		return nil, nil
+	}
 	a.publicAccessOnce.Do(func() {
 		bucketname := a.Name.Data
 		location := a.Location.Data
@@ -450,6 +459,10 @@ const (
 )
 
 func (a *mqlAwsS3Bucket) public() (bool, error) {
+	// Placeholder buckets (e.g., cross-account references) can't be queried
+	if !a.Exists.Data {
+		return false, nil
+	}
 	var (
 		bucketname = a.Name.Data
 		location   = a.Location.Data
@@ -572,6 +585,10 @@ func (a *mqlAwsS3Bucket) cors() ([]any, error) {
 }
 
 func (a *mqlAwsS3Bucket) logging() (map[string]any, error) {
+	// Placeholder buckets (e.g., cross-account references) can't be queried
+	if !a.Exists.Data {
+		return nil, nil
+	}
 	bucketname := a.Name.Data
 	bucketlocation := a.Location.Data
 

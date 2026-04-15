@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	cloudwatchtypes "github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
@@ -680,6 +681,24 @@ func initAwsCloudwatchLoggroup(runtime *plugin.Runtime, args map[string]*llx.Raw
 			return args, logGroup, nil
 		}
 	}
+
+	// If the log group is in a different account (e.g., organizational trail referencing
+	// a log group in the management account), create a placeholder resource with basic
+	// info extracted from the ARN instead of failing.
+	conn := runtime.Connection.(*connection.AwsConnection)
+	if parsedArn, parseErr := arn.Parse(arnVal); parseErr == nil && parsedArn.AccountID != conn.AccountId() {
+		log.Warn().Str("arn", arnVal).Str("currentAccount", conn.AccountId()).Str("logGroupAccount", parsedArn.AccountID).Msg("cross-account CloudWatch log group reference")
+		region, groupName := parseLogGroupArn(arnVal)
+		args["name"] = llx.StringData(groupName)
+		args["region"] = llx.StringData(region)
+		args["retentionInDays"] = llx.IntData(0)
+		args["storedBytes"] = llx.IntData(0)
+		args["dataProtectionStatus"] = llx.StringData("")
+		args["deletionProtectionEnabled"] = llx.BoolData(false)
+		args["logGroupClass"] = llx.StringData("")
+		return args, nil, nil
+	}
+
 	return nil, nil, errors.New("cloudwatch log group does not exist")
 }
 
