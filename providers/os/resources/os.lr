@@ -4112,3 +4112,57 @@ private gemini.skill @defaults("name") @maturity("preview") {
   // SHA-256 hash of the skill content
   sha256() string
 }
+
+// Windsurf editor instance configuration
+// URL: https://windsurf.com/
+windsurf @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Windsurf configuration directory
+  configPath string
+  // Global rules / memories
+  rules() []windsurf.rule
+  // MCP servers
+  mcpServers() []windsurf.mcpServer
+  // Installed skills
+  skills() []windsurf.skill
+}
+
+// Windsurf rule / memory file
+private windsurf.rule @defaults("name") @maturity("preview") {
+  // Rule name (derived from filename)
+  name string
+  // Full content of the rule file
+  content string
+  // Source path of the rule file
+  source string
+}
+
+// Windsurf MCP server configuration
+private windsurf.mcpServer @defaults("name") @maturity("preview") {
+  // Server name
+  name string
+  // Server command
+  command string
+  // Server arguments
+  args []string
+  // Whether environment variables are configured
+  hasEnv bool
+}
+
+// Windsurf skill
+private windsurf.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}

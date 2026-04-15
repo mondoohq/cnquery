@@ -284,6 +284,10 @@ const (
 	ResourceGemini                       string = "gemini"
 	ResourceGeminiMcpServer              string = "gemini.mcpServer"
 	ResourceGeminiSkill                  string = "gemini.skill"
+	ResourceWindsurf                     string = "windsurf"
+	ResourceWindsurfRule                 string = "windsurf.rule"
+	ResourceWindsurfMcpServer            string = "windsurf.mcpServer"
+	ResourceWindsurfSkill                string = "windsurf.skill"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -1361,6 +1365,22 @@ func init() {
 		"gemini.skill": {
 			// to override args, implement: initGeminiSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGeminiSkill,
+		},
+		"windsurf": {
+			Init:   initWindsurf,
+			Create: createWindsurf,
+		},
+		"windsurf.rule": {
+			// to override args, implement: initWindsurfRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindsurfRule,
+		},
+		"windsurf.mcpServer": {
+			// to override args, implement: initWindsurfMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindsurfMcpServer,
+		},
+		"windsurf.skill": {
+			// to override args, implement: initWindsurfSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindsurfSkill,
 		},
 	}
 }
@@ -5806,6 +5826,60 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gemini.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGeminiSkill).GetSha256()).ToDataRes(types.String)
+	},
+	"windsurf.configPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindsurf).GetConfigPath()).ToDataRes(types.String)
+	},
+	"windsurf.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindsurf).GetRules()).ToDataRes(types.Array(types.Resource("windsurf.rule")))
+	},
+	"windsurf.mcpServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindsurf).GetMcpServers()).ToDataRes(types.Array(types.Resource("windsurf.mcpServer")))
+	},
+	"windsurf.skills": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindsurf).GetSkills()).ToDataRes(types.Array(types.Resource("windsurf.skill")))
+	},
+	"windsurf.rule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindsurfRule).GetName()).ToDataRes(types.String)
+	},
+	"windsurf.rule.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindsurfRule).GetContent()).ToDataRes(types.String)
+	},
+	"windsurf.rule.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindsurfRule).GetSource()).ToDataRes(types.String)
+	},
+	"windsurf.mcpServer.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindsurfMcpServer).GetName()).ToDataRes(types.String)
+	},
+	"windsurf.mcpServer.command": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindsurfMcpServer).GetCommand()).ToDataRes(types.String)
+	},
+	"windsurf.mcpServer.args": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindsurfMcpServer).GetArgs()).ToDataRes(types.Array(types.String))
+	},
+	"windsurf.mcpServer.hasEnv": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindsurfMcpServer).GetHasEnv()).ToDataRes(types.Bool)
+	},
+	"windsurf.skill.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindsurfSkill).GetName()).ToDataRes(types.String)
+	},
+	"windsurf.skill.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindsurfSkill).GetDescription()).ToDataRes(types.String)
+	},
+	"windsurf.skill.allowedTools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindsurfSkill).GetAllowedTools()).ToDataRes(types.Array(types.String))
+	},
+	"windsurf.skill.argumentHint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindsurfSkill).GetArgumentHint()).ToDataRes(types.String)
+	},
+	"windsurf.skill.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindsurfSkill).GetSource()).ToDataRes(types.String)
+	},
+	"windsurf.skill.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindsurfSkill).GetContent()).ToDataRes(types.String)
+	},
+	"windsurf.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindsurfSkill).GetSha256()).ToDataRes(types.String)
 	},
 }
 
@@ -12721,6 +12795,94 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gemini.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGeminiSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windsurf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindsurf).__id, ok = v.Value.(string)
+		return
+	},
+	"windsurf.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindsurf).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windsurf.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindsurf).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windsurf.mcpServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindsurf).McpServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windsurf.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindsurf).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windsurf.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindsurfRule).__id, ok = v.Value.(string)
+		return
+	},
+	"windsurf.rule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindsurfRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windsurf.rule.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindsurfRule).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windsurf.rule.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindsurfRule).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windsurf.mcpServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindsurfMcpServer).__id, ok = v.Value.(string)
+		return
+	},
+	"windsurf.mcpServer.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindsurfMcpServer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windsurf.mcpServer.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindsurfMcpServer).Command, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windsurf.mcpServer.args": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindsurfMcpServer).Args, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windsurf.mcpServer.hasEnv": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindsurfMcpServer).HasEnv, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windsurf.skill.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindsurfSkill).__id, ok = v.Value.(string)
+		return
+	},
+	"windsurf.skill.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindsurfSkill).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windsurf.skill.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindsurfSkill).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windsurf.skill.allowedTools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindsurfSkill).AllowedTools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windsurf.skill.argumentHint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindsurfSkill).ArgumentHint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windsurf.skill.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindsurfSkill).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windsurf.skill.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindsurfSkill).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windsurf.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindsurfSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -35330,6 +35492,310 @@ func (c *mqlGeminiSkill) GetContent() *plugin.TValue[string] {
 }
 
 func (c *mqlGeminiSkill) GetSha256() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
+		return c.sha256()
+	})
+}
+
+// mqlWindsurf for the windsurf resource
+type mqlWindsurf struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindsurfInternal it will be used here
+	ConfigPath plugin.TValue[string]
+	Rules      plugin.TValue[[]any]
+	McpServers plugin.TValue[[]any]
+	Skills     plugin.TValue[[]any]
+}
+
+// createWindsurf creates a new instance of this resource
+func createWindsurf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindsurf{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windsurf", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindsurf) MqlName() string {
+	return "windsurf"
+}
+
+func (c *mqlWindsurf) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindsurf) GetConfigPath() *plugin.TValue[string] {
+	return &c.ConfigPath
+}
+
+func (c *mqlWindsurf) GetRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windsurf", c.__id, "rules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rules()
+	})
+}
+
+func (c *mqlWindsurf) GetMcpServers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.McpServers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windsurf", c.__id, "mcpServers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mcpServers()
+	})
+}
+
+func (c *mqlWindsurf) GetSkills() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Skills, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windsurf", c.__id, "skills")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.skills()
+	})
+}
+
+// mqlWindsurfRule for the windsurf.rule resource
+type mqlWindsurfRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindsurfRuleInternal it will be used here
+	Name    plugin.TValue[string]
+	Content plugin.TValue[string]
+	Source  plugin.TValue[string]
+}
+
+// createWindsurfRule creates a new instance of this resource
+func createWindsurfRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindsurfRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windsurf.rule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindsurfRule) MqlName() string {
+	return "windsurf.rule"
+}
+
+func (c *mqlWindsurfRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindsurfRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlWindsurfRule) GetContent() *plugin.TValue[string] {
+	return &c.Content
+}
+
+func (c *mqlWindsurfRule) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+// mqlWindsurfMcpServer for the windsurf.mcpServer resource
+type mqlWindsurfMcpServer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindsurfMcpServerInternal it will be used here
+	Name    plugin.TValue[string]
+	Command plugin.TValue[string]
+	Args    plugin.TValue[[]any]
+	HasEnv  plugin.TValue[bool]
+}
+
+// createWindsurfMcpServer creates a new instance of this resource
+func createWindsurfMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindsurfMcpServer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windsurf.mcpServer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindsurfMcpServer) MqlName() string {
+	return "windsurf.mcpServer"
+}
+
+func (c *mqlWindsurfMcpServer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindsurfMcpServer) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlWindsurfMcpServer) GetCommand() *plugin.TValue[string] {
+	return &c.Command
+}
+
+func (c *mqlWindsurfMcpServer) GetArgs() *plugin.TValue[[]any] {
+	return &c.Args
+}
+
+func (c *mqlWindsurfMcpServer) GetHasEnv() *plugin.TValue[bool] {
+	return &c.HasEnv
+}
+
+// mqlWindsurfSkill for the windsurf.skill resource
+type mqlWindsurfSkill struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindsurfSkillInternal it will be used here
+	Name         plugin.TValue[string]
+	Description  plugin.TValue[string]
+	AllowedTools plugin.TValue[[]any]
+	ArgumentHint plugin.TValue[string]
+	Source       plugin.TValue[string]
+	Content      plugin.TValue[string]
+	Sha256       plugin.TValue[string]
+}
+
+// createWindsurfSkill creates a new instance of this resource
+func createWindsurfSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindsurfSkill{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windsurf.skill", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindsurfSkill) MqlName() string {
+	return "windsurf.skill"
+}
+
+func (c *mqlWindsurfSkill) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindsurfSkill) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlWindsurfSkill) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlWindsurfSkill) GetAllowedTools() *plugin.TValue[[]any] {
+	return &c.AllowedTools
+}
+
+func (c *mqlWindsurfSkill) GetArgumentHint() *plugin.TValue[string] {
+	return &c.ArgumentHint
+}
+
+func (c *mqlWindsurfSkill) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlWindsurfSkill) GetContent() *plugin.TValue[string] {
+	return &c.Content
+}
+
+func (c *mqlWindsurfSkill) GetSha256() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
 		return c.sha256()
 	})
