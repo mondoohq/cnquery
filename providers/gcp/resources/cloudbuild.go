@@ -61,7 +61,7 @@ func (g *mqlGcpProjectCloudBuildService) triggers() ([]any, error) {
 	defer client.Close()
 
 	it := client.ListBuildTriggers(ctx, &cloudbuildpb.ListBuildTriggersRequest{
-		Parent:    fmt.Sprintf("projects/%s/locations/-", projectId),
+		Parent:    fmt.Sprintf("projects/%s/locations/global", projectId),
 		ProjectId: projectId,
 	})
 
