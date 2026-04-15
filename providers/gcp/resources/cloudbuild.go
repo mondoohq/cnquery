@@ -17,6 +17,8 @@ import (
 	"go.mondoo.com/mql/v13/types"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (g *mqlGcpProject) cloudBuild() (*mqlGcpProjectCloudBuildService, error) {
@@ -59,7 +61,8 @@ func (g *mqlGcpProjectCloudBuildService) triggers() ([]any, error) {
 	defer client.Close()
 
 	it := client.ListBuildTriggers(ctx, &cloudbuildpb.ListBuildTriggersRequest{
-		Parent: fmt.Sprintf("projects/%s/locations/-", projectId),
+		Parent:    fmt.Sprintf("projects/%s/locations/global", projectId),
+		ProjectId: projectId,
 	})
 
 	var res []any
@@ -337,6 +340,13 @@ func (g *mqlGcpProjectCloudBuildService) workerPools() ([]any, error) {
 			break
 		}
 		if err != nil {
+			// The wildcard location "-" may not be supported; treat InvalidArgument as empty
+			if s, ok := status.FromError(err); ok && s.Code() == codes.InvalidArgument {
+				break
+			}
+			if isGRPCSkippable(err) {
+				break
+			}
 			return nil, err
 		}
 

@@ -368,20 +368,27 @@ func (g *mqlGcpProjectPubsubServiceTopic) config() (*mqlGcpProjectPubsubServiceT
 		return nil, err
 	}
 
-	res, err := CreateResource(g.MqlRuntime, "gcp.project.pubsubService.topic.config", map[string]*llx.RawData{
+	args := map[string]*llx.RawData{
 		"projectId":            llx.StringData(projectId),
 		"topicName":            llx.StringData(t.ID()),
 		"labels":               llx.MapData(convert.MapToInterfaceMap(cfg.Labels), types.String),
 		"kmsKeyName":           llx.StringData(cfg.KMSKeyName),
 		"messageStoragePolicy": llx.ResourceData(messageStoragePolicy, "gcp.project.pubsubService.topic.config.messagestoragepolicy"),
-		"schemaSettings":       llx.ResourceData(schemaSettings, "gcp.project.pubsubService.topic.config.schemaSettings"),
 		"state":                llx.StringData(topicStateToString(cfg.State)),
 		"retentionDuration":    llx.TimeData(optionalDurationToTime(cfg.RetentionDuration)),
-	})
+	}
+	if schemaSettings != nil {
+		args["schemaSettings"] = llx.ResourceData(schemaSettings, "gcp.project.pubsubService.topic.config.schemaSettings")
+	}
+	res, err := CreateResource(g.MqlRuntime, "gcp.project.pubsubService.topic.config", args)
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlGcpProjectPubsubServiceTopicConfig), nil
+	tc := res.(*mqlGcpProjectPubsubServiceTopicConfig)
+	if schemaSettings == nil {
+		tc.SchemaSettings.State = plugin.StateIsNull | plugin.StateIsSet
+	}
+	return tc, nil
 }
 
 func (g *mqlGcpProjectPubsubService) subscriptions() ([]any, error) {
@@ -490,7 +497,7 @@ func (g *mqlGcpProjectPubsubServiceSubscription) config() (*mqlGcpProjectPubsubS
 	if cfg.DeadLetterPolicy != nil {
 		deadLetterDict = map[string]any{
 			"deadLetterTopic":     cfg.DeadLetterPolicy.DeadLetterTopic,
-			"maxDeliveryAttempts": cfg.DeadLetterPolicy.MaxDeliveryAttempts,
+			"maxDeliveryAttempts": int64(cfg.DeadLetterPolicy.MaxDeliveryAttempts),
 		}
 	}
 
