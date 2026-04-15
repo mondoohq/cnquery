@@ -635,3 +635,42 @@ func TestMergeAccountTagsIntoLabels(t *testing.T) {
 		require.Equal(t, "cc-42", got["CostCenter"])
 	})
 }
+
+func TestIsSiblingOrgAccountAsset(t *testing.T) {
+	primaryAccountId := "111111111111"
+
+	t.Run("primary account asset returns false", func(t *testing.T) {
+		a := &inventory.Asset{
+			Platform:    &inventory.Platform{Name: "aws"},
+			PlatformIds: []string{"//platformid.api.mondoo.app/runtime/aws/accounts/111111111111"},
+		}
+		require.False(t, isSiblingOrgAccountAsset(a, primaryAccountId))
+	})
+
+	t.Run("sibling account asset returns true", func(t *testing.T) {
+		a := &inventory.Asset{
+			Platform:    &inventory.Platform{Name: "aws"},
+			PlatformIds: []string{"//platformid.api.mondoo.app/runtime/aws/accounts/222222222222"},
+		}
+		require.True(t, isSiblingOrgAccountAsset(a, primaryAccountId))
+	})
+
+	t.Run("non-account asset returns false", func(t *testing.T) {
+		a := &inventory.Asset{
+			Platform:    &inventory.Platform{Name: "aws-ec2-instance"},
+			PlatformIds: []string{"//platformid.api.mondoo.app/runtime/aws/accounts/222222222222/regions/us-east-1/instances/i-abc"},
+		}
+		require.False(t, isSiblingOrgAccountAsset(a, primaryAccountId))
+	})
+
+	t.Run("nil asset returns false", func(t *testing.T) {
+		require.False(t, isSiblingOrgAccountAsset(nil, primaryAccountId))
+	})
+
+	t.Run("asset with nil platform returns false", func(t *testing.T) {
+		a := &inventory.Asset{
+			PlatformIds: []string{"//platformid.api.mondoo.app/runtime/aws/accounts/222222222222"},
+		}
+		require.False(t, isSiblingOrgAccountAsset(a, primaryAccountId))
+	})
+}

@@ -292,6 +292,25 @@ func mergeAccountTagsIntoLabels(labels, accountTags map[string]string) map[strin
 	return labels
 }
 
+// isSiblingOrgAccountAsset returns true when the asset represents an AWS
+// account other than the primary account (i.e. a sibling discovered via the
+// organization target). These assets must not inherit the primary account's
+// tags. Primary and sibling account assets both have Platform.Name == "aws"
+// (set by GetPlatformForObject with an empty name), so the discriminator is
+// whether the asset's platform id references the primary account id.
+func isSiblingOrgAccountAsset(a *inventory.Asset, primaryAccountId string) bool {
+	if a == nil || a.Platform == nil || a.Platform.Name != "aws" {
+		return false
+	}
+	suffix := "/accounts/" + primaryAccountId
+	for _, pid := range a.PlatformIds {
+		if strings.HasSuffix(pid, suffix) {
+			return false
+		}
+	}
+	return true
+}
+
 type instanceInfo struct {
 	region          string
 	platformDetails string
