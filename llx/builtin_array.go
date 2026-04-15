@@ -932,7 +932,9 @@ func arrayContainsAll(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 	}
 
 	org := bind.Value.([]any)
-	filters := arg.Value.([]any)
+	argFilters := arg.Value.([]any)
+	filters := make([]any, len(argFilters))
+	copy(filters, argFilters)
 
 	for i := range org {
 		for j := range filters {

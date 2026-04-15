@@ -1291,11 +1291,13 @@ func dictContainsAll(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) 
 		return &RawData{Type: bind.Type, Error: errors.New("cannot compute difference of lists, argument is not a list")}, 0, nil
 	}
 
-	filters, ok := arg.Value.([]any)
+	argFilters, ok := arg.Value.([]any)
 	if !ok {
 		return &RawData{Type: bind.Type, Error: errors.New("tried to call function with a non-array, please make sure the argument is an array")}, 0, nil
 		// filters = []any{arg.Value}
 	}
+	filters := make([]any, len(argFilters))
+	copy(filters, argFilters)
 
 	for i := range org {
 		for j := range filters {

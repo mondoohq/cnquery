@@ -717,6 +717,10 @@ func TestArray(t *testing.T) {
 			Expectation: []any{int64(3)},
 		},
 		{
+			Code:        "a = [1,2]; [1,2,3].containsAll(a); [1,2,4].containsAll(a)",
+			ResultIndex: 2, Expectation: []any(nil),
+		},
+		{
 			Code:        "[2,1,2,2].containsNone([1])",
 			Expectation: []any{int64(1)},
 		},
