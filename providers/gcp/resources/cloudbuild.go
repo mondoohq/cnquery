@@ -120,30 +120,52 @@ func (g *mqlGcpProjectCloudBuildService) triggers() ([]any, error) {
 			return nil, err
 		}
 
-		mqlTrigger, err := CreateResource(g.MqlRuntime, "gcp.project.cloudBuildService.trigger", map[string]*llx.RawData{
-			"projectId":             llx.StringData(projectId),
-			"name":                  llx.StringData(trigger.Name),
-			"triggerId":             llx.StringData(trigger.Id),
-			"description":           llx.StringData(trigger.Description),
-			"disabled":              llx.BoolData(trigger.Disabled),
-			"tags":                  llx.ArrayData(tags, types.String),
-			"filename":              llx.StringData(trigger.GetFilename()),
-			"filter":                llx.StringData(trigger.Filter),
-			"substitutions":         llx.MapData(substitutions, types.String),
-			"serviceAccount":        llx.StringData(trigger.ServiceAccount),
-			"github":                llx.ResourceData(github, "gcp.project.cloudBuildService.trigger.githubEventsConfig"),
-			"pubsubConfig":          llx.ResourceData(pubsubConfig, "gcp.project.cloudBuildService.trigger.pubsubConfig"),
-			"webhookConfig":         llx.ResourceData(webhookConfig, "gcp.project.cloudBuildService.trigger.webhookConfig"),
-			"repositoryEventConfig": llx.ResourceData(repoEventConfig, "gcp.project.cloudBuildService.trigger.repositoryEventConfig"),
-			"createTime":            llx.TimeDataPtr(createTime),
-		})
+		args := map[string]*llx.RawData{
+			"projectId":      llx.StringData(projectId),
+			"name":           llx.StringData(trigger.Name),
+			"triggerId":      llx.StringData(trigger.Id),
+			"description":    llx.StringData(trigger.Description),
+			"disabled":       llx.BoolData(trigger.Disabled),
+			"tags":           llx.ArrayData(tags, types.String),
+			"filename":       llx.StringData(trigger.GetFilename()),
+			"filter":         llx.StringData(trigger.Filter),
+			"substitutions":  llx.MapData(substitutions, types.String),
+			"serviceAccount": llx.StringData(trigger.ServiceAccount),
+			"createTime":     llx.TimeDataPtr(createTime),
+		}
+		if github != nil {
+			args["github"] = llx.ResourceData(github, "gcp.project.cloudBuildService.trigger.githubEventsConfig")
+		}
+		if pubsubConfig != nil {
+			args["pubsubConfig"] = llx.ResourceData(pubsubConfig, "gcp.project.cloudBuildService.trigger.pubsubConfig")
+		}
+		if webhookConfig != nil {
+			args["webhookConfig"] = llx.ResourceData(webhookConfig, "gcp.project.cloudBuildService.trigger.webhookConfig")
+		}
+		if repoEventConfig != nil {
+			args["repositoryEventConfig"] = llx.ResourceData(repoEventConfig, "gcp.project.cloudBuildService.trigger.repositoryEventConfig")
+		}
+
+		mqlTrigger, err := CreateResource(g.MqlRuntime, "gcp.project.cloudBuildService.trigger", args)
 		if err != nil {
 			return nil, err
 		}
 
-		// Populate Internal struct cache for cross-references
+		// Populate Internal struct cache and set null state for absent sub-resources
 		t := mqlTrigger.(*mqlGcpProjectCloudBuildServiceTrigger)
 		t.cacheServiceAccount = trigger.ServiceAccount
+		if github == nil {
+			t.Github.State = plugin.StateIsNull | plugin.StateIsSet
+		}
+		if pubsubConfig == nil {
+			t.PubsubConfig.State = plugin.StateIsNull | plugin.StateIsSet
+		}
+		if webhookConfig == nil {
+			t.WebhookConfig.State = plugin.StateIsNull | plugin.StateIsSet
+		}
+		if repoEventConfig == nil {
+			t.RepositoryEventConfig.State = plugin.StateIsNull | plugin.StateIsSet
+		}
 
 		res = append(res, mqlTrigger)
 	}
@@ -154,6 +176,9 @@ func (g *mqlGcpProjectCloudBuildService) triggers() ([]any, error) {
 func (g *mqlGcpProjectCloudBuildServiceTrigger) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error
+	}
+	if g.Name.Error != nil {
+		return "", g.Name.Error
 	}
 	return fmt.Sprintf("gcp.project/%s/cloudBuildService.trigger/%s", g.ProjectId.Data, g.Name.Data), nil
 }
@@ -378,19 +403,32 @@ func (g *mqlGcpProjectCloudBuildService) workerPools() ([]any, error) {
 			return nil, err
 		}
 
-		mqlWP, err := CreateResource(g.MqlRuntime, "gcp.project.cloudBuildService.workerPool", map[string]*llx.RawData{
-			"projectId":     llx.StringData(projectId),
-			"name":          llx.StringData(wp.Name),
-			"displayName":   llx.StringData(wp.DisplayName),
-			"state":         llx.StringData(wp.State.String()),
-			"annotations":   llx.MapData(annotations, types.String),
-			"workerConfig":  llx.ResourceData(workerConfig, "gcp.project.cloudBuildService.workerPool.workerConfig"),
-			"networkConfig": llx.ResourceData(networkConfig, "gcp.project.cloudBuildService.workerPool.networkConfig"),
-			"createTime":    llx.TimeDataPtr(createTime),
-			"updateTime":    llx.TimeDataPtr(updateTime),
-		})
+		wpArgs := map[string]*llx.RawData{
+			"projectId":   llx.StringData(projectId),
+			"name":        llx.StringData(wp.Name),
+			"displayName": llx.StringData(wp.DisplayName),
+			"state":       llx.StringData(wp.State.String()),
+			"annotations": llx.MapData(annotations, types.String),
+			"createTime":  llx.TimeDataPtr(createTime),
+			"updateTime":  llx.TimeDataPtr(updateTime),
+		}
+		if workerConfig != nil {
+			wpArgs["workerConfig"] = llx.ResourceData(workerConfig, "gcp.project.cloudBuildService.workerPool.workerConfig")
+		}
+		if networkConfig != nil {
+			wpArgs["networkConfig"] = llx.ResourceData(networkConfig, "gcp.project.cloudBuildService.workerPool.networkConfig")
+		}
+
+		mqlWP, err := CreateResource(g.MqlRuntime, "gcp.project.cloudBuildService.workerPool", wpArgs)
 		if err != nil {
 			return nil, err
+		}
+		wpRes := mqlWP.(*mqlGcpProjectCloudBuildServiceWorkerPool)
+		if workerConfig == nil {
+			wpRes.WorkerConfig.State = plugin.StateIsNull | plugin.StateIsSet
+		}
+		if networkConfig == nil {
+			wpRes.NetworkConfig.State = plugin.StateIsNull | plugin.StateIsSet
 		}
 		res = append(res, mqlWP)
 	}
@@ -401,6 +439,9 @@ func (g *mqlGcpProjectCloudBuildService) workerPools() ([]any, error) {
 func (g *mqlGcpProjectCloudBuildServiceWorkerPool) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error
+	}
+	if g.Name.Error != nil {
+		return "", g.Name.Error
 	}
 	return fmt.Sprintf("gcp.project/%s/cloudBuildService.workerPool/%s", g.ProjectId.Data, g.Name.Data), nil
 }

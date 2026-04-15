@@ -2281,7 +2281,6 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   enabledK8sBetaApis []string
 }
 
-// Google Kubernetes Engine (GKE) cluster maintenance policy
 // Google Cloud (GCP) GKE cluster notification configuration
 private gcp.project.gkeService.cluster.notificationConfig @defaults("pubsubEnabled") {
   // Internal ID
