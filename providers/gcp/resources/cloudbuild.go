@@ -236,7 +236,10 @@ func buildTriggerGithubConfig(runtime *plugin.Runtime, parentName string, cfg *c
 }
 
 func (g *mqlGcpProjectCloudBuildServiceTriggerGithubEventsConfig) id() (string, error) {
-	return g.Id.Data, g.Id.Error
+	if g.Id.Error != nil {
+		return "", g.Id.Error
+	}
+	return g.Id.Data, nil
 }
 
 func buildTriggerPubsubConfig(runtime *plugin.Runtime, parentName string, cfg *cloudbuildpb.PubsubConfig) (*mqlGcpProjectCloudBuildServiceTriggerPubsubConfig, error) {
@@ -263,7 +266,10 @@ func buildTriggerPubsubConfig(runtime *plugin.Runtime, parentName string, cfg *c
 }
 
 func (g *mqlGcpProjectCloudBuildServiceTriggerPubsubConfig) id() (string, error) {
-	return g.Id.Data, g.Id.Error
+	if g.Id.Error != nil {
+		return "", g.Id.Error
+	}
+	return g.Id.Data, nil
 }
 
 type mqlGcpProjectCloudBuildServiceTriggerPubsubConfigInternal struct {
@@ -301,7 +307,10 @@ func buildTriggerWebhookConfig(runtime *plugin.Runtime, parentName string, cfg *
 }
 
 func (g *mqlGcpProjectCloudBuildServiceTriggerWebhookConfig) id() (string, error) {
-	return g.Id.Data, g.Id.Error
+	if g.Id.Error != nil {
+		return "", g.Id.Error
+	}
+	return g.Id.Data, nil
 }
 
 func buildTriggerRepoEventConfig(runtime *plugin.Runtime, parentName string, cfg *cloudbuildpb.RepositoryEventConfig) (*mqlGcpProjectCloudBuildServiceTriggerRepositoryEventConfig, error) {
@@ -332,7 +341,10 @@ func buildTriggerRepoEventConfig(runtime *plugin.Runtime, parentName string, cfg
 }
 
 func (g *mqlGcpProjectCloudBuildServiceTriggerRepositoryEventConfig) id() (string, error) {
-	return g.Id.Data, g.Id.Error
+	if g.Id.Error != nil {
+		return "", g.Id.Error
+	}
+	return g.Id.Data, nil
 }
 
 func (g *mqlGcpProjectCloudBuildService) workerPools() ([]any, error) {
@@ -464,7 +476,10 @@ func buildWorkerPoolWorkerConfig(runtime *plugin.Runtime, parentName string, cfg
 }
 
 func (g *mqlGcpProjectCloudBuildServiceWorkerPoolWorkerConfig) id() (string, error) {
-	return g.Id.Data, g.Id.Error
+	if g.Id.Error != nil {
+		return "", g.Id.Error
+	}
+	return g.Id.Data, nil
 }
 
 func buildWorkerPoolNetworkConfig(runtime *plugin.Runtime, parentName string, cfg *cloudbuildpb.PrivatePoolV1Config) (*mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig, error) {
@@ -485,5 +500,8 @@ func buildWorkerPoolNetworkConfig(runtime *plugin.Runtime, parentName string, cf
 }
 
 func (g *mqlGcpProjectCloudBuildServiceWorkerPoolNetworkConfig) id() (string, error) {
-	return g.Id.Data, g.Id.Error
+	if g.Id.Error != nil {
+		return "", g.Id.Error
+	}
+	return g.Id.Data, nil
 }

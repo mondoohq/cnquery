@@ -85,6 +85,9 @@ func (g *mqlGcpProjectIapServiceBrand) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error
 	}
+	if g.Name.Error != nil {
+		return "", g.Name.Error
+	}
 	return fmt.Sprintf("gcp.project/%s/iapService.brand/%s", g.ProjectId.Data, g.Name.Data), nil
 }
 
@@ -148,6 +151,9 @@ func (g *mqlGcpProjectIapService) tunnelDestGroups() ([]any, error) {
 func (g *mqlGcpProjectIapServiceTunnelDestGroup) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error
+	}
+	if g.Name.Error != nil {
+		return "", g.Name.Error
 	}
 	return fmt.Sprintf("gcp.project/%s/iapService.tunnelDestGroup/%s", g.ProjectId.Data, g.Name.Data), nil
 }

@@ -443,7 +443,10 @@ func (g *mqlGcpProjectKmsServiceKeyring) cryptokeys() ([]any, error) {
 			mqlDestroyScheduledDuration = &v
 		}
 
-		kajpDict, _ := protoToDict(k.KeyAccessJustificationsPolicy)
+		kajpDict, err := protoToDict(k.KeyAccessJustificationsPolicy)
+		if err != nil {
+			return nil, err
+		}
 		mqlKey, err := CreateResource(g.MqlRuntime, "gcp.project.kmsService.keyring.cryptokey", map[string]*llx.RawData{
 			"resourcePath":                  llx.StringData(k.Name),
 			"name":                          llx.StringData(parseResourceName(k.Name)),
@@ -459,6 +462,9 @@ func (g *mqlGcpProjectKmsServiceKeyring) cryptokeys() ([]any, error) {
 			"cryptoKeyBackend":              llx.StringData(k.CryptoKeyBackend),
 			"keyAccessJustificationsPolicy": llx.DictData(kajpDict),
 		})
+		if err != nil {
+			return nil, err
+		}
 
 		keys = append(keys, mqlKey)
 	}

@@ -695,7 +695,7 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 			return nil, err
 		}
 
-		mqlCluster, err := CreateResource(g.MqlRuntime, "gcp.project.gkeService.cluster", map[string]*llx.RawData{
+		clusterArgs := map[string]*llx.RawData{
 			"projectId":                      llx.StringData(projectId),
 			"id":                             llx.StringData(c.Id),
 			"name":                           llx.StringData(c.Name),
@@ -745,13 +745,20 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 			"tpuIpv4CidrBlock":               llx.StringData(c.TpuIpv4CidrBlock),
 			"enabledK8sBetaApis":             llx.ArrayData(enabledK8sBetaApis, types.String),
 			"meshCertificates":               llx.DictData(meshCertificates),
-			"notificationConfig":             llx.ResourceData(notificationConfig, "gcp.project.gkeService.cluster.notificationConfig"),
-		})
+		}
+		if notificationConfig != nil {
+			clusterArgs["notificationConfig"] = llx.ResourceData(notificationConfig, "gcp.project.gkeService.cluster.notificationConfig")
+		}
+
+		mqlCluster, err := CreateResource(g.MqlRuntime, "gcp.project.gkeService.cluster", clusterArgs)
 		if err != nil {
 			return nil, err
 		}
 		mqlC := mqlCluster.(*mqlGcpProjectGkeServiceCluster)
 		mqlC.cacheDatabaseEncryptionKeyName = databaseEncryptionKeyName
+		if notificationConfig == nil {
+			mqlC.NotificationConfig.State = plugin.StateIsNull | plugin.StateIsSet
+		}
 		res = append(res, mqlCluster)
 	}
 

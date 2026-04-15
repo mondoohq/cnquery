@@ -233,10 +233,13 @@ func (g *mqlGcpProjectSpannerServiceInstanceDatabase) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error
 	}
+	if g.InstanceName.Error != nil {
+		return "", g.InstanceName.Error
+	}
 	if g.Name.Error != nil {
 		return "", g.Name.Error
 	}
-	return fmt.Sprintf("gcp.project/%s/spannerService/%s", g.ProjectId.Data, g.Name.Data), nil
+	return fmt.Sprintf("gcp.project/%s/spannerService/%s/database/%s", g.ProjectId.Data, g.InstanceName.Data, g.Name.Data), nil
 }
 
 func (g *mqlGcpProjectSpannerServiceInstanceDatabase) ddl() ([]any, error) {
@@ -365,10 +368,13 @@ func (g *mqlGcpProjectSpannerServiceInstanceBackup) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error
 	}
+	if g.InstanceName.Error != nil {
+		return "", g.InstanceName.Error
+	}
 	if g.Name.Error != nil {
 		return "", g.Name.Error
 	}
-	return fmt.Sprintf("gcp.project/%s/spannerService/%s", g.ProjectId.Data, g.Name.Data), nil
+	return fmt.Sprintf("gcp.project/%s/spannerService/%s/backup/%s", g.ProjectId.Data, g.InstanceName.Data, g.Name.Data), nil
 }
 
 func (g *mqlGcpProjectSpannerService) instanceConfigs() ([]any, error) {

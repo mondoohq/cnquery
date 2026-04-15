@@ -25,6 +25,31 @@ import (
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
+// durationSeconds safely extracts the Seconds field from a *durationpb.Duration,
+// returning 0 if the duration is nil.
+func durationSeconds(d *durationpb.Duration) int64 {
+	if d == nil {
+		return 0
+	}
+	return d.Seconds
+}
+
+// mutationRecordTime safely extracts the MutateTime from a MutationRecord.
+func mutationRecordTime(mr *monitoringpb.MutationRecord) *llx.RawData {
+	if mr == nil || mr.MutateTime == nil {
+		return llx.NilData
+	}
+	return llx.TimeData(mr.MutateTime.AsTime())
+}
+
+// mutationRecordBy safely extracts the MutatedBy from a MutationRecord.
+func mutationRecordBy(mr *monitoringpb.MutationRecord) *llx.RawData {
+	if mr == nil {
+		return llx.StringData("")
+	}
+	return llx.StringData(mr.MutatedBy)
+}
+
 func (g *mqlGcpProjectMonitoringService) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error
@@ -116,7 +141,7 @@ func (g *mqlGcpProjectMonitoringService) alertPolicies() ([]any, error) {
 					"denominatorFilter":     thresh.DenominatorFilter,
 					"comparison":            thresh.Comparison.String(),
 					"thresholdValue":        thresh.ThresholdValue,
-					"duration":              thresh.Duration.Seconds,
+					"duration":              durationSeconds(thresh.Duration),
 					"evaluationMissingData": thresh.EvaluationMissingData.String(),
 				}
 			}
@@ -125,7 +150,7 @@ func (g *mqlGcpProjectMonitoringService) alertPolicies() ([]any, error) {
 			if absent := c.GetConditionAbsent(); absent != nil {
 				mqlAbsent = map[string]any{
 					"filter":   absent.Filter,
-					"duration": llx.DurationToTime(absent.Duration.Seconds),
+					"duration": durationSeconds(absent.Duration),
 				}
 			}
 
@@ -141,7 +166,7 @@ func (g *mqlGcpProjectMonitoringService) alertPolicies() ([]any, error) {
 			if monitoringQLanguage := c.GetConditionMonitoringQueryLanguage(); monitoringQLanguage != nil {
 				mqlMonitoringQueryLanguage = map[string]any{
 					"query":                 monitoringQLanguage.Query,
-					"duration":              int64(monitoringQLanguage.Duration.Seconds),
+					"duration":              durationSeconds(monitoringQLanguage.Duration),
 					"evaluationMissingData": monitoringQLanguage.EvaluationMissingData.String(),
 				}
 			}
@@ -169,12 +194,16 @@ func (g *mqlGcpProjectMonitoringService) alertPolicies() ([]any, error) {
 			var mqlNotifRateLimit any
 			if p.AlertStrategy.NotificationRateLimit != nil {
 				mqlNotifRateLimit = map[string]any{
-					"period": llx.TimeData(llx.DurationToTime(p.AlertStrategy.NotificationRateLimit.Period.Seconds)),
+					"period": durationSeconds(p.AlertStrategy.NotificationRateLimit.Period),
 				}
+			}
+			var autoClose int64
+			if p.AlertStrategy.AutoClose != nil {
+				autoClose = p.AlertStrategy.AutoClose.Seconds
 			}
 			mqlAlertStrategy = map[string]any{
 				"notificationRateLimit": mqlNotifRateLimit,
-				"autoClose":             llx.TimeData(llx.DurationToTime(p.AlertStrategy.AutoClose.Seconds)),
+				"autoClose":             autoClose,
 			}
 		}
 
@@ -189,10 +218,10 @@ func (g *mqlGcpProjectMonitoringService) alertPolicies() ([]any, error) {
 			"enabled":                 llx.BoolData(p.Enabled.Value),
 			"validity":                llx.DictData(mqlValidity),
 			"notificationChannelUrls": llx.ArrayData(convert.SliceAnyToInterface(p.NotificationChannels), types.String),
-			"created":                 llx.TimeData(p.CreationRecord.MutateTime.AsTime()),
-			"createdBy":               llx.StringData(p.CreationRecord.MutatedBy),
-			"updated":                 llx.TimeData(p.MutationRecord.MutateTime.AsTime()),
-			"updatedBy":               llx.StringData(p.MutationRecord.MutatedBy),
+			"created":                 mutationRecordTime(p.CreationRecord),
+			"createdBy":               mutationRecordBy(p.CreationRecord),
+			"updated":                 mutationRecordTime(p.MutationRecord),
+			"updatedBy":               mutationRecordBy(p.MutationRecord),
 			"alertStrategy":           llx.DictData(mqlAlertStrategy),
 		})
 		if err != nil {
@@ -478,6 +507,9 @@ func (g *mqlGcpProjectMonitoringServiceDashboard) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error
 	}
+	if g.Name.Error != nil {
+		return "", g.Name.Error
+	}
 	return fmt.Sprintf("gcp.project/%s/monitoringService.dashboard/%s", g.ProjectId.Data, g.Name.Data), nil
 }
 
@@ -546,6 +578,9 @@ func (g *mqlGcpProjectMonitoringService) services() ([]any, error) {
 func (g *mqlGcpProjectMonitoringServiceService) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error
+	}
+	if g.Name.Error != nil {
+		return "", g.Name.Error
 	}
 	return fmt.Sprintf("gcp.project/%s/monitoringService.service/%s", g.ProjectId.Data, g.Name.Data), nil
 }
@@ -631,6 +666,9 @@ func (g *mqlGcpProjectMonitoringServiceService) slos() ([]any, error) {
 func (g *mqlGcpProjectMonitoringServiceServiceSlo) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error
+	}
+	if g.Name.Error != nil {
+		return "", g.Name.Error
 	}
 	return fmt.Sprintf("gcp.project/%s/monitoringService.service.slo/%s", g.ProjectId.Data, g.Name.Data), nil
 }

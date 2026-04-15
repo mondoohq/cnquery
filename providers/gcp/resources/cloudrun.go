@@ -462,7 +462,10 @@ func (g *mqlGcpProjectCloudRunService) services() ([]any, error) {
 					})
 				}
 
-				baDict, _ := protoToDict(s.BinaryAuthorization)
+				baDict, err := protoToDict(s.BinaryAuthorization)
+				if err != nil {
+					log.Error().Err(err).Msg("failed to convert BinaryAuthorization to dict")
+				}
 				mqlS, err := CreateResource(g.MqlRuntime, "gcp.project.cloudRunService.service", map[string]*llx.RawData{
 					"id":                    llx.StringData(s.Name),
 					"projectId":             llx.StringData(projectId),

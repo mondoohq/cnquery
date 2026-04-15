@@ -755,6 +755,15 @@ func (g *mqlGcpProjectSqlServiceInstanceUser) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error
 	}
+	if g.InstanceName.Error != nil {
+		return "", g.InstanceName.Error
+	}
+	if g.Name.Error != nil {
+		return "", g.Name.Error
+	}
+	if g.Host.Error != nil {
+		return "", g.Host.Error
+	}
 	return fmt.Sprintf("gcp.project/%s/sqlService.instance/%s/user/%s@%s", g.ProjectId.Data, g.InstanceName.Data, g.Name.Data, g.Host.Data), nil
 }
 
@@ -827,6 +836,12 @@ func (g *mqlGcpProjectSqlServiceInstance) sslCerts() ([]any, error) {
 func (g *mqlGcpProjectSqlServiceInstanceSslCert) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error
+	}
+	if g.InstanceName.Error != nil {
+		return "", g.InstanceName.Error
+	}
+	if g.Sha1Fingerprint.Error != nil {
+		return "", g.Sha1Fingerprint.Error
 	}
 	return fmt.Sprintf("gcp.project/%s/sqlService.instance/%s/sslCert/%s", g.ProjectId.Data, g.InstanceName.Data, g.Sha1Fingerprint.Data), nil
 }

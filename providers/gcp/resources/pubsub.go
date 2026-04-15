@@ -814,6 +814,9 @@ func (g *mqlGcpProjectPubsubServiceSchema) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error
 	}
+	if g.Name.Error != nil {
+		return "", g.Name.Error
+	}
 	return fmt.Sprintf("gcp.project/%s/pubsubService.schema/%s", g.ProjectId.Data, g.Name.Data), nil
 }
 

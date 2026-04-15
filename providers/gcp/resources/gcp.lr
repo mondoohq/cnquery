@@ -2295,6 +2295,7 @@ private gcp.project.gkeService.cluster.notificationConfig @defaults("pubsubEnabl
   filterEventTypes []string
 }
 
+// Google Cloud (GCP) GKE cluster maintenance policy
 private gcp.project.gkeService.cluster.maintenancePolicy {
   // Internal ID
   id string

@@ -46,7 +46,10 @@ func (g *mqlGcpProjectComputeService) instanceTemplates() ([]any, error) {
 	req := computeSvc.InstanceTemplates.List(projectId)
 	if err := req.Pages(ctx, func(page *compute.InstanceTemplateList) error {
 		for _, tmpl := range page.Items {
-			properties, _ := convert.JsonToDict(tmpl.Properties)
+			properties, err := convert.JsonToDict(tmpl.Properties)
+			if err != nil {
+				return err
+			}
 
 			mqlTmpl, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.instanceTemplate", map[string]*llx.RawData{
 				"id":                llx.StringData(strconv.FormatUint(tmpl.Id, 10)),

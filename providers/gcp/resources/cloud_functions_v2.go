@@ -6,7 +6,6 @@ package resources
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	functions "cloud.google.com/go/functions/apiv2"
@@ -85,23 +84,42 @@ func (g *mqlGcpProject) cloudFunctionsV2() ([]any, error) {
 			return nil, err
 		}
 
-		mqlFn, err := CreateResource(g.MqlRuntime, "gcp.project.cloudFunctionV2", map[string]*llx.RawData{
-			"projectId":     llx.StringData(projectId),
-			"name":          llx.StringData(fn.Name),
-			"description":   llx.StringData(fn.Description),
-			"state":         llx.StringData(fn.State.String()),
-			"environment":   llx.StringData(fn.Environment.String()),
-			"url":           llx.StringData(fn.Url),
-			"labels":        llx.MapData(labels, types.String),
-			"kmsKeyName":    llx.StringData(fn.KmsKeyName),
-			"buildConfig":   llx.ResourceData(buildConfig, "gcp.project.cloudFunctionV2.buildConfig"),
-			"serviceConfig": llx.ResourceData(serviceConfig, "gcp.project.cloudFunctionV2.serviceConfig"),
-			"eventTrigger":  llx.ResourceData(eventTrigger, "gcp.project.cloudFunctionV2.eventTrigger"),
-			"createTime":    llx.TimeDataPtr(createTime),
-			"updateTime":    llx.TimeDataPtr(updateTime),
-		})
+		args := map[string]*llx.RawData{
+			"projectId":   llx.StringData(projectId),
+			"name":        llx.StringData(fn.Name),
+			"description": llx.StringData(fn.Description),
+			"state":       llx.StringData(fn.State.String()),
+			"environment": llx.StringData(fn.Environment.String()),
+			"url":         llx.StringData(fn.Url),
+			"labels":      llx.MapData(labels, types.String),
+			"kmsKeyName":  llx.StringData(fn.KmsKeyName),
+			"createTime":  llx.TimeDataPtr(createTime),
+			"updateTime":  llx.TimeDataPtr(updateTime),
+		}
+		if buildConfig != nil {
+			args["buildConfig"] = llx.ResourceData(buildConfig, "gcp.project.cloudFunctionV2.buildConfig")
+		}
+		if serviceConfig != nil {
+			args["serviceConfig"] = llx.ResourceData(serviceConfig, "gcp.project.cloudFunctionV2.serviceConfig")
+		}
+		if eventTrigger != nil {
+			args["eventTrigger"] = llx.ResourceData(eventTrigger, "gcp.project.cloudFunctionV2.eventTrigger")
+		}
+
+		mqlFn, err := CreateResource(g.MqlRuntime, "gcp.project.cloudFunctionV2", args)
 		if err != nil {
 			return nil, err
+		}
+		fnRes := mqlFn.(*mqlGcpProjectCloudFunctionV2)
+		fnRes.cacheKmsKeyName = fn.KmsKeyName
+		if buildConfig == nil {
+			fnRes.BuildConfig.State = plugin.StateIsNull | plugin.StateIsSet
+		}
+		if serviceConfig == nil {
+			fnRes.ServiceConfig.State = plugin.StateIsNull | plugin.StateIsSet
+		}
+		if eventTrigger == nil {
+			fnRes.EventTrigger.State = plugin.StateIsNull | plugin.StateIsSet
 		}
 		res = append(res, mqlFn)
 	}
@@ -116,6 +134,9 @@ type mqlGcpProjectCloudFunctionV2Internal struct {
 func (g *mqlGcpProjectCloudFunctionV2) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error
+	}
+	if g.Name.Error != nil {
+		return "", g.Name.Error
 	}
 	return fmt.Sprintf("gcp.project/%s/cloudFunctionV2/%s", g.ProjectId.Data, g.Name.Data), nil
 }
@@ -305,11 +326,6 @@ func (g *mqlGcpProjectCloudFunctionV2EventTrigger) topic() (*mqlGcpProjectPubsub
 		g.Topic.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	// Extract short topic ID from full name (projects/{project}/topics/{topic})
-	parts := strings.Split(topicName, "/")
-	topicID := parts[len(parts)-1]
-	_ = topicID // the full name is used as the lookup key
-
 	res, err := NewResource(g.MqlRuntime, "gcp.project.pubsubService.topic", map[string]*llx.RawData{
 		"name": llx.StringData(topicName),
 	})
