@@ -60,15 +60,23 @@ func (g *mqlGcpProjectSourceRepositoriesService) repos() ([]any, error) {
 				return err
 			}
 
-			mqlRepo, err := CreateResource(g.MqlRuntime, "gcp.project.sourceRepositoriesService.repo", map[string]*llx.RawData{
-				"projectId":    llx.StringData(projectId),
-				"name":         llx.StringData(repo.Name),
-				"url":          llx.StringData(repo.Url),
-				"size":         llx.IntData(repo.Size),
-				"mirrorConfig": llx.ResourceData(mirrorConfig, "gcp.project.sourceRepositoriesService.repo.mirrorConfig"),
-			})
+			args := map[string]*llx.RawData{
+				"projectId": llx.StringData(projectId),
+				"name":      llx.StringData(repo.Name),
+				"url":       llx.StringData(repo.Url),
+				"size":      llx.IntData(repo.Size),
+			}
+			if mirrorConfig != nil {
+				args["mirrorConfig"] = llx.ResourceData(mirrorConfig, "gcp.project.sourceRepositoriesService.repo.mirrorConfig")
+			}
+
+			mqlRepo, err := CreateResource(g.MqlRuntime, "gcp.project.sourceRepositoriesService.repo", args)
 			if err != nil {
 				return err
+			}
+			if mirrorConfig == nil {
+				r := mqlRepo.(*mqlGcpProjectSourceRepositoriesServiceRepo)
+				r.MirrorConfig.State = plugin.StateIsNull | plugin.StateIsSet
 			}
 			res = append(res, mqlRepo)
 		}
@@ -83,6 +91,9 @@ func (g *mqlGcpProjectSourceRepositoriesService) repos() ([]any, error) {
 func (g *mqlGcpProjectSourceRepositoriesServiceRepo) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error
+	}
+	if g.Name.Error != nil {
+		return "", g.Name.Error
 	}
 	return fmt.Sprintf("gcp.project/%s/sourceRepositoriesService.repo/%s", g.ProjectId.Data, g.Name.Data), nil
 }
