@@ -312,6 +312,24 @@ func isSiblingOrgAccountAsset(a *inventory.Asset, primaryAccountId string) bool 
 	return true
 }
 
+// applyAccountTagsToAssets merges the primary account's tags into every asset
+// in the list, except sibling org account assets which are skipped. The merge
+// follows mergeAccountTagsIntoLabels semantics: asset labels win on collision.
+func applyAccountTagsToAssets(assets []*inventory.Asset, accountTags map[string]string, primaryAccountId string) {
+	if len(accountTags) == 0 {
+		return
+	}
+	for _, a := range assets {
+		if a == nil {
+			continue
+		}
+		if isSiblingOrgAccountAsset(a, primaryAccountId) {
+			continue
+		}
+		a.Labels = mergeAccountTagsIntoLabels(a.Labels, accountTags)
+	}
+}
+
 type instanceInfo struct {
 	region          string
 	platformDetails string

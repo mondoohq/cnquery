@@ -122,6 +122,9 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 
 	awsAccount := res.(*mqlAwsAccount)
 
+	accountTags := fetchPrimaryAccountTags(awsAccount)
+	primaryAccountId := trimAwsAccountIdToJustId(awsAccount.Id.Data)
+
 	targets := getDiscoveryTargets(conn.Conf)
 	for _, target := range targets {
 		list, err := discover(runtime, awsAccount, target, conn.Filters)
@@ -131,7 +134,28 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 		}
 		in.Spec.Assets = append(in.Spec.Assets, list...)
 	}
+
+	applyAccountTagsToAssets(in.Spec.Assets, accountTags, primaryAccountId)
+
 	return in, nil
+}
+
+// fetchPrimaryAccountTags returns the primary AWS account's tags as a plain
+// string map. Any error reading tags is logged and an empty map is returned so
+// discovery can proceed.
+func fetchPrimaryAccountTags(awsAccount *mqlAwsAccount) map[string]string {
+	t := awsAccount.GetTags()
+	if t == nil {
+		return map[string]string{}
+	}
+	if t.Error != nil {
+		log.Warn().Err(t.Error).Msg("failed to read AWS account tags; proceeding without account-level tag propagation")
+		return map[string]string{}
+	}
+	if t.Data == nil {
+		return map[string]string{}
+	}
+	return mapStringInterfaceToStringString(t.Data)
 }
 
 func getDiscoveryTargets(config *inventory.Config) []string {
