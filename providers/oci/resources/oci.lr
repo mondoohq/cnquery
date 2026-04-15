@@ -866,8 +866,6 @@ private oci.loadBalancer.loadBalancer @defaults("name") {
 
 // Oracle Cloud Infrastructure (OCI) load balancer listener
 private oci.loadBalancer.listener @defaults("name") {
-  // Listener identifier
-  id string
   // Listener name
   name string
   // Listener port
@@ -886,8 +884,6 @@ private oci.loadBalancer.listener @defaults("name") {
 
 // Oracle Cloud Infrastructure (OCI) load balancer backend set
 private oci.loadBalancer.backendSet @defaults("name") {
-  // Backend set identifier (same as name; OCI backend sets have no OCID)
-  id string
   // Backend set name
   name string
   // Load balancing policy (ROUND_ROBIN, LEAST_CONNECTIONS, IP_HASH)

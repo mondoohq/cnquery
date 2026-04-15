@@ -1375,9 +1375,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.loadBalancer.loadBalancer.created": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLoadBalancerLoadBalancer).GetCreated()).ToDataRes(types.Time)
 	},
-	"oci.loadBalancer.listener.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciLoadBalancerListener).GetId()).ToDataRes(types.String)
-	},
 	"oci.loadBalancer.listener.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLoadBalancerListener).GetName()).ToDataRes(types.String)
 	},
@@ -1398,9 +1395,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.loadBalancer.listener.sslVerifyPeerCertificate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLoadBalancerListener).GetSslVerifyPeerCertificate()).ToDataRes(types.Bool)
-	},
-	"oci.loadBalancer.backendSet.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciLoadBalancerBackendSet).GetId()).ToDataRes(types.String)
 	},
 	"oci.loadBalancer.backendSet.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLoadBalancerBackendSet).GetName()).ToDataRes(types.String)
@@ -3096,10 +3090,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciLoadBalancerListener).__id, ok = v.Value.(string)
 		return
 	},
-	"oci.loadBalancer.listener.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciLoadBalancerListener).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"oci.loadBalancer.listener.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciLoadBalancerListener).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3130,10 +3120,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.loadBalancer.backendSet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciLoadBalancerBackendSet).__id, ok = v.Value.(string)
-		return
-	},
-	"oci.loadBalancer.backendSet.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciLoadBalancerBackendSet).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"oci.loadBalancer.backendSet.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7769,7 +7755,6 @@ type mqlOciLoadBalancerListener struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlOciLoadBalancerListenerInternal it will be used here
-	Id                       plugin.TValue[string]
 	Name                     plugin.TValue[string]
 	Port                     plugin.TValue[int64]
 	Protocol                 plugin.TValue[string]
@@ -7816,10 +7801,6 @@ func (c *mqlOciLoadBalancerListener) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlOciLoadBalancerListener) GetId() *plugin.TValue[string] {
-	return &c.Id
-}
-
 func (c *mqlOciLoadBalancerListener) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
@@ -7853,7 +7834,6 @@ type mqlOciLoadBalancerBackendSet struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlOciLoadBalancerBackendSetInternal it will be used here
-	Id            plugin.TValue[string]
 	Name          plugin.TValue[string]
 	Policy        plugin.TValue[string]
 	HealthChecker plugin.TValue[any]
@@ -7895,10 +7875,6 @@ func (c *mqlOciLoadBalancerBackendSet) MqlName() string {
 
 func (c *mqlOciLoadBalancerBackendSet) MqlID() string {
 	return c.__id
-}
-
-func (c *mqlOciLoadBalancerBackendSet) GetId() *plugin.TValue[string] {
-	return &c.Id
 }
 
 func (c *mqlOciLoadBalancerBackendSet) GetName() *plugin.TValue[string] {

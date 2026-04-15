@@ -215,12 +215,10 @@ oci.loadBalancer 13.0.6
 oci.loadBalancer.backendSet 13.0.6
 oci.loadBalancer.backendSet.backendCount 13.0.6
 oci.loadBalancer.backendSet.healthChecker 13.0.6
-oci.loadBalancer.backendSet.id 13.0.6
 oci.loadBalancer.backendSet.name 13.0.6
 oci.loadBalancer.backendSet.policy 13.0.6
 oci.loadBalancer.listener 13.0.6
 oci.loadBalancer.listener.defaultBackendSetName 13.0.6
-oci.loadBalancer.listener.id 13.0.6
 oci.loadBalancer.listener.name 13.0.6
 oci.loadBalancer.listener.port 13.0.6
 oci.loadBalancer.listener.protocol 13.0.6

@@ -145,7 +145,7 @@ func (o *mqlOciLoadBalancerLoadBalancer) listeners() ([]any, error) {
 		lbId := o.Id.Data
 		listenerId := lbId + "/listener/" + name
 		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.loadBalancer.listener", map[string]*llx.RawData{
-			"id":                       llx.StringData(listenerId),
+			"__id":                     llx.StringData(listenerId),
 			"name":                     llx.StringData(name),
 			"port":                     llx.IntDataPtr(listener.Port),
 			"protocol":                 llx.StringDataPtr(listener.Protocol),
@@ -173,7 +173,7 @@ func (o *mqlOciLoadBalancerLoadBalancer) backendSets() ([]any, error) {
 		lbId := o.Id.Data
 		bsId := lbId + "/backendSet/" + name
 		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.loadBalancer.backendSet", map[string]*llx.RawData{
-			"id":            llx.StringData(bsId),
+			"__id":          llx.StringData(bsId),
 			"name":          llx.StringData(name),
 			"policy":        llx.StringDataPtr(bs.Policy),
 			"healthChecker": llx.DictData(healthChecker),
@@ -188,9 +188,9 @@ func (o *mqlOciLoadBalancerLoadBalancer) backendSets() ([]any, error) {
 }
 
 func (o *mqlOciLoadBalancerListener) id() (string, error) {
-	return o.Id.Data, nil
+	return o.__id, nil
 }
 
 func (o *mqlOciLoadBalancerBackendSet) id() (string, error) {
-	return o.Id.Data, nil
+	return o.__id, nil
 }
