@@ -273,6 +273,25 @@ func getPlatformFamily(pf string) []string {
 	return []string{}
 }
 
+// mergeAccountTagsIntoLabels merges account-level tags into an asset's labels.
+// The asset's existing labels always win on key collisions — account tags only
+// fill gaps. A nil labels map is initialized. An empty or nil accountTags map
+// is a no-op.
+func mergeAccountTagsIntoLabels(labels, accountTags map[string]string) map[string]string {
+	if len(accountTags) == 0 {
+		return labels
+	}
+	if labels == nil {
+		labels = map[string]string{}
+	}
+	for k, v := range accountTags {
+		if _, exists := labels[k]; !exists {
+			labels[k] = v
+		}
+	}
+	return labels
+}
+
 type instanceInfo struct {
 	region          string
 	platformDetails string

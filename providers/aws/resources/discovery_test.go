@@ -588,3 +588,50 @@ func TestDiscoveryDefaultBehavior(t *testing.T) {
 			"child should have no targets regardless of parent's explicit targets")
 	})
 }
+
+func TestMergeAccountTagsIntoLabels(t *testing.T) {
+	t.Run("asset label wins on collision", func(t *testing.T) {
+		labels := map[string]string{"Environment": "prod"}
+		accountTags := map[string]string{"Environment": "staging", "Owner": "team-a"}
+
+		got := mergeAccountTagsIntoLabels(labels, accountTags)
+
+		require.Equal(t, "prod", got["Environment"])
+		require.Equal(t, "team-a", got["Owner"])
+	})
+
+	t.Run("nil labels initialized", func(t *testing.T) {
+		accountTags := map[string]string{"Owner": "team-a"}
+
+		got := mergeAccountTagsIntoLabels(nil, accountTags)
+
+		require.Equal(t, map[string]string{"Owner": "team-a"}, got)
+	})
+
+	t.Run("empty account tags is a no-op", func(t *testing.T) {
+		labels := map[string]string{"Environment": "prod"}
+
+		got := mergeAccountTagsIntoLabels(labels, map[string]string{})
+
+		require.Equal(t, map[string]string{"Environment": "prod"}, got)
+	})
+
+	t.Run("nil account tags is a no-op", func(t *testing.T) {
+		labels := map[string]string{"Environment": "prod"}
+
+		got := mergeAccountTagsIntoLabels(labels, nil)
+
+		require.Equal(t, map[string]string{"Environment": "prod"}, got)
+	})
+
+	t.Run("fills gaps without touching existing keys", func(t *testing.T) {
+		labels := map[string]string{"Name": "web-01"}
+		accountTags := map[string]string{"Owner": "team-a", "CostCenter": "cc-42"}
+
+		got := mergeAccountTagsIntoLabels(labels, accountTags)
+
+		require.Equal(t, "web-01", got["Name"])
+		require.Equal(t, "team-a", got["Owner"])
+		require.Equal(t, "cc-42", got["CostCenter"])
+	})
+}
