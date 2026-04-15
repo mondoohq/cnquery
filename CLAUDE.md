@@ -385,6 +385,21 @@ When navigating the codebase, these are the critical types you'll encounter:
 - **`providers.Coordinator`** - Manages provider lifecycle and spawning
 - **`providers.Runtime`** - Active provider management per asset
 
+### LLX Builtin Function Invariants
+When implementing or modifying builtin functions in `llx/` (e.g., array/dict operations):
+- **Never mutate slices or maps obtained from `arg.Value` or `bind.Value`.** These reference shared runtime data — the runtime caches resolved values and may return the same `RawData` pointer to multiple callers. Mutating them corrupts the original value for any subsequent use. Always copy before modifying:
+  ```go
+  // WRONG: mutates the argument's backing array in-place
+  filters := arg.Value.([]any)
+  filters = append(filters[0:j], filters[j+1:]...)  // destroys arg.Value for future callers
+
+  // CORRECT: copy first, then mutate the copy
+  argFilters := arg.Value.([]any)
+  filters := make([]any, len(argFilters))
+  copy(filters, argFilters)
+  filters = append(filters[0:j], filters[j+1:]...)  // safe — original untouched
+  ```
+
 ## 6. Development Workflow Patterns
 
 The primary workflow for provider changes is the "Local Provider Debugging" pattern in Section 4. For resource-only changes, follow Steps 1-4 in Section 2.
