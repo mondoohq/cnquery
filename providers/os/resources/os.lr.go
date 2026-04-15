@@ -271,6 +271,10 @@ const (
 	ResourceCursorMcpServer              string = "cursor.mcpServer"
 	ResourceCursorRule                   string = "cursor.rule"
 	ResourceCursorSkill                  string = "cursor.skill"
+	ResourceGithubCopilot                string = "github.copilot"
+	ResourceGithubCopilotAccount         string = "github.copilot.account"
+	ResourceGithubCopilotMcpServer       string = "github.copilot.mcpServer"
+	ResourceGithubCopilotSkill           string = "github.copilot.skill"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -1296,6 +1300,22 @@ func init() {
 		"cursor.skill": {
 			// to override args, implement: initCursorSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createCursorSkill,
+		},
+		"github.copilot": {
+			Init:   initGithubCopilot,
+			Create: createGithubCopilot,
+		},
+		"github.copilot.account": {
+			// to override args, implement: initGithubCopilotAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGithubCopilotAccount,
+		},
+		"github.copilot.mcpServer": {
+			// to override args, implement: initGithubCopilotMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGithubCopilotMcpServer,
+		},
+		"github.copilot.skill": {
+			// to override args, implement: initGithubCopilotSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGithubCopilotSkill,
 		},
 	}
 }
@@ -5543,6 +5563,57 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"cursor.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCursorSkill).GetSha256()).ToDataRes(types.String)
+	},
+	"github.copilot.configPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilot).GetConfigPath()).ToDataRes(types.String)
+	},
+	"github.copilot.accounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilot).GetAccounts()).ToDataRes(types.Array(types.Resource("github.copilot.account")))
+	},
+	"github.copilot.mcpServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilot).GetMcpServers()).ToDataRes(types.Array(types.Resource("github.copilot.mcpServer")))
+	},
+	"github.copilot.skills": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilot).GetSkills()).ToDataRes(types.Array(types.Resource("github.copilot.skill")))
+	},
+	"github.copilot.account.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilotAccount).GetUser()).ToDataRes(types.String)
+	},
+	"github.copilot.account.githubAppId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilotAccount).GetGithubAppId()).ToDataRes(types.String)
+	},
+	"github.copilot.mcpServer.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilotMcpServer).GetName()).ToDataRes(types.String)
+	},
+	"github.copilot.mcpServer.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilotMcpServer).GetType()).ToDataRes(types.String)
+	},
+	"github.copilot.mcpServer.command": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilotMcpServer).GetCommand()).ToDataRes(types.String)
+	},
+	"github.copilot.mcpServer.args": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilotMcpServer).GetArgs()).ToDataRes(types.Array(types.String))
+	},
+	"github.copilot.skill.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilotSkill).GetName()).ToDataRes(types.String)
+	},
+	"github.copilot.skill.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilotSkill).GetDescription()).ToDataRes(types.String)
+	},
+	"github.copilot.skill.allowedTools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilotSkill).GetAllowedTools()).ToDataRes(types.Array(types.String))
+	},
+	"github.copilot.skill.argumentHint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilotSkill).GetArgumentHint()).ToDataRes(types.String)
+	},
+	"github.copilot.skill.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilotSkill).GetSource()).ToDataRes(types.String)
+	},
+	"github.copilot.skill.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilotSkill).GetContent()).ToDataRes(types.String)
+	},
+	"github.copilot.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilotSkill).GetSha256()).ToDataRes(types.String)
 	},
 }
 
@@ -12142,6 +12213,90 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"cursor.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCursorSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.copilot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilot).__id, ok = v.Value.(string)
+		return
+	},
+	"github.copilot.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilot).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.copilot.accounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilot).Accounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"github.copilot.mcpServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilot).McpServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"github.copilot.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilot).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"github.copilot.account.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotAccount).__id, ok = v.Value.(string)
+		return
+	},
+	"github.copilot.account.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotAccount).User, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.copilot.account.githubAppId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotAccount).GithubAppId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.copilot.mcpServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotMcpServer).__id, ok = v.Value.(string)
+		return
+	},
+	"github.copilot.mcpServer.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotMcpServer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.copilot.mcpServer.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotMcpServer).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.copilot.mcpServer.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotMcpServer).Command, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.copilot.mcpServer.args": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotMcpServer).Args, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"github.copilot.skill.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotSkill).__id, ok = v.Value.(string)
+		return
+	},
+	"github.copilot.skill.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotSkill).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.copilot.skill.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotSkill).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.copilot.skill.allowedTools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotSkill).AllowedTools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"github.copilot.skill.argumentHint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotSkill).ArgumentHint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.copilot.skill.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotSkill).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.copilot.skill.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotSkill).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.copilot.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -33640,6 +33795,305 @@ func (c *mqlCursorSkill) GetContent() *plugin.TValue[string] {
 }
 
 func (c *mqlCursorSkill) GetSha256() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
+		return c.sha256()
+	})
+}
+
+// mqlGithubCopilot for the github.copilot resource
+type mqlGithubCopilot struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGithubCopilotInternal it will be used here
+	ConfigPath plugin.TValue[string]
+	Accounts   plugin.TValue[[]any]
+	McpServers plugin.TValue[[]any]
+	Skills     plugin.TValue[[]any]
+}
+
+// createGithubCopilot creates a new instance of this resource
+func createGithubCopilot(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGithubCopilot{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("github.copilot", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGithubCopilot) MqlName() string {
+	return "github.copilot"
+}
+
+func (c *mqlGithubCopilot) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGithubCopilot) GetConfigPath() *plugin.TValue[string] {
+	return &c.ConfigPath
+}
+
+func (c *mqlGithubCopilot) GetAccounts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Accounts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.copilot", c.__id, "accounts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.accounts()
+	})
+}
+
+func (c *mqlGithubCopilot) GetMcpServers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.McpServers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.copilot", c.__id, "mcpServers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mcpServers()
+	})
+}
+
+func (c *mqlGithubCopilot) GetSkills() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Skills, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.copilot", c.__id, "skills")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.skills()
+	})
+}
+
+// mqlGithubCopilotAccount for the github.copilot.account resource
+type mqlGithubCopilotAccount struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGithubCopilotAccountInternal it will be used here
+	User        plugin.TValue[string]
+	GithubAppId plugin.TValue[string]
+}
+
+// createGithubCopilotAccount creates a new instance of this resource
+func createGithubCopilotAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGithubCopilotAccount{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("github.copilot.account", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGithubCopilotAccount) MqlName() string {
+	return "github.copilot.account"
+}
+
+func (c *mqlGithubCopilotAccount) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGithubCopilotAccount) GetUser() *plugin.TValue[string] {
+	return &c.User
+}
+
+func (c *mqlGithubCopilotAccount) GetGithubAppId() *plugin.TValue[string] {
+	return &c.GithubAppId
+}
+
+// mqlGithubCopilotMcpServer for the github.copilot.mcpServer resource
+type mqlGithubCopilotMcpServer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGithubCopilotMcpServerInternal it will be used here
+	Name    plugin.TValue[string]
+	Type    plugin.TValue[string]
+	Command plugin.TValue[string]
+	Args    plugin.TValue[[]any]
+}
+
+// createGithubCopilotMcpServer creates a new instance of this resource
+func createGithubCopilotMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGithubCopilotMcpServer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("github.copilot.mcpServer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGithubCopilotMcpServer) MqlName() string {
+	return "github.copilot.mcpServer"
+}
+
+func (c *mqlGithubCopilotMcpServer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGithubCopilotMcpServer) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGithubCopilotMcpServer) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlGithubCopilotMcpServer) GetCommand() *plugin.TValue[string] {
+	return &c.Command
+}
+
+func (c *mqlGithubCopilotMcpServer) GetArgs() *plugin.TValue[[]any] {
+	return &c.Args
+}
+
+// mqlGithubCopilotSkill for the github.copilot.skill resource
+type mqlGithubCopilotSkill struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGithubCopilotSkillInternal it will be used here
+	Name         plugin.TValue[string]
+	Description  plugin.TValue[string]
+	AllowedTools plugin.TValue[[]any]
+	ArgumentHint plugin.TValue[string]
+	Source       plugin.TValue[string]
+	Content      plugin.TValue[string]
+	Sha256       plugin.TValue[string]
+}
+
+// createGithubCopilotSkill creates a new instance of this resource
+func createGithubCopilotSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGithubCopilotSkill{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("github.copilot.skill", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGithubCopilotSkill) MqlName() string {
+	return "github.copilot.skill"
+}
+
+func (c *mqlGithubCopilotSkill) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGithubCopilotSkill) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGithubCopilotSkill) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGithubCopilotSkill) GetAllowedTools() *plugin.TValue[[]any] {
+	return &c.AllowedTools
+}
+
+func (c *mqlGithubCopilotSkill) GetArgumentHint() *plugin.TValue[string] {
+	return &c.ArgumentHint
+}
+
+func (c *mqlGithubCopilotSkill) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlGithubCopilotSkill) GetContent() *plugin.TValue[string] {
+	return &c.Content
+}
+
+func (c *mqlGithubCopilotSkill) GetSha256() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
 		return c.sha256()
 	})
