@@ -3718,3 +3718,38 @@ private openai.codex.connector @defaults("name") @maturity("preview") {
   // Plugin that provides this connector
   plugin string
 }
+
+// Cursor editor instance configuration
+cursor @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Cursor configuration directory
+  configPath string
+  // MCP servers
+  mcpServers() []cursor.mcpServer
+  // Cursor rules (global and project-scoped)
+  rules() []cursor.rule
+}
+
+// Cursor MCP server configuration
+private cursor.mcpServer @defaults("name") @maturity("preview") {
+  // Server name
+  name string
+  // Server command (for stdio type)
+  command string
+  // Server URL (for sse/streamable-http type)
+  url string
+  // Server arguments
+  args []string
+  // Whether environment variables are configured
+  hasEnv bool
+}
+
+// Cursor rule file
+private cursor.rule @defaults("name") @maturity("preview") {
+  // Rule name (derived from filename)
+  name string
+  // Full content of the rule file
+  content string
+  // Source path of the rule file
+  source string
+}

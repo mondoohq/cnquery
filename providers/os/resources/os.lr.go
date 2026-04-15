@@ -259,6 +259,9 @@ const (
 	ResourceOpenaiCodexSkill             string = "openai.codex.skill"
 	ResourceOpenaiCodexMcpServer         string = "openai.codex.mcpServer"
 	ResourceOpenaiCodexConnector         string = "openai.codex.connector"
+	ResourceCursor                       string = "cursor"
+	ResourceCursorMcpServer              string = "cursor.mcpServer"
+	ResourceCursorRule                   string = "cursor.rule"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -1236,6 +1239,18 @@ func init() {
 		"openai.codex.connector": {
 			// to override args, implement: initOpenaiCodexConnector(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOpenaiCodexConnector,
+		},
+		"cursor": {
+			Init:   initCursor,
+			Create: createCursor,
+		},
+		"cursor.mcpServer": {
+			// to override args, implement: initCursorMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCursorMcpServer,
+		},
+		"cursor.rule": {
+			// to override args, implement: initCursorRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCursorRule,
 		},
 	}
 }
@@ -5270,6 +5285,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"openai.codex.connector.plugin": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenaiCodexConnector).GetPlugin()).ToDataRes(types.String)
+	},
+	"cursor.configPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCursor).GetConfigPath()).ToDataRes(types.String)
+	},
+	"cursor.mcpServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCursor).GetMcpServers()).ToDataRes(types.Array(types.Resource("cursor.mcpServer")))
+	},
+	"cursor.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCursor).GetRules()).ToDataRes(types.Array(types.Resource("cursor.rule")))
+	},
+	"cursor.mcpServer.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCursorMcpServer).GetName()).ToDataRes(types.String)
+	},
+	"cursor.mcpServer.command": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCursorMcpServer).GetCommand()).ToDataRes(types.String)
+	},
+	"cursor.mcpServer.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCursorMcpServer).GetUrl()).ToDataRes(types.String)
+	},
+	"cursor.mcpServer.args": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCursorMcpServer).GetArgs()).ToDataRes(types.Array(types.String))
+	},
+	"cursor.mcpServer.hasEnv": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCursorMcpServer).GetHasEnv()).ToDataRes(types.Bool)
+	},
+	"cursor.rule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCursorRule).GetName()).ToDataRes(types.String)
+	},
+	"cursor.rule.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCursorRule).GetContent()).ToDataRes(types.String)
+	},
+	"cursor.rule.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCursorRule).GetSource()).ToDataRes(types.String)
 	},
 }
 
@@ -11537,6 +11585,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openai.codex.connector.plugin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenaiCodexConnector).Plugin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cursor.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCursor).__id, ok = v.Value.(string)
+		return
+	},
+	"cursor.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCursor).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cursor.mcpServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCursor).McpServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cursor.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCursor).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cursor.mcpServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCursorMcpServer).__id, ok = v.Value.(string)
+		return
+	},
+	"cursor.mcpServer.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCursorMcpServer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cursor.mcpServer.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCursorMcpServer).Command, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cursor.mcpServer.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCursorMcpServer).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cursor.mcpServer.args": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCursorMcpServer).Args, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cursor.mcpServer.hasEnv": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCursorMcpServer).HasEnv, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cursor.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCursorRule).__id, ok = v.Value.(string)
+		return
+	},
+	"cursor.rule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCursorRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cursor.rule.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCursorRule).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cursor.rule.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCursorRule).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -32065,4 +32169,215 @@ func (c *mqlOpenaiCodexConnector) GetId() *plugin.TValue[string] {
 
 func (c *mqlOpenaiCodexConnector) GetPlugin() *plugin.TValue[string] {
 	return &c.Plugin
+}
+
+// mqlCursor for the cursor resource
+type mqlCursor struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCursorInternal it will be used here
+	ConfigPath plugin.TValue[string]
+	McpServers plugin.TValue[[]any]
+	Rules      plugin.TValue[[]any]
+}
+
+// createCursor creates a new instance of this resource
+func createCursor(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCursor{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cursor", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCursor) MqlName() string {
+	return "cursor"
+}
+
+func (c *mqlCursor) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCursor) GetConfigPath() *plugin.TValue[string] {
+	return &c.ConfigPath
+}
+
+func (c *mqlCursor) GetMcpServers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.McpServers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cursor", c.__id, "mcpServers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mcpServers()
+	})
+}
+
+func (c *mqlCursor) GetRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cursor", c.__id, "rules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rules()
+	})
+}
+
+// mqlCursorMcpServer for the cursor.mcpServer resource
+type mqlCursorMcpServer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCursorMcpServerInternal it will be used here
+	Name    plugin.TValue[string]
+	Command plugin.TValue[string]
+	Url     plugin.TValue[string]
+	Args    plugin.TValue[[]any]
+	HasEnv  plugin.TValue[bool]
+}
+
+// createCursorMcpServer creates a new instance of this resource
+func createCursorMcpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCursorMcpServer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cursor.mcpServer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCursorMcpServer) MqlName() string {
+	return "cursor.mcpServer"
+}
+
+func (c *mqlCursorMcpServer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCursorMcpServer) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlCursorMcpServer) GetCommand() *plugin.TValue[string] {
+	return &c.Command
+}
+
+func (c *mqlCursorMcpServer) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlCursorMcpServer) GetArgs() *plugin.TValue[[]any] {
+	return &c.Args
+}
+
+func (c *mqlCursorMcpServer) GetHasEnv() *plugin.TValue[bool] {
+	return &c.HasEnv
+}
+
+// mqlCursorRule for the cursor.rule resource
+type mqlCursorRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCursorRuleInternal it will be used here
+	Name    plugin.TValue[string]
+	Content plugin.TValue[string]
+	Source  plugin.TValue[string]
+}
+
+// createCursorRule creates a new instance of this resource
+func createCursorRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCursorRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cursor.rule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCursorRule) MqlName() string {
+	return "cursor.rule"
+}
+
+func (c *mqlCursorRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCursorRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlCursorRule) GetContent() *plugin.TValue[string] {
+	return &c.Content
+}
+
+func (c *mqlCursorRule) GetSource() *plugin.TValue[string] {
+	return &c.Source
 }
