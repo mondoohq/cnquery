@@ -114,6 +114,8 @@ func parseFlagsToFiltersOpts(m map[string]*llx.Primitive) map[string]string {
 			"ecs:only-running-containers",
 			"ecs:discover-instances",
 			"ecs:discover-images",
+			// account-level filters
+			"propagate-account-tags",
 		}
 		for k, v := range x.Map {
 			for _, prefix := range knownTagPrefixes {

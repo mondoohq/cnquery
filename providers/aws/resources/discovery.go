@@ -122,9 +122,6 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 
 	awsAccount := res.(*mqlAwsAccount)
 
-	accountTags := fetchPrimaryAccountTags(awsAccount)
-	primaryAccountId := trimAwsAccountIdToJustId(awsAccount.Id.Data)
-
 	targets := getDiscoveryTargets(conn.Conf)
 	for _, target := range targets {
 		list, err := discover(runtime, awsAccount, target, conn.Filters)
@@ -135,7 +132,11 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 		in.Spec.Assets = append(in.Spec.Assets, list...)
 	}
 
-	applyAccountTagsToAssets(in.Spec.Assets, accountTags, primaryAccountId)
+	if conn.Filters.PropagateAccountTags {
+		accountTags := fetchPrimaryAccountTags(awsAccount)
+		primaryAccountId := trimAwsAccountIdToJustId(awsAccount.Id.Data)
+		applyAccountTagsToAssets(in.Spec.Assets, accountTags, primaryAccountId)
+	}
 
 	return in, nil
 }

@@ -251,6 +251,8 @@ func TestDiscoveryFiltersFromOpts(t *testing.T) {
 			"ecs:only-running-containers": "true",
 			"ecs:discover-images":         "T",
 			"ecs:discover-instances":      "false",
+			// Account-level filters
+			"propagate-account-tags": "true",
 		}
 		expected := DiscoveryFilters{
 			General: GeneralDiscoveryFilters{
@@ -278,6 +280,7 @@ func TestDiscoveryFiltersFromOpts(t *testing.T) {
 				Tags:        []string{"tag1", "tag2"},
 				ExcludeTags: []string{"tag1", "tag2"},
 			},
+			PropagateAccountTags: true,
 		}
 
 		actual := DiscoveryFiltersFromOpts(opts)

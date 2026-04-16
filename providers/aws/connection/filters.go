@@ -14,10 +14,11 @@ import (
 )
 
 type DiscoveryFilters struct {
-	Ec2     Ec2DiscoveryFilters
-	Ecr     EcrDiscoveryFilters
-	Ecs     EcsDiscoveryFilters
-	General GeneralDiscoveryFilters
+	Ec2                  Ec2DiscoveryFilters
+	Ecr                  EcrDiscoveryFilters
+	Ecs                  EcsDiscoveryFilters
+	General              GeneralDiscoveryFilters
+	PropagateAccountTags bool
 }
 
 func DiscoveryFiltersFromOpts(opts map[string]string) DiscoveryFilters {
@@ -41,6 +42,7 @@ func DiscoveryFiltersFromOpts(opts map[string]string) DiscoveryFilters {
 			DiscoverInstances:     parseBoolOpt(opts, "ecs:discover-instances", false),
 			DiscoverImages:        parseBoolOpt(opts, "ecs:discover-images", false),
 		},
+		PropagateAccountTags: parseBoolOpt(opts, "propagate-account-tags", false),
 	}
 
 	// TODO: backward compatibility, remove in future versions
