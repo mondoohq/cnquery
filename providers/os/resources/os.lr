@@ -2950,7 +2950,7 @@ private firefox.addon @defaults("name version active browser") {
   installDate int
   // Last update date as Unix timestamp (milliseconds)
   updateDate int
-  // Whether auto-updates are enabled for this addon
+  // Whether auto-updates are enabled for this addon (true when set to "on" or "use global default")
   autoupdate bool
   // Whether this is a native WebExtension (no special loader)
   native bool

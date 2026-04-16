@@ -177,7 +177,8 @@ func (f *mqlFirefox) addons() ([]any, error) {
 			continue
 		}
 
-		uid := int64(0)
+		// Default to -1 to avoid false association with root (uid 0)
+		uid := int64(-1)
 		if uidVal := user.GetUid(); uidVal.Error == nil {
 			uid = uidVal.Data
 		}
@@ -267,7 +268,11 @@ func (f *mqlFirefox) addons() ([]any, error) {
 
 					// Derived fields
 					disabled := addon.UserDisabled || addon.AppDisabled
+					// applyBackgroundUpdates: 0=off, 1=on, 2=use global default.
+					// We treat both 1 and 2 as true since the global default is typically on.
 					autoupdate := addon.ApplyBackgroundUpdates != 0
+					// Native WebExtensions have no special loader (loader is nil).
+					// Legacy/XUL addons or system addons use a non-nil loader string.
 					native := addon.Loader == nil && addon.Type == "extension"
 
 					// Merge permissions and origins
