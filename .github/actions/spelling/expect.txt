@@ -398,6 +398,7 @@ vulnmgmt
 vztmpl
 webide
 WEBSERVERS
+Webstore
 wil
 workdir
 WORKSPACESUSER
