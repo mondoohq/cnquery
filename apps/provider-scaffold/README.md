@@ -18,7 +18,7 @@ cd providers/$PROVIDER && go mod tidy && cd ../..
 $EDITOR providers/$PROVIDER/resources/$PROVIDER.lr
 
 # Generate resource code
-make providers/lr && ./lr generate providers/$PROVIDER/resources/$PROVIDER.lr --dist providers/$PROVIDER/resources
+make providers/mqlr && ./mqlr generate providers/$PROVIDER/resources/$PROVIDER.lr --dist providers/$PROVIDER/resources
 
 # Build and install
 make providers/build/$PROVIDER && make providers/install/$PROVIDER

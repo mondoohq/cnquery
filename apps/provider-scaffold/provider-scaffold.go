@@ -4,14 +4,12 @@
 package main
 
 import (
-	"bufio"
 	"embed"
 	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"slices"
-	"sort"
 	"strings"
 	"text/template"
 	"unicode"
@@ -100,7 +98,7 @@ func main() {
 	fmt.Printf("  cd %s && go mod tidy\n", *dir)
 	fmt.Printf("  # Edit resources/%s.lr to define your resources\n", *providerID)
 	fmt.Println("  # Generate resource code:")
-	fmt.Printf("  make providers/lr && ./lr generate %s/resources/%s.lr --dist %s/resources\n", *dir, *providerID, *dir)
+	fmt.Printf("  make providers/mqlr && ./mqlr generate %s/resources/%s.lr --dist %s/resources\n", *dir, *providerID, *dir)
 	fmt.Println("  # Build and install:")
 	fmt.Printf("  make providers/build/%s && make providers/install/%s\n", *providerID, *providerID)
 	fmt.Println("  # Test:")
@@ -225,8 +223,15 @@ func registerInMakefile(providerID string) error {
 		return nil
 	}
 
-	providers = append(providers, providerID)
-	sort.Strings(providers)
+	// Insert at sorted position, preserving existing order for other entries.
+	insertIdx := len(providers)
+	for i, p := range providers {
+		if providerID < p {
+			insertIdx = i
+			break
+		}
+	}
+	providers = slices.Insert(providers, insertIdx, providerID)
 
 	// Rebuild the PROVIDERS block.
 	var newBlock []string
@@ -267,9 +272,6 @@ func registerInDevelopmentMd(providerID string) error {
 
 	// Find the go.work use block and insert alphabetically.
 	lines := strings.Split(string(content), "\n")
-	scanner := bufio.NewScanner(strings.NewReader(string(content)))
-	_ = scanner
-
 	inserted := false
 	var result []string
 	inUseBlock := false
