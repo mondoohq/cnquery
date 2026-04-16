@@ -385,3 +385,91 @@ func (o *mqlOciObjectStorageBucket) definedTags() (map[string]interface{}, error
 	}
 	return tags, nil
 }
+
+func (o *mqlOciObjectStorageBucket) retentionRules() ([]any, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+
+	region := o.GetRegion()
+	if region.Error != nil {
+		return nil, region.Error
+	}
+
+	client, err := conn.ObjectStorageClient(region.Data.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	namespace := o.GetNamespace()
+	if namespace.Error != nil {
+		return nil, namespace.Error
+	}
+
+	name := o.GetName()
+	if name.Error != nil {
+		return nil, name.Error
+	}
+
+	ctx := context.Background()
+	var rules []objectstorage.RetentionRuleSummary
+	var page *string
+	for {
+		response, err := client.ListRetentionRules(ctx, objectstorage.ListRetentionRulesRequest{
+			NamespaceName: common.String(namespace.Data),
+			BucketName:    common.String(name.Data),
+			Page:          page,
+		})
+		if err != nil {
+			return nil, err
+		}
+		rules = append(rules, response.Items...)
+		if response.OpcNextPage == nil {
+			break
+		}
+		page = response.OpcNextPage
+	}
+
+	res := make([]any, 0, len(rules))
+	for i := range rules {
+		r := rules[i]
+
+		var created *time.Time
+		if r.TimeCreated != nil {
+			created = &r.TimeCreated.Time
+		}
+		var timeModified *time.Time
+		if r.TimeModified != nil {
+			timeModified = &r.TimeModified.Time
+		}
+		var timeRuleLocked *time.Time
+		if r.TimeRuleLocked != nil {
+			timeRuleLocked = &r.TimeRuleLocked.Time
+		}
+
+		var durationAmount int64
+		var durationTimeUnit string
+		if r.Duration != nil {
+			durationAmount = int64Value(r.Duration.TimeAmount)
+			durationTimeUnit = string(r.Duration.TimeUnit)
+		}
+
+		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.objectStorage.retentionRule", map[string]*llx.RawData{
+			"id":               llx.StringDataPtr(r.Id),
+			"name":             llx.StringDataPtr(r.DisplayName),
+			"durationAmount":   llx.IntData(durationAmount),
+			"durationTimeUnit": llx.StringData(durationTimeUnit),
+			"timeRuleLocked":   llx.TimeDataPtr(timeRuleLocked),
+			"created":          llx.TimeDataPtr(created),
+			"timeModified":     llx.TimeDataPtr(timeModified),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlInstance)
+	}
+
+	return res, nil
+}
+
+func (o *mqlOciObjectStorageRetentionRule) id() (string, error) {
+	return "oci.objectStorage.retentionRule/" + o.Id.Data, nil
+}

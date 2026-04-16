@@ -13,6 +13,7 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/containerengine"
 	"github.com/oracle/oci-go-sdk/v65/core"
+	"github.com/oracle/oci-go-sdk/v65/database"
 	"github.com/oracle/oci-go-sdk/v65/events"
 	"github.com/oracle/oci-go-sdk/v65/filestorage"
 	"github.com/oracle/oci-go-sdk/v65/identity"
@@ -24,6 +25,7 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/objectstorage"
 	"github.com/oracle/oci-go-sdk/v65/ons"
 	"github.com/oracle/oci-go-sdk/v65/vault"
+	"github.com/oracle/oci-go-sdk/v65/waf"
 )
 
 func (c *OciConnection) IdentityClient() (identity.IdentityClient, error) {
@@ -292,6 +294,24 @@ func (c *OciConnection) NetworkFirewallClient(region string) (*networkfirewall.N
 
 func (c *OciConnection) ContainerEngineClient(region string) (*containerengine.ContainerEngineClient, error) {
 	client, err := containerengine.NewContainerEngineClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) WafClient(region string) (*waf.WafClient, error) {
+	client, err := waf.NewWafClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) DatabaseClient(region string) (*database.DatabaseClient, error) {
+	client, err := database.NewDatabaseClientWithConfigurationProvider(c.config)
 	if err != nil {
 		return nil, err
 	}

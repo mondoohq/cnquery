@@ -209,7 +209,9 @@ func (o *mqlOciKmsVault) keys() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlInstance)
+		mqlKey := mqlInstance.(*mqlOciKmsKey)
+		mqlKey.cacheManagementEndpoint = managementEndpoint
+		res = append(res, mqlKey)
 	}
 
 	return res, nil
@@ -278,6 +280,79 @@ func initOciKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 	return nil, nil, errors.New("oci.kms.key not found: " + idVal)
 }
 
+type mqlOciKmsKeyInternal struct {
+	cacheManagementEndpoint string
+}
+
 func (o *mqlOciKmsKey) id() (string, error) {
 	return "oci.kms.key/" + o.Id.Data, nil
+}
+
+func (o *mqlOciKmsKey) keyVersions() ([]any, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+	ctx := context.Background()
+
+	if o.cacheManagementEndpoint == "" {
+		return []any{}, nil
+	}
+
+	svc, err := conn.KmsManagementClient(o.cacheManagementEndpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	versions := []keymanagement.KeyVersionSummary{}
+	var page *string
+	for {
+		response, err := svc.ListKeyVersions(ctx, keymanagement.ListKeyVersionsRequest{
+			KeyId: common.String(o.Id.Data),
+			Page:  page,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		versions = append(versions, response.Items...)
+
+		if response.OpcNextPage == nil {
+			break
+		}
+		page = response.OpcNextPage
+	}
+
+	res := make([]any, 0, len(versions))
+	for i := range versions {
+		v := versions[i]
+
+		var created *time.Time
+		if v.TimeCreated != nil {
+			created = &v.TimeCreated.Time
+		}
+		var timeOfDeletion *time.Time
+		if v.TimeOfDeletion != nil {
+			timeOfDeletion = &v.TimeOfDeletion.Time
+		}
+
+		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.kms.keyVersion", map[string]*llx.RawData{
+			"id":             llx.StringDataPtr(v.Id),
+			"keyId":          llx.StringDataPtr(v.KeyId),
+			"vaultId":        llx.StringDataPtr(v.VaultId),
+			"compartmentID":  llx.StringDataPtr(v.CompartmentId),
+			"origin":         llx.StringData(string(v.Origin)),
+			"state":          llx.StringData(string(v.LifecycleState)),
+			"isAutoRotated":  llx.BoolDataPtr(v.IsAutoRotated),
+			"created":        llx.TimeDataPtr(created),
+			"timeOfDeletion": llx.TimeDataPtr(timeOfDeletion),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlInstance)
+	}
+
+	return res, nil
+}
+
+func (o *mqlOciKmsKeyVersion) id() (string, error) {
+	return "oci.kms.keyVersion/" + o.Id.Data, nil
 }

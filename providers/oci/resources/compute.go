@@ -189,7 +189,9 @@ func (o *mqlOciCompute) getComputeInstances(conn *connection.OciConnection, regi
 				if err != nil {
 					return nil, err
 				}
-				res = append(res, mqlInstance)
+				mqlInst := mqlInstance.(*mqlOciComputeInstance)
+				mqlInst.cacheRegion = regionResource.Id.Data
+				res = append(res, mqlInst)
 			}
 
 			return jobpool.JobResult(res), nil
@@ -199,8 +201,125 @@ func (o *mqlOciCompute) getComputeInstances(conn *connection.OciConnection, regi
 	return tasks
 }
 
+type mqlOciComputeInstanceInternal struct {
+	cacheRegion string
+}
+
 func (o *mqlOciComputeInstance) id() (string, error) {
 	return "oci.compute.instance/" + o.Id.Data, nil
+}
+
+func (o *mqlOciComputeInstance) vnics() ([]any, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+	ctx := context.Background()
+
+	computeSvc, err := conn.ComputeClient(o.cacheRegion)
+	if err != nil {
+		return nil, err
+	}
+
+	networkSvc, err := conn.NetworkClient(o.cacheRegion)
+	if err != nil {
+		return nil, err
+	}
+
+	// List VNIC attachments for this instance
+	var attachments []core.VnicAttachment
+	var page *string
+	for {
+		response, err := computeSvc.ListVnicAttachments(ctx, core.ListVnicAttachmentsRequest{
+			CompartmentId: common.String(conn.TenantID()),
+			InstanceId:    common.String(o.Id.Data),
+			Page:          page,
+		})
+		if err != nil {
+			return nil, err
+		}
+		attachments = append(attachments, response.Items...)
+		if response.OpcNextPage == nil {
+			break
+		}
+		page = response.OpcNextPage
+	}
+
+	res := make([]any, 0, len(attachments))
+	for i := range attachments {
+		att := attachments[i]
+		if att.VnicId == nil || att.LifecycleState != core.VnicAttachmentLifecycleStateAttached {
+			continue
+		}
+
+		vnicResp, err := networkSvc.GetVnic(ctx, core.GetVnicRequest{
+			VnicId: att.VnicId,
+		})
+		if err != nil {
+			log.Debug().Err(err).Msgf("failed to get VNIC %s", *att.VnicId)
+			continue
+		}
+		vnic := vnicResp.Vnic
+
+		var created *time.Time
+		if vnic.TimeCreated != nil {
+			created = &vnic.TimeCreated.Time
+		}
+
+		freeformTags := make(map[string]interface{}, len(vnic.FreeformTags))
+		for k, v := range vnic.FreeformTags {
+			freeformTags[k] = v
+		}
+
+		definedTags := make(map[string]interface{}, len(vnic.DefinedTags))
+		for k, v := range vnic.DefinedTags {
+			definedTags[k] = v
+		}
+
+		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.compute.vnic", map[string]*llx.RawData{
+			"id":                  llx.StringDataPtr(vnic.Id),
+			"name":                llx.StringDataPtr(vnic.DisplayName),
+			"compartmentID":       llx.StringDataPtr(vnic.CompartmentId),
+			"isPrimary":           llx.BoolDataPtr(vnic.IsPrimary),
+			"privateIp":           llx.StringDataPtr(vnic.PrivateIp),
+			"publicIp":            llx.StringDataPtr(vnic.PublicIp),
+			"macAddress":          llx.StringDataPtr(vnic.MacAddress),
+			"hostnameLabel":       llx.StringDataPtr(vnic.HostnameLabel),
+			"nsgIds":              llx.ArrayData(convert.SliceAnyToInterface(vnic.NsgIds), types.String),
+			"skipSourceDestCheck": llx.BoolDataPtr(vnic.SkipSourceDestCheck),
+			"state":               llx.StringData(string(vnic.LifecycleState)),
+			"created":             llx.TimeDataPtr(created),
+			"freeformTags":        llx.MapData(freeformTags, types.String),
+			"definedTags":         llx.MapData(definedTags, types.Any),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlVnic := mqlInstance.(*mqlOciComputeVnic)
+		mqlVnic.cacheSubnetId = stringValue(vnic.SubnetId)
+		res = append(res, mqlVnic)
+	}
+
+	return res, nil
+}
+
+type mqlOciComputeVnicInternal struct {
+	cacheSubnetId string
+}
+
+func (o *mqlOciComputeVnic) id() (string, error) {
+	return "oci.compute.vnic/" + o.Id.Data, nil
+}
+
+func (o *mqlOciComputeVnic) subnet() (*mqlOciNetworkSubnet, error) {
+	if o.cacheSubnetId == "" {
+		o.Subnet.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	mqlSubnet, err := NewResource(o.MqlRuntime, "oci.network.subnet", map[string]*llx.RawData{
+		"id": llx.StringData(o.cacheSubnetId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return mqlSubnet.(*mqlOciNetworkSubnet), nil
 }
 
 func (o *mqlOciCompute) images() ([]any, error) {

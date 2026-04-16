@@ -485,6 +485,7 @@ func (o *mqlOciNetwork) getSubnets(conn *connection.OciConnection, regions []any
 				}
 				mqlSub := mqlInstance.(*mqlOciNetworkSubnet)
 				mqlSub.cacheVcnId = stringValue(subnet.VcnId)
+				mqlSub.cacheRouteTableId = stringValue(subnet.RouteTableId)
 				res = append(res, mqlSub)
 			}
 
@@ -496,7 +497,8 @@ func (o *mqlOciNetwork) getSubnets(conn *connection.OciConnection, regions []any
 }
 
 type mqlOciNetworkSubnetInternal struct {
-	cacheVcnId string
+	cacheVcnId        string
+	cacheRouteTableId string
 }
 
 func initOciNetworkSubnet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -812,4 +814,472 @@ func (o *mqlOciNetworkNetworkSecurityGroup) egressSecurityRules() ([]any, error)
 		return nil, err
 	}
 	return o.EgressSecurityRules.Data, nil
+}
+
+// Internet Gateways
+
+func (o *mqlOciNetwork) internetGateways() ([]any, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+
+	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
+	if err != nil {
+		return nil, err
+	}
+	oci := ociResource.(*mqlOci)
+	list := oci.GetRegions()
+	if list.Error != nil {
+		return nil, list.Error
+	}
+
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(o.getInternetGateways(conn, list.Data), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+	}
+
+	return res, nil
+}
+
+func (o *mqlOciNetwork) getInternetGateways(conn *connection.OciConnection, regions []any) []*jobpool.Job {
+	ctx := context.Background()
+	tasks := make([]*jobpool.Job, 0)
+	for _, region := range regions {
+		regionResource, ok := region.(*mqlOciRegion)
+		if !ok {
+			return jobErr(errors.New("invalid region type"))
+		}
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("calling oci internet gateways with region %s", regionResource.Id.Data)
+
+			svc, err := conn.NetworkClient(regionResource.Id.Data)
+			if err != nil {
+				return nil, err
+			}
+
+			igws := []core.InternetGateway{}
+			var page *string
+			for {
+				response, err := svc.ListInternetGateways(ctx, core.ListInternetGatewaysRequest{
+					CompartmentId: common.String(conn.TenantID()),
+					Page:          page,
+				})
+				if err != nil {
+					return nil, err
+				}
+
+				igws = append(igws, response.Items...)
+
+				if response.OpcNextPage == nil {
+					break
+				}
+				page = response.OpcNextPage
+			}
+
+			var res []any
+			for i := range igws {
+				igw := igws[i]
+
+				var created *time.Time
+				if igw.TimeCreated != nil {
+					created = &igw.TimeCreated.Time
+				}
+
+				freeformTags := make(map[string]interface{}, len(igw.FreeformTags))
+				for k, v := range igw.FreeformTags {
+					freeformTags[k] = v
+				}
+
+				definedTags := make(map[string]interface{}, len(igw.DefinedTags))
+				for k, v := range igw.DefinedTags {
+					definedTags[k] = v
+				}
+
+				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.network.internetGateway", map[string]*llx.RawData{
+					"id":            llx.StringDataPtr(igw.Id),
+					"name":          llx.StringDataPtr(igw.DisplayName),
+					"compartmentID": llx.StringDataPtr(igw.CompartmentId),
+					"isEnabled":     llx.BoolDataPtr(igw.IsEnabled),
+					"state":         llx.StringData(string(igw.LifecycleState)),
+					"created":       llx.TimeDataPtr(created),
+					"freeformTags":  llx.MapData(freeformTags, types.String),
+					"definedTags":   llx.MapData(definedTags, types.Any),
+				})
+				if err != nil {
+					return nil, err
+				}
+				mqlIgw := mqlInstance.(*mqlOciNetworkInternetGateway)
+				mqlIgw.cacheVcnId = stringValue(igw.VcnId)
+				res = append(res, mqlIgw)
+			}
+
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+type mqlOciNetworkInternetGatewayInternal struct {
+	cacheVcnId string
+}
+
+func (o *mqlOciNetworkInternetGateway) id() (string, error) {
+	return "oci.network.internetGateway/" + o.Id.Data, nil
+}
+
+func (o *mqlOciNetworkInternetGateway) vcn() (*mqlOciNetworkVcn, error) {
+	if o.cacheVcnId == "" {
+		o.Vcn.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	mqlVcn, err := NewResource(o.MqlRuntime, "oci.network.vcn", map[string]*llx.RawData{
+		"id": llx.StringData(o.cacheVcnId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return mqlVcn.(*mqlOciNetworkVcn), nil
+}
+
+// NAT Gateways
+
+func (o *mqlOciNetwork) natGateways() ([]any, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+
+	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
+	if err != nil {
+		return nil, err
+	}
+	oci := ociResource.(*mqlOci)
+	list := oci.GetRegions()
+	if list.Error != nil {
+		return nil, list.Error
+	}
+
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(o.getNatGateways(conn, list.Data), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+	}
+
+	return res, nil
+}
+
+func (o *mqlOciNetwork) getNatGateways(conn *connection.OciConnection, regions []any) []*jobpool.Job {
+	ctx := context.Background()
+	tasks := make([]*jobpool.Job, 0)
+	for _, region := range regions {
+		regionResource, ok := region.(*mqlOciRegion)
+		if !ok {
+			return jobErr(errors.New("invalid region type"))
+		}
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("calling oci NAT gateways with region %s", regionResource.Id.Data)
+
+			svc, err := conn.NetworkClient(regionResource.Id.Data)
+			if err != nil {
+				return nil, err
+			}
+
+			natGws := []core.NatGateway{}
+			var page *string
+			for {
+				response, err := svc.ListNatGateways(ctx, core.ListNatGatewaysRequest{
+					CompartmentId: common.String(conn.TenantID()),
+					Page:          page,
+				})
+				if err != nil {
+					return nil, err
+				}
+
+				natGws = append(natGws, response.Items...)
+
+				if response.OpcNextPage == nil {
+					break
+				}
+				page = response.OpcNextPage
+			}
+
+			var res []any
+			for i := range natGws {
+				ngw := natGws[i]
+
+				var created *time.Time
+				if ngw.TimeCreated != nil {
+					created = &ngw.TimeCreated.Time
+				}
+
+				freeformTags := make(map[string]interface{}, len(ngw.FreeformTags))
+				for k, v := range ngw.FreeformTags {
+					freeformTags[k] = v
+				}
+
+				definedTags := make(map[string]interface{}, len(ngw.DefinedTags))
+				for k, v := range ngw.DefinedTags {
+					definedTags[k] = v
+				}
+
+				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.network.natGateway", map[string]*llx.RawData{
+					"id":            llx.StringDataPtr(ngw.Id),
+					"name":          llx.StringDataPtr(ngw.DisplayName),
+					"compartmentID": llx.StringDataPtr(ngw.CompartmentId),
+					"blockTraffic":  llx.BoolDataPtr(ngw.BlockTraffic),
+					"natIp":         llx.StringDataPtr(ngw.NatIp),
+					"state":         llx.StringData(string(ngw.LifecycleState)),
+					"created":       llx.TimeDataPtr(created),
+					"freeformTags":  llx.MapData(freeformTags, types.String),
+					"definedTags":   llx.MapData(definedTags, types.Any),
+				})
+				if err != nil {
+					return nil, err
+				}
+				mqlNgw := mqlInstance.(*mqlOciNetworkNatGateway)
+				mqlNgw.cacheVcnId = stringValue(ngw.VcnId)
+				res = append(res, mqlNgw)
+			}
+
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+type mqlOciNetworkNatGatewayInternal struct {
+	cacheVcnId string
+}
+
+func (o *mqlOciNetworkNatGateway) id() (string, error) {
+	return "oci.network.natGateway/" + o.Id.Data, nil
+}
+
+func (o *mqlOciNetworkNatGateway) vcn() (*mqlOciNetworkVcn, error) {
+	if o.cacheVcnId == "" {
+		o.Vcn.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	mqlVcn, err := NewResource(o.MqlRuntime, "oci.network.vcn", map[string]*llx.RawData{
+		"id": llx.StringData(o.cacheVcnId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return mqlVcn.(*mqlOciNetworkVcn), nil
+}
+
+// Route Tables
+
+// routeRule is an OCI route rule for serialization to dict
+type routeRule struct {
+	// Target network entity OCID
+	NetworkEntityId string `json:"networkEntityId"`
+	// Destination CIDR block or service CIDR
+	Destination string `json:"destination,omitempty"`
+	// Type of destination (CIDR_BLOCK, SERVICE_CIDR_BLOCK)
+	DestinationType string `json:"destinationType,omitempty"`
+	// Description of the route rule
+	Description string `json:"description,omitempty"`
+	// Route type (STATIC, LOCAL)
+	RouteType string `json:"routeType,omitempty"`
+}
+
+func (o *mqlOciNetwork) routeTables() ([]any, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+
+	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
+	if err != nil {
+		return nil, err
+	}
+	oci := ociResource.(*mqlOci)
+	list := oci.GetRegions()
+	if list.Error != nil {
+		return nil, list.Error
+	}
+
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(o.getRouteTables(conn, list.Data), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+	}
+
+	return res, nil
+}
+
+func (o *mqlOciNetwork) getRouteTables(conn *connection.OciConnection, regions []any) []*jobpool.Job {
+	ctx := context.Background()
+	tasks := make([]*jobpool.Job, 0)
+	for _, region := range regions {
+		regionResource, ok := region.(*mqlOciRegion)
+		if !ok {
+			return jobErr(errors.New("invalid region type"))
+		}
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("calling oci route tables with region %s", regionResource.Id.Data)
+
+			svc, err := conn.NetworkClient(regionResource.Id.Data)
+			if err != nil {
+				return nil, err
+			}
+
+			rts := []core.RouteTable{}
+			var page *string
+			for {
+				response, err := svc.ListRouteTables(ctx, core.ListRouteTablesRequest{
+					CompartmentId: common.String(conn.TenantID()),
+					Page:          page,
+				})
+				if err != nil {
+					return nil, err
+				}
+
+				rts = append(rts, response.Items...)
+
+				if response.OpcNextPage == nil {
+					break
+				}
+				page = response.OpcNextPage
+			}
+
+			var res []any
+			for i := range rts {
+				rt := rts[i]
+
+				var created *time.Time
+				if rt.TimeCreated != nil {
+					created = &rt.TimeCreated.Time
+				}
+
+				rules := make([]routeRule, 0, len(rt.RouteRules))
+				for j := range rt.RouteRules {
+					r := rt.RouteRules[j]
+					rules = append(rules, routeRule{
+						NetworkEntityId: stringValue(r.NetworkEntityId),
+						Destination:     stringValue(r.Destination),
+						DestinationType: string(r.DestinationType),
+						Description:     stringValue(r.Description),
+						RouteType:       string(r.RouteType),
+					})
+				}
+				routeRules, err := convert.JsonToDictSlice(rules)
+				if err != nil {
+					return nil, err
+				}
+
+				freeformTags := make(map[string]interface{}, len(rt.FreeformTags))
+				for k, v := range rt.FreeformTags {
+					freeformTags[k] = v
+				}
+
+				definedTags := make(map[string]interface{}, len(rt.DefinedTags))
+				for k, v := range rt.DefinedTags {
+					definedTags[k] = v
+				}
+
+				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.network.routeTable", map[string]*llx.RawData{
+					"id":            llx.StringDataPtr(rt.Id),
+					"name":          llx.StringDataPtr(rt.DisplayName),
+					"compartmentID": llx.StringDataPtr(rt.CompartmentId),
+					"routeRules":    llx.DictData(routeRules),
+					"state":         llx.StringData(string(rt.LifecycleState)),
+					"created":       llx.TimeDataPtr(created),
+					"freeformTags":  llx.MapData(freeformTags, types.String),
+					"definedTags":   llx.MapData(definedTags, types.Any),
+				})
+				if err != nil {
+					return nil, err
+				}
+				mqlRt := mqlInstance.(*mqlOciNetworkRouteTable)
+				mqlRt.cacheVcnId = stringValue(rt.VcnId)
+				res = append(res, mqlRt)
+			}
+
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+type mqlOciNetworkRouteTableInternal struct {
+	cacheVcnId string
+}
+
+func initOciNetworkRouteTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	if args["id"] == nil {
+		return nil, nil, errors.New("id required to fetch oci.network.routeTable")
+	}
+	idVal := args["id"].Value.(string)
+
+	obj, err := CreateResource(runtime, "oci.network", nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	network := obj.(*mqlOciNetwork)
+
+	rawRTs := network.GetRouteTables()
+	if rawRTs.Error != nil {
+		return nil, nil, rawRTs.Error
+	}
+
+	for _, raw := range rawRTs.Data {
+		rt := raw.(*mqlOciNetworkRouteTable)
+		if rt.Id.Data == idVal {
+			return args, rt, nil
+		}
+	}
+
+	return nil, nil, errors.New("oci.network.routeTable not found: " + idVal)
+}
+
+func (o *mqlOciNetworkRouteTable) id() (string, error) {
+	return "oci.network.routeTable/" + o.Id.Data, nil
+}
+
+func (o *mqlOciNetworkRouteTable) vcn() (*mqlOciNetworkVcn, error) {
+	if o.cacheVcnId == "" {
+		o.Vcn.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	mqlVcn, err := NewResource(o.MqlRuntime, "oci.network.vcn", map[string]*llx.RawData{
+		"id": llx.StringData(o.cacheVcnId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return mqlVcn.(*mqlOciNetworkVcn), nil
+}
+
+// Subnet route table reference
+
+func (o *mqlOciNetworkSubnet) routeTable() (*mqlOciNetworkRouteTable, error) {
+	if o.cacheRouteTableId == "" {
+		o.RouteTable.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	mqlRt, err := NewResource(o.MqlRuntime, "oci.network.routeTable", map[string]*llx.RawData{
+		"id": llx.StringData(o.cacheRouteTableId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return mqlRt.(*mqlOciNetworkRouteTable), nil
 }

@@ -98,6 +98,24 @@ private oci.identity.user @defaults("name") {
   authTokens() []oci.identity.authToken
   // Groups the user belongs to
   groups() []oci.identity.group
+  // MFA TOTP devices
+  mfaDevices() []oci.identity.mfaDevice
+}
+
+// Oracle Cloud Infrastructure (OCI) MFA TOTP device
+private oci.identity.mfaDevice @defaults("id") {
+  // MFA device OCID
+  id string
+  // User OCID the device belongs to
+  userId string
+  // Whether the device has been activated
+  isActivated bool
+  // Lifecycle state (CREATING, ACTIVE, INACTIVE, DELETING, DELETED)
+  state string
+  // Creation time
+  created time
+  // Expiration time
+  expires time
 }
 
 // Oracle Cloud Infrastructure (OCI) API key (PEM-format RSA credential for API authentication)
@@ -158,6 +176,8 @@ private oci.identity.group @defaults("name") {
   freeformTags map[string]string
   // Defined tags for governance and cost tracking
   definedTags map[string]map[string]string
+  // Users in the group
+  members() []oci.identity.user
 }
 
 // Oracle Cloud Infrastructure (OCI) IAM policy that grants group permissions to resources
@@ -234,6 +254,42 @@ private oci.compute.instance @defaults("name") {
   metadata map[string]string
   // Expected maintenance reboot time, if scheduled
   timeMaintenanceRebootDue time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // Virtual network interface cards attached to the instance
+  vnics() []oci.compute.vnic
+}
+
+// Oracle Cloud Infrastructure (OCI) virtual network interface card (VNIC)
+private oci.compute.vnic @defaults("name") {
+  // VNIC OCID
+  id string
+  // VNIC display name
+  name string
+  // Compartment OCID
+  compartmentID string
+  // Whether this is the primary VNIC
+  isPrimary bool
+  // Private IP address
+  privateIp string
+  // Public IP address (empty if none assigned)
+  publicIp string
+  // MAC address
+  macAddress string
+  // Hostname label for DNS
+  hostnameLabel string
+  // Subnet the VNIC is in
+  subnet() oci.network.subnet
+  // Network Security Group OCIDs
+  nsgIds []string
+  // Whether source/destination check is skipped
+  skipSourceDestCheck bool
+  // Lifecycle state (PROVISIONING, AVAILABLE, TERMINATING, TERMINATED)
+  state string
+  // Creation time
+  created time
   // Free-form tags for resource management
   freeformTags map[string]string
   // Defined tags for governance and cost tracking
@@ -324,6 +380,12 @@ oci.network {
   securityLists() []oci.network.securityList
   // Network Security Groups (NSGs)
   networkSecurityGroups() []oci.network.networkSecurityGroup
+  // Internet gateways
+  internetGateways() []oci.network.internetGateway
+  // NAT gateways
+  natGateways() []oci.network.natGateway
+  // Route tables
+  routeTables() []oci.network.routeTable
 }
 
 // Oracle Cloud Infrastructure (OCI) Virtual Cloud Network (VCN)
@@ -382,6 +444,8 @@ private oci.network.subnet @defaults("name") {
   prohibitPublicIpOnVnic bool
   // Whether internet ingress is prohibited
   prohibitInternetIngress bool
+  // Route table used by this subnet
+  routeTable() oci.network.routeTable
   // Subnet creation time
   created time
   // Free-form tags for resource management
@@ -438,6 +502,74 @@ private oci.network.networkSecurityGroup @defaults("name") {
   ingressSecurityRules() []dict
   // Egress security rules
   egressSecurityRules() []dict
+}
+
+// Oracle Cloud Infrastructure (OCI) internet gateway (connects VCN to the internet)
+private oci.network.internetGateway @defaults("name") {
+  // Internet gateway OCID
+  id string
+  // Display name
+  name string
+  // Compartment OCID
+  compartmentID string
+  // VCN the internet gateway belongs to
+  vcn() oci.network.vcn
+  // Whether the gateway is enabled
+  isEnabled bool
+  // Lifecycle state (e.g., PROVISIONING, AVAILABLE, TERMINATING, TERMINATED)
+  state string
+  // Creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) NAT gateway (enables outbound internet access without inbound exposure)
+private oci.network.natGateway @defaults("name") {
+  // NAT gateway OCID
+  id string
+  // Display name
+  name string
+  // Compartment OCID
+  compartmentID string
+  // VCN the NAT gateway belongs to
+  vcn() oci.network.vcn
+  // Whether traffic is blocked through the gateway
+  blockTraffic bool
+  // The public IP address associated with the NAT gateway
+  natIp string
+  // Lifecycle state (e.g., PROVISIONING, AVAILABLE, TERMINATING, TERMINATED)
+  state string
+  // Creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) route table (routing rules for VCN traffic)
+private oci.network.routeTable @defaults("name") {
+  // Route table OCID
+  id string
+  // Display name
+  name string
+  // Compartment OCID
+  compartmentID string
+  // VCN the route table belongs to
+  vcn() oci.network.vcn
+  // Route rules defining traffic destinations and targets
+  routeRules []dict
+  // Lifecycle state (e.g., PROVISIONING, AVAILABLE, TERMINATING, TERMINATED)
+  state string
+  // Creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
 }
 
 // Oracle Cloud Infrastructure (OCI) Logging service
@@ -532,8 +664,32 @@ private oci.kms.key @defaults("name") {
   state string
   // Whether auto key rotation is enabled
   isAutoRotationEnabled bool
+  // Key versions (rotation history)
+  keyVersions() []oci.kms.keyVersion
   // Creation time
   created time
+}
+
+// Oracle Cloud Infrastructure (OCI) KMS key version (represents a specific version of a master encryption key)
+private oci.kms.keyVersion @defaults("id") {
+  // Key version OCID
+  id string
+  // Master encryption key OCID
+  keyId string
+  // Vault OCID
+  vaultId string
+  // Compartment OCID
+  compartmentID string
+  // Origin of the key material (INTERNAL, EXTERNAL)
+  origin string
+  // Lifecycle state (e.g., CREATING, ENABLING, ENABLED, DISABLING, DISABLED, DELETING, DELETED, PENDING_DELETION, SCHEDULING_DELETION, CANCELLING_DELETION)
+  state string
+  // Whether this version was created by auto-rotation
+  isAutoRotated bool
+  // Creation time
+  created time
+  // Scheduled deletion time
+  timeOfDeletion time
 }
 
 // Oracle Cloud Infrastructure (OCI) Object Storage service
@@ -586,6 +742,26 @@ private oci.objectStorage.bucket {
   freeformTags() map[string]string
   // Defined tags for governance and cost tracking
   definedTags() map[string]map[string]string
+  // Retention rules for immutability/WORM compliance
+  retentionRules() []oci.objectStorage.retentionRule
+}
+
+// Oracle Cloud Infrastructure (OCI) Object Storage retention rule
+private oci.objectStorage.retentionRule @defaults("name") {
+  // Retention rule OCID
+  id string
+  // Retention rule display name
+  name string
+  // Duration amount (in timeUnit units)
+  durationAmount int
+  // Duration time unit (DAYS, YEARS)
+  durationTimeUnit string
+  // Time after which the rule becomes locked and cannot be deleted
+  timeRuleLocked time
+  // Creation time
+  created time
+  // Last modification time
+  timeModified time
 }
 
 // Oracle Cloud Infrastructure (OCI) File Storage service
@@ -830,8 +1006,38 @@ private oci.vault.secret @defaults("name") {
   nextRotationTime time
   // Whether auto generation is enabled
   isAutoGenerationEnabled bool
+  // Rotation interval in ISO 8601 duration format (e.g., P30D for 30 days)
+  rotationInterval() string
+  // Whether scheduled rotation is enabled
+  isScheduledRotationEnabled() bool
+  // Expiry time of the current secret version
+  timeOfCurrentVersionExpiry() time
+  // Secret versions
+  secretVersions() []oci.vault.secretVersion
   // Creation time
   created time
+}
+
+// Oracle Cloud Infrastructure (OCI) vault secret version
+private oci.vault.secretVersion @defaults("versionNumber") {
+  // Secret OCID this version belongs to
+  secretId string
+  // Secret version number
+  versionNumber int
+  // Version name
+  name string
+  // Content type (BASE64, BUNDLE)
+  contentType string
+  // Version lifecycle stages (CURRENT, PENDING, LATEST, PREVIOUS, DEPRECATED)
+  stages []string
+  // Whether the content was auto-generated
+  isContentAutoGenerated bool
+  // Creation time
+  created time
+  // Version expiry time
+  timeOfExpiry time
+  // Scheduled deletion time
+  timeOfDeletion time
 }
 
 // Oracle Cloud Infrastructure (OCI) Load Balancer service
@@ -1008,4 +1214,174 @@ private oci.oke.nodePool @defaults("name") {
   sshPublicKey string
   // Lifecycle state (e.g., CREATING, ACTIVE, UPDATING, DELETING, DELETED, FAILED, NEEDS_ATTENTION)
   state string
+}
+
+// Oracle Cloud Infrastructure (OCI) Web Application Firewall service
+oci.waf {
+  // Web application firewalls
+  firewalls() []oci.waf.firewall
+  // Web application firewall policies
+  policies() []oci.waf.policy
+}
+
+// Oracle Cloud Infrastructure (OCI) web application firewall
+private oci.waf.firewall @defaults("name") {
+  // WAF OCID
+  id string
+  // Display name
+  name string
+  // Compartment OCID
+  compartmentID string
+  // WAF policy attached to this firewall
+  policy() oci.waf.policy
+  // Load balancer this WAF is attached to
+  loadBalancer() oci.loadBalancer.loadBalancer
+  // Lifecycle state (e.g., CREATING, UPDATING, ACTIVE, DELETING, DELETED, FAILED)
+  state string
+  // Creation time
+  created time
+  // Last update time
+  timeUpdated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) web application firewall policy
+private oci.waf.policy @defaults("name") {
+  // WAF policy OCID
+  id string
+  // Display name
+  name string
+  // Compartment OCID
+  compartmentID string
+  // Lifecycle state (e.g., CREATING, UPDATING, ACTIVE, DELETING, DELETED, FAILED)
+  state string
+  // Creation time
+  created time
+  // Last update time
+  timeUpdated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) Database service
+oci.database {
+  // Database systems (VM/BM)
+  dbSystems() []oci.database.dbSystem
+  // Autonomous databases
+  autonomousDatabases() []oci.database.autonomousDatabase
+}
+
+// Oracle Cloud Infrastructure (OCI) database system (VM/BM)
+private oci.database.dbSystem @defaults("name") {
+  // DB system OCID
+  id string
+  // Display name
+  name string
+  // Compartment OCID
+  compartmentID string
+  // Availability domain
+  availabilityDomain string
+  // Compute shape
+  shape string
+  // Database edition (STANDARD_EDITION, ENTERPRISE_EDITION, ENTERPRISE_EDITION_HIGH_PERFORMANCE, ENTERPRISE_EDITION_EXTREME_PERFORMANCE)
+  databaseEdition string
+  // Disk redundancy (HIGH, NORMAL, FLEX)
+  diskRedundancy string
+  // Hostname
+  hostname string
+  // Domain
+  domain string
+  // Oracle Database version
+  version string
+  // Number of CPU cores
+  cpuCoreCount int
+  // Number of nodes
+  nodeCount int
+  // Data storage size in GBs
+  dataStorageSizeInGBs int
+  // License model (LICENSE_INCLUDED, BRING_YOUR_OWN_LICENSE)
+  licenseModel string
+  // KMS key for encryption
+  kmsKey() oci.kms.key
+  // Subnet the DB system is in
+  subnet() oci.network.subnet
+  // Network Security Group OCIDs
+  nsgIds []string
+  // Backup network NSG OCIDs
+  backupNetworkNsgIds []string
+  // Lifecycle state (e.g., PROVISIONING, AVAILABLE, UPDATING, TERMINATING, TERMINATED, FAILED, MIGRATED, MAINTENANCE_IN_PROGRESS, NEEDS_ATTENTION, UPGRADING)
+  state string
+  // Creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) autonomous database
+private oci.database.autonomousDatabase @defaults("name") {
+  // Autonomous database OCID
+  id string
+  // Display name
+  name string
+  // Compartment OCID
+  compartmentID string
+  // Database name
+  dbName string
+  // Database version
+  dbVersion string
+  // Database workload type (OLTP, DW, AJD, APEX)
+  dbWorkload string
+  // Whether this is a dedicated Exadata infrastructure
+  isDedicated bool
+  // Whether this is a free-tier database
+  isFreeTier bool
+  // Number of CPU cores
+  cpuCoreCount int
+  // Data storage size in TBs
+  dataStorageSizeInTBs int
+  // Whether mTLS connection is required
+  isMtlsConnectionRequired bool
+  // Whether access control is enabled
+  isAccessControlEnabled bool
+  // Allowed client IP addresses (ACL)
+  whitelistedIps []string
+  // Whether auto-scaling is enabled
+  isAutoScalingEnabled bool
+  // Whether local Data Guard is enabled
+  isLocalDataGuardEnabled bool
+  // Oracle Data Safe status (REGISTERED, NOT_REGISTERED, DEREGISTERING, FAILED)
+  dataSafeStatus string
+  // Open mode (READ_ONLY, READ_WRITE)
+  openMode string
+  // Permission level (RESTRICTED, UNRESTRICTED)
+  permissionLevel string
+  // License model (LICENSE_INCLUDED, BRING_YOUR_OWN_LICENSE)
+  licenseModel string
+  // KMS key for encryption
+  kmsKey() oci.kms.key
+  // KMS vault for encryption
+  kmsVault() oci.kms.vault
+  // Subnet for private endpoint
+  subnet() oci.network.subnet
+  // Network Security Group OCIDs
+  nsgIds []string
+  // Private endpoint IP address
+  privateEndpointIp string
+  // Private endpoint label
+  privateEndpointLabel string
+  // Lifecycle state (e.g., PROVISIONING, AVAILABLE, STOPPING, STOPPED, STARTING, TERMINATING, TERMINATED, UNAVAILABLE, RESTORE_IN_PROGRESS, RESTORE_FAILED, BACKUP_IN_PROGRESS, SCALE_IN_PROGRESS, AVAILABLE_NEEDS_ATTENTION, UPDATING, MAINTENANCE_IN_PROGRESS, RESTARTING, RECREATING, ROLE_CHANGE_IN_PROGRESS, UPGRADING, INACCESSIBLE, STANDBY)
+  state string
+  // Creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/loadbalancer"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
@@ -122,6 +123,37 @@ func (o *mqlOciLoadBalancer) getLoadBalancers(conn *connection.OciConnection, re
 type mqlOciLoadBalancerLoadBalancerInternal struct {
 	cacheListeners   map[string]loadbalancer.Listener
 	cacheBackendSets map[string]loadbalancer.BackendSet
+}
+
+func initOciLoadBalancerLoadBalancer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	if args["id"] == nil {
+		return nil, nil, errors.New("id required to fetch oci.loadBalancer.loadBalancer")
+	}
+	idVal := args["id"].Value.(string)
+
+	obj, err := CreateResource(runtime, "oci.loadBalancer", nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	lb := obj.(*mqlOciLoadBalancer)
+
+	rawLBs := lb.GetLoadBalancers()
+	if rawLBs.Error != nil {
+		return nil, nil, rawLBs.Error
+	}
+
+	for _, raw := range rawLBs.Data {
+		l := raw.(*mqlOciLoadBalancerLoadBalancer)
+		if l.Id.Data == idVal {
+			return args, l, nil
+		}
+	}
+
+	return nil, nil, errors.New("oci.loadBalancer.loadBalancer not found: " + idVal)
 }
 
 func (o *mqlOciLoadBalancerLoadBalancer) id() (string, error) {
