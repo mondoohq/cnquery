@@ -51,6 +51,7 @@ ceph
 certificatechains
 chatgpt
 chokepoint
+classpath
 cifs
 ciscocatalyst
 claude
@@ -176,12 +177,15 @@ istio
 jamf
 jira
 jsonbody
+jre
 junos
 jupyter
+JVM
 kerberoastable
 keyspace
 kqueue
 krbtgt
+kts
 kubenet
 kustomization
 labelmatchstatement
@@ -227,6 +231,7 @@ msk
 Mtls
 MULTIAZ
 mychart
+myapp
 myproject
 naflags
 natgateway
@@ -263,6 +268,7 @@ openssl
 openvpn
 openzfs
 orstatement
+OSGi
 ospf
 ovmf
 owpjy
@@ -369,6 +375,7 @@ switchports
 tailscale
 targetgroup
 tde
+temurin
 tensorboard
 testutils
 tgw
@@ -382,6 +389,7 @@ tpl
 tpu
 trainingjob
 transitgateway
+transitives
 Twt
 udid
 uefi

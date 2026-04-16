@@ -21,6 +21,9 @@ import (
 // MaxArchiveSize is the maximum size of a JAR/WAR/EAR file to scan (100MB).
 const MaxArchiveSize = 100 * 1024 * 1024
 
+// maxNestingDepth limits how deeply nested JARs are scanned to prevent zip bombs.
+const maxNestingDepth = 3
+
 // archiveExtensions are the file extensions we scan.
 var archiveExtensions = []string{".jar", ".war", ".ear", ".par", ".sar", ".nar"}
 
@@ -53,11 +56,12 @@ func ScanArchive(afs *afero.Afero, archivePath string) ([]*languages.Package, er
 		return nil, err
 	}
 
-	return scanZipData(data, archivePath)
+	return scanZipData(data, archivePath, 0)
 }
 
 // scanZipData scans ZIP data for Java package metadata.
-func scanZipData(data []byte, evidencePath string) ([]*languages.Package, error) {
+// depth tracks nesting level to prevent zip bomb attacks.
+func scanZipData(data []byte, evidencePath string, depth int) ([]*languages.Package, error) {
 	reader, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
 	if err != nil {
 		return nil, err
@@ -81,8 +85,8 @@ func scanZipData(data []byte, evidencePath string) ([]*languages.Package, error)
 			}
 		}
 
-		// Extract MANIFEST.MF as fallback
-		if name == "META-INF/MANIFEST.MF" && len(packages) == 0 {
+		// Always parse MANIFEST.MF as a fallback candidate
+		if name == "META-INF/MANIFEST.MF" {
 			pkg, err := extractManifest(file, evidencePath)
 			if err != nil {
 				log.Debug().Err(err).Msg("failed to parse MANIFEST.MF in archive")
@@ -91,9 +95,9 @@ func scanZipData(data []byte, evidencePath string) ([]*languages.Package, error)
 			}
 		}
 
-		// Scan nested JARs (WAR, fat JARs)
-		if isNestedJar(name) {
-			nestedPkgs, err := extractNestedJar(file, evidencePath+"!"+name)
+		// Scan nested JARs (WAR, fat JARs) if within depth limit
+		if isNestedJar(name) && depth < maxNestingDepth {
+			nestedPkgs, err := extractNestedJar(file, evidencePath+"!"+name, depth+1)
 			if err != nil {
 				log.Debug().Err(err).Str("entry", name).Msg("failed to scan nested JAR")
 				continue
@@ -142,19 +146,20 @@ func extractManifest(file *zip.File, evidencePath string) (*languages.Package, e
 	return bom.Root(), nil
 }
 
-func extractNestedJar(file *zip.File, evidencePath string) ([]*languages.Package, error) {
+func extractNestedJar(file *zip.File, evidencePath string, depth int) ([]*languages.Package, error) {
 	rc, err := file.Open()
 	if err != nil {
 		return nil, err
 	}
 	defer rc.Close()
 
-	data, err := io.ReadAll(rc)
+	// Limit read size to prevent zip bomb memory exhaustion
+	data, err := io.ReadAll(io.LimitReader(rc, MaxArchiveSize))
 	if err != nil {
 		return nil, err
 	}
 
-	return scanZipData(data, evidencePath)
+	return scanZipData(data, evidencePath, depth)
 }
 
 // isNestedJar returns true if the ZIP entry is a JAR inside a known lib directory.

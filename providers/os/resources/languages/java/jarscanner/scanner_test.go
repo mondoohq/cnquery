@@ -44,7 +44,7 @@ Implementation-Version: 3.12.0
 `,
 	})
 
-	packages, err := scanZipData(jarData, "/app/libs/commons-lang3-3.12.0.jar")
+	packages, err := scanZipData(jarData, "/app/libs/commons-lang3-3.12.0.jar", 0)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(packages))
 
@@ -63,7 +63,7 @@ Implementation-Vendor: Example Corp
 `,
 	})
 
-	packages, err := scanZipData(jarData, "/app/libs/my-library.jar")
+	packages, err := scanZipData(jarData, "/app/libs/my-library.jar", 0)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(packages))
 
@@ -99,7 +99,7 @@ version=31.1-jre
 
 	require.NoError(t, outerWriter.Close())
 
-	packages, err := scanZipData(outerBuf.Bytes(), "/app/myapp.jar")
+	packages, err := scanZipData(outerBuf.Bytes(), "/app/myapp.jar", 0)
 	require.NoError(t, err)
 
 	// Should find both the outer app and the nested guava JAR

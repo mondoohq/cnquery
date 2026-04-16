@@ -57,12 +57,8 @@ func vendorFromGroupId(groupId string) string {
 		"de": true, "fr": true, "uk": true, "co": true,
 	}
 
-	for i, part := range parts {
+	for _, part := range parts {
 		if !skipPrefixes[part] {
-			// Return this segment as vendor, or remaining joined if it's the last
-			if i < len(parts)-1 {
-				return part
-			}
 			return part
 		}
 	}

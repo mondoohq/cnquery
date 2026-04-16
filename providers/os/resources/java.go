@@ -22,6 +22,9 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
+// defaultJavaPaths are searched for pom.xml, gradle.lockfile, and JAR files.
+// Only top-level files in these directories are scanned; use java.packages(path: "/specific/dir")
+// for recursive or targeted scanning.
 var defaultJavaPaths = []string{
 	// Common deployment locations
 	"/app",
@@ -135,12 +138,16 @@ func (r *mqlJavaPackages) gatherData() error {
 		r.Root = plugin.TValue[*mqlJavaPackage]{State: plugin.StateIsSet | plugin.StateIsNull}
 	}
 
-	// Set transitive list
-	transitiveResources, err := newJavaPackageList(r.MqlRuntime, transitiveDeps)
+	// Set list as the union of all packages (transitive already includes direct
+	// for most formats; for JAR scanning, packages go into transitiveDeps only).
+	// Deduplicate by name@version.
+	allPkgs := deduplicatePackages(append(transitiveDeps, directDeps...))
+	slices.SortFunc(allPkgs, languages.SortFn)
+	allResources, err := newJavaPackageList(r.MqlRuntime, allPkgs)
 	if err != nil {
 		return err
 	}
-	r.List = plugin.TValue[[]any]{Data: transitiveResources, State: plugin.StateIsSet}
+	r.List = plugin.TValue[[]any]{Data: allResources, State: plugin.StateIsSet}
 
 	// Set direct dependencies
 	directResources, err := newJavaPackageList(r.MqlRuntime, directDeps)
@@ -283,6 +290,21 @@ func collectFromArchive(afs *afero.Afero, path string) (*languages.Package, []*l
 	return nil, nil, packages, []string{path}
 }
 
+// deduplicatePackages removes duplicate packages by name@version.
+func deduplicatePackages(pkgs []*languages.Package) []*languages.Package {
+	seen := make(map[string]bool)
+	var result []*languages.Package
+	for _, pkg := range pkgs {
+		key := pkg.Name + "@" + pkg.Version
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		result = append(result, pkg)
+	}
+	return result
+}
+
 func (r *mqlJavaPackages) root() (*mqlJavaPackage, error) {
 	return nil, r.gatherData()
 }
@@ -345,7 +367,7 @@ func newJavaPackage(runtime *plugin.Runtime, pkg *languages.Package) (*mqlJavaPa
 	}
 
 	mqlPkg, err := CreateResource(runtime, "java.package", map[string]*llx.RawData{
-		"id":      llx.StringData(pkg.Name + "@" + pkg.Version + path),
+		"id":      llx.StringData(pkg.Name + "@" + pkg.Version + ":" + path),
 		"name":    llx.StringData(pkg.Name),
 		"version": llx.StringData(pkg.Version),
 		"purl":    llx.StringData(pkg.Purl),
