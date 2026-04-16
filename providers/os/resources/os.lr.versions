@@ -1100,6 +1100,7 @@ sshd.config.blocks 10.0.5
 sshd.config.ciphers 9.0.0
 sshd.config.file 9.0.0
 sshd.config.files 9.0.0
+sshd.config.hostkeyalgorithms 13.9.3
 sshd.config.hostkeys 9.0.0
 sshd.config.kexs 9.0.0
 sshd.config.macs 9.0.0
