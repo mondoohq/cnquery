@@ -231,7 +231,9 @@ func (a *mqlAwsSagemakerEndpointConfigProductionVariant) serverlessConfig() (*mq
 	if err != nil {
 		return nil, err
 	}
-	return mqlRes.(*mqlAwsSagemakerEndpointConfigServerlessConfig), nil
+	scRes := mqlRes.(*mqlAwsSagemakerEndpointConfigServerlessConfig)
+	scRes.cacheParentId = a.cacheParentArn + "/productionVariant/" + a.VariantName.Data
+	return scRes, nil
 }
 
 func (a *mqlAwsSagemakerEndpointConfigProductionVariant) managedInstanceScaling() (any, error) {
@@ -465,7 +467,9 @@ func (a *mqlAwsSagemakerMonitoringSchedule) scheduleConfig() (*mqlAwsSagemakerMo
 	if err != nil {
 		return nil, err
 	}
-	return mqlRes.(*mqlAwsSagemakerMonitoringScheduleScheduleConfig), nil
+	res := mqlRes.(*mqlAwsSagemakerMonitoringScheduleScheduleConfig)
+	res.cacheParentArn = a.Arn.Data
+	return res, nil
 }
 
 func (a *mqlAwsSagemakerMonitoringSchedule) monitoringJobDefinitionName() (string, error) {
