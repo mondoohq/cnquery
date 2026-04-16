@@ -97,7 +97,7 @@ func (a *mqlAwsSagemaker) getHubs(conn *connection.AwsConnection) []*jobpool.Job
 			for {
 				out, err := svc.ListHubs(ctx, &sagemaker.ListHubsInput{NextToken: nextToken})
 				if err != nil {
-					if Is400AccessDeniedError(err) {
+					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
@@ -236,7 +236,7 @@ func (a *mqlAwsSagemakerHub) contents() ([]any, error) {
 				NextToken:      nextToken,
 			})
 			if err != nil {
-				if Is400AccessDeniedError(err) {
+				if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
 					return res, nil
 				}
 				return nil, err
