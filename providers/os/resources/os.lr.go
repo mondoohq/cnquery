@@ -184,6 +184,8 @@ const (
 	ResourceJavaPackage                  string = "java.package"
 	ResourceRustPackages                 string = "rust.packages"
 	ResourceRustPackage                  string = "rust.package"
+	ResourceDotnetPackages               string = "dotnet.packages"
+	ResourceDotnetPackage                string = "dotnet.package"
 	ResourceMacos                        string = "macos"
 	ResourceMacosHardware                string = "macos.hardware"
 	ResourceMacosAlf                     string = "macos.alf"
@@ -926,6 +928,14 @@ func init() {
 		"rust.package": {
 			// to override args, implement: initRustPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createRustPackage,
+		},
+		"dotnet.packages": {
+			Init:   initDotnetPackages,
+			Create: createDotnetPackages,
+		},
+		"dotnet.package": {
+			// to override args, implement: initDotnetPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDotnetPackage,
 		},
 		"macos": {
 			// to override args, implement: initMacos(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3663,6 +3673,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"rust.package.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRustPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"dotnet.packages.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDotnetPackages).GetPath()).ToDataRes(types.String)
+	},
+	"dotnet.packages.root": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDotnetPackages).GetRoot()).ToDataRes(types.Resource("dotnet.package"))
+	},
+	"dotnet.packages.directDependencies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDotnetPackages).GetDirectDependencies()).ToDataRes(types.Array(types.Resource("dotnet.package")))
+	},
+	"dotnet.packages.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDotnetPackages).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"dotnet.packages.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDotnetPackages).GetList()).ToDataRes(types.Array(types.Resource("dotnet.package")))
+	},
+	"dotnet.package.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDotnetPackage).GetId()).ToDataRes(types.String)
+	},
+	"dotnet.package.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDotnetPackage).GetName()).ToDataRes(types.String)
+	},
+	"dotnet.package.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDotnetPackage).GetVersion()).ToDataRes(types.String)
+	},
+	"dotnet.package.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDotnetPackage).GetPurl()).ToDataRes(types.String)
+	},
+	"dotnet.package.cpes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDotnetPackage).GetCpes()).ToDataRes(types.Array(types.Resource("cpe")))
+	},
+	"dotnet.package.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDotnetPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
 	},
 	"macos.computerName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacos).GetComputerName()).ToDataRes(types.String)
@@ -8955,6 +8998,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"rust.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlRustPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"dotnet.packages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDotnetPackages).__id, ok = v.Value.(string)
+		return
+	},
+	"dotnet.packages.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDotnetPackages).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"dotnet.packages.root": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDotnetPackages).Root, ok = plugin.RawToTValue[*mqlDotnetPackage](v.Value, v.Error)
+		return
+	},
+	"dotnet.packages.directDependencies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDotnetPackages).DirectDependencies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"dotnet.packages.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDotnetPackages).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"dotnet.packages.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDotnetPackages).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"dotnet.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDotnetPackage).__id, ok = v.Value.(string)
+		return
+	},
+	"dotnet.package.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDotnetPackage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"dotnet.package.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDotnetPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"dotnet.package.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDotnetPackage).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"dotnet.package.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDotnetPackage).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"dotnet.package.cpes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDotnetPackage).Cpes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"dotnet.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDotnetPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"macos.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24773,6 +24868,227 @@ func (c *mqlRustPackage) GetFiles() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("rust.package", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+// mqlDotnetPackages for the dotnet.packages resource
+type mqlDotnetPackages struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlDotnetPackagesInternal
+	Path               plugin.TValue[string]
+	Root               plugin.TValue[*mqlDotnetPackage]
+	DirectDependencies plugin.TValue[[]any]
+	Files              plugin.TValue[[]any]
+	List               plugin.TValue[[]any]
+}
+
+// createDotnetPackages creates a new instance of this resource
+func createDotnetPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDotnetPackages{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("dotnet.packages", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDotnetPackages) MqlName() string {
+	return "dotnet.packages"
+}
+
+func (c *mqlDotnetPackages) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDotnetPackages) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlDotnetPackages) GetRoot() *plugin.TValue[*mqlDotnetPackage] {
+	return plugin.GetOrCompute[*mqlDotnetPackage](&c.Root, func() (*mqlDotnetPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("dotnet.packages", c.__id, "root")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDotnetPackage), nil
+			}
+		}
+
+		return c.root()
+	})
+}
+
+func (c *mqlDotnetPackages) GetDirectDependencies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DirectDependencies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("dotnet.packages", c.__id, "directDependencies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.directDependencies()
+	})
+}
+
+func (c *mqlDotnetPackages) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("dotnet.packages", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+func (c *mqlDotnetPackages) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("dotnet.packages", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlDotnetPackage for the dotnet.package resource
+type mqlDotnetPackage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDotnetPackageInternal it will be used here
+	Id      plugin.TValue[string]
+	Name    plugin.TValue[string]
+	Version plugin.TValue[string]
+	Purl    plugin.TValue[string]
+	Cpes    plugin.TValue[[]any]
+	Files   plugin.TValue[[]any]
+}
+
+// createDotnetPackage creates a new instance of this resource
+func createDotnetPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDotnetPackage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("dotnet.package", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDotnetPackage) MqlName() string {
+	return "dotnet.package"
+}
+
+func (c *mqlDotnetPackage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDotnetPackage) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlDotnetPackage) GetName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Name, func() (string, error) {
+		return c.name()
+	})
+}
+
+func (c *mqlDotnetPackage) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlDotnetPackage) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
+	})
+}
+
+func (c *mqlDotnetPackage) GetCpes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Cpes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("dotnet.package", c.__id, "cpes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.cpes()
+	})
+}
+
+func (c *mqlDotnetPackage) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("dotnet.package", c.__id, "files")
 			if err != nil {
 				return nil, err
 			}
