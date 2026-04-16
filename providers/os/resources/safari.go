@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
@@ -44,6 +45,45 @@ func (s *mqlSafari) extensions() ([]any, error) {
 	if _, err := afs.Stat("/usr/bin/pluginkit"); err != nil {
 		log.Warn().Msg("pluginkit command not found at /usr/bin/pluginkit, cannot enumerate Safari extensions")
 		return []any{}, nil
+	}
+
+	// Get users list for uid and per-user Extensions.plist
+	usersResource, err := CreateResource(s.MqlRuntime, "users", map[string]*llx.RawData{})
+	if err != nil {
+		log.Debug().Err(err).Msg("could not get users list")
+	}
+
+	// Build a map of enabled states from each user's Extensions.plist
+	enabledStates := make(map[string]bool)
+	uid := int64(0)
+	if usersResource != nil {
+		users := usersResource.(*mqlUsers)
+		userList := users.GetList()
+		if userList.Error == nil {
+			for _, u := range userList.Data {
+				user := u.(*mqlUser)
+				home := user.GetHome()
+				if home.Error != nil || home.Data == "" {
+					continue
+				}
+				// Only process macOS user homes
+				if !strings.HasPrefix(home.Data, "/Users/") || home.Data == "/Users/Shared" {
+					continue
+				}
+
+				// Get uid from the first valid user (pluginkit returns current user's extensions)
+				if uid == 0 {
+					if uidVal := user.GetUid(); uidVal.Error == nil {
+						uid = uidVal.Data
+					}
+				}
+
+				states := readSafariExtensionStates(&afero.Afero{Fs: afs}, home.Data)
+				for k, v := range states {
+					enabledStates[k] = v
+				}
+			}
+		}
 	}
 
 	seen := make(map[string]bool)
@@ -80,7 +120,7 @@ func (s *mqlSafari) extensions() ([]any, error) {
 				continue
 			}
 
-			ext, err := newSafariExtension(s.MqlRuntime, conn, path, extType)
+			ext, err := newSafariExtension(s.MqlRuntime, conn, path, extType, enabledStates, uid)
 			if err != nil {
 				// Skip extensions we can't parse
 				continue
@@ -92,7 +132,40 @@ func (s *mqlSafari) extensions() ([]any, error) {
 	return extensions, nil
 }
 
-func newSafariExtension(runtime *plugin.Runtime, conn shared.Connection, path string, extType string) (*mqlSafariExtension, error) {
+// readSafariExtensionStates reads Safari's Extensions.plist and returns a map of
+// bundle identifier to enabled state
+func readSafariExtensionStates(afs *afero.Afero, homeDir string) map[string]bool {
+	states := make(map[string]bool)
+
+	plistPath := filepath.Join(homeDir, "Library", "Safari", "Extensions", "Extensions.plist")
+	f, err := afs.Open(plistPath)
+	if err != nil {
+		return states
+	}
+	defer f.Close()
+
+	data, err := plist.Decode(f)
+	if err != nil {
+		log.Debug().Err(err).Str("path", plistPath).Msg("could not decode Safari Extensions.plist")
+		return states
+	}
+
+	// Extensions.plist contains a dict where keys are bundle identifiers
+	// and values are dicts with an "Enabled" boolean
+	for key, val := range data {
+		if extData, ok := val.(map[string]any); ok {
+			if enabled, ok := extData["Enabled"]; ok {
+				if b, ok := enabled.(bool); ok {
+					states[key] = b
+				}
+			}
+		}
+	}
+
+	return states
+}
+
+func newSafariExtension(runtime *plugin.Runtime, conn shared.Connection, path string, extType string, enabledStates map[string]bool, uid int64) (*mqlSafariExtension, error) {
 	afs := conn.FileSystem()
 
 	// Parse Info.plist from the extension bundle
@@ -132,6 +205,12 @@ func newSafariExtension(runtime *plugin.Runtime, conn shared.Connection, path st
 	// Derive extension type name from the pluginkit type
 	extensionTypeName := strings.TrimPrefix(extType, "com.apple.Safari.")
 
+	// Determine enabled state from Extensions.plist
+	enabled := true // default to true if not found in plist
+	if val, ok := enabledStates[identifier]; ok {
+		enabled = val
+	}
+
 	// Create the resource with a unique ID
 	ext, err := CreateResource(runtime, "safari.extension", map[string]*llx.RawData{
 		"__id":             llx.StringData(identifier + "|" + path),
@@ -143,6 +222,8 @@ func newSafariExtension(runtime *plugin.Runtime, conn shared.Connection, path st
 		"path":             llx.StringData(path),
 		"containerAppPath": llx.StringData(containerAppPath),
 		"containerAppName": llx.StringData(containerAppName),
+		"enabled":          llx.BoolData(enabled),
+		"uid":              llx.IntData(uid),
 	})
 	if err != nil {
 		return nil, err

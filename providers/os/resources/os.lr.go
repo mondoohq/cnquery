@@ -3860,6 +3860,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"safari.extension.containerAppName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSafariExtension).GetContainerAppName()).ToDataRes(types.String)
 	},
+	"safari.extension.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSafariExtension).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"safari.extension.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSafariExtension).GetUid()).ToDataRes(types.Int)
+	},
 	"launchd.jobs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlLaunchd).GetJobs()).ToDataRes(types.Array(types.Resource("launchd.job")))
 	},
@@ -9069,6 +9075,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"safari.extension.containerAppName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSafariExtension).ContainerAppName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"safari.extension.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSafariExtension).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"safari.extension.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSafariExtension).Uid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"launchd.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24952,6 +24966,8 @@ type mqlSafariExtension struct {
 	Path             plugin.TValue[string]
 	ContainerAppPath plugin.TValue[string]
 	ContainerAppName plugin.TValue[string]
+	Enabled          plugin.TValue[bool]
+	Uid              plugin.TValue[int64]
 }
 
 // createSafariExtension creates a new instance of this resource
@@ -25016,6 +25032,14 @@ func (c *mqlSafariExtension) GetContainerAppPath() *plugin.TValue[string] {
 
 func (c *mqlSafariExtension) GetContainerAppName() *plugin.TValue[string] {
 	return &c.ContainerAppName
+}
+
+func (c *mqlSafariExtension) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlSafariExtension) GetUid() *plugin.TValue[int64] {
+	return &c.Uid
 }
 
 // mqlLaunchd for the launchd resource

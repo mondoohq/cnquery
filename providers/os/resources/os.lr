@@ -2515,6 +2515,10 @@ private safari.extension @defaults("name version identifier") {
   containerAppPath string
   // Containing application name
   containerAppName string
+  // Whether the extension is enabled in Safari preferences
+  enabled bool
+  // UID of the user who owns this extension
+  uid int
 }
 
 // macOS launchd job configurations
