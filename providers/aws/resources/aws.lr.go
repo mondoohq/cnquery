@@ -128,6 +128,22 @@ const (
 	ResourceAwsSagemakerModelCard                                               string = "aws.sagemaker.modelCard"
 	ResourceAwsSagemakerSpace                                                   string = "aws.sagemaker.space"
 	ResourceAwsSagemakerUserProfile                                             string = "aws.sagemaker.userProfile"
+	ResourceAwsSagemakerEndpointConfig                                          string = "aws.sagemaker.endpointConfig"
+	ResourceAwsSagemakerEndpointConfigProductionVariant                         string = "aws.sagemaker.endpointConfig.productionVariant"
+	ResourceAwsSagemakerEndpointConfigServerlessConfig                          string = "aws.sagemaker.endpointConfig.serverlessConfig"
+	ResourceAwsSagemakerEndpointConfigDataCaptureConfig                         string = "aws.sagemaker.endpointConfig.dataCaptureConfig"
+	ResourceAwsSagemakerMonitoringSchedule                                      string = "aws.sagemaker.monitoringSchedule"
+	ResourceAwsSagemakerMonitoringScheduleScheduleConfig                        string = "aws.sagemaker.monitoringSchedule.scheduleConfig"
+	ResourceAwsSagemakerMonitoringJobDefinitionAppSpecification                 string = "aws.sagemaker.monitoringJobDefinition.appSpecification"
+	ResourceAwsSagemakerMonitoringJobDefinitionJobInput                         string = "aws.sagemaker.monitoringJobDefinition.jobInput"
+	ResourceAwsSagemakerMonitoringJobDefinitionJobOutputConfig                  string = "aws.sagemaker.monitoringJobDefinition.jobOutputConfig"
+	ResourceAwsSagemakerMonitoringJobDefinitionMonitoringOutput                 string = "aws.sagemaker.monitoringJobDefinition.monitoringOutput"
+	ResourceAwsSagemakerMonitoringJobDefinitionJobResources                     string = "aws.sagemaker.monitoringJobDefinition.jobResources"
+	ResourceAwsSagemakerMonitoringJobDefinitionNetworkConfig                    string = "aws.sagemaker.monitoringJobDefinition.networkConfig"
+	ResourceAwsSagemakerDataQualityJobDefinition                                string = "aws.sagemaker.dataQualityJobDefinition"
+	ResourceAwsSagemakerModelQualityJobDefinition                               string = "aws.sagemaker.modelQualityJobDefinition"
+	ResourceAwsSagemakerModelBiasJobDefinition                                  string = "aws.sagemaker.modelBiasJobDefinition"
+	ResourceAwsSagemakerModelExplainabilityJobDefinition                        string = "aws.sagemaker.modelExplainabilityJobDefinition"
 	ResourceAwsSns                                                              string = "aws.sns"
 	ResourceAwsSnsTopic                                                         string = "aws.sns.topic"
 	ResourceAwsSnsSubscription                                                  string = "aws.sns.subscription"
@@ -1029,6 +1045,70 @@ func init() {
 		"aws.sagemaker.userProfile": {
 			// to override args, implement: initAwsSagemakerUserProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsSagemakerUserProfile,
+		},
+		"aws.sagemaker.endpointConfig": {
+			// to override args, implement: initAwsSagemakerEndpointConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerEndpointConfig,
+		},
+		"aws.sagemaker.endpointConfig.productionVariant": {
+			// to override args, implement: initAwsSagemakerEndpointConfigProductionVariant(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerEndpointConfigProductionVariant,
+		},
+		"aws.sagemaker.endpointConfig.serverlessConfig": {
+			// to override args, implement: initAwsSagemakerEndpointConfigServerlessConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerEndpointConfigServerlessConfig,
+		},
+		"aws.sagemaker.endpointConfig.dataCaptureConfig": {
+			// to override args, implement: initAwsSagemakerEndpointConfigDataCaptureConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerEndpointConfigDataCaptureConfig,
+		},
+		"aws.sagemaker.monitoringSchedule": {
+			// to override args, implement: initAwsSagemakerMonitoringSchedule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerMonitoringSchedule,
+		},
+		"aws.sagemaker.monitoringSchedule.scheduleConfig": {
+			// to override args, implement: initAwsSagemakerMonitoringScheduleScheduleConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerMonitoringScheduleScheduleConfig,
+		},
+		"aws.sagemaker.monitoringJobDefinition.appSpecification": {
+			// to override args, implement: initAwsSagemakerMonitoringJobDefinitionAppSpecification(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerMonitoringJobDefinitionAppSpecification,
+		},
+		"aws.sagemaker.monitoringJobDefinition.jobInput": {
+			// to override args, implement: initAwsSagemakerMonitoringJobDefinitionJobInput(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerMonitoringJobDefinitionJobInput,
+		},
+		"aws.sagemaker.monitoringJobDefinition.jobOutputConfig": {
+			// to override args, implement: initAwsSagemakerMonitoringJobDefinitionJobOutputConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerMonitoringJobDefinitionJobOutputConfig,
+		},
+		"aws.sagemaker.monitoringJobDefinition.monitoringOutput": {
+			// to override args, implement: initAwsSagemakerMonitoringJobDefinitionMonitoringOutput(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerMonitoringJobDefinitionMonitoringOutput,
+		},
+		"aws.sagemaker.monitoringJobDefinition.jobResources": {
+			// to override args, implement: initAwsSagemakerMonitoringJobDefinitionJobResources(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerMonitoringJobDefinitionJobResources,
+		},
+		"aws.sagemaker.monitoringJobDefinition.networkConfig": {
+			// to override args, implement: initAwsSagemakerMonitoringJobDefinitionNetworkConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerMonitoringJobDefinitionNetworkConfig,
+		},
+		"aws.sagemaker.dataQualityJobDefinition": {
+			// to override args, implement: initAwsSagemakerDataQualityJobDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerDataQualityJobDefinition,
+		},
+		"aws.sagemaker.modelQualityJobDefinition": {
+			// to override args, implement: initAwsSagemakerModelQualityJobDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerModelQualityJobDefinition,
+		},
+		"aws.sagemaker.modelBiasJobDefinition": {
+			// to override args, implement: initAwsSagemakerModelBiasJobDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerModelBiasJobDefinition,
+		},
+		"aws.sagemaker.modelExplainabilityJobDefinition": {
+			// to override args, implement: initAwsSagemakerModelExplainabilityJobDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerModelExplainabilityJobDefinition,
 		},
 		"aws.sns": {
 			// to override args, implement: initAwsSns(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4933,6 +5013,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.sagemaker.userProfiles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemaker).GetUserProfiles()).ToDataRes(types.Array(types.Resource("aws.sagemaker.userProfile")))
 	},
+	"aws.sagemaker.endpointConfigs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemaker).GetEndpointConfigs()).ToDataRes(types.Array(types.Resource("aws.sagemaker.endpointConfig")))
+	},
+	"aws.sagemaker.monitoringSchedules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemaker).GetMonitoringSchedules()).ToDataRes(types.Array(types.Resource("aws.sagemaker.monitoringSchedule")))
+	},
+	"aws.sagemaker.dataQualityJobDefinitions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemaker).GetDataQualityJobDefinitions()).ToDataRes(types.Array(types.Resource("aws.sagemaker.dataQualityJobDefinition")))
+	},
+	"aws.sagemaker.modelQualityJobDefinitions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemaker).GetModelQualityJobDefinitions()).ToDataRes(types.Array(types.Resource("aws.sagemaker.modelQualityJobDefinition")))
+	},
+	"aws.sagemaker.modelBiasJobDefinitions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemaker).GetModelBiasJobDefinitions()).ToDataRes(types.Array(types.Resource("aws.sagemaker.modelBiasJobDefinition")))
+	},
+	"aws.sagemaker.modelExplainabilityJobDefinitions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemaker).GetModelExplainabilityJobDefinitions()).ToDataRes(types.Array(types.Resource("aws.sagemaker.modelExplainabilityJobDefinition")))
+	},
 	"aws.sagemaker.notebookinstance.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerNotebookinstance).GetArn()).ToDataRes(types.String)
 	},
@@ -5814,6 +5912,351 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.sagemaker.userProfile.singleSignOnUserValue": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerUserProfile).GetSingleSignOnUserValue()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.endpointConfig.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpointConfig).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.endpointConfig.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpointConfig).GetName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.endpointConfig.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpointConfig).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.endpointConfig.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpointConfig).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.endpointConfig.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpointConfig).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.sagemaker.endpointConfig.productionVariants": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpointConfig).GetProductionVariants()).ToDataRes(types.Array(types.Resource("aws.sagemaker.endpointConfig.productionVariant")))
+	},
+	"aws.sagemaker.endpointConfig.dataCaptureConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpointConfig).GetDataCaptureConfig()).ToDataRes(types.Resource("aws.sagemaker.endpointConfig.dataCaptureConfig"))
+	},
+	"aws.sagemaker.endpointConfig.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpointConfig).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.sagemaker.endpointConfig.asyncInferenceConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpointConfig).GetAsyncInferenceConfig()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.endpointConfig.productionVariant.variantName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpointConfigProductionVariant).GetVariantName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.endpointConfig.productionVariant.modelName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpointConfigProductionVariant).GetModelName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.endpointConfig.productionVariant.instanceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpointConfigProductionVariant).GetInstanceType()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.endpointConfig.productionVariant.initialInstanceCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpointConfigProductionVariant).GetInitialInstanceCount()).ToDataRes(types.Int)
+	},
+	"aws.sagemaker.endpointConfig.productionVariant.initialVariantWeight": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpointConfigProductionVariant).GetInitialVariantWeight()).ToDataRes(types.Float)
+	},
+	"aws.sagemaker.endpointConfig.productionVariant.volumeSizeInGB": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpointConfigProductionVariant).GetVolumeSizeInGB()).ToDataRes(types.Int)
+	},
+	"aws.sagemaker.endpointConfig.productionVariant.modelDataDownloadTimeoutInSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpointConfigProductionVariant).GetModelDataDownloadTimeoutInSeconds()).ToDataRes(types.Int)
+	},
+	"aws.sagemaker.endpointConfig.productionVariant.acceleratorType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpointConfigProductionVariant).GetAcceleratorType()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.endpointConfig.productionVariant.serverlessConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpointConfigProductionVariant).GetServerlessConfig()).ToDataRes(types.Resource("aws.sagemaker.endpointConfig.serverlessConfig"))
+	},
+	"aws.sagemaker.endpointConfig.productionVariant.managedInstanceScaling": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpointConfigProductionVariant).GetManagedInstanceScaling()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.endpointConfig.productionVariant.routingConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpointConfigProductionVariant).GetRoutingConfig()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.endpointConfig.serverlessConfig.memorySizeInMB": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpointConfigServerlessConfig).GetMemorySizeInMB()).ToDataRes(types.Int)
+	},
+	"aws.sagemaker.endpointConfig.serverlessConfig.maxConcurrency": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpointConfigServerlessConfig).GetMaxConcurrency()).ToDataRes(types.Int)
+	},
+	"aws.sagemaker.endpointConfig.serverlessConfig.provisionedConcurrency": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpointConfigServerlessConfig).GetProvisionedConcurrency()).ToDataRes(types.Int)
+	},
+	"aws.sagemaker.endpointConfig.dataCaptureConfig.enableCapture": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpointConfigDataCaptureConfig).GetEnableCapture()).ToDataRes(types.Bool)
+	},
+	"aws.sagemaker.endpointConfig.dataCaptureConfig.initialSamplingPercentage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpointConfigDataCaptureConfig).GetInitialSamplingPercentage()).ToDataRes(types.Int)
+	},
+	"aws.sagemaker.endpointConfig.dataCaptureConfig.destinationS3Uri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpointConfigDataCaptureConfig).GetDestinationS3Uri()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.endpointConfig.dataCaptureConfig.captureOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpointConfigDataCaptureConfig).GetCaptureOptions()).ToDataRes(types.Array(types.String))
+	},
+	"aws.sagemaker.endpointConfig.dataCaptureConfig.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpointConfigDataCaptureConfig).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.sagemaker.endpointConfig.dataCaptureConfig.captureContentTypeHeader": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerEndpointConfigDataCaptureConfig).GetCaptureContentTypeHeader()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.monitoringSchedule.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringSchedule).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.monitoringSchedule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringSchedule).GetName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.monitoringSchedule.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringSchedule).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.monitoringSchedule.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringSchedule).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.monitoringSchedule.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringSchedule).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.monitoringSchedule.lastModifiedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringSchedule).GetLastModifiedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.monitoringSchedule.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringSchedule).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.sagemaker.monitoringSchedule.monitoringType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringSchedule).GetMonitoringType()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.monitoringSchedule.scheduleConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringSchedule).GetScheduleConfig()).ToDataRes(types.Resource("aws.sagemaker.monitoringSchedule.scheduleConfig"))
+	},
+	"aws.sagemaker.monitoringSchedule.monitoringJobDefinitionName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringSchedule).GetMonitoringJobDefinitionName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.monitoringSchedule.endpointName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringSchedule).GetEndpointName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.monitoringSchedule.endpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringSchedule).GetEndpoint()).ToDataRes(types.Resource("aws.sagemaker.endpoint"))
+	},
+	"aws.sagemaker.monitoringSchedule.failureReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringSchedule).GetFailureReason()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.monitoringSchedule.scheduleConfig.scheduleExpression": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringScheduleScheduleConfig).GetScheduleExpression()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.monitoringSchedule.scheduleConfig.dataAnalysisStartTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringScheduleScheduleConfig).GetDataAnalysisStartTime()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.monitoringSchedule.scheduleConfig.dataAnalysisEndTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringScheduleScheduleConfig).GetDataAnalysisEndTime()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.monitoringJobDefinition.appSpecification.imageUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification).GetImageUri()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.monitoringJobDefinition.appSpecification.containerEntrypoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification).GetContainerEntrypoint()).ToDataRes(types.Array(types.String))
+	},
+	"aws.sagemaker.monitoringJobDefinition.appSpecification.containerArguments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification).GetContainerArguments()).ToDataRes(types.Array(types.String))
+	},
+	"aws.sagemaker.monitoringJobDefinition.appSpecification.postAnalyticsProcessorSourceUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification).GetPostAnalyticsProcessorSourceUri()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.monitoringJobDefinition.appSpecification.recordPreprocessorSourceUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification).GetRecordPreprocessorSourceUri()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.monitoringJobDefinition.appSpecification.environment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification).GetEnvironment()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.sagemaker.monitoringJobDefinition.jobInput.endpointInput": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringJobDefinitionJobInput).GetEndpointInput()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.monitoringJobDefinition.jobInput.batchTransformInput": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringJobDefinitionJobInput).GetBatchTransformInput()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.monitoringJobDefinition.jobOutputConfig.monitoringOutputs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig).GetMonitoringOutputs()).ToDataRes(types.Array(types.Resource("aws.sagemaker.monitoringJobDefinition.monitoringOutput")))
+	},
+	"aws.sagemaker.monitoringJobDefinition.jobOutputConfig.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.sagemaker.monitoringJobDefinition.monitoringOutput.s3Uri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringJobDefinitionMonitoringOutput).GetS3Uri()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.monitoringJobDefinition.monitoringOutput.localPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringJobDefinitionMonitoringOutput).GetLocalPath()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.monitoringJobDefinition.monitoringOutput.s3UploadMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringJobDefinitionMonitoringOutput).GetS3UploadMode()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.monitoringJobDefinition.jobResources.instanceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringJobDefinitionJobResources).GetInstanceType()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.monitoringJobDefinition.jobResources.instanceCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringJobDefinitionJobResources).GetInstanceCount()).ToDataRes(types.Int)
+	},
+	"aws.sagemaker.monitoringJobDefinition.jobResources.volumeSizeInGB": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringJobDefinitionJobResources).GetVolumeSizeInGB()).ToDataRes(types.Int)
+	},
+	"aws.sagemaker.monitoringJobDefinition.jobResources.volumeKmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringJobDefinitionJobResources).GetVolumeKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.sagemaker.monitoringJobDefinition.networkConfig.enableInterContainerTrafficEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig).GetEnableInterContainerTrafficEncryption()).ToDataRes(types.Bool)
+	},
+	"aws.sagemaker.monitoringJobDefinition.networkConfig.enableNetworkIsolation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig).GetEnableNetworkIsolation()).ToDataRes(types.Bool)
+	},
+	"aws.sagemaker.monitoringJobDefinition.networkConfig.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
+	"aws.sagemaker.monitoringJobDefinition.networkConfig.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.sagemaker.monitoringJobDefinition.networkConfig.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
+	"aws.sagemaker.dataQualityJobDefinition.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDataQualityJobDefinition).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.dataQualityJobDefinition.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDataQualityJobDefinition).GetName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.dataQualityJobDefinition.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDataQualityJobDefinition).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.dataQualityJobDefinition.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDataQualityJobDefinition).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.dataQualityJobDefinition.appSpecification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDataQualityJobDefinition).GetAppSpecification()).ToDataRes(types.Resource("aws.sagemaker.monitoringJobDefinition.appSpecification"))
+	},
+	"aws.sagemaker.dataQualityJobDefinition.baselineConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDataQualityJobDefinition).GetBaselineConfig()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.dataQualityJobDefinition.jobInput": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDataQualityJobDefinition).GetJobInput()).ToDataRes(types.Resource("aws.sagemaker.monitoringJobDefinition.jobInput"))
+	},
+	"aws.sagemaker.dataQualityJobDefinition.jobOutputConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDataQualityJobDefinition).GetJobOutputConfig()).ToDataRes(types.Resource("aws.sagemaker.monitoringJobDefinition.jobOutputConfig"))
+	},
+	"aws.sagemaker.dataQualityJobDefinition.jobResources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDataQualityJobDefinition).GetJobResources()).ToDataRes(types.Resource("aws.sagemaker.monitoringJobDefinition.jobResources"))
+	},
+	"aws.sagemaker.dataQualityJobDefinition.networkConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDataQualityJobDefinition).GetNetworkConfig()).ToDataRes(types.Resource("aws.sagemaker.monitoringJobDefinition.networkConfig"))
+	},
+	"aws.sagemaker.dataQualityJobDefinition.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDataQualityJobDefinition).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.sagemaker.dataQualityJobDefinition.stoppingCondition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDataQualityJobDefinition).GetStoppingCondition()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.modelQualityJobDefinition.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelQualityJobDefinition).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelQualityJobDefinition.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelQualityJobDefinition).GetName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelQualityJobDefinition.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelQualityJobDefinition).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelQualityJobDefinition.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelQualityJobDefinition).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.modelQualityJobDefinition.appSpecification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelQualityJobDefinition).GetAppSpecification()).ToDataRes(types.Resource("aws.sagemaker.monitoringJobDefinition.appSpecification"))
+	},
+	"aws.sagemaker.modelQualityJobDefinition.baselineConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelQualityJobDefinition).GetBaselineConfig()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.modelQualityJobDefinition.jobInput": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelQualityJobDefinition).GetJobInput()).ToDataRes(types.Resource("aws.sagemaker.monitoringJobDefinition.jobInput"))
+	},
+	"aws.sagemaker.modelQualityJobDefinition.jobOutputConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelQualityJobDefinition).GetJobOutputConfig()).ToDataRes(types.Resource("aws.sagemaker.monitoringJobDefinition.jobOutputConfig"))
+	},
+	"aws.sagemaker.modelQualityJobDefinition.jobResources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelQualityJobDefinition).GetJobResources()).ToDataRes(types.Resource("aws.sagemaker.monitoringJobDefinition.jobResources"))
+	},
+	"aws.sagemaker.modelQualityJobDefinition.networkConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelQualityJobDefinition).GetNetworkConfig()).ToDataRes(types.Resource("aws.sagemaker.monitoringJobDefinition.networkConfig"))
+	},
+	"aws.sagemaker.modelQualityJobDefinition.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelQualityJobDefinition).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.sagemaker.modelQualityJobDefinition.stoppingCondition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelQualityJobDefinition).GetStoppingCondition()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.modelBiasJobDefinition.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelBiasJobDefinition).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelBiasJobDefinition.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelBiasJobDefinition).GetName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelBiasJobDefinition.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelBiasJobDefinition).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelBiasJobDefinition.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelBiasJobDefinition).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.modelBiasJobDefinition.appSpecification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelBiasJobDefinition).GetAppSpecification()).ToDataRes(types.Resource("aws.sagemaker.monitoringJobDefinition.appSpecification"))
+	},
+	"aws.sagemaker.modelBiasJobDefinition.baselineConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelBiasJobDefinition).GetBaselineConfig()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.modelBiasJobDefinition.jobInput": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelBiasJobDefinition).GetJobInput()).ToDataRes(types.Resource("aws.sagemaker.monitoringJobDefinition.jobInput"))
+	},
+	"aws.sagemaker.modelBiasJobDefinition.jobOutputConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelBiasJobDefinition).GetJobOutputConfig()).ToDataRes(types.Resource("aws.sagemaker.monitoringJobDefinition.jobOutputConfig"))
+	},
+	"aws.sagemaker.modelBiasJobDefinition.jobResources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelBiasJobDefinition).GetJobResources()).ToDataRes(types.Resource("aws.sagemaker.monitoringJobDefinition.jobResources"))
+	},
+	"aws.sagemaker.modelBiasJobDefinition.networkConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelBiasJobDefinition).GetNetworkConfig()).ToDataRes(types.Resource("aws.sagemaker.monitoringJobDefinition.networkConfig"))
+	},
+	"aws.sagemaker.modelBiasJobDefinition.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelBiasJobDefinition).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.sagemaker.modelBiasJobDefinition.stoppingCondition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelBiasJobDefinition).GetStoppingCondition()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.modelExplainabilityJobDefinition.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelExplainabilityJobDefinition).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelExplainabilityJobDefinition.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelExplainabilityJobDefinition).GetName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelExplainabilityJobDefinition.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelExplainabilityJobDefinition).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.modelExplainabilityJobDefinition.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelExplainabilityJobDefinition).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.modelExplainabilityJobDefinition.appSpecification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelExplainabilityJobDefinition).GetAppSpecification()).ToDataRes(types.Resource("aws.sagemaker.monitoringJobDefinition.appSpecification"))
+	},
+	"aws.sagemaker.modelExplainabilityJobDefinition.baselineConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelExplainabilityJobDefinition).GetBaselineConfig()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.modelExplainabilityJobDefinition.jobInput": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelExplainabilityJobDefinition).GetJobInput()).ToDataRes(types.Resource("aws.sagemaker.monitoringJobDefinition.jobInput"))
+	},
+	"aws.sagemaker.modelExplainabilityJobDefinition.jobOutputConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelExplainabilityJobDefinition).GetJobOutputConfig()).ToDataRes(types.Resource("aws.sagemaker.monitoringJobDefinition.jobOutputConfig"))
+	},
+	"aws.sagemaker.modelExplainabilityJobDefinition.jobResources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelExplainabilityJobDefinition).GetJobResources()).ToDataRes(types.Resource("aws.sagemaker.monitoringJobDefinition.jobResources"))
+	},
+	"aws.sagemaker.modelExplainabilityJobDefinition.networkConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelExplainabilityJobDefinition).GetNetworkConfig()).ToDataRes(types.Resource("aws.sagemaker.monitoringJobDefinition.networkConfig"))
+	},
+	"aws.sagemaker.modelExplainabilityJobDefinition.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelExplainabilityJobDefinition).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.sagemaker.modelExplainabilityJobDefinition.stoppingCondition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelExplainabilityJobDefinition).GetStoppingCondition()).ToDataRes(types.Dict)
 	},
 	"aws.sns.topics": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSns).GetTopics()).ToDataRes(types.Array(types.Resource("aws.sns.topic")))
@@ -21896,6 +22339,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSagemaker).UserProfiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.sagemaker.endpointConfigs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemaker).EndpointConfigs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringSchedules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemaker).MonitoringSchedules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.dataQualityJobDefinitions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemaker).DataQualityJobDefinitions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelQualityJobDefinitions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemaker).ModelQualityJobDefinitions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelBiasJobDefinitions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemaker).ModelBiasJobDefinitions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelExplainabilityJobDefinitions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemaker).ModelExplainabilityJobDefinitions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.sagemaker.notebookinstance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerNotebookinstance).__id, ok = v.Value.(string)
 		return
@@ -23174,6 +23641,530 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.sagemaker.userProfile.singleSignOnUserValue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerUserProfile).SingleSignOnUserValue, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpointConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.endpointConfig.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfig).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpointConfig.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfig).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpointConfig.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfig).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpointConfig.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfig).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpointConfig.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfig).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpointConfig.productionVariants": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfig).ProductionVariants, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpointConfig.dataCaptureConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfig).DataCaptureConfig, ok = plugin.RawToTValue[*mqlAwsSagemakerEndpointConfigDataCaptureConfig](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpointConfig.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfig).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpointConfig.asyncInferenceConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfig).AsyncInferenceConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpointConfig.productionVariant.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfigProductionVariant).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.endpointConfig.productionVariant.variantName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfigProductionVariant).VariantName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpointConfig.productionVariant.modelName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfigProductionVariant).ModelName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpointConfig.productionVariant.instanceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfigProductionVariant).InstanceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpointConfig.productionVariant.initialInstanceCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfigProductionVariant).InitialInstanceCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpointConfig.productionVariant.initialVariantWeight": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfigProductionVariant).InitialVariantWeight, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpointConfig.productionVariant.volumeSizeInGB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfigProductionVariant).VolumeSizeInGB, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpointConfig.productionVariant.modelDataDownloadTimeoutInSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfigProductionVariant).ModelDataDownloadTimeoutInSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpointConfig.productionVariant.acceleratorType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfigProductionVariant).AcceleratorType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpointConfig.productionVariant.serverlessConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfigProductionVariant).ServerlessConfig, ok = plugin.RawToTValue[*mqlAwsSagemakerEndpointConfigServerlessConfig](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpointConfig.productionVariant.managedInstanceScaling": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfigProductionVariant).ManagedInstanceScaling, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpointConfig.productionVariant.routingConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfigProductionVariant).RoutingConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpointConfig.serverlessConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfigServerlessConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.endpointConfig.serverlessConfig.memorySizeInMB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfigServerlessConfig).MemorySizeInMB, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpointConfig.serverlessConfig.maxConcurrency": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfigServerlessConfig).MaxConcurrency, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpointConfig.serverlessConfig.provisionedConcurrency": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfigServerlessConfig).ProvisionedConcurrency, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpointConfig.dataCaptureConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfigDataCaptureConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.endpointConfig.dataCaptureConfig.enableCapture": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfigDataCaptureConfig).EnableCapture, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpointConfig.dataCaptureConfig.initialSamplingPercentage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfigDataCaptureConfig).InitialSamplingPercentage, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpointConfig.dataCaptureConfig.destinationS3Uri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfigDataCaptureConfig).DestinationS3Uri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpointConfig.dataCaptureConfig.captureOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfigDataCaptureConfig).CaptureOptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpointConfig.dataCaptureConfig.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfigDataCaptureConfig).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.endpointConfig.dataCaptureConfig.captureContentTypeHeader": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerEndpointConfigDataCaptureConfig).CaptureContentTypeHeader, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringSchedule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringSchedule).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.monitoringSchedule.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringSchedule).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringSchedule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringSchedule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringSchedule.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringSchedule).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringSchedule.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringSchedule).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringSchedule.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringSchedule).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringSchedule.lastModifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringSchedule).LastModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringSchedule.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringSchedule).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringSchedule.monitoringType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringSchedule).MonitoringType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringSchedule.scheduleConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringSchedule).ScheduleConfig, ok = plugin.RawToTValue[*mqlAwsSagemakerMonitoringScheduleScheduleConfig](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringSchedule.monitoringJobDefinitionName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringSchedule).MonitoringJobDefinitionName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringSchedule.endpointName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringSchedule).EndpointName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringSchedule.endpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringSchedule).Endpoint, ok = plugin.RawToTValue[*mqlAwsSagemakerEndpoint](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringSchedule.failureReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringSchedule).FailureReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringSchedule.scheduleConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringScheduleScheduleConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.monitoringSchedule.scheduleConfig.scheduleExpression": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringScheduleScheduleConfig).ScheduleExpression, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringSchedule.scheduleConfig.dataAnalysisStartTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringScheduleScheduleConfig).DataAnalysisStartTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringSchedule.scheduleConfig.dataAnalysisEndTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringScheduleScheduleConfig).DataAnalysisEndTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinition.appSpecification.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinition.appSpecification.imageUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification).ImageUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinition.appSpecification.containerEntrypoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification).ContainerEntrypoint, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinition.appSpecification.containerArguments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification).ContainerArguments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinition.appSpecification.postAnalyticsProcessorSourceUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification).PostAnalyticsProcessorSourceUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinition.appSpecification.recordPreprocessorSourceUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification).RecordPreprocessorSourceUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinition.appSpecification.environment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification).Environment, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinition.jobInput.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringJobDefinitionJobInput).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinition.jobInput.endpointInput": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringJobDefinitionJobInput).EndpointInput, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinition.jobInput.batchTransformInput": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringJobDefinitionJobInput).BatchTransformInput, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinition.jobOutputConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinition.jobOutputConfig.monitoringOutputs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig).MonitoringOutputs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinition.jobOutputConfig.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinition.monitoringOutput.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringJobDefinitionMonitoringOutput).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinition.monitoringOutput.s3Uri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringJobDefinitionMonitoringOutput).S3Uri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinition.monitoringOutput.localPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringJobDefinitionMonitoringOutput).LocalPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinition.monitoringOutput.s3UploadMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringJobDefinitionMonitoringOutput).S3UploadMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinition.jobResources.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringJobDefinitionJobResources).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinition.jobResources.instanceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringJobDefinitionJobResources).InstanceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinition.jobResources.instanceCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringJobDefinitionJobResources).InstanceCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinition.jobResources.volumeSizeInGB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringJobDefinitionJobResources).VolumeSizeInGB, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinition.jobResources.volumeKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringJobDefinitionJobResources).VolumeKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinition.networkConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinition.networkConfig.enableInterContainerTrafficEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig).EnableInterContainerTrafficEncryption, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinition.networkConfig.enableNetworkIsolation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig).EnableNetworkIsolation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinition.networkConfig.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinition.networkConfig.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.monitoringJobDefinition.networkConfig.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.dataQualityJobDefinition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDataQualityJobDefinition).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.dataQualityJobDefinition.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDataQualityJobDefinition).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.dataQualityJobDefinition.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDataQualityJobDefinition).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.dataQualityJobDefinition.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDataQualityJobDefinition).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.dataQualityJobDefinition.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDataQualityJobDefinition).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.dataQualityJobDefinition.appSpecification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDataQualityJobDefinition).AppSpecification, ok = plugin.RawToTValue[*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.dataQualityJobDefinition.baselineConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDataQualityJobDefinition).BaselineConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.dataQualityJobDefinition.jobInput": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDataQualityJobDefinition).JobInput, ok = plugin.RawToTValue[*mqlAwsSagemakerMonitoringJobDefinitionJobInput](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.dataQualityJobDefinition.jobOutputConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDataQualityJobDefinition).JobOutputConfig, ok = plugin.RawToTValue[*mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.dataQualityJobDefinition.jobResources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDataQualityJobDefinition).JobResources, ok = plugin.RawToTValue[*mqlAwsSagemakerMonitoringJobDefinitionJobResources](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.dataQualityJobDefinition.networkConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDataQualityJobDefinition).NetworkConfig, ok = plugin.RawToTValue[*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.dataQualityJobDefinition.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDataQualityJobDefinition).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.dataQualityJobDefinition.stoppingCondition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDataQualityJobDefinition).StoppingCondition, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelQualityJobDefinition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelQualityJobDefinition).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.modelQualityJobDefinition.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelQualityJobDefinition).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelQualityJobDefinition.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelQualityJobDefinition).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelQualityJobDefinition.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelQualityJobDefinition).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelQualityJobDefinition.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelQualityJobDefinition).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelQualityJobDefinition.appSpecification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelQualityJobDefinition).AppSpecification, ok = plugin.RawToTValue[*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelQualityJobDefinition.baselineConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelQualityJobDefinition).BaselineConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelQualityJobDefinition.jobInput": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelQualityJobDefinition).JobInput, ok = plugin.RawToTValue[*mqlAwsSagemakerMonitoringJobDefinitionJobInput](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelQualityJobDefinition.jobOutputConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelQualityJobDefinition).JobOutputConfig, ok = plugin.RawToTValue[*mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelQualityJobDefinition.jobResources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelQualityJobDefinition).JobResources, ok = plugin.RawToTValue[*mqlAwsSagemakerMonitoringJobDefinitionJobResources](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelQualityJobDefinition.networkConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelQualityJobDefinition).NetworkConfig, ok = plugin.RawToTValue[*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelQualityJobDefinition.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelQualityJobDefinition).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelQualityJobDefinition.stoppingCondition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelQualityJobDefinition).StoppingCondition, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelBiasJobDefinition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelBiasJobDefinition).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.modelBiasJobDefinition.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelBiasJobDefinition).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelBiasJobDefinition.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelBiasJobDefinition).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelBiasJobDefinition.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelBiasJobDefinition).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelBiasJobDefinition.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelBiasJobDefinition).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelBiasJobDefinition.appSpecification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelBiasJobDefinition).AppSpecification, ok = plugin.RawToTValue[*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelBiasJobDefinition.baselineConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelBiasJobDefinition).BaselineConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelBiasJobDefinition.jobInput": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelBiasJobDefinition).JobInput, ok = plugin.RawToTValue[*mqlAwsSagemakerMonitoringJobDefinitionJobInput](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelBiasJobDefinition.jobOutputConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelBiasJobDefinition).JobOutputConfig, ok = plugin.RawToTValue[*mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelBiasJobDefinition.jobResources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelBiasJobDefinition).JobResources, ok = plugin.RawToTValue[*mqlAwsSagemakerMonitoringJobDefinitionJobResources](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelBiasJobDefinition.networkConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelBiasJobDefinition).NetworkConfig, ok = plugin.RawToTValue[*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelBiasJobDefinition.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelBiasJobDefinition).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelBiasJobDefinition.stoppingCondition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelBiasJobDefinition).StoppingCondition, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelExplainabilityJobDefinition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelExplainabilityJobDefinition).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.modelExplainabilityJobDefinition.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelExplainabilityJobDefinition).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelExplainabilityJobDefinition.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelExplainabilityJobDefinition).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelExplainabilityJobDefinition.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelExplainabilityJobDefinition).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelExplainabilityJobDefinition.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelExplainabilityJobDefinition).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelExplainabilityJobDefinition.appSpecification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelExplainabilityJobDefinition).AppSpecification, ok = plugin.RawToTValue[*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelExplainabilityJobDefinition.baselineConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelExplainabilityJobDefinition).BaselineConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelExplainabilityJobDefinition.jobInput": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelExplainabilityJobDefinition).JobInput, ok = plugin.RawToTValue[*mqlAwsSagemakerMonitoringJobDefinitionJobInput](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelExplainabilityJobDefinition.jobOutputConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelExplainabilityJobDefinition).JobOutputConfig, ok = plugin.RawToTValue[*mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelExplainabilityJobDefinition.jobResources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelExplainabilityJobDefinition).JobResources, ok = plugin.RawToTValue[*mqlAwsSagemakerMonitoringJobDefinitionJobResources](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelExplainabilityJobDefinition.networkConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelExplainabilityJobDefinition).NetworkConfig, ok = plugin.RawToTValue[*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelExplainabilityJobDefinition.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelExplainabilityJobDefinition).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelExplainabilityJobDefinition.stoppingCondition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelExplainabilityJobDefinition).StoppingCondition, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.sns.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -50657,21 +51648,27 @@ type mqlAwsSagemaker struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsSagemakerInternal it will be used here
-	Endpoints           plugin.TValue[[]any]
-	NotebookInstances   plugin.TValue[[]any]
-	Models              plugin.TValue[[]any]
-	TrainingJobs        plugin.TValue[[]any]
-	ProcessingJobs      plugin.TValue[[]any]
-	Pipelines           plugin.TValue[[]any]
-	Domains             plugin.TValue[[]any]
-	InferenceComponents plugin.TValue[[]any]
-	Clusters            plugin.TValue[[]any]
-	FeatureGroups       plugin.TValue[[]any]
-	ModelPackages       plugin.TValue[[]any]
-	ModelPackageGroups  plugin.TValue[[]any]
-	ModelCards          plugin.TValue[[]any]
-	Spaces              plugin.TValue[[]any]
-	UserProfiles        plugin.TValue[[]any]
+	Endpoints                         plugin.TValue[[]any]
+	NotebookInstances                 plugin.TValue[[]any]
+	Models                            plugin.TValue[[]any]
+	TrainingJobs                      plugin.TValue[[]any]
+	ProcessingJobs                    plugin.TValue[[]any]
+	Pipelines                         plugin.TValue[[]any]
+	Domains                           plugin.TValue[[]any]
+	InferenceComponents               plugin.TValue[[]any]
+	Clusters                          plugin.TValue[[]any]
+	FeatureGroups                     plugin.TValue[[]any]
+	ModelPackages                     plugin.TValue[[]any]
+	ModelPackageGroups                plugin.TValue[[]any]
+	ModelCards                        plugin.TValue[[]any]
+	Spaces                            plugin.TValue[[]any]
+	UserProfiles                      plugin.TValue[[]any]
+	EndpointConfigs                   plugin.TValue[[]any]
+	MonitoringSchedules               plugin.TValue[[]any]
+	DataQualityJobDefinitions         plugin.TValue[[]any]
+	ModelQualityJobDefinitions        plugin.TValue[[]any]
+	ModelBiasJobDefinitions           plugin.TValue[[]any]
+	ModelExplainabilityJobDefinitions plugin.TValue[[]any]
 }
 
 // createAwsSagemaker creates a new instance of this resource
@@ -50948,6 +51945,102 @@ func (c *mqlAwsSagemaker) GetUserProfiles() *plugin.TValue[[]any] {
 		}
 
 		return c.userProfiles()
+	})
+}
+
+func (c *mqlAwsSagemaker) GetEndpointConfigs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EndpointConfigs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker", c.__id, "endpointConfigs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.endpointConfigs()
+	})
+}
+
+func (c *mqlAwsSagemaker) GetMonitoringSchedules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MonitoringSchedules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker", c.__id, "monitoringSchedules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.monitoringSchedules()
+	})
+}
+
+func (c *mqlAwsSagemaker) GetDataQualityJobDefinitions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DataQualityJobDefinitions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker", c.__id, "dataQualityJobDefinitions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.dataQualityJobDefinitions()
+	})
+}
+
+func (c *mqlAwsSagemaker) GetModelQualityJobDefinitions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ModelQualityJobDefinitions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker", c.__id, "modelQualityJobDefinitions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.modelQualityJobDefinitions()
+	})
+}
+
+func (c *mqlAwsSagemaker) GetModelBiasJobDefinitions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ModelBiasJobDefinitions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker", c.__id, "modelBiasJobDefinitions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.modelBiasJobDefinitions()
+	})
+}
+
+func (c *mqlAwsSagemaker) GetModelExplainabilityJobDefinitions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ModelExplainabilityJobDefinitions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker", c.__id, "modelExplainabilityJobDefinitions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.modelExplainabilityJobDefinitions()
 	})
 }
 
@@ -54216,6 +55309,1765 @@ func (c *mqlAwsSagemakerUserProfile) GetSingleSignOnUserIdentifier() *plugin.TVa
 func (c *mqlAwsSagemakerUserProfile) GetSingleSignOnUserValue() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.SingleSignOnUserValue, func() (string, error) {
 		return c.singleSignOnUserValue()
+	})
+}
+
+// mqlAwsSagemakerEndpointConfig for the aws.sagemaker.endpointConfig resource
+type mqlAwsSagemakerEndpointConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerEndpointConfigInternal
+	Arn                  plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Region               plugin.TValue[string]
+	CreatedAt            plugin.TValue[*time.Time]
+	Tags                 plugin.TValue[map[string]any]
+	ProductionVariants   plugin.TValue[[]any]
+	DataCaptureConfig    plugin.TValue[*mqlAwsSagemakerEndpointConfigDataCaptureConfig]
+	KmsKey               plugin.TValue[*mqlAwsKmsKey]
+	AsyncInferenceConfig plugin.TValue[any]
+}
+
+// createAwsSagemakerEndpointConfig creates a new instance of this resource
+func createAwsSagemakerEndpointConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerEndpointConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.endpointConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerEndpointConfig) MqlName() string {
+	return "aws.sagemaker.endpointConfig"
+}
+
+func (c *mqlAwsSagemakerEndpointConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerEndpointConfig) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSagemakerEndpointConfig) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSagemakerEndpointConfig) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSagemakerEndpointConfig) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSagemakerEndpointConfig) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsSagemakerEndpointConfig) GetProductionVariants() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ProductionVariants, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.endpointConfig", c.__id, "productionVariants")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.productionVariants()
+	})
+}
+
+func (c *mqlAwsSagemakerEndpointConfig) GetDataCaptureConfig() *plugin.TValue[*mqlAwsSagemakerEndpointConfigDataCaptureConfig] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerEndpointConfigDataCaptureConfig](&c.DataCaptureConfig, func() (*mqlAwsSagemakerEndpointConfigDataCaptureConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.endpointConfig", c.__id, "dataCaptureConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerEndpointConfigDataCaptureConfig), nil
+			}
+		}
+
+		return c.dataCaptureConfig()
+	})
+}
+
+func (c *mqlAwsSagemakerEndpointConfig) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.endpointConfig", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsSagemakerEndpointConfig) GetAsyncInferenceConfig() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.AsyncInferenceConfig, func() (any, error) {
+		return c.asyncInferenceConfig()
+	})
+}
+
+// mqlAwsSagemakerEndpointConfigProductionVariant for the aws.sagemaker.endpointConfig.productionVariant resource
+type mqlAwsSagemakerEndpointConfigProductionVariant struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerEndpointConfigProductionVariantInternal
+	VariantName                       plugin.TValue[string]
+	ModelName                         plugin.TValue[string]
+	InstanceType                      plugin.TValue[string]
+	InitialInstanceCount              plugin.TValue[int64]
+	InitialVariantWeight              plugin.TValue[float64]
+	VolumeSizeInGB                    plugin.TValue[int64]
+	ModelDataDownloadTimeoutInSeconds plugin.TValue[int64]
+	AcceleratorType                   plugin.TValue[string]
+	ServerlessConfig                  plugin.TValue[*mqlAwsSagemakerEndpointConfigServerlessConfig]
+	ManagedInstanceScaling            plugin.TValue[any]
+	RoutingConfig                     plugin.TValue[any]
+}
+
+// createAwsSagemakerEndpointConfigProductionVariant creates a new instance of this resource
+func createAwsSagemakerEndpointConfigProductionVariant(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerEndpointConfigProductionVariant{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.endpointConfig.productionVariant", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerEndpointConfigProductionVariant) MqlName() string {
+	return "aws.sagemaker.endpointConfig.productionVariant"
+}
+
+func (c *mqlAwsSagemakerEndpointConfigProductionVariant) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerEndpointConfigProductionVariant) GetVariantName() *plugin.TValue[string] {
+	return &c.VariantName
+}
+
+func (c *mqlAwsSagemakerEndpointConfigProductionVariant) GetModelName() *plugin.TValue[string] {
+	return &c.ModelName
+}
+
+func (c *mqlAwsSagemakerEndpointConfigProductionVariant) GetInstanceType() *plugin.TValue[string] {
+	return &c.InstanceType
+}
+
+func (c *mqlAwsSagemakerEndpointConfigProductionVariant) GetInitialInstanceCount() *plugin.TValue[int64] {
+	return &c.InitialInstanceCount
+}
+
+func (c *mqlAwsSagemakerEndpointConfigProductionVariant) GetInitialVariantWeight() *plugin.TValue[float64] {
+	return &c.InitialVariantWeight
+}
+
+func (c *mqlAwsSagemakerEndpointConfigProductionVariant) GetVolumeSizeInGB() *plugin.TValue[int64] {
+	return &c.VolumeSizeInGB
+}
+
+func (c *mqlAwsSagemakerEndpointConfigProductionVariant) GetModelDataDownloadTimeoutInSeconds() *plugin.TValue[int64] {
+	return &c.ModelDataDownloadTimeoutInSeconds
+}
+
+func (c *mqlAwsSagemakerEndpointConfigProductionVariant) GetAcceleratorType() *plugin.TValue[string] {
+	return &c.AcceleratorType
+}
+
+func (c *mqlAwsSagemakerEndpointConfigProductionVariant) GetServerlessConfig() *plugin.TValue[*mqlAwsSagemakerEndpointConfigServerlessConfig] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerEndpointConfigServerlessConfig](&c.ServerlessConfig, func() (*mqlAwsSagemakerEndpointConfigServerlessConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.endpointConfig.productionVariant", c.__id, "serverlessConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerEndpointConfigServerlessConfig), nil
+			}
+		}
+
+		return c.serverlessConfig()
+	})
+}
+
+func (c *mqlAwsSagemakerEndpointConfigProductionVariant) GetManagedInstanceScaling() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.ManagedInstanceScaling, func() (any, error) {
+		return c.managedInstanceScaling()
+	})
+}
+
+func (c *mqlAwsSagemakerEndpointConfigProductionVariant) GetRoutingConfig() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.RoutingConfig, func() (any, error) {
+		return c.routingConfig()
+	})
+}
+
+// mqlAwsSagemakerEndpointConfigServerlessConfig for the aws.sagemaker.endpointConfig.serverlessConfig resource
+type mqlAwsSagemakerEndpointConfigServerlessConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerEndpointConfigServerlessConfigInternal
+	MemorySizeInMB         plugin.TValue[int64]
+	MaxConcurrency         plugin.TValue[int64]
+	ProvisionedConcurrency plugin.TValue[int64]
+}
+
+// createAwsSagemakerEndpointConfigServerlessConfig creates a new instance of this resource
+func createAwsSagemakerEndpointConfigServerlessConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerEndpointConfigServerlessConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.endpointConfig.serverlessConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerEndpointConfigServerlessConfig) MqlName() string {
+	return "aws.sagemaker.endpointConfig.serverlessConfig"
+}
+
+func (c *mqlAwsSagemakerEndpointConfigServerlessConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerEndpointConfigServerlessConfig) GetMemorySizeInMB() *plugin.TValue[int64] {
+	return &c.MemorySizeInMB
+}
+
+func (c *mqlAwsSagemakerEndpointConfigServerlessConfig) GetMaxConcurrency() *plugin.TValue[int64] {
+	return &c.MaxConcurrency
+}
+
+func (c *mqlAwsSagemakerEndpointConfigServerlessConfig) GetProvisionedConcurrency() *plugin.TValue[int64] {
+	return &c.ProvisionedConcurrency
+}
+
+// mqlAwsSagemakerEndpointConfigDataCaptureConfig for the aws.sagemaker.endpointConfig.dataCaptureConfig resource
+type mqlAwsSagemakerEndpointConfigDataCaptureConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerEndpointConfigDataCaptureConfigInternal
+	EnableCapture             plugin.TValue[bool]
+	InitialSamplingPercentage plugin.TValue[int64]
+	DestinationS3Uri          plugin.TValue[string]
+	CaptureOptions            plugin.TValue[[]any]
+	KmsKey                    plugin.TValue[*mqlAwsKmsKey]
+	CaptureContentTypeHeader  plugin.TValue[any]
+}
+
+// createAwsSagemakerEndpointConfigDataCaptureConfig creates a new instance of this resource
+func createAwsSagemakerEndpointConfigDataCaptureConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerEndpointConfigDataCaptureConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.endpointConfig.dataCaptureConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerEndpointConfigDataCaptureConfig) MqlName() string {
+	return "aws.sagemaker.endpointConfig.dataCaptureConfig"
+}
+
+func (c *mqlAwsSagemakerEndpointConfigDataCaptureConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerEndpointConfigDataCaptureConfig) GetEnableCapture() *plugin.TValue[bool] {
+	return &c.EnableCapture
+}
+
+func (c *mqlAwsSagemakerEndpointConfigDataCaptureConfig) GetInitialSamplingPercentage() *plugin.TValue[int64] {
+	return &c.InitialSamplingPercentage
+}
+
+func (c *mqlAwsSagemakerEndpointConfigDataCaptureConfig) GetDestinationS3Uri() *plugin.TValue[string] {
+	return &c.DestinationS3Uri
+}
+
+func (c *mqlAwsSagemakerEndpointConfigDataCaptureConfig) GetCaptureOptions() *plugin.TValue[[]any] {
+	return &c.CaptureOptions
+}
+
+func (c *mqlAwsSagemakerEndpointConfigDataCaptureConfig) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.endpointConfig.dataCaptureConfig", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsSagemakerEndpointConfigDataCaptureConfig) GetCaptureContentTypeHeader() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.CaptureContentTypeHeader, func() (any, error) {
+		return c.captureContentTypeHeader()
+	})
+}
+
+// mqlAwsSagemakerMonitoringSchedule for the aws.sagemaker.monitoringSchedule resource
+type mqlAwsSagemakerMonitoringSchedule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerMonitoringScheduleInternal
+	Arn                         plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	Region                      plugin.TValue[string]
+	Status                      plugin.TValue[string]
+	CreatedAt                   plugin.TValue[*time.Time]
+	LastModifiedAt              plugin.TValue[*time.Time]
+	Tags                        plugin.TValue[map[string]any]
+	MonitoringType              plugin.TValue[string]
+	ScheduleConfig              plugin.TValue[*mqlAwsSagemakerMonitoringScheduleScheduleConfig]
+	MonitoringJobDefinitionName plugin.TValue[string]
+	EndpointName                plugin.TValue[string]
+	Endpoint                    plugin.TValue[*mqlAwsSagemakerEndpoint]
+	FailureReason               plugin.TValue[string]
+}
+
+// createAwsSagemakerMonitoringSchedule creates a new instance of this resource
+func createAwsSagemakerMonitoringSchedule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerMonitoringSchedule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.monitoringSchedule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerMonitoringSchedule) MqlName() string {
+	return "aws.sagemaker.monitoringSchedule"
+}
+
+func (c *mqlAwsSagemakerMonitoringSchedule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerMonitoringSchedule) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSagemakerMonitoringSchedule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSagemakerMonitoringSchedule) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSagemakerMonitoringSchedule) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsSagemakerMonitoringSchedule) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSagemakerMonitoringSchedule) GetLastModifiedAt() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedAt
+}
+
+func (c *mqlAwsSagemakerMonitoringSchedule) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsSagemakerMonitoringSchedule) GetMonitoringType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MonitoringType, func() (string, error) {
+		return c.monitoringType()
+	})
+}
+
+func (c *mqlAwsSagemakerMonitoringSchedule) GetScheduleConfig() *plugin.TValue[*mqlAwsSagemakerMonitoringScheduleScheduleConfig] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerMonitoringScheduleScheduleConfig](&c.ScheduleConfig, func() (*mqlAwsSagemakerMonitoringScheduleScheduleConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.monitoringSchedule", c.__id, "scheduleConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerMonitoringScheduleScheduleConfig), nil
+			}
+		}
+
+		return c.scheduleConfig()
+	})
+}
+
+func (c *mqlAwsSagemakerMonitoringSchedule) GetMonitoringJobDefinitionName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MonitoringJobDefinitionName, func() (string, error) {
+		return c.monitoringJobDefinitionName()
+	})
+}
+
+func (c *mqlAwsSagemakerMonitoringSchedule) GetEndpointName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.EndpointName, func() (string, error) {
+		return c.endpointName()
+	})
+}
+
+func (c *mqlAwsSagemakerMonitoringSchedule) GetEndpoint() *plugin.TValue[*mqlAwsSagemakerEndpoint] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerEndpoint](&c.Endpoint, func() (*mqlAwsSagemakerEndpoint, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.monitoringSchedule", c.__id, "endpoint")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerEndpoint), nil
+			}
+		}
+
+		return c.endpoint()
+	})
+}
+
+func (c *mqlAwsSagemakerMonitoringSchedule) GetFailureReason() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.FailureReason, func() (string, error) {
+		return c.failureReason()
+	})
+}
+
+// mqlAwsSagemakerMonitoringScheduleScheduleConfig for the aws.sagemaker.monitoringSchedule.scheduleConfig resource
+type mqlAwsSagemakerMonitoringScheduleScheduleConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerMonitoringScheduleScheduleConfigInternal
+	ScheduleExpression    plugin.TValue[string]
+	DataAnalysisStartTime plugin.TValue[string]
+	DataAnalysisEndTime   plugin.TValue[string]
+}
+
+// createAwsSagemakerMonitoringScheduleScheduleConfig creates a new instance of this resource
+func createAwsSagemakerMonitoringScheduleScheduleConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerMonitoringScheduleScheduleConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.monitoringSchedule.scheduleConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerMonitoringScheduleScheduleConfig) MqlName() string {
+	return "aws.sagemaker.monitoringSchedule.scheduleConfig"
+}
+
+func (c *mqlAwsSagemakerMonitoringScheduleScheduleConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerMonitoringScheduleScheduleConfig) GetScheduleExpression() *plugin.TValue[string] {
+	return &c.ScheduleExpression
+}
+
+func (c *mqlAwsSagemakerMonitoringScheduleScheduleConfig) GetDataAnalysisStartTime() *plugin.TValue[string] {
+	return &c.DataAnalysisStartTime
+}
+
+func (c *mqlAwsSagemakerMonitoringScheduleScheduleConfig) GetDataAnalysisEndTime() *plugin.TValue[string] {
+	return &c.DataAnalysisEndTime
+}
+
+// mqlAwsSagemakerMonitoringJobDefinitionAppSpecification for the aws.sagemaker.monitoringJobDefinition.appSpecification resource
+type mqlAwsSagemakerMonitoringJobDefinitionAppSpecification struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerMonitoringJobDefinitionAppSpecificationInternal
+	ImageUri                        plugin.TValue[string]
+	ContainerEntrypoint             plugin.TValue[[]any]
+	ContainerArguments              plugin.TValue[[]any]
+	PostAnalyticsProcessorSourceUri plugin.TValue[string]
+	RecordPreprocessorSourceUri     plugin.TValue[string]
+	Environment                     plugin.TValue[map[string]any]
+}
+
+// createAwsSagemakerMonitoringJobDefinitionAppSpecification creates a new instance of this resource
+func createAwsSagemakerMonitoringJobDefinitionAppSpecification(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerMonitoringJobDefinitionAppSpecification{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.monitoringJobDefinition.appSpecification", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinitionAppSpecification) MqlName() string {
+	return "aws.sagemaker.monitoringJobDefinition.appSpecification"
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinitionAppSpecification) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinitionAppSpecification) GetImageUri() *plugin.TValue[string] {
+	return &c.ImageUri
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinitionAppSpecification) GetContainerEntrypoint() *plugin.TValue[[]any] {
+	return &c.ContainerEntrypoint
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinitionAppSpecification) GetContainerArguments() *plugin.TValue[[]any] {
+	return &c.ContainerArguments
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinitionAppSpecification) GetPostAnalyticsProcessorSourceUri() *plugin.TValue[string] {
+	return &c.PostAnalyticsProcessorSourceUri
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinitionAppSpecification) GetRecordPreprocessorSourceUri() *plugin.TValue[string] {
+	return &c.RecordPreprocessorSourceUri
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinitionAppSpecification) GetEnvironment() *plugin.TValue[map[string]any] {
+	return &c.Environment
+}
+
+// mqlAwsSagemakerMonitoringJobDefinitionJobInput for the aws.sagemaker.monitoringJobDefinition.jobInput resource
+type mqlAwsSagemakerMonitoringJobDefinitionJobInput struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerMonitoringJobDefinitionJobInputInternal
+	EndpointInput       plugin.TValue[any]
+	BatchTransformInput plugin.TValue[any]
+}
+
+// createAwsSagemakerMonitoringJobDefinitionJobInput creates a new instance of this resource
+func createAwsSagemakerMonitoringJobDefinitionJobInput(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerMonitoringJobDefinitionJobInput{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.monitoringJobDefinition.jobInput", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinitionJobInput) MqlName() string {
+	return "aws.sagemaker.monitoringJobDefinition.jobInput"
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinitionJobInput) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinitionJobInput) GetEndpointInput() *plugin.TValue[any] {
+	return &c.EndpointInput
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinitionJobInput) GetBatchTransformInput() *plugin.TValue[any] {
+	return &c.BatchTransformInput
+}
+
+// mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig for the aws.sagemaker.monitoringJobDefinition.jobOutputConfig resource
+type mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfigInternal
+	MonitoringOutputs plugin.TValue[[]any]
+	KmsKey            plugin.TValue[*mqlAwsKmsKey]
+}
+
+// createAwsSagemakerMonitoringJobDefinitionJobOutputConfig creates a new instance of this resource
+func createAwsSagemakerMonitoringJobDefinitionJobOutputConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.monitoringJobDefinition.jobOutputConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig) MqlName() string {
+	return "aws.sagemaker.monitoringJobDefinition.jobOutputConfig"
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig) GetMonitoringOutputs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MonitoringOutputs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.monitoringJobDefinition.jobOutputConfig", c.__id, "monitoringOutputs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.monitoringOutputs()
+	})
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.monitoringJobDefinition.jobOutputConfig", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+// mqlAwsSagemakerMonitoringJobDefinitionMonitoringOutput for the aws.sagemaker.monitoringJobDefinition.monitoringOutput resource
+type mqlAwsSagemakerMonitoringJobDefinitionMonitoringOutput struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerMonitoringJobDefinitionMonitoringOutputInternal
+	S3Uri        plugin.TValue[string]
+	LocalPath    plugin.TValue[string]
+	S3UploadMode plugin.TValue[string]
+}
+
+// createAwsSagemakerMonitoringJobDefinitionMonitoringOutput creates a new instance of this resource
+func createAwsSagemakerMonitoringJobDefinitionMonitoringOutput(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerMonitoringJobDefinitionMonitoringOutput{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.monitoringJobDefinition.monitoringOutput", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinitionMonitoringOutput) MqlName() string {
+	return "aws.sagemaker.monitoringJobDefinition.monitoringOutput"
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinitionMonitoringOutput) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinitionMonitoringOutput) GetS3Uri() *plugin.TValue[string] {
+	return &c.S3Uri
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinitionMonitoringOutput) GetLocalPath() *plugin.TValue[string] {
+	return &c.LocalPath
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinitionMonitoringOutput) GetS3UploadMode() *plugin.TValue[string] {
+	return &c.S3UploadMode
+}
+
+// mqlAwsSagemakerMonitoringJobDefinitionJobResources for the aws.sagemaker.monitoringJobDefinition.jobResources resource
+type mqlAwsSagemakerMonitoringJobDefinitionJobResources struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerMonitoringJobDefinitionJobResourcesInternal
+	InstanceType   plugin.TValue[string]
+	InstanceCount  plugin.TValue[int64]
+	VolumeSizeInGB plugin.TValue[int64]
+	VolumeKmsKey   plugin.TValue[*mqlAwsKmsKey]
+}
+
+// createAwsSagemakerMonitoringJobDefinitionJobResources creates a new instance of this resource
+func createAwsSagemakerMonitoringJobDefinitionJobResources(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerMonitoringJobDefinitionJobResources{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.monitoringJobDefinition.jobResources", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinitionJobResources) MqlName() string {
+	return "aws.sagemaker.monitoringJobDefinition.jobResources"
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinitionJobResources) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinitionJobResources) GetInstanceType() *plugin.TValue[string] {
+	return &c.InstanceType
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinitionJobResources) GetInstanceCount() *plugin.TValue[int64] {
+	return &c.InstanceCount
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinitionJobResources) GetVolumeSizeInGB() *plugin.TValue[int64] {
+	return &c.VolumeSizeInGB
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinitionJobResources) GetVolumeKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.VolumeKmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.monitoringJobDefinition.jobResources", c.__id, "volumeKmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.volumeKmsKey()
+	})
+}
+
+// mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig for the aws.sagemaker.monitoringJobDefinition.networkConfig resource
+type mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerMonitoringJobDefinitionNetworkConfigInternal
+	EnableInterContainerTrafficEncryption plugin.TValue[bool]
+	EnableNetworkIsolation                plugin.TValue[bool]
+	Vpc                                   plugin.TValue[*mqlAwsVpc]
+	SecurityGroups                        plugin.TValue[[]any]
+	Subnets                               plugin.TValue[[]any]
+}
+
+// createAwsSagemakerMonitoringJobDefinitionNetworkConfig creates a new instance of this resource
+func createAwsSagemakerMonitoringJobDefinitionNetworkConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.monitoringJobDefinition.networkConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig) MqlName() string {
+	return "aws.sagemaker.monitoringJobDefinition.networkConfig"
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig) GetEnableInterContainerTrafficEncryption() *plugin.TValue[bool] {
+	return &c.EnableInterContainerTrafficEncryption
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig) GetEnableNetworkIsolation() *plugin.TValue[bool] {
+	return &c.EnableNetworkIsolation
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.monitoringJobDefinition.networkConfig", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.monitoringJobDefinition.networkConfig", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.monitoringJobDefinition.networkConfig", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
+}
+
+// mqlAwsSagemakerDataQualityJobDefinition for the aws.sagemaker.dataQualityJobDefinition resource
+type mqlAwsSagemakerDataQualityJobDefinition struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerDataQualityJobDefinitionInternal
+	Arn               plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Region            plugin.TValue[string]
+	CreatedAt         plugin.TValue[*time.Time]
+	AppSpecification  plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification]
+	BaselineConfig    plugin.TValue[any]
+	JobInput          plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionJobInput]
+	JobOutputConfig   plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig]
+	JobResources      plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionJobResources]
+	NetworkConfig     plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig]
+	IamRole           plugin.TValue[*mqlAwsIamRole]
+	StoppingCondition plugin.TValue[any]
+}
+
+// createAwsSagemakerDataQualityJobDefinition creates a new instance of this resource
+func createAwsSagemakerDataQualityJobDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerDataQualityJobDefinition{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.dataQualityJobDefinition", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerDataQualityJobDefinition) MqlName() string {
+	return "aws.sagemaker.dataQualityJobDefinition"
+}
+
+func (c *mqlAwsSagemakerDataQualityJobDefinition) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerDataQualityJobDefinition) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSagemakerDataQualityJobDefinition) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSagemakerDataQualityJobDefinition) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSagemakerDataQualityJobDefinition) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSagemakerDataQualityJobDefinition) GetAppSpecification() *plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification](&c.AppSpecification, func() (*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.dataQualityJobDefinition", c.__id, "appSpecification")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification), nil
+			}
+		}
+
+		return c.appSpecification()
+	})
+}
+
+func (c *mqlAwsSagemakerDataQualityJobDefinition) GetBaselineConfig() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.BaselineConfig, func() (any, error) {
+		return c.baselineConfig()
+	})
+}
+
+func (c *mqlAwsSagemakerDataQualityJobDefinition) GetJobInput() *plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionJobInput] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerMonitoringJobDefinitionJobInput](&c.JobInput, func() (*mqlAwsSagemakerMonitoringJobDefinitionJobInput, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.dataQualityJobDefinition", c.__id, "jobInput")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerMonitoringJobDefinitionJobInput), nil
+			}
+		}
+
+		return c.jobInput()
+	})
+}
+
+func (c *mqlAwsSagemakerDataQualityJobDefinition) GetJobOutputConfig() *plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig](&c.JobOutputConfig, func() (*mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.dataQualityJobDefinition", c.__id, "jobOutputConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig), nil
+			}
+		}
+
+		return c.jobOutputConfig()
+	})
+}
+
+func (c *mqlAwsSagemakerDataQualityJobDefinition) GetJobResources() *plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionJobResources] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerMonitoringJobDefinitionJobResources](&c.JobResources, func() (*mqlAwsSagemakerMonitoringJobDefinitionJobResources, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.dataQualityJobDefinition", c.__id, "jobResources")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerMonitoringJobDefinitionJobResources), nil
+			}
+		}
+
+		return c.jobResources()
+	})
+}
+
+func (c *mqlAwsSagemakerDataQualityJobDefinition) GetNetworkConfig() *plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig](&c.NetworkConfig, func() (*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.dataQualityJobDefinition", c.__id, "networkConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig), nil
+			}
+		}
+
+		return c.networkConfig()
+	})
+}
+
+func (c *mqlAwsSagemakerDataQualityJobDefinition) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.dataQualityJobDefinition", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsSagemakerDataQualityJobDefinition) GetStoppingCondition() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.StoppingCondition, func() (any, error) {
+		return c.stoppingCondition()
+	})
+}
+
+// mqlAwsSagemakerModelQualityJobDefinition for the aws.sagemaker.modelQualityJobDefinition resource
+type mqlAwsSagemakerModelQualityJobDefinition struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerModelQualityJobDefinitionInternal
+	Arn               plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Region            plugin.TValue[string]
+	CreatedAt         plugin.TValue[*time.Time]
+	AppSpecification  plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification]
+	BaselineConfig    plugin.TValue[any]
+	JobInput          plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionJobInput]
+	JobOutputConfig   plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig]
+	JobResources      plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionJobResources]
+	NetworkConfig     plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig]
+	IamRole           plugin.TValue[*mqlAwsIamRole]
+	StoppingCondition plugin.TValue[any]
+}
+
+// createAwsSagemakerModelQualityJobDefinition creates a new instance of this resource
+func createAwsSagemakerModelQualityJobDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerModelQualityJobDefinition{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.modelQualityJobDefinition", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerModelQualityJobDefinition) MqlName() string {
+	return "aws.sagemaker.modelQualityJobDefinition"
+}
+
+func (c *mqlAwsSagemakerModelQualityJobDefinition) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerModelQualityJobDefinition) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSagemakerModelQualityJobDefinition) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSagemakerModelQualityJobDefinition) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSagemakerModelQualityJobDefinition) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSagemakerModelQualityJobDefinition) GetAppSpecification() *plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification](&c.AppSpecification, func() (*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.modelQualityJobDefinition", c.__id, "appSpecification")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification), nil
+			}
+		}
+
+		return c.appSpecification()
+	})
+}
+
+func (c *mqlAwsSagemakerModelQualityJobDefinition) GetBaselineConfig() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.BaselineConfig, func() (any, error) {
+		return c.baselineConfig()
+	})
+}
+
+func (c *mqlAwsSagemakerModelQualityJobDefinition) GetJobInput() *plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionJobInput] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerMonitoringJobDefinitionJobInput](&c.JobInput, func() (*mqlAwsSagemakerMonitoringJobDefinitionJobInput, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.modelQualityJobDefinition", c.__id, "jobInput")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerMonitoringJobDefinitionJobInput), nil
+			}
+		}
+
+		return c.jobInput()
+	})
+}
+
+func (c *mqlAwsSagemakerModelQualityJobDefinition) GetJobOutputConfig() *plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig](&c.JobOutputConfig, func() (*mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.modelQualityJobDefinition", c.__id, "jobOutputConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig), nil
+			}
+		}
+
+		return c.jobOutputConfig()
+	})
+}
+
+func (c *mqlAwsSagemakerModelQualityJobDefinition) GetJobResources() *plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionJobResources] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerMonitoringJobDefinitionJobResources](&c.JobResources, func() (*mqlAwsSagemakerMonitoringJobDefinitionJobResources, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.modelQualityJobDefinition", c.__id, "jobResources")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerMonitoringJobDefinitionJobResources), nil
+			}
+		}
+
+		return c.jobResources()
+	})
+}
+
+func (c *mqlAwsSagemakerModelQualityJobDefinition) GetNetworkConfig() *plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig](&c.NetworkConfig, func() (*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.modelQualityJobDefinition", c.__id, "networkConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig), nil
+			}
+		}
+
+		return c.networkConfig()
+	})
+}
+
+func (c *mqlAwsSagemakerModelQualityJobDefinition) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.modelQualityJobDefinition", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsSagemakerModelQualityJobDefinition) GetStoppingCondition() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.StoppingCondition, func() (any, error) {
+		return c.stoppingCondition()
+	})
+}
+
+// mqlAwsSagemakerModelBiasJobDefinition for the aws.sagemaker.modelBiasJobDefinition resource
+type mqlAwsSagemakerModelBiasJobDefinition struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerModelBiasJobDefinitionInternal
+	Arn               plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Region            plugin.TValue[string]
+	CreatedAt         plugin.TValue[*time.Time]
+	AppSpecification  plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification]
+	BaselineConfig    plugin.TValue[any]
+	JobInput          plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionJobInput]
+	JobOutputConfig   plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig]
+	JobResources      plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionJobResources]
+	NetworkConfig     plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig]
+	IamRole           plugin.TValue[*mqlAwsIamRole]
+	StoppingCondition plugin.TValue[any]
+}
+
+// createAwsSagemakerModelBiasJobDefinition creates a new instance of this resource
+func createAwsSagemakerModelBiasJobDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerModelBiasJobDefinition{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.modelBiasJobDefinition", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerModelBiasJobDefinition) MqlName() string {
+	return "aws.sagemaker.modelBiasJobDefinition"
+}
+
+func (c *mqlAwsSagemakerModelBiasJobDefinition) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerModelBiasJobDefinition) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSagemakerModelBiasJobDefinition) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSagemakerModelBiasJobDefinition) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSagemakerModelBiasJobDefinition) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSagemakerModelBiasJobDefinition) GetAppSpecification() *plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification](&c.AppSpecification, func() (*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.modelBiasJobDefinition", c.__id, "appSpecification")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification), nil
+			}
+		}
+
+		return c.appSpecification()
+	})
+}
+
+func (c *mqlAwsSagemakerModelBiasJobDefinition) GetBaselineConfig() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.BaselineConfig, func() (any, error) {
+		return c.baselineConfig()
+	})
+}
+
+func (c *mqlAwsSagemakerModelBiasJobDefinition) GetJobInput() *plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionJobInput] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerMonitoringJobDefinitionJobInput](&c.JobInput, func() (*mqlAwsSagemakerMonitoringJobDefinitionJobInput, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.modelBiasJobDefinition", c.__id, "jobInput")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerMonitoringJobDefinitionJobInput), nil
+			}
+		}
+
+		return c.jobInput()
+	})
+}
+
+func (c *mqlAwsSagemakerModelBiasJobDefinition) GetJobOutputConfig() *plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig](&c.JobOutputConfig, func() (*mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.modelBiasJobDefinition", c.__id, "jobOutputConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig), nil
+			}
+		}
+
+		return c.jobOutputConfig()
+	})
+}
+
+func (c *mqlAwsSagemakerModelBiasJobDefinition) GetJobResources() *plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionJobResources] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerMonitoringJobDefinitionJobResources](&c.JobResources, func() (*mqlAwsSagemakerMonitoringJobDefinitionJobResources, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.modelBiasJobDefinition", c.__id, "jobResources")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerMonitoringJobDefinitionJobResources), nil
+			}
+		}
+
+		return c.jobResources()
+	})
+}
+
+func (c *mqlAwsSagemakerModelBiasJobDefinition) GetNetworkConfig() *plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig](&c.NetworkConfig, func() (*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.modelBiasJobDefinition", c.__id, "networkConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig), nil
+			}
+		}
+
+		return c.networkConfig()
+	})
+}
+
+func (c *mqlAwsSagemakerModelBiasJobDefinition) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.modelBiasJobDefinition", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsSagemakerModelBiasJobDefinition) GetStoppingCondition() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.StoppingCondition, func() (any, error) {
+		return c.stoppingCondition()
+	})
+}
+
+// mqlAwsSagemakerModelExplainabilityJobDefinition for the aws.sagemaker.modelExplainabilityJobDefinition resource
+type mqlAwsSagemakerModelExplainabilityJobDefinition struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerModelExplainabilityJobDefinitionInternal
+	Arn               plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Region            plugin.TValue[string]
+	CreatedAt         plugin.TValue[*time.Time]
+	AppSpecification  plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification]
+	BaselineConfig    plugin.TValue[any]
+	JobInput          plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionJobInput]
+	JobOutputConfig   plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig]
+	JobResources      plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionJobResources]
+	NetworkConfig     plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig]
+	IamRole           plugin.TValue[*mqlAwsIamRole]
+	StoppingCondition plugin.TValue[any]
+}
+
+// createAwsSagemakerModelExplainabilityJobDefinition creates a new instance of this resource
+func createAwsSagemakerModelExplainabilityJobDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerModelExplainabilityJobDefinition{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.modelExplainabilityJobDefinition", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerModelExplainabilityJobDefinition) MqlName() string {
+	return "aws.sagemaker.modelExplainabilityJobDefinition"
+}
+
+func (c *mqlAwsSagemakerModelExplainabilityJobDefinition) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerModelExplainabilityJobDefinition) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSagemakerModelExplainabilityJobDefinition) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSagemakerModelExplainabilityJobDefinition) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSagemakerModelExplainabilityJobDefinition) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSagemakerModelExplainabilityJobDefinition) GetAppSpecification() *plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification](&c.AppSpecification, func() (*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.modelExplainabilityJobDefinition", c.__id, "appSpecification")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerMonitoringJobDefinitionAppSpecification), nil
+			}
+		}
+
+		return c.appSpecification()
+	})
+}
+
+func (c *mqlAwsSagemakerModelExplainabilityJobDefinition) GetBaselineConfig() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.BaselineConfig, func() (any, error) {
+		return c.baselineConfig()
+	})
+}
+
+func (c *mqlAwsSagemakerModelExplainabilityJobDefinition) GetJobInput() *plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionJobInput] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerMonitoringJobDefinitionJobInput](&c.JobInput, func() (*mqlAwsSagemakerMonitoringJobDefinitionJobInput, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.modelExplainabilityJobDefinition", c.__id, "jobInput")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerMonitoringJobDefinitionJobInput), nil
+			}
+		}
+
+		return c.jobInput()
+	})
+}
+
+func (c *mqlAwsSagemakerModelExplainabilityJobDefinition) GetJobOutputConfig() *plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig](&c.JobOutputConfig, func() (*mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.modelExplainabilityJobDefinition", c.__id, "jobOutputConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerMonitoringJobDefinitionJobOutputConfig), nil
+			}
+		}
+
+		return c.jobOutputConfig()
+	})
+}
+
+func (c *mqlAwsSagemakerModelExplainabilityJobDefinition) GetJobResources() *plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionJobResources] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerMonitoringJobDefinitionJobResources](&c.JobResources, func() (*mqlAwsSagemakerMonitoringJobDefinitionJobResources, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.modelExplainabilityJobDefinition", c.__id, "jobResources")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerMonitoringJobDefinitionJobResources), nil
+			}
+		}
+
+		return c.jobResources()
+	})
+}
+
+func (c *mqlAwsSagemakerModelExplainabilityJobDefinition) GetNetworkConfig() *plugin.TValue[*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig](&c.NetworkConfig, func() (*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.modelExplainabilityJobDefinition", c.__id, "networkConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerMonitoringJobDefinitionNetworkConfig), nil
+			}
+		}
+
+		return c.networkConfig()
+	})
+}
+
+func (c *mqlAwsSagemakerModelExplainabilityJobDefinition) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.modelExplainabilityJobDefinition", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsSagemakerModelExplainabilityJobDefinition) GetStoppingCondition() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.StoppingCondition, func() (any, error) {
+		return c.stoppingCondition()
 	})
 }
 

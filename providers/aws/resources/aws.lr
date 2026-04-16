@@ -1734,6 +1734,18 @@ aws.sagemaker {
   spaces() []aws.sagemaker.space
   // List of SageMaker user profiles
   userProfiles() []aws.sagemaker.userProfile
+  // List of SageMaker endpoint configurations
+  endpointConfigs() []aws.sagemaker.endpointConfig
+  // List of SageMaker monitoring schedules
+  monitoringSchedules() []aws.sagemaker.monitoringSchedule
+  // List of SageMaker data quality job definitions
+  dataQualityJobDefinitions() []aws.sagemaker.dataQualityJobDefinition
+  // List of SageMaker model quality job definitions
+  modelQualityJobDefinitions() []aws.sagemaker.modelQualityJobDefinition
+  // List of SageMaker model bias job definitions
+  modelBiasJobDefinitions() []aws.sagemaker.modelBiasJobDefinition
+  // List of SageMaker model explainability job definitions
+  modelExplainabilityJobDefinitions() []aws.sagemaker.modelExplainabilityJobDefinition
 }
 
 // AWS SageMaker notebook instance
@@ -2426,6 +2438,300 @@ private aws.sagemaker.userProfile @defaults("arn name status") {
   singleSignOnUserIdentifier() string
   // IAM Identity Center user value
   singleSignOnUserValue() string
+}
+
+// AWS SageMaker endpoint configuration
+private aws.sagemaker.endpointConfig @defaults("arn name") {
+  // ARN of the endpoint configuration
+  arn string
+  // Name of the endpoint configuration
+  name string
+  // Region where the endpoint configuration exists
+  region string
+  // Time when the endpoint configuration was created
+  createdAt time
+  // Tags for the endpoint configuration
+  tags() map[string]string
+  // Production variant specifications
+  productionVariants() []aws.sagemaker.endpointConfig.productionVariant
+  // Data capture configuration
+  dataCaptureConfig() aws.sagemaker.endpointConfig.dataCaptureConfig
+  // KMS key used for encryption
+  kmsKey() aws.kms.key
+  // Asynchronous inference configuration
+  asyncInferenceConfig() dict
+}
+
+// AWS SageMaker endpoint configuration production variant
+private aws.sagemaker.endpointConfig.productionVariant @defaults("variantName modelName instanceType") {
+  // Name of the variant
+  variantName string
+  // Name of the model
+  modelName string
+  // ML instance type
+  instanceType string
+  // Initial number of instances
+  initialInstanceCount int
+  // Initial traffic weight
+  initialVariantWeight float
+  // Volume size in GB for ML storage
+  volumeSizeInGB int
+  // Model data download timeout in seconds
+  modelDataDownloadTimeoutInSeconds int
+  // Accelerator type
+  acceleratorType string
+  // Serverless configuration
+  serverlessConfig() aws.sagemaker.endpointConfig.serverlessConfig
+  // Managed instance scaling configuration
+  managedInstanceScaling() dict
+  // Routing configuration
+  routingConfig() dict
+}
+
+// AWS SageMaker endpoint configuration serverless config
+private aws.sagemaker.endpointConfig.serverlessConfig @defaults("memorySizeInMB maxConcurrency") {
+  // Memory size in MB
+  memorySizeInMB int
+  // Maximum number of concurrent invocations
+  maxConcurrency int
+  // Provisioned concurrency
+  provisionedConcurrency int
+}
+
+// AWS SageMaker endpoint configuration data capture config
+private aws.sagemaker.endpointConfig.dataCaptureConfig @defaults("enableCapture") {
+  // Whether data capture is enabled
+  enableCapture bool
+  // Initial sampling percentage
+  initialSamplingPercentage int
+  // S3 destination URI for captured data
+  destinationS3Uri string
+  // Capture modes: Input, Output
+  captureOptions []string
+  // KMS key used to encrypt captured data
+  kmsKey() aws.kms.key
+  // Capture content type header
+  captureContentTypeHeader() dict
+}
+
+// AWS SageMaker monitoring schedule
+private aws.sagemaker.monitoringSchedule @defaults("arn name status") {
+  // ARN of the monitoring schedule
+  arn string
+  // Name of the monitoring schedule
+  name string
+  // Region where the monitoring schedule exists
+  region string
+  // Status: Pending, Failed, Scheduled, Stopped
+  status string
+  // Time when the monitoring schedule was created
+  createdAt time
+  // Time when the monitoring schedule was last modified
+  lastModifiedAt time
+  // Tags for the monitoring schedule
+  tags() map[string]string
+  // Monitoring type: DataQuality, ModelQuality, ModelBias, ModelExplainability
+  monitoringType() string
+  // Schedule configuration
+  scheduleConfig() aws.sagemaker.monitoringSchedule.scheduleConfig
+  // Monitoring job definition name
+  monitoringJobDefinitionName() string
+  // Name of the endpoint being monitored
+  endpointName() string
+  // Typed reference to the endpoint being monitored
+  endpoint() aws.sagemaker.endpoint
+  // Failure reason if the monitoring schedule failed
+  failureReason() string
+}
+
+// AWS SageMaker monitoring schedule configuration
+private aws.sagemaker.monitoringSchedule.scheduleConfig @defaults("scheduleExpression") {
+  // Cron expression for the schedule
+  scheduleExpression string
+  // Data analysis start time
+  dataAnalysisStartTime string
+  // Data analysis end time
+  dataAnalysisEndTime string
+}
+
+// AWS SageMaker monitoring job definition app specification
+private aws.sagemaker.monitoringJobDefinition.appSpecification @defaults("imageUri") {
+  // Docker image URI
+  imageUri string
+  // Container entrypoint
+  containerEntrypoint []string
+  // Container arguments
+  containerArguments []string
+  // Post analytics processor source URI
+  postAnalyticsProcessorSourceUri string
+  // Record preprocessor source URI
+  recordPreprocessorSourceUri string
+  // Environment variables
+  environment map[string]string
+}
+
+// AWS SageMaker monitoring job definition input
+private aws.sagemaker.monitoringJobDefinition.jobInput {
+  // Endpoint input configuration
+  endpointInput dict
+  // Batch transform input configuration
+  batchTransformInput dict
+}
+
+// AWS SageMaker monitoring job definition output configuration
+private aws.sagemaker.monitoringJobDefinition.jobOutputConfig {
+  // Monitoring outputs
+  monitoringOutputs() []aws.sagemaker.monitoringJobDefinition.monitoringOutput
+  // KMS key for output encryption
+  kmsKey() aws.kms.key
+}
+
+// AWS SageMaker monitoring output
+private aws.sagemaker.monitoringJobDefinition.monitoringOutput @defaults("s3Uri") {
+  // S3 URI for the output
+  s3Uri string
+  // Local path in the container
+  localPath string
+  // S3 upload mode: Continuous or EndOfJob
+  s3UploadMode string
+}
+
+// AWS SageMaker monitoring job resources
+private aws.sagemaker.monitoringJobDefinition.jobResources @defaults("instanceType instanceCount") {
+  // ML instance type
+  instanceType string
+  // Number of ML instances
+  instanceCount int
+  // Volume size in GB
+  volumeSizeInGB int
+  // KMS key for volume encryption
+  volumeKmsKey() aws.kms.key
+}
+
+// AWS SageMaker monitoring job network configuration
+private aws.sagemaker.monitoringJobDefinition.networkConfig {
+  // Whether inter-container traffic encryption is enabled
+  enableInterContainerTrafficEncryption bool
+  // Whether network isolation is enabled
+  enableNetworkIsolation bool
+  // VPC associated with this job
+  vpc() aws.vpc
+  // Security groups for the job
+  securityGroups() []aws.ec2.securitygroup
+  // Subnets for the job
+  subnets() []aws.vpc.subnet
+}
+
+// AWS SageMaker data quality job definition
+private aws.sagemaker.dataQualityJobDefinition @defaults("arn name") {
+  // ARN of the job definition
+  arn string
+  // Name of the job definition
+  name string
+  // Region where the job definition exists
+  region string
+  // Time when the job definition was created
+  createdAt time
+  // App specification
+  appSpecification() aws.sagemaker.monitoringJobDefinition.appSpecification
+  // Baseline configuration
+  baselineConfig() dict
+  // Job input configuration
+  jobInput() aws.sagemaker.monitoringJobDefinition.jobInput
+  // Job output configuration
+  jobOutputConfig() aws.sagemaker.monitoringJobDefinition.jobOutputConfig
+  // Job resources
+  jobResources() aws.sagemaker.monitoringJobDefinition.jobResources
+  // Network configuration
+  networkConfig() aws.sagemaker.monitoringJobDefinition.networkConfig
+  // IAM role for the job
+  iamRole() aws.iam.role
+  // Stopping condition
+  stoppingCondition() dict
+}
+
+// AWS SageMaker model quality job definition
+private aws.sagemaker.modelQualityJobDefinition @defaults("arn name") {
+  // ARN of the job definition
+  arn string
+  // Name of the job definition
+  name string
+  // Region where the job definition exists
+  region string
+  // Time when the job definition was created
+  createdAt time
+  // App specification
+  appSpecification() aws.sagemaker.monitoringJobDefinition.appSpecification
+  // Baseline configuration
+  baselineConfig() dict
+  // Job input configuration
+  jobInput() aws.sagemaker.monitoringJobDefinition.jobInput
+  // Job output configuration
+  jobOutputConfig() aws.sagemaker.monitoringJobDefinition.jobOutputConfig
+  // Job resources
+  jobResources() aws.sagemaker.monitoringJobDefinition.jobResources
+  // Network configuration
+  networkConfig() aws.sagemaker.monitoringJobDefinition.networkConfig
+  // IAM role for the job
+  iamRole() aws.iam.role
+  // Stopping condition
+  stoppingCondition() dict
+}
+
+// AWS SageMaker model bias job definition
+private aws.sagemaker.modelBiasJobDefinition @defaults("arn name") {
+  // ARN of the job definition
+  arn string
+  // Name of the job definition
+  name string
+  // Region where the job definition exists
+  region string
+  // Time when the job definition was created
+  createdAt time
+  // App specification
+  appSpecification() aws.sagemaker.monitoringJobDefinition.appSpecification
+  // Baseline configuration
+  baselineConfig() dict
+  // Job input configuration
+  jobInput() aws.sagemaker.monitoringJobDefinition.jobInput
+  // Job output configuration
+  jobOutputConfig() aws.sagemaker.monitoringJobDefinition.jobOutputConfig
+  // Job resources
+  jobResources() aws.sagemaker.monitoringJobDefinition.jobResources
+  // Network configuration
+  networkConfig() aws.sagemaker.monitoringJobDefinition.networkConfig
+  // IAM role for the job
+  iamRole() aws.iam.role
+  // Stopping condition
+  stoppingCondition() dict
+}
+
+// AWS SageMaker model explainability job definition
+private aws.sagemaker.modelExplainabilityJobDefinition @defaults("arn name") {
+  // ARN of the job definition
+  arn string
+  // Name of the job definition
+  name string
+  // Region where the job definition exists
+  region string
+  // Time when the job definition was created
+  createdAt time
+  // App specification
+  appSpecification() aws.sagemaker.monitoringJobDefinition.appSpecification
+  // Baseline configuration
+  baselineConfig() dict
+  // Job input configuration
+  jobInput() aws.sagemaker.monitoringJobDefinition.jobInput
+  // Job output configuration
+  jobOutputConfig() aws.sagemaker.monitoringJobDefinition.jobOutputConfig
+  // Job resources
+  jobResources() aws.sagemaker.monitoringJobDefinition.jobResources
+  // Network configuration
+  networkConfig() aws.sagemaker.monitoringJobDefinition.networkConfig
+  // IAM role for the job
+  iamRole() aws.iam.role
+  // Stopping condition
+  stoppingCondition() dict
 }
 
 // AWS Simple Notification Service (SNS)
