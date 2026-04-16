@@ -13,6 +13,7 @@ firebase.project.domain 13.0.0
 firebase.project.firestore 13.0.1
 firebase.project.firestore.exposedCollections 13.0.1
 firebase.project.firestore.publiclyReadable 13.0.1
+firebase.project.firestore.structureExposed 13.0.2
 firebase.project.firestore.url 13.0.1
 firebase.project.hosting 13.0.0
 firebase.project.hosting.androidAssetLinks 13.0.0

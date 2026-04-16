@@ -197,6 +197,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"firebase.project.firestore.publiclyReadable": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFirebaseProjectFirestore).GetPubliclyReadable()).ToDataRes(types.Bool)
 	},
+	"firebase.project.firestore.structureExposed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirebaseProjectFirestore).GetStructureExposed()).ToDataRes(types.Bool)
+	},
 	"firebase.project.firestore.exposedCollections": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFirebaseProjectFirestore).GetExposedCollections()).ToDataRes(types.Array(types.String))
 	},
@@ -334,6 +337,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"firebase.project.firestore.publiclyReadable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlFirebaseProjectFirestore).PubliclyReadable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"firebase.project.firestore.structureExposed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirebaseProjectFirestore).StructureExposed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"firebase.project.firestore.exposedCollections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -766,6 +773,7 @@ type mqlFirebaseProjectFirestore struct {
 	// optional: if you define mqlFirebaseProjectFirestoreInternal it will be used here
 	Url                plugin.TValue[string]
 	PubliclyReadable   plugin.TValue[bool]
+	StructureExposed   plugin.TValue[bool]
 	ExposedCollections plugin.TValue[[]any]
 }
 
@@ -812,6 +820,10 @@ func (c *mqlFirebaseProjectFirestore) GetUrl() *plugin.TValue[string] {
 
 func (c *mqlFirebaseProjectFirestore) GetPubliclyReadable() *plugin.TValue[bool] {
 	return &c.PubliclyReadable
+}
+
+func (c *mqlFirebaseProjectFirestore) GetStructureExposed() *plugin.TValue[bool] {
+	return &c.StructureExposed
 }
 
 func (c *mqlFirebaseProjectFirestore) GetExposedCollections() *plugin.TValue[[]any] {

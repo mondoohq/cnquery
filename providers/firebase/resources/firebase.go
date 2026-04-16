@@ -18,6 +18,13 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
+// drainAndClose reads any remaining data from the response body and closes it,
+// allowing the underlying TCP connection to be reused by the HTTP client pool.
+func drainAndClose(body io.ReadCloser) {
+	io.Copy(io.Discard, body)
+	body.Close()
+}
+
 func initFirebaseProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	conn := runtime.Connection.(*connection.FirebaseConnection)
 
@@ -78,8 +85,7 @@ func initFirebaseProjectRealtimeDatabase(runtime *plugin.Runtime, args map[strin
 			log.Debug().Err(err).Str("url", url).Msg("failed to reach Realtime Database")
 			continue
 		}
-		io.Copy(io.Discard, resp.Body)
-		resp.Body.Close()
+		drainAndClose(resp.Body)
 
 		if resp.StatusCode == http.StatusNotFound {
 			continue
@@ -100,7 +106,7 @@ func initFirebaseProjectRealtimeDatabase(runtime *plugin.Runtime, args map[strin
 					structureExposed = true
 				}
 			}
-			shallowResp.Body.Close()
+			drainAndClose(shallowResp.Body)
 		}
 
 		break
@@ -217,9 +223,8 @@ func initFirebaseProjectAuthConfig(runtime *plugin.Runtime, args map[string]*llx
 		}
 	}
 
-	// If not found in the config response, probe for email enumeration directly.
-	// Try signing up with a clearly-invalid email to see if the error distinguishes
-	// between "email exists" vs "email not found" (only safe read-only check).
+	// If not found in the config response, probe for email enumeration directly
+	// using the createAuthUri endpoint (read-only email lookup, no auth attempt).
 	if !emailEnumerationProtection && apiKey != "" {
 		emailEnumerationProtection = probeEmailEnumerationProtection(client, apiKey)
 	}
@@ -233,11 +238,13 @@ func initFirebaseProjectAuthConfig(runtime *plugin.Runtime, args map[string]*llx
 }
 
 // probeEmailEnumerationProtection tests whether email enumeration protection is enabled
-// by calling the signUp endpoint with an invalid email and checking error behavior.
-// When protection is ON, the API returns a generic error rather than EMAIL_EXISTS/EMAIL_NOT_FOUND.
+// by calling the createAuthUri endpoint (read-only email lookup used by Firebase's own
+// console). This does NOT trigger sign-in attempts or write to the target's auth audit log.
+// When protection is ON, the API returns an empty response; when OFF, it reveals whether
+// the email is registered.
 func probeEmailEnumerationProtection(client *http.Client, apiKey string) bool {
-	url := "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=" + apiKey
-	payload := `{"email":"mql-probe-nonexistent-user@test.invalid","password":"probe","returnSecureToken":false}`
+	url := "https://identitytoolkit.googleapis.com/v1/accounts:createAuthUri?key=" + apiKey
+	payload := `{"identifier":"mql-probe-nonexistent@test.invalid","continueUri":"https://localhost"}`
 
 	resp, err := client.Post(url, "application/json", strings.NewReader(payload))
 	if err != nil {
@@ -250,15 +257,21 @@ func probeEmailEnumerationProtection(client *http.Client, apiKey string) bool {
 		return false
 	}
 
-	bodyStr := string(body)
-
-	// If the error message says EMAIL_NOT_FOUND, enumeration protection is OFF
-	// (the API is revealing whether the email exists).
-	// If protection is ON, we get INVALID_LOGIN_CREDENTIALS instead.
-	if strings.Contains(bodyStr, "EMAIL_NOT_FOUND") {
+	// When email enumeration protection is OFF, the response includes a "registered"
+	// field that reveals whether the email exists. When protection is ON, the
+	// "registered" field is absent — the API refuses to disclose account existence.
+	var result map[string]interface{}
+	if err := json.Unmarshal(body, &result); err != nil {
 		return false
 	}
-	if strings.Contains(bodyStr, "INVALID_LOGIN_CREDENTIALS") {
+
+	if _, hasRegistered := result["registered"]; hasRegistered {
+		// The API reveals account existence → protection is OFF
+		return false
+	}
+
+	// No "registered" field and a successful response → protection is ON
+	if resp.StatusCode == http.StatusOK {
 		return true
 	}
 
@@ -315,7 +328,7 @@ func initFirebaseProjectHosting(runtime *plugin.Runtime, args map[string]*llx.Ra
 				appleData = parsed
 			}
 		}
-		resp.Body.Close()
+		drainAndClose(resp.Body)
 	}
 
 	// Check Android Asset Links
@@ -331,7 +344,7 @@ func initFirebaseProjectHosting(runtime *plugin.Runtime, args map[string]*llx.Ra
 				androidData = parsed
 			}
 		}
-		resp.Body.Close()
+		drainAndClose(resp.Body)
 	}
 
 	// Check for exposed source maps
@@ -384,12 +397,12 @@ func initFirebaseProjectHosting(runtime *plugin.Runtime, args map[string]*llx.Ra
 							exposedSourceMaps = append(exposedSourceMaps, mapURL)
 						}
 					}
-					mapResp.Body.Close()
+					drainAndClose(mapResp.Body)
+					checked++
 				}
-				checked++
 			}
 		}
-		resp.Body.Close()
+		drainAndClose(resp.Body)
 	}
 
 	args["domain"] = llx.StringData(domain)
@@ -438,7 +451,7 @@ func initFirebaseProjectStorage(runtime *plugin.Runtime, args map[string]*llx.Ra
 		if resp.StatusCode == http.StatusOK {
 			publiclyListable = true
 		}
-		resp.Body.Close()
+		drainAndClose(resp.Body)
 	}
 
 	args["bucketUrl"] = llx.StringData(bucketURL)
@@ -478,6 +491,7 @@ func initFirebaseProjectFirestore(runtime *plugin.Runtime, args map[string]*llx.
 
 	client := conn.HttpClient()
 	publiclyReadable := false
+	structureExposed := false
 	exposedCollections := []interface{}{}
 
 	// Check 1: Can we read documents directly?
@@ -509,11 +523,11 @@ func initFirebaseProjectFirestore(runtime *plugin.Runtime, args map[string]*llx.
 				}
 			}
 		}
-		resp.Body.Close()
+		drainAndClose(resp.Body)
 	}
 
 	// Check 2: listCollectionIds — often allowed even when document reads are blocked.
-	// This reveals the database structure (top-level collection names).
+	// This reveals the database structure (top-level collection names) but not document data.
 	listURL := firestoreURL + ":listCollectionIds"
 	log.Debug().Str("url", listURL).Msg("checking Firestore listCollectionIds")
 
@@ -524,6 +538,7 @@ func initFirebaseProjectFirestore(runtime *plugin.Runtime, args map[string]*llx.
 			var listResult map[string]interface{}
 			if json.Unmarshal(body, &listResult) == nil {
 				if collIds, ok := listResult["collectionIds"].([]interface{}); ok {
+					structureExposed = true
 					// Merge with any collections found from document reads
 					seen := map[string]bool{}
 					for _, c := range exposedCollections {
@@ -535,19 +550,15 @@ func initFirebaseProjectFirestore(runtime *plugin.Runtime, args map[string]*llx.
 							exposedCollections = append(exposedCollections, id)
 						}
 					}
-					// If we got collection IDs, the database structure is exposed
-					// even if direct document reads are blocked
-					if !publiclyReadable && len(collIds) > 0 {
-						publiclyReadable = true
-					}
 				}
 			}
 		}
-		listResp.Body.Close()
+		drainAndClose(listResp.Body)
 	}
 
 	args["url"] = llx.StringData(firestoreURL)
 	args["publiclyReadable"] = llx.BoolData(publiclyReadable)
+	args["structureExposed"] = llx.BoolData(structureExposed)
 	args["exposedCollections"] = llx.ArrayData(exposedCollections, types.String)
 
 	return args, nil, nil
