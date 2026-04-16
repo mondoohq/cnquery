@@ -4474,7 +4474,6 @@ aws.sagemaker.cluster.createdAt 13.12.0
 aws.sagemaker.cluster.failureMessage 13.12.0
 aws.sagemaker.cluster.iamRole 13.12.0
 aws.sagemaker.cluster.instanceGroups 13.12.0
-aws.sagemaker.cluster.lastModifiedAt 13.13.4
 aws.sagemaker.cluster.name 13.12.0
 aws.sagemaker.cluster.nodeProvisioningMode 13.12.0
 aws.sagemaker.cluster.nodeRecovery 13.12.0

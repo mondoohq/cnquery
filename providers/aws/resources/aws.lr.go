@@ -5476,9 +5476,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.sagemaker.cluster.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerCluster).GetCreatedAt()).ToDataRes(types.Time)
 	},
-	"aws.sagemaker.cluster.lastModifiedAt": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsSagemakerCluster).GetLastModifiedAt()).ToDataRes(types.Time)
-	},
 	"aws.sagemaker.cluster.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerCluster).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -22685,10 +22682,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.sagemaker.cluster.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerCluster).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
-		return
-	},
-	"aws.sagemaker.cluster.lastModifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsSagemakerCluster).LastModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.cluster.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -51448,11 +51441,15 @@ func (c *mqlAwsSagemakerEndpointProductionVariant) GetVariantName() *plugin.TVal
 }
 
 func (c *mqlAwsSagemakerEndpointProductionVariant) GetModelName() *plugin.TValue[string] {
-	return &c.ModelName
+	return plugin.GetOrCompute[string](&c.ModelName, func() (string, error) {
+		return c.modelName()
+	})
 }
 
 func (c *mqlAwsSagemakerEndpointProductionVariant) GetInstanceType() *plugin.TValue[string] {
-	return &c.InstanceType
+	return plugin.GetOrCompute[string](&c.InstanceType, func() (string, error) {
+		return c.instanceType()
+	})
 }
 
 func (c *mqlAwsSagemakerEndpointProductionVariant) GetCurrentInstanceCount() *plugin.TValue[int64] {
@@ -52934,7 +52931,6 @@ type mqlAwsSagemakerCluster struct {
 	Region               plugin.TValue[string]
 	Status               plugin.TValue[string]
 	CreatedAt            plugin.TValue[*time.Time]
-	LastModifiedAt       plugin.TValue[*time.Time]
 	Tags                 plugin.TValue[map[string]any]
 	IamRole              plugin.TValue[*mqlAwsIamRole]
 	InstanceGroups       plugin.TValue[[]any]
@@ -53001,12 +52997,6 @@ func (c *mqlAwsSagemakerCluster) GetStatus() *plugin.TValue[string] {
 
 func (c *mqlAwsSagemakerCluster) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
-}
-
-func (c *mqlAwsSagemakerCluster) GetLastModifiedAt() *plugin.TValue[*time.Time] {
-	return plugin.GetOrCompute[*time.Time](&c.LastModifiedAt, func() (*time.Time, error) {
-		return c.lastModifiedAt()
-	})
 }
 
 func (c *mqlAwsSagemakerCluster) GetTags() *plugin.TValue[map[string]any] {

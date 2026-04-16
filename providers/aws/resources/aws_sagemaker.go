@@ -463,7 +463,7 @@ func (a *mqlAwsSagemakerEndpoint) productionVariants() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	return sagemakerBuildProductionVariants(a.MqlRuntime, a.Arn.Data, resp.ProductionVariants)
+	return sagemakerBuildProductionVariants(a.MqlRuntime, a.Arn.Data, resp.ProductionVariants, convert.ToValue(resp.EndpointConfigName))
 }
 
 func (a *mqlAwsSagemakerEndpoint) shadowProductionVariants() ([]any, error) {
@@ -471,7 +471,7 @@ func (a *mqlAwsSagemakerEndpoint) shadowProductionVariants() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	return sagemakerBuildProductionVariants(a.MqlRuntime, a.Arn.Data+"/shadow", resp.ShadowProductionVariants)
+	return sagemakerBuildProductionVariants(a.MqlRuntime, a.Arn.Data+"/shadow", resp.ShadowProductionVariants, convert.ToValue(resp.EndpointConfigName))
 }
 
 func (a *mqlAwsSagemakerEndpoint) dataCaptureConfig() (*mqlAwsSagemakerEndpointDataCaptureConfig, error) {
@@ -538,15 +538,78 @@ func (a *mqlAwsSagemakerEndpointDataCaptureConfig) kmsKey() (*mqlAwsKmsKey, erro
 
 type mqlAwsSagemakerEndpointProductionVariantInternal struct {
 	cacheParentId                string
+	cacheEndpointConfigName      string
 	cacheCurrentServerlessConfig any
 	cacheDesiredServerlessConfig any
 	cacheManagedInstanceScaling  any
 	cacheRoutingConfig           any
 	cacheVariantStatuses         []any
+	configFetched                bool
+	configLock                   sync.Mutex
+	cacheModelName               string
+	cacheInstanceType            string
 }
 
 func (a *mqlAwsSagemakerEndpointProductionVariant) id() (string, error) {
 	return a.cacheParentId + "/" + a.VariantName.Data, nil
+}
+
+func (a *mqlAwsSagemakerEndpointProductionVariant) fetchConfig() error {
+	if a.configFetched {
+		return nil
+	}
+	a.configLock.Lock()
+	defer a.configLock.Unlock()
+	if a.configFetched {
+		return nil
+	}
+	if a.cacheEndpointConfigName == "" {
+		a.configFetched = true
+		return nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	// Extract region from parent ID (ARN format: arn:aws:sagemaker:REGION:...)
+	region := ""
+	if parts := strings.SplitN(a.cacheParentId, ":", 5); len(parts) >= 4 {
+		region = parts[3]
+	}
+	if region == "" {
+		a.configFetched = true
+		return nil
+	}
+	svc := conn.Sagemaker(region)
+	ctx := context.Background()
+	resp, err := svc.DescribeEndpointConfig(ctx, &sagemaker.DescribeEndpointConfigInput{
+		EndpointConfigName: &a.cacheEndpointConfigName,
+	})
+	if err != nil {
+		a.configFetched = true
+		return nil // Gracefully degrade — don't fail the whole resource
+	}
+	variantName := a.VariantName.Data
+	for _, pv := range resp.ProductionVariants {
+		if convert.ToValue(pv.VariantName) == variantName {
+			a.cacheModelName = convert.ToValue(pv.ModelName)
+			a.cacheInstanceType = string(pv.InstanceType)
+			break
+		}
+	}
+	a.configFetched = true
+	return nil
+}
+
+func (a *mqlAwsSagemakerEndpointProductionVariant) modelName() (string, error) {
+	if err := a.fetchConfig(); err != nil {
+		return "", err
+	}
+	return a.cacheModelName, nil
+}
+
+func (a *mqlAwsSagemakerEndpointProductionVariant) instanceType() (string, error) {
+	if err := a.fetchConfig(); err != nil {
+		return "", err
+	}
+	return a.cacheInstanceType, nil
 }
 
 func (a *mqlAwsSagemakerEndpointProductionVariant) currentServerlessConfig() (map[string]any, error) {
@@ -589,7 +652,7 @@ func (a *mqlAwsSagemakerEndpointProductionVariantStatus) id() (string, error) {
 	return a.cacheParentId + "/status/" + a.Status.Data, nil
 }
 
-func sagemakerBuildProductionVariants(runtime *plugin.Runtime, parentId string, variants []sagemakerTypes.ProductionVariantSummary) ([]any, error) {
+func sagemakerBuildProductionVariants(runtime *plugin.Runtime, parentId string, variants []sagemakerTypes.ProductionVariantSummary, endpointConfigName string) ([]any, error) {
 	res := make([]any, 0, len(variants))
 	for _, v := range variants {
 		var currentCount, desiredCount int64
@@ -610,8 +673,6 @@ func sagemakerBuildProductionVariants(runtime *plugin.Runtime, parentId string, 
 		mqlPV, err := CreateResource(runtime, "aws.sagemaker.endpoint.productionVariant",
 			map[string]*llx.RawData{
 				"variantName":          llx.StringDataPtr(v.VariantName),
-				"modelName":            llx.StringData(""), // Not available in summary
-				"instanceType":         llx.StringData(""),
 				"currentInstanceCount": llx.IntData(currentCount),
 				"desiredInstanceCount": llx.IntData(desiredCount),
 				"currentWeight":        llx.FloatData(currentWeight),
@@ -622,6 +683,7 @@ func sagemakerBuildProductionVariants(runtime *plugin.Runtime, parentId string, 
 		}
 		pv := mqlPV.(*mqlAwsSagemakerEndpointProductionVariant)
 		pv.cacheParentId = parentId
+		pv.cacheEndpointConfigName = endpointConfigName
 		pv.cacheCurrentServerlessConfig, _ = convert.JsonToDict(v.CurrentServerlessConfig)
 		pv.cacheDesiredServerlessConfig, _ = convert.JsonToDict(v.DesiredServerlessConfig)
 		pv.cacheManagedInstanceScaling, _ = convert.JsonToDict(v.ManagedInstanceScaling)
@@ -1168,7 +1230,7 @@ type mqlAwsSagemakerTrainingjobStatusTransitionInternal struct {
 }
 
 func (a *mqlAwsSagemakerTrainingjobStatusTransition) id() (string, error) {
-	return a.cacheParentArn + "/statusTransition/" + a.Status.Data, nil
+	return a.cacheParentArn + "/statusTransition/" + a.Status.Data + "/" + a.StartTime.Data.String(), nil
 }
 
 type mqlAwsSagemakerTrainingjobMetricDataInternal struct {
@@ -1176,7 +1238,7 @@ type mqlAwsSagemakerTrainingjobMetricDataInternal struct {
 }
 
 func (a *mqlAwsSagemakerTrainingjobMetricData) id() (string, error) {
-	return a.cacheParentArn + "/metric/" + a.MetricName.Data, nil
+	return a.cacheParentArn + "/metric/" + a.MetricName.Data + "/" + a.Timestamp.Data.String(), nil
 }
 
 func (a *mqlAwsSagemakerTrainingjob) iamRole() (*mqlAwsIamRole, error) {
@@ -2297,18 +2359,6 @@ func (a *mqlAwsSagemakerCluster) id() (string, error) {
 func (a *mqlAwsSagemakerCluster) tags() (map[string]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	return a.fetchTags(conn, a.Region.Data, a.Arn.Data)
-}
-
-func (a *mqlAwsSagemakerCluster) lastModifiedAt() (*time.Time, error) {
-	resp, err := a.fetchDetails()
-	if err != nil {
-		return nil, err
-	}
-	if resp.CreationTime != nil {
-		// DescribeCluster doesn't expose LastModifiedTime; return creation time as fallback
-		return resp.CreationTime, nil
-	}
-	return nil, nil
 }
 
 func (a *mqlAwsSagemakerCluster) fetchDetails() (*sagemaker.DescribeClusterOutput, error) {

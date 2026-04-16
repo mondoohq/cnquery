@@ -90,7 +90,7 @@ func TestProductionVariantNullDicts(t *testing.T) {
 // ---- sagemakerBuildProductionVariants tests ----
 
 func TestSagemakerBuildProductionVariantsEmpty(t *testing.T) {
-	result, err := sagemakerBuildProductionVariants(nil, "parent-arn", nil)
+	result, err := sagemakerBuildProductionVariants(nil, "parent-arn", nil, "")
 	require.NoError(t, err)
 	assert.Empty(t, result)
 }
@@ -114,7 +114,7 @@ func TestBuildProductionVariantsWithData(t *testing.T) {
 	}
 
 	// Verify the helper doesn't panic on nil runtime with empty input
-	emptyResult, err := sagemakerBuildProductionVariants(nil, "parent", nil)
+	emptyResult, err := sagemakerBuildProductionVariants(nil, "parent", nil, "")
 	require.NoError(t, err)
 	assert.Empty(t, emptyResult)
 
@@ -168,21 +168,25 @@ func TestModelContainerNullDicts(t *testing.T) {
 // ---- Training job sub-resource tests ----
 
 func TestTrainingJobStatusTransitionId(t *testing.T) {
+	startTime := time.Date(2026, 1, 15, 10, 30, 0, 0, time.UTC)
 	st := &mqlAwsSagemakerTrainingjobStatusTransition{}
 	st.cacheParentArn = "arn:aws:sagemaker:us-east-1:123456789012:training-job/my-job"
 	st.Status = plugin.TValue[string]{Data: "Training", State: plugin.StateIsSet}
+	st.StartTime = plugin.TValue[*time.Time]{Data: &startTime, State: plugin.StateIsSet}
 	id, err := st.id()
 	require.NoError(t, err)
-	assert.Equal(t, "arn:aws:sagemaker:us-east-1:123456789012:training-job/my-job/statusTransition/Training", id)
+	assert.Equal(t, "arn:aws:sagemaker:us-east-1:123456789012:training-job/my-job/statusTransition/Training/"+startTime.String(), id)
 }
 
 func TestTrainingJobMetricDataId(t *testing.T) {
+	ts := time.Date(2026, 1, 15, 12, 0, 0, 0, time.UTC)
 	md := &mqlAwsSagemakerTrainingjobMetricData{}
 	md.cacheParentArn = "arn:aws:sagemaker:us-east-1:123456789012:training-job/my-job"
 	md.MetricName = plugin.TValue[string]{Data: "train:loss", State: plugin.StateIsSet}
+	md.Timestamp = plugin.TValue[*time.Time]{Data: &ts, State: plugin.StateIsSet}
 	id, err := md.id()
 	require.NoError(t, err)
-	assert.Equal(t, "arn:aws:sagemaker:us-east-1:123456789012:training-job/my-job/metric/train:loss", id)
+	assert.Equal(t, "arn:aws:sagemaker:us-east-1:123456789012:training-job/my-job/metric/train:loss/"+ts.String(), id)
 }
 
 // ---- Cluster tests ----
