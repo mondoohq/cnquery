@@ -62207,7 +62207,9 @@ func (c *mqlAwsSagemakerImageVersion) GetImageName() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsSagemakerImageVersion) GetContainerImage() *plugin.TValue[string] {
-	return &c.ContainerImage
+	return plugin.GetOrCompute[string](&c.ContainerImage, func() (string, error) {
+		return c.containerImage()
+	})
 }
 
 func (c *mqlAwsSagemakerImageVersion) GetBaseImage() *plugin.TValue[string] {

@@ -955,7 +955,6 @@ func (a *mqlAwsSagemakerImage) versions() ([]any, error) {
 					"version":        llx.IntData(versionNum),
 					"region":         llx.StringData(a.Region.Data),
 					"imageName":      llx.StringData(name),
-					"containerImage": llx.StringData(""),
 					"status":         llx.StringData(string(v.ImageVersionStatus)),
 					"createdAt":      llx.TimeDataPtr(v.CreationTime),
 					"lastModifiedAt": llx.TimeDataPtr(v.LastModifiedTime),

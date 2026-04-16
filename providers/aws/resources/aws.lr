@@ -3299,7 +3299,7 @@ private aws.sagemaker.image.version @defaults("arn version status") {
   // Name of the parent image
   imageName string
   // Container image URI (ECR) for this version
-  containerImage string
+  containerImage() string
   // Base image URI used to build this version
   baseImage() string
   // Status: CREATING, CREATED, CREATE_FAILED, DELETING, DELETE_FAILED
