@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/afero"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/types"
 )
 
 // firefoxBrowserConfig defines a Firefox-based browser's profile path configuration
@@ -79,25 +80,37 @@ type firefoxExtensionsJSON struct {
 
 // firefoxAddonEntry represents a single addon entry in extensions.json
 type firefoxAddonEntry struct {
-	ID            string         `json:"id"`
-	Name          string         `json:"name"`
-	Version       string         `json:"version"`
-	Type          string         `json:"type"`
-	Description   string         `json:"description"`
-	Active        bool           `json:"active"`
-	UserDisabled  bool           `json:"userDisabled"`
-	Visible       bool           `json:"visible"`
-	Path          string         `json:"path"`
-	SourceURI     string         `json:"sourceURI"`
-	InstallDate   int64          `json:"installDate"`
-	UpdateDate    int64          `json:"updateDate"`
-	DefaultLocale *firefoxLocale `json:"defaultLocale"`
+	ID                     string              `json:"id"`
+	Name                   string              `json:"name"`
+	Version                string              `json:"version"`
+	Type                   string              `json:"type"`
+	Description            string              `json:"description"`
+	Active                 bool                `json:"active"`
+	UserDisabled           bool                `json:"userDisabled"`
+	AppDisabled            bool                `json:"appDisabled"`
+	Visible                bool                `json:"visible"`
+	Path                   string              `json:"path"`
+	SourceURI              string              `json:"sourceURI"`
+	InstallDate            int64               `json:"installDate"`
+	UpdateDate             int64               `json:"updateDate"`
+	DefaultLocale          *firefoxLocale      `json:"defaultLocale"`
+	Location               string              `json:"location"`
+	Loader                 *string             `json:"loader"`
+	ApplyBackgroundUpdates int                 `json:"applyBackgroundUpdates"`
+	Permissions            *firefoxPermissions `json:"permissions"`
 }
 
 // firefoxLocale represents localized addon information
 type firefoxLocale struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
+	Creator     string `json:"creator"`
+}
+
+// firefoxPermissions represents the permissions object in Firefox extensions.json
+type firefoxPermissions struct {
+	Permissions []string `json:"permissions"`
+	Origins     []string `json:"origins"`
 }
 
 // firefoxSystemAddonSuffixes contains domain suffixes that identify Mozilla system addons
@@ -162,6 +175,11 @@ func (f *mqlFirefox) addons() ([]any, error) {
 		homeDir := home.Data
 		if !isValidFirefoxUserHome(homeDir, platformKey) {
 			continue
+		}
+
+		uid := int64(0)
+		if uidVal := user.GetUid(); uidVal.Error == nil {
+			uid = uidVal.Data
 		}
 
 		// Check each browser for this user
@@ -236,6 +254,7 @@ func (f *mqlFirefox) addons() ([]any, error) {
 					// Get the best name (prefer localized if available)
 					name := addon.Name
 					description := addon.Description
+					creator := ""
 					if addon.DefaultLocale != nil {
 						if addon.DefaultLocale.Name != "" {
 							name = addon.DefaultLocale.Name
@@ -243,6 +262,25 @@ func (f *mqlFirefox) addons() ([]any, error) {
 						if addon.DefaultLocale.Description != "" {
 							description = addon.DefaultLocale.Description
 						}
+						creator = addon.DefaultLocale.Creator
+					}
+
+					// Derived fields
+					disabled := addon.UserDisabled || addon.AppDisabled
+					autoupdate := addon.ApplyBackgroundUpdates != 0
+					native := addon.Loader == nil && addon.Type == "extension"
+
+					// Merge permissions and origins
+					var perms []any
+					if addon.Permissions != nil {
+						merged := firefoxMergeStringSlices(addon.Permissions.Permissions, addon.Permissions.Origins)
+						perms = make([]any, len(merged))
+						for i, v := range merged {
+							perms[i] = v
+						}
+					}
+					if perms == nil {
+						perms = []any{}
 					}
 
 					addonResource, err := CreateResource(f.MqlRuntime, "firefox.addon", map[string]*llx.RawData{
@@ -254,13 +292,20 @@ func (f *mqlFirefox) addons() ([]any, error) {
 						"type":         llx.StringData(addon.Type),
 						"active":       llx.BoolData(addon.Active),
 						"userDisabled": llx.BoolData(addon.UserDisabled),
+						"disabled":     llx.BoolData(disabled),
 						"visible":      llx.BoolData(addon.Visible),
 						"path":         llx.StringData(addon.Path),
 						"profile":      llx.StringData(profileName),
 						"browser":      llx.StringData(browserCfg.name),
+						"creator":      llx.StringData(creator),
 						"sourceUri":    llx.StringData(addon.SourceURI),
 						"installDate":  llx.IntData(addon.InstallDate),
 						"updateDate":   llx.IntData(addon.UpdateDate),
+						"autoupdate":   llx.BoolData(autoupdate),
+						"native":       llx.BoolData(native),
+						"location":     llx.StringData(addon.Location),
+						"permissions":  llx.ArrayData(perms, types.String),
+						"uid":          llx.IntData(uid),
 					})
 					if err != nil {
 						log.Debug().Err(err).Str("addon", addon.ID).Msg("could not create addon resource")
@@ -353,4 +398,15 @@ func isValidFirefoxUserHome(homeDir string, platform string) bool {
 	default:
 		return false
 	}
+}
+
+// firefoxMergeStringSlices merges two string slices, skipping empty ones
+func firefoxMergeStringSlices(a, b []string) []string {
+	if len(a) == 0 && len(b) == 0 {
+		return nil
+	}
+	result := make([]string, 0, len(a)+len(b))
+	result = append(result, a...)
+	result = append(result, b...)
+	return result
 }

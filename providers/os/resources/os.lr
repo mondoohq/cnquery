@@ -2932,6 +2932,8 @@ private firefox.addon @defaults("name version active browser") {
   active bool
   // Whether the addon is disabled by user
   userDisabled bool
+  // Whether the addon is disabled (user or app disabled)
+  disabled bool
   // Whether the addon is visible in the addon manager
   visible bool
   // Path to the addon (can be XPI file or directory)
@@ -2940,12 +2942,24 @@ private firefox.addon @defaults("name version active browser") {
   profile string
   // Browser name (e.g., "Firefox", "Firefox Developer Edition", "LibreWolf")
   browser string
+  // Addon creator/author name
+  creator string
   // Source URI from where addon was installed
   sourceUri string
   // Install date as Unix timestamp (milliseconds)
   installDate int
   // Last update date as Unix timestamp (milliseconds)
   updateDate int
+  // Whether auto-updates are enabled for this addon
+  autoupdate bool
+  // Whether this is a native WebExtension (no special loader)
+  native bool
+  // Install location (e.g., "app-profile", "app-system-defaults", "app-builtin")
+  location string
+  // Combined API permissions and host origins
+  permissions []string
+  // UID of the user who owns this addon
+  uid int
 }
 
 // Experimental: USB resource

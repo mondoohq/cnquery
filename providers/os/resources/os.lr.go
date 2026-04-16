@@ -4316,6 +4316,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"firefox.addon.userDisabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFirefoxAddon).GetUserDisabled()).ToDataRes(types.Bool)
 	},
+	"firefox.addon.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxAddon).GetDisabled()).ToDataRes(types.Bool)
+	},
 	"firefox.addon.visible": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFirefoxAddon).GetVisible()).ToDataRes(types.Bool)
 	},
@@ -4328,6 +4331,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"firefox.addon.browser": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFirefoxAddon).GetBrowser()).ToDataRes(types.String)
 	},
+	"firefox.addon.creator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxAddon).GetCreator()).ToDataRes(types.String)
+	},
 	"firefox.addon.sourceUri": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFirefoxAddon).GetSourceUri()).ToDataRes(types.String)
 	},
@@ -4336,6 +4342,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"firefox.addon.updateDate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFirefoxAddon).GetUpdateDate()).ToDataRes(types.Int)
+	},
+	"firefox.addon.autoupdate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxAddon).GetAutoupdate()).ToDataRes(types.Bool)
+	},
+	"firefox.addon.native": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxAddon).GetNative()).ToDataRes(types.Bool)
+	},
+	"firefox.addon.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxAddon).GetLocation()).ToDataRes(types.String)
+	},
+	"firefox.addon.permissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxAddon).GetPermissions()).ToDataRes(types.Array(types.String))
+	},
+	"firefox.addon.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirefoxAddon).GetUid()).ToDataRes(types.Int)
 	},
 	"usb.devices": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlUsb).GetDevices()).ToDataRes(types.Array(types.Resource("usb.device")))
@@ -9775,6 +9796,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlFirefoxAddon).UserDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"firefox.addon.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"firefox.addon.visible": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlFirefoxAddon).Visible, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -9791,6 +9816,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlFirefoxAddon).Browser, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"firefox.addon.creator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).Creator, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"firefox.addon.sourceUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlFirefoxAddon).SourceUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -9801,6 +9830,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"firefox.addon.updateDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlFirefoxAddon).UpdateDate, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"firefox.addon.autoupdate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).Autoupdate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"firefox.addon.native": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).Native, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"firefox.addon.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firefox.addon.permissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).Permissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"firefox.addon.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirefoxAddon).Uid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"usb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26910,13 +26959,20 @@ type mqlFirefoxAddon struct {
 	Type         plugin.TValue[string]
 	Active       plugin.TValue[bool]
 	UserDisabled plugin.TValue[bool]
+	Disabled     plugin.TValue[bool]
 	Visible      plugin.TValue[bool]
 	Path         plugin.TValue[string]
 	Profile      plugin.TValue[string]
 	Browser      plugin.TValue[string]
+	Creator      plugin.TValue[string]
 	SourceUri    plugin.TValue[string]
 	InstallDate  plugin.TValue[int64]
 	UpdateDate   plugin.TValue[int64]
+	Autoupdate   plugin.TValue[bool]
+	Native       plugin.TValue[bool]
+	Location     plugin.TValue[string]
+	Permissions  plugin.TValue[[]any]
+	Uid          plugin.TValue[int64]
 }
 
 // createFirefoxAddon creates a new instance of this resource
@@ -26979,6 +27035,10 @@ func (c *mqlFirefoxAddon) GetUserDisabled() *plugin.TValue[bool] {
 	return &c.UserDisabled
 }
 
+func (c *mqlFirefoxAddon) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
+}
+
 func (c *mqlFirefoxAddon) GetVisible() *plugin.TValue[bool] {
 	return &c.Visible
 }
@@ -26995,6 +27055,10 @@ func (c *mqlFirefoxAddon) GetBrowser() *plugin.TValue[string] {
 	return &c.Browser
 }
 
+func (c *mqlFirefoxAddon) GetCreator() *plugin.TValue[string] {
+	return &c.Creator
+}
+
 func (c *mqlFirefoxAddon) GetSourceUri() *plugin.TValue[string] {
 	return &c.SourceUri
 }
@@ -27005,6 +27069,26 @@ func (c *mqlFirefoxAddon) GetInstallDate() *plugin.TValue[int64] {
 
 func (c *mqlFirefoxAddon) GetUpdateDate() *plugin.TValue[int64] {
 	return &c.UpdateDate
+}
+
+func (c *mqlFirefoxAddon) GetAutoupdate() *plugin.TValue[bool] {
+	return &c.Autoupdate
+}
+
+func (c *mqlFirefoxAddon) GetNative() *plugin.TValue[bool] {
+	return &c.Native
+}
+
+func (c *mqlFirefoxAddon) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlFirefoxAddon) GetPermissions() *plugin.TValue[[]any] {
+	return &c.Permissions
+}
+
+func (c *mqlFirefoxAddon) GetUid() *plugin.TValue[int64] {
+	return &c.Uid
 }
 
 // mqlUsb for the usb resource
