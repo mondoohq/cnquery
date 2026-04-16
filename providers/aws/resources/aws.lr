@@ -2531,7 +2531,7 @@ private aws.sagemaker.monitoringSchedule @defaults("arn name status") {
   // Tags for the monitoring schedule
   tags() map[string]string
   // Monitoring type: DataQuality, ModelQuality, ModelBias, ModelExplainability
-  monitoringType() string
+  monitoringType string
   // Schedule configuration
   scheduleConfig() aws.sagemaker.monitoringSchedule.scheduleConfig
   // Monitoring job definition name

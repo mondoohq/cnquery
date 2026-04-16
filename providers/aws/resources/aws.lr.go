@@ -55791,9 +55791,7 @@ func (c *mqlAwsSagemakerMonitoringSchedule) GetTags() *plugin.TValue[map[string]
 }
 
 func (c *mqlAwsSagemakerMonitoringSchedule) GetMonitoringType() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.MonitoringType, func() (string, error) {
-		return c.monitoringType()
-	})
+	return &c.MonitoringType
 }
 
 func (c *mqlAwsSagemakerMonitoringSchedule) GetScheduleConfig() *plugin.TValue[*mqlAwsSagemakerMonitoringScheduleScheduleConfig] {

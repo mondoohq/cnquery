@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
@@ -413,6 +414,7 @@ func (a *mqlAwsSagemaker) getMonitoringSchedules(conn *connection.AwsConnection)
 							"name":           llx.StringDataPtr(item.MonitoringScheduleName),
 							"region":         llx.StringData(region),
 							"status":         llx.StringData(string(item.MonitoringScheduleStatus)),
+							"monitoringType": llx.StringData(string(item.MonitoringType)),
 							"createdAt":      llx.TimeDataPtr(item.CreationTime),
 							"lastModifiedAt": llx.TimeDataPtr(item.LastModifiedTime),
 						})
@@ -472,14 +474,6 @@ func (a *mqlAwsSagemakerMonitoringSchedule) fetchDetails() (*sagemaker.DescribeM
 	return resp, nil
 }
 
-func (a *mqlAwsSagemakerMonitoringSchedule) monitoringType() (string, error) {
-	resp, err := a.fetchDetails()
-	if err != nil {
-		return "", err
-	}
-	return string(resp.MonitoringType), nil
-}
-
 func (a *mqlAwsSagemakerMonitoringSchedule) scheduleConfig() (*mqlAwsSagemakerMonitoringScheduleScheduleConfig, error) {
 	resp, err := a.fetchDetails()
 	if err != nil {
@@ -533,7 +527,12 @@ func (a *mqlAwsSagemakerMonitoringSchedule) endpoint() (*mqlAwsSagemakerEndpoint
 		return nil, nil
 	}
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	endpointArn := fmt.Sprintf("arn:aws:sagemaker:%s:%s:endpoint/%s", a.Region.Data, conn.AccountId(), *resp.EndpointName)
+	// Extract partition from the schedule's own ARN to handle aws-cn, aws-us-gov
+	partition := "aws"
+	if parts := strings.SplitN(a.Arn.Data, ":", 3); len(parts) >= 2 {
+		partition = parts[1]
+	}
+	endpointArn := fmt.Sprintf("arn:%s:sagemaker:%s:%s:endpoint/%s", partition, a.Region.Data, conn.AccountId(), *resp.EndpointName)
 	res, err := NewResource(a.MqlRuntime, "aws.sagemaker.endpoint",
 		map[string]*llx.RawData{"arn": llx.StringData(endpointArn)})
 	if err != nil {
