@@ -186,6 +186,8 @@ const (
 	ResourceRustPackage                  string = "rust.package"
 	ResourceDotnetPackages               string = "dotnet.packages"
 	ResourceDotnetPackage                string = "dotnet.package"
+	ResourcePhpPackages                  string = "php.packages"
+	ResourcePhpPackage                   string = "php.package"
 	ResourceMacos                        string = "macos"
 	ResourceMacosHardware                string = "macos.hardware"
 	ResourceMacosAlf                     string = "macos.alf"
@@ -936,6 +938,14 @@ func init() {
 		"dotnet.package": {
 			// to override args, implement: initDotnetPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDotnetPackage,
+		},
+		"php.packages": {
+			Init:   initPhpPackages,
+			Create: createPhpPackages,
+		},
+		"php.package": {
+			// to override args, implement: initPhpPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createPhpPackage,
 		},
 		"macos": {
 			// to override args, implement: initMacos(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3706,6 +3716,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"dotnet.package.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDotnetPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"php.packages.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPhpPackages).GetPath()).ToDataRes(types.String)
+	},
+	"php.packages.root": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPhpPackages).GetRoot()).ToDataRes(types.Resource("php.package"))
+	},
+	"php.packages.directDependencies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPhpPackages).GetDirectDependencies()).ToDataRes(types.Array(types.Resource("php.package")))
+	},
+	"php.packages.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPhpPackages).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"php.packages.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPhpPackages).GetList()).ToDataRes(types.Array(types.Resource("php.package")))
+	},
+	"php.package.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPhpPackage).GetId()).ToDataRes(types.String)
+	},
+	"php.package.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPhpPackage).GetName()).ToDataRes(types.String)
+	},
+	"php.package.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPhpPackage).GetVersion()).ToDataRes(types.String)
+	},
+	"php.package.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPhpPackage).GetPurl()).ToDataRes(types.String)
+	},
+	"php.package.cpes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPhpPackage).GetCpes()).ToDataRes(types.Array(types.Resource("cpe")))
+	},
+	"php.package.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPhpPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
 	},
 	"macos.computerName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacos).GetComputerName()).ToDataRes(types.String)
@@ -9050,6 +9093,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"dotnet.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDotnetPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"php.packages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPhpPackages).__id, ok = v.Value.(string)
+		return
+	},
+	"php.packages.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPhpPackages).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"php.packages.root": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPhpPackages).Root, ok = plugin.RawToTValue[*mqlPhpPackage](v.Value, v.Error)
+		return
+	},
+	"php.packages.directDependencies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPhpPackages).DirectDependencies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"php.packages.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPhpPackages).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"php.packages.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPhpPackages).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"php.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPhpPackage).__id, ok = v.Value.(string)
+		return
+	},
+	"php.package.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPhpPackage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"php.package.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPhpPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"php.package.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPhpPackage).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"php.package.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPhpPackage).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"php.package.cpes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPhpPackage).Cpes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"php.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPhpPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"macos.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25089,6 +25184,227 @@ func (c *mqlDotnetPackage) GetFiles() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("dotnet.package", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+// mqlPhpPackages for the php.packages resource
+type mqlPhpPackages struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlPhpPackagesInternal
+	Path               plugin.TValue[string]
+	Root               plugin.TValue[*mqlPhpPackage]
+	DirectDependencies plugin.TValue[[]any]
+	Files              plugin.TValue[[]any]
+	List               plugin.TValue[[]any]
+}
+
+// createPhpPackages creates a new instance of this resource
+func createPhpPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPhpPackages{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("php.packages", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPhpPackages) MqlName() string {
+	return "php.packages"
+}
+
+func (c *mqlPhpPackages) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPhpPackages) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlPhpPackages) GetRoot() *plugin.TValue[*mqlPhpPackage] {
+	return plugin.GetOrCompute[*mqlPhpPackage](&c.Root, func() (*mqlPhpPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("php.packages", c.__id, "root")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPhpPackage), nil
+			}
+		}
+
+		return c.root()
+	})
+}
+
+func (c *mqlPhpPackages) GetDirectDependencies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DirectDependencies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("php.packages", c.__id, "directDependencies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.directDependencies()
+	})
+}
+
+func (c *mqlPhpPackages) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("php.packages", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+func (c *mqlPhpPackages) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("php.packages", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlPhpPackage for the php.package resource
+type mqlPhpPackage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlPhpPackageInternal it will be used here
+	Id      plugin.TValue[string]
+	Name    plugin.TValue[string]
+	Version plugin.TValue[string]
+	Purl    plugin.TValue[string]
+	Cpes    plugin.TValue[[]any]
+	Files   plugin.TValue[[]any]
+}
+
+// createPhpPackage creates a new instance of this resource
+func createPhpPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPhpPackage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("php.package", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPhpPackage) MqlName() string {
+	return "php.package"
+}
+
+func (c *mqlPhpPackage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPhpPackage) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlPhpPackage) GetName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Name, func() (string, error) {
+		return c.name()
+	})
+}
+
+func (c *mqlPhpPackage) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlPhpPackage) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
+	})
+}
+
+func (c *mqlPhpPackage) GetCpes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Cpes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("php.package", c.__id, "cpes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.cpes()
+	})
+}
+
+func (c *mqlPhpPackage) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("php.package", c.__id, "files")
 			if err != nil {
 				return nil, err
 			}

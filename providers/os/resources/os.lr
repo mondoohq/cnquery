@@ -2367,6 +2367,40 @@ dotnet.package @defaults("name version purl") {
   files() []pkgFileInfo
 }
 
+// PHP / Composer packages
+php.packages {
+  []php.package
+
+  init(path? string)
+
+  // Path to search for Composer files
+  path string
+
+  // Root project (may not exist)
+  root() php.package
+
+  // List of direct dependencies
+  directDependencies() []php.package
+
+  // Files used to determine the packages
+  files() []pkgFileInfo
+}
+
+php.package @defaults("name version purl") {
+  // ID is the php.package unique identifier
+  id string
+  // Name of the package (vendor/package)
+  name() string
+  // Version of the package
+  version() string
+  // Package URL
+  purl() string
+  // Common Platform Enumeration (CPE) for the package
+  cpes() []core.cpe
+  // Package files
+  files() []pkgFileInfo
+}
+
 // macOS specific resources
 macos {
   // macOS computer name

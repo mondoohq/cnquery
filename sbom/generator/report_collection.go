@@ -55,6 +55,7 @@ type BomFields struct {
 	JavaPackages    []BomPackage      `json:"java.packages.list,omitempty"`
 	RustPackages    []BomPackage      `json:"rust.packages.list,omitempty"`
 	DotnetPackages  []BomPackage      `json:"dotnet.packages.list,omitempty"`
+	PhpPackages     []BomPackage      `json:"php.packages.list,omitempty"`
 	KernelInstalled []KernelInstalled `json:"kernel.installed,omitempty"`
 }
 

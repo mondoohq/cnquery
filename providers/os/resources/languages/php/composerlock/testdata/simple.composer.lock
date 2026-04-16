@@ -1,0 +1,38 @@
+{
+  "_readme": ["This file locks the dependencies of your project"],
+  "content-hash": "abc123",
+  "packages": [
+    {
+      "name": "monolog/monolog",
+      "version": "3.5.0",
+      "license": ["MIT"],
+      "description": "Sends your logs to files, sockets, inboxes, databases and various web services"
+    },
+    {
+      "name": "symfony/console",
+      "version": "v6.4.1",
+      "license": ["MIT"],
+      "description": "Eases the creation of beautiful and testable command line interfaces"
+    },
+    {
+      "name": "psr/log",
+      "version": "3.0.0",
+      "license": ["MIT"],
+      "description": "Common interface for logging libraries"
+    }
+  ],
+  "packages-dev": [
+    {
+      "name": "phpunit/phpunit",
+      "version": "10.5.5",
+      "license": ["BSD-3-Clause"],
+      "description": "The PHP Unit Testing framework."
+    },
+    {
+      "name": "mockery/mockery",
+      "version": "1.6.7",
+      "license": ["BSD-3-Clause"],
+      "description": "Mockery is a simple yet flexible PHP mock object framework"
+    }
+  ]
+}

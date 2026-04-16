@@ -194,6 +194,7 @@ kts
 kubenet
 kustomization
 labelmatchstatement
+Laravel
 lastname
 launchconfiguration
 launchtemplate
@@ -239,6 +240,7 @@ MULTIAZ
 mychart
 myapp
 myproject
+myvendor
 naflags
 natgateway
 netbios
@@ -289,6 +291,7 @@ PAYG
 pdp
 persistentvolume
 persistentvolumeclaim
+phpunit
 Pids
 pipefail
 pki
@@ -300,6 +303,7 @@ priorityclass
 privateca
 privs
 privsep
+psr
 processingjob
 proxmox
 psc
@@ -382,6 +386,7 @@ stringx
 subscriptionfilter
 superusers
 switchports
+symfony
 tailscale
 targetgroup
 tde

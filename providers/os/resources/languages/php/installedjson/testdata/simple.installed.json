@@ -1,0 +1,23 @@
+{
+  "packages": [
+    {
+      "name": "monolog/monolog",
+      "version": "3.5.0",
+      "version_normalized": "3.5.0.0",
+      "license": ["MIT"],
+      "description": "Sends your logs to files, sockets, inboxes, databases and various web services"
+    },
+    {
+      "name": "symfony/console",
+      "version": "v6.4.1",
+      "version_normalized": "6.4.1.0",
+      "license": ["MIT"]
+    },
+    {
+      "name": "psr/log",
+      "version": "3.0.0",
+      "version_normalized": "3.0.0.0",
+      "license": ["MIT"]
+    }
+  ]
+}
