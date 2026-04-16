@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"strings"
+
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 )
 
@@ -33,6 +35,13 @@ func intValue(i *int) int64 {
 		return 0
 	}
 	return int64(*i)
+}
+
+// isOcid returns true if the string looks like a valid OCI resource identifier.
+// OCI uses placeholder values like "ORACLE_MANAGED_KEY" for system-managed
+// resources; those should not be resolved via init lookups.
+func isOcid(s string) bool {
+	return strings.HasPrefix(s, "ocid1.")
 }
 
 func jobErr(err error) []*jobpool.Job {

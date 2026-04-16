@@ -153,7 +153,7 @@ func (o *mqlOciDatabaseDbSystem) id() (string, error) {
 }
 
 func (o *mqlOciDatabaseDbSystem) kmsKey() (*mqlOciKmsKey, error) {
-	if o.cacheKmsKeyId == "" {
+	if o.cacheKmsKeyId == "" || !isOcid(o.cacheKmsKeyId) {
 		o.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
@@ -318,7 +318,7 @@ func (o *mqlOciDatabaseAutonomousDatabase) id() (string, error) {
 }
 
 func (o *mqlOciDatabaseAutonomousDatabase) kmsKey() (*mqlOciKmsKey, error) {
-	if o.cacheKmsKeyId == "" {
+	if o.cacheKmsKeyId == "" || !isOcid(o.cacheKmsKeyId) {
 		o.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
