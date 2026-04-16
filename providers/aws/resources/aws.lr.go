@@ -7373,7 +7373,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsSagemakerWorkteam).GetWorkteamUrl()).ToDataRes(types.String)
 	},
 	"aws.sagemaker.workteam.memberDefinitions": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsSagemakerWorkteam).GetMemberDefinitions()).ToDataRes(types.Dict)
+		return (r.(*mqlAwsSagemakerWorkteam).GetMemberDefinitions()).ToDataRes(types.Array(types.Dict))
 	},
 	"aws.sagemaker.workteam.notificationTopic": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerWorkteam).GetNotificationTopic()).ToDataRes(types.Resource("aws.sns.topic"))
@@ -26742,7 +26742,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"aws.sagemaker.workteam.memberDefinitions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsSagemakerWorkteam).MemberDefinitions, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		r.(*mqlAwsSagemakerWorkteam).MemberDefinitions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.workteam.notificationTopic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -63660,7 +63660,7 @@ type mqlAwsSagemakerWorkteam struct {
 	WorkforceArn      plugin.TValue[string]
 	Workforce         plugin.TValue[*mqlAwsSagemakerWorkforce]
 	WorkteamUrl       plugin.TValue[string]
-	MemberDefinitions plugin.TValue[any]
+	MemberDefinitions plugin.TValue[[]any]
 	NotificationTopic plugin.TValue[*mqlAwsSnsTopic]
 	Tags              plugin.TValue[map[string]any]
 }
@@ -63750,7 +63750,7 @@ func (c *mqlAwsSagemakerWorkteam) GetWorkteamUrl() *plugin.TValue[string] {
 	return &c.WorkteamUrl
 }
 
-func (c *mqlAwsSagemakerWorkteam) GetMemberDefinitions() *plugin.TValue[any] {
+func (c *mqlAwsSagemakerWorkteam) GetMemberDefinitions() *plugin.TValue[[]any] {
 	return &c.MemberDefinitions
 }
 

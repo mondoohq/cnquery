@@ -3493,7 +3493,7 @@ private aws.sagemaker.workteam @defaults("arn name") {
   // URI where workers log in to access tasks (worker portal)
   workteamUrl string
   // Member definitions (Cognito user groups or OIDC groups)
-  memberDefinitions dict
+  memberDefinitions []dict
   // SNS topic used to notify workers of new tasks (null if unset)
   notificationTopic() aws.sns.topic
   // Tags for the workteam

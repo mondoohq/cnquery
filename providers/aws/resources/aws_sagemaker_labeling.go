@@ -589,7 +589,10 @@ func (a *mqlAwsSagemaker) getWorkteams(conn *connection.AwsConnection) []*jobpoo
 						eagerTags = tags
 					}
 
-					memberDefs, _ := convert.JsonToDictSlice(wt.MemberDefinitions)
+					memberDefs, err := convert.JsonToDictSlice(wt.MemberDefinitions)
+					if err != nil {
+						log.Warn().Err(err).Str("workteam", convert.ToValue(wt.WorkteamArn)).Msg("failed to convert sagemaker workteam member definitions")
+					}
 
 					mqlWt, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerWorkteam,
 						map[string]*llx.RawData{
