@@ -1746,6 +1746,20 @@ aws.sagemaker {
   modelBiasJobDefinitions() []aws.sagemaker.modelBiasJobDefinition
   // List of SageMaker model explainability job definitions
   modelExplainabilityJobDefinitions() []aws.sagemaker.modelExplainabilityJobDefinition
+  // List of SageMaker experiments
+  experiments() []aws.sagemaker.experiment
+  // List of SageMaker trials
+  trials() []aws.sagemaker.trial
+  // List of SageMaker trial components
+  trialComponents() []aws.sagemaker.trialComponent
+  // List of SageMaker projects
+  projects() []aws.sagemaker.project
+  // List of SageMaker hyperparameter tuning jobs
+  hyperParameterTuningJobs() []aws.sagemaker.hyperParameterTuningJob
+  // List of SageMaker batch transform jobs
+  transformJobs() []aws.sagemaker.transformJob
+  // List of SageMaker AutoML jobs
+  autoMLJobs() []aws.sagemaker.autoMLJob
 }
 
 // AWS SageMaker notebook instance
@@ -2732,6 +2746,390 @@ private aws.sagemaker.modelExplainabilityJobDefinition @defaults("arn name") {
   iamRole() aws.iam.role
   // Stopping condition
   stoppingCondition() dict
+}
+
+// AWS SageMaker experiment
+private aws.sagemaker.experiment @defaults("arn name") {
+  // ARN of the experiment
+  arn string
+  // Name of the experiment
+  name string
+  // Display name of the experiment
+  displayName string
+  // Description of the experiment
+  description string
+  // Region where the experiment exists
+  region string
+  // Time when the experiment was created
+  createdAt time
+  // Time when the experiment was last modified
+  lastModifiedAt time
+  // Tags for the experiment
+  tags() map[string]string
+  // Source of the experiment
+  source() aws.sagemaker.experiment.source
+}
+
+// AWS SageMaker experiment source
+private aws.sagemaker.experiment.source @defaults("sourceArn sourceType") {
+  // ARN of the source
+  sourceArn string
+  // Type of the source
+  sourceType string
+}
+
+// AWS SageMaker trial
+private aws.sagemaker.trial @defaults("arn name") {
+  // ARN of the trial
+  arn string
+  // Name of the trial
+  name string
+  // Display name of the trial
+  displayName string
+  // Region where the trial exists
+  region string
+  // Time when the trial was created
+  createdAt time
+  // Time when the trial was last modified
+  lastModifiedAt time
+  // Tags for the trial
+  tags() map[string]string
+  // Experiment this trial belongs to
+  experiment() aws.sagemaker.experiment
+  // Source of the trial
+  source() aws.sagemaker.trial.source
+  // Components of the trial
+  components() []aws.sagemaker.trialComponent
+}
+
+// AWS SageMaker trial source
+private aws.sagemaker.trial.source @defaults("sourceArn sourceType") {
+  // ARN of the source
+  sourceArn string
+  // Type of the source
+  sourceType string
+}
+
+// AWS SageMaker trial component
+private aws.sagemaker.trialComponent @defaults("arn name") {
+  // ARN of the trial component
+  arn string
+  // Name of the trial component
+  name string
+  // Display name of the trial component
+  displayName string
+  // Region where the trial component exists
+  region string
+  // Status of the trial component
+  status string
+  // Time when the trial component was created
+  createdAt time
+  // Time when the trial component was last modified
+  lastModifiedAt time
+  // Tags for the trial component
+  tags() map[string]string
+  // Source of the trial component
+  source() aws.sagemaker.trialComponent.source
+  // Parameters of the trial component
+  parameters dict
+  // Input artifacts
+  inputArtifacts dict
+  // Output artifacts
+  outputArtifacts dict
+  // Metrics for the trial component
+  metrics() []aws.sagemaker.trialComponent.metricSummary
+}
+
+// AWS SageMaker trial component source
+private aws.sagemaker.trialComponent.source @defaults("sourceArn sourceType") {
+  // ARN of the source
+  sourceArn string
+  // Type of the source
+  sourceType string
+}
+
+// AWS SageMaker trial component metric summary
+private aws.sagemaker.trialComponent.metricSummary @defaults("metricName") {
+  // Name of the metric
+  metricName string
+  // ARN of the source
+  sourceArn string
+  // Minimum value
+  min float
+  // Maximum value
+  max float
+  // Average value
+  avg float
+  // Number of data points
+  count int
+  // Last recorded value
+  last float
+  // Standard deviation
+  stdDev float
+}
+
+// AWS SageMaker project
+private aws.sagemaker.project @defaults("arn name status") {
+  // ARN of the project
+  arn string
+  // Name of the project
+  name string
+  // Project ID
+  projectId string
+  // Description of the project
+  description string
+  // Region where the project exists
+  region string
+  // Status: Pending, CreateInProgress, CreateCompleted, CreateFailed, DeleteInProgress, DeleteFailed, DeleteCompleted, UpdateInProgress, UpdateCompleted, UpdateFailed
+  status string
+  // Time when the project was created
+  createdAt time
+  // Tags for the project
+  tags() map[string]string
+  // Service Catalog provisioning details
+  serviceCatalogProvisioningDetails() aws.sagemaker.project.provisioningDetails
+  // Service Catalog provisioned product details
+  serviceCatalogProvisionedProductDetails() aws.sagemaker.project.provisionedProductDetails
+}
+
+// AWS SageMaker project provisioning details
+private aws.sagemaker.project.provisioningDetails @defaults("productId") {
+  // Service Catalog product ID
+  productId string
+  // Provisioning artifact ID
+  provisioningArtifactId string
+  // Path ID
+  pathId string
+  // Provisioning parameters
+  provisioningParameters() []aws.sagemaker.project.provisioningParameter
+}
+
+// AWS SageMaker project provisioning parameter
+private aws.sagemaker.project.provisioningParameter @defaults("key value") {
+  // Parameter key
+  key string
+  // Parameter value
+  value string
+}
+
+// AWS SageMaker project provisioned product details
+private aws.sagemaker.project.provisionedProductDetails @defaults("provisionedProductId") {
+  // Provisioned product ID
+  provisionedProductId string
+  // Provisioned product status message
+  provisionedProductStatusMessage string
+}
+
+// AWS SageMaker hyperparameter tuning job
+private aws.sagemaker.hyperParameterTuningJob @defaults("arn name status") {
+  // ARN of the tuning job
+  arn string
+  // Name of the tuning job
+  name string
+  // Region where the tuning job exists
+  region string
+  // Status: Completed, InProgress, Failed, Stopped, Stopping, Deleting, DeleteFailed
+  status string
+  // Time when the tuning job was created
+  createdAt time
+  // Time when the tuning job was last modified
+  lastModifiedAt time
+  // Tags for the tuning job
+  tags() map[string]string
+  // Tuning strategy: Bayesian, Random, Hyperband, Grid
+  strategy() string
+  // Objective metric configuration
+  objectiveMetric() aws.sagemaker.hyperParameterTuningJob.objective
+  // Resource limits
+  resourceLimits() aws.sagemaker.hyperParameterTuningJob.resourceLimits
+  // Parameter ranges
+  parameterRanges() []aws.sagemaker.hyperParameterTuningJob.parameterRange
+  // Training job status counters
+  trainingJobStatusCounters() aws.sagemaker.hyperParameterTuningJob.statusCounters
+  // Best training job summary
+  bestTrainingJob() dict
+  // Failure reason if the tuning job failed
+  failureReason() string
+}
+
+// AWS SageMaker hyperparameter tuning job objective
+private aws.sagemaker.hyperParameterTuningJob.objective @defaults("type metricName") {
+  // Objective type: Maximize or Minimize
+  type string
+  // Name of the objective metric
+  metricName string
+}
+
+// AWS SageMaker hyperparameter tuning job resource limits
+private aws.sagemaker.hyperParameterTuningJob.resourceLimits @defaults("maxNumberOfTrainingJobs maxParallelTrainingJobs") {
+  // Maximum number of training jobs
+  maxNumberOfTrainingJobs int
+  // Maximum number of parallel training jobs
+  maxParallelTrainingJobs int
+  // Maximum runtime in seconds
+  maxRuntimeInSeconds int
+}
+
+// AWS SageMaker hyperparameter tuning job parameter range
+private aws.sagemaker.hyperParameterTuningJob.parameterRange @defaults("name type") {
+  // Name of the parameter
+  name string
+  // Type: Continuous, Integer, or Categorical
+  type string
+  // Minimum value (for Continuous and Integer)
+  minValue string
+  // Maximum value (for Continuous and Integer)
+  maxValue string
+  // Scaling type: Auto, Linear, Logarithmic, ReverseLogarithmic
+  scalingType string
+  // Possible values (for Categorical)
+  values []string
+}
+
+// AWS SageMaker hyperparameter tuning job training status counters
+private aws.sagemaker.hyperParameterTuningJob.statusCounters @defaults("completed inProgress") {
+  // Number of completed training jobs
+  completed int
+  // Number of in-progress training jobs
+  inProgress int
+  // Number of retryable error training jobs
+  retryableError int
+  // Number of non-retryable error training jobs
+  nonRetryableError int
+  // Number of stopped training jobs
+  stopped int
+}
+
+// AWS SageMaker batch transform job
+private aws.sagemaker.transformJob @defaults("arn name status") {
+  // ARN of the transform job
+  arn string
+  // Name of the transform job
+  name string
+  // Region where the transform job exists
+  region string
+  // Status: InProgress, Completed, Failed, Stopping, Stopped
+  status string
+  // Time when the transform job was created
+  createdAt time
+  // Tags for the transform job
+  tags() map[string]string
+  // Name of the model used
+  modelName string
+  // Typed reference to the model
+  model() aws.sagemaker.model
+  // Maximum concurrent transforms
+  maxConcurrentTransforms int
+  // Maximum payload size in MB
+  maxPayloadInMB int
+  // Batch strategy: MultiRecord or SingleRecord
+  batchStrategy string
+  // Transform input configuration
+  transformInput() aws.sagemaker.transformJob.input
+  // Transform output configuration
+  transformOutput() aws.sagemaker.transformJob.output
+  // Transform resource configuration
+  transformResources() aws.sagemaker.transformJob.resources
+  // Failure reason if the transform job failed
+  failureReason() string
+}
+
+// AWS SageMaker transform job input
+private aws.sagemaker.transformJob.input @defaults("s3Uri contentType") {
+  // S3 URI for input data
+  s3Uri string
+  // Data source type
+  dataSource string
+  // Content type of the input data
+  contentType string
+  // Compression type: None or Gzip
+  compressionType string
+  // Split type: None, Line, RecordIO, TFRecord
+  splitType string
+}
+
+// AWS SageMaker transform job output
+private aws.sagemaker.transformJob.output @defaults("s3Uri") {
+  // S3 URI for output data
+  s3Uri string
+  // Accept content type
+  accept string
+  // Assembly method: None or Line
+  assembleWith string
+  // KMS key for output encryption
+  kmsKey() aws.kms.key
+}
+
+// AWS SageMaker transform job resources
+private aws.sagemaker.transformJob.resources @defaults("instanceType instanceCount") {
+  // ML instance type
+  instanceType string
+  // Number of ML instances
+  instanceCount int
+  // KMS key for volume encryption
+  volumeKmsKey() aws.kms.key
+}
+
+// AWS SageMaker AutoML job
+private aws.sagemaker.autoMLJob @defaults("arn name status") {
+  // ARN of the AutoML job
+  arn string
+  // Name of the AutoML job
+  name string
+  // Region where the AutoML job exists
+  region string
+  // Status: Completed, InProgress, Failed, Stopped, Stopping
+  status string
+  // Time when the AutoML job was created
+  createdAt time
+  // Time when the AutoML job was last modified
+  lastModifiedAt time
+  // Tags for the AutoML job
+  tags() map[string]string
+  // Input data configuration
+  inputDataConfig() []aws.sagemaker.autoMLJob.inputChannel
+  // Output data configuration
+  outputDataConfig() aws.sagemaker.autoMLJob.outputConfig
+  // IAM role for the AutoML job
+  iamRole() aws.iam.role
+  // Best candidate model
+  bestCandidate() aws.sagemaker.autoMLJob.candidate
+  // Failure reason if the AutoML job failed
+  failureReason() string
+}
+
+// AWS SageMaker AutoML job input channel
+private aws.sagemaker.autoMLJob.inputChannel @defaults("targetAttributeName s3Uri") {
+  // Target attribute name
+  targetAttributeName string
+  // Content type
+  contentType string
+  // Compression type
+  compressionType string
+  // S3 URI for input data
+  s3Uri string
+  // S3 data type: ManifestFile or S3Prefix
+  s3DataType string
+}
+
+// AWS SageMaker AutoML job output configuration
+private aws.sagemaker.autoMLJob.outputConfig @defaults("s3Uri") {
+  // S3 URI for output data
+  s3Uri string
+  // KMS key for output encryption
+  kmsKey() aws.kms.key
+}
+
+// AWS SageMaker AutoML job best candidate
+private aws.sagemaker.autoMLJob.candidate @defaults("candidateName candidateStatus") {
+  // Name of the candidate
+  candidateName string
+  // Status of the candidate
+  candidateStatus string
+  // Objective metric name
+  objectiveMetricName string
+  // Objective metric value
+  objectiveMetricValue float
 }
 
 // AWS Simple Notification Service (SNS)
