@@ -1,3 +1,6 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
 package provider
 
 import (
@@ -117,8 +120,8 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.{{ .CamelcaseProviderID }}Connection) error {
-  // TODO: adjust asset detection
-  asset.Id = conn.Conf.Type
+	// TODO: adjust asset detection
+	asset.Id = conn.Conf.Type
 	asset.Name = conn.Conf.Host
 
 	asset.Platform = &inventory.Platform{
@@ -129,7 +132,7 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.{{ .CamelcaseP
 	}
 
 	// TODO: Add platform IDs
-	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/oci/"}
+	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/{{ .ProviderID }}/"}
 	return nil
 }
 

@@ -1,4 +1,7 @@
-option provider = "{{ .GoPackage }}"
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/mql/providers/{{ .ProviderID }}"
 option go_package = "{{ .GoPackage }}/resources"
 
 // {{ .ProviderName }}

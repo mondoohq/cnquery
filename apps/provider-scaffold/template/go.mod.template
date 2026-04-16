@@ -1,3 +1,5 @@
 module {{ .GoPackage }}
 
-go 1.22
+replace go.mondoo.com/mql/v13 => ../..
+
+go 1.25.8
