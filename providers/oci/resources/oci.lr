@@ -1268,6 +1268,160 @@ private oci.waf.policy @defaults("name") {
   definedTags map[string]map[string]string
 }
 
+// Oracle Cloud Infrastructure (OCI) Functions service
+oci.functions {
+  // Function applications
+  applications() []oci.functions.application
+}
+
+// Oracle Cloud Infrastructure (OCI) Functions application (groups related serverless functions)
+private oci.functions.application @defaults("name") {
+  // Application OCID
+  id string
+  // Application display name
+  name string
+  // Compartment OCID
+  compartmentID string
+  // Lifecycle state (CREATING, ACTIVE, INACTIVE, UPDATING, DELETING, DELETED, FAILED)
+  state string
+  // Application shape (GENERIC_X86, GENERIC_ARM, GENERIC_X86_ARM)
+  shape string
+  // Application tracing configuration
+  traceConfig dict
+  // Image signature verification policy configuration
+  imagePolicyConfig dict
+  // Application creation time
+  created time
+  // Last update time
+  timeUpdated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // Subnets where functions run
+  subnets() []oci.network.subnet
+  // Network Security Groups applied to the application
+  networkSecurityGroups() []oci.network.networkSecurityGroup
+  // Application environment configuration variables
+  config() map[string]string
+  // Syslog URL for logging (tcp://host:port)
+  syslogUrl() string
+  // Functions in this application
+  functions() []oci.functions.function
+}
+
+// Oracle Cloud Infrastructure (OCI) serverless function
+private oci.functions.function @defaults("name") {
+  // Function OCID
+  id string
+  // Function display name
+  name string
+  // Compartment OCID
+  compartmentID string
+  // Parent application OCID
+  applicationId string
+  // Lifecycle state (CREATING, ACTIVE, INACTIVE, UPDATING, DELETING, DELETED, FAILED)
+  state string
+  // Docker image URL for the function
+  image string
+  // Image digest (sha256)
+  imageDigest string
+  // Function shape (GENERIC_X86, GENERIC_ARM, GENERIC_X86_ARM)
+  shape string
+  // Maximum memory in MBs
+  memoryInMBs int
+  // Execution timeout in seconds
+  timeoutInSeconds int
+  // Base URL for function invocation
+  invokeEndpoint string
+  // Function tracing configuration
+  traceConfig dict
+  // Function creation time
+  created time
+  // Last update time
+  timeUpdated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // Function environment configuration variables
+  config() map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) Container Instances service
+oci.containerInstances {
+  // Container instances
+  instances() []oci.containerInstances.instance
+}
+
+// Oracle Cloud Infrastructure (OCI) container instance (serverless container group)
+private oci.containerInstances.instance @defaults("name") {
+  // Container instance OCID
+  id string
+  // Display name
+  name string
+  // Compartment OCID
+  compartmentID string
+  // Availability domain
+  availabilityDomain string
+  // Lifecycle state (CREATING, ACTIVE, UPDATING, DELETING, DELETED, FAILED)
+  state string
+  // Compute shape
+  shape string
+  // Shape configuration (OCPUs, memory)
+  shapeConfig dict
+  // Number of containers
+  containerCount int
+  // Container restart policy (ALWAYS, NEVER, ON_FAILURE)
+  containerRestartPolicy string
+  // Fault domain
+  faultDomain string
+  // Graceful shutdown timeout in seconds
+  gracefulShutdownTimeoutInSeconds int
+  // Number of attached volumes
+  volumeCount int
+  // Creation time
+  created time
+  // Last update time
+  timeUpdated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // Containers running on this instance
+  containers() []oci.containerInstances.container
+}
+
+// Oracle Cloud Infrastructure (OCI) container within a container instance
+private oci.containerInstances.container @defaults("name") {
+  // Container OCID
+  id string
+  // Display name
+  name string
+  // Compartment OCID
+  compartmentID string
+  // Availability domain
+  availabilityDomain string
+  // Lifecycle state (CREATING, ACTIVE, STOPPING, STOPPED, EXITED, FAILED)
+  state string
+  // Parent container instance OCID
+  containerInstanceId string
+  // Docker image URL
+  imageUrl string
+  // Whether resource principal access is disabled
+  isResourcePrincipalDisabled bool
+  // Resource configuration (CPU/memory limits)
+  resourceConfig dict
+  // Creation time
+  created time
+  // Last update time
+  timeUpdated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
 // Oracle Cloud Infrastructure (OCI) Database service
 oci.database {
   // Database systems (VM/BM)
