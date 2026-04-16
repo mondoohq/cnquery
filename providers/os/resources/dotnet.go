@@ -213,15 +213,13 @@ func collectDotnetFromDir(afs *afero.Afero, dir string) (*languages.Package, []*
 	if entries == nil {
 		entries, _ = afs.ReadDir(dir)
 	}
-	if entries != nil {
-		for _, entry := range entries {
-			name := entry.Name()
-			if !entry.IsDir() && (strings.HasSuffix(name, ".csproj") || strings.HasSuffix(name, ".fsproj")) {
-				_, d, t, f := parseDotnetFile(afs, filepath.Join(dir, name), &csproj.Extractor{})
-				direct = append(direct, d...)
-				transitive = append(transitive, t...)
-				files = append(files, f...)
-			}
+	for _, entry := range entries {
+		name := entry.Name()
+		if !entry.IsDir() && (strings.HasSuffix(name, ".csproj") || strings.HasSuffix(name, ".fsproj")) {
+			_, d, t, f := parseDotnetFile(afs, filepath.Join(dir, name), &csproj.Extractor{})
+			direct = append(direct, d...)
+			transitive = append(transitive, t...)
+			files = append(files, f...)
 		}
 	}
 
