@@ -26,10 +26,15 @@ import (
 // defaultDotnetPaths are searched for .NET package files.
 // Only top-level files in these directories are scanned.
 var defaultDotnetPaths = []string{
+	// Linux/container paths
 	"/app",
 	"/usr/src/app",
 	"/home/*/app",
 	"/opt",
+	// Windows paths (WinRM scanning)
+	"C:\\inetpub\\wwwroot",
+	"C:\\Users\\*\\source",
+	"C:\\app",
 }
 
 func initDotnetPackages(_ *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -113,7 +118,10 @@ func (r *mqlDotnetPackages) gatherData() error {
 		r.Root = plugin.TValue[*mqlDotnetPackage]{State: plugin.StateIsSet | plugin.StateIsNull}
 	}
 
-	// Set list (union of all packages, deduplicated)
+	// Set list (union of all packages, deduplicated).
+	// Both slices are combined because some extractors (e.g., depsjson) return nil
+	// for Direct() and only populate Transitive(), while others (e.g., packageslockjson)
+	// include direct packages in Transitive(). Deduplication handles overlap.
 	combined := make([]*languages.Package, 0, len(transitiveDeps)+len(directDeps))
 	combined = append(combined, transitiveDeps...)
 	combined = append(combined, directDeps...)

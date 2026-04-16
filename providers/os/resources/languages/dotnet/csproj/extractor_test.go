@@ -39,3 +39,27 @@ func TestCsprojExtractor(t *testing.T) {
 	assert.Equal(t, "13.0.3", p.Version)
 	assert.Equal(t, "pkg:nuget/Newtonsoft.Json@13.0.3", p.Purl)
 }
+
+func TestCsprojExtractorChildElements(t *testing.T) {
+	f, err := os.Open("./testdata/child-elements.csproj")
+	require.NoError(t, err)
+	defer f.Close()
+
+	info, err := (&Extractor{}).Parse(f, "path/to/MyApp.csproj")
+	require.NoError(t, err)
+
+	// Version specified as child element should be parsed
+	direct := info.Direct()
+	assert.Equal(t, 1, len(direct))
+	p := direct.Find("Newtonsoft.Json")
+	require.NotNil(t, p)
+	assert.Equal(t, "13.0.3", p.Version)
+	assert.Equal(t, "pkg:nuget/Newtonsoft.Json@13.0.3", p.Purl)
+
+	// PrivateAssets as child element should mark as dev
+	assert.Nil(t, direct.Find("xunit"))
+
+	transitive := info.Transitive()
+	assert.Equal(t, 2, len(transitive))
+	assert.NotNil(t, transitive.Find("xunit"))
+}

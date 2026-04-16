@@ -14,6 +14,7 @@ apparmor
 appslot
 arp
 artifactregistry
+aspnet
 asdk
 atlassian
 auditlog
@@ -34,6 +35,7 @@ AWSPENDING
 AWSPREVIOUS
 awsvpc
 Beixb
+BXdl
 bwawxf
 backupconfiguration
 backupdr
@@ -237,6 +239,8 @@ naflags
 natgateway
 netbios
 netin
+Newtonsoft
+NUnit
 netout
 networkfirewall
 networkinterface
@@ -257,6 +261,7 @@ nsrecord
 nss
 nullgroup
 nullstring
+Odr
 oid
 oidc
 ondemand
@@ -430,6 +435,7 @@ webide
 WEBSERVERS
 Webstore
 wil
+Wjki
 workdir
 WORKSPACESUSER
 workspacesweb

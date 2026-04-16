@@ -72,11 +72,12 @@ func (p *project) Transitive() languages.Packages {
 }
 
 func makePackage(ref packageReference, evidence []string) *languages.Package {
+	version := ref.version()
 	return &languages.Package{
 		Name:         ref.Include,
-		Version:      ref.Version,
-		Purl:         dotnet.NewPackageUrl(ref.Include, ref.Version),
-		Cpes:         dotnet.NewCpes(ref.Include, ref.Version),
+		Version:      version,
+		Purl:         dotnet.NewPackageUrl(ref.Include, version),
+		Cpes:         dotnet.NewCpes(ref.Include, version),
 		EvidenceList: dotnet.NewEvidenceList(evidence),
 	}
 }

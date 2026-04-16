@@ -20,13 +20,35 @@ type itemGroup struct {
 }
 
 // packageReference represents a single <PackageReference> element.
+// Version and PrivateAssets can appear as either XML attributes or child elements:
+//
+//	<PackageReference Include="Foo" Version="1.0" />                  (attribute form)
+//	<PackageReference Include="Foo"><Version>1.0</Version></PackageReference>  (element form)
 type packageReference struct {
-	Include       string `xml:"Include,attr"`
-	Version       string `xml:"Version,attr"`
-	PrivateAssets string `xml:"PrivateAssets,attr"`
+	Include           string `xml:"Include,attr"`
+	VersionAttr       string `xml:"Version,attr"`
+	VersionElem       string `xml:"Version"`
+	PrivateAssetsAttr string `xml:"PrivateAssets,attr"`
+	PrivateAssetsElem string `xml:"PrivateAssets"`
+}
+
+// version returns the package version, preferring the attribute form.
+func (p *packageReference) version() string {
+	if p.VersionAttr != "" {
+		return p.VersionAttr
+	}
+	return p.VersionElem
+}
+
+// privateAssets returns the PrivateAssets value, preferring the attribute form.
+func (p *packageReference) privateAssets() string {
+	if p.PrivateAssetsAttr != "" {
+		return p.PrivateAssetsAttr
+	}
+	return p.PrivateAssetsElem
 }
 
 // isDev returns true if this is a development-only package (PrivateAssets="all").
 func (p *packageReference) isDev() bool {
-	return p.PrivateAssets == "all"
+	return p.privateAssets() == "all"
 }
