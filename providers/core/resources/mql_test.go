@@ -698,7 +698,7 @@ func TestArray(t *testing.T) {
 		},
 		{
 			Code:        "[2,1,2,1].containsOnly([1,2])",
-			ResultIndex: 0, Expectation: []any(nil),
+			ResultIndex: 0, Expectation: []any{},
 		},
 		{
 			Code:        "a = [1]; [2,1,2,1].containsOnly(a)",
@@ -722,7 +722,7 @@ func TestArray(t *testing.T) {
 		},
 		{
 			Code:        "[2,1,2,1].containsNone([3,4])",
-			ResultIndex: 0, Expectation: []any(nil),
+			ResultIndex: 0, Expectation: []any{},
 		},
 		{
 			Code:        "a = [1]; [2,1,2,1].containsNone(a)",
@@ -739,6 +739,21 @@ func TestArray(t *testing.T) {
 		{
 			Code:        "[3,1,3,4,2] - [3,4,5]",
 			Expectation: []any{int64(1), int64(2)},
+		},
+		// Regression: array-valued builtins must return empty, not null, when no
+		// items remain, so downstream concatenation does not fail with
+		// "cannot add arrays to null".
+		{
+			Code:        "[1,2,3].where(99) + [9]",
+			Expectation: []any{int64(9)},
+		},
+		{
+			Code:        "[1,2,3].sample(0) + [9]",
+			Expectation: []any{int64(9)},
+		},
+		{
+			Code:        "[].flat + [9]",
+			Expectation: []any{int64(9)},
 		},
 	})
 

@@ -1207,7 +1207,7 @@ func dictFlat(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawDa
 		return &RawData{Type: bind.Type, Error: errors.New("incorrect type, no array data found")}, 0, nil
 	}
 
-	var res []any
+	res := make([]any, 0)
 	for i := range list {
 		res = append(res, flatten(list[i])...)
 	}
@@ -1246,7 +1246,7 @@ func dictDifferenceV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 		return &RawData{Type: bind.Type, Error: errors.New("tried to call function with a non-array, please make sure the argument is an array")}, 0, nil
 	}
 
-	var res []any
+	res := make([]any, 0)
 	var skip bool
 	for i := range org {
 		skip = false
@@ -1345,7 +1345,7 @@ func dictContainsNone(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 		// filters = []any{arg.Value}
 	}
 
-	var res []any
+	res := make([]any, 0)
 	var skip bool
 	for i := range org {
 		skip = true

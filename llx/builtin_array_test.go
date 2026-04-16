@@ -21,3 +21,25 @@ func TestArrayFlat(t *testing.T) {
 		require.Equal(t, ArrayData([]any{}, types.Any), res)
 	})
 }
+
+// Ensure internal array helpers return empty slices (not nil) so that downstream
+// operations like array concatenation do not hit "cannot add arrays to null".
+func TestArrayHelpers_EmptyNotNil(t *testing.T) {
+	t.Run("flatten of empty array returns empty slice", func(t *testing.T) {
+		res := flatten([]any{})
+		require.NotNil(t, res)
+		require.Equal(t, []any{}, res)
+	})
+
+	t.Run("_arraySample with zero count returns empty slice", func(t *testing.T) {
+		res := _arraySample([]any{1, 2, 3}, 0)
+		require.NotNil(t, res)
+		require.Equal(t, []any{}, res)
+	})
+
+	t.Run("_arraySample with empty array returns empty slice", func(t *testing.T) {
+		res := _arraySample([]any{}, 5)
+		require.NotNil(t, res)
+		require.Equal(t, []any{}, res)
+	})
+}

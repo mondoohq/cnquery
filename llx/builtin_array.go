@@ -232,7 +232,7 @@ func _arrayWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, in
 	arg1 := chunk.Function.Args[1]
 	if types.Type(arg1.Type).Underlying() != types.FunctionLike {
 		right := arg1.RawData().Value
-		var res []any
+		res := make([]any, 0)
 		for i := range list {
 			left := list[i]
 			if left == right {
@@ -302,7 +302,7 @@ func arrayWhereNotV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) 
 }
 
 func _arraySample(array []any, cnt int64) []any {
-	var res []any
+	res := make([]any, 0)
 	// Note: we still go through the list, even if more items are requested than the list contains.
 	// In that case we only return what we have, but in random order.
 	for i := 0; i < int(cnt) && len(array) > 0; i++ {
@@ -476,7 +476,7 @@ func flatten(v any) []any {
 		return []any{v}
 	}
 
-	var res []any
+	res := make([]any, 0)
 	for i := range list {
 		res = append(res, flatten(list[i])...)
 	}
@@ -829,7 +829,7 @@ func arrayDifferenceV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64
 	org := bind.Value.([]any)
 	filters := arg.Value.([]any)
 
-	var res []any
+	res := make([]any, 0)
 	var skip bool
 	for i := range org {
 		skip = false
@@ -985,7 +985,7 @@ func arrayContainsNone(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64
 	org := bind.Value.([]any)
 	filters := arg.Value.([]any)
 
-	var res []any
+	res := make([]any, 0)
 	for i := range org {
 		for j := range filters {
 			if equalFunc(org[i], filters[j]) {
