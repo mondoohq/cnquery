@@ -180,6 +180,8 @@ const (
 	ResourceNpmPackage                   string = "npm.package"
 	ResourceGoPackages                   string = "go.packages"
 	ResourceGoPackage                    string = "go.package"
+	ResourceJavaPackages                 string = "java.packages"
+	ResourceJavaPackage                  string = "java.package"
 	ResourceMacos                        string = "macos"
 	ResourceMacosHardware                string = "macos.hardware"
 	ResourceMacosAlf                     string = "macos.alf"
@@ -906,6 +908,14 @@ func init() {
 		"go.package": {
 			// to override args, implement: initGoPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGoPackage,
+		},
+		"java.packages": {
+			Init:   initJavaPackages,
+			Create: createJavaPackages,
+		},
+		"java.package": {
+			// to override args, implement: initJavaPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createJavaPackage,
 		},
 		"macos": {
 			// to override args, implement: initMacos(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3577,6 +3587,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"go.package.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"java.packages.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJavaPackages).GetPath()).ToDataRes(types.String)
+	},
+	"java.packages.root": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJavaPackages).GetRoot()).ToDataRes(types.Resource("java.package"))
+	},
+	"java.packages.directDependencies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJavaPackages).GetDirectDependencies()).ToDataRes(types.Array(types.Resource("java.package")))
+	},
+	"java.packages.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJavaPackages).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"java.packages.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJavaPackages).GetList()).ToDataRes(types.Array(types.Resource("java.package")))
+	},
+	"java.package.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJavaPackage).GetId()).ToDataRes(types.String)
+	},
+	"java.package.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJavaPackage).GetName()).ToDataRes(types.String)
+	},
+	"java.package.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJavaPackage).GetVersion()).ToDataRes(types.String)
+	},
+	"java.package.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJavaPackage).GetPurl()).ToDataRes(types.String)
+	},
+	"java.package.cpes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJavaPackage).GetCpes()).ToDataRes(types.Array(types.Resource("cpe")))
+	},
+	"java.package.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJavaPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
 	},
 	"macos.computerName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacos).GetComputerName()).ToDataRes(types.String)
@@ -8765,6 +8808,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"go.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGoPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"java.packages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJavaPackages).__id, ok = v.Value.(string)
+		return
+	},
+	"java.packages.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJavaPackages).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"java.packages.root": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJavaPackages).Root, ok = plugin.RawToTValue[*mqlJavaPackage](v.Value, v.Error)
+		return
+	},
+	"java.packages.directDependencies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJavaPackages).DirectDependencies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"java.packages.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJavaPackages).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"java.packages.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJavaPackages).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"java.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJavaPackage).__id, ok = v.Value.(string)
+		return
+	},
+	"java.package.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJavaPackage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"java.package.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJavaPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"java.package.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJavaPackage).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"java.package.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJavaPackage).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"java.package.cpes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJavaPackage).Cpes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"java.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJavaPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"macos.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24141,6 +24236,227 @@ func (c *mqlGoPackage) GetFiles() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("go.package", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+// mqlJavaPackages for the java.packages resource
+type mqlJavaPackages struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlJavaPackagesInternal
+	Path               plugin.TValue[string]
+	Root               plugin.TValue[*mqlJavaPackage]
+	DirectDependencies plugin.TValue[[]any]
+	Files              plugin.TValue[[]any]
+	List               plugin.TValue[[]any]
+}
+
+// createJavaPackages creates a new instance of this resource
+func createJavaPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJavaPackages{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("java.packages", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJavaPackages) MqlName() string {
+	return "java.packages"
+}
+
+func (c *mqlJavaPackages) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJavaPackages) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlJavaPackages) GetRoot() *plugin.TValue[*mqlJavaPackage] {
+	return plugin.GetOrCompute[*mqlJavaPackage](&c.Root, func() (*mqlJavaPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("java.packages", c.__id, "root")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlJavaPackage), nil
+			}
+		}
+
+		return c.root()
+	})
+}
+
+func (c *mqlJavaPackages) GetDirectDependencies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DirectDependencies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("java.packages", c.__id, "directDependencies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.directDependencies()
+	})
+}
+
+func (c *mqlJavaPackages) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("java.packages", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+func (c *mqlJavaPackages) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("java.packages", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlJavaPackage for the java.package resource
+type mqlJavaPackage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlJavaPackageInternal it will be used here
+	Id      plugin.TValue[string]
+	Name    plugin.TValue[string]
+	Version plugin.TValue[string]
+	Purl    plugin.TValue[string]
+	Cpes    plugin.TValue[[]any]
+	Files   plugin.TValue[[]any]
+}
+
+// createJavaPackage creates a new instance of this resource
+func createJavaPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJavaPackage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("java.package", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJavaPackage) MqlName() string {
+	return "java.package"
+}
+
+func (c *mqlJavaPackage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJavaPackage) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlJavaPackage) GetName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Name, func() (string, error) {
+		return c.name()
+	})
+}
+
+func (c *mqlJavaPackage) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlJavaPackage) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
+	})
+}
+
+func (c *mqlJavaPackage) GetCpes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Cpes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("java.package", c.__id, "cpes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.cpes()
+	})
+}
+
+func (c *mqlJavaPackage) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("java.package", c.__id, "files")
 			if err != nil {
 				return nil, err
 			}

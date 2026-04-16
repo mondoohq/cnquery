@@ -1,0 +1,8 @@
+Manifest-Version: 1.0
+Bundle-SymbolicName: org.apache.commons.lang3
+Bundle-Version: 3.12.0
+Bundle-Name: Apache Commons Lang
+Bundle-Vendor: The Apache Software Foundation
+Bundle-License: https://www.apache.org/licenses/LICENSE-2.0.txt
+Implementation-Title: Apache Commons Lang
+Implementation-Version: 3.12.0
