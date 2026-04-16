@@ -1108,6 +1108,7 @@ sshd.config.matchBlock 10.0.5
 sshd.config.matchBlock.ciphers 11.4.10
 sshd.config.matchBlock.context 10.0.5
 sshd.config.matchBlock.criteria 10.0.5
+sshd.config.matchBlock.hostkeyalgorithms 13.9.3
 sshd.config.matchBlock.hostkeys 11.4.10
 sshd.config.matchBlock.kexs 11.4.10
 sshd.config.matchBlock.macs 11.4.10

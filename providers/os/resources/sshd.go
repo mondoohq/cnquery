@@ -282,12 +282,12 @@ func (s *mqlSshdConfig) kexs(params map[string]any) ([]any, error) {
 }
 
 func (s *mqlSshdConfig) hostkeys(params map[string]any) ([]any, error) {
-        rawHostKeys, ok := params["HostKey"]
-        if !ok {
-                return nil, nil
-        }
+	rawHostKeys, ok := params["HostKey"]
+	if !ok {
+		return nil, nil
+	}
 
-        return parseConfigEntrySlice(rawHostKeys)
+	return parseConfigEntrySlice(rawHostKeys)
 }
 
 func (s *mqlSshdConfig) hostkeyalgorithms(params map[string]any) ([]any, error) {
