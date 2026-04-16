@@ -2886,6 +2886,8 @@ private networkRoute @defaults("destination flags"){
 chrome {
   // All installed Chrome extensions across all profiles and users
   extensions() []chrome.extension
+  // All content scripts from all Chrome extensions across all profiles and users
+  extensionContentScripts() []chrome.extensionContentScript
 }
 
 // Chrome browser extension
@@ -2900,14 +2902,62 @@ private chrome.extension @defaults("name version identifier browser") {
   description string
   // Chrome extension manifest version (2 or 3)
   manifestVersion int
-  // Permissions requested by the extension
+  // Permissions requested by the extension (includes host_permissions for Manifest V3)
   permissions []string
+  // Optional permissions that may be granted at runtime
+  optionalPermissions []string
   // Path to the extension directory
   path string
   // Chrome profile name where extension is installed
   profile string
+  // Full path to the Chrome profile directory
+  profilePath string
   // Browser name (e.g., "Google Chrome", "Chromium", "Google Chrome Beta")
   browser string
+  // Extension author from manifest
+  author string
+  // URL used to check for extension updates
+  updateUrl string
+  // SHA-256 hash of the on-disk manifest.json file
+  manifestHash string
+  // Whether the extension was installed from the Chrome Web Store
+  fromWebstore bool
+  // Extension state (e.g., "enabled", "disabled")
+  state string
+  // Whether the extension is currently enabled
+  enabled bool
+  // Whether the extension runs persistently in the background (Manifest V2 only; V3 is always false)
+  persistent bool
+  // Extension install time
+  installTime time
+  // Default locale for internationalization
+  defaultLocale string
+  // Whether the extension directory exists on disk (referenced in Preferences)
+  referenced bool
+  // UID of the user who owns this extension
+  uid int
+  // Content scripts declared by this extension
+  contentScripts []chrome.extensionContentScript
+}
+
+// Chrome extension content script
+private chrome.extensionContentScript @defaults("script match") {
+  // Parent extension identifier
+  identifier string
+  // Parent extension version
+  version string
+  // Browser name (e.g., "Google Chrome", "Brave")
+  browserType string
+  // UID of the owning user
+  uid int
+  // JavaScript content script filename
+  script string
+  // URL match pattern where the script executes
+  match string
+  // Full path to the Chrome profile directory
+  profilePath string
+  // Path to the extension directory
+  path string
 }
 
 // Firefox browser resources

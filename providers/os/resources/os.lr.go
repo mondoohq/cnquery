@@ -16,232 +16,233 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceAsset                      string = "asset"
-	ResourceAssetEol                   string = "asset.eol"
-	ResourceMondooEol                  string = "mondoo.eol"
-	ResourceVulnmgmt                   string = "vulnmgmt"
-	ResourceVulnCve                    string = "vuln.cve"
-	ResourceVulnAdvisory               string = "vuln.advisory"
-	ResourceVulnPackage                string = "vuln.package"
-	ResourcePlatformAdvisories         string = "platform.advisories"
-	ResourcePlatformCves               string = "platform.cves"
-	ResourceAuditCvss                  string = "audit.cvss"
-	ResourceAuditAdvisory              string = "audit.advisory"
-	ResourceAuditCve                   string = "audit.cve"
-	ResourceMachine                    string = "machine"
-	ResourceMachineBios                string = "machine.bios"
-	ResourceMachineSystem              string = "machine.system"
-	ResourceMachineBaseboard           string = "machine.baseboard"
-	ResourceMachineChassis             string = "machine.chassis"
-	ResourceMachineCpu                 string = "machine.cpu"
-	ResourceMachineSecureboot          string = "machine.secureboot"
-	ResourceOs                         string = "os"
-	ResourceOsDate                     string = "os.date"
-	ResourceOsUpdate                   string = "os.update"
-	ResourceOsBase                     string = "os.base"
-	ResourceOsUnix                     string = "os.unix"
-	ResourceOsLinux                    string = "os.linux"
-	ResourceOsRootCertificates         string = "os.rootCertificates"
-	ResourceCommand                    string = "command"
-	ResourcePowershell                 string = "powershell"
-	ResourceFile                       string = "file"
-	ResourceFileContext                string = "file.context"
-	ResourceFilePermissions            string = "file.permissions"
-	ResourceFiles                      string = "files"
-	ResourceFilesFind                  string = "files.find"
-	ResourceParseIni                   string = "parse.ini"
-	ResourceParseJson                  string = "parse.json"
-	ResourceParseXml                   string = "parse.xml"
-	ResourceParsePlist                 string = "parse.plist"
-	ResourceParseYaml                  string = "parse.yaml"
-	ResourceParseCertificates          string = "parse.certificates"
-	ResourceParseOpenpgp               string = "parse.openpgp"
-	ResourceUser                       string = "user"
-	ResourcePrivatekey                 string = "privatekey"
-	ResourceUsers                      string = "users"
-	ResourceAuthorizedkeys             string = "authorizedkeys"
-	ResourceAuthorizedkeysEntry        string = "authorizedkeys.entry"
-	ResourceGroup                      string = "group"
-	ResourceGroups                     string = "groups"
-	ResourcePackage                    string = "package"
-	ResourcePkgFileInfo                string = "pkgFileInfo"
-	ResourcePackages                   string = "packages"
-	ResourcePamConf                    string = "pam.conf"
-	ResourcePamConfServiceEntry        string = "pam.conf.serviceEntry"
-	ResourceSshd                       string = "sshd"
-	ResourceSshdConfig                 string = "sshd.config"
-	ResourceSshdConfigMatchBlock       string = "sshd.config.matchBlock"
-	ResourceAuditdConfig               string = "auditd.config"
-	ResourceAuditdRules                string = "auditd.rules"
-	ResourceAuditdRule                 string = "auditd.rule"
-	ResourceAuditdRuleControl          string = "auditd.rule.control"
-	ResourceAuditdRuleFile             string = "auditd.rule.file"
-	ResourceAuditdRuleSyscall          string = "auditd.rule.syscall"
-	ResourceApache2                    string = "apache2"
-	ResourceApache2Conf                string = "apache2.conf"
-	ResourceApache2ConfModule          string = "apache2.conf.module"
-	ResourceApache2ConfVirtualHost     string = "apache2.conf.virtualHost"
-	ResourceApache2ConfDirectory       string = "apache2.conf.directory"
-	ResourceJournaldConfig             string = "journald.config"
-	ResourceJournaldConfigSection      string = "journald.config.section"
-	ResourceJournaldConfigSectionParam string = "journald.config.section.param"
-	ResourceService                    string = "service"
-	ResourceServices                   string = "services"
-	ResourceSystemdTimer               string = "systemd.timer"
-	ResourceSystemdTimers              string = "systemd.timers"
-	ResourceSystemdSocket              string = "systemd.socket"
-	ResourceSystemdSockets             string = "systemd.sockets"
-	ResourceKernel                     string = "kernel"
-	ResourceKernelModule               string = "kernel.module"
-	ResourceDocker                     string = "docker"
-	ResourceDockerFile                 string = "docker.file"
-	ResourceDockerFileStage            string = "docker.file.stage"
-	ResourceDockerFileArg              string = "docker.file.arg"
-	ResourceDockerFileEnv              string = "docker.file.env"
-	ResourceDockerFileUser             string = "docker.file.user"
-	ResourceDockerFileExpose           string = "docker.file.expose"
-	ResourceDockerFileFrom             string = "docker.file.from"
-	ResourceDockerFileRun              string = "docker.file.run"
-	ResourceDockerFileAdd              string = "docker.file.add"
-	ResourceDockerFileCopy             string = "docker.file.copy"
-	ResourceDockerFileHealthcheck      string = "docker.file.healthcheck"
-	ResourceDockerFileVolume           string = "docker.file.volume"
-	ResourceDockerFileShell            string = "docker.file.shell"
-	ResourceDockerFileWorkdir          string = "docker.file.workdir"
-	ResourceDockerImage                string = "docker.image"
-	ResourceDockerContainer            string = "docker.container"
-	ResourceContainerd                 string = "containerd"
-	ResourceContainerdContainer        string = "containerd.container"
-	ResourceIptables                   string = "iptables"
-	ResourceIp6tables                  string = "ip6tables"
-	ResourceIptablesEntry              string = "iptables.entry"
-	ResourceNftables                   string = "nftables"
-	ResourceNftablesTable              string = "nftables.table"
-	ResourceNftablesChain              string = "nftables.chain"
-	ResourceNftablesRule               string = "nftables.rule"
-	ResourceNftablesSet                string = "nftables.set"
-	ResourceUfw                        string = "ufw"
-	ResourceUfwRule                    string = "ufw.rule"
-	ResourceUfwApplication             string = "ufw.application"
-	ResourceFirewalld                  string = "firewalld"
-	ResourceFirewalldZone              string = "firewalld.zone"
-	ResourceFirewalldRichrule          string = "firewalld.richrule"
-	ResourceFstab                      string = "fstab"
-	ResourceFstabEntry                 string = "fstab.entry"
-	ResourceGrubConfig                 string = "grub.config"
-	ResourceGrubConfigEntry            string = "grub.config.entry"
-	ResourceSysrc                      string = "sysrc"
-	ResourceSysrcEntry                 string = "sysrc.entry"
-	ResourceProcess                    string = "process"
-	ResourceProcesses                  string = "processes"
-	ResourcePort                       string = "port"
-	ResourcePorts                      string = "ports"
-	ResourceAuditpol                   string = "auditpol"
-	ResourceAuditpolEntry              string = "auditpol.entry"
-	ResourceSecpol                     string = "secpol"
-	ResourceNtpConf                    string = "ntp.conf"
-	ResourceRsyslogConf                string = "rsyslog.conf"
-	ResourceLogindefs                  string = "logindefs"
-	ResourceLimits                     string = "limits"
-	ResourceLimitsEntry                string = "limits.entry"
-	ResourceSudoers                    string = "sudoers"
-	ResourceSudoersUserSpec            string = "sudoers.userSpec"
-	ResourceSudoersDefault             string = "sudoers.default"
-	ResourceSudoersAlias               string = "sudoers.alias"
-	ResourceLsblk                      string = "lsblk"
-	ResourceLsblkEntry                 string = "lsblk.entry"
-	ResourceApparmor                   string = "apparmor"
-	ResourceApparmorProfile            string = "apparmor.profile"
-	ResourceApparmorProcess            string = "apparmor.process"
-	ResourceSelinux                    string = "selinux"
-	ResourceSelinuxBoolean             string = "selinux.boolean"
-	ResourceSelinuxModule              string = "selinux.module"
-	ResourceModprobe                   string = "modprobe"
-	ResourceModprobeInstall            string = "modprobe.install"
-	ResourceModprobeRemove             string = "modprobe.remove"
-	ResourceModprobeBlacklist          string = "modprobe.blacklist"
-	ResourceModprobeOption             string = "modprobe.option"
-	ResourceModprobeAlias              string = "modprobe.alias"
-	ResourceModprobeSoftdep            string = "modprobe.softdep"
-	ResourceMount                      string = "mount"
-	ResourceMountPoint                 string = "mount.point"
-	ResourceShadow                     string = "shadow"
-	ResourceShadowEntry                string = "shadow.entry"
-	ResourceYum                        string = "yum"
-	ResourceYumRepo                    string = "yum.repo"
-	ResourceRegistrykey                string = "registrykey"
-	ResourceRegistrykeyProperty        string = "registrykey.property"
-	ResourceContainerImage             string = "container.image"
-	ResourceContainerRepository        string = "container.repository"
-	ResourceKubelet                    string = "kubelet"
-	ResourcePython                     string = "python"
-	ResourcePythonPackage              string = "python.package"
-	ResourceNpmPackages                string = "npm.packages"
-	ResourceNpmPackage                 string = "npm.package"
-	ResourceMacos                      string = "macos"
-	ResourceMacosHardware              string = "macos.hardware"
-	ResourceMacosAlf                   string = "macos.alf"
-	ResourceMacosFirewall              string = "macos.firewall"
-	ResourceMacosFirewallApp           string = "macos.firewall.app"
-	ResourceMacosFilevault             string = "macos.filevault"
-	ResourceMacosGatekeeper            string = "macos.gatekeeper"
-	ResourceMacosSip                   string = "macos.sip"
-	ResourceMacosTimemachine           string = "macos.timemachine"
-	ResourceMacosSystemsetup           string = "macos.systemsetup"
-	ResourceOpenBSMAudit               string = "openBSMAudit"
-	ResourceWindows                    string = "windows"
-	ResourceMacosSystemExtension       string = "macos.systemExtension"
-	ResourceSafari                     string = "safari"
-	ResourceSafariExtension            string = "safari.extension"
-	ResourceLaunchd                    string = "launchd"
-	ResourceLaunchdJob                 string = "launchd.job"
-	ResourceWindowsHotfix              string = "windows.hotfix"
-	ResourceWindowsServerFeature       string = "windows.serverFeature"
-	ResourceWindowsOptionalFeature     string = "windows.optionalFeature"
-	ResourceWindowsFirewall            string = "windows.firewall"
-	ResourceWindowsFirewallProfile     string = "windows.firewall.profile"
-	ResourceWindowsFirewallRule        string = "windows.firewall.rule"
-	ResourceWindowsBitlocker           string = "windows.bitlocker"
-	ResourceWindowsBitlockerVolume     string = "windows.bitlocker.volume"
-	ResourceWindowsSecurity            string = "windows.security"
-	ResourceWindowsSecurityProduct     string = "windows.security.product"
-	ResourceWindowsSecurityHealth      string = "windows.security.health"
-	ResourceCloud                      string = "cloud"
-	ResourceCloudInstance              string = "cloudInstance"
-	ResourceIpAddress                  string = "ipAddress"
-	ResourceNetwork                    string = "network"
-	ResourceNetworkInterface           string = "networkInterface"
-	ResourceNetworkRoutes              string = "networkRoutes"
-	ResourceNetworkRoute               string = "networkRoute"
-	ResourceChrome                     string = "chrome"
-	ResourceChromeExtension            string = "chrome.extension"
-	ResourceFirefox                    string = "firefox"
-	ResourceFirefoxAddon               string = "firefox.addon"
-	ResourceUsb                        string = "usb"
-	ResourceUsbDevice                  string = "usb.device"
-	ResourceCrontab                    string = "crontab"
-	ResourceCrontabEntry               string = "crontab.entry"
-	ResourceVscode                     string = "vscode"
-	ResourceVscodeExtension            string = "vscode.extension"
-	ResourceLogrotate                  string = "logrotate"
-	ResourceLogrotateEntry             string = "logrotate.entry"
-	ResourceMdadm                      string = "mdadm"
-	ResourceMdadmArray                 string = "mdadm.array"
-	ResourceMdadmDevice                string = "mdadm.device"
-	ResourceZfs                        string = "zfs"
-	ResourceZfsPool                    string = "zfs.pool"
-	ResourceZfsPoolVdev                string = "zfs.pool.vdev"
-	ResourceZfsDataset                 string = "zfs.dataset"
-	ResourceClaudeCode                 string = "claude.code"
-	ResourceClaudeCodePlugin           string = "claude.code.plugin"
-	ResourceClaudeCodeSkill            string = "claude.code.skill"
-	ResourceClaudeCodeProject          string = "claude.code.project"
-	ResourceClaudeCodeMcpServer        string = "claude.code.mcpServer"
-	ResourceOpenaiCodex                string = "openai.codex"
-	ResourceOpenaiCodexPlugin          string = "openai.codex.plugin"
-	ResourceOpenaiCodexSkill           string = "openai.codex.skill"
-	ResourceOpenaiCodexMcpServer       string = "openai.codex.mcpServer"
-	ResourceOpenaiCodexConnector       string = "openai.codex.connector"
+	ResourceAsset                        string = "asset"
+	ResourceAssetEol                     string = "asset.eol"
+	ResourceMondooEol                    string = "mondoo.eol"
+	ResourceVulnmgmt                     string = "vulnmgmt"
+	ResourceVulnCve                      string = "vuln.cve"
+	ResourceVulnAdvisory                 string = "vuln.advisory"
+	ResourceVulnPackage                  string = "vuln.package"
+	ResourcePlatformAdvisories           string = "platform.advisories"
+	ResourcePlatformCves                 string = "platform.cves"
+	ResourceAuditCvss                    string = "audit.cvss"
+	ResourceAuditAdvisory                string = "audit.advisory"
+	ResourceAuditCve                     string = "audit.cve"
+	ResourceMachine                      string = "machine"
+	ResourceMachineBios                  string = "machine.bios"
+	ResourceMachineSystem                string = "machine.system"
+	ResourceMachineBaseboard             string = "machine.baseboard"
+	ResourceMachineChassis               string = "machine.chassis"
+	ResourceMachineCpu                   string = "machine.cpu"
+	ResourceMachineSecureboot            string = "machine.secureboot"
+	ResourceOs                           string = "os"
+	ResourceOsDate                       string = "os.date"
+	ResourceOsUpdate                     string = "os.update"
+	ResourceOsBase                       string = "os.base"
+	ResourceOsUnix                       string = "os.unix"
+	ResourceOsLinux                      string = "os.linux"
+	ResourceOsRootCertificates           string = "os.rootCertificates"
+	ResourceCommand                      string = "command"
+	ResourcePowershell                   string = "powershell"
+	ResourceFile                         string = "file"
+	ResourceFileContext                  string = "file.context"
+	ResourceFilePermissions              string = "file.permissions"
+	ResourceFiles                        string = "files"
+	ResourceFilesFind                    string = "files.find"
+	ResourceParseIni                     string = "parse.ini"
+	ResourceParseJson                    string = "parse.json"
+	ResourceParseXml                     string = "parse.xml"
+	ResourceParsePlist                   string = "parse.plist"
+	ResourceParseYaml                    string = "parse.yaml"
+	ResourceParseCertificates            string = "parse.certificates"
+	ResourceParseOpenpgp                 string = "parse.openpgp"
+	ResourceUser                         string = "user"
+	ResourcePrivatekey                   string = "privatekey"
+	ResourceUsers                        string = "users"
+	ResourceAuthorizedkeys               string = "authorizedkeys"
+	ResourceAuthorizedkeysEntry          string = "authorizedkeys.entry"
+	ResourceGroup                        string = "group"
+	ResourceGroups                       string = "groups"
+	ResourcePackage                      string = "package"
+	ResourcePkgFileInfo                  string = "pkgFileInfo"
+	ResourcePackages                     string = "packages"
+	ResourcePamConf                      string = "pam.conf"
+	ResourcePamConfServiceEntry          string = "pam.conf.serviceEntry"
+	ResourceSshd                         string = "sshd"
+	ResourceSshdConfig                   string = "sshd.config"
+	ResourceSshdConfigMatchBlock         string = "sshd.config.matchBlock"
+	ResourceAuditdConfig                 string = "auditd.config"
+	ResourceAuditdRules                  string = "auditd.rules"
+	ResourceAuditdRule                   string = "auditd.rule"
+	ResourceAuditdRuleControl            string = "auditd.rule.control"
+	ResourceAuditdRuleFile               string = "auditd.rule.file"
+	ResourceAuditdRuleSyscall            string = "auditd.rule.syscall"
+	ResourceApache2                      string = "apache2"
+	ResourceApache2Conf                  string = "apache2.conf"
+	ResourceApache2ConfModule            string = "apache2.conf.module"
+	ResourceApache2ConfVirtualHost       string = "apache2.conf.virtualHost"
+	ResourceApache2ConfDirectory         string = "apache2.conf.directory"
+	ResourceJournaldConfig               string = "journald.config"
+	ResourceJournaldConfigSection        string = "journald.config.section"
+	ResourceJournaldConfigSectionParam   string = "journald.config.section.param"
+	ResourceService                      string = "service"
+	ResourceServices                     string = "services"
+	ResourceSystemdTimer                 string = "systemd.timer"
+	ResourceSystemdTimers                string = "systemd.timers"
+	ResourceSystemdSocket                string = "systemd.socket"
+	ResourceSystemdSockets               string = "systemd.sockets"
+	ResourceKernel                       string = "kernel"
+	ResourceKernelModule                 string = "kernel.module"
+	ResourceDocker                       string = "docker"
+	ResourceDockerFile                   string = "docker.file"
+	ResourceDockerFileStage              string = "docker.file.stage"
+	ResourceDockerFileArg                string = "docker.file.arg"
+	ResourceDockerFileEnv                string = "docker.file.env"
+	ResourceDockerFileUser               string = "docker.file.user"
+	ResourceDockerFileExpose             string = "docker.file.expose"
+	ResourceDockerFileFrom               string = "docker.file.from"
+	ResourceDockerFileRun                string = "docker.file.run"
+	ResourceDockerFileAdd                string = "docker.file.add"
+	ResourceDockerFileCopy               string = "docker.file.copy"
+	ResourceDockerFileHealthcheck        string = "docker.file.healthcheck"
+	ResourceDockerFileVolume             string = "docker.file.volume"
+	ResourceDockerFileShell              string = "docker.file.shell"
+	ResourceDockerFileWorkdir            string = "docker.file.workdir"
+	ResourceDockerImage                  string = "docker.image"
+	ResourceDockerContainer              string = "docker.container"
+	ResourceContainerd                   string = "containerd"
+	ResourceContainerdContainer          string = "containerd.container"
+	ResourceIptables                     string = "iptables"
+	ResourceIp6tables                    string = "ip6tables"
+	ResourceIptablesEntry                string = "iptables.entry"
+	ResourceNftables                     string = "nftables"
+	ResourceNftablesTable                string = "nftables.table"
+	ResourceNftablesChain                string = "nftables.chain"
+	ResourceNftablesRule                 string = "nftables.rule"
+	ResourceNftablesSet                  string = "nftables.set"
+	ResourceUfw                          string = "ufw"
+	ResourceUfwRule                      string = "ufw.rule"
+	ResourceUfwApplication               string = "ufw.application"
+	ResourceFirewalld                    string = "firewalld"
+	ResourceFirewalldZone                string = "firewalld.zone"
+	ResourceFirewalldRichrule            string = "firewalld.richrule"
+	ResourceFstab                        string = "fstab"
+	ResourceFstabEntry                   string = "fstab.entry"
+	ResourceGrubConfig                   string = "grub.config"
+	ResourceGrubConfigEntry              string = "grub.config.entry"
+	ResourceSysrc                        string = "sysrc"
+	ResourceSysrcEntry                   string = "sysrc.entry"
+	ResourceProcess                      string = "process"
+	ResourceProcesses                    string = "processes"
+	ResourcePort                         string = "port"
+	ResourcePorts                        string = "ports"
+	ResourceAuditpol                     string = "auditpol"
+	ResourceAuditpolEntry                string = "auditpol.entry"
+	ResourceSecpol                       string = "secpol"
+	ResourceNtpConf                      string = "ntp.conf"
+	ResourceRsyslogConf                  string = "rsyslog.conf"
+	ResourceLogindefs                    string = "logindefs"
+	ResourceLimits                       string = "limits"
+	ResourceLimitsEntry                  string = "limits.entry"
+	ResourceSudoers                      string = "sudoers"
+	ResourceSudoersUserSpec              string = "sudoers.userSpec"
+	ResourceSudoersDefault               string = "sudoers.default"
+	ResourceSudoersAlias                 string = "sudoers.alias"
+	ResourceLsblk                        string = "lsblk"
+	ResourceLsblkEntry                   string = "lsblk.entry"
+	ResourceApparmor                     string = "apparmor"
+	ResourceApparmorProfile              string = "apparmor.profile"
+	ResourceApparmorProcess              string = "apparmor.process"
+	ResourceSelinux                      string = "selinux"
+	ResourceSelinuxBoolean               string = "selinux.boolean"
+	ResourceSelinuxModule                string = "selinux.module"
+	ResourceModprobe                     string = "modprobe"
+	ResourceModprobeInstall              string = "modprobe.install"
+	ResourceModprobeRemove               string = "modprobe.remove"
+	ResourceModprobeBlacklist            string = "modprobe.blacklist"
+	ResourceModprobeOption               string = "modprobe.option"
+	ResourceModprobeAlias                string = "modprobe.alias"
+	ResourceModprobeSoftdep              string = "modprobe.softdep"
+	ResourceMount                        string = "mount"
+	ResourceMountPoint                   string = "mount.point"
+	ResourceShadow                       string = "shadow"
+	ResourceShadowEntry                  string = "shadow.entry"
+	ResourceYum                          string = "yum"
+	ResourceYumRepo                      string = "yum.repo"
+	ResourceRegistrykey                  string = "registrykey"
+	ResourceRegistrykeyProperty          string = "registrykey.property"
+	ResourceContainerImage               string = "container.image"
+	ResourceContainerRepository          string = "container.repository"
+	ResourceKubelet                      string = "kubelet"
+	ResourcePython                       string = "python"
+	ResourcePythonPackage                string = "python.package"
+	ResourceNpmPackages                  string = "npm.packages"
+	ResourceNpmPackage                   string = "npm.package"
+	ResourceMacos                        string = "macos"
+	ResourceMacosHardware                string = "macos.hardware"
+	ResourceMacosAlf                     string = "macos.alf"
+	ResourceMacosFirewall                string = "macos.firewall"
+	ResourceMacosFirewallApp             string = "macos.firewall.app"
+	ResourceMacosFilevault               string = "macos.filevault"
+	ResourceMacosGatekeeper              string = "macos.gatekeeper"
+	ResourceMacosSip                     string = "macos.sip"
+	ResourceMacosTimemachine             string = "macos.timemachine"
+	ResourceMacosSystemsetup             string = "macos.systemsetup"
+	ResourceOpenBSMAudit                 string = "openBSMAudit"
+	ResourceWindows                      string = "windows"
+	ResourceMacosSystemExtension         string = "macos.systemExtension"
+	ResourceSafari                       string = "safari"
+	ResourceSafariExtension              string = "safari.extension"
+	ResourceLaunchd                      string = "launchd"
+	ResourceLaunchdJob                   string = "launchd.job"
+	ResourceWindowsHotfix                string = "windows.hotfix"
+	ResourceWindowsServerFeature         string = "windows.serverFeature"
+	ResourceWindowsOptionalFeature       string = "windows.optionalFeature"
+	ResourceWindowsFirewall              string = "windows.firewall"
+	ResourceWindowsFirewallProfile       string = "windows.firewall.profile"
+	ResourceWindowsFirewallRule          string = "windows.firewall.rule"
+	ResourceWindowsBitlocker             string = "windows.bitlocker"
+	ResourceWindowsBitlockerVolume       string = "windows.bitlocker.volume"
+	ResourceWindowsSecurity              string = "windows.security"
+	ResourceWindowsSecurityProduct       string = "windows.security.product"
+	ResourceWindowsSecurityHealth        string = "windows.security.health"
+	ResourceCloud                        string = "cloud"
+	ResourceCloudInstance                string = "cloudInstance"
+	ResourceIpAddress                    string = "ipAddress"
+	ResourceNetwork                      string = "network"
+	ResourceNetworkInterface             string = "networkInterface"
+	ResourceNetworkRoutes                string = "networkRoutes"
+	ResourceNetworkRoute                 string = "networkRoute"
+	ResourceChrome                       string = "chrome"
+	ResourceChromeExtension              string = "chrome.extension"
+	ResourceChromeExtensionContentScript string = "chrome.extensionContentScript"
+	ResourceFirefox                      string = "firefox"
+	ResourceFirefoxAddon                 string = "firefox.addon"
+	ResourceUsb                          string = "usb"
+	ResourceUsbDevice                    string = "usb.device"
+	ResourceCrontab                      string = "crontab"
+	ResourceCrontabEntry                 string = "crontab.entry"
+	ResourceVscode                       string = "vscode"
+	ResourceVscodeExtension              string = "vscode.extension"
+	ResourceLogrotate                    string = "logrotate"
+	ResourceLogrotateEntry               string = "logrotate.entry"
+	ResourceMdadm                        string = "mdadm"
+	ResourceMdadmArray                   string = "mdadm.array"
+	ResourceMdadmDevice                  string = "mdadm.device"
+	ResourceZfs                          string = "zfs"
+	ResourceZfsPool                      string = "zfs.pool"
+	ResourceZfsPoolVdev                  string = "zfs.pool.vdev"
+	ResourceZfsDataset                   string = "zfs.dataset"
+	ResourceClaudeCode                   string = "claude.code"
+	ResourceClaudeCodePlugin             string = "claude.code.plugin"
+	ResourceClaudeCodeSkill              string = "claude.code.skill"
+	ResourceClaudeCodeProject            string = "claude.code.project"
+	ResourceClaudeCodeMcpServer          string = "claude.code.mcpServer"
+	ResourceOpenaiCodex                  string = "openai.codex"
+	ResourceOpenaiCodexPlugin            string = "openai.codex.plugin"
+	ResourceOpenaiCodexSkill             string = "openai.codex.skill"
+	ResourceOpenaiCodexMcpServer         string = "openai.codex.mcpServer"
+	ResourceOpenaiCodexConnector         string = "openai.codex.connector"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -1043,6 +1044,10 @@ func init() {
 		"chrome.extension": {
 			// to override args, implement: initChromeExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createChromeExtension,
+		},
+		"chrome.extensionContentScript": {
+			// to override args, implement: initChromeExtensionContentScript(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createChromeExtensionContentScript,
 		},
 		"firefox": {
 			// to override args, implement: initFirefox(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4265,6 +4270,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"chrome.extensions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlChrome).GetExtensions()).ToDataRes(types.Array(types.Resource("chrome.extension")))
 	},
+	"chrome.extensionContentScripts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChrome).GetExtensionContentScripts()).ToDataRes(types.Array(types.Resource("chrome.extensionContentScript")))
+	},
 	"chrome.extension.identifier": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlChromeExtension).GetIdentifier()).ToDataRes(types.String)
 	},
@@ -4283,14 +4291,80 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"chrome.extension.permissions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlChromeExtension).GetPermissions()).ToDataRes(types.Array(types.String))
 	},
+	"chrome.extension.optionalPermissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChromeExtension).GetOptionalPermissions()).ToDataRes(types.Array(types.String))
+	},
 	"chrome.extension.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlChromeExtension).GetPath()).ToDataRes(types.String)
 	},
 	"chrome.extension.profile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlChromeExtension).GetProfile()).ToDataRes(types.String)
 	},
+	"chrome.extension.profilePath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChromeExtension).GetProfilePath()).ToDataRes(types.String)
+	},
 	"chrome.extension.browser": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlChromeExtension).GetBrowser()).ToDataRes(types.String)
+	},
+	"chrome.extension.author": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChromeExtension).GetAuthor()).ToDataRes(types.String)
+	},
+	"chrome.extension.updateUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChromeExtension).GetUpdateUrl()).ToDataRes(types.String)
+	},
+	"chrome.extension.manifestHash": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChromeExtension).GetManifestHash()).ToDataRes(types.String)
+	},
+	"chrome.extension.fromWebstore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChromeExtension).GetFromWebstore()).ToDataRes(types.Bool)
+	},
+	"chrome.extension.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChromeExtension).GetState()).ToDataRes(types.String)
+	},
+	"chrome.extension.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChromeExtension).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"chrome.extension.persistent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChromeExtension).GetPersistent()).ToDataRes(types.Bool)
+	},
+	"chrome.extension.installTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChromeExtension).GetInstallTime()).ToDataRes(types.Time)
+	},
+	"chrome.extension.defaultLocale": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChromeExtension).GetDefaultLocale()).ToDataRes(types.String)
+	},
+	"chrome.extension.referenced": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChromeExtension).GetReferenced()).ToDataRes(types.Bool)
+	},
+	"chrome.extension.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChromeExtension).GetUid()).ToDataRes(types.Int)
+	},
+	"chrome.extension.contentScripts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChromeExtension).GetContentScripts()).ToDataRes(types.Array(types.Resource("chrome.extensionContentScript")))
+	},
+	"chrome.extensionContentScript.identifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChromeExtensionContentScript).GetIdentifier()).ToDataRes(types.String)
+	},
+	"chrome.extensionContentScript.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChromeExtensionContentScript).GetVersion()).ToDataRes(types.String)
+	},
+	"chrome.extensionContentScript.browserType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChromeExtensionContentScript).GetBrowserType()).ToDataRes(types.String)
+	},
+	"chrome.extensionContentScript.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChromeExtensionContentScript).GetUid()).ToDataRes(types.Int)
+	},
+	"chrome.extensionContentScript.script": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChromeExtensionContentScript).GetScript()).ToDataRes(types.String)
+	},
+	"chrome.extensionContentScript.match": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChromeExtensionContentScript).GetMatch()).ToDataRes(types.String)
+	},
+	"chrome.extensionContentScript.profilePath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChromeExtensionContentScript).GetProfilePath()).ToDataRes(types.String)
+	},
+	"chrome.extensionContentScript.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChromeExtensionContentScript).GetPath()).ToDataRes(types.String)
 	},
 	"firefox.addons": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFirefox).GetAddons()).ToDataRes(types.Array(types.Resource("firefox.addon")))
@@ -9695,6 +9769,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlChrome).Extensions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"chrome.extensionContentScripts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChrome).ExtensionContentScripts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"chrome.extension.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlChromeExtension).__id, ok = v.Value.(string)
 		return
@@ -9723,6 +9801,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlChromeExtension).Permissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"chrome.extension.optionalPermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChromeExtension).OptionalPermissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"chrome.extension.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlChromeExtension).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -9731,8 +9813,96 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlChromeExtension).Profile, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"chrome.extension.profilePath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChromeExtension).ProfilePath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"chrome.extension.browser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlChromeExtension).Browser, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"chrome.extension.author": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChromeExtension).Author, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"chrome.extension.updateUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChromeExtension).UpdateUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"chrome.extension.manifestHash": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChromeExtension).ManifestHash, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"chrome.extension.fromWebstore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChromeExtension).FromWebstore, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"chrome.extension.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChromeExtension).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"chrome.extension.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChromeExtension).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"chrome.extension.persistent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChromeExtension).Persistent, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"chrome.extension.installTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChromeExtension).InstallTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"chrome.extension.defaultLocale": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChromeExtension).DefaultLocale, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"chrome.extension.referenced": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChromeExtension).Referenced, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"chrome.extension.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChromeExtension).Uid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"chrome.extension.contentScripts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChromeExtension).ContentScripts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"chrome.extensionContentScript.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChromeExtensionContentScript).__id, ok = v.Value.(string)
+		return
+	},
+	"chrome.extensionContentScript.identifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChromeExtensionContentScript).Identifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"chrome.extensionContentScript.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChromeExtensionContentScript).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"chrome.extensionContentScript.browserType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChromeExtensionContentScript).BrowserType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"chrome.extensionContentScript.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChromeExtensionContentScript).Uid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"chrome.extensionContentScript.script": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChromeExtensionContentScript).Script, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"chrome.extensionContentScript.match": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChromeExtensionContentScript).Match, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"chrome.extensionContentScript.profilePath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChromeExtensionContentScript).ProfilePath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"chrome.extensionContentScript.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChromeExtensionContentScript).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"firefox.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26696,8 +26866,9 @@ func (c *mqlNetworkRoute) GetIface() *plugin.TValue[*mqlNetworkInterface] {
 type mqlChrome struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlChromeInternal it will be used here
-	Extensions plugin.TValue[[]any]
+	mqlChromeInternal
+	Extensions              plugin.TValue[[]any]
+	ExtensionContentScripts plugin.TValue[[]any]
 }
 
 // createChrome creates a new instance of this resource
@@ -26753,20 +26924,50 @@ func (c *mqlChrome) GetExtensions() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlChrome) GetExtensionContentScripts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ExtensionContentScripts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("chrome", c.__id, "extensionContentScripts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.extensionContentScripts()
+	})
+}
+
 // mqlChromeExtension for the chrome.extension resource
 type mqlChromeExtension struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlChromeExtensionInternal it will be used here
-	Identifier      plugin.TValue[string]
-	Name            plugin.TValue[string]
-	Version         plugin.TValue[string]
-	Description     plugin.TValue[string]
-	ManifestVersion plugin.TValue[int64]
-	Permissions     plugin.TValue[[]any]
-	Path            plugin.TValue[string]
-	Profile         plugin.TValue[string]
-	Browser         plugin.TValue[string]
+	Identifier          plugin.TValue[string]
+	Name                plugin.TValue[string]
+	Version             plugin.TValue[string]
+	Description         plugin.TValue[string]
+	ManifestVersion     plugin.TValue[int64]
+	Permissions         plugin.TValue[[]any]
+	OptionalPermissions plugin.TValue[[]any]
+	Path                plugin.TValue[string]
+	Profile             plugin.TValue[string]
+	ProfilePath         plugin.TValue[string]
+	Browser             plugin.TValue[string]
+	Author              plugin.TValue[string]
+	UpdateUrl           plugin.TValue[string]
+	ManifestHash        plugin.TValue[string]
+	FromWebstore        plugin.TValue[bool]
+	State               plugin.TValue[string]
+	Enabled             plugin.TValue[bool]
+	Persistent          plugin.TValue[bool]
+	InstallTime         plugin.TValue[*time.Time]
+	DefaultLocale       plugin.TValue[string]
+	Referenced          plugin.TValue[bool]
+	Uid                 plugin.TValue[int64]
+	ContentScripts      plugin.TValue[[]any]
 }
 
 // createChromeExtension creates a new instance of this resource
@@ -26825,6 +27026,10 @@ func (c *mqlChromeExtension) GetPermissions() *plugin.TValue[[]any] {
 	return &c.Permissions
 }
 
+func (c *mqlChromeExtension) GetOptionalPermissions() *plugin.TValue[[]any] {
+	return &c.OptionalPermissions
+}
+
 func (c *mqlChromeExtension) GetPath() *plugin.TValue[string] {
 	return &c.Path
 }
@@ -26833,8 +27038,139 @@ func (c *mqlChromeExtension) GetProfile() *plugin.TValue[string] {
 	return &c.Profile
 }
 
+func (c *mqlChromeExtension) GetProfilePath() *plugin.TValue[string] {
+	return &c.ProfilePath
+}
+
 func (c *mqlChromeExtension) GetBrowser() *plugin.TValue[string] {
 	return &c.Browser
+}
+
+func (c *mqlChromeExtension) GetAuthor() *plugin.TValue[string] {
+	return &c.Author
+}
+
+func (c *mqlChromeExtension) GetUpdateUrl() *plugin.TValue[string] {
+	return &c.UpdateUrl
+}
+
+func (c *mqlChromeExtension) GetManifestHash() *plugin.TValue[string] {
+	return &c.ManifestHash
+}
+
+func (c *mqlChromeExtension) GetFromWebstore() *plugin.TValue[bool] {
+	return &c.FromWebstore
+}
+
+func (c *mqlChromeExtension) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlChromeExtension) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlChromeExtension) GetPersistent() *plugin.TValue[bool] {
+	return &c.Persistent
+}
+
+func (c *mqlChromeExtension) GetInstallTime() *plugin.TValue[*time.Time] {
+	return &c.InstallTime
+}
+
+func (c *mqlChromeExtension) GetDefaultLocale() *plugin.TValue[string] {
+	return &c.DefaultLocale
+}
+
+func (c *mqlChromeExtension) GetReferenced() *plugin.TValue[bool] {
+	return &c.Referenced
+}
+
+func (c *mqlChromeExtension) GetUid() *plugin.TValue[int64] {
+	return &c.Uid
+}
+
+func (c *mqlChromeExtension) GetContentScripts() *plugin.TValue[[]any] {
+	return &c.ContentScripts
+}
+
+// mqlChromeExtensionContentScript for the chrome.extensionContentScript resource
+type mqlChromeExtensionContentScript struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlChromeExtensionContentScriptInternal it will be used here
+	Identifier  plugin.TValue[string]
+	Version     plugin.TValue[string]
+	BrowserType plugin.TValue[string]
+	Uid         plugin.TValue[int64]
+	Script      plugin.TValue[string]
+	Match       plugin.TValue[string]
+	ProfilePath plugin.TValue[string]
+	Path        plugin.TValue[string]
+}
+
+// createChromeExtensionContentScript creates a new instance of this resource
+func createChromeExtensionContentScript(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlChromeExtensionContentScript{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("chrome.extensionContentScript", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlChromeExtensionContentScript) MqlName() string {
+	return "chrome.extensionContentScript"
+}
+
+func (c *mqlChromeExtensionContentScript) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlChromeExtensionContentScript) GetIdentifier() *plugin.TValue[string] {
+	return &c.Identifier
+}
+
+func (c *mqlChromeExtensionContentScript) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlChromeExtensionContentScript) GetBrowserType() *plugin.TValue[string] {
+	return &c.BrowserType
+}
+
+func (c *mqlChromeExtensionContentScript) GetUid() *plugin.TValue[int64] {
+	return &c.Uid
+}
+
+func (c *mqlChromeExtensionContentScript) GetScript() *plugin.TValue[string] {
+	return &c.Script
+}
+
+func (c *mqlChromeExtensionContentScript) GetMatch() *plugin.TValue[string] {
+	return &c.Match
+}
+
+func (c *mqlChromeExtensionContentScript) GetProfilePath() *plugin.TValue[string] {
+	return &c.ProfilePath
+}
+
+func (c *mqlChromeExtensionContentScript) GetPath() *plugin.TValue[string] {
+	return &c.Path
 }
 
 // mqlFirefox for the firefox resource

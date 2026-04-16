@@ -4,10 +4,16 @@
 package resources
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
@@ -69,18 +75,65 @@ var browserConfigs = map[string][]browserConfig{
 	},
 }
 
+// profileDirPattern matches Chromium profile directories: "Default" or "Profile N"
+var profileDirPattern = regexp.MustCompile(`^(Default|Profile \d+)$`)
+
 // extensionPathPattern matches Chrome extension manifest paths and extracts profile and extension ID
 // Group 1: profile name, Group 2: extension ID
 var extensionPathPattern = regexp.MustCompile(`/([^/]+)/Extensions/([^/]+)/[^/]+/manifest\.json$`)
 
-// chromeManifest represents the structure of a Chrome extension manifest.json
-type chromeManifest struct {
-	Name            string   `json:"name"`
-	Version         string   `json:"version"`
-	Description     string   `json:"description"`
-	ManifestVersion int      `json:"manifest_version"`
-	Permissions     []string `json:"permissions"`
-	DefaultLocale   string   `json:"default_locale"`
+// chromePreferences represents the relevant parts of Chrome's Preferences file
+type chromePreferences struct {
+	Extensions struct {
+		Settings map[string]chromePrefsExtension `json:"settings"`
+	} `json:"extensions"`
+}
+
+// chromePrefsExtension represents a single extension entry in the Preferences/Secure Preferences file
+type chromePrefsExtension struct {
+	FromWebstore     bool                `json:"from_webstore"`
+	InstallTime      string              `json:"install_time"`       // Chrome epoch (legacy Preferences)
+	FirstInstallTime string              `json:"first_install_time"` // Chrome epoch (Secure Preferences)
+	State            *int                `json:"state"`              // 0=disabled, 1=enabled; nil if not present
+	DisableReasons   json.RawMessage     `json:"disable_reasons"`    // Can be int or []int; non-zero/non-empty means disabled
+	Path             string              `json:"path"`
+	Manifest         chromePrefsManifest `json:"manifest"`
+}
+
+// chromePrefsManifest represents the manifest copy inside the Preferences file
+type chromePrefsManifest struct {
+	Name                    string                `json:"name"`
+	Version                 string                `json:"version"`
+	Description             string                `json:"description"`
+	Author                  json.RawMessage       `json:"author"` // can be string or {"email":"..."}
+	ManifestVersion         int                   `json:"manifest_version"`
+	Permissions             []json.RawMessage     `json:"permissions"`               // can contain strings or objects
+	HostPermissions         []string              `json:"host_permissions"`          // Manifest V3
+	OptionalPermissions     []json.RawMessage     `json:"optional_permissions"`      // can contain strings or objects
+	OptionalHostPermissions []string              `json:"optional_host_permissions"` // Manifest V3
+	UpdateUrl               string                `json:"update_url"`
+	DefaultLocale           string                `json:"default_locale"`
+	Background              *chromeBackground     `json:"background"`
+	ContentScripts          []chromeContentScript `json:"content_scripts"`
+}
+
+// chromeBackground represents the background configuration in a Chrome extension manifest
+type chromeBackground struct {
+	Persistent *bool `json:"persistent"`
+}
+
+// chromeContentScript represents a content script entry in a Chrome extension manifest
+type chromeContentScript struct {
+	Matches []string `json:"matches"`
+	Js      []string `json:"js"`
+}
+
+// mqlChromeInternal caches both extensions and content scripts to avoid double computation
+type mqlChromeInternal struct {
+	cachedExtensions     []any
+	cachedContentScripts []any
+	fetched              bool
+	lock                 sync.Mutex
 }
 
 func (c *mqlChrome) id() (string, error) {
@@ -88,37 +141,69 @@ func (c *mqlChrome) id() (string, error) {
 }
 
 func (c *mqlChrome) extensions() ([]any, error) {
+	exts, _, err := c.fetchAll()
+	return exts, err
+}
+
+func (c *mqlChrome) extensionContentScripts() ([]any, error) {
+	_, scripts, err := c.fetchAll()
+	return scripts, err
+}
+
+// fetchAll discovers all Chrome extensions and content scripts, caching the results
+func (c *mqlChrome) fetchAll() ([]any, []any, error) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	if c.fetched {
+		return c.cachedExtensions, c.cachedContentScripts, nil
+	}
+
 	conn := c.MqlRuntime.Connection.(shared.Connection)
 	pf := conn.Asset().Platform
 	if pf == nil {
-		return nil, nil
+		c.fetched = true
+		return nil, nil, nil
 	}
 
 	platformKey := getPlatformKey(pf)
 	if platformKey == "" {
 		log.Debug().Str("platform", pf.Name).Msg("unsupported platform for Chrome extension detection")
-		return []any{}, nil
+		c.fetched = true
+		c.cachedExtensions = []any{}
+		c.cachedContentScripts = []any{}
+		return c.cachedExtensions, c.cachedContentScripts, nil
 	}
 
 	configs, ok := browserConfigs[platformKey]
 	if !ok {
-		return []any{}, nil
+		c.fetched = true
+		c.cachedExtensions = []any{}
+		c.cachedContentScripts = []any{}
+		return c.cachedExtensions, c.cachedContentScripts, nil
 	}
 
 	// Get list of users to find their home directories
 	usersResource, err := CreateResource(c.MqlRuntime, "users", map[string]*llx.RawData{})
 	if err != nil {
 		log.Debug().Err(err).Msg("could not get users list")
-		return []any{}, nil
+		c.fetched = true
+		c.cachedExtensions = []any{}
+		c.cachedContentScripts = []any{}
+		return c.cachedExtensions, c.cachedContentScripts, nil
 	}
 	users := usersResource.(*mqlUsers)
 	userList := users.GetList()
 	if userList.Error != nil {
 		log.Debug().Err(userList.Error).Msg("could not retrieve users list")
-		return []any{}, nil
+		c.fetched = true
+		c.cachedExtensions = []any{}
+		c.cachedContentScripts = []any{}
+		return c.cachedExtensions, c.cachedContentScripts, nil
 	}
 
-	extensions := []any{}
+	var extensions []any
+	var allContentScripts []any
 	seen := make(map[string]bool)
 
 	fs := conn.FileSystem()
@@ -126,7 +211,6 @@ func (c *mqlChrome) extensions() ([]any, error) {
 
 	log.Debug().Str("platform", platformKey).Int("userCount", len(userList.Data)).Msg("searching for browser extensions")
 
-	// Iterate through each user's home directory
 	for _, u := range userList.Data {
 		user := u.(*mqlUser)
 		home := user.GetHome()
@@ -134,20 +218,22 @@ func (c *mqlChrome) extensions() ([]any, error) {
 			continue
 		}
 
-		// Skip system users (no valid home or special paths)
 		homeDir := home.Data
 		if !isValidUserHome(homeDir, platformKey) {
 			continue
 		}
 
-		// Check each browser for this user
+		uid := int64(0)
+		if uidVal := user.GetUid(); uidVal.Error == nil {
+			uid = uidVal.Data
+		}
+
 		for _, browserCfg := range configs {
 			browserDir := filepath.Join(homeDir, browserCfg.relPath)
 			if browserCfg.profilePath != "" {
 				browserDir = filepath.Join(browserDir, browserCfg.profilePath)
 			}
 
-			// Check if browser directory exists before searching
 			exists, err := afs.DirExists(browserDir)
 			if err != nil || !exists {
 				continue
@@ -155,109 +241,480 @@ func (c *mqlChrome) extensions() ([]any, error) {
 
 			log.Debug().Str("browser", browserCfg.name).Str("path", browserDir).Msg("found browser directory")
 
-			// Search for extensions in this browser directory
-			// Depth 5: profile/Extensions/extID/version/manifest.json
-			filesFind, err := CreateResource(c.MqlRuntime, "files.find", map[string]*llx.RawData{
-				"from":  llx.StringData(browserDir),
-				"name":  llx.StringData("manifest.json"),
-				"type":  llx.StringData("f"),
-				"depth": llx.IntData(5),
-			})
-			if err != nil {
-				log.Debug().Err(err).Str("browserDir", browserDir).Msg("could not create files.find resource")
+			// Discover profiles
+			profiles := discoverChromeProfiles(afs, browserDir)
+			if len(profiles) == 0 {
 				continue
 			}
 
-			ff := filesFind.(*mqlFilesFind)
-			fileList := ff.GetList()
-			if fileList.Error != nil {
-				log.Debug().Err(fileList.Error).Str("browserDir", browserDir).Msg("files.find failed")
-				continue
-			}
+			for _, profileName := range profiles {
+				profileDir := filepath.Join(browserDir, profileName)
 
-			for _, f := range fileList.Data {
-				file := f.(*mqlFile)
-				manifestPath := file.GetPath()
-				if manifestPath.Error != nil {
-					continue
+				// Try Secure Preferences first (modern Chrome stores extension data here),
+				// then fall back to Preferences
+				prefsPath := filepath.Join(profileDir, "Secure Preferences")
+				if exists, _ := afs.Exists(prefsPath); !exists {
+					prefsPath = filepath.Join(profileDir, "Preferences")
 				}
 
-				// Normalize path for regex matching (use forward slashes)
-				normalizedPath := filepath.ToSlash(manifestPath.Data)
-
-				// Filter to only extension manifest files using the path pattern
-				matches := extensionPathPattern.FindStringSubmatch(normalizedPath)
-				if matches == nil {
-					continue
-				}
-
-				// Extract profile and extension ID from regex groups
-				// Group 1: profile name, Group 2: extension ID
-				profile := matches[1]
-				extensionID := matches[2]
-
-				// Create unique key including browser to avoid cross-browser deduplication
-				// Same extension in Chrome and Edge should be listed separately
-				uniqueKey := browserCfg.name + "|" + profile + "|" + extensionID
-				if seen[uniqueKey] {
-					// Skip duplicate (same extension, same browser, same profile)
-					// This can happen if multiple versions exist - we take the first one found
-					continue
-				}
-				seen[uniqueKey] = true
-
-				// Read and parse manifest.json
-				manifest, err := readChromeManifest(afs, manifestPath.Data)
-				if err != nil {
-					log.Debug().Err(err).Str("path", manifestPath.Data).Msg("could not read manifest.json")
-					continue
-				}
-
-				// Resolve localized names if needed
-				extDir := filepath.Dir(manifestPath.Data)
-				name := manifest.Name
-				if strings.HasPrefix(name, "__MSG_") {
-					if localizedName := resolveChromei18n(afs, extDir, manifest.DefaultLocale, name); localizedName != "" {
-						name = localizedName
-					}
-				}
-
-				description := manifest.Description
-				if strings.HasPrefix(description, "__MSG_") {
-					if localizedDesc := resolveChromei18n(afs, extDir, manifest.DefaultLocale, description); localizedDesc != "" {
-						description = localizedDesc
-					}
-				}
-
-				// Convert permissions to []any
-				perms := make([]any, len(manifest.Permissions))
-				for i, p := range manifest.Permissions {
-					perms[i] = p
-				}
-
-				ext, err := CreateResource(c.MqlRuntime, "chrome.extension", map[string]*llx.RawData{
-					"__id":            llx.StringData(uniqueKey),
-					"identifier":      llx.StringData(extensionID),
-					"name":            llx.StringData(name),
-					"version":         llx.StringData(manifest.Version),
-					"description":     llx.StringData(description),
-					"manifestVersion": llx.IntData(int64(manifest.ManifestVersion)),
-					"permissions":     llx.ArrayData(perms, types.String),
-					"path":            llx.StringData(extDir),
-					"profile":         llx.StringData(profile),
-					"browser":         llx.StringData(browserCfg.name),
-				})
-				if err != nil {
-					log.Debug().Err(err).Str("extension", extensionID).Msg("could not create extension resource")
-					continue
-				}
-
-				extensions = append(extensions, ext)
+				exts, scripts := c.parseProfileExtensions(afs, prefsPath, profileDir, profileName, browserCfg.name, uid, seen)
+				extensions = append(extensions, exts...)
+				allContentScripts = append(allContentScripts, scripts...)
 			}
 		}
 	}
 
+	if extensions == nil {
+		extensions = []any{}
+	}
+	if allContentScripts == nil {
+		allContentScripts = []any{}
+	}
+
+	c.fetched = true
+	c.cachedExtensions = extensions
+	c.cachedContentScripts = allContentScripts
+	return extensions, allContentScripts, nil
+}
+
+// parseProfileExtensions parses extensions from a single Chrome profile's Preferences file
+func (c *mqlChrome) parseProfileExtensions(
+	afs *afero.Afero,
+	prefsPath, profileDir, profileName, browserName string,
+	uid int64,
+	seen map[string]bool,
+) ([]any, []any) {
+	data, err := afs.ReadFile(prefsPath)
+	if err != nil {
+		log.Debug().Err(err).Str("path", prefsPath).Msg("could not read Preferences file, trying manifest.json fallback")
+		return c.fallbackManifestScan(afs, profileDir, profileName, browserName, uid, seen)
+	}
+
+	var prefs chromePreferences
+	if err := json.Unmarshal(data, &prefs); err != nil {
+		log.Debug().Err(err).Str("path", prefsPath).Msg("could not parse Preferences file, trying manifest.json fallback")
+		return c.fallbackManifestScan(afs, profileDir, profileName, browserName, uid, seen)
+	}
+
+	var extensions []any
+	var contentScripts []any
+
+	for extID, entry := range prefs.Extensions.Settings {
+		// Skip entries without a manifest (not real extensions)
+		if entry.Manifest.Name == "" && entry.Manifest.Version == "" {
+			continue
+		}
+
+		uniqueKey := browserName + "|" + profileName + "|" + extID
+		if seen[uniqueKey] {
+			continue
+		}
+		seen[uniqueKey] = true
+
+		// Resolve i18n names
+		extDir := resolveExtensionDir(profileDir, entry.Path, extID)
+		name := entry.Manifest.Name
+		if strings.HasPrefix(name, "__MSG_") {
+			if resolved := resolveChromei18n(afs, extDir, entry.Manifest.DefaultLocale, name); resolved != "" {
+				name = resolved
+			}
+		}
+
+		description := entry.Manifest.Description
+		if strings.HasPrefix(description, "__MSG_") {
+			if resolved := resolveChromei18n(afs, extDir, entry.Manifest.DefaultLocale, description); resolved != "" {
+				description = resolved
+			}
+		}
+
+		// Merge permissions (V2: all in permissions, V3: split into permissions + host_permissions)
+		// Permissions can contain strings or objects (e.g. {"fileSystem":["write"]})
+		perms := mergeStringSlices(rawMessagesToStrings(entry.Manifest.Permissions), entry.Manifest.HostPermissions)
+		optPerms := mergeStringSlices(rawMessagesToStrings(entry.Manifest.OptionalPermissions), entry.Manifest.OptionalHostPermissions)
+
+		// Extract author (can be a string or an object like {"email":"..."})
+		author := extractChromeAuthor(entry.Manifest.Author)
+
+		// State mapping: prefer explicit state field, then derive from disable_reasons
+		state, enabled := resolveExtensionState(entry.State, entry.DisableReasons)
+
+		// Persistent flag (V2 only; V3 service workers are never persistent)
+		persistent := false
+		if entry.Manifest.Background != nil && entry.Manifest.Background.Persistent != nil {
+			persistent = *entry.Manifest.Background.Persistent
+		}
+
+		// Install time: try first_install_time (Secure Preferences) then install_time (legacy)
+		installTimeStr := entry.FirstInstallTime
+		if installTimeStr == "" {
+			installTimeStr = entry.InstallTime
+		}
+		var installTime *time.Time
+		if installTimeStr != "" {
+			installTime = chromeTimeToGoTime(installTimeStr)
+		}
+
+		// Manifest hash from on-disk manifest.json
+		manifestHash := computeManifestHash(afs, extDir)
+
+		// Referenced: check if extension directory exists on disk
+		referenced := dirExists(afs, extDir)
+
+		// Build content scripts for this extension
+		var extContentScripts []any
+		for _, cs := range entry.Manifest.ContentScripts {
+			for _, jsFile := range cs.Js {
+				for _, matchPattern := range cs.Matches {
+					csID := browserName + "|" + profileDir + "|" + extID + "|" + jsFile + "|" + matchPattern
+					csResource, err := CreateResource(c.MqlRuntime, "chrome.extensionContentScript", map[string]*llx.RawData{
+						"__id":        llx.StringData(csID),
+						"identifier":  llx.StringData(extID),
+						"version":     llx.StringData(entry.Manifest.Version),
+						"browserType": llx.StringData(browserName),
+						"uid":         llx.IntData(uid),
+						"script":      llx.StringData(jsFile),
+						"match":       llx.StringData(matchPattern),
+						"profilePath": llx.StringData(profileDir),
+						"path":        llx.StringData(extDir),
+					})
+					if err != nil {
+						log.Debug().Err(err).Str("script", jsFile).Str("match", matchPattern).Msg("could not create content script resource")
+						continue
+					}
+					extContentScripts = append(extContentScripts, csResource)
+				}
+			}
+		}
+		contentScripts = append(contentScripts, extContentScripts...)
+
+		// Convert slices to []any for llx
+		permsAny := toAnySlice(perms)
+		optPermsAny := toAnySlice(optPerms)
+
+		resourceData := map[string]*llx.RawData{
+			"__id":                llx.StringData(uniqueKey),
+			"identifier":          llx.StringData(extID),
+			"name":                llx.StringData(name),
+			"version":             llx.StringData(entry.Manifest.Version),
+			"description":         llx.StringData(description),
+			"manifestVersion":     llx.IntData(int64(entry.Manifest.ManifestVersion)),
+			"permissions":         llx.ArrayData(permsAny, types.String),
+			"optionalPermissions": llx.ArrayData(optPermsAny, types.String),
+			"path":                llx.StringData(extDir),
+			"profile":             llx.StringData(profileName),
+			"profilePath":         llx.StringData(profileDir),
+			"browser":             llx.StringData(browserName),
+			"author":              llx.StringData(author),
+			"updateUrl":           llx.StringData(entry.Manifest.UpdateUrl),
+			"manifestHash":        llx.StringData(manifestHash),
+			"fromWebstore":        llx.BoolData(entry.FromWebstore),
+			"state":               llx.StringData(state),
+			"enabled":             llx.BoolData(enabled),
+			"persistent":          llx.BoolData(persistent),
+			"defaultLocale":       llx.StringData(entry.Manifest.DefaultLocale),
+			"referenced":          llx.BoolData(referenced),
+			"uid":                 llx.IntData(uid),
+			"contentScripts":      llx.ArrayData(extContentScripts, types.Resource("chrome.extensionContentScript")),
+		}
+
+		if installTime != nil {
+			resourceData["installTime"] = llx.TimeData(*installTime)
+		} else {
+			resourceData["installTime"] = llx.TimeData(llx.NeverFutureTime)
+		}
+
+		ext, err := CreateResource(c.MqlRuntime, "chrome.extension", resourceData)
+		if err != nil {
+			log.Debug().Err(err).Str("extension", extID).Msg("could not create extension resource")
+			continue
+		}
+
+		extensions = append(extensions, ext)
+	}
+
+	return extensions, contentScripts
+}
+
+// fallbackManifestScan uses the legacy manifest.json file scanning approach
+// when the Preferences file is unavailable or corrupt
+func (c *mqlChrome) fallbackManifestScan(
+	afs *afero.Afero,
+	profileDir, profileName, browserName string,
+	uid int64,
+	seen map[string]bool,
+) ([]any, []any) {
+	extensionsDir := filepath.Join(profileDir, "Extensions")
+	exists, err := afs.DirExists(extensionsDir)
+	if err != nil || !exists {
+		return nil, nil
+	}
+
+	// Search for manifest.json files
+	filesFind, err := CreateResource(c.MqlRuntime, "files.find", map[string]*llx.RawData{
+		"from":  llx.StringData(extensionsDir),
+		"name":  llx.StringData("manifest.json"),
+		"type":  llx.StringData("f"),
+		"depth": llx.IntData(3),
+	})
+	if err != nil {
+		return nil, nil
+	}
+
+	ff := filesFind.(*mqlFilesFind)
+	fileList := ff.GetList()
+	if fileList.Error != nil {
+		return nil, nil
+	}
+
+	var extensions []any
+	for _, f := range fileList.Data {
+		file := f.(*mqlFile)
+		manifestPath := file.GetPath()
+		if manifestPath.Error != nil {
+			continue
+		}
+
+		normalizedPath := filepath.ToSlash(manifestPath.Data)
+		matches := extensionPathPattern.FindStringSubmatch(normalizedPath)
+		if matches == nil {
+			continue
+		}
+
+		extensionID := matches[2]
+		uniqueKey := browserName + "|" + profileName + "|" + extensionID
+		if seen[uniqueKey] {
+			continue
+		}
+		seen[uniqueKey] = true
+
+		manifest, err := readChromeManifest(afs, manifestPath.Data)
+		if err != nil {
+			continue
+		}
+
+		extDir := filepath.Dir(manifestPath.Data)
+		name := manifest.Name
+		if strings.HasPrefix(name, "__MSG_") {
+			if resolved := resolveChromei18n(afs, extDir, manifest.DefaultLocale, name); resolved != "" {
+				name = resolved
+			}
+		}
+
+		description := manifest.Description
+		if strings.HasPrefix(description, "__MSG_") {
+			if resolved := resolveChromei18n(afs, extDir, manifest.DefaultLocale, description); resolved != "" {
+				description = resolved
+			}
+		}
+
+		permsAny := toAnySlice(manifest.Permissions)
+		manifestHash := computeManifestHash(afs, extDir)
+
+		ext, err := CreateResource(c.MqlRuntime, "chrome.extension", map[string]*llx.RawData{
+			"__id":                llx.StringData(uniqueKey),
+			"identifier":          llx.StringData(extensionID),
+			"name":                llx.StringData(name),
+			"version":             llx.StringData(manifest.Version),
+			"description":         llx.StringData(description),
+			"manifestVersion":     llx.IntData(int64(manifest.ManifestVersion)),
+			"permissions":         llx.ArrayData(permsAny, types.String),
+			"optionalPermissions": llx.ArrayData([]any{}, types.String),
+			"path":                llx.StringData(extDir),
+			"profile":             llx.StringData(profileName),
+			"profilePath":         llx.StringData(profileDir),
+			"browser":             llx.StringData(browserName),
+			"author":              llx.StringData(""),
+			"updateUrl":           llx.StringData(""),
+			"manifestHash":        llx.StringData(manifestHash),
+			"fromWebstore":        llx.BoolData(false),
+			"state":               llx.StringData("unknown"),
+			"enabled":             llx.BoolData(true),
+			"persistent":          llx.BoolData(false),
+			"installTime":         llx.TimeData(llx.NeverFutureTime),
+			"defaultLocale":       llx.StringData(manifest.DefaultLocale),
+			"referenced":          llx.BoolData(true),
+			"uid":                 llx.IntData(uid),
+			"contentScripts":      llx.ArrayData([]any{}, types.Resource("chrome.extensionContentScript")),
+		})
+		if err != nil {
+			continue
+		}
+
+		extensions = append(extensions, ext)
+	}
+
 	return extensions, nil
+}
+
+// discoverChromeProfiles returns a list of profile directory names found in a browser directory
+func discoverChromeProfiles(afs *afero.Afero, browserDir string) []string {
+	entries, err := afs.ReadDir(browserDir)
+	if err != nil {
+		log.Debug().Err(err).Str("browserDir", browserDir).Msg("could not read browser directory for profile discovery")
+		return nil
+	}
+
+	var profiles []string
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		name := entry.Name()
+		if profileDirPattern.MatchString(name) {
+			// Verify the profile has a Preferences/Secure Preferences or Extensions directory
+			profileDir := filepath.Join(browserDir, name)
+			hasPrefs, _ := afs.Exists(filepath.Join(profileDir, "Preferences"))
+			hasSecPrefs, _ := afs.Exists(filepath.Join(profileDir, "Secure Preferences"))
+			hasExts, _ := afs.DirExists(filepath.Join(profileDir, "Extensions"))
+			if hasPrefs || hasSecPrefs || hasExts {
+				profiles = append(profiles, name)
+			}
+		}
+	}
+
+	return profiles
+}
+
+// resolveExtensionDir determines the extension directory on disk
+func resolveExtensionDir(profileDir, entryPath, extID string) string {
+	if entryPath != "" {
+		// The path in Preferences is relative to the Extensions directory
+		return filepath.Join(profileDir, "Extensions", entryPath)
+	}
+	return filepath.Join(profileDir, "Extensions", extID)
+}
+
+// chromeTimeToGoTime converts a Chrome epoch time string to a Go time.Time
+// Chrome epoch: microseconds since 1601-01-01
+func chromeTimeToGoTime(chromeTime string) *time.Time {
+	val, err := strconv.ParseInt(chromeTime, 10, 64)
+	if err != nil || val == 0 {
+		return nil
+	}
+	// Chrome epoch: microseconds since 1601-01-01
+	// Subtract the difference between 1601 and 1970 in microseconds
+	unixMicro := val - 11644473600000000
+	t := time.Unix(unixMicro/1000000, (unixMicro%1000000)*1000)
+	return &t
+}
+
+// resolveExtensionState determines the state and enabled status of an extension
+// from the state field and/or disable_reasons
+func resolveExtensionState(state *int, disableReasons json.RawMessage) (string, bool) {
+	if state != nil {
+		switch *state {
+		case 0:
+			return "disabled", false
+		case 1:
+			return "enabled", true
+		default:
+			return fmt.Sprintf("unknown(%d)", *state), *state == 1
+		}
+	}
+
+	// Fall back to disable_reasons: can be int or []int; non-zero/non-empty means disabled
+	if len(disableReasons) > 0 && string(disableReasons) != "null" && string(disableReasons) != "0" && string(disableReasons) != "[]" {
+		// Try as int first
+		var intVal int
+		if json.Unmarshal(disableReasons, &intVal) == nil && intVal != 0 {
+			return "disabled", false
+		}
+		// Try as array
+		var arrVal []int
+		if json.Unmarshal(disableReasons, &arrVal) == nil && len(arrVal) > 0 {
+			return "disabled", false
+		}
+	}
+
+	// Default: assume enabled if no explicit state
+	return "enabled", true
+}
+
+// extractChromeAuthor extracts the author string from the manifest's author field
+// which can be either a plain string or an object like {"email":"someone@example.com"}
+func extractChromeAuthor(raw json.RawMessage) string {
+	if len(raw) == 0 {
+		return ""
+	}
+
+	// Try as string first
+	var s string
+	if err := json.Unmarshal(raw, &s); err == nil {
+		return s
+	}
+
+	// Try as object
+	var obj map[string]string
+	if err := json.Unmarshal(raw, &obj); err == nil {
+		if email, ok := obj["email"]; ok {
+			return email
+		}
+		// Return first non-empty value
+		for _, v := range obj {
+			if v != "" {
+				return v
+			}
+		}
+	}
+
+	return ""
+}
+
+// computeManifestHash computes the SHA-256 hash of the manifest.json file in the given extension directory
+func computeManifestHash(afs *afero.Afero, extDir string) string {
+	manifestPath := filepath.Join(extDir, "manifest.json")
+	data, err := afs.ReadFile(manifestPath)
+	if err != nil {
+		return ""
+	}
+	hash := sha256.Sum256(data)
+	return hex.EncodeToString(hash[:])
+}
+
+// dirExists checks if a directory exists
+func dirExists(afs *afero.Afero, path string) bool {
+	exists, err := afs.DirExists(path)
+	return err == nil && exists
+}
+
+// rawMessagesToStrings extracts string values from a slice of json.RawMessage.
+// Non-string entries (e.g., objects like {"fileSystem":["write"]}) are converted to their JSON representation.
+func rawMessagesToStrings(raw []json.RawMessage) []string {
+	if len(raw) == 0 {
+		return nil
+	}
+	result := make([]string, 0, len(raw))
+	for _, r := range raw {
+		var s string
+		if json.Unmarshal(r, &s) == nil {
+			result = append(result, s)
+		} else {
+			// Non-string permission (e.g., {"fileSystem":["write"]}), include as JSON string
+			result = append(result, string(r))
+		}
+	}
+	return result
+}
+
+// mergeStringSlices merges two string slices, skipping empty ones
+func mergeStringSlices(a, b []string) []string {
+	if len(a) == 0 && len(b) == 0 {
+		return nil
+	}
+	result := make([]string, 0, len(a)+len(b))
+	result = append(result, a...)
+	result = append(result, b...)
+	return result
+}
+
+// chromeManifest represents the structure of a Chrome extension manifest.json (for fallback parsing)
+type chromeManifest struct {
+	Name            string   `json:"name"`
+	Version         string   `json:"version"`
+	Description     string   `json:"description"`
+	ManifestVersion int      `json:"manifest_version"`
+	Permissions     []string `json:"permissions"`
+	DefaultLocale   string   `json:"default_locale"`
 }
 
 // getPlatformKey returns the platform key for browser configs lookup
@@ -306,7 +763,7 @@ func isValidUserHome(homeDir string, platform string) bool {
 	}
 }
 
-// readChromeManifest reads and parses a Chrome extension manifest.json file
+// readChromeManifest reads and parses a Chrome extension manifest.json file (for fallback)
 func readChromeManifest(afs *afero.Afero, path string) (*chromeManifest, error) {
 	data, err := afs.ReadFile(path)
 	if err != nil {
