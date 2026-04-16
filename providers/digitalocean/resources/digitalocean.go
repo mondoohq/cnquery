@@ -39,6 +39,22 @@ func initDigitaloceanAccount(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	return args, nil, nil
 }
 
+func toStringSlice(s []string) []interface{} {
+	r := make([]interface{}, len(s))
+	for i, v := range s {
+		r[i] = v
+	}
+	return r
+}
+
+func toIntSlice(s []int) []interface{} {
+	r := make([]interface{}, len(s))
+	for i, v := range s {
+		r[i] = int64(v)
+	}
+	return r
+}
+
 // helper to parse DigitalOcean time strings
 func parseDoTime(s string) *time.Time {
 	if s == "" {
@@ -159,27 +175,33 @@ func (r *mqlDigitalocean) firewalls() ([]interface{}, error) {
 		for _, fw := range firewalls {
 			inbound := make([]interface{}, len(fw.InboundRules))
 			for i, rule := range fw.InboundRules {
-				srcAddrs := make([]interface{}, len(rule.Sources.Addresses))
-				for j, a := range rule.Sources.Addresses {
-					srcAddrs[j] = a
+				m := map[string]interface{}{
+					"protocol": rule.Protocol,
+					"ports":    rule.PortRange,
 				}
-				inbound[i] = map[string]interface{}{
-					"protocol":        rule.Protocol,
-					"ports":           rule.PortRange,
-					"sourceAddresses": srcAddrs,
+				if rule.Sources != nil {
+					m["sourceAddresses"] = toStringSlice(rule.Sources.Addresses)
+					m["sourceDropletIds"] = toIntSlice(rule.Sources.DropletIDs)
+					m["sourceLoadBalancerUids"] = toStringSlice(rule.Sources.LoadBalancerUIDs)
+					m["sourceKubernetesIds"] = toStringSlice(rule.Sources.KubernetesIDs)
+					m["sourceTags"] = toStringSlice(rule.Sources.Tags)
 				}
+				inbound[i] = m
 			}
 			outbound := make([]interface{}, len(fw.OutboundRules))
 			for i, rule := range fw.OutboundRules {
-				dstAddrs := make([]interface{}, len(rule.Destinations.Addresses))
-				for j, a := range rule.Destinations.Addresses {
-					dstAddrs[j] = a
+				m := map[string]interface{}{
+					"protocol": rule.Protocol,
+					"ports":    rule.PortRange,
 				}
-				outbound[i] = map[string]interface{}{
-					"protocol":             rule.Protocol,
-					"ports":                rule.PortRange,
-					"destinationAddresses": dstAddrs,
+				if rule.Destinations != nil {
+					m["destinationAddresses"] = toStringSlice(rule.Destinations.Addresses)
+					m["destinationDropletIds"] = toIntSlice(rule.Destinations.DropletIDs)
+					m["destinationLoadBalancerUids"] = toStringSlice(rule.Destinations.LoadBalancerUIDs)
+					m["destinationKubernetesIds"] = toStringSlice(rule.Destinations.KubernetesIDs)
+					m["destinationTags"] = toStringSlice(rule.Destinations.Tags)
 				}
+				outbound[i] = m
 			}
 
 			dropletIds := make([]interface{}, len(fw.DropletIDs))

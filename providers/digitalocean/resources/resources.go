@@ -5,7 +5,6 @@ package resources
 
 import (
 	"context"
-	"strconv"
 
 	"github.com/digitalocean/godo"
 	"go.mondoo.com/mql/v13/llx"
@@ -376,7 +375,7 @@ func (r *mqlDigitalocean) apps() ([]interface{}, error) {
 		}
 		for _, app := range apps {
 			status := ""
-			if app.LastDeploymentActiveAt.IsZero() == false {
+			if !app.LastDeploymentActiveAt.IsZero() {
 				status = "active"
 			}
 			if app.InProgressDeployment != nil {
@@ -413,9 +412,14 @@ func (r *mqlDigitalocean) apps() ([]interface{}, error) {
 				spec["functions"] = fnNames
 			}
 
+			name := ""
+			if app.Spec != nil {
+				name = app.Spec.Name
+			}
+
 			res, err := CreateResource(r.MqlRuntime, "digitalocean.app", map[string]*llx.RawData{
 				"id":                     llx.StringData(app.ID),
-				"name":                   llx.StringData(app.Spec.Name),
+				"name":                   llx.StringData(name),
 				"liveUrl":                llx.StringData(app.LiveURL),
 				"createdAt":              llx.TimeData(app.CreatedAt),
 				"updatedAt":              llx.TimeData(app.UpdatedAt),
@@ -680,6 +684,3 @@ func (r *mqlDigitalocean) spacesKeys() ([]interface{}, error) {
 func (r *mqlDigitaloceanSpacesKey) id() (string, error) {
 	return "digitalocean.spacesKey/" + r.AccessKey.Data, nil
 }
-
-// ensure strconv is used
-var _ = strconv.Itoa

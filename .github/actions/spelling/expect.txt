@@ -136,6 +136,7 @@ gcs
 GENEVE
 geomatchstatement
 gistfile
+godo
 gopls
 gpc
 gpo
@@ -167,6 +168,7 @@ imei
 ingresstls
 initrdefi
 INPROGRESS
+iodef
 iotedge
 iothread
 ipc
@@ -174,6 +176,7 @@ ipsetforwardedipconfig
 ipsetreferencestatement
 ISOs
 istio
+issuewild
 jamf
 jira
 jsonbody
@@ -226,6 +229,7 @@ mkey
 mlag
 mls
 modelarmor
+mongodb
 Mpim
 msk
 Mtls
@@ -392,6 +396,7 @@ tpu
 trainingjob
 transitgateway
 transitives
+TValue
 Twt
 udid
 uefi
@@ -438,6 +443,7 @@ writeback
 Xff
 xlarge
 xssmatchstatement
+xxxxx
 yara
 zerolog
 zfs
