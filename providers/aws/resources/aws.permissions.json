@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.13.3",
-  "generated_at": "2026-04-16T09:29:38-07:00",
+  "generated_at": "2026-04-16T09:53:34-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -447,8 +447,13 @@
     "s3:GetPublicAccessBlock",
     "s3:ListBucketMetricsConfigurations",
     "s3:ListBuckets",
+    "sagemaker:DescribeAlgorithm",
+    "sagemaker:DescribeApp",
+    "sagemaker:DescribeAppImageConfig",
     "sagemaker:DescribeAutoMLJob",
     "sagemaker:DescribeCluster",
+    "sagemaker:DescribeCodeRepository",
+    "sagemaker:DescribeCompilationJob",
     "sagemaker:DescribeDataQualityJobDefinition",
     "sagemaker:DescribeDomain",
     "sagemaker:DescribeEndpoint",
@@ -456,6 +461,8 @@
     "sagemaker:DescribeExperiment",
     "sagemaker:DescribeFeatureGroup",
     "sagemaker:DescribeHyperParameterTuningJob",
+    "sagemaker:DescribeImage",
+    "sagemaker:DescribeImageVersion",
     "sagemaker:DescribeInferenceComponent",
     "sagemaker:DescribeModel",
     "sagemaker:DescribeModelBiasJobDefinition",
@@ -466,18 +473,25 @@
     "sagemaker:DescribeModelQualityJobDefinition",
     "sagemaker:DescribeMonitoringSchedule",
     "sagemaker:DescribeNotebookInstance",
+    "sagemaker:DescribeNotebookInstanceLifecycleConfig",
     "sagemaker:DescribePipeline",
     "sagemaker:DescribeProcessingJob",
     "sagemaker:DescribeProject",
     "sagemaker:DescribeSpace",
+    "sagemaker:DescribeStudioLifecycleConfig",
     "sagemaker:DescribeTrainingJob",
     "sagemaker:DescribeTransformJob",
     "sagemaker:DescribeTrial",
     "sagemaker:DescribeTrialComponent",
     "sagemaker:DescribeUserProfile",
+    "sagemaker:ListAlgorithms",
+    "sagemaker:ListAppImageConfigs",
+    "sagemaker:ListApps",
     "sagemaker:ListAutoMLJobs",
     "sagemaker:ListClusterNodes",
     "sagemaker:ListClusters",
+    "sagemaker:ListCodeRepositories",
+    "sagemaker:ListCompilationJobs",
     "sagemaker:ListDataQualityJobDefinitions",
     "sagemaker:ListDomains",
     "sagemaker:ListEndpointConfigs",
@@ -485,6 +499,8 @@
     "sagemaker:ListExperiments",
     "sagemaker:ListFeatureGroups",
     "sagemaker:ListHyperParameterTuningJobs",
+    "sagemaker:ListImageVersions",
+    "sagemaker:ListImages",
     "sagemaker:ListInferenceComponents",
     "sagemaker:ListModelBiasJobDefinitions",
     "sagemaker:ListModelCards",
@@ -494,11 +510,13 @@
     "sagemaker:ListModelQualityJobDefinitions",
     "sagemaker:ListModels",
     "sagemaker:ListMonitoringSchedules",
+    "sagemaker:ListNotebookInstanceLifecycleConfigs",
     "sagemaker:ListNotebookInstances",
     "sagemaker:ListPipelines",
     "sagemaker:ListProcessingJobs",
     "sagemaker:ListProjects",
     "sagemaker:ListSpaces",
+    "sagemaker:ListStudioLifecycleConfigs",
     "sagemaker:ListTags",
     "sagemaker:ListTrainingJobs",
     "sagemaker:ListTransformJobs",
@@ -3359,6 +3377,24 @@
       "source_file": "aws_s3.go"
     },
     {
+      "permission": "sagemaker:DescribeAlgorithm",
+      "service": "sagemaker",
+      "action": "DescribeAlgorithm",
+      "source_file": "aws_sagemaker_infra.go"
+    },
+    {
+      "permission": "sagemaker:DescribeApp",
+      "service": "sagemaker",
+      "action": "DescribeApp",
+      "source_file": "aws_sagemaker_infra.go"
+    },
+    {
+      "permission": "sagemaker:DescribeAppImageConfig",
+      "service": "sagemaker",
+      "action": "DescribeAppImageConfig",
+      "source_file": "aws_sagemaker_infra.go"
+    },
+    {
       "permission": "sagemaker:DescribeAutoMLJob",
       "service": "sagemaker",
       "action": "DescribeAutoMLJob",
@@ -3369,6 +3405,18 @@
       "service": "sagemaker",
       "action": "DescribeCluster",
       "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:DescribeCodeRepository",
+      "service": "sagemaker",
+      "action": "DescribeCodeRepository",
+      "source_file": "aws_sagemaker_infra.go"
+    },
+    {
+      "permission": "sagemaker:DescribeCompilationJob",
+      "service": "sagemaker",
+      "action": "DescribeCompilationJob",
+      "source_file": "aws_sagemaker_infra.go"
     },
     {
       "permission": "sagemaker:DescribeDataQualityJobDefinition",
@@ -3417,6 +3465,18 @@
       "service": "sagemaker",
       "action": "DescribeHyperParameterTuningJob",
       "source_file": "aws_sagemaker_mlops.go"
+    },
+    {
+      "permission": "sagemaker:DescribeImage",
+      "service": "sagemaker",
+      "action": "DescribeImage",
+      "source_file": "aws_sagemaker_infra.go"
+    },
+    {
+      "permission": "sagemaker:DescribeImageVersion",
+      "service": "sagemaker",
+      "action": "DescribeImageVersion",
+      "source_file": "aws_sagemaker_infra.go"
     },
     {
       "permission": "sagemaker:DescribeInferenceComponent",
@@ -3479,6 +3539,12 @@
       "source_file": "aws_sagemaker.go"
     },
     {
+      "permission": "sagemaker:DescribeNotebookInstanceLifecycleConfig",
+      "service": "sagemaker",
+      "action": "DescribeNotebookInstanceLifecycleConfig",
+      "source_file": "aws_sagemaker_infra.go"
+    },
+    {
       "permission": "sagemaker:DescribePipeline",
       "service": "sagemaker",
       "action": "DescribePipeline",
@@ -3501,6 +3567,12 @@
       "service": "sagemaker",
       "action": "DescribeSpace",
       "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:DescribeStudioLifecycleConfig",
+      "service": "sagemaker",
+      "action": "DescribeStudioLifecycleConfig",
+      "source_file": "aws_sagemaker_infra.go"
     },
     {
       "permission": "sagemaker:DescribeTrainingJob",
@@ -3533,6 +3605,24 @@
       "source_file": "aws_sagemaker.go"
     },
     {
+      "permission": "sagemaker:ListAlgorithms",
+      "service": "sagemaker",
+      "action": "ListAlgorithms",
+      "source_file": "aws_sagemaker_infra.go"
+    },
+    {
+      "permission": "sagemaker:ListAppImageConfigs",
+      "service": "sagemaker",
+      "action": "ListAppImageConfigs",
+      "source_file": "aws_sagemaker_infra.go"
+    },
+    {
+      "permission": "sagemaker:ListApps",
+      "service": "sagemaker",
+      "action": "ListApps",
+      "source_file": "aws_sagemaker_infra.go"
+    },
+    {
       "permission": "sagemaker:ListAutoMLJobs",
       "service": "sagemaker",
       "action": "ListAutoMLJobs",
@@ -3549,6 +3639,18 @@
       "service": "sagemaker",
       "action": "ListClusters",
       "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:ListCodeRepositories",
+      "service": "sagemaker",
+      "action": "ListCodeRepositories",
+      "source_file": "aws_sagemaker_infra.go"
+    },
+    {
+      "permission": "sagemaker:ListCompilationJobs",
+      "service": "sagemaker",
+      "action": "ListCompilationJobs",
+      "source_file": "aws_sagemaker_infra.go"
     },
     {
       "permission": "sagemaker:ListDataQualityJobDefinitions",
@@ -3591,6 +3693,18 @@
       "service": "sagemaker",
       "action": "ListHyperParameterTuningJobs",
       "source_file": "aws_sagemaker_mlops.go"
+    },
+    {
+      "permission": "sagemaker:ListImageVersions",
+      "service": "sagemaker",
+      "action": "ListImageVersions",
+      "source_file": "aws_sagemaker_infra.go"
+    },
+    {
+      "permission": "sagemaker:ListImages",
+      "service": "sagemaker",
+      "action": "ListImages",
+      "source_file": "aws_sagemaker_infra.go"
     },
     {
       "permission": "sagemaker:ListInferenceComponents",
@@ -3647,6 +3761,12 @@
       "source_file": "aws_sagemaker_monitoring.go"
     },
     {
+      "permission": "sagemaker:ListNotebookInstanceLifecycleConfigs",
+      "service": "sagemaker",
+      "action": "ListNotebookInstanceLifecycleConfigs",
+      "source_file": "aws_sagemaker_infra.go"
+    },
+    {
       "permission": "sagemaker:ListNotebookInstances",
       "service": "sagemaker",
       "action": "ListNotebookInstances",
@@ -3675,6 +3795,12 @@
       "service": "sagemaker",
       "action": "ListSpaces",
       "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:ListStudioLifecycleConfigs",
+      "service": "sagemaker",
+      "action": "ListStudioLifecycleConfigs",
+      "source_file": "aws_sagemaker_infra.go"
     },
     {
       "permission": "sagemaker:ListTags",

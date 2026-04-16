@@ -1760,6 +1760,22 @@ aws.sagemaker {
   transformJobs() []aws.sagemaker.transformJob
   // List of SageMaker AutoML jobs
   autoMLJobs() []aws.sagemaker.autoMLJob
+  // List of SageMaker Studio apps
+  apps() []aws.sagemaker.app
+  // List of SageMaker app image configs
+  appImageConfigs() []aws.sagemaker.appImageConfig
+  // List of SageMaker Studio lifecycle configs
+  studioLifecycleConfigs() []aws.sagemaker.studioLifecycleConfig
+  // List of SageMaker Git code repositories
+  codeRepositories() []aws.sagemaker.codeRepository
+  // List of SageMaker notebook instance lifecycle configs
+  notebookInstanceLifecycleConfigs() []aws.sagemaker.notebookInstanceLifecycleConfig
+  // List of SageMaker custom container images
+  images() []aws.sagemaker.image
+  // List of SageMaker custom algorithms
+  algorithms() []aws.sagemaker.algorithm
+  // List of SageMaker Neo model compilation jobs
+  compilationJobs() []aws.sagemaker.compilationJob
 }
 
 // AWS SageMaker notebook instance
@@ -3130,6 +3146,232 @@ private aws.sagemaker.autoMLJob.candidate @defaults("candidateName candidateStat
   objectiveMetricName string
   // Objective metric value
   objectiveMetricValue float
+}
+
+// AWS SageMaker Studio app
+private aws.sagemaker.app @defaults("arn name appType status") {
+  // ARN of the app
+  arn string
+  // Name of the app
+  name string
+  // App type: JupyterServer, KernelGateway, DetailedProfiler, TensorBoard, CodeEditor, JupyterLab, RStudioServerPro, RSessionGateway, Canvas
+  appType string
+  // Region where the app exists
+  region string
+  // Status: Deleted, Deleting, Failed, InService, Pending
+  status string
+  // Time when the app was created
+  createdAt time
+  // ID of the domain the app belongs to
+  domainId string
+  // Reference to the owning domain
+  domain() aws.sagemaker.domain
+  // User profile the app is scoped to (empty if space-scoped)
+  userProfileName string
+  // Space the app is scoped to (empty if user-scoped)
+  spaceName string
+  // Last health check timestamp
+  lastHealthCheckAt() time
+  // Last user activity timestamp
+  lastUserActivityAt() time
+  // Failure reason if the app failed to start
+  failureReason() string
+  // SageMaker image ARN used by the app
+  sageMakerImageArn() string
+  // SageMaker image version ARN used by the app
+  sageMakerImageVersionArn() string
+  // EC2 instance type running the app
+  instanceType() string
+}
+
+// AWS SageMaker app image config
+private aws.sagemaker.appImageConfig @defaults("arn name") {
+  // ARN of the app image config
+  arn string
+  // Name of the app image config
+  name string
+  // Region where the app image config exists
+  region string
+  // Time when the config was created
+  createdAt time
+  // Time when the config was last modified
+  lastModifiedAt time
+  // KernelGateway image configuration (raw structure)
+  kernelGatewayImageConfig() dict
+  // JupyterLab app image configuration (raw structure)
+  jupyterLabAppImageConfig() dict
+  // Code Editor app image configuration (raw structure)
+  codeEditorAppImageConfig() dict
+}
+
+// AWS SageMaker Studio lifecycle config
+private aws.sagemaker.studioLifecycleConfig @defaults("arn name appType") {
+  // ARN of the lifecycle config
+  arn string
+  // Name of the lifecycle config
+  name string
+  // Region where the lifecycle config exists
+  region string
+  // App type: JupyterServer, KernelGateway, CodeEditor, JupyterLab
+  appType string
+  // Time when the lifecycle config was created
+  createdAt time
+  // Time when the lifecycle config was last modified
+  lastModifiedAt time
+  // Base64-encoded content of the lifecycle script
+  content() string
+  // Tags for the lifecycle config
+  tags() map[string]string
+}
+
+// AWS SageMaker Git code repository
+private aws.sagemaker.codeRepository @defaults("arn name") {
+  // ARN of the code repository
+  arn string
+  // Name of the code repository
+  name string
+  // Region where the code repository exists
+  region string
+  // Time when the repository was created
+  createdAt time
+  // Time when the repository was last modified
+  lastModifiedAt time
+  // Git repository URL
+  repositoryUrl() string
+  // Default branch of the repository
+  branch() string
+  // Secrets Manager secret containing credentials (null when public/unauthenticated)
+  secret() aws.secretsmanager.secret
+}
+
+// AWS SageMaker notebook instance lifecycle config
+private aws.sagemaker.notebookInstanceLifecycleConfig @defaults("arn name") {
+  // ARN of the lifecycle config
+  arn string
+  // Name of the lifecycle config
+  name string
+  // Region where the lifecycle config exists
+  region string
+  // Time when the config was created
+  createdAt time
+  // Time when the config was last modified
+  lastModifiedAt time
+  // Base64-encoded shell scripts run on instance creation
+  onCreate() []string
+  // Base64-encoded shell scripts run on instance start
+  onStart() []string
+}
+
+// AWS SageMaker custom container image
+private aws.sagemaker.image @defaults("arn name status") {
+  // ARN of the image
+  arn string
+  // Name of the image
+  name string
+  // Region where the image exists
+  region string
+  // Display name for the image
+  displayName string
+  // Description of the image
+  description string
+  // Status: CREATING, CREATED, CREATE_FAILED, UPDATING, UPDATED, UPDATE_FAILED, DELETING, DELETE_FAILED
+  status string
+  // Time when the image was created
+  createdAt time
+  // Time when the image was last modified
+  lastModifiedAt time
+  // Failure reason if the image is in a failed state
+  failureReason() string
+  // IAM role SageMaker uses to manage the image
+  iamRole() aws.iam.role
+  // Versions of the image
+  versions() []aws.sagemaker.image.version
+}
+
+// AWS SageMaker image version
+private aws.sagemaker.image.version @defaults("arn version status") {
+  // ARN of the image version
+  arn string
+  // Version number
+  version int
+  // Region where the image version exists
+  region string
+  // Name of the parent image
+  imageName string
+  // Container image URI (ECR) for this version
+  containerImage string
+  // Base image URI used to build this version
+  baseImage() string
+  // Status: CREATING, CREATED, CREATE_FAILED, DELETING, DELETE_FAILED
+  status string
+  // Time when the version was created
+  createdAt time
+  // Time when the version was last modified
+  lastModifiedAt time
+}
+
+// AWS SageMaker custom algorithm
+private aws.sagemaker.algorithm @defaults("arn name status") {
+  // ARN of the algorithm
+  arn string
+  // Name of the algorithm
+  name string
+  // Region where the algorithm exists
+  region string
+  // Description of the algorithm
+  description string
+  // Status: Pending, InProgress, Completed, Failed, Deleting
+  status string
+  // Time when the algorithm was created
+  createdAt time
+  // Training image URI used by the algorithm
+  trainingImage() string
+  // Supported content types for training input
+  supportedContentTypes() []string
+  // Supported transform instance types
+  supportedTransformInstanceTypes() []string
+  // Supported training instance types
+  supportedTrainingInstanceTypes() []string
+  // Whether distributed training is supported
+  supportsDistributedTraining() bool
+  // Tags for the algorithm
+  tags() map[string]string
+}
+
+// AWS SageMaker Neo model compilation job
+private aws.sagemaker.compilationJob @defaults("arn name status") {
+  // ARN of the compilation job
+  arn string
+  // Name of the compilation job
+  name string
+  // Region where the compilation job exists
+  region string
+  // Status: INPROGRESS, COMPLETED, FAILED, STARTING, STOPPING, STOPPED
+  status string
+  // Time when the job was created
+  createdAt time
+  // Time when the job was last modified
+  lastModifiedAt time
+  // Compilation start time
+  startedAt() time
+  // Compilation end time
+  endedAt() time
+  // Failure reason if the job failed
+  failureReason() string
+  // Tags for the compilation job
+  tags() map[string]string
+  // IAM execution role
+  iamRole() aws.iam.role
+  // Input model S3 URI
+  inputS3Uri() string
+  // Output S3 URI for the compiled model
+  outputS3Uri() string
+  // Target device for compilation
+  targetDevice() string
+  // Target platform configuration (OS, arch, accelerator)
+  targetPlatform() dict
+  // Maximum runtime in seconds
+  maxRuntimeInSeconds() int
 }
 
 // AWS Simple Notification Service (SNS)
