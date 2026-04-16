@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"time"
 
 	"github.com/digitalocean/godo"
 	"go.mondoo.com/mql/v13/llx"
@@ -243,11 +244,11 @@ func initDigitaloceanRegistry(runtime *plugin.Runtime, args map[string]*llx.RawD
 	conn := runtime.Connection.(*connection.DigitaloceanConnection)
 	reg, _, err := conn.Client().Registry.Get(context.Background())
 	if err != nil {
-		// No registry configured -- return empty
+		// No registry configured -- return empty sentinel
 		args["name"] = llx.StringData("")
 		args["storageUsageBytes"] = llx.IntData(0)
 		args["region"] = llx.StringData("")
-		args["createdAt"] = llx.NilData
+		args["createdAt"] = llx.TimeData(time.Time{})
 		args["subscriptionTier"] = llx.StringData("")
 		return args, nil, nil
 	}

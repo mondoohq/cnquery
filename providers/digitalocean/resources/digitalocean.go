@@ -121,14 +121,23 @@ func (r *mqlDigitalocean) droplets() ([]interface{}, error) {
 				imageDict["slug"] = d.Image.Slug
 			}
 
+			regionSlug := ""
+			if d.Region != nil {
+				regionSlug = d.Region.Slug
+			}
+			sizeSlug := ""
+			if d.Size != nil {
+				sizeSlug = d.Size.Slug
+			}
+
 			res, err := CreateResource(r.MqlRuntime, "digitalocean.droplet", map[string]*llx.RawData{
 				"id":                llx.IntData(int64(d.ID)),
 				"name":              llx.StringData(d.Name),
 				"memory":            llx.IntData(int64(d.Memory)),
 				"vcpus":             llx.IntData(int64(d.Vcpus)),
 				"disk":              llx.IntData(int64(d.Disk)),
-				"region":            llx.StringData(d.Region.Slug),
-				"size":              llx.StringData(d.Size.Slug),
+				"region":            llx.StringData(regionSlug),
+				"size":              llx.StringData(sizeSlug),
 				"status":            llx.StringData(d.Status),
 				"createdAt":         llx.TimeDataPtr(parseDoTime(d.Created)),
 				"publicIpv4":        llx.StringData(publicIPv4),
@@ -427,11 +436,15 @@ func (r *mqlDigitalocean) volumes() ([]interface{}, error) {
 				tags[i] = t
 			}
 
+			volRegion := ""
+			if v.Region != nil {
+				volRegion = v.Region.Slug
+			}
 			res, err := CreateResource(r.MqlRuntime, "digitalocean.volume", map[string]*llx.RawData{
 				"id":              llx.StringData(v.ID),
 				"name":            llx.StringData(v.Name),
 				"sizeGigabytes":   llx.IntData(v.SizeGigaBytes),
-				"region":          llx.StringData(v.Region.Slug),
+				"region":          llx.StringData(volRegion),
 				"description":     llx.StringData(v.Description),
 				"filesystemType":  llx.StringData(v.FilesystemType),
 				"filesystemLabel": llx.StringData(v.FilesystemLabel),
@@ -511,12 +524,16 @@ func (r *mqlDigitalocean) loadBalancers() ([]interface{}, error) {
 				ss["cookieTtlSeconds"] = float64(lb.StickySessions.CookieTtlSeconds)
 			}
 
+			lbRegion := ""
+			if lb.Region != nil {
+				lbRegion = lb.Region.Slug
+			}
 			res, err := CreateResource(r.MqlRuntime, "digitalocean.loadBalancer", map[string]*llx.RawData{
 				"id":                           llx.StringData(lb.ID),
 				"name":                         llx.StringData(lb.Name),
 				"ip":                           llx.StringData(lb.IP),
 				"status":                       llx.StringData(lb.Status),
-				"region":                       llx.StringData(lb.Region.Slug),
+				"region":                       llx.StringData(lbRegion),
 				"createdAt":                    llx.TimeDataPtr(parseDoTime(lb.Created)),
 				"algorithm":                    llx.StringData(lb.Algorithm),
 				"redirectHttpToHttps":          llx.BoolData(lb.RedirectHttpToHttps),

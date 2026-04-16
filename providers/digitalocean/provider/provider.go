@@ -134,7 +134,12 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.DigitaloceanCo
 		Title:  "DigitalOcean",
 	}
 
-	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/digitalocean/"}
+	platformId := "//platformid.api.mondoo.app/runtime/digitalocean"
+	acct, _, err := conn.Client().Account.Get(context.Background())
+	if err == nil && acct.UUID != "" {
+		platformId += "/account/" + acct.UUID
+	}
+	asset.PlatformIds = []string{platformId}
 	return nil
 }
 
