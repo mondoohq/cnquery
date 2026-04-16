@@ -1796,6 +1796,8 @@ aws.sagemaker {
   associations() []aws.sagemaker.association
   // List of SageMaker lineage groups
   lineageGroups() []aws.sagemaker.lineageGroup
+  // List of SageMaker JumpStart hubs
+  hubs() []aws.sagemaker.hub
 }
 
 // AWS SageMaker notebook instance
@@ -3672,6 +3674,78 @@ private aws.sagemaker.association @defaults("sourceArn destinationArn associatio
   destinationName string
   // Type of the destination entity
   destinationType string
+}
+
+// AWS SageMaker JumpStart hub
+private aws.sagemaker.hub @defaults("arn name status") {
+  // ARN of the hub
+  arn string
+  // Name of the hub
+  name string
+  // Region where the hub exists
+  region string
+  // Status: InService, Creating, Updating, Deleting, CreateFailed, UpdateFailed, DeleteFailed
+  status string
+  // Time when the hub was created
+  createdAt time
+  // Time when the hub was last modified
+  lastModifiedAt time
+  // Display name of the hub
+  displayName string
+  // Description of the hub (from Describe)
+  description string
+  // Tags for the hub
+  tags() map[string]string
+  // Failure reason if the hub is in a failed state
+  failureReason() string
+  // Search keywords attached to the hub
+  searchKeywords() []string
+  // S3 output path where hub content is stored (null for SageMaker public hub)
+  s3OutputPath() string
+  // List of contents in the hub (models, notebooks, model references)
+  contents() []aws.sagemaker.hubContent
+}
+
+// AWS SageMaker JumpStart hub content
+private aws.sagemaker.hubContent @defaults("arn name contentType status") {
+  // ARN of the hub content
+  arn string
+  // Name of the hub content
+  name string
+  // Region where the hub content exists
+  region string
+  // Name of the parent hub
+  hubName string
+  // Reference to the parent hub
+  hub() aws.sagemaker.hub
+  // Content type: Model, Notebook, ModelReference
+  contentType string
+  // Status of the content: Available, Importing, Deleting, ImportFailed, DeleteFailed
+  status string
+  // Version of the hub content
+  contentVersion string
+  // Version of the hub content document schema
+  documentSchemaVersion string
+  // Time when the content was created
+  createdAt time
+  // Display name of the content
+  displayName string
+  // Description of the content
+  description string
+  // ARN of the corresponding public SageMaker hub content (null when original)
+  sageMakerPublicHubContentArn string
+  // Support status of the content
+  supportStatus string
+  // Tags for the hub content
+  tags() map[string]string
+  // Search keywords attached to the content
+  searchKeywords() []string
+  // Hub content document (JSON describing containers, scripts, etc.)
+  document() string
+  // Markdown describing the content
+  markdown() string
+  // Failure reason if the content is in a failed state
+  failureReason() string
 }
 
 // AWS SageMaker lineage group

@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.13.3",
-  "generated_at": "2026-04-16T11:55:00-07:00",
+  "generated_at": "2026-04-16T13:02:13-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -464,6 +464,8 @@
     "sagemaker:DescribeExperiment",
     "sagemaker:DescribeFeatureGroup",
     "sagemaker:DescribeFlowDefinition",
+    "sagemaker:DescribeHub",
+    "sagemaker:DescribeHubContent",
     "sagemaker:DescribeHumanTaskUi",
     "sagemaker:DescribeHyperParameterTuningJob",
     "sagemaker:DescribeImage",
@@ -510,6 +512,8 @@
     "sagemaker:ListExperiments",
     "sagemaker:ListFeatureGroups",
     "sagemaker:ListFlowDefinitions",
+    "sagemaker:ListHubContents",
+    "sagemaker:ListHubs",
     "sagemaker:ListHumanTaskUis",
     "sagemaker:ListHyperParameterTuningJobs",
     "sagemaker:ListImageVersions",
@@ -3502,6 +3506,18 @@
       "source_file": "aws_sagemaker_labeling.go"
     },
     {
+      "permission": "sagemaker:DescribeHub",
+      "service": "sagemaker",
+      "action": "DescribeHub",
+      "source_file": "aws_sagemaker_hub.go"
+    },
+    {
+      "permission": "sagemaker:DescribeHubContent",
+      "service": "sagemaker",
+      "action": "DescribeHubContent",
+      "source_file": "aws_sagemaker_hub.go"
+    },
+    {
       "permission": "sagemaker:DescribeHumanTaskUi",
       "service": "sagemaker",
       "action": "DescribeHumanTaskUi",
@@ -3776,6 +3792,18 @@
       "service": "sagemaker",
       "action": "ListFlowDefinitions",
       "source_file": "aws_sagemaker_labeling.go"
+    },
+    {
+      "permission": "sagemaker:ListHubContents",
+      "service": "sagemaker",
+      "action": "ListHubContents",
+      "source_file": "aws_sagemaker_hub.go"
+    },
+    {
+      "permission": "sagemaker:ListHubs",
+      "service": "sagemaker",
+      "action": "ListHubs",
+      "source_file": "aws_sagemaker_hub.go"
     },
     {
       "permission": "sagemaker:ListHumanTaskUis",

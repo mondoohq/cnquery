@@ -186,6 +186,8 @@ const (
 	ResourceAwsSagemakerAction                                                  string = "aws.sagemaker.action"
 	ResourceAwsSagemakerContext                                                 string = "aws.sagemaker.context"
 	ResourceAwsSagemakerAssociation                                             string = "aws.sagemaker.association"
+	ResourceAwsSagemakerHub                                                     string = "aws.sagemaker.hub"
+	ResourceAwsSagemakerHubContent                                              string = "aws.sagemaker.hubContent"
 	ResourceAwsSagemakerLineageGroup                                            string = "aws.sagemaker.lineageGroup"
 	ResourceAwsSns                                                              string = "aws.sns"
 	ResourceAwsSnsTopic                                                         string = "aws.sns.topic"
@@ -1320,6 +1322,14 @@ func init() {
 		"aws.sagemaker.association": {
 			// to override args, implement: initAwsSagemakerAssociation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsSagemakerAssociation,
+		},
+		"aws.sagemaker.hub": {
+			Init:   initAwsSagemakerHub,
+			Create: createAwsSagemakerHub,
+		},
+		"aws.sagemaker.hubContent": {
+			// to override args, implement: initAwsSagemakerHubContent(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerHubContent,
 		},
 		"aws.sagemaker.lineageGroup": {
 			Init:   initAwsSagemakerLineageGroup,
@@ -5321,6 +5331,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.sagemaker.lineageGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemaker).GetLineageGroups()).ToDataRes(types.Array(types.Resource("aws.sagemaker.lineageGroup")))
 	},
+	"aws.sagemaker.hubs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemaker).GetHubs()).ToDataRes(types.Array(types.Resource("aws.sagemaker.hub")))
+	},
 	"aws.sagemaker.notebookinstance.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerNotebookinstance).GetArn()).ToDataRes(types.String)
 	},
@@ -7630,6 +7643,102 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.sagemaker.association.destinationType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerAssociation).GetDestinationType()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.hub.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHub).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.hub.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHub).GetName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.hub.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHub).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.hub.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHub).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.hub.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHub).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.hub.lastModifiedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHub).GetLastModifiedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.hub.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHub).GetDisplayName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.hub.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHub).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.hub.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHub).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.sagemaker.hub.failureReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHub).GetFailureReason()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.hub.searchKeywords": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHub).GetSearchKeywords()).ToDataRes(types.Array(types.String))
+	},
+	"aws.sagemaker.hub.s3OutputPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHub).GetS3OutputPath()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.hub.contents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHub).GetContents()).ToDataRes(types.Array(types.Resource("aws.sagemaker.hubContent")))
+	},
+	"aws.sagemaker.hubContent.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHubContent).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.hubContent.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHubContent).GetName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.hubContent.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHubContent).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.hubContent.hubName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHubContent).GetHubName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.hubContent.hub": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHubContent).GetHub()).ToDataRes(types.Resource("aws.sagemaker.hub"))
+	},
+	"aws.sagemaker.hubContent.contentType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHubContent).GetContentType()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.hubContent.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHubContent).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.hubContent.contentVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHubContent).GetContentVersion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.hubContent.documentSchemaVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHubContent).GetDocumentSchemaVersion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.hubContent.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHubContent).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.hubContent.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHubContent).GetDisplayName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.hubContent.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHubContent).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.hubContent.sageMakerPublicHubContentArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHubContent).GetSageMakerPublicHubContentArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.hubContent.supportStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHubContent).GetSupportStatus()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.hubContent.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHubContent).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.sagemaker.hubContent.searchKeywords": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHubContent).GetSearchKeywords()).ToDataRes(types.Array(types.String))
+	},
+	"aws.sagemaker.hubContent.document": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHubContent).GetDocument()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.hubContent.markdown": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHubContent).GetMarkdown()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.hubContent.failureReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHubContent).GetFailureReason()).ToDataRes(types.String)
 	},
 	"aws.sagemaker.lineageGroup.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerLineageGroup).GetArn()).ToDataRes(types.String)
@@ -23860,6 +23969,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSagemaker).LineageGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.sagemaker.hubs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemaker).Hubs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.sagemaker.notebookinstance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerNotebookinstance).__id, ok = v.Value.(string)
 		return
@@ -27274,6 +27387,142 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.sagemaker.association.destinationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerAssociation).DestinationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.hub.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHub).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.hub.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHub).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.hub.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHub).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.hub.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHub).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.hub.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHub).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.hub.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHub).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.hub.lastModifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHub).LastModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.hub.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHub).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.hub.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHub).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.hub.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHub).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.hub.failureReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHub).FailureReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.hub.searchKeywords": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHub).SearchKeywords, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.hub.s3OutputPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHub).S3OutputPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.hub.contents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHub).Contents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.hubContent.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHubContent).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.hubContent.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHubContent).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.hubContent.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHubContent).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.hubContent.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHubContent).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.hubContent.hubName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHubContent).HubName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.hubContent.hub": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHubContent).Hub, ok = plugin.RawToTValue[*mqlAwsSagemakerHub](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.hubContent.contentType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHubContent).ContentType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.hubContent.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHubContent).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.hubContent.contentVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHubContent).ContentVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.hubContent.documentSchemaVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHubContent).DocumentSchemaVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.hubContent.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHubContent).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.hubContent.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHubContent).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.hubContent.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHubContent).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.hubContent.sageMakerPublicHubContentArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHubContent).SageMakerPublicHubContentArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.hubContent.supportStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHubContent).SupportStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.hubContent.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHubContent).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.hubContent.searchKeywords": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHubContent).SearchKeywords, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.hubContent.document": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHubContent).Document, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.hubContent.markdown": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHubContent).Markdown, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.hubContent.failureReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHubContent).FailureReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.lineageGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -54839,6 +55088,7 @@ type mqlAwsSagemaker struct {
 	Contexts                          plugin.TValue[[]any]
 	Associations                      plugin.TValue[[]any]
 	LineageGroups                     plugin.TValue[[]any]
+	Hubs                              plugin.TValue[[]any]
 }
 
 // createAwsSagemaker creates a new instance of this resource
@@ -55611,6 +55861,22 @@ func (c *mqlAwsSagemaker) GetLineageGroups() *plugin.TValue[[]any] {
 		}
 
 		return c.lineageGroups()
+	})
+}
+
+func (c *mqlAwsSagemaker) GetHubs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Hubs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker", c.__id, "hubs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.hubs()
 	})
 }
 
@@ -65052,6 +65318,296 @@ func (c *mqlAwsSagemakerAssociation) GetDestinationName() *plugin.TValue[string]
 
 func (c *mqlAwsSagemakerAssociation) GetDestinationType() *plugin.TValue[string] {
 	return &c.DestinationType
+}
+
+// mqlAwsSagemakerHub for the aws.sagemaker.hub resource
+type mqlAwsSagemakerHub struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerHubInternal
+	Arn            plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Region         plugin.TValue[string]
+	Status         plugin.TValue[string]
+	CreatedAt      plugin.TValue[*time.Time]
+	LastModifiedAt plugin.TValue[*time.Time]
+	DisplayName    plugin.TValue[string]
+	Description    plugin.TValue[string]
+	Tags           plugin.TValue[map[string]any]
+	FailureReason  plugin.TValue[string]
+	SearchKeywords plugin.TValue[[]any]
+	S3OutputPath   plugin.TValue[string]
+	Contents       plugin.TValue[[]any]
+}
+
+// createAwsSagemakerHub creates a new instance of this resource
+func createAwsSagemakerHub(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerHub{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.hub", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerHub) MqlName() string {
+	return "aws.sagemaker.hub"
+}
+
+func (c *mqlAwsSagemakerHub) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerHub) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSagemakerHub) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSagemakerHub) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSagemakerHub) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsSagemakerHub) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSagemakerHub) GetLastModifiedAt() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedAt
+}
+
+func (c *mqlAwsSagemakerHub) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlAwsSagemakerHub) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsSagemakerHub) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsSagemakerHub) GetFailureReason() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.FailureReason, func() (string, error) {
+		return c.failureReason()
+	})
+}
+
+func (c *mqlAwsSagemakerHub) GetSearchKeywords() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SearchKeywords, func() ([]any, error) {
+		return c.searchKeywords()
+	})
+}
+
+func (c *mqlAwsSagemakerHub) GetS3OutputPath() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.S3OutputPath, func() (string, error) {
+		return c.s3OutputPath()
+	})
+}
+
+func (c *mqlAwsSagemakerHub) GetContents() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Contents, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.hub", c.__id, "contents")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.contents()
+	})
+}
+
+// mqlAwsSagemakerHubContent for the aws.sagemaker.hubContent resource
+type mqlAwsSagemakerHubContent struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerHubContentInternal
+	Arn                          plugin.TValue[string]
+	Name                         plugin.TValue[string]
+	Region                       plugin.TValue[string]
+	HubName                      plugin.TValue[string]
+	Hub                          plugin.TValue[*mqlAwsSagemakerHub]
+	ContentType                  plugin.TValue[string]
+	Status                       plugin.TValue[string]
+	ContentVersion               plugin.TValue[string]
+	DocumentSchemaVersion        plugin.TValue[string]
+	CreatedAt                    plugin.TValue[*time.Time]
+	DisplayName                  plugin.TValue[string]
+	Description                  plugin.TValue[string]
+	SageMakerPublicHubContentArn plugin.TValue[string]
+	SupportStatus                plugin.TValue[string]
+	Tags                         plugin.TValue[map[string]any]
+	SearchKeywords               plugin.TValue[[]any]
+	Document                     plugin.TValue[string]
+	Markdown                     plugin.TValue[string]
+	FailureReason                plugin.TValue[string]
+}
+
+// createAwsSagemakerHubContent creates a new instance of this resource
+func createAwsSagemakerHubContent(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerHubContent{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.hubContent", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerHubContent) MqlName() string {
+	return "aws.sagemaker.hubContent"
+}
+
+func (c *mqlAwsSagemakerHubContent) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerHubContent) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSagemakerHubContent) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSagemakerHubContent) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSagemakerHubContent) GetHubName() *plugin.TValue[string] {
+	return &c.HubName
+}
+
+func (c *mqlAwsSagemakerHubContent) GetHub() *plugin.TValue[*mqlAwsSagemakerHub] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerHub](&c.Hub, func() (*mqlAwsSagemakerHub, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.hubContent", c.__id, "hub")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerHub), nil
+			}
+		}
+
+		return c.hub()
+	})
+}
+
+func (c *mqlAwsSagemakerHubContent) GetContentType() *plugin.TValue[string] {
+	return &c.ContentType
+}
+
+func (c *mqlAwsSagemakerHubContent) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsSagemakerHubContent) GetContentVersion() *plugin.TValue[string] {
+	return &c.ContentVersion
+}
+
+func (c *mqlAwsSagemakerHubContent) GetDocumentSchemaVersion() *plugin.TValue[string] {
+	return &c.DocumentSchemaVersion
+}
+
+func (c *mqlAwsSagemakerHubContent) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSagemakerHubContent) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlAwsSagemakerHubContent) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsSagemakerHubContent) GetSageMakerPublicHubContentArn() *plugin.TValue[string] {
+	return &c.SageMakerPublicHubContentArn
+}
+
+func (c *mqlAwsSagemakerHubContent) GetSupportStatus() *plugin.TValue[string] {
+	return &c.SupportStatus
+}
+
+func (c *mqlAwsSagemakerHubContent) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsSagemakerHubContent) GetSearchKeywords() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SearchKeywords, func() ([]any, error) {
+		return c.searchKeywords()
+	})
+}
+
+func (c *mqlAwsSagemakerHubContent) GetDocument() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Document, func() (string, error) {
+		return c.document()
+	})
+}
+
+func (c *mqlAwsSagemakerHubContent) GetMarkdown() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Markdown, func() (string, error) {
+		return c.markdown()
+	})
+}
+
+func (c *mqlAwsSagemakerHubContent) GetFailureReason() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.FailureReason, func() (string, error) {
+		return c.failureReason()
+	})
 }
 
 // mqlAwsSagemakerLineageGroup for the aws.sagemaker.lineageGroup resource
