@@ -186,6 +186,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"digitalocean": {
+		Provider: &plugin.Provider{
+			Name:            "digitalocean",
+			ID:              "go.mondoo.com/mql/providers/digitalocean",
+			ConnectionTypes: []string{"digitalocean"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "digitalocean",
+					Use:   "digitalocean",
+					Short: "a DigitalOcean account",
+				},
+			},
+		},
+	},
+
 	"equinix": {
 		Provider: &plugin.Provider{
 			Name:            "equinix",
