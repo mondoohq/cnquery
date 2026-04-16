@@ -4,6 +4,7 @@ ACCOUNTADMIN
 activedirectory
 ACTIVEMQ
 adr
+afero
 AJD
 advancedthreatprotection
 alloydb
@@ -32,6 +33,8 @@ awslogs
 AWSPENDING
 AWSPREVIOUS
 awsvpc
+Beixb
+bwawxf
 backupconfiguration
 backupdr
 backupsetting
@@ -85,6 +88,8 @@ dfw
 directoryservice
 diskread
 diskwrite
+DRdf
+Duf
 dlp
 dlq
 dlv
@@ -106,6 +111,7 @@ eventarc
 Exadata
 exo
 failback
+FEBLx
 fargate
 filestore
 filesz
@@ -137,6 +143,7 @@ grafana
 groupname
 gvnic
 hadoop
+HBFNV
 HCMCLOUD
 headerorder
 hec
@@ -153,6 +160,7 @@ iccid
 identitycenter
 idps
 ilb
+IMtn
 imds
 imei
 ingresstls
@@ -219,6 +227,7 @@ msk
 Mtls
 MULTIAZ
 mychart
+myproject
 naflags
 natgateway
 netbios
@@ -228,6 +237,7 @@ networkfirewall
 networkinterface
 nexthop
 nft
+NINEl
 nmap
 noc
 nocerts
@@ -255,6 +265,7 @@ openzfs
 orstatement
 ospf
 ovmf
+owpjy
 OVS
 pagerduty
 panos
@@ -286,6 +297,7 @@ pzi
 pzs
 qcow
 
+QAwr
 QGA
 querypack
 quorate
@@ -348,6 +360,7 @@ sqli
 sqlimatchstatement
 sqlserver
 Sspr
+stdlib
 stepfunctions
 stringx
 subscriptionfilter
@@ -369,17 +382,20 @@ tpl
 tpu
 trainingjob
 transitgateway
+Twt
 udid
 uefi
 UNAVAIL
 unifi
 Uocm
+URkuh
 usb
 Utc
 valkey
 VAULTNAME
 vcpus
 vdcs
+vendored
 vdev
 verifiedaccess
 vertexai
