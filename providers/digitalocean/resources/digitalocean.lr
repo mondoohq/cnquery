@@ -1,0 +1,587 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/mql/providers/digitalocean"
+option go_package = "go.mondoo.com/mql/v13/providers/digitalocean/resources"
+
+// DigitalOcean cloud provider
+digitalocean {
+  // Droplets (virtual machines)
+  droplets() []digitalocean.droplet
+  // Firewalls
+  firewalls() []digitalocean.firewall
+  // Managed databases
+  databases() []digitalocean.database
+  // Domains
+  domains() []digitalocean.domain
+  // Block storage volumes
+  volumes() []digitalocean.volume
+  // Load balancers
+  loadBalancers() []digitalocean.loadBalancer
+  // VPCs
+  vpcs() []digitalocean.vpc
+  // VPC peerings
+  vpcPeerings() []digitalocean.vpcPeering
+  // Kubernetes clusters
+  kubernetesClusters() []digitalocean.kubernetes.cluster
+  // Projects
+  projects() []digitalocean.project
+  // SSH keys
+  sshKeys() []digitalocean.sshKey
+  // TLS certificates
+  certificates() []digitalocean.certificate
+  // Container registry repositories
+  registryRepositories() []digitalocean.registry.repository
+  // Reserved IPs
+  reservedIPs() []digitalocean.reservedIp
+  // App Platform applications
+  apps() []digitalocean.app
+  // Monitoring alert policies
+  alertPolicies() []digitalocean.alertPolicy
+  // Uptime checks
+  uptimeChecks() []digitalocean.uptimeCheck
+  // CDN endpoints
+  cdnEndpoints() []digitalocean.cdn
+  // Tags
+  tags() []digitalocean.tag
+  // Spaces access keys
+  spacesKeys() []digitalocean.spacesKey
+}
+
+// DigitalOcean account information
+digitalocean.account @defaults("email status") {
+  // Account email
+  email string
+  // Account UUID
+  uuid string
+  // Droplet limit
+  dropletLimit int
+  // Floating IP limit
+  floatingIpLimit int
+  // Volume limit
+  volumeLimit int
+  // Email verified
+  emailVerified bool
+  // Account status (active, warning, locked)
+  status string
+  // Status message
+  statusMessage string
+}
+
+// DigitalOcean Droplet (virtual machine)
+digitalocean.droplet @defaults("id name status") {
+  // Droplet ID
+  id int
+  // Droplet name
+  name string
+  // Memory in MB
+  memory int
+  // Number of vCPUs
+  vcpus int
+  // Disk size in GB
+  disk int
+  // Region slug
+  region string
+  // Size slug
+  size string
+  // Status (new, active, off, archive)
+  status string
+  // Created at
+  createdAt time
+  // Public IPv4 address
+  publicIpv4 string
+  // Private IPv4 address
+  privateIpv4 string
+  // Tags
+  tags []string
+  // VPC UUID
+  vpcUuid string
+  // Features (e.g., monitoring, backups)
+  features []string
+  // Backup enabled
+  backupsEnabled bool
+  // Monitoring enabled
+  monitoringEnabled bool
+  // Image information
+  image dict
+}
+
+// DigitalOcean firewall
+digitalocean.firewall @defaults("id name status") {
+  // Firewall ID
+  id string
+  // Firewall name
+  name string
+  // Status (waiting, succeeded, failed)
+  status string
+  // Created at
+  createdAt time
+  // Inbound rules
+  inboundRules []dict
+  // Outbound rules
+  outboundRules []dict
+  // Droplet IDs protected by this firewall
+  dropletIds []int
+  // Tags used to target droplets
+  tags []string
+}
+
+// DigitalOcean managed database cluster
+digitalocean.database @defaults("id name engine") {
+  // Database cluster ID
+  id string
+  // Database cluster name
+  name string
+  // Database engine (pg, mysql, redis, mongodb, kafka, opensearch)
+  engine string
+  // Database engine version
+  version string
+  // Number of nodes
+  numNodes int
+  // Size slug
+  size string
+  // Region slug
+  region string
+  // Status (creating, online, resizing, migrating, forking)
+  status string
+  // Created at
+  createdAt time
+  // Private network UUID
+  privateNetworkUuid string
+  // Tags
+  tags []string
+  // Firewall rules
+  firewallRules() []dict
+  // Maintenance window
+  maintenanceWindow dict
+  // Database users
+  users() []digitalocean.database.user
+  // Database replicas
+  replicas() []digitalocean.database.replica
+  // Connection pools
+  pools() []digitalocean.database.pool
+}
+
+// DigitalOcean database user
+private digitalocean.database.user @defaults("name role") {
+  // Database ID (parent)
+  databaseId string
+  // Username
+  name string
+  // Role (primary, normal)
+  role string
+}
+
+// DigitalOcean database replica
+private digitalocean.database.replica @defaults("name status") {
+  // Database ID (parent)
+  databaseId string
+  // Replica name
+  name string
+  // Region slug
+  region string
+  // Status
+  status string
+  // Created at
+  createdAt time
+  // Size slug
+  size string
+  // Tags
+  tags []string
+}
+
+// DigitalOcean database connection pool
+private digitalocean.database.pool @defaults("name mode") {
+  // Database ID (parent)
+  databaseId string
+  // Pool name
+  name string
+  // Database name
+  database string
+  // User
+  user string
+  // Pool size
+  size int
+  // Connection mode (transaction, session, statement)
+  mode string
+}
+
+// DigitalOcean domain
+digitalocean.domain @defaults("name") {
+  // Domain name
+  name string
+  // TTL in seconds
+  ttl int
+  // Zone file contents
+  zoneFile string
+  // DNS records
+  records() []digitalocean.domain.record
+}
+
+// DigitalOcean DNS record
+private digitalocean.domain.record @defaults("type name data") {
+  // Domain name (parent)
+  domainName string
+  // Record ID
+  id int
+  // Record type (A, AAAA, CNAME, MX, TXT, NS, SRV, CAA)
+  type string
+  // Record name (subdomain)
+  name string
+  // Record data (IP, hostname, etc.)
+  data string
+  // TTL in seconds
+  ttl int
+  // Priority (MX, SRV)
+  priority int
+  // Port (SRV)
+  port int
+  // Weight (SRV)
+  weight int
+}
+
+// DigitalOcean block storage volume
+digitalocean.volume @defaults("id name sizeGigabytes") {
+  // Volume ID
+  id string
+  // Volume name
+  name string
+  // Size in GB
+  sizeGigabytes int
+  // Region slug
+  region string
+  // Description
+  description string
+  // Filesystem type
+  filesystemType string
+  // Filesystem label
+  filesystemLabel string
+  // Created at
+  createdAt time
+  // Tags
+  tags []string
+  // Droplet IDs attached to
+  dropletIds []int
+}
+
+// DigitalOcean load balancer
+digitalocean.loadBalancer @defaults("id name status") {
+  // Load balancer ID
+  id string
+  // Name
+  name string
+  // Public IP address
+  ip string
+  // Status (new, active, errored)
+  status string
+  // Region slug
+  region string
+  // Created at
+  createdAt time
+  // Algorithm (round_robin, least_connections)
+  algorithm string
+  // Redirect HTTP to HTTPS
+  redirectHttpToHttps bool
+  // Enable proxy protocol
+  enableProxyProtocol bool
+  // Enable backend keepalive
+  enableBackendKeepalive bool
+  // VPC UUID
+  vpcUuid string
+  // Droplet IDs
+  dropletIds []int
+  // Tags
+  tags []string
+  // Forwarding rules
+  forwardingRules []dict
+  // Health check configuration
+  healthCheck dict
+  // Sticky sessions configuration
+  stickySessions dict
+  // Disable automatic Let's Encrypt DNS records
+  disableLetsEncryptDnsRecords bool
+}
+
+// DigitalOcean VPC
+digitalocean.vpc @defaults("id name region") {
+  // VPC ID
+  id string
+  // Name
+  name string
+  // Description
+  description string
+  // IP range (CIDR)
+  ipRange string
+  // Region slug
+  region string
+  // Created at
+  createdAt time
+  // Whether this is the default VPC
+  default bool
+}
+
+// DigitalOcean VPC peering
+digitalocean.vpcPeering @defaults("id name status") {
+  // Peering ID
+  id string
+  // Peering name
+  name string
+  // VPC IDs in this peering
+  vpcIds []string
+  // Status
+  status string
+  // Created at
+  createdAt time
+}
+
+// DigitalOcean Kubernetes cluster
+digitalocean.kubernetes.cluster @defaults("id name version") {
+  // Cluster ID
+  id string
+  // Cluster name
+  name string
+  // Kubernetes version
+  version string
+  // Region slug
+  region string
+  // Status (running, provisioning, degraded, error, deleted, upgrading)
+  status string
+  // Created at
+  createdAt time
+  // Updated at
+  updatedAt time
+  // Cluster subnet
+  clusterSubnet string
+  // Service subnet
+  serviceSubnet string
+  // VPC UUID
+  vpcUuid string
+  // Auto-upgrade enabled
+  autoUpgrade bool
+  // Surge upgrade enabled
+  surgeUpgrade bool
+  // HA control plane enabled
+  ha bool
+  // Tags
+  tags []string
+  // Maintenance policy
+  maintenancePolicy dict
+  // Node pools
+  nodePools() []digitalocean.kubernetes.nodePool
+}
+
+// DigitalOcean Kubernetes node pool
+private digitalocean.kubernetes.nodePool @defaults("id name size") {
+  // Node pool ID
+  id string
+  // Cluster ID (parent)
+  clusterId string
+  // Name
+  name string
+  // Droplet size slug
+  size string
+  // Number of nodes
+  count int
+  // Auto-scale enabled
+  autoScale bool
+  // Minimum nodes (if auto-scale)
+  minNodes int
+  // Maximum nodes (if auto-scale)
+  maxNodes int
+  // Tags
+  tags []string
+  // Labels
+  labels dict
+  // Taints
+  taints []dict
+}
+
+// DigitalOcean project
+digitalocean.project @defaults("id name environment") {
+  // Project ID
+  id string
+  // Name
+  name string
+  // Description
+  description string
+  // Purpose
+  purpose string
+  // Environment (Development, Staging, Production)
+  environment string
+  // Created at
+  createdAt time
+  // Updated at
+  updatedAt time
+  // Whether this is the default project
+  isDefault bool
+}
+
+// DigitalOcean SSH key
+digitalocean.sshKey @defaults("id name") {
+  // SSH key ID
+  id int
+  // Key name
+  name string
+  // Public key fingerprint
+  fingerprint string
+  // Public key content
+  publicKey string
+}
+
+// DigitalOcean TLS certificate
+digitalocean.certificate @defaults("id name state") {
+  // Certificate ID
+  id string
+  // Certificate name
+  name string
+  // SHA-1 fingerprint
+  sha1Fingerprint string
+  // State (pending, verified, error)
+  state string
+  // Type (custom, lets_encrypt)
+  type string
+  // DNS names
+  dnsNames []string
+  // Expiration
+  notAfter time
+  // Created at
+  createdAt time
+}
+
+// DigitalOcean container registry
+digitalocean.registry @defaults("name region") {
+  // Registry name
+  name string
+  // Storage usage in bytes
+  storageUsageBytes int
+  // Region slug
+  region string
+  // Created at
+  createdAt time
+  // Subscription tier
+  subscriptionTier string
+}
+
+// DigitalOcean container registry repository
+private digitalocean.registry.repository @defaults("name tagCount") {
+  // Registry name (parent)
+  registryName string
+  // Repository name
+  name string
+  // Number of tags
+  tagCount int
+  // Number of manifests
+  manifestCount int
+}
+
+// DigitalOcean reserved IP
+digitalocean.reservedIp @defaults("ip region") {
+  // IP address
+  ip string
+  // Region slug
+  region string
+  // Project ID
+  projectId string
+  // Whether the IP is locked
+  locked bool
+  // Droplet ID (0 if unassigned)
+  dropletId int
+}
+
+// DigitalOcean App Platform application
+digitalocean.app @defaults("id name") {
+  // App ID
+  id string
+  // App name
+  name string
+  // Live URL
+  liveUrl string
+  // Created at
+  createdAt time
+  // Updated at
+  updatedAt time
+  // Active deployment status
+  activeDeploymentStatus string
+  // App spec
+  spec dict
+}
+
+// DigitalOcean monitoring alert policy
+digitalocean.alertPolicy @defaults("uuid type enabled") {
+  // Alert policy UUID
+  uuid string
+  // Alert type (e.g., v1/insights/droplet/cpu)
+  type string
+  // Description
+  description string
+  // Comparison operator (GreaterThan, LessThan)
+  compare string
+  // Threshold value
+  value float
+  // Window (5m, 10m, 30m, 1h)
+  window string
+  // Whether the alert is enabled
+  enabled bool
+  // Entity IDs being monitored
+  entities []string
+  // Tags
+  tags []string
+  // Email notification targets
+  alertEmails []string
+  // Slack notification targets
+  alertSlack []dict
+}
+
+// DigitalOcean uptime check
+digitalocean.uptimeCheck @defaults("id name type") {
+  // Check ID
+  id string
+  // Check name
+  name string
+  // Check type (ping, http, https)
+  type string
+  // Target URL or IP
+  target string
+  // Monitoring regions
+  regions []string
+  // Whether the check is enabled
+  enabled bool
+}
+
+// DigitalOcean CDN endpoint
+digitalocean.cdn @defaults("id origin") {
+  // CDN ID
+  id string
+  // Origin (Spaces bucket endpoint)
+  origin string
+  // CDN endpoint URL
+  endpoint string
+  // TTL in seconds
+  ttl int
+  // TLS certificate ID
+  certificateId string
+  // Custom domain
+  customDomain string
+  // Created at
+  createdAt time
+}
+
+// DigitalOcean tag
+digitalocean.tag @defaults("name") {
+  // Tag name
+  name string
+  // Total number of resources with this tag
+  resourceCount int
+}
+
+// DigitalOcean Spaces access key
+digitalocean.spacesKey @defaults("name accessKey") {
+  // Key name
+  name string
+  // Access key ID
+  accessKey string
+  // Grants (bucket permissions)
+  grants []dict
+  // Created at
+  createdAt time
+}

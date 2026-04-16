@@ -205,6 +205,7 @@ PROVIDERS := \
 	cloudflare \
 	cloudformation \
 	depsdev \
+	digitalocean \
 	equinix \
 	gcp \
 	github \

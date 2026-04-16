@@ -206,6 +206,7 @@ use (
    ./mql/providers/cloudflare
    ./mql/providers/cloudformation
    ./mql/providers/depsdev
+   ./mql/providers/digitalocean
    ./mql/providers/equinix
    ./mql/providers/gcp
    ./mql/providers/github
