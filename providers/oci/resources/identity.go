@@ -280,7 +280,7 @@ func (o *mqlOciIdentityUser) authTokens() ([]any, error) {
 		}
 		var expires *time.Time
 		if authToken.TimeExpires != nil {
-			created = &authToken.TimeExpires.Time
+			expires = &authToken.TimeExpires.Time
 		}
 
 		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.authToken", map[string]*llx.RawData{
@@ -315,20 +315,27 @@ func (o *mqlOciIdentityUser) groups() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	memberships, err := client.ListUserGroupMemberships(ctx, identity.ListUserGroupMembershipsRequest{
-		CompartmentId: common.String(compartmentID),
-		UserId:        common.String(userId),
-	})
-	if err != nil {
-		return nil, err
-	}
-
 	grpMember := map[string]bool{}
-	for i := range memberships.Items {
-		m := memberships.Items[i]
-		if m.GroupId != nil {
-			grpMember[*m.GroupId] = true
+	var page *string
+	for {
+		memberships, err := client.ListUserGroupMemberships(ctx, identity.ListUserGroupMembershipsRequest{
+			CompartmentId: common.String(compartmentID),
+			UserId:        common.String(userId),
+			Page:          page,
+		})
+		if err != nil {
+			return nil, err
 		}
+		for i := range memberships.Items {
+			m := memberships.Items[i]
+			if m.GroupId != nil {
+				grpMember[*m.GroupId] = true
+			}
+		}
+		if memberships.OpcNextPage == nil {
+			break
+		}
+		page = memberships.OpcNextPage
 	}
 
 	// fetch all groups and filter the groups
@@ -657,20 +664,27 @@ func (o *mqlOciIdentityGroup) members() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	memberships, err := client.ListUserGroupMemberships(ctx, identity.ListUserGroupMembershipsRequest{
-		CompartmentId: common.String(o.CompartmentID.Data),
-		GroupId:       common.String(o.Id.Data),
-	})
-	if err != nil {
-		return nil, err
-	}
-
 	userMember := map[string]bool{}
-	for i := range memberships.Items {
-		m := memberships.Items[i]
-		if m.UserId != nil {
-			userMember[*m.UserId] = true
+	var page *string
+	for {
+		memberships, err := client.ListUserGroupMemberships(ctx, identity.ListUserGroupMembershipsRequest{
+			CompartmentId: common.String(o.CompartmentID.Data),
+			GroupId:       common.String(o.Id.Data),
+			Page:          page,
+		})
+		if err != nil {
+			return nil, err
 		}
+		for i := range memberships.Items {
+			m := memberships.Items[i]
+			if m.UserId != nil {
+				userMember[*m.UserId] = true
+			}
+		}
+		if memberships.OpcNextPage == nil {
+			break
+		}
+		page = memberships.OpcNextPage
 	}
 
 	obj, err := NewResource(o.MqlRuntime, "oci.identity", nil)

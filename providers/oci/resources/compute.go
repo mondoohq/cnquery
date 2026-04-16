@@ -249,6 +249,7 @@ func (o *mqlOciComputeInstance) vnics() ([]any, error) {
 			continue
 		}
 
+		// OCI has no batch GetVnic API, so each attachment requires a separate call.
 		vnicResp, err := networkSvc.GetVnic(ctx, core.GetVnicRequest{
 			VnicId: att.VnicId,
 		})

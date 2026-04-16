@@ -4,6 +4,7 @@ ACCOUNTADMIN
 activedirectory
 ACTIVEMQ
 adr
+AJD
 advancedthreatprotection
 alloydb
 alpn
@@ -102,6 +103,7 @@ elbv
 endpointslice
 ERPCLOUD
 eventarc
+Exadata
 exo
 failback
 fargate
@@ -212,6 +214,7 @@ mls
 modelarmor
 Mpim
 msk
+Mtls
 MULTIAZ
 mychart
 naflags
@@ -385,7 +388,7 @@ vmbr
 vmdk
 VMID
 vmstate
-Vnic
+vnic
 vnet
 vpus
 vrf
