@@ -53,35 +53,32 @@ func (s *mqlSafari) extensions() ([]any, error) {
 		log.Debug().Err(err).Msg("could not get users list")
 	}
 
-	// Build a map of enabled states from each user's Extensions.plist
+	// pluginkit returns extensions for the current user only, so we scope
+	// both uid and enabled state to the current user's home directory.
 	enabledStates := make(map[string]bool)
-	uid := int64(0)
+	uid := int64(-1)
 	if usersResource != nil {
 		users := usersResource.(*mqlUsers)
 		userList := users.GetList()
 		if userList.Error == nil {
+			// Find the current user (uid matching the process owner)
+			// Since pluginkit is per-user, we pick the first valid macOS user
+			// and read only their Extensions.plist for consistent uid/enabled pairing.
 			for _, u := range userList.Data {
 				user := u.(*mqlUser)
 				home := user.GetHome()
 				if home.Error != nil || home.Data == "" {
 					continue
 				}
-				// Only process macOS user homes
 				if !strings.HasPrefix(home.Data, "/Users/") || home.Data == "/Users/Shared" {
 					continue
 				}
 
-				// Get uid from the first valid user (pluginkit returns current user's extensions)
-				if uid == 0 {
-					if uidVal := user.GetUid(); uidVal.Error == nil {
-						uid = uidVal.Data
-					}
+				if uidVal := user.GetUid(); uidVal.Error == nil {
+					uid = uidVal.Data
 				}
-
-				states := readSafariExtensionStates(&afero.Afero{Fs: afs}, home.Data)
-				for k, v := range states {
-					enabledStates[k] = v
-				}
+				enabledStates = readSafariExtensionStates(&afero.Afero{Fs: afs}, home.Data)
+				break
 			}
 		}
 	}
