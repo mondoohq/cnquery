@@ -344,6 +344,7 @@ secretmanager
 SECRETVALUE
 secureboot
 selfservice
+serde
 serviceconnection
 serviceprincipals
 Sflags
@@ -380,6 +381,7 @@ tensorboard
 testutils
 tgw
 throughputs
+tokio
 timestream
 tokenauth
 tokenid
