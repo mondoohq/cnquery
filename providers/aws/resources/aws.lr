@@ -2757,7 +2757,7 @@ private aws.sagemaker.experiment @defaults("arn name") {
   // Display name of the experiment
   displayName string
   // Description of the experiment
-  description string
+  description() string
   // Region where the experiment exists
   region string
   // Time when the experiment was created

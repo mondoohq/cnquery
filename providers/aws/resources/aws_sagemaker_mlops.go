@@ -81,7 +81,6 @@ func (a *mqlAwsSagemaker) getExperiments(conn *connection.AwsConnection) []*jobp
 							"arn":            llx.StringDataPtr(exp.ExperimentArn),
 							"name":           llx.StringDataPtr(exp.ExperimentName),
 							"displayName":    llx.StringDataPtr(exp.DisplayName),
-							"description":    llx.StringData(""),
 							"region":         llx.StringData(region),
 							"createdAt":      llx.TimeDataPtr(exp.CreationTime),
 							"lastModifiedAt": llx.TimeDataPtr(exp.LastModifiedTime),
@@ -106,10 +105,11 @@ func (a *mqlAwsSagemaker) getExperiments(conn *connection.AwsConnection) []*jobp
 
 type mqlAwsSagemakerExperimentInternal struct {
 	sagemakerTagsCache
-	detailsFetched  bool
-	detailsLock     sync.Mutex
-	cacheSourceArn  *string
-	cacheSourceType string
+	detailsFetched   bool
+	detailsLock      sync.Mutex
+	cacheDescription *string
+	cacheSourceArn   *string
+	cacheSourceType  string
 }
 
 func (a *mqlAwsSagemakerExperiment) id() (string, error) {
@@ -140,12 +140,20 @@ func (a *mqlAwsSagemakerExperiment) fetchDetails() error {
 		return err
 	}
 
+	a.cacheDescription = resp.Description
 	if resp.Source != nil {
 		a.cacheSourceArn = resp.Source.SourceArn
 		a.cacheSourceType = convert.ToValue(resp.Source.SourceType)
 	}
 	a.detailsFetched = true
 	return nil
+}
+
+func (a *mqlAwsSagemakerExperiment) description() (string, error) {
+	if err := a.fetchDetails(); err != nil {
+		return "", err
+	}
+	return convert.ToValue(a.cacheDescription), nil
 }
 
 func (a *mqlAwsSagemakerExperiment) source() (*mqlAwsSagemakerExperimentSource, error) {
@@ -315,9 +323,18 @@ func (a *mqlAwsSagemakerTrial) experiment() (*mqlAwsSagemakerExperiment, error) 
 		a.Experiment.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	// Cannot easily resolve experiment by name across regions - set null
-	a.Experiment.State = plugin.StateIsNull | plugin.StateIsSet
-	return nil, nil
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	partition := "aws"
+	if parts := strings.SplitN(a.Arn.Data, ":", 3); len(parts) >= 2 {
+		partition = parts[1]
+	}
+	experimentArn := fmt.Sprintf("arn:%s:sagemaker:%s:%s:experiment/%s", partition, a.Region.Data, conn.AccountId(), a.cacheExperimentName)
+	res, err := NewResource(a.MqlRuntime, "aws.sagemaker.experiment",
+		map[string]*llx.RawData{"arn": llx.StringData(experimentArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsSagemakerExperiment), nil
 }
 
 func (a *mqlAwsSagemakerTrial) source() (*mqlAwsSagemakerTrialSource, error) {

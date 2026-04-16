@@ -58527,7 +58527,9 @@ func (c *mqlAwsSagemakerExperiment) GetDisplayName() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsSagemakerExperiment) GetDescription() *plugin.TValue[string] {
-	return &c.Description
+	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
+		return c.description()
+	})
 }
 
 func (c *mqlAwsSagemakerExperiment) GetRegion() *plugin.TValue[string] {
