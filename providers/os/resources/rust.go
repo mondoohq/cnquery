@@ -80,31 +80,30 @@ func (r *mqlRustPackages) gatherData() error {
 		root, directDeps, transitiveDeps, filePaths = collectRustPackages(afs, path)
 	} else {
 		for _, searchPath := range defaultRustPaths {
-			// Cargo.lock
-			matches, err := afero.Glob(fs, filepath.Join(searchPath, "Cargo.lock"))
-			if err == nil {
-				for _, match := range matches {
-					r, _, t, f := collectRustPackages(afs, match)
+			// Prefer Cargo.lock when available (resolved truth)
+			lockMatches, _ := afero.Glob(fs, filepath.Join(searchPath, "Cargo.lock"))
+			if len(lockMatches) > 0 {
+				for _, match := range lockMatches {
+					collectedRoot, _, t, f := collectRustPackages(afs, match)
 					if root == nil {
-						root = r
+						root = collectedRoot
 					}
 					transitiveDeps = append(transitiveDeps, t...)
 					filePaths = append(filePaths, f...)
 				}
+				continue
 			}
 
-			// Cargo.toml (only if no Cargo.lock found in this path)
-			matches, err = afero.Glob(fs, filepath.Join(searchPath, "Cargo.toml"))
-			if err == nil {
-				for _, match := range matches {
-					r, d, t, f := collectRustPackages(afs, match)
-					if root == nil {
-						root = r
-					}
-					directDeps = append(directDeps, d...)
-					transitiveDeps = append(transitiveDeps, t...)
-					filePaths = append(filePaths, f...)
+			// Fall back to Cargo.toml only if no Cargo.lock in this path
+			tomlMatches, _ := afero.Glob(fs, filepath.Join(searchPath, "Cargo.toml"))
+			for _, match := range tomlMatches {
+				collectedRoot, d, t, f := collectRustPackages(afs, match)
+				if root == nil {
+					root = collectedRoot
 				}
+				directDeps = append(directDeps, d...)
+				transitiveDeps = append(transitiveDeps, t...)
+				filePaths = append(filePaths, f...)
 			}
 		}
 	}
@@ -124,7 +123,10 @@ func (r *mqlRustPackages) gatherData() error {
 	}
 
 	// Set list (union of all packages, deduplicated)
-	allPkgs := deduplicateRustPackages(append(transitiveDeps, directDeps...))
+	combined := make([]*languages.Package, 0, len(transitiveDeps)+len(directDeps))
+	combined = append(combined, transitiveDeps...)
+	combined = append(combined, directDeps...)
+	allPkgs := deduplicateRustPackages(combined)
 	slices.SortFunc(allPkgs, languages.SortFn)
 	allResources, err := newRustPackageList(r.MqlRuntime, allPkgs)
 	if err != nil {
