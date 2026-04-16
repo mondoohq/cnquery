@@ -3436,6 +3436,10 @@ private aws.sagemaker.labelingJob @defaults("arn name status") {
   outputKmsKey() aws.kms.key
   // S3 URI of the label category configuration file
   labelCategoryConfigS3Uri() string
+  // Reference to the workteam that performs the labeling
+  workteam() aws.sagemaker.workteam
+  // Reference to the human task UI used by the job
+  humanTaskUi() aws.sagemaker.humanTaskUi
 }
 
 // AWS SageMaker private workforce
@@ -3460,8 +3464,12 @@ private aws.sagemaker.workforce @defaults("arn name") {
   oidcConfig() dict
   // Allowed source CIDR ranges for worker access
   allowedIpRanges() []string
-  // VPC configuration for the workforce (null if public)
-  workforceVpcConfig() dict
+  // VPC the workforce is attached to (null if public)
+  vpc() aws.vpc
+  // Subnets the workforce uses
+  vpcSubnets() []aws.vpc.subnet
+  // Security groups associated with the workforce
+  vpcSecurityGroups() []aws.ec2.securitygroup
 }
 
 // AWS SageMaker workteam
@@ -3488,6 +3496,8 @@ private aws.sagemaker.workteam @defaults("arn name") {
   memberDefinitions dict
   // SNS topic used to notify workers of new tasks (null if unset)
   notificationTopic() aws.sns.topic
+  // Tags for the workteam
+  tags() map[string]string
 }
 
 // AWS SageMaker human task UI (worker task template)
@@ -3506,6 +3516,8 @@ private aws.sagemaker.humanTaskUi @defaults("arn name") {
   uiTemplateContentSha256() string
   // URL to the UI template
   uiTemplateUrl() string
+  // Tags for the human task UI
+  tags() map[string]string
 }
 
 // AWS SageMaker Augmented AI flow definition

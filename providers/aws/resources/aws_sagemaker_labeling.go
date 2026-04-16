@@ -238,6 +238,8 @@ type mqlAwsSagemakerLabelingJobInternal struct {
 	cacheOutputS3Uri              string
 	cacheOutputKmsKeyId           *string
 	cacheLabelCategoryConfigS3Uri string
+	cacheWorkteamArn              string
+	cacheHumanTaskUiArn           string
 }
 
 func (a *mqlAwsSagemakerLabelingJob) id() (string, error) {
@@ -277,8 +279,46 @@ func (a *mqlAwsSagemakerLabelingJob) fetchDetails() error {
 		a.cacheOutputS3Uri = convert.ToValue(resp.OutputConfig.S3OutputPath)
 		a.cacheOutputKmsKeyId = resp.OutputConfig.KmsKeyId
 	}
+	if resp.HumanTaskConfig != nil {
+		a.cacheWorkteamArn = convert.ToValue(resp.HumanTaskConfig.WorkteamArn)
+		if resp.HumanTaskConfig.UiConfig != nil {
+			a.cacheHumanTaskUiArn = convert.ToValue(resp.HumanTaskConfig.UiConfig.HumanTaskUiArn)
+		}
+	}
 	a.detailsFetched = true
 	return nil
+}
+
+func (a *mqlAwsSagemakerLabelingJob) workteam() (*mqlAwsSagemakerWorkteam, error) {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	if a.cacheWorkteamArn == "" {
+		a.Workteam.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.sagemaker.workteam",
+		map[string]*llx.RawData{"arn": llx.StringData(a.cacheWorkteamArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsSagemakerWorkteam), nil
+}
+
+func (a *mqlAwsSagemakerLabelingJob) humanTaskUi() (*mqlAwsSagemakerHumanTaskUi, error) {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	if a.cacheHumanTaskUiArn == "" {
+		a.HumanTaskUi.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.sagemaker.humanTaskUi",
+		map[string]*llx.RawData{"arn": llx.StringData(a.cacheHumanTaskUiArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsSagemakerHumanTaskUi), nil
 }
 
 func (a *mqlAwsSagemakerLabelingJob) iamRole() (*mqlAwsIamRole, error) {
@@ -414,9 +454,14 @@ func (a *mqlAwsSagemaker) getWorkforces(conn *connection.AwsConnection) []*jobpo
 						}
 					}
 					if wf.WorkforceVpcConfig != nil {
-						if d, err := convert.JsonToDict(wf.WorkforceVpcConfig); err == nil {
-							m.cacheWorkforceVpcConfig = d
+						m.cacheVpcId = wf.WorkforceVpcConfig.VpcId
+						m.cacheSubnetIds = wf.WorkforceVpcConfig.Subnets
+						accountID := conn.AccountId()
+						sgArns := make([]string, 0, len(wf.WorkforceVpcConfig.SecurityGroupIds))
+						for _, sgID := range wf.WorkforceVpcConfig.SecurityGroupIds {
+							sgArns = append(sgArns, NewSecurityGroupArn(region, accountID, sgID))
 						}
+						m.setSecurityGroupArns(sgArns)
 					}
 					m.configsLoaded = true
 
@@ -431,11 +476,13 @@ func (a *mqlAwsSagemaker) getWorkforces(conn *connection.AwsConnection) []*jobpo
 }
 
 type mqlAwsSagemakerWorkforceInternal struct {
-	configsLoaded           bool
-	cacheCognitoConfig      any
-	cacheOidcConfig         any
-	cacheWorkforceVpcConfig any
-	cacheAllowedIpRanges    []any
+	securityGroupIdHandler
+	configsLoaded        bool
+	cacheCognitoConfig   any
+	cacheOidcConfig      any
+	cacheAllowedIpRanges []any
+	cacheVpcId           *string
+	cacheSubnetIds       []string
 }
 
 func (a *mqlAwsSagemakerWorkforce) id() (string, error) {
@@ -450,12 +497,41 @@ func (a *mqlAwsSagemakerWorkforce) oidcConfig() (any, error) {
 	return a.cacheOidcConfig, nil
 }
 
-func (a *mqlAwsSagemakerWorkforce) workforceVpcConfig() (any, error) {
-	return a.cacheWorkforceVpcConfig, nil
-}
-
 func (a *mqlAwsSagemakerWorkforce) allowedIpRanges() ([]any, error) {
 	return a.cacheAllowedIpRanges, nil
+}
+
+func (a *mqlAwsSagemakerWorkforce) vpc() (*mqlAwsVpc, error) {
+	if a.cacheVpcId == nil || *a.cacheVpcId == "" {
+		a.Vpc.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.vpc",
+		map[string]*llx.RawData{"id": llx.StringDataPtr(a.cacheVpcId)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsVpc), nil
+}
+
+func (a *mqlAwsSagemakerWorkforce) vpcSubnets() ([]any, error) {
+	if len(a.cacheSubnetIds) == 0 {
+		return []any{}, nil
+	}
+	res := make([]any, 0, len(a.cacheSubnetIds))
+	for _, id := range a.cacheSubnetIds {
+		sub, err := NewResource(a.MqlRuntime, "aws.vpc.subnet",
+			map[string]*llx.RawData{"id": llx.StringData(id)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, sub)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsSagemakerWorkforce) vpcSecurityGroups() ([]any, error) {
+	return a.newSecurityGroupResources(a.MqlRuntime)
 }
 
 // ---- Workteams ----
@@ -501,6 +577,18 @@ func (a *mqlAwsSagemaker) getWorkteams(conn *connection.AwsConnection) []*jobpoo
 				}
 
 				for _, wt := range page.Workteams {
+					var eagerTags map[string]any
+					if conn.Filters.General.HasTags() {
+						tags, err := getSagemakerTags(ctx, svc, wt.WorkteamArn)
+						if err != nil {
+							return nil, err
+						}
+						if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(tags)) {
+							continue
+						}
+						eagerTags = tags
+					}
+
 					memberDefs, _ := convert.JsonToDictSlice(wt.MemberDefinitions)
 
 					mqlWt, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerWorkteam,
@@ -522,6 +610,10 @@ func (a *mqlAwsSagemaker) getWorkteams(conn *connection.AwsConnection) []*jobpoo
 					if wt.NotificationConfiguration != nil {
 						m.cacheNotificationTopicArn = wt.NotificationConfiguration.NotificationTopicArn
 					}
+					if eagerTags != nil {
+						m.cacheTags = eagerTags
+						m.tagsFetched = true
+					}
 					res = append(res, mqlWt)
 				}
 			}
@@ -533,11 +625,17 @@ func (a *mqlAwsSagemaker) getWorkteams(conn *connection.AwsConnection) []*jobpoo
 }
 
 type mqlAwsSagemakerWorkteamInternal struct {
+	sagemakerTagsCache
 	cacheNotificationTopicArn *string
 }
 
 func (a *mqlAwsSagemakerWorkteam) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsSagemakerWorkteam) tags() (map[string]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return a.fetchTags(conn, a.Region.Data, a.Arn.Data)
 }
 
 func (a *mqlAwsSagemakerWorkteam) workforce() (*mqlAwsSagemakerWorkforce, error) {
@@ -619,6 +717,18 @@ func (a *mqlAwsSagemaker) getHumanTaskUis(conn *connection.AwsConnection) []*job
 				}
 
 				for _, ht := range page.HumanTaskUiSummaries {
+					var eagerTags map[string]any
+					if conn.Filters.General.HasTags() {
+						tags, err := getSagemakerTags(ctx, svc, ht.HumanTaskUiArn)
+						if err != nil {
+							return nil, err
+						}
+						if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(tags)) {
+							continue
+						}
+						eagerTags = tags
+					}
+
 					mqlHt, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerHumanTaskUi,
 						map[string]*llx.RawData{
 							"arn":       llx.StringDataPtr(ht.HumanTaskUiArn),
@@ -628,6 +738,11 @@ func (a *mqlAwsSagemaker) getHumanTaskUis(conn *connection.AwsConnection) []*job
 						})
 					if err != nil {
 						return nil, err
+					}
+					m := mqlHt.(*mqlAwsSagemakerHumanTaskUi)
+					if eagerTags != nil {
+						m.cacheTags = eagerTags
+						m.tagsFetched = true
 					}
 					res = append(res, mqlHt)
 				}
@@ -640,6 +755,7 @@ func (a *mqlAwsSagemaker) getHumanTaskUis(conn *connection.AwsConnection) []*job
 }
 
 type mqlAwsSagemakerHumanTaskUiInternal struct {
+	sagemakerTagsCache
 	detailsLock         sync.Mutex
 	detailsFetched      bool
 	cacheStatus         string
@@ -649,6 +765,11 @@ type mqlAwsSagemakerHumanTaskUiInternal struct {
 
 func (a *mqlAwsSagemakerHumanTaskUi) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsSagemakerHumanTaskUi) tags() (map[string]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return a.fetchTags(conn, a.Region.Data, a.Arn.Data)
 }
 
 func (a *mqlAwsSagemakerHumanTaskUi) fetchDetails() error {

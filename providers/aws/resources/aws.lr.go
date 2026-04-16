@@ -7300,6 +7300,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.sagemaker.labelingJob.labelCategoryConfigS3Uri": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerLabelingJob).GetLabelCategoryConfigS3Uri()).ToDataRes(types.String)
 	},
+	"aws.sagemaker.labelingJob.workteam": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerLabelingJob).GetWorkteam()).ToDataRes(types.Resource("aws.sagemaker.workteam"))
+	},
+	"aws.sagemaker.labelingJob.humanTaskUi": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerLabelingJob).GetHumanTaskUi()).ToDataRes(types.Resource("aws.sagemaker.humanTaskUi"))
+	},
 	"aws.sagemaker.workforce.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerWorkforce).GetArn()).ToDataRes(types.String)
 	},
@@ -7330,8 +7336,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.sagemaker.workforce.allowedIpRanges": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerWorkforce).GetAllowedIpRanges()).ToDataRes(types.Array(types.String))
 	},
-	"aws.sagemaker.workforce.workforceVpcConfig": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsSagemakerWorkforce).GetWorkforceVpcConfig()).ToDataRes(types.Dict)
+	"aws.sagemaker.workforce.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerWorkforce).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
+	"aws.sagemaker.workforce.vpcSubnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerWorkforce).GetVpcSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
+	"aws.sagemaker.workforce.vpcSecurityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerWorkforce).GetVpcSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
 	},
 	"aws.sagemaker.workteam.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerWorkteam).GetArn()).ToDataRes(types.String)
@@ -7366,6 +7378,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.sagemaker.workteam.notificationTopic": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerWorkteam).GetNotificationTopic()).ToDataRes(types.Resource("aws.sns.topic"))
 	},
+	"aws.sagemaker.workteam.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerWorkteam).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"aws.sagemaker.humanTaskUi.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerHumanTaskUi).GetArn()).ToDataRes(types.String)
 	},
@@ -7386,6 +7401,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.sagemaker.humanTaskUi.uiTemplateUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerHumanTaskUi).GetUiTemplateUrl()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.humanTaskUi.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHumanTaskUi).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.sagemaker.flowDefinition.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerFlowDefinition).GetArn()).ToDataRes(types.String)
@@ -26619,6 +26637,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSagemakerLabelingJob).LabelCategoryConfigS3Uri, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.sagemaker.labelingJob.workteam": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerLabelingJob).Workteam, ok = plugin.RawToTValue[*mqlAwsSagemakerWorkteam](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.labelingJob.humanTaskUi": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerLabelingJob).HumanTaskUi, ok = plugin.RawToTValue[*mqlAwsSagemakerHumanTaskUi](v.Value, v.Error)
+		return
+	},
 	"aws.sagemaker.workforce.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerWorkforce).__id, ok = v.Value.(string)
 		return
@@ -26663,8 +26689,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSagemakerWorkforce).AllowedIpRanges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"aws.sagemaker.workforce.workforceVpcConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsSagemakerWorkforce).WorkforceVpcConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+	"aws.sagemaker.workforce.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerWorkforce).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.workforce.vpcSubnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerWorkforce).VpcSubnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.workforce.vpcSecurityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerWorkforce).VpcSecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.workteam.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26715,6 +26749,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSagemakerWorkteam).NotificationTopic, ok = plugin.RawToTValue[*mqlAwsSnsTopic](v.Value, v.Error)
 		return
 	},
+	"aws.sagemaker.workteam.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerWorkteam).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"aws.sagemaker.humanTaskUi.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerHumanTaskUi).__id, ok = v.Value.(string)
 		return
@@ -26745,6 +26783,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.sagemaker.humanTaskUi.uiTemplateUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerHumanTaskUi).UiTemplateUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.humanTaskUi.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHumanTaskUi).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.flowDefinition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -63274,6 +63316,8 @@ type mqlAwsSagemakerLabelingJob struct {
 	OutputS3Uri              plugin.TValue[string]
 	OutputKmsKey             plugin.TValue[*mqlAwsKmsKey]
 	LabelCategoryConfigS3Uri plugin.TValue[string]
+	Workteam                 plugin.TValue[*mqlAwsSagemakerWorkteam]
+	HumanTaskUi              plugin.TValue[*mqlAwsSagemakerHumanTaskUi]
 }
 
 // createAwsSagemakerLabelingJob creates a new instance of this resource
@@ -63419,22 +63463,56 @@ func (c *mqlAwsSagemakerLabelingJob) GetLabelCategoryConfigS3Uri() *plugin.TValu
 	})
 }
 
+func (c *mqlAwsSagemakerLabelingJob) GetWorkteam() *plugin.TValue[*mqlAwsSagemakerWorkteam] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerWorkteam](&c.Workteam, func() (*mqlAwsSagemakerWorkteam, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.labelingJob", c.__id, "workteam")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerWorkteam), nil
+			}
+		}
+
+		return c.workteam()
+	})
+}
+
+func (c *mqlAwsSagemakerLabelingJob) GetHumanTaskUi() *plugin.TValue[*mqlAwsSagemakerHumanTaskUi] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerHumanTaskUi](&c.HumanTaskUi, func() (*mqlAwsSagemakerHumanTaskUi, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.labelingJob", c.__id, "humanTaskUi")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerHumanTaskUi), nil
+			}
+		}
+
+		return c.humanTaskUi()
+	})
+}
+
 // mqlAwsSagemakerWorkforce for the aws.sagemaker.workforce resource
 type mqlAwsSagemakerWorkforce struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsSagemakerWorkforceInternal
-	Arn                plugin.TValue[string]
-	Name               plugin.TValue[string]
-	Region             plugin.TValue[string]
-	CreatedAt          plugin.TValue[*time.Time]
-	IpAddressType      plugin.TValue[string]
-	FailureReason      plugin.TValue[string]
-	SubDomain          plugin.TValue[string]
-	CognitoConfig      plugin.TValue[any]
-	OidcConfig         plugin.TValue[any]
-	AllowedIpRanges    plugin.TValue[[]any]
-	WorkforceVpcConfig plugin.TValue[any]
+	Arn               plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Region            plugin.TValue[string]
+	CreatedAt         plugin.TValue[*time.Time]
+	IpAddressType     plugin.TValue[string]
+	FailureReason     plugin.TValue[string]
+	SubDomain         plugin.TValue[string]
+	CognitoConfig     plugin.TValue[any]
+	OidcConfig        plugin.TValue[any]
+	AllowedIpRanges   plugin.TValue[[]any]
+	Vpc               plugin.TValue[*mqlAwsVpc]
+	VpcSubnets        plugin.TValue[[]any]
+	VpcSecurityGroups plugin.TValue[[]any]
 }
 
 // createAwsSagemakerWorkforce creates a new instance of this resource
@@ -63520,9 +63598,51 @@ func (c *mqlAwsSagemakerWorkforce) GetAllowedIpRanges() *plugin.TValue[[]any] {
 	})
 }
 
-func (c *mqlAwsSagemakerWorkforce) GetWorkforceVpcConfig() *plugin.TValue[any] {
-	return plugin.GetOrCompute[any](&c.WorkforceVpcConfig, func() (any, error) {
-		return c.workforceVpcConfig()
+func (c *mqlAwsSagemakerWorkforce) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.workforce", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
+func (c *mqlAwsSagemakerWorkforce) GetVpcSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VpcSubnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.workforce", c.__id, "vpcSubnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vpcSubnets()
+	})
+}
+
+func (c *mqlAwsSagemakerWorkforce) GetVpcSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VpcSecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.workforce", c.__id, "vpcSecurityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vpcSecurityGroups()
 	})
 }
 
@@ -63542,6 +63662,7 @@ type mqlAwsSagemakerWorkteam struct {
 	WorkteamUrl       plugin.TValue[string]
 	MemberDefinitions plugin.TValue[any]
 	NotificationTopic plugin.TValue[*mqlAwsSnsTopic]
+	Tags              plugin.TValue[map[string]any]
 }
 
 // createAwsSagemakerWorkteam creates a new instance of this resource
@@ -63649,6 +63770,12 @@ func (c *mqlAwsSagemakerWorkteam) GetNotificationTopic() *plugin.TValue[*mqlAwsS
 	})
 }
 
+func (c *mqlAwsSagemakerWorkteam) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
 // mqlAwsSagemakerHumanTaskUi for the aws.sagemaker.humanTaskUi resource
 type mqlAwsSagemakerHumanTaskUi struct {
 	MqlRuntime *plugin.Runtime
@@ -63661,6 +63788,7 @@ type mqlAwsSagemakerHumanTaskUi struct {
 	Status                  plugin.TValue[string]
 	UiTemplateContentSha256 plugin.TValue[string]
 	UiTemplateUrl           plugin.TValue[string]
+	Tags                    plugin.TValue[map[string]any]
 }
 
 // createAwsSagemakerHumanTaskUi creates a new instance of this resource
@@ -63731,6 +63859,12 @@ func (c *mqlAwsSagemakerHumanTaskUi) GetUiTemplateContentSha256() *plugin.TValue
 func (c *mqlAwsSagemakerHumanTaskUi) GetUiTemplateUrl() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.UiTemplateUrl, func() (string, error) {
 		return c.uiTemplateUrl()
+	})
+}
+
+func (c *mqlAwsSagemakerHumanTaskUi) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
 	})
 }
 

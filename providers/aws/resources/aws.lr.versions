@@ -4782,6 +4782,7 @@ aws.sagemaker.humanTaskUi.createdAt 13.13.4
 aws.sagemaker.humanTaskUi.name 13.13.4
 aws.sagemaker.humanTaskUi.region 13.13.4
 aws.sagemaker.humanTaskUi.status 13.13.4
+aws.sagemaker.humanTaskUi.tags 13.13.4
 aws.sagemaker.humanTaskUi.uiTemplateContentSha256 13.13.4
 aws.sagemaker.humanTaskUi.uiTemplateUrl 13.13.4
 aws.sagemaker.humanTaskUis 13.13.4
@@ -4865,6 +4866,7 @@ aws.sagemaker.labelingJob 13.13.4
 aws.sagemaker.labelingJob.arn 13.13.4
 aws.sagemaker.labelingJob.createdAt 13.13.4
 aws.sagemaker.labelingJob.failureReason 13.13.4
+aws.sagemaker.labelingJob.humanTaskUi 13.13.4
 aws.sagemaker.labelingJob.humansLabeled 13.13.4
 aws.sagemaker.labelingJob.iamRole 13.13.4
 aws.sagemaker.labelingJob.inputS3Uri 13.13.4
@@ -4880,6 +4882,7 @@ aws.sagemaker.labelingJob.status 13.13.4
 aws.sagemaker.labelingJob.tags 13.13.4
 aws.sagemaker.labelingJob.totalLabeled 13.13.4
 aws.sagemaker.labelingJob.unlabeled 13.13.4
+aws.sagemaker.labelingJob.workteam 13.13.4
 aws.sagemaker.labelingJobs 13.13.4
 aws.sagemaker.model 13.0.2
 aws.sagemaker.model.arn 13.0.2
@@ -5286,7 +5289,9 @@ aws.sagemaker.workforce.name 13.13.4
 aws.sagemaker.workforce.oidcConfig 13.13.4
 aws.sagemaker.workforce.region 13.13.4
 aws.sagemaker.workforce.subDomain 13.13.4
-aws.sagemaker.workforce.workforceVpcConfig 13.13.4
+aws.sagemaker.workforce.vpc 13.13.4
+aws.sagemaker.workforce.vpcSecurityGroups 13.13.4
+aws.sagemaker.workforce.vpcSubnets 13.13.4
 aws.sagemaker.workforces 13.13.4
 aws.sagemaker.workteam 13.13.4
 aws.sagemaker.workteam.arn 13.13.4
@@ -5297,6 +5302,7 @@ aws.sagemaker.workteam.memberDefinitions 13.13.4
 aws.sagemaker.workteam.name 13.13.4
 aws.sagemaker.workteam.notificationTopic 13.13.4
 aws.sagemaker.workteam.region 13.13.4
+aws.sagemaker.workteam.tags 13.13.4
 aws.sagemaker.workteam.workforce 13.13.4
 aws.sagemaker.workteam.workforceArn 13.13.4
 aws.sagemaker.workteam.workteamUrl 13.13.4
