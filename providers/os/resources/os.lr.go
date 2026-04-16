@@ -182,6 +182,8 @@ const (
 	ResourceGoPackage                    string = "go.package"
 	ResourceJavaPackages                 string = "java.packages"
 	ResourceJavaPackage                  string = "java.package"
+	ResourceRustPackages                 string = "rust.packages"
+	ResourceRustPackage                  string = "rust.package"
 	ResourceMacos                        string = "macos"
 	ResourceMacosHardware                string = "macos.hardware"
 	ResourceMacosAlf                     string = "macos.alf"
@@ -916,6 +918,14 @@ func init() {
 		"java.package": {
 			// to override args, implement: initJavaPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createJavaPackage,
+		},
+		"rust.packages": {
+			Init:   initRustPackages,
+			Create: createRustPackages,
+		},
+		"rust.package": {
+			// to override args, implement: initRustPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createRustPackage,
 		},
 		"macos": {
 			// to override args, implement: initMacos(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3620,6 +3630,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"java.package.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlJavaPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"rust.packages.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRustPackages).GetPath()).ToDataRes(types.String)
+	},
+	"rust.packages.root": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRustPackages).GetRoot()).ToDataRes(types.Resource("rust.package"))
+	},
+	"rust.packages.directDependencies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRustPackages).GetDirectDependencies()).ToDataRes(types.Array(types.Resource("rust.package")))
+	},
+	"rust.packages.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRustPackages).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"rust.packages.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRustPackages).GetList()).ToDataRes(types.Array(types.Resource("rust.package")))
+	},
+	"rust.package.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRustPackage).GetId()).ToDataRes(types.String)
+	},
+	"rust.package.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRustPackage).GetName()).ToDataRes(types.String)
+	},
+	"rust.package.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRustPackage).GetVersion()).ToDataRes(types.String)
+	},
+	"rust.package.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRustPackage).GetPurl()).ToDataRes(types.String)
+	},
+	"rust.package.cpes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRustPackage).GetCpes()).ToDataRes(types.Array(types.Resource("cpe")))
+	},
+	"rust.package.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRustPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
 	},
 	"macos.computerName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacos).GetComputerName()).ToDataRes(types.String)
@@ -8860,6 +8903,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"java.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlJavaPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"rust.packages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRustPackages).__id, ok = v.Value.(string)
+		return
+	},
+	"rust.packages.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRustPackages).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"rust.packages.root": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRustPackages).Root, ok = plugin.RawToTValue[*mqlRustPackage](v.Value, v.Error)
+		return
+	},
+	"rust.packages.directDependencies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRustPackages).DirectDependencies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"rust.packages.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRustPackages).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"rust.packages.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRustPackages).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"rust.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRustPackage).__id, ok = v.Value.(string)
+		return
+	},
+	"rust.package.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRustPackage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"rust.package.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRustPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"rust.package.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRustPackage).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"rust.package.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRustPackage).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"rust.package.cpes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRustPackage).Cpes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"rust.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRustPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"macos.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24457,6 +24552,227 @@ func (c *mqlJavaPackage) GetFiles() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("java.package", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+// mqlRustPackages for the rust.packages resource
+type mqlRustPackages struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlRustPackagesInternal
+	Path               plugin.TValue[string]
+	Root               plugin.TValue[*mqlRustPackage]
+	DirectDependencies plugin.TValue[[]any]
+	Files              plugin.TValue[[]any]
+	List               plugin.TValue[[]any]
+}
+
+// createRustPackages creates a new instance of this resource
+func createRustPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlRustPackages{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("rust.packages", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlRustPackages) MqlName() string {
+	return "rust.packages"
+}
+
+func (c *mqlRustPackages) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlRustPackages) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlRustPackages) GetRoot() *plugin.TValue[*mqlRustPackage] {
+	return plugin.GetOrCompute[*mqlRustPackage](&c.Root, func() (*mqlRustPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("rust.packages", c.__id, "root")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlRustPackage), nil
+			}
+		}
+
+		return c.root()
+	})
+}
+
+func (c *mqlRustPackages) GetDirectDependencies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DirectDependencies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("rust.packages", c.__id, "directDependencies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.directDependencies()
+	})
+}
+
+func (c *mqlRustPackages) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("rust.packages", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+func (c *mqlRustPackages) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("rust.packages", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlRustPackage for the rust.package resource
+type mqlRustPackage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlRustPackageInternal it will be used here
+	Id      plugin.TValue[string]
+	Name    plugin.TValue[string]
+	Version plugin.TValue[string]
+	Purl    plugin.TValue[string]
+	Cpes    plugin.TValue[[]any]
+	Files   plugin.TValue[[]any]
+}
+
+// createRustPackage creates a new instance of this resource
+func createRustPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlRustPackage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("rust.package", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlRustPackage) MqlName() string {
+	return "rust.package"
+}
+
+func (c *mqlRustPackage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlRustPackage) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlRustPackage) GetName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Name, func() (string, error) {
+		return c.name()
+	})
+}
+
+func (c *mqlRustPackage) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlRustPackage) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
+	})
+}
+
+func (c *mqlRustPackage) GetCpes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Cpes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("rust.package", c.__id, "cpes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.cpes()
+	})
+}
+
+func (c *mqlRustPackage) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("rust.package", c.__id, "files")
 			if err != nil {
 				return nil, err
 			}

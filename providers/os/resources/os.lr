@@ -2299,6 +2299,40 @@ java.package @defaults("name version purl") {
   files() []pkgFileInfo
 }
 
+// Rust/Cargo packages
+rust.packages {
+  []rust.package
+
+  init(path? string)
+
+  // Path to search for Cargo files
+  path string
+
+  // Root crate (may not exist)
+  root() rust.package
+
+  // List of direct dependencies
+  directDependencies() []rust.package
+
+  // Files used to determine the packages
+  files() []pkgFileInfo
+}
+
+rust.package @defaults("name version purl") {
+  // ID is the rust.package unique identifier
+  id string
+  // Name of the crate
+  name() string
+  // Version of the crate
+  version() string
+  // Package URL
+  purl() string
+  // Common Platform Enumeration (CPE) for the package
+  cpes() []core.cpe
+  // Package files
+  files() []pkgFileInfo
+}
+
 // macOS specific resources
 macos {
   // macOS computer name
