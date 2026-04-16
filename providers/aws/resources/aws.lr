@@ -1812,6 +1812,68 @@ private aws.sagemaker.endpoint @defaults("arn name") {
   lastModifiedAt time
   // Status of the endpoint: OutOfService, Creating, Updating, SystemUpdating, RollingBack, InService, Deleting, Failed, or UpdateRollbackFailed
   status string
+  // Name of the endpoint configuration
+  endpointConfigName() string
+  // Production variants deployed on this endpoint
+  productionVariants() []aws.sagemaker.endpoint.productionVariant
+  // Shadow production variants deployed on this endpoint
+  shadowProductionVariants() []aws.sagemaker.endpoint.productionVariant
+  // Data capture configuration
+  dataCaptureConfig() aws.sagemaker.endpoint.dataCaptureConfig
+}
+
+// AWS SageMaker endpoint production variant
+private aws.sagemaker.endpoint.productionVariant @defaults("variantName modelName instanceType") {
+  // Name of the variant
+  variantName string
+  // Name of the model deployed
+  modelName string
+  // ML instance type
+  instanceType string
+  // Current number of instances
+  currentInstanceCount int
+  // Desired number of instances
+  desiredInstanceCount int
+  // Current traffic weight
+  currentWeight float
+  // Desired traffic weight
+  desiredWeight float
+  // Current serverless configuration
+  currentServerlessConfig() dict
+  // Desired serverless configuration
+  desiredServerlessConfig() dict
+  // Variant status details
+  variantStatuses() []aws.sagemaker.endpoint.productionVariant.status
+  // Managed instance scaling configuration
+  managedInstanceScaling() dict
+  // Routing configuration
+  routingConfig() dict
+}
+
+// AWS SageMaker endpoint production variant status
+private aws.sagemaker.endpoint.productionVariant.status @defaults("status") {
+  // Status of the variant: Creating, Updating, Deleting, ActivatingTraffic, Baking
+  status string
+  // Status message
+  statusMessage string
+  // Time when this status started
+  startTime time
+}
+
+// AWS SageMaker endpoint data capture configuration
+private aws.sagemaker.endpoint.dataCaptureConfig @defaults("enableCapture captureStatus") {
+  // Whether data capture is enabled
+  enableCapture bool
+  // Status of data capture: Started or Stopped
+  captureStatus string
+  // Current sampling percentage
+  currentSamplingPercentage int
+  // S3 destination URI for captured data
+  destinationS3Uri string
+  // Capture modes: Input, Output
+  captureOptions []string
+  // KMS key used to encrypt captured data
+  kmsKey() aws.kms.key
 }
 
 // AWS SageMaker model
@@ -1836,6 +1898,28 @@ private aws.sagemaker.model @defaults("arn name") {
   vpcConfig() dict
   // VPC associated with this model
   vpc() aws.vpc
+  // Additional containers in the inference pipeline
+  containers() []aws.sagemaker.model.container
+  // Inference execution configuration
+  inferenceExecutionConfig() dict
+}
+
+// AWS SageMaker model container definition
+private aws.sagemaker.model.container @defaults("containerHostname image") {
+  // Hostname of the container
+  containerHostname string
+  // Docker image URI
+  image string
+  // S3 path to the model artifacts
+  modelDataUrl string
+  // Container mode: SingleModel or MultiModel
+  mode string
+  // Environment variables
+  environment map[string]string
+  // Image configuration
+  imageConfig() dict
+  // Multi-model configuration
+  multiModelConfig() dict
 }
 
 // AWS SageMaker training job
@@ -1880,6 +1964,36 @@ private aws.sagemaker.trainingjob @defaults("arn name status") {
   resourceConfig() dict
   // Stopping condition
   stoppingCondition() dict
+  // Secondary status transitions during training
+  secondaryStatusTransitions() []aws.sagemaker.trainingjob.statusTransition
+  // Final metric values achieved by the training job
+  finalMetrics() []aws.sagemaker.trainingjob.metricData
+  // Checkpoint configuration
+  checkpointConfig() dict
+  // Wall clock time in seconds
+  wallClockTimeInSeconds() int
+}
+
+// AWS SageMaker training job status transition
+private aws.sagemaker.trainingjob.statusTransition @defaults("status startTime") {
+  // Status during this transition
+  status string
+  // Time when the transition started
+  startTime time
+  // Time when the transition ended
+  endTime time
+  // Status message
+  statusMessage string
+}
+
+// AWS SageMaker training job metric data
+private aws.sagemaker.trainingjob.metricData @defaults("metricName value") {
+  // Name of the metric
+  metricName string
+  // Value of the metric
+  value float
+  // Timestamp when the metric was recorded
+  timestamp time
 }
 
 // AWS SageMaker processing job
@@ -2046,6 +2160,8 @@ private aws.sagemaker.cluster @defaults("arn name status") {
   status string
   // Time when the cluster was created
   createdAt time
+  // Time when the cluster was last modified
+  lastModifiedAt() time
   // Tags for the cluster
   tags() map[string]string
   // IAM role used for cluster operations
