@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.13.3",
-  "generated_at": "2026-04-16T09:53:34-07:00",
+  "generated_at": "2026-04-16T10:43:55-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -460,10 +460,13 @@
     "sagemaker:DescribeEndpointConfig",
     "sagemaker:DescribeExperiment",
     "sagemaker:DescribeFeatureGroup",
+    "sagemaker:DescribeFlowDefinition",
+    "sagemaker:DescribeHumanTaskUi",
     "sagemaker:DescribeHyperParameterTuningJob",
     "sagemaker:DescribeImage",
     "sagemaker:DescribeImageVersion",
     "sagemaker:DescribeInferenceComponent",
+    "sagemaker:DescribeLabelingJob",
     "sagemaker:DescribeModel",
     "sagemaker:DescribeModelBiasJobDefinition",
     "sagemaker:DescribeModelCard",
@@ -498,10 +501,13 @@
     "sagemaker:ListEndpoints",
     "sagemaker:ListExperiments",
     "sagemaker:ListFeatureGroups",
+    "sagemaker:ListFlowDefinitions",
+    "sagemaker:ListHumanTaskUis",
     "sagemaker:ListHyperParameterTuningJobs",
     "sagemaker:ListImageVersions",
     "sagemaker:ListImages",
     "sagemaker:ListInferenceComponents",
+    "sagemaker:ListLabelingJobs",
     "sagemaker:ListModelBiasJobDefinitions",
     "sagemaker:ListModelCards",
     "sagemaker:ListModelExplainabilityJobDefinitions",
@@ -523,6 +529,8 @@
     "sagemaker:ListTrialComponents",
     "sagemaker:ListTrials",
     "sagemaker:ListUserProfiles",
+    "sagemaker:ListWorkforces",
+    "sagemaker:ListWorkteams",
     "scheduler:GetSchedule",
     "scheduler:ListScheduleGroups",
     "scheduler:ListSchedules",
@@ -3461,6 +3469,18 @@
       "source_file": "aws_sagemaker.go"
     },
     {
+      "permission": "sagemaker:DescribeFlowDefinition",
+      "service": "sagemaker",
+      "action": "DescribeFlowDefinition",
+      "source_file": "aws_sagemaker_labeling.go"
+    },
+    {
+      "permission": "sagemaker:DescribeHumanTaskUi",
+      "service": "sagemaker",
+      "action": "DescribeHumanTaskUi",
+      "source_file": "aws_sagemaker_labeling.go"
+    },
+    {
       "permission": "sagemaker:DescribeHyperParameterTuningJob",
       "service": "sagemaker",
       "action": "DescribeHyperParameterTuningJob",
@@ -3483,6 +3503,12 @@
       "service": "sagemaker",
       "action": "DescribeInferenceComponent",
       "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:DescribeLabelingJob",
+      "service": "sagemaker",
+      "action": "DescribeLabelingJob",
+      "source_file": "aws_sagemaker_labeling.go"
     },
     {
       "permission": "sagemaker:DescribeModel",
@@ -3689,6 +3715,18 @@
       "source_file": "aws_sagemaker.go"
     },
     {
+      "permission": "sagemaker:ListFlowDefinitions",
+      "service": "sagemaker",
+      "action": "ListFlowDefinitions",
+      "source_file": "aws_sagemaker_labeling.go"
+    },
+    {
+      "permission": "sagemaker:ListHumanTaskUis",
+      "service": "sagemaker",
+      "action": "ListHumanTaskUis",
+      "source_file": "aws_sagemaker_labeling.go"
+    },
+    {
       "permission": "sagemaker:ListHyperParameterTuningJobs",
       "service": "sagemaker",
       "action": "ListHyperParameterTuningJobs",
@@ -3711,6 +3749,12 @@
       "service": "sagemaker",
       "action": "ListInferenceComponents",
       "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:ListLabelingJobs",
+      "service": "sagemaker",
+      "action": "ListLabelingJobs",
+      "source_file": "aws_sagemaker_labeling.go"
     },
     {
       "permission": "sagemaker:ListModelBiasJobDefinitions",
@@ -3837,6 +3881,18 @@
       "service": "sagemaker",
       "action": "ListUserProfiles",
       "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:ListWorkforces",
+      "service": "sagemaker",
+      "action": "ListWorkforces",
+      "source_file": "aws_sagemaker_labeling.go"
+    },
+    {
+      "permission": "sagemaker:ListWorkteams",
+      "service": "sagemaker",
+      "action": "ListWorkteams",
+      "source_file": "aws_sagemaker_labeling.go"
     },
     {
       "permission": "scheduler:GetSchedule",

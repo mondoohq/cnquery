@@ -177,6 +177,11 @@ const (
 	ResourceAwsSagemakerImageVersion                                            string = "aws.sagemaker.image.version"
 	ResourceAwsSagemakerAlgorithm                                               string = "aws.sagemaker.algorithm"
 	ResourceAwsSagemakerCompilationJob                                          string = "aws.sagemaker.compilationJob"
+	ResourceAwsSagemakerLabelingJob                                             string = "aws.sagemaker.labelingJob"
+	ResourceAwsSagemakerWorkforce                                               string = "aws.sagemaker.workforce"
+	ResourceAwsSagemakerWorkteam                                                string = "aws.sagemaker.workteam"
+	ResourceAwsSagemakerHumanTaskUi                                             string = "aws.sagemaker.humanTaskUi"
+	ResourceAwsSagemakerFlowDefinition                                          string = "aws.sagemaker.flowDefinition"
 	ResourceAwsSns                                                              string = "aws.sns"
 	ResourceAwsSnsTopic                                                         string = "aws.sns.topic"
 	ResourceAwsSnsSubscription                                                  string = "aws.sns.subscription"
@@ -1274,6 +1279,26 @@ func init() {
 		"aws.sagemaker.compilationJob": {
 			// to override args, implement: initAwsSagemakerCompilationJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsSagemakerCompilationJob,
+		},
+		"aws.sagemaker.labelingJob": {
+			// to override args, implement: initAwsSagemakerLabelingJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerLabelingJob,
+		},
+		"aws.sagemaker.workforce": {
+			Init:   initAwsSagemakerWorkforce,
+			Create: createAwsSagemakerWorkforce,
+		},
+		"aws.sagemaker.workteam": {
+			Init:   initAwsSagemakerWorkteam,
+			Create: createAwsSagemakerWorkteam,
+		},
+		"aws.sagemaker.humanTaskUi": {
+			Init:   initAwsSagemakerHumanTaskUi,
+			Create: createAwsSagemakerHumanTaskUi,
+		},
+		"aws.sagemaker.flowDefinition": {
+			// to override args, implement: initAwsSagemakerFlowDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerFlowDefinition,
 		},
 		"aws.sns": {
 			// to override args, implement: initAwsSns(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -5241,6 +5266,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.sagemaker.compilationJobs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemaker).GetCompilationJobs()).ToDataRes(types.Array(types.Resource("aws.sagemaker.compilationJob")))
 	},
+	"aws.sagemaker.labelingJobs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemaker).GetLabelingJobs()).ToDataRes(types.Array(types.Resource("aws.sagemaker.labelingJob")))
+	},
+	"aws.sagemaker.workforces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemaker).GetWorkforces()).ToDataRes(types.Array(types.Resource("aws.sagemaker.workforce")))
+	},
+	"aws.sagemaker.workteams": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemaker).GetWorkteams()).ToDataRes(types.Array(types.Resource("aws.sagemaker.workteam")))
+	},
+	"aws.sagemaker.humanTaskUis": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemaker).GetHumanTaskUis()).ToDataRes(types.Array(types.Resource("aws.sagemaker.humanTaskUi")))
+	},
+	"aws.sagemaker.flowDefinitions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemaker).GetFlowDefinitions()).ToDataRes(types.Array(types.Resource("aws.sagemaker.flowDefinition")))
+	},
 	"aws.sagemaker.notebookinstance.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerNotebookinstance).GetArn()).ToDataRes(types.String)
 	},
@@ -7205,6 +7245,198 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.sagemaker.compilationJob.maxRuntimeInSeconds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerCompilationJob).GetMaxRuntimeInSeconds()).ToDataRes(types.Int)
+	},
+	"aws.sagemaker.labelingJob.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerLabelingJob).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.labelingJob.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerLabelingJob).GetName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.labelingJob.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerLabelingJob).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.labelingJob.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerLabelingJob).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.labelingJob.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerLabelingJob).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.labelingJob.lastModifiedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerLabelingJob).GetLastModifiedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.labelingJob.humansLabeled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerLabelingJob).GetHumansLabeled()).ToDataRes(types.Int)
+	},
+	"aws.sagemaker.labelingJob.machinesLabeled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerLabelingJob).GetMachinesLabeled()).ToDataRes(types.Int)
+	},
+	"aws.sagemaker.labelingJob.unlabeled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerLabelingJob).GetUnlabeled()).ToDataRes(types.Int)
+	},
+	"aws.sagemaker.labelingJob.totalLabeled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerLabelingJob).GetTotalLabeled()).ToDataRes(types.Int)
+	},
+	"aws.sagemaker.labelingJob.failureReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerLabelingJob).GetFailureReason()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.labelingJob.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerLabelingJob).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.sagemaker.labelingJob.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerLabelingJob).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.sagemaker.labelingJob.labelAttributeName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerLabelingJob).GetLabelAttributeName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.labelingJob.inputS3Uri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerLabelingJob).GetInputS3Uri()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.labelingJob.outputS3Uri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerLabelingJob).GetOutputS3Uri()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.labelingJob.outputKmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerLabelingJob).GetOutputKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.sagemaker.labelingJob.labelCategoryConfigS3Uri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerLabelingJob).GetLabelCategoryConfigS3Uri()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.workforce.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerWorkforce).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.workforce.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerWorkforce).GetName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.workforce.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerWorkforce).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.workforce.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerWorkforce).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.workforce.ipAddressType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerWorkforce).GetIpAddressType()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.workforce.failureReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerWorkforce).GetFailureReason()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.workforce.subDomain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerWorkforce).GetSubDomain()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.workforce.cognitoConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerWorkforce).GetCognitoConfig()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.workforce.oidcConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerWorkforce).GetOidcConfig()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.workforce.allowedIpRanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerWorkforce).GetAllowedIpRanges()).ToDataRes(types.Array(types.String))
+	},
+	"aws.sagemaker.workforce.workforceVpcConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerWorkforce).GetWorkforceVpcConfig()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.workteam.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerWorkteam).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.workteam.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerWorkteam).GetName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.workteam.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerWorkteam).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.workteam.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerWorkteam).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.workteam.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerWorkteam).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.workteam.lastUpdatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerWorkteam).GetLastUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.workteam.workforceArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerWorkteam).GetWorkforceArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.workteam.workforce": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerWorkteam).GetWorkforce()).ToDataRes(types.Resource("aws.sagemaker.workforce"))
+	},
+	"aws.sagemaker.workteam.workteamUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerWorkteam).GetWorkteamUrl()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.workteam.memberDefinitions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerWorkteam).GetMemberDefinitions()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.workteam.notificationTopic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerWorkteam).GetNotificationTopic()).ToDataRes(types.Resource("aws.sns.topic"))
+	},
+	"aws.sagemaker.humanTaskUi.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHumanTaskUi).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.humanTaskUi.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHumanTaskUi).GetName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.humanTaskUi.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHumanTaskUi).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.humanTaskUi.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHumanTaskUi).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.humanTaskUi.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHumanTaskUi).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.humanTaskUi.uiTemplateContentSha256": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHumanTaskUi).GetUiTemplateContentSha256()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.humanTaskUi.uiTemplateUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerHumanTaskUi).GetUiTemplateUrl()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.flowDefinition.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFlowDefinition).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.flowDefinition.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFlowDefinition).GetName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.flowDefinition.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFlowDefinition).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.flowDefinition.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFlowDefinition).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.flowDefinition.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFlowDefinition).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.flowDefinition.failureReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFlowDefinition).GetFailureReason()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.flowDefinition.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFlowDefinition).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.sagemaker.flowDefinition.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFlowDefinition).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.sagemaker.flowDefinition.outputS3Uri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFlowDefinition).GetOutputS3Uri()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.flowDefinition.outputKmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFlowDefinition).GetOutputKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.sagemaker.flowDefinition.workteamArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFlowDefinition).GetWorkteamArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.flowDefinition.workteam": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFlowDefinition).GetWorkteam()).ToDataRes(types.Resource("aws.sagemaker.workteam"))
+	},
+	"aws.sagemaker.flowDefinition.humanTaskUiArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFlowDefinition).GetHumanTaskUiArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.flowDefinition.humanTaskUi": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFlowDefinition).GetHumanTaskUi()).ToDataRes(types.Resource("aws.sagemaker.humanTaskUi"))
+	},
+	"aws.sagemaker.flowDefinition.taskCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFlowDefinition).GetTaskCount()).ToDataRes(types.Int)
+	},
+	"aws.sagemaker.flowDefinition.humanLoopActivationConditions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFlowDefinition).GetHumanLoopActivationConditions()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.flowDefinition.humanLoopRequestSource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerFlowDefinition).GetHumanLoopRequestSource()).ToDataRes(types.String)
 	},
 	"aws.sns.topics": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSns).GetTopics()).ToDataRes(types.Array(types.Resource("aws.sns.topic")))
@@ -23371,6 +23603,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSagemaker).CompilationJobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.sagemaker.labelingJobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemaker).LabelingJobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.workforces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemaker).Workforces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.workteams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemaker).Workteams, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.humanTaskUis": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemaker).HumanTaskUis, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.flowDefinitions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemaker).FlowDefinitions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.sagemaker.notebookinstance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerNotebookinstance).__id, ok = v.Value.(string)
 		return
@@ -26289,6 +26541,282 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.sagemaker.compilationJob.maxRuntimeInSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerCompilationJob).MaxRuntimeInSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.labelingJob.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerLabelingJob).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.labelingJob.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerLabelingJob).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.labelingJob.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerLabelingJob).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.labelingJob.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerLabelingJob).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.labelingJob.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerLabelingJob).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.labelingJob.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerLabelingJob).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.labelingJob.lastModifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerLabelingJob).LastModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.labelingJob.humansLabeled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerLabelingJob).HumansLabeled, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.labelingJob.machinesLabeled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerLabelingJob).MachinesLabeled, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.labelingJob.unlabeled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerLabelingJob).Unlabeled, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.labelingJob.totalLabeled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerLabelingJob).TotalLabeled, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.labelingJob.failureReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerLabelingJob).FailureReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.labelingJob.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerLabelingJob).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.labelingJob.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerLabelingJob).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.labelingJob.labelAttributeName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerLabelingJob).LabelAttributeName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.labelingJob.inputS3Uri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerLabelingJob).InputS3Uri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.labelingJob.outputS3Uri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerLabelingJob).OutputS3Uri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.labelingJob.outputKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerLabelingJob).OutputKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.labelingJob.labelCategoryConfigS3Uri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerLabelingJob).LabelCategoryConfigS3Uri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.workforce.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerWorkforce).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.workforce.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerWorkforce).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.workforce.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerWorkforce).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.workforce.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerWorkforce).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.workforce.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerWorkforce).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.workforce.ipAddressType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerWorkforce).IpAddressType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.workforce.failureReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerWorkforce).FailureReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.workforce.subDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerWorkforce).SubDomain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.workforce.cognitoConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerWorkforce).CognitoConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.workforce.oidcConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerWorkforce).OidcConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.workforce.allowedIpRanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerWorkforce).AllowedIpRanges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.workforce.workforceVpcConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerWorkforce).WorkforceVpcConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.workteam.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerWorkteam).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.workteam.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerWorkteam).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.workteam.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerWorkteam).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.workteam.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerWorkteam).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.workteam.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerWorkteam).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.workteam.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerWorkteam).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.workteam.lastUpdatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerWorkteam).LastUpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.workteam.workforceArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerWorkteam).WorkforceArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.workteam.workforce": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerWorkteam).Workforce, ok = plugin.RawToTValue[*mqlAwsSagemakerWorkforce](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.workteam.workteamUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerWorkteam).WorkteamUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.workteam.memberDefinitions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerWorkteam).MemberDefinitions, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.workteam.notificationTopic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerWorkteam).NotificationTopic, ok = plugin.RawToTValue[*mqlAwsSnsTopic](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.humanTaskUi.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHumanTaskUi).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.humanTaskUi.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHumanTaskUi).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.humanTaskUi.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHumanTaskUi).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.humanTaskUi.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHumanTaskUi).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.humanTaskUi.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHumanTaskUi).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.humanTaskUi.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHumanTaskUi).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.humanTaskUi.uiTemplateContentSha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHumanTaskUi).UiTemplateContentSha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.humanTaskUi.uiTemplateUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerHumanTaskUi).UiTemplateUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.flowDefinition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFlowDefinition).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.flowDefinition.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFlowDefinition).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.flowDefinition.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFlowDefinition).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.flowDefinition.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFlowDefinition).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.flowDefinition.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFlowDefinition).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.flowDefinition.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFlowDefinition).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.flowDefinition.failureReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFlowDefinition).FailureReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.flowDefinition.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFlowDefinition).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.flowDefinition.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFlowDefinition).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.flowDefinition.outputS3Uri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFlowDefinition).OutputS3Uri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.flowDefinition.outputKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFlowDefinition).OutputKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.flowDefinition.workteamArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFlowDefinition).WorkteamArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.flowDefinition.workteam": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFlowDefinition).Workteam, ok = plugin.RawToTValue[*mqlAwsSagemakerWorkteam](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.flowDefinition.humanTaskUiArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFlowDefinition).HumanTaskUiArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.flowDefinition.humanTaskUi": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFlowDefinition).HumanTaskUi, ok = plugin.RawToTValue[*mqlAwsSagemakerHumanTaskUi](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.flowDefinition.taskCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFlowDefinition).TaskCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.flowDefinition.humanLoopActivationConditions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFlowDefinition).HumanLoopActivationConditions, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.flowDefinition.humanLoopRequestSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerFlowDefinition).HumanLoopRequestSource, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.sns.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -53808,6 +54336,11 @@ type mqlAwsSagemaker struct {
 	Images                            plugin.TValue[[]any]
 	Algorithms                        plugin.TValue[[]any]
 	CompilationJobs                   plugin.TValue[[]any]
+	LabelingJobs                      plugin.TValue[[]any]
+	Workforces                        plugin.TValue[[]any]
+	Workteams                         plugin.TValue[[]any]
+	HumanTaskUis                      plugin.TValue[[]any]
+	FlowDefinitions                   plugin.TValue[[]any]
 }
 
 // createAwsSagemaker creates a new instance of this resource
@@ -54420,6 +54953,86 @@ func (c *mqlAwsSagemaker) GetCompilationJobs() *plugin.TValue[[]any] {
 		}
 
 		return c.compilationJobs()
+	})
+}
+
+func (c *mqlAwsSagemaker) GetLabelingJobs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LabelingJobs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker", c.__id, "labelingJobs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.labelingJobs()
+	})
+}
+
+func (c *mqlAwsSagemaker) GetWorkforces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Workforces, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker", c.__id, "workforces")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.workforces()
+	})
+}
+
+func (c *mqlAwsSagemaker) GetWorkteams() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Workteams, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker", c.__id, "workteams")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.workteams()
+	})
+}
+
+func (c *mqlAwsSagemaker) GetHumanTaskUis() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.HumanTaskUis, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker", c.__id, "humanTaskUis")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.humanTaskUis()
+	})
+}
+
+func (c *mqlAwsSagemaker) GetFlowDefinitions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FlowDefinitions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker", c.__id, "flowDefinitions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.flowDefinitions()
 	})
 }
 
@@ -62635,6 +63248,680 @@ func (c *mqlAwsSagemakerCompilationJob) GetTargetPlatform() *plugin.TValue[any] 
 func (c *mqlAwsSagemakerCompilationJob) GetMaxRuntimeInSeconds() *plugin.TValue[int64] {
 	return plugin.GetOrCompute[int64](&c.MaxRuntimeInSeconds, func() (int64, error) {
 		return c.maxRuntimeInSeconds()
+	})
+}
+
+// mqlAwsSagemakerLabelingJob for the aws.sagemaker.labelingJob resource
+type mqlAwsSagemakerLabelingJob struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerLabelingJobInternal
+	Arn                      plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	Region                   plugin.TValue[string]
+	Status                   plugin.TValue[string]
+	CreatedAt                plugin.TValue[*time.Time]
+	LastModifiedAt           plugin.TValue[*time.Time]
+	HumansLabeled            plugin.TValue[int64]
+	MachinesLabeled          plugin.TValue[int64]
+	Unlabeled                plugin.TValue[int64]
+	TotalLabeled             plugin.TValue[int64]
+	FailureReason            plugin.TValue[string]
+	Tags                     plugin.TValue[map[string]any]
+	IamRole                  plugin.TValue[*mqlAwsIamRole]
+	LabelAttributeName       plugin.TValue[string]
+	InputS3Uri               plugin.TValue[string]
+	OutputS3Uri              plugin.TValue[string]
+	OutputKmsKey             plugin.TValue[*mqlAwsKmsKey]
+	LabelCategoryConfigS3Uri plugin.TValue[string]
+}
+
+// createAwsSagemakerLabelingJob creates a new instance of this resource
+func createAwsSagemakerLabelingJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerLabelingJob{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.labelingJob", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerLabelingJob) MqlName() string {
+	return "aws.sagemaker.labelingJob"
+}
+
+func (c *mqlAwsSagemakerLabelingJob) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerLabelingJob) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSagemakerLabelingJob) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSagemakerLabelingJob) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSagemakerLabelingJob) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsSagemakerLabelingJob) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSagemakerLabelingJob) GetLastModifiedAt() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedAt
+}
+
+func (c *mqlAwsSagemakerLabelingJob) GetHumansLabeled() *plugin.TValue[int64] {
+	return &c.HumansLabeled
+}
+
+func (c *mqlAwsSagemakerLabelingJob) GetMachinesLabeled() *plugin.TValue[int64] {
+	return &c.MachinesLabeled
+}
+
+func (c *mqlAwsSagemakerLabelingJob) GetUnlabeled() *plugin.TValue[int64] {
+	return &c.Unlabeled
+}
+
+func (c *mqlAwsSagemakerLabelingJob) GetTotalLabeled() *plugin.TValue[int64] {
+	return &c.TotalLabeled
+}
+
+func (c *mqlAwsSagemakerLabelingJob) GetFailureReason() *plugin.TValue[string] {
+	return &c.FailureReason
+}
+
+func (c *mqlAwsSagemakerLabelingJob) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsSagemakerLabelingJob) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.labelingJob", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsSagemakerLabelingJob) GetLabelAttributeName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LabelAttributeName, func() (string, error) {
+		return c.labelAttributeName()
+	})
+}
+
+func (c *mqlAwsSagemakerLabelingJob) GetInputS3Uri() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.InputS3Uri, func() (string, error) {
+		return c.inputS3Uri()
+	})
+}
+
+func (c *mqlAwsSagemakerLabelingJob) GetOutputS3Uri() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.OutputS3Uri, func() (string, error) {
+		return c.outputS3Uri()
+	})
+}
+
+func (c *mqlAwsSagemakerLabelingJob) GetOutputKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.OutputKmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.labelingJob", c.__id, "outputKmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.outputKmsKey()
+	})
+}
+
+func (c *mqlAwsSagemakerLabelingJob) GetLabelCategoryConfigS3Uri() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LabelCategoryConfigS3Uri, func() (string, error) {
+		return c.labelCategoryConfigS3Uri()
+	})
+}
+
+// mqlAwsSagemakerWorkforce for the aws.sagemaker.workforce resource
+type mqlAwsSagemakerWorkforce struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerWorkforceInternal
+	Arn                plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Region             plugin.TValue[string]
+	CreatedAt          plugin.TValue[*time.Time]
+	IpAddressType      plugin.TValue[string]
+	FailureReason      plugin.TValue[string]
+	SubDomain          plugin.TValue[string]
+	CognitoConfig      plugin.TValue[any]
+	OidcConfig         plugin.TValue[any]
+	AllowedIpRanges    plugin.TValue[[]any]
+	WorkforceVpcConfig plugin.TValue[any]
+}
+
+// createAwsSagemakerWorkforce creates a new instance of this resource
+func createAwsSagemakerWorkforce(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerWorkforce{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.workforce", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerWorkforce) MqlName() string {
+	return "aws.sagemaker.workforce"
+}
+
+func (c *mqlAwsSagemakerWorkforce) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerWorkforce) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSagemakerWorkforce) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSagemakerWorkforce) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSagemakerWorkforce) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSagemakerWorkforce) GetIpAddressType() *plugin.TValue[string] {
+	return &c.IpAddressType
+}
+
+func (c *mqlAwsSagemakerWorkforce) GetFailureReason() *plugin.TValue[string] {
+	return &c.FailureReason
+}
+
+func (c *mqlAwsSagemakerWorkforce) GetSubDomain() *plugin.TValue[string] {
+	return &c.SubDomain
+}
+
+func (c *mqlAwsSagemakerWorkforce) GetCognitoConfig() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.CognitoConfig, func() (any, error) {
+		return c.cognitoConfig()
+	})
+}
+
+func (c *mqlAwsSagemakerWorkforce) GetOidcConfig() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.OidcConfig, func() (any, error) {
+		return c.oidcConfig()
+	})
+}
+
+func (c *mqlAwsSagemakerWorkforce) GetAllowedIpRanges() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AllowedIpRanges, func() ([]any, error) {
+		return c.allowedIpRanges()
+	})
+}
+
+func (c *mqlAwsSagemakerWorkforce) GetWorkforceVpcConfig() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.WorkforceVpcConfig, func() (any, error) {
+		return c.workforceVpcConfig()
+	})
+}
+
+// mqlAwsSagemakerWorkteam for the aws.sagemaker.workteam resource
+type mqlAwsSagemakerWorkteam struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerWorkteamInternal
+	Arn               plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Region            plugin.TValue[string]
+	Description       plugin.TValue[string]
+	CreatedAt         plugin.TValue[*time.Time]
+	LastUpdatedAt     plugin.TValue[*time.Time]
+	WorkforceArn      plugin.TValue[string]
+	Workforce         plugin.TValue[*mqlAwsSagemakerWorkforce]
+	WorkteamUrl       plugin.TValue[string]
+	MemberDefinitions plugin.TValue[any]
+	NotificationTopic plugin.TValue[*mqlAwsSnsTopic]
+}
+
+// createAwsSagemakerWorkteam creates a new instance of this resource
+func createAwsSagemakerWorkteam(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerWorkteam{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.workteam", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerWorkteam) MqlName() string {
+	return "aws.sagemaker.workteam"
+}
+
+func (c *mqlAwsSagemakerWorkteam) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerWorkteam) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSagemakerWorkteam) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSagemakerWorkteam) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSagemakerWorkteam) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsSagemakerWorkteam) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSagemakerWorkteam) GetLastUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.LastUpdatedAt
+}
+
+func (c *mqlAwsSagemakerWorkteam) GetWorkforceArn() *plugin.TValue[string] {
+	return &c.WorkforceArn
+}
+
+func (c *mqlAwsSagemakerWorkteam) GetWorkforce() *plugin.TValue[*mqlAwsSagemakerWorkforce] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerWorkforce](&c.Workforce, func() (*mqlAwsSagemakerWorkforce, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.workteam", c.__id, "workforce")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerWorkforce), nil
+			}
+		}
+
+		return c.workforce()
+	})
+}
+
+func (c *mqlAwsSagemakerWorkteam) GetWorkteamUrl() *plugin.TValue[string] {
+	return &c.WorkteamUrl
+}
+
+func (c *mqlAwsSagemakerWorkteam) GetMemberDefinitions() *plugin.TValue[any] {
+	return &c.MemberDefinitions
+}
+
+func (c *mqlAwsSagemakerWorkteam) GetNotificationTopic() *plugin.TValue[*mqlAwsSnsTopic] {
+	return plugin.GetOrCompute[*mqlAwsSnsTopic](&c.NotificationTopic, func() (*mqlAwsSnsTopic, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.workteam", c.__id, "notificationTopic")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSnsTopic), nil
+			}
+		}
+
+		return c.notificationTopic()
+	})
+}
+
+// mqlAwsSagemakerHumanTaskUi for the aws.sagemaker.humanTaskUi resource
+type mqlAwsSagemakerHumanTaskUi struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerHumanTaskUiInternal
+	Arn                     plugin.TValue[string]
+	Name                    plugin.TValue[string]
+	Region                  plugin.TValue[string]
+	CreatedAt               plugin.TValue[*time.Time]
+	Status                  plugin.TValue[string]
+	UiTemplateContentSha256 plugin.TValue[string]
+	UiTemplateUrl           plugin.TValue[string]
+}
+
+// createAwsSagemakerHumanTaskUi creates a new instance of this resource
+func createAwsSagemakerHumanTaskUi(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerHumanTaskUi{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.humanTaskUi", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerHumanTaskUi) MqlName() string {
+	return "aws.sagemaker.humanTaskUi"
+}
+
+func (c *mqlAwsSagemakerHumanTaskUi) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerHumanTaskUi) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSagemakerHumanTaskUi) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSagemakerHumanTaskUi) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSagemakerHumanTaskUi) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSagemakerHumanTaskUi) GetStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
+		return c.status()
+	})
+}
+
+func (c *mqlAwsSagemakerHumanTaskUi) GetUiTemplateContentSha256() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.UiTemplateContentSha256, func() (string, error) {
+		return c.uiTemplateContentSha256()
+	})
+}
+
+func (c *mqlAwsSagemakerHumanTaskUi) GetUiTemplateUrl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.UiTemplateUrl, func() (string, error) {
+		return c.uiTemplateUrl()
+	})
+}
+
+// mqlAwsSagemakerFlowDefinition for the aws.sagemaker.flowDefinition resource
+type mqlAwsSagemakerFlowDefinition struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerFlowDefinitionInternal
+	Arn                           plugin.TValue[string]
+	Name                          plugin.TValue[string]
+	Region                        plugin.TValue[string]
+	Status                        plugin.TValue[string]
+	CreatedAt                     plugin.TValue[*time.Time]
+	FailureReason                 plugin.TValue[string]
+	Tags                          plugin.TValue[map[string]any]
+	IamRole                       plugin.TValue[*mqlAwsIamRole]
+	OutputS3Uri                   plugin.TValue[string]
+	OutputKmsKey                  plugin.TValue[*mqlAwsKmsKey]
+	WorkteamArn                   plugin.TValue[string]
+	Workteam                      plugin.TValue[*mqlAwsSagemakerWorkteam]
+	HumanTaskUiArn                plugin.TValue[string]
+	HumanTaskUi                   plugin.TValue[*mqlAwsSagemakerHumanTaskUi]
+	TaskCount                     plugin.TValue[int64]
+	HumanLoopActivationConditions plugin.TValue[string]
+	HumanLoopRequestSource        plugin.TValue[string]
+}
+
+// createAwsSagemakerFlowDefinition creates a new instance of this resource
+func createAwsSagemakerFlowDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerFlowDefinition{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.flowDefinition", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerFlowDefinition) MqlName() string {
+	return "aws.sagemaker.flowDefinition"
+}
+
+func (c *mqlAwsSagemakerFlowDefinition) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerFlowDefinition) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSagemakerFlowDefinition) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSagemakerFlowDefinition) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSagemakerFlowDefinition) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsSagemakerFlowDefinition) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSagemakerFlowDefinition) GetFailureReason() *plugin.TValue[string] {
+	return &c.FailureReason
+}
+
+func (c *mqlAwsSagemakerFlowDefinition) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsSagemakerFlowDefinition) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.flowDefinition", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsSagemakerFlowDefinition) GetOutputS3Uri() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.OutputS3Uri, func() (string, error) {
+		return c.outputS3Uri()
+	})
+}
+
+func (c *mqlAwsSagemakerFlowDefinition) GetOutputKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.OutputKmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.flowDefinition", c.__id, "outputKmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.outputKmsKey()
+	})
+}
+
+func (c *mqlAwsSagemakerFlowDefinition) GetWorkteamArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.WorkteamArn, func() (string, error) {
+		return c.workteamArn()
+	})
+}
+
+func (c *mqlAwsSagemakerFlowDefinition) GetWorkteam() *plugin.TValue[*mqlAwsSagemakerWorkteam] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerWorkteam](&c.Workteam, func() (*mqlAwsSagemakerWorkteam, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.flowDefinition", c.__id, "workteam")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerWorkteam), nil
+			}
+		}
+
+		return c.workteam()
+	})
+}
+
+func (c *mqlAwsSagemakerFlowDefinition) GetHumanTaskUiArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.HumanTaskUiArn, func() (string, error) {
+		return c.humanTaskUiArn()
+	})
+}
+
+func (c *mqlAwsSagemakerFlowDefinition) GetHumanTaskUi() *plugin.TValue[*mqlAwsSagemakerHumanTaskUi] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerHumanTaskUi](&c.HumanTaskUi, func() (*mqlAwsSagemakerHumanTaskUi, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.flowDefinition", c.__id, "humanTaskUi")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerHumanTaskUi), nil
+			}
+		}
+
+		return c.humanTaskUi()
+	})
+}
+
+func (c *mqlAwsSagemakerFlowDefinition) GetTaskCount() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.TaskCount, func() (int64, error) {
+		return c.taskCount()
+	})
+}
+
+func (c *mqlAwsSagemakerFlowDefinition) GetHumanLoopActivationConditions() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.HumanLoopActivationConditions, func() (string, error) {
+		return c.humanLoopActivationConditions()
+	})
+}
+
+func (c *mqlAwsSagemakerFlowDefinition) GetHumanLoopRequestSource() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.HumanLoopRequestSource, func() (string, error) {
+		return c.humanLoopRequestSource()
 	})
 }
 

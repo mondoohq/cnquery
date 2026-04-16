@@ -1776,6 +1776,16 @@ aws.sagemaker {
   algorithms() []aws.sagemaker.algorithm
   // List of SageMaker Neo model compilation jobs
   compilationJobs() []aws.sagemaker.compilationJob
+  // List of SageMaker Ground Truth labeling jobs
+  labelingJobs() []aws.sagemaker.labelingJob
+  // List of SageMaker workforces (private workforces tied to Cognito or OIDC)
+  workforces() []aws.sagemaker.workforce
+  // List of SageMaker workteams (subsets of workforces)
+  workteams() []aws.sagemaker.workteam
+  // List of SageMaker human task UIs (worker task templates)
+  humanTaskUis() []aws.sagemaker.humanTaskUi
+  // List of SageMaker Augmented AI (A2I) flow definitions
+  flowDefinitions() []aws.sagemaker.flowDefinition
 }
 
 // AWS SageMaker notebook instance
@@ -3386,6 +3396,154 @@ private aws.sagemaker.compilationJob @defaults("arn name status") {
   targetPlatform() dict
   // Maximum runtime in seconds
   maxRuntimeInSeconds() int
+}
+
+// AWS SageMaker Ground Truth labeling job
+private aws.sagemaker.labelingJob @defaults("arn name status") {
+  // ARN of the labeling job
+  arn string
+  // Name of the labeling job
+  name string
+  // Region where the labeling job exists
+  region string
+  // Status: InProgress, Completed, Failed, Stopping, Stopped, Initializing
+  status string
+  // Time when the job was created
+  createdAt time
+  // Time when the job was last modified
+  lastModifiedAt time
+  // Number of data objects labeled by humans
+  humansLabeled int
+  // Number of data objects labeled by machines
+  machinesLabeled int
+  // Number of data objects that could not be labeled
+  unlabeled int
+  // Total number of data objects in the job
+  totalLabeled int
+  // Failure reason if the job failed
+  failureReason string
+  // Tags for the labeling job
+  tags() map[string]string
+  // IAM execution role
+  iamRole() aws.iam.role
+  // Attribute used as the label in the output manifest
+  labelAttributeName() string
+  // S3 URI of the input manifest (list of data object locations)
+  inputS3Uri() string
+  // S3 path where labeled output is written
+  outputS3Uri() string
+  // KMS key used to encrypt the output data
+  outputKmsKey() aws.kms.key
+  // S3 URI of the label category configuration file
+  labelCategoryConfigS3Uri() string
+}
+
+// AWS SageMaker private workforce
+private aws.sagemaker.workforce @defaults("arn name") {
+  // ARN of the workforce
+  arn string
+  // Name of the workforce
+  name string
+  // Region where the workforce exists
+  region string
+  // Time when the workforce was created
+  createdAt time
+  // IP address type: ipv4 or dualstack
+  ipAddressType string
+  // Failure reason (if the workforce is in a failed state)
+  failureReason string
+  // Worker portal subdomain (e.g. workforce.sagemaker.aws)
+  subDomain string
+  // Cognito user pool configuration (null if OIDC-backed)
+  cognitoConfig() dict
+  // OIDC configuration (null if Cognito-backed)
+  oidcConfig() dict
+  // Allowed source CIDR ranges for worker access
+  allowedIpRanges() []string
+  // VPC configuration for the workforce (null if public)
+  workforceVpcConfig() dict
+}
+
+// AWS SageMaker workteam
+private aws.sagemaker.workteam @defaults("arn name") {
+  // ARN of the workteam
+  arn string
+  // Name of the workteam
+  name string
+  // Region where the workteam exists
+  region string
+  // Description of the workteam
+  description string
+  // Time when the workteam was created
+  createdAt time
+  // Time when the workteam was last updated
+  lastUpdatedAt time
+  // ARN of the owning workforce
+  workforceArn string
+  // Reference to the owning workforce
+  workforce() aws.sagemaker.workforce
+  // URI where workers log in to access tasks (worker portal)
+  workteamUrl string
+  // Member definitions (Cognito user groups or OIDC groups)
+  memberDefinitions dict
+  // SNS topic used to notify workers of new tasks (null if unset)
+  notificationTopic() aws.sns.topic
+}
+
+// AWS SageMaker human task UI (worker task template)
+private aws.sagemaker.humanTaskUi @defaults("arn name") {
+  // ARN of the human task UI
+  arn string
+  // Name of the human task UI
+  name string
+  // Region where the human task UI exists
+  region string
+  // Time when the human task UI was created
+  createdAt time
+  // Status: Active, Deleting
+  status() string
+  // SHA-256 hash of the UI template content
+  uiTemplateContentSha256() string
+  // URL to the UI template
+  uiTemplateUrl() string
+}
+
+// AWS SageMaker Augmented AI flow definition
+private aws.sagemaker.flowDefinition @defaults("arn name status") {
+  // ARN of the flow definition
+  arn string
+  // Name of the flow definition
+  name string
+  // Region where the flow definition exists
+  region string
+  // Status: Initializing, Active, Failed, Deleting
+  status string
+  // Time when the flow definition was created
+  createdAt time
+  // Failure reason if the flow definition failed
+  failureReason string
+  // Tags for the flow definition
+  tags() map[string]string
+  // IAM execution role
+  iamRole() aws.iam.role
+  // S3 path for flow output
+  outputS3Uri() string
+  // KMS key used to encrypt output
+  outputKmsKey() aws.kms.key
+  // Workteam ARN that reviews human loop tasks
+  workteamArn() string
+  // Reference to the workteam that reviews human loop tasks
+  workteam() aws.sagemaker.workteam
+  // Human task UI ARN used by the flow
+  humanTaskUiArn() string
+  // Reference to the human task UI used by the flow
+  humanTaskUi() aws.sagemaker.humanTaskUi
+  // Number of distinct workers required per task
+  taskCount() int
+  // Human loop activation conditions (JSON)
+  humanLoopActivationConditions() string
+  // Human loop request source (e.g. AWS/Textract/AnalyzeDocument/Forms/V1)
+  humanLoopRequestSource() string
 }
 
 // AWS Simple Notification Service (SNS)
