@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -18,6 +19,92 @@ import (
 	"go.mondoo.com/mql/v13/providers/aws/connection"
 	"go.mondoo.com/mql/v13/types"
 )
+
+// parseSagemakerArn extracts (partition, region, accountID, resourceName) from a SageMaker ARN.
+// Returns empty strings for missing parts.
+func parseSagemakerArn(arn string) (partition, region, account, name string) {
+	parts := strings.Split(arn, ":")
+	if len(parts) >= 6 {
+		partition = parts[1]
+		region = parts[3]
+		account = parts[4]
+		if slash := strings.Index(parts[5], "/"); slash >= 0 {
+			name = parts[5][slash+1:]
+		}
+	}
+	return
+}
+
+func initAwsSagemakerExperiment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	if args["arn"] == nil {
+		return nil, nil, errors.New("arn required to resolve sagemaker experiment")
+	}
+	arnVal := args["arn"].Value.(string)
+
+	obj, err := CreateResource(runtime, "aws.sagemaker", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	sm := obj.(*mqlAwsSagemaker)
+
+	rawResources := sm.GetExperiments()
+	if rawResources.Error == nil {
+		for _, rawResource := range rawResources.Data {
+			e := rawResource.(*mqlAwsSagemakerExperiment)
+			if e.Arn.Data == arnVal {
+				return args, e, nil
+			}
+		}
+	}
+
+	// Fallback: derive name/region from ARN so minimal fields resolve.
+	_, region, _, name := parseSagemakerArn(arnVal)
+	if args["name"] == nil && name != "" {
+		args["name"] = llx.StringData(name)
+	}
+	if args["region"] == nil && region != "" {
+		args["region"] = llx.StringData(region)
+	}
+	return args, nil, nil
+}
+
+func initAwsSagemakerModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	if args["arn"] == nil {
+		return nil, nil, errors.New("arn required to resolve sagemaker model")
+	}
+	arnVal := args["arn"].Value.(string)
+
+	obj, err := CreateResource(runtime, "aws.sagemaker", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	sm := obj.(*mqlAwsSagemaker)
+
+	rawResources := sm.GetModels()
+	if rawResources.Error == nil {
+		for _, rawResource := range rawResources.Data {
+			m := rawResource.(*mqlAwsSagemakerModel)
+			if m.Arn.Data == arnVal {
+				return args, m, nil
+			}
+		}
+	}
+
+	_, region, _, name := parseSagemakerArn(arnVal)
+	if args["name"] == nil && name != "" {
+		args["name"] = llx.StringData(name)
+	}
+	if args["region"] == nil && region != "" {
+		args["region"] = llx.StringData(region)
+	}
+	return args, nil, nil
+}
 
 // ---- Experiments ----
 
@@ -501,11 +588,14 @@ func (a *mqlAwsSagemaker) getTrialComponents(conn *connection.AwsConnection) []*
 
 type mqlAwsSagemakerTrialComponentInternal struct {
 	sagemakerTagsCache
-	detailsFetched  bool
-	detailsLock     sync.Mutex
-	cacheSourceArn  *string
-	cacheSourceType string
-	cacheMetrics    []any
+	detailsFetched       bool
+	detailsLock          sync.Mutex
+	cacheSourceArn       *string
+	cacheSourceType      string
+	cacheMetrics         []any
+	cacheParameters      any
+	cacheInputArtifacts  any
+	cacheOutputArtifacts any
 }
 
 func (a *mqlAwsSagemakerTrialComponent) id() (string, error) {
@@ -539,6 +629,16 @@ func (a *mqlAwsSagemakerTrialComponent) fetchDetails() error {
 	if resp.Source != nil {
 		a.cacheSourceArn = resp.Source.SourceArn
 		a.cacheSourceType = convert.ToValue(resp.Source.SourceType)
+	}
+
+	if params, err := convert.JsonToDict(resp.Parameters); err == nil {
+		a.cacheParameters = params
+	}
+	if in, err := convert.JsonToDict(resp.InputArtifacts); err == nil {
+		a.cacheInputArtifacts = in
+	}
+	if out, err := convert.JsonToDict(resp.OutputArtifacts); err == nil {
+		a.cacheOutputArtifacts = out
 	}
 
 	// Build metrics
@@ -613,6 +713,27 @@ func (a *mqlAwsSagemakerTrialComponent) metrics() ([]any, error) {
 		return nil, err
 	}
 	return a.cacheMetrics, nil
+}
+
+func (a *mqlAwsSagemakerTrialComponent) parameters() (any, error) {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	return a.cacheParameters, nil
+}
+
+func (a *mqlAwsSagemakerTrialComponent) inputArtifacts() (any, error) {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	return a.cacheInputArtifacts, nil
+}
+
+func (a *mqlAwsSagemakerTrialComponent) outputArtifacts() (any, error) {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	return a.cacheOutputArtifacts, nil
 }
 
 type mqlAwsSagemakerTrialComponentSourceInternal struct {
@@ -1259,15 +1380,11 @@ func (a *mqlAwsSagemaker) getTransformJobs(conn *connection.AwsConnection) []*jo
 
 					mqlJob, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerTransformJob,
 						map[string]*llx.RawData{
-							"arn":                     llx.StringDataPtr(job.TransformJobArn),
-							"name":                    llx.StringDataPtr(job.TransformJobName),
-							"region":                  llx.StringData(region),
-							"status":                  llx.StringData(string(job.TransformJobStatus)),
-							"createdAt":               llx.TimeDataPtr(job.CreationTime),
-							"modelName":               llx.StringData(""),
-							"maxConcurrentTransforms": llx.IntData(0),
-							"maxPayloadInMB":          llx.IntData(0),
-							"batchStrategy":           llx.StringData(""),
+							"arn":       llx.StringDataPtr(job.TransformJobArn),
+							"name":      llx.StringDataPtr(job.TransformJobName),
+							"region":    llx.StringData(region),
+							"status":    llx.StringData(string(job.TransformJobStatus)),
+							"createdAt": llx.TimeDataPtr(job.CreationTime),
 						})
 					if err != nil {
 						return nil, err
@@ -1289,21 +1406,28 @@ func (a *mqlAwsSagemaker) getTransformJobs(conn *connection.AwsConnection) []*jo
 
 type mqlAwsSagemakerTransformJobInternal struct {
 	sagemakerTagsCache
-	detailsFetched     bool
-	detailsLock        sync.Mutex
-	cacheFailureReason string
+	detailsFetched               bool
+	detailsLock                  sync.Mutex
+	cacheFailureReason           string
+	cacheModelName               string
+	cacheMaxConcurrentTransforms int64
+	cacheMaxPayloadInMB          int64
+	cacheBatchStrategy           string
 	// Transform input
+	hasInput                  bool
 	cacheInputS3Uri           string
 	cacheInputDataSource      string
 	cacheInputContentType     string
 	cacheInputCompressionType string
 	cacheInputSplitType       string
 	// Transform output
+	hasOutput               bool
 	cacheOutputS3Uri        string
 	cacheOutputAccept       string
 	cacheOutputAssembleWith string
 	cacheOutputKmsKeyId     *string
 	// Transform resources
+	hasResources               bool
 	cacheResourceInstanceType  string
 	cacheResourceInstanceCount int64
 	cacheResourceVolumeKmsKey  *string
@@ -1338,8 +1462,17 @@ func (a *mqlAwsSagemakerTransformJob) fetchDetails() error {
 	}
 
 	a.cacheFailureReason = convert.ToValue(resp.FailureReason)
+	a.cacheModelName = convert.ToValue(resp.ModelName)
+	a.cacheBatchStrategy = string(resp.BatchStrategy)
+	if resp.MaxConcurrentTransforms != nil {
+		a.cacheMaxConcurrentTransforms = int64(*resp.MaxConcurrentTransforms)
+	}
+	if resp.MaxPayloadInMB != nil {
+		a.cacheMaxPayloadInMB = int64(*resp.MaxPayloadInMB)
+	}
 
 	if resp.TransformInput != nil {
+		a.hasInput = true
 		ti := resp.TransformInput
 		a.cacheInputContentType = convert.ToValue(ti.ContentType)
 		a.cacheInputCompressionType = string(ti.CompressionType)
@@ -1351,6 +1484,7 @@ func (a *mqlAwsSagemakerTransformJob) fetchDetails() error {
 	}
 
 	if resp.TransformOutput != nil {
+		a.hasOutput = true
 		to := resp.TransformOutput
 		a.cacheOutputS3Uri = convert.ToValue(to.S3OutputPath)
 		a.cacheOutputAccept = convert.ToValue(to.Accept)
@@ -1359,6 +1493,7 @@ func (a *mqlAwsSagemakerTransformJob) fetchDetails() error {
 	}
 
 	if resp.TransformResources != nil {
+		a.hasResources = true
 		tr := resp.TransformResources
 		a.cacheResourceInstanceType = string(tr.InstanceType)
 		if tr.InstanceCount != nil {
@@ -1371,8 +1506,39 @@ func (a *mqlAwsSagemakerTransformJob) fetchDetails() error {
 	return nil
 }
 
+func (a *mqlAwsSagemakerTransformJob) modelName() (string, error) {
+	if err := a.fetchDetails(); err != nil {
+		return "", err
+	}
+	return a.cacheModelName, nil
+}
+
+func (a *mqlAwsSagemakerTransformJob) maxConcurrentTransforms() (int64, error) {
+	if err := a.fetchDetails(); err != nil {
+		return 0, err
+	}
+	return a.cacheMaxConcurrentTransforms, nil
+}
+
+func (a *mqlAwsSagemakerTransformJob) maxPayloadInMB() (int64, error) {
+	if err := a.fetchDetails(); err != nil {
+		return 0, err
+	}
+	return a.cacheMaxPayloadInMB, nil
+}
+
+func (a *mqlAwsSagemakerTransformJob) batchStrategy() (string, error) {
+	if err := a.fetchDetails(); err != nil {
+		return "", err
+	}
+	return a.cacheBatchStrategy, nil
+}
+
 func (a *mqlAwsSagemakerTransformJob) model() (*mqlAwsSagemakerModel, error) {
-	if a.ModelName.Data == "" {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	if a.cacheModelName == "" {
 		a.Model.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
@@ -1381,9 +1547,13 @@ func (a *mqlAwsSagemakerTransformJob) model() (*mqlAwsSagemakerModel, error) {
 	if parts := strings.SplitN(a.Arn.Data, ":", 3); len(parts) >= 2 {
 		partition = parts[1]
 	}
-	modelArn := fmt.Sprintf("arn:%s:sagemaker:%s:%s:model/%s", partition, a.Region.Data, conn.AccountId(), a.ModelName.Data)
+	modelArn := fmt.Sprintf("arn:%s:sagemaker:%s:%s:model/%s", partition, a.Region.Data, conn.AccountId(), a.cacheModelName)
 	res, err := NewResource(a.MqlRuntime, "aws.sagemaker.model",
-		map[string]*llx.RawData{"arn": llx.StringData(modelArn)})
+		map[string]*llx.RawData{
+			"arn":    llx.StringData(modelArn),
+			"name":   llx.StringData(a.cacheModelName),
+			"region": llx.StringData(a.Region.Data),
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -1401,7 +1571,7 @@ func (a *mqlAwsSagemakerTransformJob) transformInput() (*mqlAwsSagemakerTransfor
 	if err := a.fetchDetails(); err != nil {
 		return nil, err
 	}
-	if a.cacheInputS3Uri == "" && a.cacheInputContentType == "" {
+	if !a.hasInput {
 		a.TransformInput.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
@@ -1425,7 +1595,7 @@ func (a *mqlAwsSagemakerTransformJob) transformOutput() (*mqlAwsSagemakerTransfo
 	if err := a.fetchDetails(); err != nil {
 		return nil, err
 	}
-	if a.cacheOutputS3Uri == "" {
+	if !a.hasOutput {
 		a.TransformOutput.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
@@ -1448,7 +1618,7 @@ func (a *mqlAwsSagemakerTransformJob) transformResources() (*mqlAwsSagemakerTran
 	if err := a.fetchDetails(); err != nil {
 		return nil, err
 	}
-	if a.cacheResourceInstanceType == "" {
+	if !a.hasResources {
 		a.TransformResources.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}

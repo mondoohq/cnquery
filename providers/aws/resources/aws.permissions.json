@@ -1,7 +1,7 @@
 {
   "provider": "aws",
-  "version": "13.13.1",
-  "generated_at": "2026-04-15T11:18:18-07:00",
+  "version": "13.13.3",
+  "generated_at": "2026-04-16T09:29:38-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -447,37 +447,63 @@
     "s3:GetPublicAccessBlock",
     "s3:ListBucketMetricsConfigurations",
     "s3:ListBuckets",
+    "sagemaker:DescribeAutoMLJob",
     "sagemaker:DescribeCluster",
+    "sagemaker:DescribeDataQualityJobDefinition",
     "sagemaker:DescribeDomain",
+    "sagemaker:DescribeEndpoint",
     "sagemaker:DescribeEndpointConfig",
+    "sagemaker:DescribeExperiment",
     "sagemaker:DescribeFeatureGroup",
+    "sagemaker:DescribeHyperParameterTuningJob",
     "sagemaker:DescribeInferenceComponent",
     "sagemaker:DescribeModel",
+    "sagemaker:DescribeModelBiasJobDefinition",
     "sagemaker:DescribeModelCard",
+    "sagemaker:DescribeModelExplainabilityJobDefinition",
     "sagemaker:DescribeModelPackage",
     "sagemaker:DescribeModelPackageGroup",
+    "sagemaker:DescribeModelQualityJobDefinition",
+    "sagemaker:DescribeMonitoringSchedule",
     "sagemaker:DescribeNotebookInstance",
     "sagemaker:DescribePipeline",
     "sagemaker:DescribeProcessingJob",
+    "sagemaker:DescribeProject",
     "sagemaker:DescribeSpace",
     "sagemaker:DescribeTrainingJob",
+    "sagemaker:DescribeTransformJob",
+    "sagemaker:DescribeTrial",
+    "sagemaker:DescribeTrialComponent",
     "sagemaker:DescribeUserProfile",
+    "sagemaker:ListAutoMLJobs",
     "sagemaker:ListClusterNodes",
     "sagemaker:ListClusters",
+    "sagemaker:ListDataQualityJobDefinitions",
     "sagemaker:ListDomains",
+    "sagemaker:ListEndpointConfigs",
     "sagemaker:ListEndpoints",
+    "sagemaker:ListExperiments",
     "sagemaker:ListFeatureGroups",
+    "sagemaker:ListHyperParameterTuningJobs",
     "sagemaker:ListInferenceComponents",
+    "sagemaker:ListModelBiasJobDefinitions",
     "sagemaker:ListModelCards",
+    "sagemaker:ListModelExplainabilityJobDefinitions",
     "sagemaker:ListModelPackageGroups",
     "sagemaker:ListModelPackages",
+    "sagemaker:ListModelQualityJobDefinitions",
     "sagemaker:ListModels",
+    "sagemaker:ListMonitoringSchedules",
     "sagemaker:ListNotebookInstances",
     "sagemaker:ListPipelines",
     "sagemaker:ListProcessingJobs",
+    "sagemaker:ListProjects",
     "sagemaker:ListSpaces",
     "sagemaker:ListTags",
     "sagemaker:ListTrainingJobs",
+    "sagemaker:ListTransformJobs",
+    "sagemaker:ListTrialComponents",
+    "sagemaker:ListTrials",
     "sagemaker:ListUserProfiles",
     "scheduler:GetSchedule",
     "scheduler:ListScheduleGroups",
@@ -3333,15 +3359,33 @@
       "source_file": "aws_s3.go"
     },
     {
+      "permission": "sagemaker:DescribeAutoMLJob",
+      "service": "sagemaker",
+      "action": "DescribeAutoMLJob",
+      "source_file": "aws_sagemaker_mlops.go"
+    },
+    {
       "permission": "sagemaker:DescribeCluster",
       "service": "sagemaker",
       "action": "DescribeCluster",
       "source_file": "aws_sagemaker.go"
     },
     {
+      "permission": "sagemaker:DescribeDataQualityJobDefinition",
+      "service": "sagemaker",
+      "action": "DescribeDataQualityJobDefinition",
+      "source_file": "aws_sagemaker_monitoring.go"
+    },
+    {
       "permission": "sagemaker:DescribeDomain",
       "service": "sagemaker",
       "action": "DescribeDomain",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:DescribeEndpoint",
+      "service": "sagemaker",
+      "action": "DescribeEndpoint",
       "source_file": "aws_sagemaker.go"
     },
     {
@@ -3351,10 +3395,28 @@
       "source_file": "aws_sagemaker.go"
     },
     {
+      "permission": "sagemaker:DescribeEndpointConfig",
+      "service": "sagemaker",
+      "action": "DescribeEndpointConfig",
+      "source_file": "aws_sagemaker_monitoring.go"
+    },
+    {
+      "permission": "sagemaker:DescribeExperiment",
+      "service": "sagemaker",
+      "action": "DescribeExperiment",
+      "source_file": "aws_sagemaker_mlops.go"
+    },
+    {
       "permission": "sagemaker:DescribeFeatureGroup",
       "service": "sagemaker",
       "action": "DescribeFeatureGroup",
       "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:DescribeHyperParameterTuningJob",
+      "service": "sagemaker",
+      "action": "DescribeHyperParameterTuningJob",
+      "source_file": "aws_sagemaker_mlops.go"
     },
     {
       "permission": "sagemaker:DescribeInferenceComponent",
@@ -3369,10 +3431,22 @@
       "source_file": "aws_sagemaker.go"
     },
     {
+      "permission": "sagemaker:DescribeModelBiasJobDefinition",
+      "service": "sagemaker",
+      "action": "DescribeModelBiasJobDefinition",
+      "source_file": "aws_sagemaker_monitoring.go"
+    },
+    {
       "permission": "sagemaker:DescribeModelCard",
       "service": "sagemaker",
       "action": "DescribeModelCard",
       "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:DescribeModelExplainabilityJobDefinition",
+      "service": "sagemaker",
+      "action": "DescribeModelExplainabilityJobDefinition",
+      "source_file": "aws_sagemaker_monitoring.go"
     },
     {
       "permission": "sagemaker:DescribeModelPackage",
@@ -3385,6 +3459,18 @@
       "service": "sagemaker",
       "action": "DescribeModelPackageGroup",
       "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:DescribeModelQualityJobDefinition",
+      "service": "sagemaker",
+      "action": "DescribeModelQualityJobDefinition",
+      "source_file": "aws_sagemaker_monitoring.go"
+    },
+    {
+      "permission": "sagemaker:DescribeMonitoringSchedule",
+      "service": "sagemaker",
+      "action": "DescribeMonitoringSchedule",
+      "source_file": "aws_sagemaker_monitoring.go"
     },
     {
       "permission": "sagemaker:DescribeNotebookInstance",
@@ -3405,6 +3491,12 @@
       "source_file": "aws_sagemaker.go"
     },
     {
+      "permission": "sagemaker:DescribeProject",
+      "service": "sagemaker",
+      "action": "DescribeProject",
+      "source_file": "aws_sagemaker_mlops.go"
+    },
+    {
       "permission": "sagemaker:DescribeSpace",
       "service": "sagemaker",
       "action": "DescribeSpace",
@@ -3417,10 +3509,34 @@
       "source_file": "aws_sagemaker.go"
     },
     {
+      "permission": "sagemaker:DescribeTransformJob",
+      "service": "sagemaker",
+      "action": "DescribeTransformJob",
+      "source_file": "aws_sagemaker_mlops.go"
+    },
+    {
+      "permission": "sagemaker:DescribeTrial",
+      "service": "sagemaker",
+      "action": "DescribeTrial",
+      "source_file": "aws_sagemaker_mlops.go"
+    },
+    {
+      "permission": "sagemaker:DescribeTrialComponent",
+      "service": "sagemaker",
+      "action": "DescribeTrialComponent",
+      "source_file": "aws_sagemaker_mlops.go"
+    },
+    {
       "permission": "sagemaker:DescribeUserProfile",
       "service": "sagemaker",
       "action": "DescribeUserProfile",
       "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:ListAutoMLJobs",
+      "service": "sagemaker",
+      "action": "ListAutoMLJobs",
+      "source_file": "aws_sagemaker_mlops.go"
     },
     {
       "permission": "sagemaker:ListClusterNodes",
@@ -3435,10 +3551,22 @@
       "source_file": "aws_sagemaker.go"
     },
     {
+      "permission": "sagemaker:ListDataQualityJobDefinitions",
+      "service": "sagemaker",
+      "action": "ListDataQualityJobDefinitions",
+      "source_file": "aws_sagemaker_monitoring.go"
+    },
+    {
       "permission": "sagemaker:ListDomains",
       "service": "sagemaker",
       "action": "ListDomains",
       "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:ListEndpointConfigs",
+      "service": "sagemaker",
+      "action": "ListEndpointConfigs",
+      "source_file": "aws_sagemaker_monitoring.go"
     },
     {
       "permission": "sagemaker:ListEndpoints",
@@ -3447,10 +3575,22 @@
       "source_file": "aws_sagemaker.go"
     },
     {
+      "permission": "sagemaker:ListExperiments",
+      "service": "sagemaker",
+      "action": "ListExperiments",
+      "source_file": "aws_sagemaker_mlops.go"
+    },
+    {
       "permission": "sagemaker:ListFeatureGroups",
       "service": "sagemaker",
       "action": "ListFeatureGroups",
       "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:ListHyperParameterTuningJobs",
+      "service": "sagemaker",
+      "action": "ListHyperParameterTuningJobs",
+      "source_file": "aws_sagemaker_mlops.go"
     },
     {
       "permission": "sagemaker:ListInferenceComponents",
@@ -3459,10 +3599,22 @@
       "source_file": "aws_sagemaker.go"
     },
     {
+      "permission": "sagemaker:ListModelBiasJobDefinitions",
+      "service": "sagemaker",
+      "action": "ListModelBiasJobDefinitions",
+      "source_file": "aws_sagemaker_monitoring.go"
+    },
+    {
       "permission": "sagemaker:ListModelCards",
       "service": "sagemaker",
       "action": "ListModelCards",
       "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:ListModelExplainabilityJobDefinitions",
+      "service": "sagemaker",
+      "action": "ListModelExplainabilityJobDefinitions",
+      "source_file": "aws_sagemaker_monitoring.go"
     },
     {
       "permission": "sagemaker:ListModelPackageGroups",
@@ -3477,10 +3629,22 @@
       "source_file": "aws_sagemaker.go"
     },
     {
+      "permission": "sagemaker:ListModelQualityJobDefinitions",
+      "service": "sagemaker",
+      "action": "ListModelQualityJobDefinitions",
+      "source_file": "aws_sagemaker_monitoring.go"
+    },
+    {
       "permission": "sagemaker:ListModels",
       "service": "sagemaker",
       "action": "ListModels",
       "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:ListMonitoringSchedules",
+      "service": "sagemaker",
+      "action": "ListMonitoringSchedules",
+      "source_file": "aws_sagemaker_monitoring.go"
     },
     {
       "permission": "sagemaker:ListNotebookInstances",
@@ -3501,6 +3665,12 @@
       "source_file": "aws_sagemaker.go"
     },
     {
+      "permission": "sagemaker:ListProjects",
+      "service": "sagemaker",
+      "action": "ListProjects",
+      "source_file": "aws_sagemaker_mlops.go"
+    },
+    {
       "permission": "sagemaker:ListSpaces",
       "service": "sagemaker",
       "action": "ListSpaces",
@@ -3517,6 +3687,24 @@
       "service": "sagemaker",
       "action": "ListTrainingJobs",
       "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:ListTransformJobs",
+      "service": "sagemaker",
+      "action": "ListTransformJobs",
+      "source_file": "aws_sagemaker_mlops.go"
+    },
+    {
+      "permission": "sagemaker:ListTrialComponents",
+      "service": "sagemaker",
+      "action": "ListTrialComponents",
+      "source_file": "aws_sagemaker_mlops.go"
+    },
+    {
+      "permission": "sagemaker:ListTrials",
+      "service": "sagemaker",
+      "action": "ListTrials",
+      "source_file": "aws_sagemaker_mlops.go"
     },
     {
       "permission": "sagemaker:ListUserProfiles",

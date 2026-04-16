@@ -2831,11 +2831,11 @@ private aws.sagemaker.trialComponent @defaults("arn name") {
   // Source of the trial component
   source() aws.sagemaker.trialComponent.source
   // Parameters of the trial component
-  parameters dict
+  parameters() dict
   // Input artifacts
-  inputArtifacts dict
+  inputArtifacts() dict
   // Output artifacts
-  outputArtifacts dict
+  outputArtifacts() dict
   // Metrics for the trial component
   metrics() []aws.sagemaker.trialComponent.metricSummary
 }
@@ -3015,15 +3015,15 @@ private aws.sagemaker.transformJob @defaults("arn name status") {
   // Tags for the transform job
   tags() map[string]string
   // Name of the model used
-  modelName string
+  modelName() string
   // Typed reference to the model
   model() aws.sagemaker.model
   // Maximum concurrent transforms
-  maxConcurrentTransforms int
+  maxConcurrentTransforms() int
   // Maximum payload size in MB
-  maxPayloadInMB int
+  maxPayloadInMB() int
   // Batch strategy: MultiRecord or SingleRecord
-  batchStrategy string
+  batchStrategy() string
   // Transform input configuration
   transformInput() aws.sagemaker.transformJob.input
   // Transform output configuration

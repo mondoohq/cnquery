@@ -991,7 +991,7 @@ func init() {
 			Create: createAwsSagemakerEndpointDataCaptureConfig,
 		},
 		"aws.sagemaker.model": {
-			// to override args, implement: initAwsSagemakerModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsSagemakerModel,
 			Create: createAwsSagemakerModel,
 		},
 		"aws.sagemaker.model.container": {
@@ -1135,7 +1135,7 @@ func init() {
 			Create: createAwsSagemakerModelExplainabilityJobDefinition,
 		},
 		"aws.sagemaker.experiment": {
-			// to override args, implement: initAwsSagemakerExperiment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsSagemakerExperiment,
 			Create: createAwsSagemakerExperiment,
 		},
 		"aws.sagemaker.experiment.source": {
@@ -58914,15 +58914,21 @@ func (c *mqlAwsSagemakerTrialComponent) GetSource() *plugin.TValue[*mqlAwsSagema
 }
 
 func (c *mqlAwsSagemakerTrialComponent) GetParameters() *plugin.TValue[any] {
-	return &c.Parameters
+	return plugin.GetOrCompute[any](&c.Parameters, func() (any, error) {
+		return c.parameters()
+	})
 }
 
 func (c *mqlAwsSagemakerTrialComponent) GetInputArtifacts() *plugin.TValue[any] {
-	return &c.InputArtifacts
+	return plugin.GetOrCompute[any](&c.InputArtifacts, func() (any, error) {
+		return c.inputArtifacts()
+	})
 }
 
 func (c *mqlAwsSagemakerTrialComponent) GetOutputArtifacts() *plugin.TValue[any] {
-	return &c.OutputArtifacts
+	return plugin.GetOrCompute[any](&c.OutputArtifacts, func() (any, error) {
+		return c.outputArtifacts()
+	})
 }
 
 func (c *mqlAwsSagemakerTrialComponent) GetMetrics() *plugin.TValue[[]any] {
@@ -59895,7 +59901,9 @@ func (c *mqlAwsSagemakerTransformJob) GetTags() *plugin.TValue[map[string]any] {
 }
 
 func (c *mqlAwsSagemakerTransformJob) GetModelName() *plugin.TValue[string] {
-	return &c.ModelName
+	return plugin.GetOrCompute[string](&c.ModelName, func() (string, error) {
+		return c.modelName()
+	})
 }
 
 func (c *mqlAwsSagemakerTransformJob) GetModel() *plugin.TValue[*mqlAwsSagemakerModel] {
@@ -59915,15 +59923,21 @@ func (c *mqlAwsSagemakerTransformJob) GetModel() *plugin.TValue[*mqlAwsSagemaker
 }
 
 func (c *mqlAwsSagemakerTransformJob) GetMaxConcurrentTransforms() *plugin.TValue[int64] {
-	return &c.MaxConcurrentTransforms
+	return plugin.GetOrCompute[int64](&c.MaxConcurrentTransforms, func() (int64, error) {
+		return c.maxConcurrentTransforms()
+	})
 }
 
 func (c *mqlAwsSagemakerTransformJob) GetMaxPayloadInMB() *plugin.TValue[int64] {
-	return &c.MaxPayloadInMB
+	return plugin.GetOrCompute[int64](&c.MaxPayloadInMB, func() (int64, error) {
+		return c.maxPayloadInMB()
+	})
 }
 
 func (c *mqlAwsSagemakerTransformJob) GetBatchStrategy() *plugin.TValue[string] {
-	return &c.BatchStrategy
+	return plugin.GetOrCompute[string](&c.BatchStrategy, func() (string, error) {
+		return c.batchStrategy()
+	})
 }
 
 func (c *mqlAwsSagemakerTransformJob) GetTransformInput() *plugin.TValue[*mqlAwsSagemakerTransformJobInput] {
