@@ -330,7 +330,11 @@ func (a *mqlAwsSagemakerTrial) experiment() (*mqlAwsSagemakerExperiment, error) 
 	}
 	experimentArn := fmt.Sprintf("arn:%s:sagemaker:%s:%s:experiment/%s", partition, a.Region.Data, conn.AccountId(), a.cacheExperimentName)
 	res, err := NewResource(a.MqlRuntime, "aws.sagemaker.experiment",
-		map[string]*llx.RawData{"arn": llx.StringData(experimentArn)})
+		map[string]*llx.RawData{
+			"arn":    llx.StringData(experimentArn),
+			"name":   llx.StringData(a.cacheExperimentName),
+			"region": llx.StringData(a.Region.Data),
+		})
 	if err != nil {
 		return nil, err
 	}
