@@ -1218,13 +1218,13 @@ private oci.oke.nodePool @defaults("name") {
 
 // Oracle Cloud Infrastructure (OCI) Web Application Firewall service
 oci.waf {
-  // Web application firewalls
+  // Web Application Firewalls
   firewalls() []oci.waf.firewall
-  // Web application firewall policies
+  // Web Application Firewall policies
   policies() []oci.waf.policy
 }
 
-// Oracle Cloud Infrastructure (OCI) web application firewall
+// Oracle Cloud Infrastructure (OCI) Web Application Firewall
 private oci.waf.firewall @defaults("name") {
   // WAF OCID
   id string
@@ -1248,7 +1248,7 @@ private oci.waf.firewall @defaults("name") {
   definedTags map[string]map[string]string
 }
 
-// Oracle Cloud Infrastructure (OCI) web application firewall policy
+// Oracle Cloud Infrastructure (OCI) Web Application Firewall policy
 private oci.waf.policy @defaults("name") {
   // WAF policy OCID
   id string
