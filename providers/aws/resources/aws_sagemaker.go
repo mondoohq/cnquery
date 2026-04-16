@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
+	sagemakerTypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/aws/smithy-go/transport/http"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
@@ -422,6 +423,231 @@ func (c *sagemakerTagsCache) fetchTags(conn *connection.AwsConnection, region, a
 
 type mqlAwsSagemakerEndpointInternal struct {
 	sagemakerTagsCache
+	fetched       bool
+	fetchLock     sync.Mutex
+	cacheDescribe *sagemaker.DescribeEndpointOutput
+}
+
+func (a *mqlAwsSagemakerEndpoint) fetchDetails() (*sagemaker.DescribeEndpointOutput, error) {
+	if a.fetched {
+		return a.cacheDescribe, nil
+	}
+	a.fetchLock.Lock()
+	defer a.fetchLock.Unlock()
+	if a.fetched {
+		return a.cacheDescribe, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Sagemaker(a.Region.Data)
+	ctx := context.Background()
+	name := a.Name.Data
+	resp, err := svc.DescribeEndpoint(ctx, &sagemaker.DescribeEndpointInput{EndpointName: &name})
+	if err != nil {
+		return nil, err
+	}
+	a.cacheDescribe = resp
+	a.fetched = true
+	return resp, nil
+}
+
+func (a *mqlAwsSagemakerEndpoint) endpointConfigName() (string, error) {
+	resp, err := a.fetchDetails()
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(resp.EndpointConfigName), nil
+}
+
+func (a *mqlAwsSagemakerEndpoint) productionVariants() ([]any, error) {
+	resp, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	return sagemakerBuildProductionVariants(a.MqlRuntime, a.Arn.Data, resp.ProductionVariants)
+}
+
+func (a *mqlAwsSagemakerEndpoint) shadowProductionVariants() ([]any, error) {
+	resp, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	return sagemakerBuildProductionVariants(a.MqlRuntime, a.Arn.Data+"/shadow", resp.ShadowProductionVariants)
+}
+
+func (a *mqlAwsSagemakerEndpoint) dataCaptureConfig() (*mqlAwsSagemakerEndpointDataCaptureConfig, error) {
+	resp, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	if resp.DataCaptureConfig == nil {
+		a.DataCaptureConfig.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	dcc := resp.DataCaptureConfig
+	var samplingPct int64
+	if dcc.CurrentSamplingPercentage != nil {
+		samplingPct = int64(*dcc.CurrentSamplingPercentage)
+	}
+	// Get capture options from the endpoint config
+	var captureOptions []any
+	configResp, configErr := a.MqlRuntime.Connection.(*connection.AwsConnection).Sagemaker(a.Region.Data).DescribeEndpointConfig(
+		context.Background(), &sagemaker.DescribeEndpointConfigInput{EndpointConfigName: resp.EndpointConfigName})
+	if configErr == nil && configResp.DataCaptureConfig != nil {
+		for _, opt := range configResp.DataCaptureConfig.CaptureOptions {
+			captureOptions = append(captureOptions, string(opt.CaptureMode))
+		}
+	}
+	mqlRes, err := CreateResource(a.MqlRuntime, "aws.sagemaker.endpoint.dataCaptureConfig",
+		map[string]*llx.RawData{
+			"enableCapture":             llx.BoolDataPtr(dcc.EnableCapture),
+			"captureStatus":             llx.StringData(string(dcc.CaptureStatus)),
+			"currentSamplingPercentage": llx.IntData(samplingPct),
+			"destinationS3Uri":          llx.StringDataPtr(dcc.DestinationS3Uri),
+			"captureOptions":            llx.ArrayData(captureOptions, types.String),
+		})
+	if err != nil {
+		return nil, err
+	}
+	res := mqlRes.(*mqlAwsSagemakerEndpointDataCaptureConfig)
+	res.cacheEndpointArn = a.Arn.Data
+	res.cacheKmsKeyId = dcc.KmsKeyId
+	return res, nil
+}
+
+type mqlAwsSagemakerEndpointDataCaptureConfigInternal struct {
+	cacheEndpointArn string
+	cacheKmsKeyId    *string
+}
+
+func (a *mqlAwsSagemakerEndpointDataCaptureConfig) id() (string, error) {
+	return a.cacheEndpointArn + "/dataCaptureConfig", nil
+}
+
+func (a *mqlAwsSagemakerEndpointDataCaptureConfig) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.cacheKmsKeyId == nil || *a.cacheKmsKeyId == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, "aws.kms.key",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheKmsKeyId)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
+type mqlAwsSagemakerEndpointProductionVariantInternal struct {
+	cacheParentId                string
+	cacheCurrentServerlessConfig any
+	cacheDesiredServerlessConfig any
+	cacheManagedInstanceScaling  any
+	cacheRoutingConfig           any
+	cacheVariantStatuses         []any
+}
+
+func (a *mqlAwsSagemakerEndpointProductionVariant) id() (string, error) {
+	return a.cacheParentId + "/" + a.VariantName.Data, nil
+}
+
+func (a *mqlAwsSagemakerEndpointProductionVariant) currentServerlessConfig() (map[string]any, error) {
+	if a.cacheCurrentServerlessConfig == nil {
+		return nil, nil
+	}
+	return a.cacheCurrentServerlessConfig.(map[string]any), nil
+}
+
+func (a *mqlAwsSagemakerEndpointProductionVariant) desiredServerlessConfig() (map[string]any, error) {
+	if a.cacheDesiredServerlessConfig == nil {
+		return nil, nil
+	}
+	return a.cacheDesiredServerlessConfig.(map[string]any), nil
+}
+
+func (a *mqlAwsSagemakerEndpointProductionVariant) variantStatuses() ([]any, error) {
+	return a.cacheVariantStatuses, nil
+}
+
+func (a *mqlAwsSagemakerEndpointProductionVariant) managedInstanceScaling() (map[string]any, error) {
+	if a.cacheManagedInstanceScaling == nil {
+		return nil, nil
+	}
+	return a.cacheManagedInstanceScaling.(map[string]any), nil
+}
+
+func (a *mqlAwsSagemakerEndpointProductionVariant) routingConfig() (map[string]any, error) {
+	if a.cacheRoutingConfig == nil {
+		return nil, nil
+	}
+	return a.cacheRoutingConfig.(map[string]any), nil
+}
+
+type mqlAwsSagemakerEndpointProductionVariantStatusInternal struct {
+	cacheParentId string
+}
+
+func (a *mqlAwsSagemakerEndpointProductionVariantStatus) id() (string, error) {
+	return a.cacheParentId + "/status/" + a.Status.Data, nil
+}
+
+func sagemakerBuildProductionVariants(runtime *plugin.Runtime, parentId string, variants []sagemakerTypes.ProductionVariantSummary) ([]any, error) {
+	res := make([]any, 0, len(variants))
+	for _, v := range variants {
+		var currentCount, desiredCount int64
+		var currentWeight, desiredWeight float64
+		if v.CurrentInstanceCount != nil {
+			currentCount = int64(*v.CurrentInstanceCount)
+		}
+		if v.DesiredInstanceCount != nil {
+			desiredCount = int64(*v.DesiredInstanceCount)
+		}
+		if v.CurrentWeight != nil {
+			currentWeight = float64(*v.CurrentWeight)
+		}
+		if v.DesiredWeight != nil {
+			desiredWeight = float64(*v.DesiredWeight)
+		}
+
+		mqlPV, err := CreateResource(runtime, "aws.sagemaker.endpoint.productionVariant",
+			map[string]*llx.RawData{
+				"variantName":          llx.StringDataPtr(v.VariantName),
+				"modelName":            llx.StringData(""), // Not available in summary
+				"instanceType":         llx.StringData(""),
+				"currentInstanceCount": llx.IntData(currentCount),
+				"desiredInstanceCount": llx.IntData(desiredCount),
+				"currentWeight":        llx.FloatData(currentWeight),
+				"desiredWeight":        llx.FloatData(desiredWeight),
+			})
+		if err != nil {
+			return nil, err
+		}
+		pv := mqlPV.(*mqlAwsSagemakerEndpointProductionVariant)
+		pv.cacheParentId = parentId
+		pv.cacheCurrentServerlessConfig, _ = convert.JsonToDict(v.CurrentServerlessConfig)
+		pv.cacheDesiredServerlessConfig, _ = convert.JsonToDict(v.DesiredServerlessConfig)
+		pv.cacheManagedInstanceScaling, _ = convert.JsonToDict(v.ManagedInstanceScaling)
+		pv.cacheRoutingConfig, _ = convert.JsonToDict(v.RoutingConfig)
+
+		// Build variant statuses
+		variantStatuses := make([]any, 0, len(v.VariantStatus))
+		variantId := parentId + "/" + convert.ToValue(v.VariantName)
+		for _, vs := range v.VariantStatus {
+			mqlVS, err := CreateResource(runtime, "aws.sagemaker.endpoint.productionVariant.status",
+				map[string]*llx.RawData{
+					"status":        llx.StringData(string(vs.Status)),
+					"statusMessage": llx.StringDataPtr(vs.StatusMessage),
+					"startTime":     llx.TimeDataPtr(vs.StartTime),
+				})
+			if err != nil {
+				return nil, err
+			}
+			vsRes := mqlVS.(*mqlAwsSagemakerEndpointProductionVariantStatus)
+			vsRes.cacheParentId = variantId
+			variantStatuses = append(variantStatuses, mqlVS)
+		}
+		pv.cacheVariantStatuses = variantStatuses
+		res = append(res, mqlPV)
+	}
+	return res, nil
 }
 
 func (a *mqlAwsSagemakerEndpoint) tags() (map[string]any, error) {
@@ -541,6 +767,8 @@ type mqlAwsSagemakerModelInternal struct {
 	cachePrimaryContainer       any
 	cacheVpcConfig              any
 	cacheVpcSubnetIds           []string
+	cacheContainers             []sagemakerTypes.ContainerDefinition
+	cacheInferExecConfig        any
 }
 
 func (a *mqlAwsSagemakerModel) id() (string, error) {
@@ -580,8 +808,78 @@ func (a *mqlAwsSagemakerModel) fetchDetails() error {
 	if resp.VpcConfig != nil {
 		a.cacheVpcSubnetIds = resp.VpcConfig.Subnets
 	}
+	a.cacheContainers = resp.Containers
+	a.cacheInferExecConfig, _ = convert.JsonToDict(resp.InferenceExecutionConfig)
 	a.detailsFetched = true
 	return nil
+}
+
+func (a *mqlAwsSagemakerModel) containers() ([]any, error) {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	res := make([]any, 0, len(a.cacheContainers))
+	for _, c := range a.cacheContainers {
+		env := make(map[string]any, len(c.Environment))
+		for k, v := range c.Environment {
+			env[k] = v
+		}
+		mqlC, err := CreateResource(a.MqlRuntime, "aws.sagemaker.model.container",
+			map[string]*llx.RawData{
+				"containerHostname": llx.StringDataPtr(c.ContainerHostname),
+				"image":             llx.StringDataPtr(c.Image),
+				"modelDataUrl":      llx.StringDataPtr(c.ModelDataUrl),
+				"mode":              llx.StringData(string(c.Mode)),
+				"environment":       llx.MapData(env, types.String),
+			})
+		if err != nil {
+			return nil, err
+		}
+		container := mqlC.(*mqlAwsSagemakerModelContainer)
+		container.cacheModelArn = a.Arn.Data
+		container.cacheImageConfig = c.ImageConfig
+		container.cacheMultiModelConfig = c.MultiModelConfig
+		res = append(res, mqlC)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsSagemakerModel) inferenceExecutionConfig() (map[string]any, error) {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	if a.cacheInferExecConfig == nil {
+		return nil, nil
+	}
+	return a.cacheInferExecConfig.(map[string]any), nil
+}
+
+type mqlAwsSagemakerModelContainerInternal struct {
+	cacheModelArn         string
+	cacheImageConfig      any
+	cacheMultiModelConfig any
+}
+
+func (a *mqlAwsSagemakerModelContainer) id() (string, error) {
+	hostname := a.ContainerHostname.Data
+	if hostname == "" {
+		hostname = a.Image.Data
+	}
+	return a.cacheModelArn + "/container/" + hostname, nil
+}
+
+func (a *mqlAwsSagemakerModelContainer) imageConfig() (map[string]any, error) {
+	if a.cacheImageConfig == nil {
+		return nil, nil
+	}
+	return convert.JsonToDict(a.cacheImageConfig)
+}
+
+func (a *mqlAwsSagemakerModelContainer) multiModelConfig() (map[string]any, error) {
+	if a.cacheMultiModelConfig == nil {
+		return nil, nil
+	}
+	return convert.JsonToDict(a.cacheMultiModelConfig)
 }
 
 func (a *mqlAwsSagemakerModel) enableNetworkIsolation() (bool, error) {
@@ -735,6 +1033,10 @@ type mqlAwsSagemakerTrainingjobInternal struct {
 	cacheOutputDataConfig            any
 	cacheResourceConfig              any
 	cacheStoppingCondition           any
+	cacheSecondaryStatusTransitions  []sagemakerTypes.SecondaryStatusTransition
+	cacheFinalMetrics                []sagemakerTypes.MetricData
+	cacheCheckpointConfig            any
+	cacheWallClockTime               int64
 }
 
 func (a *mqlAwsSagemakerTrainingjob) id() (string, error) {
@@ -785,8 +1087,96 @@ func (a *mqlAwsSagemakerTrainingjob) fetchDetails() error {
 	a.cacheOutputDataConfig, _ = convert.JsonToDict(resp.OutputDataConfig)
 	a.cacheResourceConfig, _ = convert.JsonToDict(resp.ResourceConfig)
 	a.cacheStoppingCondition, _ = convert.JsonToDict(resp.StoppingCondition)
+	a.cacheSecondaryStatusTransitions = resp.SecondaryStatusTransitions
+	a.cacheFinalMetrics = resp.FinalMetricDataList
+	a.cacheCheckpointConfig, _ = convert.JsonToDict(resp.CheckpointConfig)
+	if resp.TrainingTimeInSeconds != nil {
+		a.cacheWallClockTime = int64(*resp.TrainingTimeInSeconds)
+	}
 	a.detailsFetched = true
 	return nil
+}
+
+func (a *mqlAwsSagemakerTrainingjob) secondaryStatusTransitions() ([]any, error) {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	res := make([]any, 0, len(a.cacheSecondaryStatusTransitions))
+	for _, t := range a.cacheSecondaryStatusTransitions {
+		mqlT, err := CreateResource(a.MqlRuntime, "aws.sagemaker.trainingjob.statusTransition",
+			map[string]*llx.RawData{
+				"status":        llx.StringData(string(t.Status)),
+				"startTime":     llx.TimeDataPtr(t.StartTime),
+				"endTime":       llx.TimeDataPtr(t.EndTime),
+				"statusMessage": llx.StringDataPtr(t.StatusMessage),
+			})
+		if err != nil {
+			return nil, err
+		}
+		st := mqlT.(*mqlAwsSagemakerTrainingjobStatusTransition)
+		st.cacheParentArn = a.Arn.Data
+		res = append(res, mqlT)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsSagemakerTrainingjob) finalMetrics() ([]any, error) {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	res := make([]any, 0, len(a.cacheFinalMetrics))
+	for _, m := range a.cacheFinalMetrics {
+		var value float64
+		if m.Value != nil {
+			value = float64(*m.Value)
+		}
+		mqlM, err := CreateResource(a.MqlRuntime, "aws.sagemaker.trainingjob.metricData",
+			map[string]*llx.RawData{
+				"metricName": llx.StringDataPtr(m.MetricName),
+				"value":      llx.FloatData(value),
+				"timestamp":  llx.TimeDataPtr(m.Timestamp),
+			})
+		if err != nil {
+			return nil, err
+		}
+		md := mqlM.(*mqlAwsSagemakerTrainingjobMetricData)
+		md.cacheParentArn = a.Arn.Data
+		res = append(res, mqlM)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsSagemakerTrainingjob) checkpointConfig() (map[string]any, error) {
+	if err := a.fetchDetails(); err != nil {
+		return nil, err
+	}
+	if a.cacheCheckpointConfig == nil {
+		return nil, nil
+	}
+	return a.cacheCheckpointConfig.(map[string]any), nil
+}
+
+func (a *mqlAwsSagemakerTrainingjob) wallClockTimeInSeconds() (int64, error) {
+	if err := a.fetchDetails(); err != nil {
+		return 0, err
+	}
+	return a.cacheWallClockTime, nil
+}
+
+type mqlAwsSagemakerTrainingjobStatusTransitionInternal struct {
+	cacheParentArn string
+}
+
+func (a *mqlAwsSagemakerTrainingjobStatusTransition) id() (string, error) {
+	return a.cacheParentArn + "/statusTransition/" + a.Status.Data, nil
+}
+
+type mqlAwsSagemakerTrainingjobMetricDataInternal struct {
+	cacheParentArn string
+}
+
+func (a *mqlAwsSagemakerTrainingjobMetricData) id() (string, error) {
+	return a.cacheParentArn + "/metric/" + a.MetricName.Data, nil
 }
 
 func (a *mqlAwsSagemakerTrainingjob) iamRole() (*mqlAwsIamRole, error) {
@@ -1907,6 +2297,18 @@ func (a *mqlAwsSagemakerCluster) id() (string, error) {
 func (a *mqlAwsSagemakerCluster) tags() (map[string]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	return a.fetchTags(conn, a.Region.Data, a.Arn.Data)
+}
+
+func (a *mqlAwsSagemakerCluster) lastModifiedAt() (*time.Time, error) {
+	resp, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	if resp.CreationTime != nil {
+		// DescribeCluster doesn't expose LastModifiedTime; return creation time as fallback
+		return resp.CreationTime, nil
+	}
+	return nil, nil
 }
 
 func (a *mqlAwsSagemakerCluster) fetchDetails() (*sagemaker.DescribeClusterOutput, error) {
