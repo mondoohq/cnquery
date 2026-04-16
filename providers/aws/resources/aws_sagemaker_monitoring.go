@@ -63,6 +63,17 @@ func (a *mqlAwsSagemaker) getEndpointConfigs(conn *connection.AwsConnection) []*
 				}
 
 				for _, item := range page.EndpointConfigs {
+					var eagerTags map[string]any
+					if conn.Filters.General.HasTags() {
+						tags, err := getSagemakerTags(ctx, svc, item.EndpointConfigArn)
+						if err != nil {
+							return nil, err
+						}
+						if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(tags)) {
+							continue
+						}
+						eagerTags = tags
+					}
 					mqlRes, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerEndpointConfig,
 						map[string]*llx.RawData{
 							"arn":       llx.StringDataPtr(item.EndpointConfigArn),
@@ -72,6 +83,11 @@ func (a *mqlAwsSagemaker) getEndpointConfigs(conn *connection.AwsConnection) []*
 						})
 					if err != nil {
 						return nil, err
+					}
+					ec := mqlRes.(*mqlAwsSagemakerEndpointConfig)
+					if eagerTags != nil {
+						ec.cacheTags = eagerTags
+						ec.tagsFetched = true
 					}
 					res = append(res, mqlRes)
 				}
@@ -380,6 +396,17 @@ func (a *mqlAwsSagemaker) getMonitoringSchedules(conn *connection.AwsConnection)
 				}
 
 				for _, item := range page.MonitoringScheduleSummaries {
+					var eagerTags map[string]any
+					if conn.Filters.General.HasTags() {
+						tags, err := getSagemakerTags(ctx, svc, item.MonitoringScheduleArn)
+						if err != nil {
+							return nil, err
+						}
+						if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(tags)) {
+							continue
+						}
+						eagerTags = tags
+					}
 					mqlRes, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerMonitoringSchedule,
 						map[string]*llx.RawData{
 							"arn":            llx.StringDataPtr(item.MonitoringScheduleArn),
@@ -391,6 +418,11 @@ func (a *mqlAwsSagemaker) getMonitoringSchedules(conn *connection.AwsConnection)
 						})
 					if err != nil {
 						return nil, err
+					}
+					ms := mqlRes.(*mqlAwsSagemakerMonitoringSchedule)
+					if eagerTags != nil {
+						ms.cacheTags = eagerTags
+						ms.tagsFetched = true
 					}
 					res = append(res, mqlRes)
 				}
@@ -500,10 +532,14 @@ func (a *mqlAwsSagemakerMonitoringSchedule) endpoint() (*mqlAwsSagemakerEndpoint
 		a.Endpoint.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	// We cannot easily look up an endpoint by name alone without listing all endpoints.
-	// Set as null to avoid expensive lookups.
-	a.Endpoint.State = plugin.StateIsNull | plugin.StateIsSet
-	return nil, nil
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	endpointArn := fmt.Sprintf("arn:aws:sagemaker:%s:%s:endpoint/%s", a.Region.Data, conn.AccountId(), *resp.EndpointName)
+	res, err := NewResource(a.MqlRuntime, "aws.sagemaker.endpoint",
+		map[string]*llx.RawData{"arn": llx.StringData(endpointArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsSagemakerEndpoint), nil
 }
 
 func (a *mqlAwsSagemakerMonitoringSchedule) failureReason() (string, error) {
@@ -675,21 +711,19 @@ func sagemakerBuildMonitoringJobSubResources(runtime *plugin.Runtime, details mo
 		result.jobResources = jr
 	}
 
-	// Build networkConfig
-	{
+	// Build networkConfig — only create when actually configured
+	if details.NetworkConfig != nil {
 		var enableEncrypt, enableIsolation bool
 		var subnetIds, sgIds []string
-		if details.NetworkConfig != nil {
-			if details.NetworkConfig.EnableInterContainerTrafficEncryption != nil {
-				enableEncrypt = *details.NetworkConfig.EnableInterContainerTrafficEncryption
-			}
-			if details.NetworkConfig.EnableNetworkIsolation != nil {
-				enableIsolation = *details.NetworkConfig.EnableNetworkIsolation
-			}
-			if details.NetworkConfig.VpcConfig != nil {
-				subnetIds = details.NetworkConfig.VpcConfig.Subnets
-				sgIds = details.NetworkConfig.VpcConfig.SecurityGroupIds
-			}
+		if details.NetworkConfig.EnableInterContainerTrafficEncryption != nil {
+			enableEncrypt = *details.NetworkConfig.EnableInterContainerTrafficEncryption
+		}
+		if details.NetworkConfig.EnableNetworkIsolation != nil {
+			enableIsolation = *details.NetworkConfig.EnableNetworkIsolation
+		}
+		if details.NetworkConfig.VpcConfig != nil {
+			subnetIds = details.NetworkConfig.VpcConfig.Subnets
+			sgIds = details.NetworkConfig.VpcConfig.SecurityGroupIds
 		}
 		mqlRes, err := CreateResource(runtime, ResourceAwsSagemakerMonitoringJobDefinitionNetworkConfig,
 			map[string]*llx.RawData{
