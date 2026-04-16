@@ -2231,6 +2231,40 @@ npm.package @defaults("name version purl") {
   files() []pkgFileInfo
 }
 
+// Go module packages
+go.packages {
+  []go.package
+
+  init(path? string)
+
+  // Path to search for Go module files
+  path string
+
+  // Root module (may not exist)
+  root() go.package
+
+  // List of direct dependencies
+  directDependencies() []go.package
+
+  // Files used to determine the packages
+  files() []pkgFileInfo
+}
+
+go.package @defaults("name version purl") {
+  // ID is the go.package unique identifier
+  id string
+  // Name of the module (module path)
+  name() string
+  // Version of the module
+  version() string
+  // Package URL
+  purl() string
+  // Common Platform Enumeration (CPE) for the package
+  cpes() []core.cpe
+  // Package files
+  files() []pkgFileInfo
+}
+
 // macOS specific resources
 macos {
   // macOS computer name

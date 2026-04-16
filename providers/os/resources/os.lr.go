@@ -178,6 +178,8 @@ const (
 	ResourcePythonPackage                string = "python.package"
 	ResourceNpmPackages                  string = "npm.packages"
 	ResourceNpmPackage                   string = "npm.package"
+	ResourceGoPackages                   string = "go.packages"
+	ResourceGoPackage                    string = "go.package"
 	ResourceMacos                        string = "macos"
 	ResourceMacosHardware                string = "macos.hardware"
 	ResourceMacosAlf                     string = "macos.alf"
@@ -896,6 +898,14 @@ func init() {
 		"npm.package": {
 			// to override args, implement: initNpmPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createNpmPackage,
+		},
+		"go.packages": {
+			Init:   initGoPackages,
+			Create: createGoPackages,
+		},
+		"go.package": {
+			// to override args, implement: initGoPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGoPackage,
 		},
 		"macos": {
 			// to override args, implement: initMacos(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3534,6 +3544,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"npm.package.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNpmPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"go.packages.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoPackages).GetPath()).ToDataRes(types.String)
+	},
+	"go.packages.root": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoPackages).GetRoot()).ToDataRes(types.Resource("go.package"))
+	},
+	"go.packages.directDependencies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoPackages).GetDirectDependencies()).ToDataRes(types.Array(types.Resource("go.package")))
+	},
+	"go.packages.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoPackages).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"go.packages.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoPackages).GetList()).ToDataRes(types.Array(types.Resource("go.package")))
+	},
+	"go.package.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoPackage).GetId()).ToDataRes(types.String)
+	},
+	"go.package.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoPackage).GetName()).ToDataRes(types.String)
+	},
+	"go.package.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoPackage).GetVersion()).ToDataRes(types.String)
+	},
+	"go.package.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoPackage).GetPurl()).ToDataRes(types.String)
+	},
+	"go.package.cpes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoPackage).GetCpes()).ToDataRes(types.Array(types.Resource("cpe")))
+	},
+	"go.package.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
 	},
 	"macos.computerName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacos).GetComputerName()).ToDataRes(types.String)
@@ -8670,6 +8713,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"npm.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNpmPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"go.packages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoPackages).__id, ok = v.Value.(string)
+		return
+	},
+	"go.packages.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoPackages).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"go.packages.root": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoPackages).Root, ok = plugin.RawToTValue[*mqlGoPackage](v.Value, v.Error)
+		return
+	},
+	"go.packages.directDependencies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoPackages).DirectDependencies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"go.packages.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoPackages).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"go.packages.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoPackages).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"go.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoPackage).__id, ok = v.Value.(string)
+		return
+	},
+	"go.package.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoPackage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"go.package.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"go.package.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoPackage).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"go.package.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoPackage).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"go.package.cpes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoPackage).Cpes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"go.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"macos.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -23825,6 +23920,227 @@ func (c *mqlNpmPackage) GetFiles() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("npm.package", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+// mqlGoPackages for the go.packages resource
+type mqlGoPackages struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGoPackagesInternal
+	Path               plugin.TValue[string]
+	Root               plugin.TValue[*mqlGoPackage]
+	DirectDependencies plugin.TValue[[]any]
+	Files              plugin.TValue[[]any]
+	List               plugin.TValue[[]any]
+}
+
+// createGoPackages creates a new instance of this resource
+func createGoPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGoPackages{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("go.packages", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGoPackages) MqlName() string {
+	return "go.packages"
+}
+
+func (c *mqlGoPackages) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGoPackages) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlGoPackages) GetRoot() *plugin.TValue[*mqlGoPackage] {
+	return plugin.GetOrCompute[*mqlGoPackage](&c.Root, func() (*mqlGoPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("go.packages", c.__id, "root")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGoPackage), nil
+			}
+		}
+
+		return c.root()
+	})
+}
+
+func (c *mqlGoPackages) GetDirectDependencies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DirectDependencies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("go.packages", c.__id, "directDependencies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.directDependencies()
+	})
+}
+
+func (c *mqlGoPackages) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("go.packages", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+func (c *mqlGoPackages) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("go.packages", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlGoPackage for the go.package resource
+type mqlGoPackage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGoPackageInternal it will be used here
+	Id      plugin.TValue[string]
+	Name    plugin.TValue[string]
+	Version plugin.TValue[string]
+	Purl    plugin.TValue[string]
+	Cpes    plugin.TValue[[]any]
+	Files   plugin.TValue[[]any]
+}
+
+// createGoPackage creates a new instance of this resource
+func createGoPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGoPackage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("go.package", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGoPackage) MqlName() string {
+	return "go.package"
+}
+
+func (c *mqlGoPackage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGoPackage) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGoPackage) GetName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Name, func() (string, error) {
+		return c.name()
+	})
+}
+
+func (c *mqlGoPackage) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlGoPackage) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
+	})
+}
+
+func (c *mqlGoPackage) GetCpes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Cpes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("go.package", c.__id, "cpes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.cpes()
+	})
+}
+
+func (c *mqlGoPackage) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("go.package", c.__id, "files")
 			if err != nil {
 				return nil, err
 			}

@@ -51,6 +51,7 @@ type BomFields struct {
 	Packages        []BomPackage      `json:"packages.list,omitempty"`
 	PythonPackages  []BomPackage      `json:"python.packages,omitempty"`
 	NpmPackages     []BomPackage      `json:"npm.packages.list,omitempty"`
+	GoPackages      []BomPackage      `json:"go.packages.list,omitempty"`
 	KernelInstalled []KernelInstalled `json:"kernel.installed,omitempty"`
 }
 
