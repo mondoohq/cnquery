@@ -1072,11 +1072,11 @@ func init() {
 			Create: createAwsSagemakerModelCard,
 		},
 		"aws.sagemaker.space": {
-			// to override args, implement: initAwsSagemakerSpace(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsSagemakerSpace,
 			Create: createAwsSagemakerSpace,
 		},
 		"aws.sagemaker.userProfile": {
-			// to override args, implement: initAwsSagemakerUserProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsSagemakerUserProfile,
 			Create: createAwsSagemakerUserProfile,
 		},
 		"aws.sagemaker.endpointConfig": {
@@ -1260,11 +1260,11 @@ func init() {
 			Create: createAwsSagemakerNotebookInstanceLifecycleConfig,
 		},
 		"aws.sagemaker.image": {
-			// to override args, implement: initAwsSagemakerImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsSagemakerImage,
 			Create: createAwsSagemakerImage,
 		},
 		"aws.sagemaker.image.version": {
-			// to override args, implement: initAwsSagemakerImageVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsSagemakerImageVersion,
 			Create: createAwsSagemakerImageVersion,
 		},
 		"aws.sagemaker.algorithm": {
@@ -6927,8 +6927,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.sagemaker.app.userProfileName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerApp).GetUserProfileName()).ToDataRes(types.String)
 	},
+	"aws.sagemaker.app.userProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerApp).GetUserProfile()).ToDataRes(types.Resource("aws.sagemaker.userProfile"))
+	},
 	"aws.sagemaker.app.spaceName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerApp).GetSpaceName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.app.space": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerApp).GetSpace()).ToDataRes(types.Resource("aws.sagemaker.space"))
 	},
 	"aws.sagemaker.app.lastHealthCheckAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerApp).GetLastHealthCheckAt()).ToDataRes(types.Time)
@@ -6942,11 +6948,20 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.sagemaker.app.sageMakerImageArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerApp).GetSageMakerImageArn()).ToDataRes(types.String)
 	},
+	"aws.sagemaker.app.sageMakerImage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerApp).GetSageMakerImage()).ToDataRes(types.Resource("aws.sagemaker.image"))
+	},
 	"aws.sagemaker.app.sageMakerImageVersionArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerApp).GetSageMakerImageVersionArn()).ToDataRes(types.String)
 	},
+	"aws.sagemaker.app.sageMakerImageVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerApp).GetSageMakerImageVersion()).ToDataRes(types.Resource("aws.sagemaker.image.version"))
+	},
 	"aws.sagemaker.app.instanceType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerApp).GetInstanceType()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.app.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerApp).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.sagemaker.appImageConfig.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerAppImageConfig).GetArn()).ToDataRes(types.String)
@@ -6971,6 +6986,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.sagemaker.appImageConfig.codeEditorAppImageConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerAppImageConfig).GetCodeEditorAppImageConfig()).ToDataRes(types.Dict)
+	},
+	"aws.sagemaker.appImageConfig.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerAppImageConfig).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.sagemaker.studioLifecycleConfig.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerStudioLifecycleConfig).GetArn()).ToDataRes(types.String)
@@ -7019,6 +7037,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.sagemaker.codeRepository.secret": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerCodeRepository).GetSecret()).ToDataRes(types.Resource("aws.secretsmanager.secret"))
+	},
+	"aws.sagemaker.codeRepository.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerCodeRepository).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.sagemaker.notebookInstanceLifecycleConfig.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerNotebookInstanceLifecycleConfig).GetArn()).ToDataRes(types.String)
@@ -25866,8 +25887,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSagemakerApp).UserProfileName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.sagemaker.app.userProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerApp).UserProfile, ok = plugin.RawToTValue[*mqlAwsSagemakerUserProfile](v.Value, v.Error)
+		return
+	},
 	"aws.sagemaker.app.spaceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerApp).SpaceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.app.space": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerApp).Space, ok = plugin.RawToTValue[*mqlAwsSagemakerSpace](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.app.lastHealthCheckAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25886,12 +25915,24 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSagemakerApp).SageMakerImageArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.sagemaker.app.sageMakerImage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerApp).SageMakerImage, ok = plugin.RawToTValue[*mqlAwsSagemakerImage](v.Value, v.Error)
+		return
+	},
 	"aws.sagemaker.app.sageMakerImageVersionArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerApp).SageMakerImageVersionArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.sagemaker.app.sageMakerImageVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerApp).SageMakerImageVersion, ok = plugin.RawToTValue[*mqlAwsSagemakerImageVersion](v.Value, v.Error)
+		return
+	},
 	"aws.sagemaker.app.instanceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerApp).InstanceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.app.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerApp).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.appImageConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25928,6 +25969,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.sagemaker.appImageConfig.codeEditorAppImageConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerAppImageConfig).CodeEditorAppImageConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.appImageConfig.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerAppImageConfig).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.studioLifecycleConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26000,6 +26045,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.sagemaker.codeRepository.secret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerCodeRepository).Secret, ok = plugin.RawToTValue[*mqlAwsSecretsmanagerSecret](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.codeRepository.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerCodeRepository).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.notebookInstanceLifecycleConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -61517,13 +61566,18 @@ type mqlAwsSagemakerApp struct {
 	DomainId                 plugin.TValue[string]
 	Domain                   plugin.TValue[*mqlAwsSagemakerDomain]
 	UserProfileName          plugin.TValue[string]
+	UserProfile              plugin.TValue[*mqlAwsSagemakerUserProfile]
 	SpaceName                plugin.TValue[string]
+	Space                    plugin.TValue[*mqlAwsSagemakerSpace]
 	LastHealthCheckAt        plugin.TValue[*time.Time]
 	LastUserActivityAt       plugin.TValue[*time.Time]
 	FailureReason            plugin.TValue[string]
 	SageMakerImageArn        plugin.TValue[string]
+	SageMakerImage           plugin.TValue[*mqlAwsSagemakerImage]
 	SageMakerImageVersionArn plugin.TValue[string]
+	SageMakerImageVersion    plugin.TValue[*mqlAwsSagemakerImageVersion]
 	InstanceType             plugin.TValue[string]
+	Tags                     plugin.TValue[map[string]any]
 }
 
 // createAwsSagemakerApp creates a new instance of this resource
@@ -61611,8 +61665,40 @@ func (c *mqlAwsSagemakerApp) GetUserProfileName() *plugin.TValue[string] {
 	return &c.UserProfileName
 }
 
+func (c *mqlAwsSagemakerApp) GetUserProfile() *plugin.TValue[*mqlAwsSagemakerUserProfile] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerUserProfile](&c.UserProfile, func() (*mqlAwsSagemakerUserProfile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.app", c.__id, "userProfile")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerUserProfile), nil
+			}
+		}
+
+		return c.userProfile()
+	})
+}
+
 func (c *mqlAwsSagemakerApp) GetSpaceName() *plugin.TValue[string] {
 	return &c.SpaceName
+}
+
+func (c *mqlAwsSagemakerApp) GetSpace() *plugin.TValue[*mqlAwsSagemakerSpace] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerSpace](&c.Space, func() (*mqlAwsSagemakerSpace, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.app", c.__id, "space")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerSpace), nil
+			}
+		}
+
+		return c.space()
+	})
 }
 
 func (c *mqlAwsSagemakerApp) GetLastHealthCheckAt() *plugin.TValue[*time.Time] {
@@ -61639,15 +61725,53 @@ func (c *mqlAwsSagemakerApp) GetSageMakerImageArn() *plugin.TValue[string] {
 	})
 }
 
+func (c *mqlAwsSagemakerApp) GetSageMakerImage() *plugin.TValue[*mqlAwsSagemakerImage] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerImage](&c.SageMakerImage, func() (*mqlAwsSagemakerImage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.app", c.__id, "sageMakerImage")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerImage), nil
+			}
+		}
+
+		return c.sageMakerImage()
+	})
+}
+
 func (c *mqlAwsSagemakerApp) GetSageMakerImageVersionArn() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.SageMakerImageVersionArn, func() (string, error) {
 		return c.sageMakerImageVersionArn()
 	})
 }
 
+func (c *mqlAwsSagemakerApp) GetSageMakerImageVersion() *plugin.TValue[*mqlAwsSagemakerImageVersion] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerImageVersion](&c.SageMakerImageVersion, func() (*mqlAwsSagemakerImageVersion, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.app", c.__id, "sageMakerImageVersion")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerImageVersion), nil
+			}
+		}
+
+		return c.sageMakerImageVersion()
+	})
+}
+
 func (c *mqlAwsSagemakerApp) GetInstanceType() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.InstanceType, func() (string, error) {
 		return c.instanceType()
+	})
+}
+
+func (c *mqlAwsSagemakerApp) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
 	})
 }
 
@@ -61664,6 +61788,7 @@ type mqlAwsSagemakerAppImageConfig struct {
 	KernelGatewayImageConfig plugin.TValue[any]
 	JupyterLabAppImageConfig plugin.TValue[any]
 	CodeEditorAppImageConfig plugin.TValue[any]
+	Tags                     plugin.TValue[map[string]any]
 }
 
 // createAwsSagemakerAppImageConfig creates a new instance of this resource
@@ -61738,6 +61863,12 @@ func (c *mqlAwsSagemakerAppImageConfig) GetJupyterLabAppImageConfig() *plugin.TV
 func (c *mqlAwsSagemakerAppImageConfig) GetCodeEditorAppImageConfig() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.CodeEditorAppImageConfig, func() (any, error) {
 		return c.codeEditorAppImageConfig()
+	})
+}
+
+func (c *mqlAwsSagemakerAppImageConfig) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
 	})
 }
 
@@ -61842,6 +61973,7 @@ type mqlAwsSagemakerCodeRepository struct {
 	RepositoryUrl  plugin.TValue[string]
 	Branch         plugin.TValue[string]
 	Secret         plugin.TValue[*mqlAwsSecretsmanagerSecret]
+	Tags           plugin.TValue[map[string]any]
 }
 
 // createAwsSagemakerCodeRepository creates a new instance of this resource
@@ -61926,6 +62058,12 @@ func (c *mqlAwsSagemakerCodeRepository) GetSecret() *plugin.TValue[*mqlAwsSecret
 		}
 
 		return c.secret()
+	})
+}
+
+func (c *mqlAwsSagemakerCodeRepository) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
 	})
 }
 

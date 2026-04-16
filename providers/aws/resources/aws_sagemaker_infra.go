@@ -5,7 +5,10 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -18,6 +21,175 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
 )
+
+// ---- Init functions for cross-referenced resources ----
+
+func initAwsSagemakerImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	if args["arn"] == nil {
+		return nil, nil, errors.New("arn required to resolve sagemaker image")
+	}
+	arnVal := args["arn"].Value.(string)
+
+	obj, err := CreateResource(runtime, "aws.sagemaker", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	sm := obj.(*mqlAwsSagemaker)
+
+	rawResources := sm.GetImages()
+	if rawResources.Error == nil {
+		for _, rawResource := range rawResources.Data {
+			img := rawResource.(*mqlAwsSagemakerImage)
+			if img.Arn.Data == arnVal {
+				return args, img, nil
+			}
+		}
+	}
+
+	// Fallback: derive name/region from ARN so minimal fields resolve.
+	_, region, _, name := parseSagemakerArn(arnVal)
+	if args["name"] == nil && name != "" {
+		args["name"] = llx.StringData(name)
+	}
+	if args["region"] == nil && region != "" {
+		args["region"] = llx.StringData(region)
+	}
+	return args, nil, nil
+}
+
+func initAwsSagemakerImageVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	if args["arn"] == nil {
+		return nil, nil, errors.New("arn required to resolve sagemaker image version")
+	}
+	arnVal := args["arn"].Value.(string)
+
+	// ARN format: arn:aws:sagemaker:<region>:<account>:image-version/<image-name>/<version>
+	parts := strings.Split(arnVal, ":")
+	if len(parts) < 6 {
+		return args, nil, nil
+	}
+	region := parts[3]
+	res := strings.TrimPrefix(parts[5], "image-version/")
+	segs := strings.SplitN(res, "/", 2)
+	if len(segs) < 2 {
+		return args, nil, nil
+	}
+	imageName := segs[0]
+	versionNum, err := strconv.Atoi(segs[1])
+	if err != nil {
+		return args, nil, nil
+	}
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Sagemaker(region)
+	ctx := context.Background()
+	v := int32(versionNum)
+	resp, err := svc.DescribeImageVersion(ctx, &sagemaker.DescribeImageVersionInput{
+		ImageName: &imageName,
+		Version:   &v,
+	})
+	if err != nil {
+		return args, nil, err
+	}
+
+	args["version"] = llx.IntData(int64(versionNum))
+	args["region"] = llx.StringData(region)
+	args["imageName"] = llx.StringData(imageName)
+	args["status"] = llx.StringData(string(resp.ImageVersionStatus))
+	args["createdAt"] = llx.TimeDataPtr(resp.CreationTime)
+	args["lastModifiedAt"] = llx.TimeDataPtr(resp.LastModifiedTime)
+	return args, nil, nil
+}
+
+func initAwsSagemakerUserProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	if args["arn"] == nil {
+		return nil, nil, errors.New("arn required to resolve sagemaker user profile")
+	}
+	arnVal := args["arn"].Value.(string)
+
+	obj, err := CreateResource(runtime, "aws.sagemaker", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	sm := obj.(*mqlAwsSagemaker)
+
+	rawResources := sm.GetUserProfiles()
+	if rawResources.Error == nil {
+		for _, rawResource := range rawResources.Data {
+			up := rawResource.(*mqlAwsSagemakerUserProfile)
+			if up.Arn.Data == arnVal {
+				return args, up, nil
+			}
+		}
+	}
+
+	// Fallback: parse region and <domain-id>/<user-profile-name> from ARN.
+	parts := strings.Split(arnVal, ":")
+	if len(parts) >= 6 {
+		region := parts[3]
+		segs := strings.SplitN(strings.TrimPrefix(parts[5], "user-profile/"), "/", 2)
+		if len(segs) == 2 {
+			if args["name"] == nil {
+				args["name"] = llx.StringData(segs[1])
+			}
+			if args["region"] == nil {
+				args["region"] = llx.StringData(region)
+			}
+		}
+	}
+	return args, nil, nil
+}
+
+func initAwsSagemakerSpace(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	if args["arn"] == nil {
+		return nil, nil, errors.New("arn required to resolve sagemaker space")
+	}
+	arnVal := args["arn"].Value.(string)
+
+	obj, err := CreateResource(runtime, "aws.sagemaker", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	sm := obj.(*mqlAwsSagemaker)
+
+	rawResources := sm.GetSpaces()
+	if rawResources.Error == nil {
+		for _, rawResource := range rawResources.Data {
+			sp := rawResource.(*mqlAwsSagemakerSpace)
+			if sp.Arn.Data == arnVal {
+				return args, sp, nil
+			}
+		}
+	}
+
+	// Fallback: parse region and <domain-id>/<space-name> from ARN.
+	parts := strings.Split(arnVal, ":")
+	if len(parts) >= 6 {
+		region := parts[3]
+		segs := strings.SplitN(strings.TrimPrefix(parts[5], "space/"), "/", 2)
+		if len(segs) == 2 {
+			if args["name"] == nil {
+				args["name"] = llx.StringData(segs[1])
+			}
+			if args["region"] == nil {
+				args["region"] = llx.StringData(region)
+			}
+		}
+	}
+	return args, nil, nil
+}
 
 // ---- Apps ----
 
@@ -76,6 +248,18 @@ func (a *mqlAwsSagemaker) getApps(conn *connection.AwsConnection) []*jobpool.Job
 					arnVal := fmt.Sprintf("arn:aws:sagemaker:%s:%s:app/%s/%s/%s/%s",
 						region, accountID, domainID, scopeName, appType, appName)
 
+					var eagerTags map[string]any
+					if conn.Filters.General.HasTags() {
+						tags, err := getSagemakerTags(ctx, svc, &arnVal)
+						if err != nil {
+							return nil, err
+						}
+						if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(tags)) {
+							continue
+						}
+						eagerTags = tags
+					}
+
 					mqlApp, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerApp,
 						map[string]*llx.RawData{
 							"arn":             llx.StringData(arnVal),
@@ -100,6 +284,10 @@ func (a *mqlAwsSagemaker) getApps(conn *connection.AwsConnection) []*jobpool.Job
 						mqlA.cacheImageVersionArn = convert.ToValue(app.ResourceSpec.SageMakerImageVersionArn)
 						mqlA.hasResourceSpec = true
 					}
+					if eagerTags != nil {
+						mqlA.cacheTags = eagerTags
+						mqlA.tagsFetched = true
+					}
 
 					res = append(res, mqlApp)
 				}
@@ -112,6 +300,7 @@ func (a *mqlAwsSagemaker) getApps(conn *connection.AwsConnection) []*jobpool.Job
 }
 
 type mqlAwsSagemakerAppInternal struct {
+	sagemakerTagsCache
 	detailsFetched          bool
 	detailsLock             sync.Mutex
 	cacheFailureReason      string
@@ -244,6 +433,81 @@ func (a *mqlAwsSagemakerApp) domain() (*mqlAwsSagemakerDomain, error) {
 	return res.(*mqlAwsSagemakerDomain), nil
 }
 
+func (a *mqlAwsSagemakerApp) userProfile() (*mqlAwsSagemakerUserProfile, error) {
+	up := a.UserProfileName.Data
+	if up == "" {
+		a.UserProfile.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	arnVal := fmt.Sprintf("arn:aws:sagemaker:%s:%s:user-profile/%s/%s",
+		a.Region.Data, conn.AccountId(), a.DomainId.Data, up)
+	res, err := NewResource(a.MqlRuntime, "aws.sagemaker.userProfile",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsSagemakerUserProfile), nil
+}
+
+func (a *mqlAwsSagemakerApp) space() (*mqlAwsSagemakerSpace, error) {
+	sp := a.SpaceName.Data
+	if sp == "" {
+		a.Space.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	arnVal := fmt.Sprintf("arn:aws:sagemaker:%s:%s:space/%s/%s",
+		a.Region.Data, conn.AccountId(), a.DomainId.Data, sp)
+	res, err := NewResource(a.MqlRuntime, "aws.sagemaker.space",
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsSagemakerSpace), nil
+}
+
+func (a *mqlAwsSagemakerApp) sageMakerImage() (*mqlAwsSagemakerImage, error) {
+	if !a.hasResourceSpec {
+		if err := a.fetchDetails(); err != nil {
+			return nil, err
+		}
+	}
+	if a.cacheImageArn == "" {
+		a.SageMakerImage.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.sagemaker.image",
+		map[string]*llx.RawData{"arn": llx.StringData(a.cacheImageArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsSagemakerImage), nil
+}
+
+func (a *mqlAwsSagemakerApp) sageMakerImageVersion() (*mqlAwsSagemakerImageVersion, error) {
+	if !a.hasResourceSpec {
+		if err := a.fetchDetails(); err != nil {
+			return nil, err
+		}
+	}
+	if a.cacheImageVersionArn == "" {
+		a.SageMakerImageVersion.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.sagemaker.image.version",
+		map[string]*llx.RawData{"arn": llx.StringData(a.cacheImageVersionArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsSagemakerImageVersion), nil
+}
+
+func (a *mqlAwsSagemakerApp) tags() (map[string]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return a.fetchTags(conn, a.Region.Data, a.Arn.Data)
+}
+
 // ---- App Image Configs ----
 
 func (a *mqlAwsSagemaker) appImageConfigs() ([]any, error) {
@@ -287,6 +551,18 @@ func (a *mqlAwsSagemaker) getAppImageConfigs(conn *connection.AwsConnection) []*
 				}
 
 				for _, c := range page.AppImageConfigs {
+					var eagerTags map[string]any
+					if conn.Filters.General.HasTags() {
+						tags, err := getSagemakerTags(ctx, svc, c.AppImageConfigArn)
+						if err != nil {
+							return nil, err
+						}
+						if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(tags)) {
+							continue
+						}
+						eagerTags = tags
+					}
+
 					mqlCfg, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerAppImageConfig,
 						map[string]*llx.RawData{
 							"arn":            llx.StringDataPtr(c.AppImageConfigArn),
@@ -317,6 +593,10 @@ func (a *mqlAwsSagemaker) getAppImageConfigs(conn *connection.AwsConnection) []*
 						}
 					}
 					mqlC.configsLoaded = true
+					if eagerTags != nil {
+						mqlC.cacheTags = eagerTags
+						mqlC.tagsFetched = true
+					}
 
 					res = append(res, mqlCfg)
 				}
@@ -329,11 +609,17 @@ func (a *mqlAwsSagemaker) getAppImageConfigs(conn *connection.AwsConnection) []*
 }
 
 type mqlAwsSagemakerAppImageConfigInternal struct {
+	sagemakerTagsCache
 	detailsLock                   sync.Mutex
 	configsLoaded                 bool
 	cacheKernelGatewayImageConfig any
 	cacheJupyterLabImageConfig    any
 	cacheCodeEditorImageConfig    any
+}
+
+func (a *mqlAwsSagemakerAppImageConfig) tags() (map[string]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return a.fetchTags(conn, a.Region.Data, a.Arn.Data)
 }
 
 func (a *mqlAwsSagemakerAppImageConfig) id() (string, error) {
@@ -562,6 +848,18 @@ func (a *mqlAwsSagemaker) getCodeRepositories(conn *connection.AwsConnection) []
 				}
 
 				for _, c := range page.CodeRepositorySummaryList {
+					var eagerTags map[string]any
+					if conn.Filters.General.HasTags() {
+						tags, err := getSagemakerTags(ctx, svc, c.CodeRepositoryArn)
+						if err != nil {
+							return nil, err
+						}
+						if conn.Filters.General.IsFilteredOutByTags(mapStringInterfaceToStringString(tags)) {
+							continue
+						}
+						eagerTags = tags
+					}
+
 					mqlRepo, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerCodeRepository,
 						map[string]*llx.RawData{
 							"arn":            llx.StringDataPtr(c.CodeRepositoryArn),
@@ -581,6 +879,10 @@ func (a *mqlAwsSagemaker) getCodeRepositories(conn *connection.AwsConnection) []
 						m.cacheSecretArn = c.GitConfig.SecretArn
 						m.gitConfigLoaded = true
 					}
+					if eagerTags != nil {
+						m.cacheTags = eagerTags
+						m.tagsFetched = true
+					}
 					res = append(res, mqlRepo)
 				}
 			}
@@ -592,11 +894,17 @@ func (a *mqlAwsSagemaker) getCodeRepositories(conn *connection.AwsConnection) []
 }
 
 type mqlAwsSagemakerCodeRepositoryInternal struct {
+	sagemakerTagsCache
 	gitConfigLock      sync.Mutex
 	gitConfigLoaded    bool
 	cacheRepositoryUrl string
 	cacheBranch        string
 	cacheSecretArn     *string
+}
+
+func (a *mqlAwsSagemakerCodeRepository) tags() (map[string]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return a.fetchTags(conn, a.Region.Data, a.Arn.Data)
 }
 
 func (a *mqlAwsSagemakerCodeRepository) id() (string, error) {

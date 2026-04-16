@@ -3168,8 +3168,12 @@ private aws.sagemaker.app @defaults("arn name appType status") {
   domain() aws.sagemaker.domain
   // User profile the app is scoped to (empty if space-scoped)
   userProfileName string
+  // Reference to the user profile the app is scoped to (null if space-scoped)
+  userProfile() aws.sagemaker.userProfile
   // Space the app is scoped to (empty if user-scoped)
   spaceName string
+  // Reference to the space the app is scoped to (null if user-scoped)
+  space() aws.sagemaker.space
   // Last health check timestamp
   lastHealthCheckAt() time
   // Last user activity timestamp
@@ -3178,10 +3182,16 @@ private aws.sagemaker.app @defaults("arn name appType status") {
   failureReason() string
   // SageMaker image ARN used by the app
   sageMakerImageArn() string
+  // Reference to the SageMaker image used by the app
+  sageMakerImage() aws.sagemaker.image
   // SageMaker image version ARN used by the app
   sageMakerImageVersionArn() string
+  // Reference to the SageMaker image version used by the app
+  sageMakerImageVersion() aws.sagemaker.image.version
   // EC2 instance type running the app
   instanceType() string
+  // Tags for the app
+  tags() map[string]string
 }
 
 // AWS SageMaker app image config
@@ -3202,6 +3212,8 @@ private aws.sagemaker.appImageConfig @defaults("arn name") {
   jupyterLabAppImageConfig() dict
   // Code Editor app image configuration (raw structure)
   codeEditorAppImageConfig() dict
+  // Tags for the app image config
+  tags() map[string]string
 }
 
 // AWS SageMaker Studio lifecycle config
@@ -3242,6 +3254,8 @@ private aws.sagemaker.codeRepository @defaults("arn name") {
   branch() string
   // Secrets Manager secret containing credentials (null when public/unauthenticated)
   secret() aws.secretsmanager.secret
+  // Tags for the code repository
+  tags() map[string]string
 }
 
 // AWS SageMaker notebook instance lifecycle config

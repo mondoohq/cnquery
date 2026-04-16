@@ -4494,10 +4494,15 @@ aws.sagemaker.app.lastHealthCheckAt 13.13.4
 aws.sagemaker.app.lastUserActivityAt 13.13.4
 aws.sagemaker.app.name 13.13.4
 aws.sagemaker.app.region 13.13.4
+aws.sagemaker.app.sageMakerImage 13.13.4
 aws.sagemaker.app.sageMakerImageArn 13.13.4
+aws.sagemaker.app.sageMakerImageVersion 13.13.4
 aws.sagemaker.app.sageMakerImageVersionArn 13.13.4
+aws.sagemaker.app.space 13.13.4
 aws.sagemaker.app.spaceName 13.13.4
 aws.sagemaker.app.status 13.13.4
+aws.sagemaker.app.tags 13.13.4
+aws.sagemaker.app.userProfile 13.13.4
 aws.sagemaker.app.userProfileName 13.13.4
 aws.sagemaker.appImageConfig 13.13.4
 aws.sagemaker.appImageConfig.arn 13.13.4
@@ -4508,6 +4513,7 @@ aws.sagemaker.appImageConfig.kernelGatewayImageConfig 13.13.4
 aws.sagemaker.appImageConfig.lastModifiedAt 13.13.4
 aws.sagemaker.appImageConfig.name 13.13.4
 aws.sagemaker.appImageConfig.region 13.13.4
+aws.sagemaker.appImageConfig.tags 13.13.4
 aws.sagemaker.appImageConfigs 13.13.4
 aws.sagemaker.apps 13.13.4
 aws.sagemaker.autoMLJob 13.13.4
@@ -4589,6 +4595,7 @@ aws.sagemaker.codeRepository.name 13.13.4
 aws.sagemaker.codeRepository.region 13.13.4
 aws.sagemaker.codeRepository.repositoryUrl 13.13.4
 aws.sagemaker.codeRepository.secret 13.13.4
+aws.sagemaker.codeRepository.tags 13.13.4
 aws.sagemaker.compilationJob 13.13.4
 aws.sagemaker.compilationJob.arn 13.13.4
 aws.sagemaker.compilationJob.createdAt 13.13.4
