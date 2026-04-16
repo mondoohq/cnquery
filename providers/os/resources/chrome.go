@@ -305,7 +305,7 @@ func (c *mqlChrome) parseProfileExtensions(
 			continue
 		}
 
-		uniqueKey := browserName + "|" + profileName + "|" + extID
+		uniqueKey := browserName + "|" + profileDir + "|" + extID
 		if seen[uniqueKey] {
 			continue
 		}
@@ -481,7 +481,7 @@ func (c *mqlChrome) fallbackManifestScan(
 		}
 
 		extensionID := matches[2]
-		uniqueKey := browserName + "|" + profileName + "|" + extensionID
+		uniqueKey := browserName + "|" + profileDir + "|" + extensionID
 		if seen[uniqueKey] {
 			continue
 		}
@@ -575,7 +575,11 @@ func discoverChromeProfiles(afs *afero.Afero, browserDir string) []string {
 	return profiles
 }
 
-// resolveExtensionDir determines the extension directory on disk
+// resolveExtensionDir determines the extension directory on disk.
+// When entryPath is set (the common case from Preferences), it includes the version
+// subdirectory (e.g., "extID/1.2.3_0"). The fallback to just extID is only hit when
+// entryPath is empty, in which case manifestHash and referenced may be inaccurate
+// since manifest.json lives one level deeper at Extensions/<extID>/<version>/.
 func resolveExtensionDir(profileDir, entryPath, extID string) string {
 	if entryPath != "" {
 		// The path in Preferences is relative to the Extensions directory
@@ -592,6 +596,10 @@ func chromeTimeToGoTime(chromeTime string) *time.Time {
 		return nil
 	}
 	// Chrome epoch: microseconds since 1601-01-01
+	// Guard against non-Chrome-epoch values that would produce absurd dates
+	if val < 11644473600000000 {
+		return nil
+	}
 	// Subtract the difference between 1601 and 1970 in microseconds
 	unixMicro := val - 11644473600000000
 	t := time.Unix(unixMicro/1000000, (unixMicro%1000000)*1000)
@@ -608,7 +616,7 @@ func resolveExtensionState(state *int, disableReasons json.RawMessage) (string, 
 		case 1:
 			return "enabled", true
 		default:
-			return fmt.Sprintf("unknown(%d)", *state), *state == 1
+			return fmt.Sprintf("unknown(%d)", *state), false
 		}
 	}
 

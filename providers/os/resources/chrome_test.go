@@ -43,6 +43,11 @@ func TestChromeTimeToGoTime(t *testing.T) {
 			wantNil:    true,
 		},
 		{
+			name:       "small value below Chrome epoch threshold",
+			chromeTime: "12345",
+			wantNil:    true,
+		},
+		{
 			// 13300000000000000 microseconds since 1601-01-01
 			// = 13300000000 seconds since 1601-01-01
 			// = 13300000000 - 11644473600 = 1655526400 Unix time
