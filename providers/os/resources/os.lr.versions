@@ -430,6 +430,16 @@ fstab.entry.fstype 11.3.5
 fstab.entry.mountpoint 11.3.5
 fstab.entry.options 11.3.5
 fstab.path 11.3.5
+githubactions.package 13.10.1
+githubactions.package.files 13.10.1
+githubactions.package.id 13.10.1
+githubactions.package.name 13.10.1
+githubactions.package.purl 13.10.1
+githubactions.package.version 13.10.1
+githubactions.packages 13.10.1
+githubactions.packages.files 13.10.1
+githubactions.packages.list 13.10.1
+githubactions.packages.path 13.10.1
 go.package 13.10.1
 go.package.cpes 13.10.1
 go.package.files 13.10.1

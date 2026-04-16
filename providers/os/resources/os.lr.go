@@ -188,6 +188,8 @@ const (
 	ResourceDotnetPackage                string = "dotnet.package"
 	ResourcePhpPackages                  string = "php.packages"
 	ResourcePhpPackage                   string = "php.package"
+	ResourceGithubactionsPackages        string = "githubactions.packages"
+	ResourceGithubactionsPackage         string = "githubactions.package"
 	ResourceMacos                        string = "macos"
 	ResourceMacosHardware                string = "macos.hardware"
 	ResourceMacosAlf                     string = "macos.alf"
@@ -946,6 +948,14 @@ func init() {
 		"php.package": {
 			// to override args, implement: initPhpPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createPhpPackage,
+		},
+		"githubactions.packages": {
+			Init:   initGithubactionsPackages,
+			Create: createGithubactionsPackages,
+		},
+		"githubactions.package": {
+			// to override args, implement: initGithubactionsPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGithubactionsPackage,
 		},
 		"macos": {
 			// to override args, implement: initMacos(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3749,6 +3759,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"php.package.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPhpPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"githubactions.packages.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubactionsPackages).GetPath()).ToDataRes(types.String)
+	},
+	"githubactions.packages.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubactionsPackages).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"githubactions.packages.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubactionsPackages).GetList()).ToDataRes(types.Array(types.Resource("githubactions.package")))
+	},
+	"githubactions.package.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubactionsPackage).GetId()).ToDataRes(types.String)
+	},
+	"githubactions.package.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubactionsPackage).GetName()).ToDataRes(types.String)
+	},
+	"githubactions.package.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubactionsPackage).GetVersion()).ToDataRes(types.String)
+	},
+	"githubactions.package.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubactionsPackage).GetPurl()).ToDataRes(types.String)
+	},
+	"githubactions.package.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubactionsPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
 	},
 	"macos.computerName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacos).GetComputerName()).ToDataRes(types.String)
@@ -9145,6 +9179,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"php.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPhpPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"githubactions.packages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubactionsPackages).__id, ok = v.Value.(string)
+		return
+	},
+	"githubactions.packages.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubactionsPackages).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"githubactions.packages.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubactionsPackages).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"githubactions.packages.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubactionsPackages).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"githubactions.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubactionsPackage).__id, ok = v.Value.(string)
+		return
+	},
+	"githubactions.package.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubactionsPackage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"githubactions.package.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubactionsPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"githubactions.package.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubactionsPackage).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"githubactions.package.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubactionsPackage).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"githubactions.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubactionsPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"macos.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25405,6 +25479,176 @@ func (c *mqlPhpPackage) GetFiles() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("php.package", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+// mqlGithubactionsPackages for the githubactions.packages resource
+type mqlGithubactionsPackages struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGithubactionsPackagesInternal
+	Path  plugin.TValue[string]
+	Files plugin.TValue[[]any]
+	List  plugin.TValue[[]any]
+}
+
+// createGithubactionsPackages creates a new instance of this resource
+func createGithubactionsPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGithubactionsPackages{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("githubactions.packages", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGithubactionsPackages) MqlName() string {
+	return "githubactions.packages"
+}
+
+func (c *mqlGithubactionsPackages) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGithubactionsPackages) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlGithubactionsPackages) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("githubactions.packages", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+func (c *mqlGithubactionsPackages) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("githubactions.packages", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlGithubactionsPackage for the githubactions.package resource
+type mqlGithubactionsPackage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGithubactionsPackageInternal it will be used here
+	Id      plugin.TValue[string]
+	Name    plugin.TValue[string]
+	Version plugin.TValue[string]
+	Purl    plugin.TValue[string]
+	Files   plugin.TValue[[]any]
+}
+
+// createGithubactionsPackage creates a new instance of this resource
+func createGithubactionsPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGithubactionsPackage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("githubactions.package", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGithubactionsPackage) MqlName() string {
+	return "githubactions.package"
+}
+
+func (c *mqlGithubactionsPackage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGithubactionsPackage) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGithubactionsPackage) GetName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Name, func() (string, error) {
+		return c.name()
+	})
+}
+
+func (c *mqlGithubactionsPackage) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlGithubactionsPackage) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
+	})
+}
+
+func (c *mqlGithubactionsPackage) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("githubactions.package", c.__id, "files")
 			if err != nil {
 				return nil, err
 			}

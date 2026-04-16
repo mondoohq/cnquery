@@ -2401,6 +2401,33 @@ php.package @defaults("name version purl") {
   files() []pkgFileInfo
 }
 
+// GitHub Actions dependencies
+githubactions.packages {
+  []githubactions.package
+
+  init(path? string)
+
+  // Path to search for workflow files (directory or specific .yml file)
+  path string
+
+  // Files used to determine the packages
+  files() []pkgFileInfo
+}
+
+// GitHub Actions action reference
+githubactions.package @defaults("name version purl") {
+  // ID is the githubactions.package unique identifier
+  id string
+  // Name of the action (owner/repo or owner/repo/path)
+  name() string
+  // Version (tag, branch, or commit SHA)
+  version() string
+  // Package URL
+  purl() string
+  // Package files
+  files() []pkgFileInfo
+}
+
 // macOS specific resources
 macos {
   // macOS computer name

@@ -60,6 +60,7 @@ claude
 clcerts
 cloudflare
 Clusterwide
+codeql
 cmdline
 cmek
 Cmk
@@ -138,6 +139,7 @@ gcs
 GENEVE
 geomatchstatement
 gistfile
+githubactions
 godo
 gopls
 gpc

@@ -47,16 +47,17 @@ type KernelInstalled struct {
 }
 
 type BomFields struct {
-	Asset           *BomAsset         `json:"asset,omitempty"`
-	Packages        []BomPackage      `json:"packages.list,omitempty"`
-	PythonPackages  []BomPackage      `json:"python.packages,omitempty"`
-	NpmPackages     []BomPackage      `json:"npm.packages.list,omitempty"`
-	GoPackages      []BomPackage      `json:"go.packages.list,omitempty"`
-	JavaPackages    []BomPackage      `json:"java.packages.list,omitempty"`
-	RustPackages    []BomPackage      `json:"rust.packages.list,omitempty"`
-	DotnetPackages  []BomPackage      `json:"dotnet.packages.list,omitempty"`
-	PhpPackages     []BomPackage      `json:"php.packages.list,omitempty"`
-	KernelInstalled []KernelInstalled `json:"kernel.installed,omitempty"`
+	Asset                 *BomAsset         `json:"asset,omitempty"`
+	Packages              []BomPackage      `json:"packages.list,omitempty"`
+	PythonPackages        []BomPackage      `json:"python.packages,omitempty"`
+	NpmPackages           []BomPackage      `json:"npm.packages.list,omitempty"`
+	GoPackages            []BomPackage      `json:"go.packages.list,omitempty"`
+	JavaPackages          []BomPackage      `json:"java.packages.list,omitempty"`
+	RustPackages          []BomPackage      `json:"rust.packages.list,omitempty"`
+	DotnetPackages        []BomPackage      `json:"dotnet.packages.list,omitempty"`
+	PhpPackages           []BomPackage      `json:"php.packages.list,omitempty"`
+	GithubActionsPackages []BomPackage      `json:"githubactions.packages.list,omitempty"`
+	KernelInstalled       []KernelInstalled `json:"kernel.installed,omitempty"`
 }
 
 func (b *BomFields) ToJSON() ([]byte, error) {

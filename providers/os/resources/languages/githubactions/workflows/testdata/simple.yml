@@ -1,0 +1,20 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+      - name: Build
+        run: go build ./...
+      - uses: docker/build-push-action@v5.1.0
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+      - uses: github/codeql-action/analyze@v3
+      - uses: ./local-action
+      - uses: docker://alpine:3.18
