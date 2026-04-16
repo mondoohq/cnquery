@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.13.3",
-  "generated_at": "2026-04-16T10:43:55-07:00",
+  "generated_at": "2026-04-16T11:55:00-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -447,13 +447,16 @@
     "s3:GetPublicAccessBlock",
     "s3:ListBucketMetricsConfigurations",
     "s3:ListBuckets",
+    "sagemaker:DescribeAction",
     "sagemaker:DescribeAlgorithm",
     "sagemaker:DescribeApp",
     "sagemaker:DescribeAppImageConfig",
+    "sagemaker:DescribeArtifact",
     "sagemaker:DescribeAutoMLJob",
     "sagemaker:DescribeCluster",
     "sagemaker:DescribeCodeRepository",
     "sagemaker:DescribeCompilationJob",
+    "sagemaker:DescribeContext",
     "sagemaker:DescribeDataQualityJobDefinition",
     "sagemaker:DescribeDomain",
     "sagemaker:DescribeEndpoint",
@@ -467,6 +470,7 @@
     "sagemaker:DescribeImageVersion",
     "sagemaker:DescribeInferenceComponent",
     "sagemaker:DescribeLabelingJob",
+    "sagemaker:DescribeLineageGroup",
     "sagemaker:DescribeModel",
     "sagemaker:DescribeModelBiasJobDefinition",
     "sagemaker:DescribeModelCard",
@@ -487,14 +491,18 @@
     "sagemaker:DescribeTrial",
     "sagemaker:DescribeTrialComponent",
     "sagemaker:DescribeUserProfile",
+    "sagemaker:ListActions",
     "sagemaker:ListAlgorithms",
     "sagemaker:ListAppImageConfigs",
     "sagemaker:ListApps",
+    "sagemaker:ListArtifacts",
+    "sagemaker:ListAssociations",
     "sagemaker:ListAutoMLJobs",
     "sagemaker:ListClusterNodes",
     "sagemaker:ListClusters",
     "sagemaker:ListCodeRepositories",
     "sagemaker:ListCompilationJobs",
+    "sagemaker:ListContexts",
     "sagemaker:ListDataQualityJobDefinitions",
     "sagemaker:ListDomains",
     "sagemaker:ListEndpointConfigs",
@@ -508,6 +516,7 @@
     "sagemaker:ListImages",
     "sagemaker:ListInferenceComponents",
     "sagemaker:ListLabelingJobs",
+    "sagemaker:ListLineageGroups",
     "sagemaker:ListModelBiasJobDefinitions",
     "sagemaker:ListModelCards",
     "sagemaker:ListModelExplainabilityJobDefinitions",
@@ -3385,6 +3394,12 @@
       "source_file": "aws_s3.go"
     },
     {
+      "permission": "sagemaker:DescribeAction",
+      "service": "sagemaker",
+      "action": "DescribeAction",
+      "source_file": "aws_sagemaker_lineage.go"
+    },
+    {
       "permission": "sagemaker:DescribeAlgorithm",
       "service": "sagemaker",
       "action": "DescribeAlgorithm",
@@ -3401,6 +3416,12 @@
       "service": "sagemaker",
       "action": "DescribeAppImageConfig",
       "source_file": "aws_sagemaker_infra.go"
+    },
+    {
+      "permission": "sagemaker:DescribeArtifact",
+      "service": "sagemaker",
+      "action": "DescribeArtifact",
+      "source_file": "aws_sagemaker_lineage.go"
     },
     {
       "permission": "sagemaker:DescribeAutoMLJob",
@@ -3425,6 +3446,12 @@
       "service": "sagemaker",
       "action": "DescribeCompilationJob",
       "source_file": "aws_sagemaker_infra.go"
+    },
+    {
+      "permission": "sagemaker:DescribeContext",
+      "service": "sagemaker",
+      "action": "DescribeContext",
+      "source_file": "aws_sagemaker_lineage.go"
     },
     {
       "permission": "sagemaker:DescribeDataQualityJobDefinition",
@@ -3509,6 +3536,12 @@
       "service": "sagemaker",
       "action": "DescribeLabelingJob",
       "source_file": "aws_sagemaker_labeling.go"
+    },
+    {
+      "permission": "sagemaker:DescribeLineageGroup",
+      "service": "sagemaker",
+      "action": "DescribeLineageGroup",
+      "source_file": "aws_sagemaker_lineage.go"
     },
     {
       "permission": "sagemaker:DescribeModel",
@@ -3631,6 +3664,12 @@
       "source_file": "aws_sagemaker.go"
     },
     {
+      "permission": "sagemaker:ListActions",
+      "service": "sagemaker",
+      "action": "ListActions",
+      "source_file": "aws_sagemaker_lineage.go"
+    },
+    {
       "permission": "sagemaker:ListAlgorithms",
       "service": "sagemaker",
       "action": "ListAlgorithms",
@@ -3647,6 +3686,18 @@
       "service": "sagemaker",
       "action": "ListApps",
       "source_file": "aws_sagemaker_infra.go"
+    },
+    {
+      "permission": "sagemaker:ListArtifacts",
+      "service": "sagemaker",
+      "action": "ListArtifacts",
+      "source_file": "aws_sagemaker_lineage.go"
+    },
+    {
+      "permission": "sagemaker:ListAssociations",
+      "service": "sagemaker",
+      "action": "ListAssociations",
+      "source_file": "aws_sagemaker_lineage.go"
     },
     {
       "permission": "sagemaker:ListAutoMLJobs",
@@ -3677,6 +3728,12 @@
       "service": "sagemaker",
       "action": "ListCompilationJobs",
       "source_file": "aws_sagemaker_infra.go"
+    },
+    {
+      "permission": "sagemaker:ListContexts",
+      "service": "sagemaker",
+      "action": "ListContexts",
+      "source_file": "aws_sagemaker_lineage.go"
     },
     {
       "permission": "sagemaker:ListDataQualityJobDefinitions",
@@ -3755,6 +3812,12 @@
       "service": "sagemaker",
       "action": "ListLabelingJobs",
       "source_file": "aws_sagemaker_labeling.go"
+    },
+    {
+      "permission": "sagemaker:ListLineageGroups",
+      "service": "sagemaker",
+      "action": "ListLineageGroups",
+      "source_file": "aws_sagemaker_lineage.go"
     },
     {
       "permission": "sagemaker:ListModelBiasJobDefinitions",

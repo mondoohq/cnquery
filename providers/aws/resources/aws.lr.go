@@ -182,6 +182,11 @@ const (
 	ResourceAwsSagemakerWorkteam                                                string = "aws.sagemaker.workteam"
 	ResourceAwsSagemakerHumanTaskUi                                             string = "aws.sagemaker.humanTaskUi"
 	ResourceAwsSagemakerFlowDefinition                                          string = "aws.sagemaker.flowDefinition"
+	ResourceAwsSagemakerArtifact                                                string = "aws.sagemaker.artifact"
+	ResourceAwsSagemakerAction                                                  string = "aws.sagemaker.action"
+	ResourceAwsSagemakerContext                                                 string = "aws.sagemaker.context"
+	ResourceAwsSagemakerAssociation                                             string = "aws.sagemaker.association"
+	ResourceAwsSagemakerLineageGroup                                            string = "aws.sagemaker.lineageGroup"
 	ResourceAwsSns                                                              string = "aws.sns"
 	ResourceAwsSnsTopic                                                         string = "aws.sns.topic"
 	ResourceAwsSnsSubscription                                                  string = "aws.sns.subscription"
@@ -1299,6 +1304,26 @@ func init() {
 		"aws.sagemaker.flowDefinition": {
 			// to override args, implement: initAwsSagemakerFlowDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsSagemakerFlowDefinition,
+		},
+		"aws.sagemaker.artifact": {
+			// to override args, implement: initAwsSagemakerArtifact(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerArtifact,
+		},
+		"aws.sagemaker.action": {
+			// to override args, implement: initAwsSagemakerAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerAction,
+		},
+		"aws.sagemaker.context": {
+			// to override args, implement: initAwsSagemakerContext(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerContext,
+		},
+		"aws.sagemaker.association": {
+			// to override args, implement: initAwsSagemakerAssociation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSagemakerAssociation,
+		},
+		"aws.sagemaker.lineageGroup": {
+			Init:   initAwsSagemakerLineageGroup,
+			Create: createAwsSagemakerLineageGroup,
 		},
 		"aws.sns": {
 			// to override args, implement: initAwsSns(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -5281,6 +5306,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.sagemaker.flowDefinitions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemaker).GetFlowDefinitions()).ToDataRes(types.Array(types.Resource("aws.sagemaker.flowDefinition")))
 	},
+	"aws.sagemaker.artifacts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemaker).GetArtifacts()).ToDataRes(types.Array(types.Resource("aws.sagemaker.artifact")))
+	},
+	"aws.sagemaker.actions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemaker).GetActions()).ToDataRes(types.Array(types.Resource("aws.sagemaker.action")))
+	},
+	"aws.sagemaker.contexts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemaker).GetContexts()).ToDataRes(types.Array(types.Resource("aws.sagemaker.context")))
+	},
+	"aws.sagemaker.associations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemaker).GetAssociations()).ToDataRes(types.Array(types.Resource("aws.sagemaker.association")))
+	},
+	"aws.sagemaker.lineageGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemaker).GetLineageGroups()).ToDataRes(types.Array(types.Resource("aws.sagemaker.lineageGroup")))
+	},
 	"aws.sagemaker.notebookinstance.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerNotebookinstance).GetArn()).ToDataRes(types.String)
 	},
@@ -7455,6 +7495,165 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.sagemaker.flowDefinition.humanLoopRequestSource": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerFlowDefinition).GetHumanLoopRequestSource()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.artifact.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerArtifact).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.artifact.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerArtifact).GetName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.artifact.artifactType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerArtifact).GetArtifactType()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.artifact.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerArtifact).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.artifact.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerArtifact).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.artifact.lastModifiedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerArtifact).GetLastModifiedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.artifact.sourceUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerArtifact).GetSourceUri()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.artifact.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerArtifact).GetProperties()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.sagemaker.artifact.lineageGroupArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerArtifact).GetLineageGroupArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.artifact.lineageGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerArtifact).GetLineageGroup()).ToDataRes(types.Resource("aws.sagemaker.lineageGroup"))
+	},
+	"aws.sagemaker.artifact.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerArtifact).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.sagemaker.action.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerAction).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.action.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerAction).GetName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.action.actionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerAction).GetActionType()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.action.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerAction).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.action.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerAction).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.action.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerAction).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.action.lastModifiedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerAction).GetLastModifiedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.action.sourceUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerAction).GetSourceUri()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.action.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerAction).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.action.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerAction).GetProperties()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.sagemaker.action.lineageGroupArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerAction).GetLineageGroupArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.action.lineageGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerAction).GetLineageGroup()).ToDataRes(types.Resource("aws.sagemaker.lineageGroup"))
+	},
+	"aws.sagemaker.action.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerAction).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.sagemaker.context.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerContext).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.context.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerContext).GetName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.context.contextType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerContext).GetContextType()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.context.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerContext).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.context.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerContext).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.context.lastModifiedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerContext).GetLastModifiedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.context.sourceUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerContext).GetSourceUri()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.context.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerContext).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.context.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerContext).GetProperties()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.sagemaker.context.lineageGroupArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerContext).GetLineageGroupArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.context.lineageGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerContext).GetLineageGroup()).ToDataRes(types.Resource("aws.sagemaker.lineageGroup"))
+	},
+	"aws.sagemaker.context.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerContext).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.sagemaker.association.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerAssociation).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.association.associationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerAssociation).GetAssociationType()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.association.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerAssociation).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.association.sourceArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerAssociation).GetSourceArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.association.sourceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerAssociation).GetSourceName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.association.sourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerAssociation).GetSourceType()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.association.destinationArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerAssociation).GetDestinationArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.association.destinationName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerAssociation).GetDestinationName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.association.destinationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerAssociation).GetDestinationType()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.lineageGroup.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerLineageGroup).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.lineageGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerLineageGroup).GetName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.lineageGroup.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerLineageGroup).GetDisplayName()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.lineageGroup.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerLineageGroup).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.lineageGroup.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerLineageGroup).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.lineageGroup.lastModifiedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerLineageGroup).GetLastModifiedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.lineageGroup.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerLineageGroup).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.lineageGroup.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerLineageGroup).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.sns.topics": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSns).GetTopics()).ToDataRes(types.Array(types.Resource("aws.sns.topic")))
@@ -23641,6 +23840,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSagemaker).FlowDefinitions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.sagemaker.artifacts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemaker).Artifacts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.actions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemaker).Actions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.contexts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemaker).Contexts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.associations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemaker).Associations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.lineageGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemaker).LineageGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.sagemaker.notebookinstance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerNotebookinstance).__id, ok = v.Value.(string)
 		return
@@ -26859,6 +27078,238 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.sagemaker.flowDefinition.humanLoopRequestSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerFlowDefinition).HumanLoopRequestSource, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.artifact.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerArtifact).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.artifact.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerArtifact).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.artifact.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerArtifact).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.artifact.artifactType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerArtifact).ArtifactType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.artifact.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerArtifact).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.artifact.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerArtifact).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.artifact.lastModifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerArtifact).LastModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.artifact.sourceUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerArtifact).SourceUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.artifact.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerArtifact).Properties, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.artifact.lineageGroupArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerArtifact).LineageGroupArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.artifact.lineageGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerArtifact).LineageGroup, ok = plugin.RawToTValue[*mqlAwsSagemakerLineageGroup](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.artifact.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerArtifact).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.action.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerAction).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.action.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerAction).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.action.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerAction).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.action.actionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerAction).ActionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.action.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerAction).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.action.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerAction).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.action.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerAction).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.action.lastModifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerAction).LastModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.action.sourceUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerAction).SourceUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.action.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerAction).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.action.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerAction).Properties, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.action.lineageGroupArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerAction).LineageGroupArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.action.lineageGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerAction).LineageGroup, ok = plugin.RawToTValue[*mqlAwsSagemakerLineageGroup](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.action.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerAction).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.context.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerContext).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.context.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerContext).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.context.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerContext).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.context.contextType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerContext).ContextType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.context.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerContext).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.context.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerContext).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.context.lastModifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerContext).LastModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.context.sourceUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerContext).SourceUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.context.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerContext).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.context.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerContext).Properties, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.context.lineageGroupArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerContext).LineageGroupArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.context.lineageGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerContext).LineageGroup, ok = plugin.RawToTValue[*mqlAwsSagemakerLineageGroup](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.context.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerContext).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.association.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerAssociation).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.association.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerAssociation).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.association.associationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerAssociation).AssociationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.association.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerAssociation).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.association.sourceArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerAssociation).SourceArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.association.sourceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerAssociation).SourceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.association.sourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerAssociation).SourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.association.destinationArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerAssociation).DestinationArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.association.destinationName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerAssociation).DestinationName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.association.destinationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerAssociation).DestinationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.lineageGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerLineageGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sagemaker.lineageGroup.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerLineageGroup).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.lineageGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerLineageGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.lineageGroup.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerLineageGroup).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.lineageGroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerLineageGroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.lineageGroup.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerLineageGroup).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.lineageGroup.lastModifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerLineageGroup).LastModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.lineageGroup.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerLineageGroup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.lineageGroup.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerLineageGroup).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.sns.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -54383,6 +54834,11 @@ type mqlAwsSagemaker struct {
 	Workteams                         plugin.TValue[[]any]
 	HumanTaskUis                      plugin.TValue[[]any]
 	FlowDefinitions                   plugin.TValue[[]any]
+	Artifacts                         plugin.TValue[[]any]
+	Actions                           plugin.TValue[[]any]
+	Contexts                          plugin.TValue[[]any]
+	Associations                      plugin.TValue[[]any]
+	LineageGroups                     plugin.TValue[[]any]
 }
 
 // createAwsSagemaker creates a new instance of this resource
@@ -55075,6 +55531,86 @@ func (c *mqlAwsSagemaker) GetFlowDefinitions() *plugin.TValue[[]any] {
 		}
 
 		return c.flowDefinitions()
+	})
+}
+
+func (c *mqlAwsSagemaker) GetArtifacts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Artifacts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker", c.__id, "artifacts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.artifacts()
+	})
+}
+
+func (c *mqlAwsSagemaker) GetActions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Actions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker", c.__id, "actions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.actions()
+	})
+}
+
+func (c *mqlAwsSagemaker) GetContexts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Contexts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker", c.__id, "contexts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.contexts()
+	})
+}
+
+func (c *mqlAwsSagemaker) GetAssociations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Associations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker", c.__id, "associations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.associations()
+	})
+}
+
+func (c *mqlAwsSagemaker) GetLineageGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LineageGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker", c.__id, "lineageGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.lineageGroups()
 	})
 }
 
@@ -64056,6 +64592,553 @@ func (c *mqlAwsSagemakerFlowDefinition) GetHumanLoopActivationConditions() *plug
 func (c *mqlAwsSagemakerFlowDefinition) GetHumanLoopRequestSource() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.HumanLoopRequestSource, func() (string, error) {
 		return c.humanLoopRequestSource()
+	})
+}
+
+// mqlAwsSagemakerArtifact for the aws.sagemaker.artifact resource
+type mqlAwsSagemakerArtifact struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerArtifactInternal
+	Arn             plugin.TValue[string]
+	Name            plugin.TValue[string]
+	ArtifactType    plugin.TValue[string]
+	Region          plugin.TValue[string]
+	CreatedAt       plugin.TValue[*time.Time]
+	LastModifiedAt  plugin.TValue[*time.Time]
+	SourceUri       plugin.TValue[string]
+	Properties      plugin.TValue[map[string]any]
+	LineageGroupArn plugin.TValue[string]
+	LineageGroup    plugin.TValue[*mqlAwsSagemakerLineageGroup]
+	Tags            plugin.TValue[map[string]any]
+}
+
+// createAwsSagemakerArtifact creates a new instance of this resource
+func createAwsSagemakerArtifact(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerArtifact{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.artifact", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerArtifact) MqlName() string {
+	return "aws.sagemaker.artifact"
+}
+
+func (c *mqlAwsSagemakerArtifact) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerArtifact) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSagemakerArtifact) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSagemakerArtifact) GetArtifactType() *plugin.TValue[string] {
+	return &c.ArtifactType
+}
+
+func (c *mqlAwsSagemakerArtifact) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSagemakerArtifact) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSagemakerArtifact) GetLastModifiedAt() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedAt
+}
+
+func (c *mqlAwsSagemakerArtifact) GetSourceUri() *plugin.TValue[string] {
+	return &c.SourceUri
+}
+
+func (c *mqlAwsSagemakerArtifact) GetProperties() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Properties, func() (map[string]any, error) {
+		return c.properties()
+	})
+}
+
+func (c *mqlAwsSagemakerArtifact) GetLineageGroupArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LineageGroupArn, func() (string, error) {
+		return c.lineageGroupArn()
+	})
+}
+
+func (c *mqlAwsSagemakerArtifact) GetLineageGroup() *plugin.TValue[*mqlAwsSagemakerLineageGroup] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerLineageGroup](&c.LineageGroup, func() (*mqlAwsSagemakerLineageGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.artifact", c.__id, "lineageGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerLineageGroup), nil
+			}
+		}
+
+		return c.lineageGroup()
+	})
+}
+
+func (c *mqlAwsSagemakerArtifact) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsSagemakerAction for the aws.sagemaker.action resource
+type mqlAwsSagemakerAction struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerActionInternal
+	Arn             plugin.TValue[string]
+	Name            plugin.TValue[string]
+	ActionType      plugin.TValue[string]
+	Region          plugin.TValue[string]
+	Status          plugin.TValue[string]
+	CreatedAt       plugin.TValue[*time.Time]
+	LastModifiedAt  plugin.TValue[*time.Time]
+	SourceUri       plugin.TValue[string]
+	Description     plugin.TValue[string]
+	Properties      plugin.TValue[map[string]any]
+	LineageGroupArn plugin.TValue[string]
+	LineageGroup    plugin.TValue[*mqlAwsSagemakerLineageGroup]
+	Tags            plugin.TValue[map[string]any]
+}
+
+// createAwsSagemakerAction creates a new instance of this resource
+func createAwsSagemakerAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerAction{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.action", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerAction) MqlName() string {
+	return "aws.sagemaker.action"
+}
+
+func (c *mqlAwsSagemakerAction) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerAction) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSagemakerAction) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSagemakerAction) GetActionType() *plugin.TValue[string] {
+	return &c.ActionType
+}
+
+func (c *mqlAwsSagemakerAction) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSagemakerAction) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsSagemakerAction) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSagemakerAction) GetLastModifiedAt() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedAt
+}
+
+func (c *mqlAwsSagemakerAction) GetSourceUri() *plugin.TValue[string] {
+	return &c.SourceUri
+}
+
+func (c *mqlAwsSagemakerAction) GetDescription() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
+		return c.description()
+	})
+}
+
+func (c *mqlAwsSagemakerAction) GetProperties() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Properties, func() (map[string]any, error) {
+		return c.properties()
+	})
+}
+
+func (c *mqlAwsSagemakerAction) GetLineageGroupArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LineageGroupArn, func() (string, error) {
+		return c.lineageGroupArn()
+	})
+}
+
+func (c *mqlAwsSagemakerAction) GetLineageGroup() *plugin.TValue[*mqlAwsSagemakerLineageGroup] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerLineageGroup](&c.LineageGroup, func() (*mqlAwsSagemakerLineageGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.action", c.__id, "lineageGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerLineageGroup), nil
+			}
+		}
+
+		return c.lineageGroup()
+	})
+}
+
+func (c *mqlAwsSagemakerAction) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsSagemakerContext for the aws.sagemaker.context resource
+type mqlAwsSagemakerContext struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerContextInternal
+	Arn             plugin.TValue[string]
+	Name            plugin.TValue[string]
+	ContextType     plugin.TValue[string]
+	Region          plugin.TValue[string]
+	CreatedAt       plugin.TValue[*time.Time]
+	LastModifiedAt  plugin.TValue[*time.Time]
+	SourceUri       plugin.TValue[string]
+	Description     plugin.TValue[string]
+	Properties      plugin.TValue[map[string]any]
+	LineageGroupArn plugin.TValue[string]
+	LineageGroup    plugin.TValue[*mqlAwsSagemakerLineageGroup]
+	Tags            plugin.TValue[map[string]any]
+}
+
+// createAwsSagemakerContext creates a new instance of this resource
+func createAwsSagemakerContext(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerContext{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.context", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerContext) MqlName() string {
+	return "aws.sagemaker.context"
+}
+
+func (c *mqlAwsSagemakerContext) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerContext) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSagemakerContext) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSagemakerContext) GetContextType() *plugin.TValue[string] {
+	return &c.ContextType
+}
+
+func (c *mqlAwsSagemakerContext) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSagemakerContext) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSagemakerContext) GetLastModifiedAt() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedAt
+}
+
+func (c *mqlAwsSagemakerContext) GetSourceUri() *plugin.TValue[string] {
+	return &c.SourceUri
+}
+
+func (c *mqlAwsSagemakerContext) GetDescription() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
+		return c.description()
+	})
+}
+
+func (c *mqlAwsSagemakerContext) GetProperties() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Properties, func() (map[string]any, error) {
+		return c.properties()
+	})
+}
+
+func (c *mqlAwsSagemakerContext) GetLineageGroupArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LineageGroupArn, func() (string, error) {
+		return c.lineageGroupArn()
+	})
+}
+
+func (c *mqlAwsSagemakerContext) GetLineageGroup() *plugin.TValue[*mqlAwsSagemakerLineageGroup] {
+	return plugin.GetOrCompute[*mqlAwsSagemakerLineageGroup](&c.LineageGroup, func() (*mqlAwsSagemakerLineageGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sagemaker.context", c.__id, "lineageGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSagemakerLineageGroup), nil
+			}
+		}
+
+		return c.lineageGroup()
+	})
+}
+
+func (c *mqlAwsSagemakerContext) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsSagemakerAssociation for the aws.sagemaker.association resource
+type mqlAwsSagemakerAssociation struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsSagemakerAssociationInternal it will be used here
+	Region          plugin.TValue[string]
+	AssociationType plugin.TValue[string]
+	CreatedAt       plugin.TValue[*time.Time]
+	SourceArn       plugin.TValue[string]
+	SourceName      plugin.TValue[string]
+	SourceType      plugin.TValue[string]
+	DestinationArn  plugin.TValue[string]
+	DestinationName plugin.TValue[string]
+	DestinationType plugin.TValue[string]
+}
+
+// createAwsSagemakerAssociation creates a new instance of this resource
+func createAwsSagemakerAssociation(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerAssociation{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.association", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerAssociation) MqlName() string {
+	return "aws.sagemaker.association"
+}
+
+func (c *mqlAwsSagemakerAssociation) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerAssociation) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSagemakerAssociation) GetAssociationType() *plugin.TValue[string] {
+	return &c.AssociationType
+}
+
+func (c *mqlAwsSagemakerAssociation) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSagemakerAssociation) GetSourceArn() *plugin.TValue[string] {
+	return &c.SourceArn
+}
+
+func (c *mqlAwsSagemakerAssociation) GetSourceName() *plugin.TValue[string] {
+	return &c.SourceName
+}
+
+func (c *mqlAwsSagemakerAssociation) GetSourceType() *plugin.TValue[string] {
+	return &c.SourceType
+}
+
+func (c *mqlAwsSagemakerAssociation) GetDestinationArn() *plugin.TValue[string] {
+	return &c.DestinationArn
+}
+
+func (c *mqlAwsSagemakerAssociation) GetDestinationName() *plugin.TValue[string] {
+	return &c.DestinationName
+}
+
+func (c *mqlAwsSagemakerAssociation) GetDestinationType() *plugin.TValue[string] {
+	return &c.DestinationType
+}
+
+// mqlAwsSagemakerLineageGroup for the aws.sagemaker.lineageGroup resource
+type mqlAwsSagemakerLineageGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSagemakerLineageGroupInternal
+	Arn            plugin.TValue[string]
+	Name           plugin.TValue[string]
+	DisplayName    plugin.TValue[string]
+	Region         plugin.TValue[string]
+	CreatedAt      plugin.TValue[*time.Time]
+	LastModifiedAt plugin.TValue[*time.Time]
+	Description    plugin.TValue[string]
+	Tags           plugin.TValue[map[string]any]
+}
+
+// createAwsSagemakerLineageGroup creates a new instance of this resource
+func createAwsSagemakerLineageGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSagemakerLineageGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sagemaker.lineageGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSagemakerLineageGroup) MqlName() string {
+	return "aws.sagemaker.lineageGroup"
+}
+
+func (c *mqlAwsSagemakerLineageGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSagemakerLineageGroup) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSagemakerLineageGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSagemakerLineageGroup) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlAwsSagemakerLineageGroup) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSagemakerLineageGroup) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSagemakerLineageGroup) GetLastModifiedAt() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedAt
+}
+
+func (c *mqlAwsSagemakerLineageGroup) GetDescription() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
+		return c.description()
+	})
+}
+
+func (c *mqlAwsSagemakerLineageGroup) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
 	})
 }
 

@@ -1786,6 +1786,16 @@ aws.sagemaker {
   humanTaskUis() []aws.sagemaker.humanTaskUi
   // List of SageMaker Augmented AI (A2I) flow definitions
   flowDefinitions() []aws.sagemaker.flowDefinition
+  // List of SageMaker lineage artifacts
+  artifacts() []aws.sagemaker.artifact
+  // List of SageMaker lineage actions
+  actions() []aws.sagemaker.action
+  // List of SageMaker lineage contexts
+  contexts() []aws.sagemaker.context
+  // List of SageMaker lineage associations
+  associations() []aws.sagemaker.association
+  // List of SageMaker lineage groups
+  lineageGroups() []aws.sagemaker.lineageGroup
 }
 
 // AWS SageMaker notebook instance
@@ -3556,6 +3566,132 @@ private aws.sagemaker.flowDefinition @defaults("arn name status") {
   humanLoopActivationConditions() string
   // Human loop request source (e.g. AWS/Textract/AnalyzeDocument/Forms/V1)
   humanLoopRequestSource() string
+}
+
+// AWS SageMaker lineage artifact
+private aws.sagemaker.artifact @defaults("arn name artifactType") {
+  // ARN of the artifact
+  arn string
+  // Name of the artifact (may be empty — artifacts are primarily identified by ARN/URI)
+  name string
+  // Type of the artifact (Model, DataSet, Image, etc.)
+  artifactType string
+  // Region where the artifact exists
+  region string
+  // Time when the artifact was created
+  createdAt time
+  // Time when the artifact was last modified
+  lastModifiedAt time
+  // Source URI of the artifact
+  sourceUri string
+  // Arbitrary key/value properties
+  properties() map[string]string
+  // ARN of the lineage group the artifact belongs to
+  lineageGroupArn() string
+  // Reference to the lineage group the artifact belongs to
+  lineageGroup() aws.sagemaker.lineageGroup
+  // Tags for the artifact
+  tags() map[string]string
+}
+
+// AWS SageMaker lineage action
+private aws.sagemaker.action @defaults("arn name actionType status") {
+  // ARN of the action
+  arn string
+  // Name of the action
+  name string
+  // Type of the action (ModelDeployment, ModelApproval, etc.)
+  actionType string
+  // Region where the action exists
+  region string
+  // Status: Unknown, InProgress, Completed, Failed, Stopping, Stopped
+  status string
+  // Time when the action was created
+  createdAt time
+  // Time when the action was last modified
+  lastModifiedAt time
+  // Source URI of the action
+  sourceUri string
+  // Description of the action
+  description() string
+  // Arbitrary key/value properties
+  properties() map[string]string
+  // ARN of the lineage group the action belongs to
+  lineageGroupArn() string
+  // Reference to the lineage group the action belongs to
+  lineageGroup() aws.sagemaker.lineageGroup
+  // Tags for the action
+  tags() map[string]string
+}
+
+// AWS SageMaker lineage context
+private aws.sagemaker.context @defaults("arn name contextType") {
+  // ARN of the context
+  arn string
+  // Name of the context
+  name string
+  // Type of the context (Endpoint, ModelPackageGroup, Experiment, etc.)
+  contextType string
+  // Region where the context exists
+  region string
+  // Time when the context was created
+  createdAt time
+  // Time when the context was last modified
+  lastModifiedAt time
+  // Source URI of the context
+  sourceUri string
+  // Description of the context
+  description() string
+  // Arbitrary key/value properties
+  properties() map[string]string
+  // ARN of the lineage group the context belongs to
+  lineageGroupArn() string
+  // Reference to the lineage group the context belongs to
+  lineageGroup() aws.sagemaker.lineageGroup
+  // Tags for the context
+  tags() map[string]string
+}
+
+// AWS SageMaker lineage association (edge between source and destination entities)
+private aws.sagemaker.association @defaults("sourceArn destinationArn associationType") {
+  // Region where the association exists
+  region string
+  // Type of the association (ContributedTo, AssociatedWith, DerivedFrom, Produced, SameAs)
+  associationType string
+  // Time when the association was created
+  createdAt time
+  // ARN of the source entity (artifact, action, context, trial component, etc.)
+  sourceArn string
+  // Name of the source entity
+  sourceName string
+  // Type of the source entity
+  sourceType string
+  // ARN of the destination entity
+  destinationArn string
+  // Name of the destination entity
+  destinationName string
+  // Type of the destination entity
+  destinationType string
+}
+
+// AWS SageMaker lineage group
+private aws.sagemaker.lineageGroup @defaults("arn name") {
+  // ARN of the lineage group
+  arn string
+  // Name of the lineage group
+  name string
+  // Display name of the lineage group
+  displayName string
+  // Region where the lineage group exists
+  region string
+  // Time when the lineage group was created
+  createdAt time
+  // Time when the lineage group was last modified
+  lastModifiedAt time
+  // Description of the lineage group
+  description() string
+  // Tags for the lineage group
+  tags() map[string]string
 }
 
 // AWS Simple Notification Service (SNS)
