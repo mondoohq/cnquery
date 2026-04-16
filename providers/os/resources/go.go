@@ -52,12 +52,19 @@ func (r *mqlGoPackages) id() (string, error) {
 }
 
 type mqlGoPackagesInternal struct {
-	mutex sync.Mutex
+	mutex   sync.Mutex
+	fetched bool
 }
 
 func (r *mqlGoPackages) gatherData() error {
+	if r.fetched {
+		return nil
+	}
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
+	if r.fetched {
+		return nil
+	}
 
 	conn := r.MqlRuntime.Connection.(shared.Connection)
 	fs := conn.FileSystem()
@@ -148,6 +155,7 @@ func (r *mqlGoPackages) gatherData() error {
 	}
 	r.Files = plugin.TValue[[]any]{Data: mqlFiles, State: plugin.StateIsSet}
 
+	r.fetched = true
 	return nil
 }
 
@@ -272,7 +280,7 @@ func newGoPackage(runtime *plugin.Runtime, pkg *languages.Package) (*mqlGoPackag
 	}
 
 	mqlPkg, err := CreateResource(runtime, "go.package", map[string]*llx.RawData{
-		"id":      llx.StringData(pkg.Name + path),
+		"id":      llx.StringData(pkg.Name + "@" + pkg.Version + path),
 		"name":    llx.StringData(pkg.Name),
 		"version": llx.StringData(pkg.Version),
 		"purl":    llx.StringData(pkg.Purl),
@@ -310,7 +318,10 @@ func (r *mqlGoPackage) files() ([]any, error) {
 }
 
 func (r *mqlGoPackage) populateData() error {
-	// All data is already available from the package object when created.
+	// go.package instances are only created via newGoPackage, which pre-populates
+	// all fields (name, version, purl, cpes, files) at creation time. This fallback
+	// is only reached if a go.package is resolved by ID alone without going through
+	// newGoPackage, which does not happen in normal operation.
 	r.Name = plugin.TValue[string]{State: plugin.StateIsSet | plugin.StateIsNull}
 	r.Version = plugin.TValue[string]{State: plugin.StateIsSet | plugin.StateIsNull}
 	r.Purl = plugin.TValue[string]{State: plugin.StateIsSet | plugin.StateIsNull}

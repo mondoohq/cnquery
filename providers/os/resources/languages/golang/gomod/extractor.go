@@ -62,12 +62,12 @@ func parseGoMod(r io.Reader) (*goMod, error) {
 			continue
 		}
 
-		// Handle block openings
-		if line == "require (" {
+		// Handle block openings (tolerant of extra whitespace)
+		if strings.HasPrefix(line, "require") && strings.HasSuffix(line, "(") {
 			inRequireBlock = true
 			continue
 		}
-		if line == "replace (" {
+		if strings.HasPrefix(line, "replace") && strings.HasSuffix(line, "(") {
 			inReplaceBlock = true
 			continue
 		}
