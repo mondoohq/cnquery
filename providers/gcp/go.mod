@@ -93,7 +93,7 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/knqyf263/go-rpmdb v0.1.1 // indirect
 	github.com/mattn/go-runewidth v0.0.23 // indirect
-	github.com/moby/buildkit v0.28.1 // indirect
+	github.com/moby/buildkit v0.29.0 // indirect
 	github.com/moby/moby/api v1.54.1 // indirect
 	github.com/moby/moby/client v0.4.0 // indirect
 	github.com/moby/sys/atomicwriter v0.1.0 // indirect

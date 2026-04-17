@@ -65,7 +65,6 @@ require (
 	github.com/miekg/dns v1.1.72
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/hashstructure/v2 v2.0.2
-	// pin v0.19.0
 	github.com/moby/buildkit v0.29.0
 	github.com/moby/sys/mount v0.3.4
 	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect
