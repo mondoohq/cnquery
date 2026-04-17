@@ -2494,6 +2494,47 @@ terraform.package @defaults("name version purl") {
   files() []pkgFileInfo
 }
 
+// Homebrew packages (macOS and Linux)
+homebrew.packages {
+  []homebrew.package
+}
+
+// Homebrew package (formula or cask)
+private homebrew.package @defaults("name version type") {
+  // Package name (formula name or cask token)
+  name string
+  // Currently installed version
+  version string
+  // Latest stable version available (equals version when up-to-date)
+  latestVersion string
+  // Package URL
+  purl string
+  // Package description
+  description string
+  // Homepage URL
+  homepage string
+  // Install path
+  path string
+  // Package type: "formula" or "cask"
+  type string
+  // Application name (casks only)
+  appName string
+  // Whether the cask manages its own updates
+  autoUpdates bool
+  // Whether this package was explicitly installed (not a dependency)
+  installedOnRequest bool
+  // Whether this package was installed as a dependency
+  installedAsDependency bool
+  // Whether a newer version is available
+  outdated bool
+  // Whether the version is pinned
+  pinned bool
+  // Homebrew tap (e.g., "homebrew/core")
+  tap string
+  // Homebrew install prefix (e.g., "/opt/homebrew")
+  prefix string
+}
+
 // macOS specific resources
 macos {
   // macOS computer name

@@ -194,6 +194,8 @@ const (
 	ResourceSwiftPackage                 string = "swift.package"
 	ResourceTerraformPackages            string = "terraform.packages"
 	ResourceTerraformPackage             string = "terraform.package"
+	ResourceHomebrewPackages             string = "homebrew.packages"
+	ResourceHomebrewPackage              string = "homebrew.package"
 	ResourceMacos                        string = "macos"
 	ResourceMacosHardware                string = "macos.hardware"
 	ResourceMacosAlf                     string = "macos.alf"
@@ -976,6 +978,14 @@ func init() {
 		"terraform.package": {
 			// to override args, implement: initTerraformPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createTerraformPackage,
+		},
+		"homebrew.packages": {
+			// to override args, implement: initHomebrewPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHomebrewPackages,
+		},
+		"homebrew.package": {
+			// to override args, implement: initHomebrewPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHomebrewPackage,
 		},
 		"macos": {
 			// to override args, implement: initMacos(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3863,6 +3873,57 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"terraform.package.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTerraformPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"homebrew.packages.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHomebrewPackages).GetList()).ToDataRes(types.Array(types.Resource("homebrew.package")))
+	},
+	"homebrew.package.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHomebrewPackage).GetName()).ToDataRes(types.String)
+	},
+	"homebrew.package.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHomebrewPackage).GetVersion()).ToDataRes(types.String)
+	},
+	"homebrew.package.latestVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHomebrewPackage).GetLatestVersion()).ToDataRes(types.String)
+	},
+	"homebrew.package.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHomebrewPackage).GetPurl()).ToDataRes(types.String)
+	},
+	"homebrew.package.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHomebrewPackage).GetDescription()).ToDataRes(types.String)
+	},
+	"homebrew.package.homepage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHomebrewPackage).GetHomepage()).ToDataRes(types.String)
+	},
+	"homebrew.package.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHomebrewPackage).GetPath()).ToDataRes(types.String)
+	},
+	"homebrew.package.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHomebrewPackage).GetType()).ToDataRes(types.String)
+	},
+	"homebrew.package.appName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHomebrewPackage).GetAppName()).ToDataRes(types.String)
+	},
+	"homebrew.package.autoUpdates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHomebrewPackage).GetAutoUpdates()).ToDataRes(types.Bool)
+	},
+	"homebrew.package.installedOnRequest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHomebrewPackage).GetInstalledOnRequest()).ToDataRes(types.Bool)
+	},
+	"homebrew.package.installedAsDependency": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHomebrewPackage).GetInstalledAsDependency()).ToDataRes(types.Bool)
+	},
+	"homebrew.package.outdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHomebrewPackage).GetOutdated()).ToDataRes(types.Bool)
+	},
+	"homebrew.package.pinned": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHomebrewPackage).GetPinned()).ToDataRes(types.Bool)
+	},
+	"homebrew.package.tap": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHomebrewPackage).GetTap()).ToDataRes(types.String)
+	},
+	"homebrew.package.prefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHomebrewPackage).GetPrefix()).ToDataRes(types.String)
 	},
 	"macos.computerName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacos).GetComputerName()).ToDataRes(types.String)
@@ -9401,6 +9462,82 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"terraform.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTerraformPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"homebrew.packages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHomebrewPackages).__id, ok = v.Value.(string)
+		return
+	},
+	"homebrew.packages.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHomebrewPackages).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"homebrew.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHomebrewPackage).__id, ok = v.Value.(string)
+		return
+	},
+	"homebrew.package.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHomebrewPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"homebrew.package.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHomebrewPackage).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"homebrew.package.latestVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHomebrewPackage).LatestVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"homebrew.package.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHomebrewPackage).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"homebrew.package.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHomebrewPackage).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"homebrew.package.homepage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHomebrewPackage).Homepage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"homebrew.package.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHomebrewPackage).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"homebrew.package.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHomebrewPackage).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"homebrew.package.appName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHomebrewPackage).AppName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"homebrew.package.autoUpdates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHomebrewPackage).AutoUpdates, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"homebrew.package.installedOnRequest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHomebrewPackage).InstalledOnRequest, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"homebrew.package.installedAsDependency": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHomebrewPackage).InstalledAsDependency, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"homebrew.package.outdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHomebrewPackage).Outdated, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"homebrew.package.pinned": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHomebrewPackage).Pinned, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"homebrew.package.tap": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHomebrewPackage).Tap, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"homebrew.package.prefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHomebrewPackage).Prefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"macos.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26233,6 +26370,191 @@ func (c *mqlTerraformPackage) GetFiles() *plugin.TValue[[]any] {
 
 		return c.files()
 	})
+}
+
+// mqlHomebrewPackages for the homebrew.packages resource
+type mqlHomebrewPackages struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlHomebrewPackagesInternal it will be used here
+	List plugin.TValue[[]any]
+}
+
+// createHomebrewPackages creates a new instance of this resource
+func createHomebrewPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHomebrewPackages{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("homebrew.packages", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHomebrewPackages) MqlName() string {
+	return "homebrew.packages"
+}
+
+func (c *mqlHomebrewPackages) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHomebrewPackages) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("homebrew.packages", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlHomebrewPackage for the homebrew.package resource
+type mqlHomebrewPackage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlHomebrewPackageInternal it will be used here
+	Name                  plugin.TValue[string]
+	Version               plugin.TValue[string]
+	LatestVersion         plugin.TValue[string]
+	Purl                  plugin.TValue[string]
+	Description           plugin.TValue[string]
+	Homepage              plugin.TValue[string]
+	Path                  plugin.TValue[string]
+	Type                  plugin.TValue[string]
+	AppName               plugin.TValue[string]
+	AutoUpdates           plugin.TValue[bool]
+	InstalledOnRequest    plugin.TValue[bool]
+	InstalledAsDependency plugin.TValue[bool]
+	Outdated              plugin.TValue[bool]
+	Pinned                plugin.TValue[bool]
+	Tap                   plugin.TValue[string]
+	Prefix                plugin.TValue[string]
+}
+
+// createHomebrewPackage creates a new instance of this resource
+func createHomebrewPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHomebrewPackage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("homebrew.package", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHomebrewPackage) MqlName() string {
+	return "homebrew.package"
+}
+
+func (c *mqlHomebrewPackage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHomebrewPackage) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlHomebrewPackage) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlHomebrewPackage) GetLatestVersion() *plugin.TValue[string] {
+	return &c.LatestVersion
+}
+
+func (c *mqlHomebrewPackage) GetPurl() *plugin.TValue[string] {
+	return &c.Purl
+}
+
+func (c *mqlHomebrewPackage) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlHomebrewPackage) GetHomepage() *plugin.TValue[string] {
+	return &c.Homepage
+}
+
+func (c *mqlHomebrewPackage) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlHomebrewPackage) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlHomebrewPackage) GetAppName() *plugin.TValue[string] {
+	return &c.AppName
+}
+
+func (c *mqlHomebrewPackage) GetAutoUpdates() *plugin.TValue[bool] {
+	return &c.AutoUpdates
+}
+
+func (c *mqlHomebrewPackage) GetInstalledOnRequest() *plugin.TValue[bool] {
+	return &c.InstalledOnRequest
+}
+
+func (c *mqlHomebrewPackage) GetInstalledAsDependency() *plugin.TValue[bool] {
+	return &c.InstalledAsDependency
+}
+
+func (c *mqlHomebrewPackage) GetOutdated() *plugin.TValue[bool] {
+	return &c.Outdated
+}
+
+func (c *mqlHomebrewPackage) GetPinned() *plugin.TValue[bool] {
+	return &c.Pinned
+}
+
+func (c *mqlHomebrewPackage) GetTap() *plugin.TValue[string] {
+	return &c.Tap
+}
+
+func (c *mqlHomebrewPackage) GetPrefix() *plugin.TValue[string] {
+	return &c.Prefix
 }
 
 // mqlMacos for the macos resource

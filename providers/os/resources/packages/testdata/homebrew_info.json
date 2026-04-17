@@ -1,0 +1,98 @@
+{
+  "formulae": [
+    {
+      "name": "curl",
+      "full_name": "curl",
+      "tap": "homebrew/core",
+      "desc": "Get a file from an HTTP, HTTPS or FTP server",
+      "homepage": "https://curl.se",
+      "versions": {
+        "stable": "8.7.1",
+        "head": "HEAD"
+      },
+      "installed": [
+        {
+          "version": "8.7.1",
+          "installed_on_request": true,
+          "installed_as_dependency": false,
+          "runtime_dependencies": [
+            {"full_name": "openssl@3", "version": "3.3.0"}
+          ]
+        }
+      ],
+      "linked_keg": "8.7.1",
+      "pinned": false,
+      "outdated": false
+    },
+    {
+      "name": "openssl@3",
+      "full_name": "openssl@3",
+      "tap": "homebrew/core",
+      "desc": "Cryptography and SSL/TLS Toolkit",
+      "homepage": "https://openssl.org/",
+      "versions": {
+        "stable": "3.3.0",
+        "head": null
+      },
+      "installed": [
+        {
+          "version": "3.3.0",
+          "installed_on_request": false,
+          "installed_as_dependency": true,
+          "runtime_dependencies": []
+        }
+      ],
+      "linked_keg": "3.3.0",
+      "pinned": true,
+      "outdated": false
+    },
+    {
+      "name": "jq",
+      "full_name": "jq",
+      "tap": "homebrew/core",
+      "desc": "Lightweight and flexible command-line JSON processor",
+      "homepage": "https://jqlang.github.io/jq/",
+      "versions": {
+        "stable": "1.7.1",
+        "head": "HEAD"
+      },
+      "installed": [
+        {
+          "version": "1.7",
+          "installed_on_request": true,
+          "installed_as_dependency": false,
+          "runtime_dependencies": []
+        }
+      ],
+      "linked_keg": "1.7",
+      "pinned": false,
+      "outdated": true
+    }
+  ],
+  "casks": [
+    {
+      "token": "google-chrome",
+      "full_token": "google-chrome",
+      "tap": "homebrew/cask",
+      "name": ["Google Chrome"],
+      "desc": "Web browser",
+      "homepage": "https://www.google.com/chrome/",
+      "version": "126.0.6478.127",
+      "auto_updates": true,
+      "installed": "126.0.6478.127",
+      "outdated": false
+    },
+    {
+      "token": "visual-studio-code",
+      "full_token": "visual-studio-code",
+      "tap": "homebrew/cask",
+      "name": ["Microsoft Visual Studio Code", "VS Code"],
+      "desc": "Open-source code editor",
+      "homepage": "https://code.visualstudio.com/",
+      "version": "1.90.0",
+      "auto_updates": true,
+      "installed": "1.89.1",
+      "outdated": true
+    }
+  ]
+}
