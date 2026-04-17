@@ -97,9 +97,40 @@ func ParseSecpol(r io.Reader) (*Secpol, error) {
 	return res, nil
 }
 
+// SecpolScript exports the local security policy and resolves any non-SID
+// account names in the Privilege Rights section to their SIDs so that
+// checks work correctly on non-English Windows installations.
 const SecpolScript = `
-secedit /export /cfg out.cfg  | Out-Null
+secedit /export /cfg out.cfg | Out-Null
 $raw = Get-Content out.cfg
 Remove-Item .\out.cfg | Out-Null
-Write-Output $raw
+$inPR = $false
+$out = @()
+foreach ($l in $raw) {
+    if ($l -eq '[Privilege Rights]') { $inPR = $true; $out += $l; continue }
+    if ($l -match '^\[') { $inPR = $false }
+    if ($inPR -and $l -match ' = ') {
+        $i = $l.IndexOf(' = ')
+        $k = $l.Substring(0, $i)
+        $vs = $l.Substring($i + 3) -split ','
+        $rs = @()
+        foreach ($v in $vs) {
+            $v = $v.Trim()
+            if ($v -match '^\*S-' -or $v -eq '') {
+                $rs += $v
+            } else {
+                try {
+                    $a = [System.Security.Principal.NTAccount]::new($v)
+                    $rs += ('*' + $a.Translate([System.Security.Principal.SecurityIdentifier]).Value)
+                } catch {
+                    $rs += $v
+                }
+            }
+        }
+        $out += ($k + ' = ' + ($rs -join ','))
+    } else {
+        $out += $l
+    }
+}
+Write-Output $out
 `
