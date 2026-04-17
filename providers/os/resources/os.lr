@@ -1480,6 +1480,7 @@ firewalld @defaults("status defaultZone") {
 
 // firewalld zone configuration
 private firewalld.zone @defaults("name target") {
+  init(name? string)
   // Zone name (e.g., "public", "internal", "dmz")
   name string
   // Default target (default, ACCEPT, REJECT, DROP)
@@ -1518,8 +1519,12 @@ private firewalld.richrule @defaults("family rule") {
   rule string
   // Source address/subnet, empty if not specified
   source string
+  // True when the source address is negated (e.g., `source NOT address="..."`)
+  sourceInverted bool
   // Destination address/subnet, empty if not specified
   destination string
+  // True when the destination address is negated (e.g., `destination NOT address="..."`)
+  destinationInverted bool
   // Action (accept, reject, drop, mark), empty if not specified
   action string
 }

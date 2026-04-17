@@ -692,7 +692,7 @@ func init() {
 			Create: createFirewalld,
 		},
 		"firewalld.zone": {
-			// to override args, implement: initFirewalldZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initFirewalldZone,
 			Create: createFirewalldZone,
 		},
 		"firewalld.richrule": {
@@ -2856,8 +2856,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"firewalld.richrule.source": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFirewalldRichrule).GetSource()).ToDataRes(types.String)
 	},
+	"firewalld.richrule.sourceInverted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldRichrule).GetSourceInverted()).ToDataRes(types.Bool)
+	},
 	"firewalld.richrule.destination": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFirewalldRichrule).GetDestination()).ToDataRes(types.String)
+	},
+	"firewalld.richrule.destinationInverted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirewalldRichrule).GetDestinationInverted()).ToDataRes(types.Bool)
 	},
 	"firewalld.richrule.action": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFirewalldRichrule).GetAction()).ToDataRes(types.String)
@@ -7707,8 +7713,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlFirewalldRichrule).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"firewalld.richrule.sourceInverted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldRichrule).SourceInverted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"firewalld.richrule.destination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlFirewalldRichrule).Destination, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firewalld.richrule.destinationInverted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirewalldRichrule).DestinationInverted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"firewalld.richrule.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20023,11 +20037,13 @@ type mqlFirewalldRichrule struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlFirewalldRichruleInternal it will be used here
-	Family      plugin.TValue[string]
-	Rule        plugin.TValue[string]
-	Source      plugin.TValue[string]
-	Destination plugin.TValue[string]
-	Action      plugin.TValue[string]
+	Family              plugin.TValue[string]
+	Rule                plugin.TValue[string]
+	Source              plugin.TValue[string]
+	SourceInverted      plugin.TValue[bool]
+	Destination         plugin.TValue[string]
+	DestinationInverted plugin.TValue[bool]
+	Action              plugin.TValue[string]
 }
 
 // createFirewalldRichrule creates a new instance of this resource
@@ -20079,8 +20095,16 @@ func (c *mqlFirewalldRichrule) GetSource() *plugin.TValue[string] {
 	return &c.Source
 }
 
+func (c *mqlFirewalldRichrule) GetSourceInverted() *plugin.TValue[bool] {
+	return &c.SourceInverted
+}
+
 func (c *mqlFirewalldRichrule) GetDestination() *plugin.TValue[string] {
 	return &c.Destination
+}
+
+func (c *mqlFirewalldRichrule) GetDestinationInverted() *plugin.TValue[bool] {
+	return &c.DestinationInverted
 }
 
 func (c *mqlFirewalldRichrule) GetAction() *plugin.TValue[string] {

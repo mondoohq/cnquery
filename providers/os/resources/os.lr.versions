@@ -400,9 +400,11 @@ firewalld.defaultZone 13.2.9
 firewalld.richrule 13.2.9
 firewalld.richrule.action 13.2.9
 firewalld.richrule.destination 13.2.9
+firewalld.richrule.destinationInverted 13.10.1
 firewalld.richrule.family 13.2.9
 firewalld.richrule.rule 13.2.9
 firewalld.richrule.source 13.2.9
+firewalld.richrule.sourceInverted 13.10.1
 firewalld.status 13.2.9
 firewalld.zone 13.2.9
 firewalld.zone.active 13.2.9

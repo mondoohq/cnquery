@@ -160,6 +160,38 @@ func TestParseFirewalldRichRule(t *testing.T) {
 				action: "accept",
 			},
 		},
+		{
+			name:  "ipv4 anti-spoofing with destination NOT address",
+			input: `rule family="ipv4" source address="127.0.0.1" destination NOT address="127.0.0.1" drop`,
+			expected: parsedRichRule{
+				family:              "ipv4",
+				source:              "127.0.0.1",
+				destination:         "127.0.0.1",
+				destinationInverted: true,
+				action:              "drop",
+			},
+		},
+		{
+			name:  "ipv6 anti-spoofing with destination NOT address",
+			input: `rule family="ipv6" source address="::1" destination NOT address="::1" drop`,
+			expected: parsedRichRule{
+				family:              "ipv6",
+				source:              "::1",
+				destination:         "::1",
+				destinationInverted: true,
+				action:              "drop",
+			},
+		},
+		{
+			name:  "source NOT address inverted",
+			input: `rule family="ipv4" source NOT address="10.0.0.0/8" drop`,
+			expected: parsedRichRule{
+				family:         "ipv4",
+				source:         "10.0.0.0/8",
+				sourceInverted: true,
+				action:         "drop",
+			},
+		},
 	}
 
 	for _, tt := range tests {
