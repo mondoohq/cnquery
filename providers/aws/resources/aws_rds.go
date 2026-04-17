@@ -398,6 +398,7 @@ type mqlAwsRdsDbinstanceInternal struct {
 	cacheKmsKeyId                    *string
 	cachePerformanceInsightsKmsKeyId *string
 	cacheActivityStreamKmsKeyId      *string
+	cacheAssociatedRoles             []rds_types.DBInstanceRole
 	region                           string
 }
 
@@ -517,6 +518,15 @@ func newMqlAwsRdsInstance(runtime *plugin.Runtime, region string, accountID stri
 		certificateExpiration = dbInstance.CertificateDetails.ValidTill
 	}
 
+	dbSubnetGroupDict, err := convert.JsonToDict(dbInstance.DBSubnetGroup)
+	if err != nil {
+		return nil, err
+	}
+	domainMemberships, err := convert.JsonToDictSlice(dbInstance.DomainMemberships)
+	if err != nil {
+		return nil, err
+	}
+
 	resource, err := CreateResource(runtime, ResourceAwsRdsDbinstance,
 		map[string]*llx.RawData{
 			"arn":                                llx.StringDataPtr(dbInstance.DBInstanceArn),
@@ -569,6 +579,10 @@ func newMqlAwsRdsInstance(runtime *plugin.Runtime, region string, accountID stri
 			"storageThroughput":                  llx.IntDataDefault(dbInstance.StorageThroughput, 0),
 			"masterUserSecret":                   llx.DictData(masterUserSecretToDict(dbInstance.MasterUserSecret)),
 			"customerOwnedIpEnabled":             llx.BoolDataPtr(dbInstance.CustomerOwnedIpEnabled),
+			"dbSubnetGroup":                      llx.DictData(dbSubnetGroupDict),
+			"domainMemberships":                  llx.ArrayData(domainMemberships, types.Dict),
+			"replicaMode":                        llx.StringData(string(dbInstance.ReplicaMode)),
+			"multiTenant":                        llx.BoolDataPtr(dbInstance.MultiTenant),
 		})
 	if err != nil {
 		return nil, err
@@ -579,8 +593,44 @@ func newMqlAwsRdsInstance(runtime *plugin.Runtime, region string, accountID stri
 	mqlDBInstance.cacheKmsKeyId = dbInstance.KmsKeyId
 	mqlDBInstance.cachePerformanceInsightsKmsKeyId = dbInstance.PerformanceInsightsKMSKeyId
 	mqlDBInstance.cacheActivityStreamKmsKeyId = dbInstance.ActivityStreamKmsKeyId
+	mqlDBInstance.cacheAssociatedRoles = dbInstance.AssociatedRoles
 	mqlDBInstance.setSecurityGroupArns(sgsArn)
 	return mqlDBInstance, nil
+}
+
+func (a *mqlAwsRdsDbinstance) associatedRoles() ([]any, error) {
+	res := make([]any, 0, len(a.cacheAssociatedRoles))
+	instanceArn := a.Arn.Data
+	for _, role := range a.cacheAssociatedRoles {
+		roleArn := convert.ToValue(role.RoleArn)
+		featureName := convert.ToValue(role.FeatureName)
+		mqlRole, err := CreateResource(a.MqlRuntime, ResourceAwsRdsDbinstanceAssociatedRole,
+			map[string]*llx.RawData{
+				"__id":        llx.StringData(fmt.Sprintf("%s/role/%s/feature/%s", instanceArn, roleArn, featureName)),
+				"roleArn":     llx.StringData(roleArn),
+				"featureName": llx.StringData(featureName),
+				"status":      llx.StringDataPtr(role.Status),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlRole)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsRdsDbinstanceAssociatedRole) iamRole() (*mqlAwsIamRole, error) {
+	arn := a.RoleArn.Data
+	if arn == "" {
+		a.IamRole.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	mqlRole, err := NewResource(a.MqlRuntime, ResourceAwsIamRole,
+		map[string]*llx.RawData{"arn": llx.StringData(arn)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlRole.(*mqlAwsIamRole), nil
 }
 
 func initAwsRdsDbcluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {

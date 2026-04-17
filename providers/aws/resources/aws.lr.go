@@ -354,6 +354,7 @@ const (
 	ResourceAwsRdsDbcluster                                                     string = "aws.rds.dbcluster"
 	ResourceAwsRdsSnapshot                                                      string = "aws.rds.snapshot"
 	ResourceAwsRdsDbinstance                                                    string = "aws.rds.dbinstance"
+	ResourceAwsRdsDbinstanceAssociatedRole                                      string = "aws.rds.dbinstance.associatedRole"
 	ResourceAwsRdsPendingMaintenanceAction                                      string = "aws.rds.pendingMaintenanceAction"
 	ResourceAwsRdsClusterParameterGroup                                         string = "aws.rds.clusterParameterGroup"
 	ResourceAwsRdsParameterGroup                                                string = "aws.rds.parameterGroup"
@@ -2002,6 +2003,10 @@ func init() {
 		"aws.rds.dbinstance": {
 			Init:   initAwsRdsDbinstance,
 			Create: createAwsRdsDbinstance,
+		},
+		"aws.rds.dbinstance.associatedRole": {
+			// to override args, implement: initAwsRdsDbinstanceAssociatedRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsRdsDbinstanceAssociatedRole,
 		},
 		"aws.rds.pendingMaintenanceAction": {
 			// to override args, implement: initAwsRdsPendingMaintenanceAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -12210,6 +12215,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.rds.dbinstance.customerOwnedIpEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetCustomerOwnedIpEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.rds.dbinstance.associatedRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetAssociatedRoles()).ToDataRes(types.Array(types.Resource("aws.rds.dbinstance.associatedRole")))
+	},
+	"aws.rds.dbinstance.dbSubnetGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetDbSubnetGroup()).ToDataRes(types.Dict)
+	},
+	"aws.rds.dbinstance.domainMemberships": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetDomainMemberships()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.rds.dbinstance.replicaMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetReplicaMode()).ToDataRes(types.String)
+	},
+	"aws.rds.dbinstance.multiTenant": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetMultiTenant()).ToDataRes(types.Bool)
+	},
+	"aws.rds.dbinstance.associatedRole.roleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstanceAssociatedRole).GetRoleArn()).ToDataRes(types.String)
+	},
+	"aws.rds.dbinstance.associatedRole.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstanceAssociatedRole).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.rds.dbinstance.associatedRole.featureName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstanceAssociatedRole).GetFeatureName()).ToDataRes(types.String)
+	},
+	"aws.rds.dbinstance.associatedRole.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstanceAssociatedRole).GetStatus()).ToDataRes(types.String)
 	},
 	"aws.rds.pendingMaintenanceAction.resourceArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsPendingMaintenanceAction).GetResourceArn()).ToDataRes(types.String)
@@ -34582,6 +34614,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.rds.dbinstance.customerOwnedIpEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbinstance).CustomerOwnedIpEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.associatedRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).AssociatedRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.dbSubnetGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).DbSubnetGroup, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.domainMemberships": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).DomainMemberships, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.replicaMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).ReplicaMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.multiTenant": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).MultiTenant, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.associatedRole.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstanceAssociatedRole).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.rds.dbinstance.associatedRole.roleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstanceAssociatedRole).RoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.associatedRole.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstanceAssociatedRole).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.associatedRole.featureName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstanceAssociatedRole).FeatureName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.associatedRole.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstanceAssociatedRole).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.rds.pendingMaintenanceAction.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -83842,6 +83914,11 @@ type mqlAwsRdsDbinstance struct {
 	ActivityStreamKmsKey               plugin.TValue[*mqlAwsKmsKey]
 	MasterUserSecret                   plugin.TValue[any]
 	CustomerOwnedIpEnabled             plugin.TValue[bool]
+	AssociatedRoles                    plugin.TValue[[]any]
+	DbSubnetGroup                      plugin.TValue[any]
+	DomainMemberships                  plugin.TValue[[]any]
+	ReplicaMode                        plugin.TValue[string]
+	MultiTenant                        plugin.TValue[bool]
 }
 
 // createAwsRdsDbinstance creates a new instance of this resource
@@ -84207,6 +84284,109 @@ func (c *mqlAwsRdsDbinstance) GetMasterUserSecret() *plugin.TValue[any] {
 
 func (c *mqlAwsRdsDbinstance) GetCustomerOwnedIpEnabled() *plugin.TValue[bool] {
 	return &c.CustomerOwnedIpEnabled
+}
+
+func (c *mqlAwsRdsDbinstance) GetAssociatedRoles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AssociatedRoles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.dbinstance", c.__id, "associatedRoles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.associatedRoles()
+	})
+}
+
+func (c *mqlAwsRdsDbinstance) GetDbSubnetGroup() *plugin.TValue[any] {
+	return &c.DbSubnetGroup
+}
+
+func (c *mqlAwsRdsDbinstance) GetDomainMemberships() *plugin.TValue[[]any] {
+	return &c.DomainMemberships
+}
+
+func (c *mqlAwsRdsDbinstance) GetReplicaMode() *plugin.TValue[string] {
+	return &c.ReplicaMode
+}
+
+func (c *mqlAwsRdsDbinstance) GetMultiTenant() *plugin.TValue[bool] {
+	return &c.MultiTenant
+}
+
+// mqlAwsRdsDbinstanceAssociatedRole for the aws.rds.dbinstance.associatedRole resource
+type mqlAwsRdsDbinstanceAssociatedRole struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsRdsDbinstanceAssociatedRoleInternal it will be used here
+	RoleArn     plugin.TValue[string]
+	IamRole     plugin.TValue[*mqlAwsIamRole]
+	FeatureName plugin.TValue[string]
+	Status      plugin.TValue[string]
+}
+
+// createAwsRdsDbinstanceAssociatedRole creates a new instance of this resource
+func createAwsRdsDbinstanceAssociatedRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRdsDbinstanceAssociatedRole{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.rds.dbinstance.associatedRole", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRdsDbinstanceAssociatedRole) MqlName() string {
+	return "aws.rds.dbinstance.associatedRole"
+}
+
+func (c *mqlAwsRdsDbinstanceAssociatedRole) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRdsDbinstanceAssociatedRole) GetRoleArn() *plugin.TValue[string] {
+	return &c.RoleArn
+}
+
+func (c *mqlAwsRdsDbinstanceAssociatedRole) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.dbinstance.associatedRole", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsRdsDbinstanceAssociatedRole) GetFeatureName() *plugin.TValue[string] {
+	return &c.FeatureName
+}
+
+func (c *mqlAwsRdsDbinstanceAssociatedRole) GetStatus() *plugin.TValue[string] {
+	return &c.Status
 }
 
 // mqlAwsRdsPendingMaintenanceAction for the aws.rds.pendingMaintenanceAction resource

@@ -4174,6 +4174,12 @@ aws.rds.dbinstance.activityStreamKmsKey 11.16.1
 aws.rds.dbinstance.activityStreamMode 11.15.2
 aws.rds.dbinstance.activityStreamStatus 11.15.2
 aws.rds.dbinstance.arn 11.15.2
+aws.rds.dbinstance.associatedRole 13.14.2
+aws.rds.dbinstance.associatedRole.featureName 13.14.2
+aws.rds.dbinstance.associatedRole.iamRole 13.14.2
+aws.rds.dbinstance.associatedRole.roleArn 13.14.2
+aws.rds.dbinstance.associatedRole.status 13.14.2
+aws.rds.dbinstance.associatedRoles 13.14.2
 aws.rds.dbinstance.autoMinorVersionUpgrade 11.15.2
 aws.rds.dbinstance.availabilityZone 11.15.2
 aws.rds.dbinstance.backupRetentionPeriod 11.15.2
@@ -4187,9 +4193,11 @@ aws.rds.dbinstance.customerOwnedIpEnabled 11.16.1
 aws.rds.dbinstance.dbClusterIdentifier 11.15.2
 aws.rds.dbinstance.dbInstanceClass 11.15.2
 aws.rds.dbinstance.dbInstanceIdentifier 11.15.2
+aws.rds.dbinstance.dbSubnetGroup 13.14.2
 aws.rds.dbinstance.dbiResourceId 11.15.2
 aws.rds.dbinstance.dedicatedLogVolume 11.15.2
 aws.rds.dbinstance.deletionProtection 11.15.2
+aws.rds.dbinstance.domainMemberships 13.14.2
 aws.rds.dbinstance.enabledCloudwatchLogsExports 11.15.2
 aws.rds.dbinstance.endpoint 11.15.2
 aws.rds.dbinstance.engine 11.15.2
@@ -4206,6 +4214,7 @@ aws.rds.dbinstance.masterUsername 11.15.2
 aws.rds.dbinstance.maxAllocatedStorage 11.15.2
 aws.rds.dbinstance.monitoringInterval 11.15.2
 aws.rds.dbinstance.multiAZ 11.15.2
+aws.rds.dbinstance.multiTenant 13.14.2
 aws.rds.dbinstance.name 11.15.2
 aws.rds.dbinstance.networkType 11.15.2
 aws.rds.dbinstance.pendingMaintenanceActions 11.15.2
@@ -4217,6 +4226,7 @@ aws.rds.dbinstance.preferredBackupWindow 11.15.2
 aws.rds.dbinstance.preferredMaintenanceWindow 11.15.2
 aws.rds.dbinstance.publiclyAccessible 11.15.2
 aws.rds.dbinstance.region 11.15.2
+aws.rds.dbinstance.replicaMode 13.14.2
 aws.rds.dbinstance.securityGroups 11.15.2
 aws.rds.dbinstance.snapshots 11.15.2
 aws.rds.dbinstance.status 11.15.2

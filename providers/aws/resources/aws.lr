@@ -7380,6 +7380,28 @@ aws.rds.dbinstance @defaults("id region engine engineVersion") {
   masterUserSecret dict
   // Whether the DB instance uses a customer-owned IP address (CoIP) for Outpost deployments
   customerOwnedIpEnabled bool
+  // IAM roles attached to the DB instance for accessing other AWS services (S3 import, Lambda, etc.)
+  associatedRoles() []aws.rds.dbinstance.associatedRole
+  // DB subnet group placement (VpcId, SubnetGroupStatus, Subnets, SupportedNetworkTypes)
+  dbSubnetGroup dict
+  // Active Directory domain memberships for the DB instance (Domain, Status, FQDN, IAMRoleName, OU, AuthSecretArn, DnsIps)
+  domainMemberships []dict
+  // Open mode for an Oracle read replica: "open-read-only" or "mounted"
+  replicaMode string
+  // Whether the DB instance is configured as Oracle multi-tenant CDB
+  multiTenant bool
+}
+
+// IAM role associated with an RDS DB instance for accessing other AWS services
+private aws.rds.dbinstance.associatedRole @defaults("featureName status") {
+  // ARN of the IAM role
+  roleArn string
+  // IAM role attached to the DB instance
+  iamRole() aws.iam.role
+  // Feature the role is associated with (e.g., s3Import, s3Export, Lambda)
+  featureName string
+  // Status of the role association (ACTIVE, PENDING, INVALID)
+  status string
 }
 
 // Amazon RDS pending maintenance action
