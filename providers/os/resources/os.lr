@@ -2535,6 +2535,41 @@ private homebrew.package @defaults("name version type") {
   prefix string
 }
 
+// Chocolatey packages (Windows)
+chocolatey.packages {
+  []chocolatey.package
+}
+
+// Chocolatey package
+private chocolatey.package @defaults("name version") {
+  // Package name
+  name string
+  // Package version
+  version string
+  // Package URL
+  purl string
+  // Short description
+  summary string
+  // Full description
+  description string
+  // Package author(s)
+  author string
+  // License name
+  license string
+  // License URL
+  licenseUrl string
+  // Package install path
+  path string
+  // Whether the package is pinned (won't auto-upgrade)
+  pinned bool
+  // Package dependencies
+  dependencies []string
+  // Package tags
+  tags []string
+  // Upstream project URL
+  projectUrl string
+}
+
 // macOS specific resources
 macos {
   // macOS computer name

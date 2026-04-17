@@ -196,6 +196,8 @@ const (
 	ResourceTerraformPackage             string = "terraform.package"
 	ResourceHomebrewPackages             string = "homebrew.packages"
 	ResourceHomebrewPackage              string = "homebrew.package"
+	ResourceChocolateyPackages           string = "chocolatey.packages"
+	ResourceChocolateyPackage            string = "chocolatey.package"
 	ResourceMacos                        string = "macos"
 	ResourceMacosHardware                string = "macos.hardware"
 	ResourceMacosAlf                     string = "macos.alf"
@@ -986,6 +988,14 @@ func init() {
 		"homebrew.package": {
 			// to override args, implement: initHomebrewPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createHomebrewPackage,
+		},
+		"chocolatey.packages": {
+			// to override args, implement: initChocolateyPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createChocolateyPackages,
+		},
+		"chocolatey.package": {
+			// to override args, implement: initChocolateyPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createChocolateyPackage,
 		},
 		"macos": {
 			// to override args, implement: initMacos(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3924,6 +3934,48 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"homebrew.package.prefix": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHomebrewPackage).GetPrefix()).ToDataRes(types.String)
+	},
+	"chocolatey.packages.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChocolateyPackages).GetList()).ToDataRes(types.Array(types.Resource("chocolatey.package")))
+	},
+	"chocolatey.package.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChocolateyPackage).GetName()).ToDataRes(types.String)
+	},
+	"chocolatey.package.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChocolateyPackage).GetVersion()).ToDataRes(types.String)
+	},
+	"chocolatey.package.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChocolateyPackage).GetPurl()).ToDataRes(types.String)
+	},
+	"chocolatey.package.summary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChocolateyPackage).GetSummary()).ToDataRes(types.String)
+	},
+	"chocolatey.package.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChocolateyPackage).GetDescription()).ToDataRes(types.String)
+	},
+	"chocolatey.package.author": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChocolateyPackage).GetAuthor()).ToDataRes(types.String)
+	},
+	"chocolatey.package.license": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChocolateyPackage).GetLicense()).ToDataRes(types.String)
+	},
+	"chocolatey.package.licenseUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChocolateyPackage).GetLicenseUrl()).ToDataRes(types.String)
+	},
+	"chocolatey.package.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChocolateyPackage).GetPath()).ToDataRes(types.String)
+	},
+	"chocolatey.package.pinned": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChocolateyPackage).GetPinned()).ToDataRes(types.Bool)
+	},
+	"chocolatey.package.dependencies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChocolateyPackage).GetDependencies()).ToDataRes(types.Array(types.String))
+	},
+	"chocolatey.package.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChocolateyPackage).GetTags()).ToDataRes(types.Array(types.String))
+	},
+	"chocolatey.package.projectUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlChocolateyPackage).GetProjectUrl()).ToDataRes(types.String)
 	},
 	"macos.computerName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacos).GetComputerName()).ToDataRes(types.String)
@@ -9538,6 +9590,70 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"homebrew.package.prefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHomebrewPackage).Prefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"chocolatey.packages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChocolateyPackages).__id, ok = v.Value.(string)
+		return
+	},
+	"chocolatey.packages.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChocolateyPackages).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"chocolatey.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChocolateyPackage).__id, ok = v.Value.(string)
+		return
+	},
+	"chocolatey.package.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChocolateyPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"chocolatey.package.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChocolateyPackage).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"chocolatey.package.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChocolateyPackage).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"chocolatey.package.summary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChocolateyPackage).Summary, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"chocolatey.package.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChocolateyPackage).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"chocolatey.package.author": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChocolateyPackage).Author, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"chocolatey.package.license": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChocolateyPackage).License, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"chocolatey.package.licenseUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChocolateyPackage).LicenseUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"chocolatey.package.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChocolateyPackage).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"chocolatey.package.pinned": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChocolateyPackage).Pinned, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"chocolatey.package.dependencies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChocolateyPackage).Dependencies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"chocolatey.package.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChocolateyPackage).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"chocolatey.package.projectUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlChocolateyPackage).ProjectUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"macos.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26555,6 +26671,166 @@ func (c *mqlHomebrewPackage) GetTap() *plugin.TValue[string] {
 
 func (c *mqlHomebrewPackage) GetPrefix() *plugin.TValue[string] {
 	return &c.Prefix
+}
+
+// mqlChocolateyPackages for the chocolatey.packages resource
+type mqlChocolateyPackages struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlChocolateyPackagesInternal it will be used here
+	List plugin.TValue[[]any]
+}
+
+// createChocolateyPackages creates a new instance of this resource
+func createChocolateyPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlChocolateyPackages{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("chocolatey.packages", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlChocolateyPackages) MqlName() string {
+	return "chocolatey.packages"
+}
+
+func (c *mqlChocolateyPackages) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlChocolateyPackages) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("chocolatey.packages", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlChocolateyPackage for the chocolatey.package resource
+type mqlChocolateyPackage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlChocolateyPackageInternal it will be used here
+	Name         plugin.TValue[string]
+	Version      plugin.TValue[string]
+	Purl         plugin.TValue[string]
+	Summary      plugin.TValue[string]
+	Description  plugin.TValue[string]
+	Author       plugin.TValue[string]
+	License      plugin.TValue[string]
+	LicenseUrl   plugin.TValue[string]
+	Path         plugin.TValue[string]
+	Pinned       plugin.TValue[bool]
+	Dependencies plugin.TValue[[]any]
+	Tags         plugin.TValue[[]any]
+	ProjectUrl   plugin.TValue[string]
+}
+
+// createChocolateyPackage creates a new instance of this resource
+func createChocolateyPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlChocolateyPackage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("chocolatey.package", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlChocolateyPackage) MqlName() string {
+	return "chocolatey.package"
+}
+
+func (c *mqlChocolateyPackage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlChocolateyPackage) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlChocolateyPackage) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlChocolateyPackage) GetPurl() *plugin.TValue[string] {
+	return &c.Purl
+}
+
+func (c *mqlChocolateyPackage) GetSummary() *plugin.TValue[string] {
+	return &c.Summary
+}
+
+func (c *mqlChocolateyPackage) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlChocolateyPackage) GetAuthor() *plugin.TValue[string] {
+	return &c.Author
+}
+
+func (c *mqlChocolateyPackage) GetLicense() *plugin.TValue[string] {
+	return &c.License
+}
+
+func (c *mqlChocolateyPackage) GetLicenseUrl() *plugin.TValue[string] {
+	return &c.LicenseUrl
+}
+
+func (c *mqlChocolateyPackage) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlChocolateyPackage) GetPinned() *plugin.TValue[bool] {
+	return &c.Pinned
+}
+
+func (c *mqlChocolateyPackage) GetDependencies() *plugin.TValue[[]any] {
+	return &c.Dependencies
+}
+
+func (c *mqlChocolateyPackage) GetTags() *plugin.TValue[[]any] {
+	return &c.Tags
+}
+
+func (c *mqlChocolateyPackage) GetProjectUrl() *plugin.TValue[string] {
+	return &c.ProjectUrl
 }
 
 // mqlMacos for the macos resource
