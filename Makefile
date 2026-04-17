@@ -204,6 +204,7 @@ PROVIDERS := \
 	bicep \
 	cloudflare \
 	cloudformation \
+	datadog \
 	depsdev \
 	digitalocean \
 	equinix \

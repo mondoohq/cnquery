@@ -1,0 +1,379 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+package resources
+
+import (
+	"strconv"
+	"time"
+
+	"github.com/DataDog/datadog-api-client-go/v2/api/datadogV1"
+	"github.com/DataDog/datadog-api-client-go/v2/api/datadogV2"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers/datadog/connection"
+)
+
+// --- Sensitive Data Scanner Groups ---
+
+func (r *mqlDatadog) sensitiveDataScannerGroups() ([]interface{}, error) {
+	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
+	api := datadogV2.NewSensitiveDataScannerApi(conn.ApiClient())
+
+	resp, _, err := api.ListScanningGroups(conn.AuthCtx())
+	if err != nil {
+		return nil, err
+	}
+
+	// Groups are in the Included array as SensitiveDataScannerGroup items
+	var all []interface{}
+	for _, item := range resp.GetIncluded() {
+		group := item.SensitiveDataScannerGroupIncludedItem
+		if group == nil {
+			continue
+		}
+		attrs := group.GetAttributes()
+
+		productList := make([]interface{}, 0)
+		for _, p := range attrs.GetProductList() {
+			productList = append(productList, string(p))
+		}
+
+		filterQuery := ""
+		if f, ok := attrs.GetFilterOk(); ok && f != nil {
+			filterQuery = f.GetQuery()
+		}
+
+		res, err := CreateResource(r.MqlRuntime, "datadog.sensitiveDataScannerGroup", map[string]*llx.RawData{
+			"id":          llx.StringData(group.GetId()),
+			"name":        llx.StringData(attrs.GetName()),
+			"description": llx.StringData(attrs.GetDescription()),
+			"isEnabled":   llx.BoolData(attrs.GetIsEnabled()),
+			"productList": llx.ArrayData(productList, "\x02"),
+			"filter":      llx.StringData(filterQuery),
+		})
+		if err != nil {
+			return nil, err
+		}
+		all = append(all, res)
+	}
+	return all, nil
+}
+
+func (r *mqlDatadogSensitiveDataScannerGroup) id() (string, error) {
+	return "datadog.sensitiveDataScannerGroup/" + r.Id.Data, nil
+}
+
+// --- Security Monitoring Filters ---
+
+func (r *mqlDatadog) securityFilters() ([]interface{}, error) {
+	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
+	api := datadogV2.NewSecurityMonitoringApi(conn.ApiClient())
+
+	resp, _, err := api.ListSecurityFilters(conn.AuthCtx())
+	if err != nil {
+		return nil, err
+	}
+
+	var all []interface{}
+	for _, f := range resp.GetData() {
+		attrs := f.GetAttributes()
+		res, err := CreateResource(r.MqlRuntime, "datadog.securityFilter", map[string]*llx.RawData{
+			"id":               llx.StringData(f.GetId()),
+			"name":             llx.StringData(attrs.GetName()),
+			"query":            llx.StringData(attrs.GetQuery()),
+			"isEnabled":        llx.BoolData(attrs.GetIsEnabled()),
+			"filteredDataType": llx.StringData(string(attrs.GetFilteredDataType())),
+			"version":          llx.IntData(int64(attrs.GetVersion())),
+		})
+		if err != nil {
+			return nil, err
+		}
+		all = append(all, res)
+	}
+	return all, nil
+}
+
+func (r *mqlDatadogSecurityFilter) id() (string, error) {
+	return "datadog.securityFilter/" + r.Id.Data, nil
+}
+
+// --- Security Monitoring Suppressions ---
+
+func (r *mqlDatadog) securitySuppressions() ([]interface{}, error) {
+	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
+	api := datadogV2.NewSecurityMonitoringApi(conn.ApiClient())
+
+	resp, _, err := api.ListSecurityMonitoringSuppressions(conn.AuthCtx())
+	if err != nil {
+		return nil, err
+	}
+
+	var all []interface{}
+	for _, s := range resp.GetData() {
+		attrs := s.GetAttributes()
+
+		var expirationDate *time.Time
+		if v, ok := attrs.GetExpirationDateOk(); ok && v != nil {
+			t := time.Unix(*v, 0)
+			expirationDate = &t
+		}
+
+		res, err := CreateResource(r.MqlRuntime, "datadog.securitySuppression", map[string]*llx.RawData{
+			"id":                 llx.StringData(s.GetId()),
+			"name":               llx.StringData(attrs.GetName()),
+			"description":        llx.StringData(attrs.GetDescription()),
+			"enabled":            llx.BoolData(attrs.GetEnabled()),
+			"ruleQuery":          llx.StringData(attrs.GetRuleQuery()),
+			"suppressionQuery":   llx.StringData(attrs.GetSuppressionQuery()),
+			"dataExclusionQuery": llx.StringData(attrs.GetDataExclusionQuery()),
+			"expirationDate":     llx.TimeDataPtr(expirationDate),
+			"createdAt":          llx.TimeData(time.Time{}),
+			"updatedAt":          llx.TimeData(time.Time{}),
+		})
+		if err != nil {
+			return nil, err
+		}
+		all = append(all, res)
+	}
+	return all, nil
+}
+
+func (r *mqlDatadogSecuritySuppression) id() (string, error) {
+	return "datadog.securitySuppression/" + r.Id.Data, nil
+}
+
+// --- Service Accounts ---
+
+func (r *mqlDatadog) serviceAccounts() ([]interface{}, error) {
+	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
+	api := datadogV2.NewUsersApi(conn.ApiClient())
+
+	resp, _, err := api.ListUsers(conn.AuthCtx())
+	if err != nil {
+		return nil, err
+	}
+
+	var all []interface{}
+	for _, u := range resp.GetData() {
+		attrs := u.GetAttributes()
+		if !attrs.GetServiceAccount() {
+			continue
+		}
+		res, err := CreateResource(r.MqlRuntime, "datadog.serviceAccount", map[string]*llx.RawData{
+			"id":        llx.StringData(u.GetId()),
+			"email":     llx.StringData(attrs.GetEmail()),
+			"name":      llx.StringData(attrs.GetName()),
+			"handle":    llx.StringData(attrs.GetHandle()),
+			"status":    llx.StringData(attrs.GetStatus()),
+			"disabled":  llx.BoolData(attrs.GetDisabled()),
+			"createdAt": llx.TimeDataPtr(timePtr(attrs.GetCreatedAt())),
+		})
+		if err != nil {
+			return nil, err
+		}
+		all = append(all, res)
+	}
+	return all, nil
+}
+
+func (r *mqlDatadogServiceAccount) id() (string, error) {
+	return "datadog.serviceAccount/" + r.Id.Data, nil
+}
+
+// --- Logs Archives ---
+
+func (r *mqlDatadog) logsArchives() ([]interface{}, error) {
+	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
+	api := datadogV2.NewLogsArchivesApi(conn.ApiClient())
+
+	resp, _, err := api.ListLogsArchives(conn.AuthCtx())
+	if err != nil {
+		return nil, err
+	}
+
+	var all []interface{}
+	for _, a := range resp.GetData() {
+		attrs := a.GetAttributes()
+
+		query := ""
+		if q, ok := attrs.GetQueryOk(); ok {
+			query = *q
+		}
+
+		state := ""
+		if s, ok := attrs.GetStateOk(); ok {
+			state = string(*s)
+		}
+
+		includeTags := false
+		if v, ok := attrs.GetIncludeTagsOk(); ok {
+			includeTags = *v
+		}
+
+		rehydrationMaxScan := int64(0)
+		if v, ok := attrs.GetRehydrationMaxScanSizeInGbOk(); ok && v != nil {
+			rehydrationMaxScan = *v
+		}
+
+		rehydrationTags := make([]interface{}, 0)
+		for _, t := range attrs.GetRehydrationTags() {
+			rehydrationTags = append(rehydrationTags, t)
+		}
+
+		destType := ""
+		dest := map[string]interface{}{}
+		if d := attrs.GetDestination(); d.LogsArchiveDestinationS3 != nil {
+			destType = "s3"
+			s3 := d.LogsArchiveDestinationS3
+			dest["bucket"] = s3.GetBucket()
+			dest["path"] = s3.GetPath()
+		} else if d.LogsArchiveDestinationGCS != nil {
+			destType = "gcs"
+			gcs := d.LogsArchiveDestinationGCS
+			dest["bucket"] = gcs.GetBucket()
+			dest["path"] = gcs.GetPath()
+		} else if d.LogsArchiveDestinationAzure != nil {
+			destType = "azure"
+			az := d.LogsArchiveDestinationAzure
+			dest["container"] = az.GetContainer()
+			dest["storageAccount"] = az.GetStorageAccount()
+			dest["path"] = az.GetPath()
+		}
+
+		res, err := CreateResource(r.MqlRuntime, "datadog.logsArchive", map[string]*llx.RawData{
+			"id":                         llx.StringData(a.GetId()),
+			"name":                       llx.StringData(attrs.GetName()),
+			"query":                      llx.StringData(query),
+			"state":                      llx.StringData(state),
+			"includeTags":                llx.BoolData(includeTags),
+			"rehydrationMaxScanSizeInGb": llx.IntData(rehydrationMaxScan),
+			"rehydrationTags":            llx.ArrayData(rehydrationTags, "\x02"),
+			"destinationType":            llx.StringData(destType),
+			"destination":                llx.DictData(dest),
+		})
+		if err != nil {
+			return nil, err
+		}
+		all = append(all, res)
+	}
+	return all, nil
+}
+
+func (r *mqlDatadogLogsArchive) id() (string, error) {
+	return "datadog.logsArchive/" + r.Id.Data, nil
+}
+
+// --- RUM Applications ---
+
+func (r *mqlDatadog) rumApplications() ([]interface{}, error) {
+	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
+	api := datadogV2.NewRUMApi(conn.ApiClient())
+
+	resp, _, err := api.GetRUMApplications(conn.AuthCtx())
+	if err != nil {
+		return nil, err
+	}
+
+	var all []interface{}
+	for _, app := range resp.GetData() {
+		attrs := app.GetAttributes()
+		res, err := CreateResource(r.MqlRuntime, "datadog.rumApplication", map[string]*llx.RawData{
+			"id":          llx.StringData(app.GetId()),
+			"name":        llx.StringData(attrs.GetName()),
+			"type":        llx.StringData(attrs.GetType()),
+			"clientToken": llx.StringData(""),
+			"createdAt":   llx.TimeDataPtr(timePtr(time.Unix(attrs.GetCreatedAt(), 0))),
+			"updatedAt":   llx.TimeDataPtr(timePtr(time.Unix(attrs.GetUpdatedAt(), 0))),
+			"orgId":       llx.StringData(strconv.FormatInt(int64(attrs.GetOrgId()), 10)),
+			"isActive":    llx.BoolData(attrs.GetIsActive()),
+		})
+		if err != nil {
+			return nil, err
+		}
+		all = append(all, res)
+	}
+	return all, nil
+}
+
+func (r *mqlDatadogRumApplication) id() (string, error) {
+	return "datadog.rumApplication/" + r.Id.Data, nil
+}
+
+// --- Synthetics Global Variables ---
+
+func (r *mqlDatadog) syntheticsGlobalVariables() ([]interface{}, error) {
+	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
+	api := datadogV1.NewSyntheticsApi(conn.ApiClient())
+
+	resp, _, err := api.ListGlobalVariables(conn.AuthCtx())
+	if err != nil {
+		return nil, err
+	}
+
+	var all []interface{}
+	for _, v := range resp.GetVariables() {
+		tags := toAnyStrings(v.GetTags())
+
+		parseTestId := ""
+		if pt, ok := v.GetParseTestPublicIdOk(); ok && pt != nil {
+			parseTestId = *pt
+		}
+
+		res, err := CreateResource(r.MqlRuntime, "datadog.syntheticsGlobalVariable", map[string]*llx.RawData{
+			"id":                llx.StringData(v.GetId()),
+			"name":              llx.StringData(v.GetName()),
+			"description":       llx.StringData(v.GetDescription()),
+			"tags":              llx.ArrayData(tags, "\x02"),
+			"isTotp":            llx.BoolData(v.GetIsTotp()),
+			"isFido":            llx.BoolData(v.GetIsFido()),
+			"parseTestPublicId": llx.StringData(parseTestId),
+		})
+		if err != nil {
+			return nil, err
+		}
+		all = append(all, res)
+	}
+	return all, nil
+}
+
+func (r *mqlDatadogSyntheticsGlobalVariable) id() (string, error) {
+	return "datadog.syntheticsGlobalVariable/" + r.Id.Data, nil
+}
+
+// --- Synthetics Private Locations ---
+
+func (r *mqlDatadog) syntheticsPrivateLocations() ([]interface{}, error) {
+	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
+	api := datadogV1.NewSyntheticsApi(conn.ApiClient())
+
+	resp, _, err := api.ListLocations(conn.AuthCtx())
+	if err != nil {
+		return nil, err
+	}
+
+	var all []interface{}
+	for _, loc := range resp.GetLocations() {
+		id := loc.GetId()
+		// Private locations have IDs starting with "pl:"
+		if len(id) < 3 || id[:3] != "pl:" {
+			continue
+		}
+
+		res, err := CreateResource(r.MqlRuntime, "datadog.syntheticsPrivateLocation", map[string]*llx.RawData{
+			"id":          llx.StringData(id),
+			"name":        llx.StringData(loc.GetName()),
+			"description": llx.StringData(""),
+			"tags":        llx.ArrayData([]interface{}{}, "\x02"),
+			"metadata":    llx.DictData(map[string]interface{}{}),
+		})
+		if err != nil {
+			return nil, err
+		}
+		all = append(all, res)
+	}
+	return all, nil
+}
+
+func (r *mqlDatadogSyntheticsPrivateLocation) id() (string, error) {
+	return "datadog.syntheticsPrivateLocation/" + r.Id.Data, nil
+}

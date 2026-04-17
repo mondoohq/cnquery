@@ -205,6 +205,7 @@ use (
    ./mql/providers/azure
    ./mql/providers/cloudflare
    ./mql/providers/cloudformation
+   ./mql/providers/datadog
    ./mql/providers/depsdev
    ./mql/providers/digitalocean
    ./mql/providers/equinix

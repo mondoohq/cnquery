@@ -1,0 +1,507 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/mql/providers/datadog"
+option go_package = "go.mondoo.com/mql/v13/providers/datadog/resources"
+
+// Datadog observability and security platform
+datadog {
+  // Users
+  users() []datadog.user
+  // Roles
+  roles() []datadog.role
+  // Monitors
+  monitors() []datadog.monitor
+  // Dashboards
+  dashboards() []datadog.dashboard
+  // Synthetics tests
+  syntheticsTests() []datadog.syntheticsTest
+  // Service Level Objectives
+  slos() []datadog.slo
+  // Log indexes
+  logIndexes() []datadog.logIndex
+  // Security monitoring rules
+  securityRules() []datadog.securityRule
+  // Downtimes (scheduled)
+  downtimes() []datadog.downtime
+  // API keys
+  apiKeys() []datadog.apiKey
+  // Application keys
+  applicationKeys() []datadog.applicationKey
+  // IP allowlist entries
+  ipAllowlistEntries() []dict
+  // Whether the IP allowlist is enabled
+  ipAllowlistEnabled() bool
+  // AWS integrations
+  integrationAwsAccounts() []datadog.integration.aws
+  // Teams
+  teams() []datadog.team
+  // Sensitive data scanner groups
+  sensitiveDataScannerGroups() []datadog.sensitiveDataScannerGroup
+  // Security monitoring filters
+  securityFilters() []datadog.securityFilter
+  // Security monitoring suppressions
+  securitySuppressions() []datadog.securitySuppression
+  // Service accounts
+  serviceAccounts() []datadog.serviceAccount
+  // Logs archives
+  logsArchives() []datadog.logsArchive
+  // RUM applications
+  rumApplications() []datadog.rumApplication
+  // Synthetics global variables
+  syntheticsGlobalVariables() []datadog.syntheticsGlobalVariable
+  // Synthetics private locations
+  syntheticsPrivateLocations() []datadog.syntheticsPrivateLocation
+}
+
+// Datadog user
+datadog.user @defaults("id email status") {
+  // User ID
+  id string
+  // Email address
+  email string
+  // User name
+  name string
+  // Handle (username)
+  handle string
+  // Status (Active, Pending, Disabled)
+  status string
+  // Title
+  title string
+  // Is service account
+  serviceAccount bool
+  // Verified
+  verified bool
+  // Disabled
+  disabled bool
+  // Created at
+  createdAt time
+  // Icon URL
+  icon string
+}
+
+// Datadog role
+datadog.role @defaults("id name") {
+  // Role ID
+  id string
+  // Role name
+  name string
+  // User count
+  userCount int
+  // Created at
+  createdAt time
+  // Modified at
+  modifiedAt time
+}
+
+// Datadog monitor (alerting rule)
+datadog.monitor @defaults("id name type") {
+  // Monitor ID
+  id int
+  // Monitor name
+  name string
+  // Monitor type (metric alert, service check, log alert, etc.)
+  type string
+  // Monitor query
+  query string
+  // Message (notification text)
+  message string
+  // Overall state (Alert, Warn, No Data, OK)
+  overallState string
+  // Tags
+  tags []string
+  // Priority (1-5, or null)
+  priority int
+  // Created at
+  created time
+  // Modified at
+  modified time
+  // Creator email
+  creator string
+  // Whether the monitor is muted
+  muted bool
+  // Whether the monitor notifies when data is missing
+  notifyNoData bool
+  // Options
+  options dict
+}
+
+// Datadog dashboard
+datadog.dashboard @defaults("id title") {
+  // Dashboard ID
+  id string
+  // Dashboard title
+  title string
+  // Dashboard description
+  description string
+  // Layout type (ordered, free)
+  layoutType string
+  // URL path
+  url string
+  // Created at
+  createdAt time
+  // Modified at
+  modifiedAt time
+  // Author handle
+  authorHandle string
+  // Is read only
+  isReadOnly bool
+}
+
+// Datadog synthetics test
+datadog.syntheticsTest @defaults("publicId name type") {
+  // Public ID
+  publicId string
+  // Test name
+  name string
+  // Test type (api, browser)
+  type string
+  // Subtype (http, ssl, dns, websocket, tcp, udp, icmp, grpc, multi)
+  subtype string
+  // Status (live, paused)
+  status string
+  // Message (notification text)
+  message string
+  // Tags
+  tags []string
+  // Locations
+  locations []string
+  // Monitor ID
+  monitorId int
+  // Created at
+  createdAt time
+  // Modified at
+  modifiedAt time
+  // Creator email
+  creator string
+  // Config
+  config dict
+  // Options
+  options dict
+}
+
+// Datadog Service Level Objective
+datadog.slo @defaults("id name type") {
+  // SLO ID
+  id string
+  // SLO name
+  name string
+  // SLO type (metric, monitor, time_slice)
+  type string
+  // Description
+  description string
+  // Tags
+  tags []string
+  // Target threshold (percentage, e.g., 99.9)
+  targetThreshold float
+  // Warning threshold (percentage)
+  warningThreshold float
+  // Timeframe (7d, 30d, 90d)
+  timeframe string
+  // Creator email
+  creator string
+  // Created at
+  createdAt time
+  // Modified at
+  modifiedAt time
+  // Monitor IDs (for monitor-based SLOs)
+  monitorIds []int
+}
+
+// Datadog log index
+datadog.logIndex @defaults("name") {
+  // Index name
+  name string
+  // Log filter query
+  filter string
+  // Number of days to retain
+  numRetentionDays int
+  // Daily limit
+  dailyLimit int
+  // Whether daily limit warning threshold percentage
+  dailyLimitWarningThresholdPercentage float
+  // Is rate limited
+  isRateLimited bool
+  // Number of flex logs retention days
+  numFlexLogsRetentionDays int
+  // Exclusion filters
+  exclusionFilters []dict
+}
+
+// Datadog security monitoring rule
+datadog.securityRule @defaults("id name type") {
+  // Rule ID
+  id string
+  // Rule name
+  name string
+  // Rule type
+  type string
+  // Message
+  message string
+  // Is enabled
+  isEnabled bool
+  // Has extended title
+  hasExtendedTitle bool
+  // Tags
+  tags []string
+  // Is default (built-in)
+  isDefault bool
+  // Is deleted
+  isDeleted bool
+  // Created at
+  createdAt time
+  // Updated at
+  updatedAt time
+  // Cases (severity, condition)
+  cases []dict
+  // Filters
+  filters []dict
+  // Options
+  options dict
+}
+
+// Datadog downtime schedule
+datadog.downtime @defaults("id status") {
+  // Downtime ID
+  id string
+  // Display timezone
+  displayTimezone string
+  // Message
+  message string
+  // Mute first recovery notification
+  muteFirstRecoveryNotification bool
+  // Notify end states
+  notifyEndStates []string
+  // Notify end types
+  notifyEndTypes []string
+  // Status (active, disabled, ended, scheduled)
+  status string
+  // Monitor identifier (tag or ID)
+  monitorIdentifier dict
+  // Schedule
+  schedule dict
+  // Scope
+  scope string
+  // Created at
+  createdAt time
+  // Modified at
+  modifiedAt time
+  // Canceled at
+  canceledAt time
+}
+
+// Datadog API key
+datadog.apiKey @defaults("id name") {
+  // API key ID
+  id string
+  // Key name
+  name string
+  // Created at
+  createdAt time
+  // Modified at
+  modifiedAt time
+  // Last four characters
+  last4 string
+}
+
+// Datadog application key
+datadog.applicationKey @defaults("id name") {
+  // Application key ID
+  id string
+  // Key name
+  name string
+  // Created at
+  createdAt time
+  // Last four characters
+  last4 string
+  // Scopes (null means full access)
+  scopes []string
+}
+
+// Datadog AWS integration account
+datadog.integration.aws @defaults("accountId") {
+  // AWS account ID
+  accountId string
+  // Role name for Datadog delegation
+  roleName string
+  // Metrics collection enabled
+  metricsEnabled bool
+  // Resource collection enabled
+  resourceCollectionEnabled bool
+  // Logs collection enabled
+  logsEnabled bool
+  // Filter tags
+  filterTags []string
+  // Host tags
+  hostTags []string
+  // Account tags
+  accountTags []string
+  // Excluded regions
+  excludedRegions []string
+}
+
+// Datadog team
+datadog.team @defaults("id name") {
+  // Team ID
+  id string
+  // Team name
+  name string
+  // Team handle (slug)
+  handle string
+  // Description
+  description string
+  // User count
+  userCount int
+  // Created at
+  createdAt time
+  // Modified at
+  modifiedAt time
+}
+
+// Datadog Sensitive Data Scanner group
+datadog.sensitiveDataScannerGroup @defaults("id name") {
+  // Group ID
+  id string
+  // Group name
+  name string
+  // Description
+  description string
+  // Whether the group is enabled
+  isEnabled bool
+  // Product list (logs, apm)
+  productList []string
+  // Filter query
+  filter string
+}
+
+// Datadog security monitoring filter
+datadog.securityFilter @defaults("id name") {
+  // Filter ID
+  id string
+  // Filter name
+  name string
+  // Filter query
+  query string
+  // Whether the filter is enabled
+  isEnabled bool
+  // Filtered data type
+  filteredDataType string
+  // Version
+  version int
+}
+
+// Datadog security monitoring suppression
+datadog.securitySuppression @defaults("id name") {
+  // Suppression ID
+  id string
+  // Suppression name
+  name string
+  // Description
+  description string
+  // Whether the suppression is enabled
+  enabled bool
+  // Rule query
+  ruleQuery string
+  // Suppression query
+  suppressionQuery string
+  // Data exclusion query
+  dataExclusionQuery string
+  // Expiration date
+  expirationDate time
+  // Created at
+  createdAt time
+  // Updated at
+  updatedAt time
+}
+
+// Datadog service account
+datadog.serviceAccount @defaults("id email") {
+  // Service account ID
+  id string
+  // Email
+  email string
+  // Name
+  name string
+  // Handle
+  handle string
+  // Status
+  status string
+  // Disabled
+  disabled bool
+  // Created at
+  createdAt time
+}
+
+// Datadog logs archive
+datadog.logsArchive @defaults("id name") {
+  // Archive ID
+  id string
+  // Archive name
+  name string
+  // Query filter
+  query string
+  // State (UNKNOWN, WORKING, FAILING, WORKING_AUTH_LEGACY)
+  state string
+  // Whether rehydration is included
+  includeTags bool
+  // Rehydration max scan size in GB
+  rehydrationMaxScanSizeInGb int
+  // Rehydration tags
+  rehydrationTags []string
+  // Destination type (s3, gcs, azure)
+  destinationType string
+  // Destination details
+  destination dict
+}
+
+// Datadog RUM application
+datadog.rumApplication @defaults("id name") {
+  // Application ID
+  id string
+  // Application name
+  name string
+  // Application type (browser, ios, android, react-native, flutter, roku, unity, kotlin-multiplatform)
+  type string
+  // Client token
+  clientToken string
+  // Created at
+  createdAt time
+  // Updated at
+  updatedAt time
+  // Organization ID
+  orgId string
+  // Is active
+  isActive bool
+}
+
+// Datadog synthetics global variable
+datadog.syntheticsGlobalVariable @defaults("id name") {
+  // Variable ID
+  id string
+  // Variable name
+  name string
+  // Description
+  description string
+  // Tags
+  tags []string
+  // Whether the value is secure
+  isTotp bool
+  // Whether the value is from a Fido device
+  isFido bool
+  // Parse test public ID (source test)
+  parseTestPublicId string
+}
+
+// Datadog synthetics private location
+datadog.syntheticsPrivateLocation @defaults("id name") {
+  // Location ID
+  id string
+  // Location name
+  name string
+  // Description
+  description string
+  // Tags
+  tags []string
+  // Metadata
+  metadata dict
+}
