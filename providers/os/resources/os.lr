@@ -2645,6 +2645,41 @@ private wordpress.package @defaults("name version purl") {
   files []pkgFileInfo
 }
 
+// Ruby/Gem packages
+ruby.packages {
+  []ruby.package
+
+  init(path? string)
+
+  // Path to search for Gemfile.lock
+  path string
+
+  // Root project (may not exist)
+  root() ruby.package
+
+  // List of direct dependencies
+  directDependencies() []ruby.package
+
+  // Files used to determine the packages
+  files() []pkgFileInfo
+}
+
+// Ruby gem package
+ruby.package @defaults("name version purl") {
+  // ID is the ruby.package unique identifier
+  id string
+  // Gem name
+  name() string
+  // Gem version
+  version() string
+  // Package URL
+  purl() string
+  // Common Platform Enumeration (CPE) for the package
+  cpes() []core.cpe
+  // Package files
+  files() []pkgFileInfo
+}
+
 // macOS specific resources
 macos {
   // macOS computer name

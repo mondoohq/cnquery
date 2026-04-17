@@ -1,5 +1,7 @@
 aad
 accesscontextmanager
+actioncable
+actionpack
 ACCOUNTADMIN
 activedirectory
 ACTIVEMQ
@@ -278,6 +280,7 @@ networkinterface
 nexthop
 nft
 NINEl
+nio
 nmap
 noc
 nocerts

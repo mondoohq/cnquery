@@ -61,6 +61,7 @@ type BomFields struct {
 	TerraformPackages     []BomPackage      `json:"terraform.packages.list,omitempty"`
 	JenkinsPackages       []BomPackage      `json:"jenkins.packages.list,omitempty"`
 	WordpressPackages     []BomPackage      `json:"wordpress.packages.list,omitempty"`
+	RubyPackages          []BomPackage      `json:"ruby.packages.list,omitempty"`
 	KernelInstalled       []KernelInstalled `json:"kernel.installed,omitempty"`
 }
 

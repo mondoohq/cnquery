@@ -203,6 +203,8 @@ const (
 	ResourceJenkinsPackage               string = "jenkins.package"
 	ResourceWordpressPackages            string = "wordpress.packages"
 	ResourceWordpressPackage             string = "wordpress.package"
+	ResourceRubyPackages                 string = "ruby.packages"
+	ResourceRubyPackage                  string = "ruby.package"
 	ResourceMacos                        string = "macos"
 	ResourceMacosHardware                string = "macos.hardware"
 	ResourceMacosAlf                     string = "macos.alf"
@@ -1029,6 +1031,14 @@ func init() {
 		"wordpress.package": {
 			// to override args, implement: initWordpressPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWordpressPackage,
+		},
+		"ruby.packages": {
+			Init:   initRubyPackages,
+			Create: createRubyPackages,
+		},
+		"ruby.package": {
+			// to override args, implement: initRubyPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createRubyPackage,
 		},
 		"macos": {
 			// to override args, implement: initMacos(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4113,6 +4123,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"wordpress.package.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWordpressPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"ruby.packages.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRubyPackages).GetPath()).ToDataRes(types.String)
+	},
+	"ruby.packages.root": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRubyPackages).GetRoot()).ToDataRes(types.Resource("ruby.package"))
+	},
+	"ruby.packages.directDependencies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRubyPackages).GetDirectDependencies()).ToDataRes(types.Array(types.Resource("ruby.package")))
+	},
+	"ruby.packages.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRubyPackages).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"ruby.packages.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRubyPackages).GetList()).ToDataRes(types.Array(types.Resource("ruby.package")))
+	},
+	"ruby.package.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRubyPackage).GetId()).ToDataRes(types.String)
+	},
+	"ruby.package.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRubyPackage).GetName()).ToDataRes(types.String)
+	},
+	"ruby.package.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRubyPackage).GetVersion()).ToDataRes(types.String)
+	},
+	"ruby.package.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRubyPackage).GetPurl()).ToDataRes(types.String)
+	},
+	"ruby.package.cpes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRubyPackage).GetCpes()).ToDataRes(types.Array(types.Resource("cpe")))
+	},
+	"ruby.package.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRubyPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
 	},
 	"macos.computerName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacos).GetComputerName()).ToDataRes(types.String)
@@ -10015,6 +10058,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"wordpress.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWordpressPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ruby.packages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRubyPackages).__id, ok = v.Value.(string)
+		return
+	},
+	"ruby.packages.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRubyPackages).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ruby.packages.root": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRubyPackages).Root, ok = plugin.RawToTValue[*mqlRubyPackage](v.Value, v.Error)
+		return
+	},
+	"ruby.packages.directDependencies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRubyPackages).DirectDependencies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ruby.packages.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRubyPackages).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ruby.packages.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRubyPackages).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ruby.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRubyPackage).__id, ok = v.Value.(string)
+		return
+	},
+	"ruby.package.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRubyPackage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ruby.package.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRubyPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ruby.package.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRubyPackage).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ruby.package.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRubyPackage).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ruby.package.cpes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRubyPackage).Cpes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ruby.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRubyPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"macos.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -27777,6 +27872,227 @@ func (c *mqlWordpressPackage) GetTestedUpTo() *plugin.TValue[string] {
 
 func (c *mqlWordpressPackage) GetFiles() *plugin.TValue[[]any] {
 	return &c.Files
+}
+
+// mqlRubyPackages for the ruby.packages resource
+type mqlRubyPackages struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlRubyPackagesInternal
+	Path               plugin.TValue[string]
+	Root               plugin.TValue[*mqlRubyPackage]
+	DirectDependencies plugin.TValue[[]any]
+	Files              plugin.TValue[[]any]
+	List               plugin.TValue[[]any]
+}
+
+// createRubyPackages creates a new instance of this resource
+func createRubyPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlRubyPackages{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ruby.packages", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlRubyPackages) MqlName() string {
+	return "ruby.packages"
+}
+
+func (c *mqlRubyPackages) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlRubyPackages) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlRubyPackages) GetRoot() *plugin.TValue[*mqlRubyPackage] {
+	return plugin.GetOrCompute[*mqlRubyPackage](&c.Root, func() (*mqlRubyPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ruby.packages", c.__id, "root")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlRubyPackage), nil
+			}
+		}
+
+		return c.root()
+	})
+}
+
+func (c *mqlRubyPackages) GetDirectDependencies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DirectDependencies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ruby.packages", c.__id, "directDependencies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.directDependencies()
+	})
+}
+
+func (c *mqlRubyPackages) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ruby.packages", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+func (c *mqlRubyPackages) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ruby.packages", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlRubyPackage for the ruby.package resource
+type mqlRubyPackage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlRubyPackageInternal it will be used here
+	Id      plugin.TValue[string]
+	Name    plugin.TValue[string]
+	Version plugin.TValue[string]
+	Purl    plugin.TValue[string]
+	Cpes    plugin.TValue[[]any]
+	Files   plugin.TValue[[]any]
+}
+
+// createRubyPackage creates a new instance of this resource
+func createRubyPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlRubyPackage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ruby.package", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlRubyPackage) MqlName() string {
+	return "ruby.package"
+}
+
+func (c *mqlRubyPackage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlRubyPackage) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlRubyPackage) GetName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Name, func() (string, error) {
+		return c.name()
+	})
+}
+
+func (c *mqlRubyPackage) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlRubyPackage) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
+	})
+}
+
+func (c *mqlRubyPackage) GetCpes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Cpes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ruby.package", c.__id, "cpes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.cpes()
+	})
+}
+
+func (c *mqlRubyPackage) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ruby.package", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
 }
 
 // mqlMacos for the macos resource
