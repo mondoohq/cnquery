@@ -110,6 +110,8 @@ customresources
 cwes
 cyclonedx
 dast
+datadog
+datadoghq
 databricks
 datapath
 datasource
@@ -217,6 +219,7 @@ hostkeys
 hotlink
 hpi
 hsts
+httpbin
 hvm
 Iaa
 iana
@@ -429,6 +432,7 @@ rbcd
 recaptcha
 regexmatchstatement
 regexpatternsetreferencestatement
+rehydration
 replicators
 resourcegroup
 resourcepolicy
@@ -495,6 +499,7 @@ swi
 switchports
 SYMANTEC
 symfony
+synthetics
 tacacs
 tailnets
 tailscale

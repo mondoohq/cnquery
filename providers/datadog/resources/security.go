@@ -127,8 +127,6 @@ func (r *mqlDatadog) securitySuppressions() ([]interface{}, error) {
 			"suppressionQuery":   llx.StringData(attrs.GetSuppressionQuery()),
 			"dataExclusionQuery": llx.StringData(attrs.GetDataExclusionQuery()),
 			"expirationDate":     llx.TimeDataPtr(expirationDate),
-			"createdAt":          llx.TimeData(time.Time{}),
-			"updatedAt":          llx.TimeData(time.Time{}),
 		})
 		if err != nil {
 			return nil, err

@@ -21,8 +21,8 @@ var Config = plugin.Provider{
 			Long: `Use the datadog provider to query resources in a Datadog account.
 
 Examples:
-  cnspec shell datadog --api-key <key> --app-key <key>
-  cnspec shell datadog
+  mql shell datadog --api-key <key> --app-key <key>
+  mql shell datadog
 
 Notes:
   Set DD_API_KEY and DD_APP_KEY environment variables to avoid passing keys on the command line.

@@ -82,7 +82,6 @@ datadog.monitor.creator 13.0.1
 datadog.monitor.id 13.0.1
 datadog.monitor.message 13.0.1
 datadog.monitor.modified 13.0.1
-datadog.monitor.muted 13.0.1
 datadog.monitor.name 13.0.1
 datadog.monitor.notifyNoData 13.0.1
 datadog.monitor.options 13.0.1
@@ -134,7 +133,6 @@ datadog.securityRule.type 13.0.1
 datadog.securityRule.updatedAt 13.0.1
 datadog.securityRules 13.0.1
 datadog.securitySuppression 13.0.1
-datadog.securitySuppression.createdAt 13.0.1
 datadog.securitySuppression.dataExclusionQuery 13.0.1
 datadog.securitySuppression.description 13.0.1
 datadog.securitySuppression.enabled 13.0.1
@@ -143,7 +141,6 @@ datadog.securitySuppression.id 13.0.1
 datadog.securitySuppression.name 13.0.1
 datadog.securitySuppression.ruleQuery 13.0.1
 datadog.securitySuppression.suppressionQuery 13.0.1
-datadog.securitySuppression.updatedAt 13.0.1
 datadog.securitySuppressions 13.0.1
 datadog.sensitiveDataScannerGroup 13.0.1
 datadog.sensitiveDataScannerGroup.description 13.0.1
@@ -194,11 +191,9 @@ datadog.syntheticsPrivateLocation.tags 13.0.1
 datadog.syntheticsPrivateLocations 13.0.1
 datadog.syntheticsTest 13.0.1
 datadog.syntheticsTest.config 13.0.1
-datadog.syntheticsTest.createdAt 13.0.1
 datadog.syntheticsTest.creator 13.0.1
 datadog.syntheticsTest.locations 13.0.1
 datadog.syntheticsTest.message 13.0.1
-datadog.syntheticsTest.modifiedAt 13.0.1
 datadog.syntheticsTest.monitorId 13.0.1
 datadog.syntheticsTest.name 13.0.1
 datadog.syntheticsTest.options 13.0.1

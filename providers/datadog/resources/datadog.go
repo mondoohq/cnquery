@@ -173,7 +173,6 @@ func (r *mqlDatadog) monitors() ([]interface{}, error) {
 			"created":      llx.TimeDataPtr(timePtr(m.GetCreated())),
 			"modified":     llx.TimeDataPtr(timePtr(m.GetModified())),
 			"creator":      llx.StringData(creator),
-			"muted":        llx.BoolData(false),
 			"notifyNoData": llx.BoolData(notifyNoData),
 			"options":      llx.DictData(options),
 		})
@@ -268,20 +267,18 @@ func (r *mqlDatadog) syntheticsTests() ([]interface{}, error) {
 		}
 
 		res, err := CreateResource(r.MqlRuntime, "datadog.syntheticsTest", map[string]*llx.RawData{
-			"publicId":   llx.StringData(t.GetPublicId()),
-			"name":       llx.StringData(t.GetName()),
-			"type":       llx.StringData(string(t.GetType())),
-			"subtype":    llx.StringData(string(t.GetSubtype())),
-			"status":     llx.StringData(string(t.GetStatus())),
-			"message":    llx.StringData(t.GetMessage()),
-			"tags":       llx.ArrayData(tags, "\x02"),
-			"locations":  llx.ArrayData(locations, "\x02"),
-			"monitorId":  llx.IntData(t.GetMonitorId()),
-			"createdAt":  llx.TimeData(time.Time{}),
-			"modifiedAt": llx.TimeData(time.Time{}),
-			"creator":    llx.StringData(creator),
-			"config":     llx.DictData(config),
-			"options":    llx.DictData(options),
+			"publicId":  llx.StringData(t.GetPublicId()),
+			"name":      llx.StringData(t.GetName()),
+			"type":      llx.StringData(string(t.GetType())),
+			"subtype":   llx.StringData(string(t.GetSubtype())),
+			"status":    llx.StringData(string(t.GetStatus())),
+			"message":   llx.StringData(t.GetMessage()),
+			"tags":      llx.ArrayData(tags, "\x02"),
+			"locations": llx.ArrayData(locations, "\x02"),
+			"monitorId": llx.IntData(t.GetMonitorId()),
+			"creator":   llx.StringData(creator),
+			"config":    llx.DictData(config),
+			"options":   llx.DictData(options),
 		})
 		if err != nil {
 			return nil, err
@@ -492,8 +489,8 @@ func (r *mqlDatadog) securityRules() ([]interface{}, error) {
 			"tags":             llx.ArrayData(tags, "\x02"),
 			"isDefault":        llx.BoolData(rule.GetIsDefault()),
 			"isDeleted":        llx.BoolData(rule.GetIsDeleted()),
-			"createdAt":        llx.TimeData(time.Unix(rule.GetCreationAuthorId(), 0)),
-			"updatedAt":        llx.TimeData(time.Unix(rule.GetUpdateAuthorId(), 0)),
+			"createdAt":        llx.TimeDataPtr(timePtr(time.UnixMilli(rule.GetCreatedAt()))),
+			"updatedAt":        llx.TimeDataPtr(timePtr(time.UnixMilli(rule.GetUpdatedAt()))),
 			"cases":            llx.ArrayData(cases, "\x13"),
 			"filters":          llx.ArrayData(filters, "\x13"),
 			"options":          llx.DictData(options),
@@ -557,8 +554,8 @@ func (r *mqlDatadog) downtimes() ([]interface{}, error) {
 			"monitorIdentifier":             llx.DictData(monitorId),
 			"schedule":                      llx.DictData(map[string]interface{}{}),
 			"scope":                         llx.StringData(scope),
-			"createdAt":                     llx.TimeData(time.Time{}),
-			"modifiedAt":                    llx.TimeData(time.Time{}),
+			"createdAt":                     llx.TimeDataPtr(timePtr(attrs.GetCreated())),
+			"modifiedAt":                    llx.TimeDataPtr(timePtr(attrs.GetModified())),
 			"canceledAt":                    llx.TimeDataPtr(canceledAt),
 		})
 		if err != nil {
@@ -649,7 +646,7 @@ func (r *mqlDatadog) ipAllowlistEnabled() (bool, error) {
 
 	resp, _, err := api.GetIPAllowlist(conn.AuthCtx())
 	if err != nil {
-		return false, nil
+		return false, err
 	}
 
 	data := resp.GetData()
@@ -663,7 +660,7 @@ func (r *mqlDatadog) ipAllowlistEntries() ([]interface{}, error) {
 
 	resp, _, err := api.GetIPAllowlist(conn.AuthCtx())
 	if err != nil {
-		return []interface{}{}, nil
+		return nil, err
 	}
 
 	data := resp.GetData()
@@ -690,7 +687,7 @@ func (r *mqlDatadog) integrationAwsAccounts() ([]interface{}, error) {
 
 	resp, _, err := api.ListAWSAccounts(conn.AuthCtx())
 	if err != nil {
-		return []interface{}{}, nil
+		return nil, err
 	}
 
 	var all []interface{}

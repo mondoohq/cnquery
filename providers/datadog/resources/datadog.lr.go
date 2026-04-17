@@ -353,9 +353,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"datadog.monitor.creator": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatadogMonitor).GetCreator()).ToDataRes(types.String)
 	},
-	"datadog.monitor.muted": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlDatadogMonitor).GetMuted()).ToDataRes(types.Bool)
-	},
 	"datadog.monitor.notifyNoData": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatadogMonitor).GetNotifyNoData()).ToDataRes(types.Bool)
 	},
@@ -415,12 +412,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"datadog.syntheticsTest.monitorId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatadogSyntheticsTest).GetMonitorId()).ToDataRes(types.Int)
-	},
-	"datadog.syntheticsTest.createdAt": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlDatadogSyntheticsTest).GetCreatedAt()).ToDataRes(types.Time)
-	},
-	"datadog.syntheticsTest.modifiedAt": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlDatadogSyntheticsTest).GetModifiedAt()).ToDataRes(types.Time)
 	},
 	"datadog.syntheticsTest.creator": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatadogSyntheticsTest).GetCreator()).ToDataRes(types.String)
@@ -709,12 +700,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"datadog.securitySuppression.expirationDate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatadogSecuritySuppression).GetExpirationDate()).ToDataRes(types.Time)
-	},
-	"datadog.securitySuppression.createdAt": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlDatadogSecuritySuppression).GetCreatedAt()).ToDataRes(types.Time)
-	},
-	"datadog.securitySuppression.updatedAt": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlDatadogSecuritySuppression).GetUpdatedAt()).ToDataRes(types.Time)
 	},
 	"datadog.serviceAccount.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatadogServiceAccount).GetId()).ToDataRes(types.String)
@@ -1052,10 +1037,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDatadogMonitor).Creator, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"datadog.monitor.muted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlDatadogMonitor).Muted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
 	"datadog.monitor.notifyNoData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatadogMonitor).NotifyNoData, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -1142,14 +1123,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"datadog.syntheticsTest.monitorId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatadogSyntheticsTest).MonitorId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"datadog.syntheticsTest.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlDatadogSyntheticsTest).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
-		return
-	},
-	"datadog.syntheticsTest.modifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlDatadogSyntheticsTest).ModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"datadog.syntheticsTest.creator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1578,14 +1551,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"datadog.securitySuppression.expirationDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatadogSecuritySuppression).ExpirationDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
-		return
-	},
-	"datadog.securitySuppression.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlDatadogSecuritySuppression).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
-		return
-	},
-	"datadog.securitySuppression.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlDatadogSecuritySuppression).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"datadog.serviceAccount.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2375,7 +2340,6 @@ type mqlDatadogMonitor struct {
 	Created      plugin.TValue[*time.Time]
 	Modified     plugin.TValue[*time.Time]
 	Creator      plugin.TValue[string]
-	Muted        plugin.TValue[bool]
 	NotifyNoData plugin.TValue[bool]
 	Options      plugin.TValue[any]
 }
@@ -2459,10 +2423,6 @@ func (c *mqlDatadogMonitor) GetModified() *plugin.TValue[*time.Time] {
 
 func (c *mqlDatadogMonitor) GetCreator() *plugin.TValue[string] {
 	return &c.Creator
-}
-
-func (c *mqlDatadogMonitor) GetMuted() *plugin.TValue[bool] {
-	return &c.Muted
 }
 
 func (c *mqlDatadogMonitor) GetNotifyNoData() *plugin.TValue[bool] {
@@ -2567,20 +2527,18 @@ type mqlDatadogSyntheticsTest struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlDatadogSyntheticsTestInternal it will be used here
-	PublicId   plugin.TValue[string]
-	Name       plugin.TValue[string]
-	Type       plugin.TValue[string]
-	Subtype    plugin.TValue[string]
-	Status     plugin.TValue[string]
-	Message    plugin.TValue[string]
-	Tags       plugin.TValue[[]any]
-	Locations  plugin.TValue[[]any]
-	MonitorId  plugin.TValue[int64]
-	CreatedAt  plugin.TValue[*time.Time]
-	ModifiedAt plugin.TValue[*time.Time]
-	Creator    plugin.TValue[string]
-	Config     plugin.TValue[any]
-	Options    plugin.TValue[any]
+	PublicId  plugin.TValue[string]
+	Name      plugin.TValue[string]
+	Type      plugin.TValue[string]
+	Subtype   plugin.TValue[string]
+	Status    plugin.TValue[string]
+	Message   plugin.TValue[string]
+	Tags      plugin.TValue[[]any]
+	Locations plugin.TValue[[]any]
+	MonitorId plugin.TValue[int64]
+	Creator   plugin.TValue[string]
+	Config    plugin.TValue[any]
+	Options   plugin.TValue[any]
 }
 
 // createDatadogSyntheticsTest creates a new instance of this resource
@@ -2654,14 +2612,6 @@ func (c *mqlDatadogSyntheticsTest) GetLocations() *plugin.TValue[[]any] {
 
 func (c *mqlDatadogSyntheticsTest) GetMonitorId() *plugin.TValue[int64] {
 	return &c.MonitorId
-}
-
-func (c *mqlDatadogSyntheticsTest) GetCreatedAt() *plugin.TValue[*time.Time] {
-	return &c.CreatedAt
-}
-
-func (c *mqlDatadogSyntheticsTest) GetModifiedAt() *plugin.TValue[*time.Time] {
-	return &c.ModifiedAt
 }
 
 func (c *mqlDatadogSyntheticsTest) GetCreator() *plugin.TValue[string] {
@@ -3554,8 +3504,6 @@ type mqlDatadogSecuritySuppression struct {
 	SuppressionQuery   plugin.TValue[string]
 	DataExclusionQuery plugin.TValue[string]
 	ExpirationDate     plugin.TValue[*time.Time]
-	CreatedAt          plugin.TValue[*time.Time]
-	UpdatedAt          plugin.TValue[*time.Time]
 }
 
 // createDatadogSecuritySuppression creates a new instance of this resource
@@ -3625,14 +3573,6 @@ func (c *mqlDatadogSecuritySuppression) GetDataExclusionQuery() *plugin.TValue[s
 
 func (c *mqlDatadogSecuritySuppression) GetExpirationDate() *plugin.TValue[*time.Time] {
 	return &c.ExpirationDate
-}
-
-func (c *mqlDatadogSecuritySuppression) GetCreatedAt() *plugin.TValue[*time.Time] {
-	return &c.CreatedAt
-}
-
-func (c *mqlDatadogSecuritySuppression) GetUpdatedAt() *plugin.TValue[*time.Time] {
-	return &c.UpdatedAt
 }
 
 // mqlDatadogServiceAccount for the datadog.serviceAccount resource

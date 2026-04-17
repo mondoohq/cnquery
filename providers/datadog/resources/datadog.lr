@@ -118,8 +118,6 @@ datadog.monitor @defaults("id name type") {
   modified time
   // Creator email
   creator string
-  // Whether the monitor is muted
-  muted bool
   // Whether the monitor notifies when data is missing
   notifyNoData bool
   // Options
@@ -168,10 +166,6 @@ datadog.syntheticsTest @defaults("publicId name type") {
   locations []string
   // Monitor ID
   monitorId int
-  // Created at
-  createdAt time
-  // Modified at
-  modifiedAt time
   // Creator email
   creator string
   // Config
@@ -408,10 +402,6 @@ datadog.securitySuppression @defaults("id name") {
   dataExclusionQuery string
   // Expiration date
   expirationDate time
-  // Created at
-  createdAt time
-  // Updated at
-  updatedAt time
 }
 
 // Datadog service account
