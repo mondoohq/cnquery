@@ -429,9 +429,11 @@ func initAwsMskCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	svc := conn.Kafka(parsed.Region)
 	out, err := svc.DescribeClusterV2(context.Background(), &kafka.DescribeClusterV2Input{ClusterArn: &arnVal})
 	if err != nil {
-		// cross-account or access denied → return a minimal shell
-		args["__id"] = llx.StringData(arnVal)
-		return args, nil, nil
+		if Is400AccessDeniedError(err) {
+			args["__id"] = llx.StringData(arnVal)
+			return args, nil, nil
+		}
+		return nil, nil, err
 	}
 	if out.ClusterInfo == nil {
 		args["__id"] = llx.StringData(arnVal)
