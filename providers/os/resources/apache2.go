@@ -274,7 +274,11 @@ func (s *mqlApache2Conf) id() (string, error) {
 	if file.Error != nil {
 		return "", file.Error
 	}
-
+	// When Apache isn't installed we leave File set+null; use a stable ID so
+	// the resource still caches cleanly instead of nil-dereferencing.
+	if file.Data == nil {
+		return "apache2.conf", nil
+	}
 	return file.Data.Path.Data, nil
 }
 
@@ -307,15 +311,11 @@ func (s *mqlApache2Conf) file() (*mqlFile, error) {
 		}
 	}
 
-	// No config file found; return the platform default so the resource still
-	// has a path but parse() will detect non-existence and return empty data.
-	f, err := CreateResource(s.MqlRuntime, "file", map[string]*llx.RawData{
-		"path": llx.StringData(preferred),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return f.(*mqlFile), nil
+	// No config file found anywhere — Apache likely isn't installed. Mark the
+	// field as set+null so downstream field accessors (params, modules, ...)
+	// return empty data instead of bubbling up "file does not exist" errors.
+	s.File.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 var reApacheGlob = regexp.MustCompile(`[*?\[]`)
@@ -529,13 +529,19 @@ func (s *mqlApache2Conf) loadEnvvars(fileContent func(string) (string, error)) m
 }
 
 // envvars returns the apache2.conf.envvars resource representing the parsed
-// envvars file. When the platform doesn't use one (or the file is missing),
-// the resource is returned with an empty params map so callers can still
-// introspect it.
+// envvars file. When the platform doesn't use one or the file is missing,
+// the field is marked set+null so the resource is cleanly absent rather than
+// rendering as an error or placeholder.
 func (s *mqlApache2Conf) envvars() (*mqlApache2ConfEnvvars, error) {
 	conn := s.MqlRuntime.Connection.(shared.Connection)
 	path := apacheEnvvarsPath(conn)
 	if path == "" {
+		s.Envvars.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	afs := &afero.Afero{Fs: conn.FileSystem()}
+	if ok, _ := afs.Exists(path); !ok {
 		s.Envvars.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
@@ -547,14 +553,11 @@ func (s *mqlApache2Conf) envvars() (*mqlApache2ConfEnvvars, error) {
 		return nil, err
 	}
 
-	afs := &afero.Afero{Fs: conn.FileSystem()}
 	params := map[string]any{}
-	if exists, _ := afs.Exists(path); exists {
-		content := f.(*mqlFile).GetContent()
-		if content.Error == nil {
-			for k, v := range apache2.ParseEnvvars(content.Data) {
-				params[k] = v
-			}
+	content := f.(*mqlFile).GetContent()
+	if content.Error == nil {
+		for k, v := range apache2.ParseEnvvars(content.Data) {
+			params[k] = v
 		}
 	}
 
