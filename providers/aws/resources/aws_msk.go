@@ -1762,8 +1762,7 @@ func (a *mqlAwsMskClusterNode) networkInterface() (*mqlAwsEc2Networkinterface, e
 	}
 	mqlEni, err := NewResource(a.MqlRuntime, ResourceAwsEc2Networkinterface,
 		map[string]*llx.RawData{
-			"id":     llx.StringDataPtr(a.cacheEniId),
-			"region": llx.StringData(a.region),
+			"id": llx.StringDataPtr(a.cacheEniId),
 		})
 	if err != nil {
 		return nil, err
