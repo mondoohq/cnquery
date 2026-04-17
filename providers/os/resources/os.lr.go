@@ -190,6 +190,8 @@ const (
 	ResourcePhpPackage                   string = "php.package"
 	ResourceGithubactionsPackages        string = "githubactions.packages"
 	ResourceGithubactionsPackage         string = "githubactions.package"
+	ResourceSwiftPackages                string = "swift.packages"
+	ResourceSwiftPackage                 string = "swift.package"
 	ResourceMacos                        string = "macos"
 	ResourceMacosHardware                string = "macos.hardware"
 	ResourceMacosAlf                     string = "macos.alf"
@@ -956,6 +958,14 @@ func init() {
 		"githubactions.package": {
 			// to override args, implement: initGithubactionsPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGithubactionsPackage,
+		},
+		"swift.packages": {
+			Init:   initSwiftPackages,
+			Create: createSwiftPackages,
+		},
+		"swift.package": {
+			// to override args, implement: initSwiftPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSwiftPackage,
 		},
 		"macos": {
 			// to override args, implement: initMacos(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3789,6 +3799,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"githubactions.package.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubactionsPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"swift.packages.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSwiftPackages).GetPath()).ToDataRes(types.String)
+	},
+	"swift.packages.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSwiftPackages).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"swift.packages.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSwiftPackages).GetList()).ToDataRes(types.Array(types.Resource("swift.package")))
+	},
+	"swift.package.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSwiftPackage).GetId()).ToDataRes(types.String)
+	},
+	"swift.package.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSwiftPackage).GetName()).ToDataRes(types.String)
+	},
+	"swift.package.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSwiftPackage).GetVersion()).ToDataRes(types.String)
+	},
+	"swift.package.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSwiftPackage).GetPurl()).ToDataRes(types.String)
+	},
+	"swift.package.cpes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSwiftPackage).GetCpes()).ToDataRes(types.Array(types.Resource("cpe")))
+	},
+	"swift.package.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSwiftPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
 	},
 	"macos.computerName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacos).GetComputerName()).ToDataRes(types.String)
@@ -9233,6 +9270,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"githubactions.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubactionsPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"swift.packages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSwiftPackages).__id, ok = v.Value.(string)
+		return
+	},
+	"swift.packages.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSwiftPackages).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"swift.packages.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSwiftPackages).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"swift.packages.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSwiftPackages).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"swift.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSwiftPackage).__id, ok = v.Value.(string)
+		return
+	},
+	"swift.package.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSwiftPackage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"swift.package.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSwiftPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"swift.package.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSwiftPackage).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"swift.package.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSwiftPackage).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"swift.package.cpes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSwiftPackage).Cpes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"swift.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSwiftPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"macos.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25673,6 +25754,193 @@ func (c *mqlGithubactionsPackage) GetFiles() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("githubactions.package", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+// mqlSwiftPackages for the swift.packages resource
+type mqlSwiftPackages struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlSwiftPackagesInternal
+	Path  plugin.TValue[string]
+	Files plugin.TValue[[]any]
+	List  plugin.TValue[[]any]
+}
+
+// createSwiftPackages creates a new instance of this resource
+func createSwiftPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSwiftPackages{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("swift.packages", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSwiftPackages) MqlName() string {
+	return "swift.packages"
+}
+
+func (c *mqlSwiftPackages) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSwiftPackages) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlSwiftPackages) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("swift.packages", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+func (c *mqlSwiftPackages) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("swift.packages", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlSwiftPackage for the swift.package resource
+type mqlSwiftPackage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSwiftPackageInternal it will be used here
+	Id      plugin.TValue[string]
+	Name    plugin.TValue[string]
+	Version plugin.TValue[string]
+	Purl    plugin.TValue[string]
+	Cpes    plugin.TValue[[]any]
+	Files   plugin.TValue[[]any]
+}
+
+// createSwiftPackage creates a new instance of this resource
+func createSwiftPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSwiftPackage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("swift.package", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSwiftPackage) MqlName() string {
+	return "swift.package"
+}
+
+func (c *mqlSwiftPackage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSwiftPackage) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlSwiftPackage) GetName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Name, func() (string, error) {
+		return c.name()
+	})
+}
+
+func (c *mqlSwiftPackage) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlSwiftPackage) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
+	})
+}
+
+func (c *mqlSwiftPackage) GetCpes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Cpes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("swift.package", c.__id, "cpes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.cpes()
+	})
+}
+
+func (c *mqlSwiftPackage) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("swift.package", c.__id, "files")
 			if err != nil {
 				return nil, err
 			}

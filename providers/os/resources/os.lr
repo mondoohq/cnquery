@@ -2433,6 +2433,35 @@ githubactions.package @defaults("name version purl") {
   files() []pkgFileInfo
 }
 
+// Swift packages (SPM and CocoaPods)
+swift.packages {
+  []swift.package
+
+  init(path? string)
+
+  // Path to search for Swift package files
+  path string
+
+  // Files used to determine the packages
+  files() []pkgFileInfo
+}
+
+// Swift package dependency
+swift.package @defaults("name version purl") {
+  // ID is the swift.package unique identifier
+  id string
+  // Name of the package
+  name() string
+  // Version of the package
+  version() string
+  // Package URL
+  purl() string
+  // Common Platform Enumeration (CPE) for the package
+  cpes() []core.cpe
+  // Package files
+  files() []pkgFileInfo
+}
+
 // macOS specific resources
 macos {
   // macOS computer name

@@ -1255,6 +1255,17 @@ sudoers.userSpec.runasUsers 11.7.0
 sudoers.userSpec.tags 11.7.0
 sudoers.userSpec.users 11.7.0
 sudoers.userSpecs 11.7.0
+swift.package 13.10.1
+swift.package.cpes 13.10.1
+swift.package.files 13.10.1
+swift.package.id 13.10.1
+swift.package.name 13.10.1
+swift.package.purl 13.10.1
+swift.package.version 13.10.1
+swift.packages 13.10.1
+swift.packages.files 13.10.1
+swift.packages.list 13.10.1
+swift.packages.path 13.10.1
 sysrc 13.2.6
 sysrc.content 13.2.6
 sysrc.entries 13.2.6

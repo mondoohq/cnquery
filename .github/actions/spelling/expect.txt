@@ -5,6 +5,7 @@ activedirectory
 ACTIVEMQ
 adr
 afero
+alamofire
 AJD
 advancedthreatprotection
 alloydb
@@ -35,6 +36,7 @@ AWSPENDING
 AWSPREVIOUS
 awsvpc
 Beixb
+bfc
 BXdl
 bwawxf
 backupconfiguration
@@ -48,6 +50,7 @@ BINPACK
 blackhole
 bytematchstatement
 cavium
+cbf
 cdn
 ceph
 certificatechains
@@ -60,6 +63,7 @@ claude
 clcerts
 cloudflare
 Clusterwide
+cocoapods
 codeql
 cmdline
 cmek
@@ -86,6 +90,7 @@ ddl
 ddos
 dedup
 dedupratio
+defc
 deliverychannel
 depsdev
 dfw
@@ -114,7 +119,9 @@ ERPCLOUD
 eventarc
 Exadata
 exo
+faa
 failback
+fce
 FEBLx
 fargate
 filestore
@@ -295,6 +302,7 @@ persistentvolume
 persistentvolumeclaim
 phpunit
 Pids
+podfile
 pipefail
 pki
 portgroup
