@@ -165,7 +165,7 @@ func (r *mqlCursorRule) id() (string, error) {
 	return "cursor.rule/" + r.Name.Data, nil
 }
 
-func (r *mqlCursorSkill) id() (string, error) {
+func (r *mqlCursorSkill) id() (string, error) { //nolint:unused
 	return "cursor.skill/" + r.Name.Data, nil
 }
 
