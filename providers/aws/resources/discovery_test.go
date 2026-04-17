@@ -42,6 +42,9 @@ func TestAllResolvedResources(t *testing.T) {
 		DiscoverySecretsManagerSecrets,
 		DiscoveryElasticacheClusters,
 		DiscoveryCloudfrontDistributions,
+		DiscoveryNeptuneClusters,
+		DiscoveryEMRClusters,
+		DiscoveryDocumentDBClusters,
 		DiscoveryInstances,
 		DiscoverySSMInstances,
 		DiscoveryECR,
@@ -79,6 +82,9 @@ func TestAutoResolvedResources(t *testing.T) {
 		DiscoverySecretsManagerSecrets,
 		DiscoveryElasticacheClusters,
 		DiscoveryCloudfrontDistributions,
+		DiscoveryNeptuneClusters,
+		DiscoveryEMRClusters,
+		DiscoveryDocumentDBClusters,
 	}
 	require.ElementsMatch(t, expected, Auto)
 }

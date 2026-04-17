@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sync"
 
@@ -97,6 +98,45 @@ func (a *mqlAwsEmr) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func initAwsEmrCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
+
+	if args["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch emr cluster")
+	}
+
+	obj, err := CreateResource(runtime, "aws.emr", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	e := obj.(*mqlAwsEmr)
+
+	rawResources := e.GetClusters()
+	if rawResources.Error != nil {
+		return nil, nil, rawResources.Error
+	}
+
+	arnVal, ok := args["arn"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("arn must be a string")
+	}
+	for _, rawResource := range rawResources.Data {
+		cluster := rawResource.(*mqlAwsEmrCluster)
+		if cluster.Arn.Data == arnVal {
+			return args, cluster, nil
+		}
+	}
+	return nil, nil, errors.New("emr cluster does not exist")
 }
 
 type mqlAwsEmrClusterInternal struct {

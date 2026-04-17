@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/neptune"
@@ -149,6 +150,45 @@ func newMqlAwsNeptuneCluster(runtime *plugin.Runtime, region string, accountID s
 
 func (a *mqlAwsNeptuneCluster) securityGroups() ([]any, error) {
 	return a.newSecurityGroupResources(a.MqlRuntime)
+}
+
+func initAwsNeptuneCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
+
+	if args["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch neptune cluster")
+	}
+
+	obj, err := CreateResource(runtime, "aws.neptune", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	n := obj.(*mqlAwsNeptune)
+
+	rawResources := n.GetClusters()
+	if rawResources.Error != nil {
+		return nil, nil, rawResources.Error
+	}
+
+	arnVal, ok := args["arn"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("arn must be a string")
+	}
+	for _, rawResource := range rawResources.Data {
+		cluster := rawResource.(*mqlAwsNeptuneCluster)
+		if cluster.Arn.Data == arnVal {
+			return args, cluster, nil
+		}
+	}
+	return nil, nil, errors.New("neptune cluster does not exist")
 }
 
 func (a *mqlAwsNeptune) instances() ([]any, error) {

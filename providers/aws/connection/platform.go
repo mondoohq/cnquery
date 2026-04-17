@@ -88,6 +88,12 @@ func getServiceName(platformName string) string {
 		return "elasticache"
 	case "aws-cloudfront-distribution":
 		return "cloudfront"
+	case "aws-neptune-cluster":
+		return "neptune"
+	case "aws-emr-cluster":
+		return "emr"
+	case "aws-documentdb-cluster":
+		return "documentdb"
 	}
 	return "other"
 }
@@ -152,6 +158,12 @@ func getTitleForPlatformName(name string) string {
 		return "AWS ElastiCache Cluster"
 	case "aws-cloudfront-distribution":
 		return "AWS CloudFront Distribution"
+	case "aws-neptune-cluster":
+		return "AWS Neptune Cluster"
+	case "aws-emr-cluster":
+		return "AWS EMR Cluster"
+	case "aws-documentdb-cluster":
+		return "AWS DocumentDB Cluster"
 	}
 	return "Amazon Web Services"
 }
