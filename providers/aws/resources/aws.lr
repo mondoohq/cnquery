@@ -4064,12 +4064,50 @@ private aws.autoscaling.group @defaults("name region minSize maxSize") {
   desiredCapacity int
   // List of availability zones associated with the group
   availabilityZones []string
+  // List of availability zone IDs associated with the group
+  availabilityZoneIds []string
+  // Capacity distribution across Availability Zones (CapacityDistributionStrategy, CapacityReservationTarget)
+  availabilityZoneDistribution dict
+  // Availability Zone impairment policy (ImpairedZoneHealthCheckBehavior, ZonalShiftEnabled)
+  availabilityZoneImpairmentPolicy dict
   // Whether Capacity Rebalancing is enabled
   capacityRebalance bool
+  // Capacity reservation specification (CapacityReservationPreference, CapacityReservationTarget)
+  capacityReservationSpecification dict
+  // Reserved user context string
+  context string
   // Duration of the default instance warmup, in seconds
   defaultInstanceWarmup int
+  // Deletion protection setting: "none" or "prevent-force-deletion"
+  deletionProtection string
+  // Metrics enabled for the group (each entry has Metric and Granularity fields)
+  enabledMetrics []dict
   // EC2 instances associated with the group
   instances() []aws.ec2.instance
+  // Instance lifecycle policy (DesiredConfiguration) for the group
+  instanceLifecyclePolicy dict
+  // Instance maintenance policy (MinHealthyPercentage, MaxHealthyPercentage)
+  instanceMaintenancePolicy dict
+  // Launch template used by the group
+  launchTemplate() aws.ec2.launchtemplate
+  // Version of the launch template used by the group
+  launchTemplateVersion string
+  // Mixed instances policy (LaunchTemplate + InstancesDistribution) for the group
+  mixedInstancesPolicy dict
+  // Service-linked IAM role used by the group to call other AWS services
+  serviceLinkedRole() aws.iam.role
+  // Subnets associated with the group
+  subnets() []aws.vpc.subnet
+  // Current state of the group when a delete operation is in progress
+  status string
+  // Suspended Auto Scaling processes (each entry has ProcessName and SuspensionReason)
+  suspendedProcesses []dict
+  // Termination policies for the group
+  terminationPolicies []string
+  // Traffic sources associated with the group (target groups, VPC Lattice, etc.)
+  trafficSources []dict
+  // Warm pool configuration (MaxGroupPreparedCapacity, MinSize, PoolState, InstanceReusePolicy)
+  warmPoolConfiguration dict
   // Unit of measurement for desired capacity (attribute-based instance type selection)
   desiredCapacityType string
   // Current size of the warm pool

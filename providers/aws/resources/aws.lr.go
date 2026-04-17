@@ -8182,14 +8182,71 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.autoscaling.group.availabilityZones": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAutoscalingGroup).GetAvailabilityZones()).ToDataRes(types.Array(types.String))
 	},
+	"aws.autoscaling.group.availabilityZoneIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetAvailabilityZoneIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.autoscaling.group.availabilityZoneDistribution": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetAvailabilityZoneDistribution()).ToDataRes(types.Dict)
+	},
+	"aws.autoscaling.group.availabilityZoneImpairmentPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetAvailabilityZoneImpairmentPolicy()).ToDataRes(types.Dict)
+	},
 	"aws.autoscaling.group.capacityRebalance": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAutoscalingGroup).GetCapacityRebalance()).ToDataRes(types.Bool)
+	},
+	"aws.autoscaling.group.capacityReservationSpecification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetCapacityReservationSpecification()).ToDataRes(types.Dict)
+	},
+	"aws.autoscaling.group.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetContext()).ToDataRes(types.String)
 	},
 	"aws.autoscaling.group.defaultInstanceWarmup": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAutoscalingGroup).GetDefaultInstanceWarmup()).ToDataRes(types.Int)
 	},
+	"aws.autoscaling.group.deletionProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetDeletionProtection()).ToDataRes(types.String)
+	},
+	"aws.autoscaling.group.enabledMetrics": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetEnabledMetrics()).ToDataRes(types.Array(types.Dict))
+	},
 	"aws.autoscaling.group.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAutoscalingGroup).GetInstances()).ToDataRes(types.Array(types.Resource("aws.ec2.instance")))
+	},
+	"aws.autoscaling.group.instanceLifecyclePolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetInstanceLifecyclePolicy()).ToDataRes(types.Dict)
+	},
+	"aws.autoscaling.group.instanceMaintenancePolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetInstanceMaintenancePolicy()).ToDataRes(types.Dict)
+	},
+	"aws.autoscaling.group.launchTemplate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetLaunchTemplate()).ToDataRes(types.Resource("aws.ec2.launchtemplate"))
+	},
+	"aws.autoscaling.group.launchTemplateVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetLaunchTemplateVersion()).ToDataRes(types.String)
+	},
+	"aws.autoscaling.group.mixedInstancesPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetMixedInstancesPolicy()).ToDataRes(types.Dict)
+	},
+	"aws.autoscaling.group.serviceLinkedRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetServiceLinkedRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.autoscaling.group.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
+	"aws.autoscaling.group.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.autoscaling.group.suspendedProcesses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetSuspendedProcesses()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.autoscaling.group.terminationPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetTerminationPolicies()).ToDataRes(types.Array(types.String))
+	},
+	"aws.autoscaling.group.trafficSources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetTrafficSources()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.autoscaling.group.warmPoolConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetWarmPoolConfiguration()).ToDataRes(types.Dict)
 	},
 	"aws.autoscaling.group.desiredCapacityType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAutoscalingGroup).GetDesiredCapacityType()).ToDataRes(types.String)
@@ -28500,16 +28557,92 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsAutoscalingGroup).AvailabilityZones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.autoscaling.group.availabilityZoneIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).AvailabilityZoneIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.autoscaling.group.availabilityZoneDistribution": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).AvailabilityZoneDistribution, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.autoscaling.group.availabilityZoneImpairmentPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).AvailabilityZoneImpairmentPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"aws.autoscaling.group.capacityRebalance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAutoscalingGroup).CapacityRebalance, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.autoscaling.group.capacityReservationSpecification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).CapacityReservationSpecification, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.autoscaling.group.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).Context, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.autoscaling.group.defaultInstanceWarmup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAutoscalingGroup).DefaultInstanceWarmup, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"aws.autoscaling.group.deletionProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).DeletionProtection, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.autoscaling.group.enabledMetrics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).EnabledMetrics, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.autoscaling.group.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAutoscalingGroup).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.autoscaling.group.instanceLifecyclePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).InstanceLifecyclePolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.autoscaling.group.instanceMaintenancePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).InstanceMaintenancePolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.autoscaling.group.launchTemplate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).LaunchTemplate, ok = plugin.RawToTValue[*mqlAwsEc2Launchtemplate](v.Value, v.Error)
+		return
+	},
+	"aws.autoscaling.group.launchTemplateVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).LaunchTemplateVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.autoscaling.group.mixedInstancesPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).MixedInstancesPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.autoscaling.group.serviceLinkedRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).ServiceLinkedRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.autoscaling.group.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.autoscaling.group.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.autoscaling.group.suspendedProcesses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).SuspendedProcesses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.autoscaling.group.terminationPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).TerminationPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.autoscaling.group.trafficSources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).TrafficSources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.autoscaling.group.warmPoolConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).WarmPoolConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.autoscaling.group.desiredCapacityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -67790,9 +67923,28 @@ type mqlAwsAutoscalingGroup struct {
 	MaxInstanceLifetime              plugin.TValue[int64]
 	DesiredCapacity                  plugin.TValue[int64]
 	AvailabilityZones                plugin.TValue[[]any]
+	AvailabilityZoneIds              plugin.TValue[[]any]
+	AvailabilityZoneDistribution     plugin.TValue[any]
+	AvailabilityZoneImpairmentPolicy plugin.TValue[any]
 	CapacityRebalance                plugin.TValue[bool]
+	CapacityReservationSpecification plugin.TValue[any]
+	Context                          plugin.TValue[string]
 	DefaultInstanceWarmup            plugin.TValue[int64]
+	DeletionProtection               plugin.TValue[string]
+	EnabledMetrics                   plugin.TValue[[]any]
 	Instances                        plugin.TValue[[]any]
+	InstanceLifecyclePolicy          plugin.TValue[any]
+	InstanceMaintenancePolicy        plugin.TValue[any]
+	LaunchTemplate                   plugin.TValue[*mqlAwsEc2Launchtemplate]
+	LaunchTemplateVersion            plugin.TValue[string]
+	MixedInstancesPolicy             plugin.TValue[any]
+	ServiceLinkedRole                plugin.TValue[*mqlAwsIamRole]
+	Subnets                          plugin.TValue[[]any]
+	Status                           plugin.TValue[string]
+	SuspendedProcesses               plugin.TValue[[]any]
+	TerminationPolicies              plugin.TValue[[]any]
+	TrafficSources                   plugin.TValue[[]any]
+	WarmPoolConfiguration            plugin.TValue[any]
 	DesiredCapacityType              plugin.TValue[string]
 	WarmPoolSize                     plugin.TValue[int64]
 	PredictedCapacity                plugin.TValue[int64]
@@ -67918,12 +68070,40 @@ func (c *mqlAwsAutoscalingGroup) GetAvailabilityZones() *plugin.TValue[[]any] {
 	return &c.AvailabilityZones
 }
 
+func (c *mqlAwsAutoscalingGroup) GetAvailabilityZoneIds() *plugin.TValue[[]any] {
+	return &c.AvailabilityZoneIds
+}
+
+func (c *mqlAwsAutoscalingGroup) GetAvailabilityZoneDistribution() *plugin.TValue[any] {
+	return &c.AvailabilityZoneDistribution
+}
+
+func (c *mqlAwsAutoscalingGroup) GetAvailabilityZoneImpairmentPolicy() *plugin.TValue[any] {
+	return &c.AvailabilityZoneImpairmentPolicy
+}
+
 func (c *mqlAwsAutoscalingGroup) GetCapacityRebalance() *plugin.TValue[bool] {
 	return &c.CapacityRebalance
 }
 
+func (c *mqlAwsAutoscalingGroup) GetCapacityReservationSpecification() *plugin.TValue[any] {
+	return &c.CapacityReservationSpecification
+}
+
+func (c *mqlAwsAutoscalingGroup) GetContext() *plugin.TValue[string] {
+	return &c.Context
+}
+
 func (c *mqlAwsAutoscalingGroup) GetDefaultInstanceWarmup() *plugin.TValue[int64] {
 	return &c.DefaultInstanceWarmup
+}
+
+func (c *mqlAwsAutoscalingGroup) GetDeletionProtection() *plugin.TValue[string] {
+	return &c.DeletionProtection
+}
+
+func (c *mqlAwsAutoscalingGroup) GetEnabledMetrics() *plugin.TValue[[]any] {
+	return &c.EnabledMetrics
 }
 
 func (c *mqlAwsAutoscalingGroup) GetInstances() *plugin.TValue[[]any] {
@@ -67940,6 +68120,90 @@ func (c *mqlAwsAutoscalingGroup) GetInstances() *plugin.TValue[[]any] {
 
 		return c.instances()
 	})
+}
+
+func (c *mqlAwsAutoscalingGroup) GetInstanceLifecyclePolicy() *plugin.TValue[any] {
+	return &c.InstanceLifecyclePolicy
+}
+
+func (c *mqlAwsAutoscalingGroup) GetInstanceMaintenancePolicy() *plugin.TValue[any] {
+	return &c.InstanceMaintenancePolicy
+}
+
+func (c *mqlAwsAutoscalingGroup) GetLaunchTemplate() *plugin.TValue[*mqlAwsEc2Launchtemplate] {
+	return plugin.GetOrCompute[*mqlAwsEc2Launchtemplate](&c.LaunchTemplate, func() (*mqlAwsEc2Launchtemplate, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.autoscaling.group", c.__id, "launchTemplate")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Launchtemplate), nil
+			}
+		}
+
+		return c.launchTemplate()
+	})
+}
+
+func (c *mqlAwsAutoscalingGroup) GetLaunchTemplateVersion() *plugin.TValue[string] {
+	return &c.LaunchTemplateVersion
+}
+
+func (c *mqlAwsAutoscalingGroup) GetMixedInstancesPolicy() *plugin.TValue[any] {
+	return &c.MixedInstancesPolicy
+}
+
+func (c *mqlAwsAutoscalingGroup) GetServiceLinkedRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.ServiceLinkedRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.autoscaling.group", c.__id, "serviceLinkedRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.serviceLinkedRole()
+	})
+}
+
+func (c *mqlAwsAutoscalingGroup) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.autoscaling.group", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
+}
+
+func (c *mqlAwsAutoscalingGroup) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsAutoscalingGroup) GetSuspendedProcesses() *plugin.TValue[[]any] {
+	return &c.SuspendedProcesses
+}
+
+func (c *mqlAwsAutoscalingGroup) GetTerminationPolicies() *plugin.TValue[[]any] {
+	return &c.TerminationPolicies
+}
+
+func (c *mqlAwsAutoscalingGroup) GetTrafficSources() *plugin.TValue[[]any] {
+	return &c.TrafficSources
+}
+
+func (c *mqlAwsAutoscalingGroup) GetWarmPoolConfiguration() *plugin.TValue[any] {
+	return &c.WarmPoolConfiguration
 }
 
 func (c *mqlAwsAutoscalingGroup) GetDesiredCapacityType() *plugin.TValue[string] {
