@@ -186,6 +186,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"datadog": {
+		Provider: &plugin.Provider{
+			Name:            "datadog",
+			ID:              "go.mondoo.com/mql/providers/datadog",
+			ConnectionTypes: []string{"datadog"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "datadog",
+					Use:   "datadog",
+					Short: "a Datadog account",
+				},
+			},
+		},
+	},
+
 	"digitalocean": {
 		Provider: &plugin.Provider{
 			Name:            "digitalocean",
