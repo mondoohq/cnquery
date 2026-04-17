@@ -19,6 +19,11 @@ type DiscoveryFilters struct {
 	Ecs                  EcsDiscoveryFilters
 	General              GeneralDiscoveryFilters
 	PropagateAccountTags bool
+	// AccountTags, when non-empty, is used as the source of account-level tags
+	// for PropagateAccountTags instead of calling Organizations. Intended for
+	// callers that can fetch tags from a management-account context (member
+	// accounts can't reach Organizations APIs).
+	AccountTags map[string]string
 }
 
 func DiscoveryFiltersFromOpts(opts map[string]string) DiscoveryFilters {
@@ -43,6 +48,7 @@ func DiscoveryFiltersFromOpts(opts map[string]string) DiscoveryFilters {
 			DiscoverImages:        parseBoolOpt(opts, "ecs:discover-images", false),
 		},
 		PropagateAccountTags: parseBoolOpt(opts, "propagate-account-tags", false),
+		AccountTags:          parseMapOpt(opts, "account-tag:"),
 	}
 
 	// TODO: backward compatibility, remove in future versions
