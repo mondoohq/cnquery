@@ -3551,6 +3551,8 @@ private claude.code.skill @defaults("name") @maturity("preview") {
   source string
   // Full content of the skill definition
   content string
+  // SHA-256 hash of the skill content
+  sha256() string
 }
 
 // Claude Code project
@@ -3628,6 +3630,8 @@ private openai.codex.skill @defaults("name") @maturity("preview") {
   plugin string
   // Full content of the skill definition
   content string
+  // SHA-256 hash of the skill content
+  sha256() string
 }
 
 // OpenAI Codex MCP server

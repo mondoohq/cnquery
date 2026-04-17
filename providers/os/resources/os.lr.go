@@ -5083,6 +5083,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"claude.code.skill.content": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClaudeCodeSkill).GetContent()).ToDataRes(types.String)
 	},
+	"claude.code.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeSkill).GetSha256()).ToDataRes(types.String)
+	},
 	"claude.code.project.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClaudeCodeProject).GetPath()).ToDataRes(types.String)
 	},
@@ -5166,6 +5169,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"openai.codex.skill.content": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenaiCodexSkill).GetContent()).ToDataRes(types.String)
+	},
+	"openai.codex.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodexSkill).GetSha256()).ToDataRes(types.String)
 	},
 	"openai.codex.mcpServer.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenaiCodexMcpServer).GetName()).ToDataRes(types.String)
@@ -11191,6 +11197,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlClaudeCodeSkill).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"claude.code.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"claude.code.project.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlClaudeCodeProject).__id, ok = v.Value.(string)
 		return
@@ -11321,6 +11331,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openai.codex.skill.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenaiCodexSkill).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openai.codex.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"openai.codex.mcpServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -30896,6 +30910,7 @@ type mqlClaudeCodeSkill struct {
 	ArgumentHint plugin.TValue[string]
 	Source       plugin.TValue[string]
 	Content      plugin.TValue[string]
+	Sha256       plugin.TValue[string]
 }
 
 // createClaudeCodeSkill creates a new instance of this resource
@@ -30957,6 +30972,12 @@ func (c *mqlClaudeCodeSkill) GetSource() *plugin.TValue[string] {
 
 func (c *mqlClaudeCodeSkill) GetContent() *plugin.TValue[string] {
 	return &c.Content
+}
+
+func (c *mqlClaudeCodeSkill) GetSha256() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
+		return c.sha256()
+	})
 }
 
 // mqlClaudeCodeProject for the claude.code.project resource
@@ -31316,6 +31337,7 @@ type mqlOpenaiCodexSkill struct {
 	Source      plugin.TValue[string]
 	Plugin      plugin.TValue[string]
 	Content     plugin.TValue[string]
+	Sha256      plugin.TValue[string]
 }
 
 // createOpenaiCodexSkill creates a new instance of this resource
@@ -31373,6 +31395,12 @@ func (c *mqlOpenaiCodexSkill) GetPlugin() *plugin.TValue[string] {
 
 func (c *mqlOpenaiCodexSkill) GetContent() *plugin.TValue[string] {
 	return &c.Content
+}
+
+func (c *mqlOpenaiCodexSkill) GetSha256() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
+		return c.sha256()
+	})
 }
 
 // mqlOpenaiCodexMcpServer for the openai.codex.mcpServer resource

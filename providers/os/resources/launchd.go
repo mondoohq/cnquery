@@ -106,7 +106,7 @@ func (l *mqlLaunchd) parseUserAgents(afs *afero.Afero) ([]any, error) {
 		}
 
 		// Skip system accounts with well-known non-user home directories
-		if invalidHomeDirs[home.Data] {
+		if isSystemHomeDir(home.Data) {
 			continue
 		}
 

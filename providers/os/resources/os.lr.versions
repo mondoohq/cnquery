@@ -178,6 +178,7 @@ claude.code.skill.argumentHint 13.8.2
 claude.code.skill.content 13.8.2
 claude.code.skill.description 13.8.2
 claude.code.skill.name 13.8.2
+claude.code.skill.sha256 13.10.1
 claude.code.skill.source 13.8.2
 claude.code.skills 13.8.2
 claude.code.subscription 13.8.2
@@ -936,6 +937,7 @@ openai.codex.skill.content 13.8.2
 openai.codex.skill.description 13.8.2
 openai.codex.skill.name 13.8.2
 openai.codex.skill.plugin 13.8.2
+openai.codex.skill.sha256 13.10.1
 openai.codex.skill.source 13.8.2
 openai.codex.skills 13.8.2
 openai.codex.version 13.8.2
