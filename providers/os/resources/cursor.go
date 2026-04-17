@@ -10,48 +10,23 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/spf13/afero"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 	"go.mondoo.com/mql/v13/types"
 )
 
 const defaultCursorConfigDir = ".cursor"
 
 func initCursor(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if x, ok := args["configPath"]; ok {
-		path, ok := x.Value.(string)
-		if !ok {
-			return nil, nil, fmt.Errorf("wrong type for 'configPath' in cursor initialization, it must be a string")
-		}
-		if path == "" {
-			delete(args, "configPath")
-		}
-	}
-
-	if _, ok := args["configPath"]; !ok {
-		home, err := targetHomeDir(runtime)
-		if err != nil {
-			return nil, nil, err
-		}
-		args["configPath"] = llx.StringData(filepath.Join(home, defaultCursorConfigDir))
-	}
-
-	return args, nil, nil
+	return initConfigPath(runtime, args, "cursor", defaultCursorConfigDir)
 }
 
 func (r *mqlCursor) id() (string, error) {
 	return "cursor/" + r.ConfigPath.Data, nil
 }
 
-func (r *mqlCursor) afs() *afero.Afero {
-	conn := r.MqlRuntime.Connection.(shared.Connection)
-	return &afero.Afero{Fs: conn.FileSystem()}
-}
-
 func (r *mqlCursor) mcpServers() ([]interface{}, error) {
-	afs := r.afs()
+	afs := connectionAfs(r.MqlRuntime)
 	configDir := r.ConfigPath.Data
 
 	// Cursor stores MCP config in mcp.json
@@ -92,7 +67,7 @@ func (r *mqlCursor) mcpServers() ([]interface{}, error) {
 }
 
 func (r *mqlCursor) rules() ([]interface{}, error) {
-	afs := r.afs()
+	afs := connectionAfs(r.MqlRuntime)
 	rulesDir := filepath.Join(r.ConfigPath.Data, "rules")
 
 	entries, err := afs.ReadDir(rulesDir)

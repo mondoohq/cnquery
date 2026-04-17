@@ -397,7 +397,9 @@ sqlimatchstatement
 sqlserver
 Sspr
 stdlib
+stdio
 stepfunctions
+streamable
 stringx
 subscriptionfilter
 superusers
