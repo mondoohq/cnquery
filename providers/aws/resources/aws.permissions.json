@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.14.1",
-  "generated_at": "2026-04-17T08:01:17-07:00",
+  "generated_at": "2026-04-17T11:35:02-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -323,6 +323,7 @@
     "inspector2:ListCoverage",
     "inspector2:ListFindings",
     "kafka:DescribeClusterV2",
+    "kafka:DescribeConfiguration",
     "kafka:DescribeConfigurationRevision",
     "kafka:DescribeReplicator",
     "kafka:GetBootstrapBrokers",
@@ -2618,6 +2619,12 @@
       "permission": "kafka:DescribeClusterV2",
       "service": "kafka",
       "action": "DescribeClusterV2",
+      "source_file": "aws_msk.go"
+    },
+    {
+      "permission": "kafka:DescribeConfiguration",
+      "service": "kafka",
+      "action": "DescribeConfiguration",
       "source_file": "aws_msk.go"
     },
     {

@@ -410,6 +410,8 @@ func newMqlAwsMskCluster(runtime *plugin.Runtime, region string, accountID strin
 }
 
 // initAwsMskCluster tolerates a bare arn (for cross-account typed refs from Pipes/Firehose/Replicator).
+// When the cluster is accessible, DescribeClusterV2 populates all scalar fields; on access denied (cross-account)
+// the resource falls back to a minimal shell with just arn/__id so callers can still traverse other fields.
 func initAwsMskCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) >= 2 {
 		return args, nil, nil
@@ -418,8 +420,28 @@ func initAwsMskCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 		return nil, nil, errors.New("arn required to fetch aws msk cluster")
 	}
 	arnVal := args["arn"].Value.(string)
-	args["__id"] = llx.StringData(arnVal)
-	return args, nil, nil
+	parsed, err := arn.Parse(arnVal)
+	if err != nil {
+		args["__id"] = llx.StringData(arnVal)
+		return args, nil, nil
+	}
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Kafka(parsed.Region)
+	out, err := svc.DescribeClusterV2(context.Background(), &kafka.DescribeClusterV2Input{ClusterArn: &arnVal})
+	if err != nil {
+		// cross-account or access denied → return a minimal shell
+		args["__id"] = llx.StringData(arnVal)
+		return args, nil, nil
+	}
+	if out.ClusterInfo == nil {
+		args["__id"] = llx.StringData(arnVal)
+		return args, nil, nil
+	}
+	mqlCluster, err := newMqlAwsMskCluster(runtime, parsed.Region, parsed.AccountID, *out.ClusterInfo)
+	if err != nil {
+		return nil, nil, err
+	}
+	return nil, mqlCluster, nil
 }
 
 func (a *mqlAwsMskCluster) fetchDescribe() (*kafka.DescribeClusterV2Output, error) {
@@ -1330,7 +1352,7 @@ func (a *mqlAwsMskClusterLoggingInfoCloudwatchLogs) logGroup() (*mqlAwsCloudwatc
 		a.LogGroup.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	logGroupArn := fmt.Sprintf("arn:aws:logs:%s:%s:log-group:%s", a.region, a.accountID, *a.cacheLogGroup)
+	logGroupArn := fmt.Sprintf("arn:aws:logs:%s:%s:log-group:%s:*", a.region, a.accountID, *a.cacheLogGroup)
 	mqlLG, err := NewResource(a.MqlRuntime, ResourceAwsCloudwatchLoggroup,
 		map[string]*llx.RawData{"arn": llx.StringData(logGroupArn)})
 	if err != nil {
@@ -1948,9 +1970,36 @@ func initAwsMskConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	if err != nil {
 		return nil, nil, err
 	}
-	args["__id"] = llx.StringData(arnVal)
-	args["region"] = llx.StringData(parsed.Region)
-	return args, nil, nil
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Kafka(parsed.Region)
+	out, err := svc.DescribeConfiguration(context.Background(), &kafka.DescribeConfigurationInput{Arn: &arnVal})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			args["__id"] = llx.StringData(arnVal)
+			args["region"] = llx.StringData(parsed.Region)
+			args["name"] = llx.StringData("")
+			args["description"] = llx.StringData("")
+			args["state"] = llx.StringData("")
+			args["kafkaVersions"] = llx.ArrayData([]any{}, types.String)
+			args["latestRevision"] = llx.IntData(0)
+			args["createdAt"] = llx.NilData
+			return args, nil, nil
+		}
+		return nil, nil, err
+	}
+	mqlCfg, err := newMqlAwsMskConfiguration(runtime, parsed.Region, kafka_types.Configuration{
+		Arn:            out.Arn,
+		Name:           out.Name,
+		Description:    out.Description,
+		State:          out.State,
+		KafkaVersions:  out.KafkaVersions,
+		LatestRevision: out.LatestRevision,
+		CreationTime:   out.CreationTime,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return nil, mqlCfg, nil
 }
 
 func (a *mqlAwsMskConfiguration) serverProperties() (string, error) {
