@@ -5,6 +5,7 @@ activedirectory
 ACTIVEMQ
 adr
 afero
+Akismet
 alamofire
 AJD
 advancedthreatprotection
@@ -25,6 +26,7 @@ autoaccept
 autoclass
 autoclose
 autoexpand
+automattic
 autoprovision
 autoreplace
 Autoscalers
@@ -158,6 +160,7 @@ godo
 gopls
 gpc
 gpo
+GPLv
 gpu
 grafana
 groupname
@@ -475,6 +478,7 @@ WEBSERVERS
 Webstore
 wil
 Wjki
+wordpress
 workdir
 WORKSPACESUSER
 workspacesweb

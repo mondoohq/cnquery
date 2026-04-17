@@ -200,6 +200,8 @@ const (
 	ResourceChocolateyPackage            string = "chocolatey.package"
 	ResourceJenkinsPackages              string = "jenkins.packages"
 	ResourceJenkinsPackage               string = "jenkins.package"
+	ResourceWordpressPackages            string = "wordpress.packages"
+	ResourceWordpressPackage             string = "wordpress.package"
 	ResourceMacos                        string = "macos"
 	ResourceMacosHardware                string = "macos.hardware"
 	ResourceMacosAlf                     string = "macos.alf"
@@ -1010,6 +1012,14 @@ func init() {
 		"jenkins.package": {
 			// to override args, implement: initJenkinsPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createJenkinsPackage,
+		},
+		"wordpress.packages": {
+			Init:   initWordpressPackages,
+			Create: createWordpressPackages,
+		},
+		"wordpress.package": {
+			// to override args, implement: initWordpressPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWordpressPackage,
 		},
 		"macos": {
 			// to override args, implement: initMacos(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4036,6 +4046,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"jenkins.package.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlJenkinsPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"wordpress.packages.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWordpressPackages).GetPath()).ToDataRes(types.String)
+	},
+	"wordpress.packages.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWordpressPackages).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"wordpress.packages.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWordpressPackages).GetList()).ToDataRes(types.Array(types.Resource("wordpress.package")))
+	},
+	"wordpress.package.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWordpressPackage).GetName()).ToDataRes(types.String)
+	},
+	"wordpress.package.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWordpressPackage).GetVersion()).ToDataRes(types.String)
+	},
+	"wordpress.package.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWordpressPackage).GetPurl()).ToDataRes(types.String)
+	},
+	"wordpress.package.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWordpressPackage).GetDisplayName()).ToDataRes(types.String)
+	},
+	"wordpress.package.license": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWordpressPackage).GetLicense()).ToDataRes(types.String)
+	},
+	"wordpress.package.requiresWp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWordpressPackage).GetRequiresWp()).ToDataRes(types.String)
+	},
+	"wordpress.package.testedUpTo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWordpressPackage).GetTestedUpTo()).ToDataRes(types.String)
+	},
+	"wordpress.package.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWordpressPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
 	},
 	"macos.computerName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacos).GetComputerName()).ToDataRes(types.String)
@@ -9819,6 +9862,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"jenkins.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlJenkinsPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"wordpress.packages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWordpressPackages).__id, ok = v.Value.(string)
+		return
+	},
+	"wordpress.packages.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWordpressPackages).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"wordpress.packages.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWordpressPackages).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"wordpress.packages.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWordpressPackages).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"wordpress.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWordpressPackage).__id, ok = v.Value.(string)
+		return
+	},
+	"wordpress.package.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWordpressPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"wordpress.package.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWordpressPackage).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"wordpress.package.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWordpressPackage).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"wordpress.package.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWordpressPackage).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"wordpress.package.license": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWordpressPackage).License, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"wordpress.package.requiresWp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWordpressPackage).RequiresWp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"wordpress.package.testedUpTo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWordpressPackage).TestedUpTo, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"wordpress.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWordpressPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"macos.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -27244,6 +27339,168 @@ func (c *mqlJenkinsPackage) GetDependencies() *plugin.TValue[[]any] {
 }
 
 func (c *mqlJenkinsPackage) GetFiles() *plugin.TValue[[]any] {
+	return &c.Files
+}
+
+// mqlWordpressPackages for the wordpress.packages resource
+type mqlWordpressPackages struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlWordpressPackagesInternal
+	Path  plugin.TValue[string]
+	Files plugin.TValue[[]any]
+	List  plugin.TValue[[]any]
+}
+
+// createWordpressPackages creates a new instance of this resource
+func createWordpressPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWordpressPackages{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("wordpress.packages", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWordpressPackages) MqlName() string {
+	return "wordpress.packages"
+}
+
+func (c *mqlWordpressPackages) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWordpressPackages) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlWordpressPackages) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("wordpress.packages", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+func (c *mqlWordpressPackages) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("wordpress.packages", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlWordpressPackage for the wordpress.package resource
+type mqlWordpressPackage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWordpressPackageInternal it will be used here
+	Name        plugin.TValue[string]
+	Version     plugin.TValue[string]
+	Purl        plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	License     plugin.TValue[string]
+	RequiresWp  plugin.TValue[string]
+	TestedUpTo  plugin.TValue[string]
+	Files       plugin.TValue[[]any]
+}
+
+// createWordpressPackage creates a new instance of this resource
+func createWordpressPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWordpressPackage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("wordpress.package", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWordpressPackage) MqlName() string {
+	return "wordpress.package"
+}
+
+func (c *mqlWordpressPackage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWordpressPackage) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlWordpressPackage) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlWordpressPackage) GetPurl() *plugin.TValue[string] {
+	return &c.Purl
+}
+
+func (c *mqlWordpressPackage) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlWordpressPackage) GetLicense() *plugin.TValue[string] {
+	return &c.License
+}
+
+func (c *mqlWordpressPackage) GetRequiresWp() *plugin.TValue[string] {
+	return &c.RequiresWp
+}
+
+func (c *mqlWordpressPackage) GetTestedUpTo() *plugin.TValue[string] {
+	return &c.TestedUpTo
+}
+
+func (c *mqlWordpressPackage) GetFiles() *plugin.TValue[[]any] {
 	return &c.Files
 }
 

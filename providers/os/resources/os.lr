@@ -2601,6 +2601,39 @@ private jenkins.package @defaults("name version purl") {
   files []pkgFileInfo
 }
 
+// WordPress plugin dependencies
+wordpress.packages {
+  []wordpress.package
+
+  init(path? string)
+
+  // Path to WordPress plugins directory (wp-content/plugins/)
+  path string
+
+  // Files used to determine the packages
+  files() []pkgFileInfo
+}
+
+// WordPress plugin
+private wordpress.package @defaults("name version purl") {
+  // Plugin slug (directory name)
+  name string
+  // Plugin version (from Stable tag)
+  version string
+  // Package URL
+  purl string
+  // Plugin display name
+  displayName string
+  // License
+  license string
+  // Minimum required WordPress version
+  requiresWp string
+  // Maximum tested WordPress version
+  testedUpTo string
+  // Package files
+  files []pkgFileInfo
+}
+
 // macOS specific resources
 macos {
   // macOS computer name
