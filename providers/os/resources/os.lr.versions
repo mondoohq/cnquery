@@ -9,6 +9,9 @@ apache2.conf.directory.allowOverride 11.8.14
 apache2.conf.directory.options 11.8.14
 apache2.conf.directory.params 11.8.14
 apache2.conf.directory.path 11.8.14
+apache2.conf.envvars 13.12.1
+apache2.conf.envvars.file 13.12.1
+apache2.conf.envvars.params 13.12.1
 apache2.conf.file 11.8.14
 apache2.conf.files 11.8.14
 apache2.conf.listenAddresses 11.8.14

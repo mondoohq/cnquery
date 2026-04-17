@@ -59,21 +59,31 @@ func Parse(content string) *Config {
 
 // ParseWithGlob parses Apache config files, recursively expanding Include and
 // IncludeOptional directives using the provided glob and file-content functions.
-func ParseWithGlob(rootPath string, fileContent fileContentFunc, globExpand globExpandFunc) (*Config, error) {
+// The optional vars map provides initial variable definitions (e.g. parsed from
+// Debian's /etc/apache2/envvars). `Define` directives encountered during
+// parsing extend this map, and `${VAR}` references in directive values are
+// substituted in-place.
+func ParseWithGlob(rootPath string, fileContent fileContentFunc, globExpand globExpandFunc, vars map[string]string) (*Config, error) {
 	content, err := fileContent(rootPath)
 	if err != nil {
 		return nil, err
+	}
+
+	// Copy the caller's map so we don't mutate it when handling Define.
+	working := make(map[string]string, len(vars))
+	for k, v := range vars {
+		working[k] = v
 	}
 
 	cfg := &Config{
 		Params: map[string]any{},
 	}
 
-	parseWithGlobRecursive(cfg, rootPath, content, fileContent, globExpand)
+	parseWithGlobRecursive(cfg, rootPath, content, fileContent, globExpand, working)
 	return cfg, nil
 }
 
-func parseWithGlobRecursive(cfg *Config, filePath, content string, fileContent fileContentFunc, globExpand globExpandFunc) {
+func parseWithGlobRecursive(cfg *Config, filePath, content string, fileContent fileContentFunc, globExpand globExpandFunc, vars map[string]string) {
 	lines := splitAndClean(content)
 	i := 0
 	for i < len(lines) {
@@ -82,15 +92,16 @@ func parseWithGlobRecursive(cfg *Config, filePath, content string, fileContent f
 		// Block directives: <VirtualHost>, <Directory>, etc.
 		if strings.HasPrefix(line, "<") {
 			blockTag, blockArg := parseBlockOpen(line)
+			blockArg = expandApacheVars(blockArg, vars)
 			blockLines, end := collectBlock(lines, i+1, blockTag)
 			i = end + 1
 
 			switch strings.ToLower(blockTag) {
 			case "virtualhost":
-				vh := parseVirtualHost(blockArg, blockLines)
+				vh := parseVirtualHost(blockArg, blockLines, vars)
 				cfg.VHosts = append(cfg.VHosts, vh)
 			case "directory", "directorymatch":
-				d := parseDirectory(blockArg, blockLines)
+				d := parseDirectory(blockArg, blockLines, vars)
 				cfg.Dirs = append(cfg.Dirs, d)
 			}
 			// Other block types (Location, Files, etc.) are silently skipped for now
@@ -103,18 +114,24 @@ func parseWithGlobRecursive(cfg *Config, filePath, content string, fileContent f
 			continue
 		}
 
+		value = expandApacheVars(value, vars)
 		keyLower := strings.ToLower(key)
 
 		switch keyLower {
 		case "include", "includeoptional":
 			cfg.Includes = append(cfg.Includes, value)
 			if globExpand != nil && fileContent != nil {
-				expandInclude(cfg, value, fileContent, globExpand, keyLower == "includeoptional")
+				expandInclude(cfg, value, fileContent, globExpand, keyLower == "includeoptional", vars)
 			}
 		case "loadmodule":
 			parts := strings.Fields(value)
 			if len(parts) >= 2 {
 				cfg.Modules = append(cfg.Modules, Module{Name: parts[0], Path: parts[1]})
+			}
+		case "define":
+			// `Define VAR value` adds an Apache-level variable usable as ${VAR}.
+			if name, val, ok := splitDefine(value); ok {
+				vars[name] = val
 			}
 		default:
 			setParam(cfg.Params, key, value)
@@ -124,7 +141,26 @@ func parseWithGlobRecursive(cfg *Config, filePath, content string, fileContent f
 	}
 }
 
-func expandInclude(cfg *Config, pattern string, fileContent fileContentFunc, globExpand globExpandFunc, optional bool) {
+// splitDefine splits a Define directive argument into name and value. When
+// only a name is given, the value is empty (Apache treats this as "defined").
+func splitDefine(s string) (string, string, bool) {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return "", "", false
+	}
+	idx := strings.IndexAny(s, " \t")
+	if idx < 0 {
+		return s, "", true
+	}
+	name := s[:idx]
+	val := strings.TrimSpace(s[idx+1:])
+	if len(val) >= 2 && val[0] == '"' && val[len(val)-1] == '"' {
+		val = val[1 : len(val)-1]
+	}
+	return name, val, true
+}
+
+func expandInclude(cfg *Config, pattern string, fileContent fileContentFunc, globExpand globExpandFunc, optional bool, vars map[string]string) {
 	paths, err := globExpand(pattern)
 	if err != nil {
 		if !optional {
@@ -141,7 +177,7 @@ func expandInclude(cfg *Config, pattern string, fileContent fileContentFunc, glo
 			}
 			continue
 		}
-		parseWithGlobRecursive(cfg, p, content, fileContent, globExpand)
+		parseWithGlobRecursive(cfg, p, content, fileContent, globExpand, vars)
 	}
 }
 
@@ -158,10 +194,10 @@ func parseLines(cfg *Config, lines []string, start int) {
 
 			switch strings.ToLower(blockTag) {
 			case "virtualhost":
-				vh := parseVirtualHost(blockArg, blockLines)
+				vh := parseVirtualHost(blockArg, blockLines, nil)
 				cfg.VHosts = append(cfg.VHosts, vh)
 			case "directory", "directorymatch":
-				d := parseDirectory(blockArg, blockLines)
+				d := parseDirectory(blockArg, blockLines, nil)
 				cfg.Dirs = append(cfg.Dirs, d)
 			}
 			continue
@@ -191,7 +227,7 @@ func parseLines(cfg *Config, lines []string, start int) {
 }
 
 // parseVirtualHost parses the lines inside a <VirtualHost> block.
-func parseVirtualHost(address string, lines []string) VirtualHost {
+func parseVirtualHost(address string, lines []string, vars map[string]string) VirtualHost {
 	vh := VirtualHost{
 		Address: address,
 		Params:  map[string]any{},
@@ -218,6 +254,7 @@ func parseVirtualHost(address string, lines []string) VirtualHost {
 			continue
 		}
 
+		value = expandApacheVars(value, vars)
 		setParam(vh.Params, key, value)
 
 		switch strings.ToLower(key) {
@@ -234,7 +271,7 @@ func parseVirtualHost(address string, lines []string) VirtualHost {
 }
 
 // parseDirectory parses the lines inside a <Directory> block.
-func parseDirectory(path string, lines []string) Directory {
+func parseDirectory(path string, lines []string, vars map[string]string) Directory {
 	d := Directory{
 		Path:   path,
 		Params: map[string]any{},
@@ -261,6 +298,7 @@ func parseDirectory(path string, lines []string) Directory {
 			continue
 		}
 
+		value = expandApacheVars(value, vars)
 		setParam(d.Params, key, value)
 
 		switch strings.ToLower(key) {

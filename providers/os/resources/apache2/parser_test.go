@@ -245,7 +245,7 @@ ServerSignature Off
 		return nil, nil
 	}
 
-	cfg, err := ParseWithGlob("/etc/httpd/conf/httpd.conf", fileContent, globExpand)
+	cfg, err := ParseWithGlob("/etc/httpd/conf/httpd.conf", fileContent, globExpand, nil)
 	require.NoError(t, err)
 	require.NotNil(t, cfg)
 

@@ -866,6 +866,16 @@ apache2.conf {
   virtualHosts(file) []apache2.conf.virtualHost
   // Directory blocks
   directories(file) []apache2.conf.directory
+  // Environment variables sourced by Apache at startup (e.g. Debian's /etc/apache2/envvars)
+  envvars() apache2.conf.envvars
+}
+
+// Apache2 environment variables (e.g. Debian's /etc/apache2/envvars)
+private apache2.conf.envvars @defaults("file.path") {
+  // File defining the environment variables
+  file file
+  // Parsed variable assignments (after shell expansion)
+  params map[string]string
 }
 
 // Apache2 loaded module
