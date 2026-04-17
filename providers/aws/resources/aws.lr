@@ -12731,9 +12731,13 @@ private aws.glue.workflow @defaults("name region") {
 }
 
 // Amazon MSK (Managed Streaming for Apache Kafka)
-aws.msk @defaults("clusters") {
+aws.msk @defaults("clusters replicators") {
   // List of MSK clusters
   clusters() []aws.msk.cluster
+  // List of MSK configurations
+  configurations() []aws.msk.configuration
+  // List of MSK replicators
+  replicators() []aws.msk.replicator
 }
 
 // Amazon MSK cluster
@@ -12768,6 +12772,10 @@ private aws.msk.cluster @defaults("name state clusterType region") {
   scramAuthEnabled() bool
   // Whether TLS client authentication is enabled
   tlsAuthEnabled() bool
+  // Whether unauthenticated traffic to the cluster is enabled
+  unauthenticatedEnabled() bool
+  // Whether any authentication mode (IAM/SCRAM/TLS/Unauthenticated) is enabled
+  anyAuthEnabled() bool
   // Whether public access is enabled
   publicAccess() bool
   // Whether CloudWatch logging is enabled for broker logs
@@ -12790,10 +12798,436 @@ private aws.msk.cluster @defaults("name state clusterType region") {
   subnets() []aws.vpc.subnet
   // Security groups attached to the cluster
   securityGroups() []aws.ec2.securitygroup
+  // Storage mode: LOCAL or TIERED (TIERED-storage bucket is AWS-managed and not customer-visible)
+  storageMode() string
+  // Network type of the cluster: IPv4 or DUAL
+  networkType() string
+  // EBS volume size in GiB for the data drive on each broker node
+  ebsVolumeSizeGiB() int
+  // Plaintext ZooKeeper connection string (legacy clusters)
+  zookeeperConnectString() string
+  // TLS ZooKeeper connection string
+  zookeeperConnectStringTls() string
+  // ARN of the pinned MSK configuration for this cluster
+  configurationArn() string
+  // Revision of the pinned MSK configuration for this cluster
+  configurationRevision() int
+  // MSK configuration pinned to this cluster
+  configuration() aws.msk.configuration
+  // Encryption information for the cluster
+  encryptionInfo() aws.msk.cluster.encryptionInfo
+  // Client authentication configuration
+  clientAuthentication() aws.msk.cluster.clientAuthentication
+  // Broker node group configuration (provisioned clusters only)
+  brokerNodeGroup() aws.msk.cluster.brokerNodeGroup
+  // Broker logging configuration
+  loggingInfo() aws.msk.cluster.loggingInfo
+  // Enhanced and open monitoring configuration
+  monitoring() aws.msk.cluster.monitoring
+  // Bootstrap broker endpoints (lazy-loaded via GetBootstrapBrokers)
+  bootstrapBrokers() aws.msk.cluster.bootstrapBrokers
+  // Resource-based cluster policy (lazy-loaded via GetClusterPolicy)
+  clusterPolicy() aws.msk.cluster.clusterPolicy
+  // Cluster operation history (lazy-loaded via ListClusterOperationsV2)
+  operations() []aws.msk.cluster.operation
+  // Broker and controller nodes in the cluster (lazy-loaded via ListNodes)
+  nodes() []aws.msk.cluster.node
+  // Cross-account client VPC connections (lazy-loaded via ListClientVpcConnections)
+  clientVpcConnections() []aws.msk.cluster.clientVpcConnection
+  // Serverless cluster configuration (null on PROVISIONED clusters)
+  serverlessConfig() aws.msk.cluster.serverlessConfig
   // Date the cluster was created
   createdAt time
   // Tags for the cluster
   tags map[string]string
+}
+
+// Encryption configuration for an MSK cluster
+private aws.msk.cluster.encryptionInfo @defaults("inTransitClientBroker inTransitInCluster") {
+  // ARN of the KMS key used for encryption at rest (AWS-managed on SERVERLESS)
+  atRestKmsKeyArn string
+  // KMS key used for encryption at rest
+  kmsKey() aws.kms.key
+  // Encryption setting for data in transit between clients and brokers: TLS, TLS_PLAINTEXT, or PLAINTEXT
+  inTransitClientBroker string
+  // Whether broker-to-broker communication within the cluster is encrypted
+  inTransitInCluster bool
+}
+
+// Client authentication configuration for an MSK cluster
+private aws.msk.cluster.clientAuthentication @defaults("iamEnabled scramEnabled tlsEnabled unauthenticatedEnabled") {
+  // Whether IAM (SASL/IAM) authentication is enabled
+  iamEnabled bool
+  // Whether SASL/SCRAM authentication is enabled
+  scramEnabled bool
+  // Whether mTLS client authentication is enabled
+  tlsEnabled bool
+  // Whether unauthenticated traffic is enabled
+  unauthenticatedEnabled bool
+  // Whether any of the auth modes is enabled
+  anyEnabled bool
+  // SCRAM secrets associated with the cluster (lazy: ListScramSecrets)
+  scramSecrets() []aws.secretsmanager.secret
+  // ACM Private CA ARNs accepted for mTLS client authentication
+  certificateAuthorityArns []string
+  // ACM Private CAs accepted for mTLS client authentication
+  tlsCertificateAuthorities() []aws.privateca.certificateAuthority
+}
+
+// Broker node group configuration (provisioned clusters only)
+private aws.msk.cluster.brokerNodeGroup @defaults("instanceType storageMode networkType") {
+  // EC2 instance type used for Apache Kafka brokers
+  instanceType string
+  // Distribution of broker nodes across Availability Zones (DEFAULT)
+  brokerAZDistribution string
+  // Availability Zone IDs the brokers are deployed into
+  zoneIds []string
+  // Network type of the cluster: IPv4 or DUAL
+  networkType string
+  // EBS volume size in GiB for the data drive on each broker node
+  ebsVolumeSizeGiB int
+  // Whether EBS provisioned throughput is enabled
+  ebsProvisionedThroughputEnabled bool
+  // Provisioned throughput in MiB/s (0 when disabled)
+  ebsProvisionedThroughputMBps int
+  // Storage mode: LOCAL or TIERED
+  storageMode string
+  // Public access configuration for the brokers
+  publicAccess() aws.msk.cluster.publicAccess
+  // VPC-connectivity auth configuration (cross-account access)
+  vpcConnectivity() aws.msk.cluster.vpcConnectivity
+  // Subnets the brokers are deployed into
+  subnets() []aws.vpc.subnet
+  // Security groups attached to the broker ENIs
+  securityGroups() []aws.ec2.securitygroup
+}
+
+// Public access configuration for MSK brokers
+private aws.msk.cluster.publicAccess @defaults("type enabled") {
+  // Type: DISABLED or SERVICE_PROVIDED_EIPS
+  type string
+  // Whether public access is enabled (derived)
+  enabled bool
+}
+
+// VPC connectivity client authentication configuration
+private aws.msk.cluster.vpcConnectivity @defaults("iamEnabled scramEnabled tlsEnabled") {
+  // Whether SASL/IAM authentication is enabled for VPC connectivity
+  iamEnabled bool
+  // Whether SASL/SCRAM authentication is enabled for VPC connectivity
+  scramEnabled bool
+  // Whether mTLS client authentication is enabled for VPC connectivity
+  tlsEnabled bool
+  // Whether any VPC-connectivity auth mode is enabled
+  anyEnabled bool
+}
+
+// Broker logging configuration for an MSK cluster
+private aws.msk.cluster.loggingInfo @defaults("hasAnyEnabled") {
+  // Whether any of the broker log destinations is enabled
+  hasAnyEnabled bool
+  // CloudWatch Logs destination (null when not configured)
+  cloudwatchLogs() aws.msk.cluster.loggingInfo.cloudwatchLogs
+  // Kinesis Firehose destination (null when not configured)
+  firehose() aws.msk.cluster.loggingInfo.firehose
+  // S3 destination (null when not configured)
+  s3() aws.msk.cluster.loggingInfo.s3
+}
+
+// CloudWatch Logs broker log destination
+private aws.msk.cluster.loggingInfo.cloudwatchLogs @defaults("enabled logGroupName") {
+  // Whether CloudWatch Logs delivery is enabled
+  enabled bool
+  // Name of the CloudWatch log group
+  logGroupName string
+  // CloudWatch log group resource
+  logGroup() aws.cloudwatch.loggroup
+}
+
+// Kinesis Firehose broker log destination
+private aws.msk.cluster.loggingInfo.firehose @defaults("enabled deliveryStreamName") {
+  // Whether Firehose delivery is enabled
+  enabled bool
+  // Name of the Firehose delivery stream
+  deliveryStreamName string
+  // Firehose delivery stream resource
+  deliveryStream() aws.kinesis.firehoseDeliveryStream
+}
+
+// S3 broker log destination
+private aws.msk.cluster.loggingInfo.s3 @defaults("enabled bucketName") {
+  // Whether S3 delivery is enabled
+  enabled bool
+  // Name of the S3 bucket
+  bucketName string
+  // Prefix prepended to log object keys
+  prefix string
+  // S3 bucket resource
+  bucket() aws.s3.bucket
+}
+
+// Enhanced and open monitoring configuration for an MSK cluster
+private aws.msk.cluster.monitoring @defaults("enhancedMonitoring jmxExporterEnabled nodeExporterEnabled") {
+  // Enhanced monitoring level: DEFAULT, PER_BROKER, PER_TOPIC_PER_BROKER, PER_TOPIC_PER_PARTITION
+  enhancedMonitoring string
+  // Whether the JMX exporter is enabled
+  jmxExporterEnabled bool
+  // Whether the node exporter is enabled
+  nodeExporterEnabled bool
+  // Whether either Prometheus exporter is enabled
+  prometheusAnyEnabled bool
+}
+
+// Bootstrap broker endpoints for an MSK cluster (from GetBootstrapBrokers)
+private aws.msk.cluster.bootstrapBrokers @defaults("hasPublicEndpoint hasPlaintextEndpoint") {
+  // Plaintext (unencrypted) broker connection string
+  plaintext string
+  // TLS broker connection string
+  tls string
+  // SASL/IAM broker connection string
+  saslIam string
+  // SASL/SCRAM broker connection string
+  saslScram string
+  // Public TLS broker connection string
+  publicTls string
+  // Public SASL/IAM broker connection string
+  publicSaslIam string
+  // Public SASL/SCRAM broker connection string
+  publicSaslScram string
+  // VPC-connectivity TLS broker connection string
+  vpcConnectivityTls string
+  // VPC-connectivity SASL/IAM broker connection string
+  vpcConnectivitySaslIam string
+  // VPC-connectivity SASL/SCRAM broker connection string
+  vpcConnectivitySaslScram string
+  // IPv6 TLS broker connection string
+  ipv6Tls string
+  // IPv6 SASL/IAM broker connection string
+  ipv6SaslIam string
+  // IPv6 SASL/SCRAM broker connection string
+  ipv6SaslScram string
+  // Whether any public endpoint is exposed
+  hasPublicEndpoint bool
+  // Whether any plaintext endpoint is exposed
+  hasPlaintextEndpoint bool
+}
+
+// Resource-based policy attached to an MSK cluster
+private aws.msk.cluster.clusterPolicy @defaults("hasPolicy hasExternalPrincipals allowsWildcardPrincipal") {
+  // Current version of the policy
+  currentVersion string
+  // Raw policy document (JSON)
+  policy string
+  // Whether a policy is attached
+  hasPolicy bool
+  // Whether the policy grants access to principals outside this account
+  hasExternalPrincipals bool
+  // Whether the policy grants access to a wildcard principal ("*")
+  allowsWildcardPrincipal bool
+}
+
+// Summary of an MSK cluster operation
+private aws.msk.cluster.operation @defaults("operationType operationState createdAt") {
+  // ARN of the operation
+  arn string
+  // Type of the operation (e.g., UPDATE_BROKER_COUNT, UPDATE_SECURITY)
+  operationType string
+  // State of the operation (e.g., PENDING, UPDATE_IN_PROGRESS, UPDATE_COMPLETE)
+  operationState string
+  // Time at which the operation was started
+  createdAt time
+  // Time at which the operation finished
+  endTime time
+  // Error code if the operation failed
+  errorCode string
+  // Error message if the operation failed
+  errorString string
+}
+
+// Broker or controller node in an MSK cluster
+private aws.msk.cluster.node @defaults("nodeType brokerId instanceType") {
+  // ARN of the node
+  nodeArn string
+  // Type of the node: BROKER or CONTROLLER
+  nodeType string
+  // EC2 instance type of the node
+  instanceType string
+  // Time the node was added to the cluster
+  addedToClusterTime string
+  // Broker ID (zero for controller nodes)
+  brokerId int
+  // Client subnet ID the broker ENI sits in
+  clientSubnetId string
+  // Client-facing VPC IP address of the broker
+  clientVpcIpAddress string
+  // ID of the ENI attached to the broker node
+  attachedENIId string
+  // Broker access endpoints
+  endpoints []string
+  // Subnet the broker ENI sits in
+  subnet() aws.vpc.subnet
+  // Network interface attached to the broker node
+  networkInterface() aws.ec2.networkinterface
+}
+
+// Cross-account client VPC connection to an MSK cluster
+private aws.msk.cluster.clientVpcConnection @defaults("state owner authentication") {
+  // ARN of the VPC connection
+  vpcConnectionArn string
+  // Authentication scheme of the VPC connection
+  authentication string
+  // State of the VPC connection
+  state string
+  // Account ID that owns the VPC connection
+  owner string
+  // Time the VPC connection was created
+  createdAt time
+  // Whether the VPC connection is cross-account (owner differs from cluster account)
+  isCrossAccount bool
+}
+
+// Serverless cluster configuration
+private aws.msk.cluster.serverlessConfig @defaults("iamEnabled networkType") {
+  // Whether SASL/IAM authentication is enabled (serverless supports IAM only)
+  iamEnabled bool
+  // Network type of the serverless cluster: IPv4 or DUAL
+  networkType string
+  // VPC configurations for the serverless cluster
+  vpcConfigs() []aws.msk.cluster.serverlessConfig.vpcConfig
+}
+
+// VPC configuration entry for a serverless MSK cluster
+private aws.msk.cluster.serverlessConfig.vpcConfig @defaults("subnetIds") {
+  // Subnet IDs the serverless cluster is attached to
+  subnetIds []string
+  // Security group IDs attached to the serverless cluster
+  securityGroupIds []string
+  // Subnets the serverless cluster is attached to
+  subnets() []aws.vpc.subnet
+  // Security groups attached to the serverless cluster
+  securityGroups() []aws.ec2.securitygroup
+}
+
+// Amazon MSK configuration (server.properties wrapper)
+private aws.msk.configuration @defaults("name state latestRevision region") {
+  // ARN of the configuration
+  arn string
+  // Name of the configuration
+  name string
+  // Description of the configuration
+  description string
+  // State of the configuration: ACTIVE, DELETING, or DELETE_FAILED
+  state string
+  // Apache Kafka versions supported by this configuration
+  kafkaVersions []string
+  // Latest revision number
+  latestRevision int
+  // Time the configuration was created
+  createdAt time
+  // Region where the configuration lives
+  region string
+  // Contents of the server.properties file (lazy-loaded via DescribeConfigurationRevision)
+  serverProperties() string
+}
+
+// Amazon MSK replicator
+private aws.msk.replicator @defaults("name state region") {
+  // ARN of the replicator
+  arn string
+  // Name of the replicator
+  name string
+  // State of the replicator
+  state string
+  // Description of the replicator
+  description string
+  // Current version of the replicator
+  currentVersion string
+  // Time the replicator was created
+  createdAt time
+  // Region where the replicator lives
+  region string
+  // Tags on the replicator
+  tags map[string]string
+  // Replication state code
+  stateCode string
+  // Replication state message
+  stateMessage string
+  // IAM role the replicator uses to access source/target clusters
+  serviceExecutionRole() aws.iam.role
+  // Kafka clusters wired into the replicator (source/target)
+  kafkaClusters() []aws.msk.replicator.kafkaCluster
+  // Replication flow configurations between source and target clusters
+  replicationInfoList() []aws.msk.replicator.replicationInfo
+  // Whether source and target clusters live in different regions
+  isCrossRegion() bool
+  // Whether source and target clusters live in different accounts
+  isCrossAccount() bool
+}
+
+// Kafka cluster referenced by an MSK replicator
+private aws.msk.replicator.kafkaCluster @defaults("kafkaClusterAlias amazonMskClusterArn") {
+  // ARN of the MSK cluster
+  amazonMskClusterArn string
+  // Alias used to prefix names of replicated topics
+  kafkaClusterAlias string
+  // Subnet IDs the replicator attaches ENIs to in the client VPC
+  subnetIds []string
+  // Security group IDs attached to the replicator ENIs
+  securityGroupIds []string
+  // MSK cluster resource (tolerates cross-account ARNs)
+  cluster() aws.msk.cluster
+  // Subnets the replicator attaches ENIs to
+  subnets() []aws.vpc.subnet
+  // Security groups attached to the replicator ENIs
+  securityGroups() []aws.ec2.securitygroup
+}
+
+// A source-to-target replication flow
+private aws.msk.replicator.replicationInfo @defaults("sourceKafkaClusterAlias targetKafkaClusterAlias") {
+  // Alias of the source Kafka cluster
+  sourceKafkaClusterAlias string
+  // Alias of the target Kafka cluster
+  targetKafkaClusterAlias string
+  // Compression type used when producing records to the target cluster
+  targetCompressionType string
+  // MSK cluster resource for the source alias
+  sourceCluster() aws.msk.cluster
+  // MSK cluster resource for the target alias
+  targetCluster() aws.msk.cluster
+  // Topic replication configuration
+  topicReplication() aws.msk.replicator.topicReplication
+  // Consumer group replication configuration
+  consumerGroupReplication() aws.msk.replicator.consumerGroupReplication
+}
+
+// Topic replication configuration for a replicator replication flow
+private aws.msk.replicator.topicReplication @defaults("startingPositionType copyTopicConfigurations detectAndCopyNewTopics") {
+  // Regular expression patterns of topics to replicate
+  topicsToReplicate []string
+  // Regular expression patterns of topics to exclude from replication
+  topicsToExclude []string
+  // Starting position type (e.g., LATEST, EARLIEST)
+  startingPositionType string
+  // Replicated topic naming convention (e.g., IDENTICAL, PREFIXED_WITH_SOURCE_CLUSTER_ALIAS)
+  topicNameConfigurationType string
+  // Whether topic ACLs are periodically copied
+  copyAccessControlListsForTopics bool
+  // Whether topic configurations are periodically copied
+  copyTopicConfigurations bool
+  // Whether new topics are detected and copied
+  detectAndCopyNewTopics bool
+}
+
+// Consumer group replication configuration for a replicator replication flow
+private aws.msk.replicator.consumerGroupReplication @defaults("synchroniseConsumerGroupOffsets detectAndCopyNewConsumerGroups") {
+  // Regular expression patterns of consumer groups to replicate
+  consumerGroupsToReplicate []string
+  // Regular expression patterns of consumer groups to exclude from replication
+  consumerGroupsToExclude []string
+  // Whether consumer group offsets are synchronised to the target cluster
+  synchroniseConsumerGroupOffsets bool
+  // Whether new consumer groups are detected and copied
+  detectAndCopyNewConsumerGroups bool
 }
 
 // Amazon MQ

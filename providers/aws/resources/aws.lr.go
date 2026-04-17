@@ -565,6 +565,29 @@ const (
 	ResourceAwsGlueWorkflow                                                     string = "aws.glue.workflow"
 	ResourceAwsMsk                                                              string = "aws.msk"
 	ResourceAwsMskCluster                                                       string = "aws.msk.cluster"
+	ResourceAwsMskClusterEncryptionInfo                                         string = "aws.msk.cluster.encryptionInfo"
+	ResourceAwsMskClusterClientAuthentication                                   string = "aws.msk.cluster.clientAuthentication"
+	ResourceAwsMskClusterBrokerNodeGroup                                        string = "aws.msk.cluster.brokerNodeGroup"
+	ResourceAwsMskClusterPublicAccess                                           string = "aws.msk.cluster.publicAccess"
+	ResourceAwsMskClusterVpcConnectivity                                        string = "aws.msk.cluster.vpcConnectivity"
+	ResourceAwsMskClusterLoggingInfo                                            string = "aws.msk.cluster.loggingInfo"
+	ResourceAwsMskClusterLoggingInfoCloudwatchLogs                              string = "aws.msk.cluster.loggingInfo.cloudwatchLogs"
+	ResourceAwsMskClusterLoggingInfoFirehose                                    string = "aws.msk.cluster.loggingInfo.firehose"
+	ResourceAwsMskClusterLoggingInfoS3                                          string = "aws.msk.cluster.loggingInfo.s3"
+	ResourceAwsMskClusterMonitoring                                             string = "aws.msk.cluster.monitoring"
+	ResourceAwsMskClusterBootstrapBrokers                                       string = "aws.msk.cluster.bootstrapBrokers"
+	ResourceAwsMskClusterClusterPolicy                                          string = "aws.msk.cluster.clusterPolicy"
+	ResourceAwsMskClusterOperation                                              string = "aws.msk.cluster.operation"
+	ResourceAwsMskClusterNode                                                   string = "aws.msk.cluster.node"
+	ResourceAwsMskClusterClientVpcConnection                                    string = "aws.msk.cluster.clientVpcConnection"
+	ResourceAwsMskClusterServerlessConfig                                       string = "aws.msk.cluster.serverlessConfig"
+	ResourceAwsMskClusterServerlessConfigVpcConfig                              string = "aws.msk.cluster.serverlessConfig.vpcConfig"
+	ResourceAwsMskConfiguration                                                 string = "aws.msk.configuration"
+	ResourceAwsMskReplicator                                                    string = "aws.msk.replicator"
+	ResourceAwsMskReplicatorKafkaCluster                                        string = "aws.msk.replicator.kafkaCluster"
+	ResourceAwsMskReplicatorReplicationInfo                                     string = "aws.msk.replicator.replicationInfo"
+	ResourceAwsMskReplicatorTopicReplication                                    string = "aws.msk.replicator.topicReplication"
+	ResourceAwsMskReplicatorConsumerGroupReplication                            string = "aws.msk.replicator.consumerGroupReplication"
 	ResourceAwsMq                                                               string = "aws.mq"
 	ResourceAwsMqBroker                                                         string = "aws.mq.broker"
 	ResourceAwsBatch                                                            string = "aws.batch"
@@ -2844,8 +2867,100 @@ func init() {
 			Create: createAwsMsk,
 		},
 		"aws.msk.cluster": {
-			// to override args, implement: initAwsMskCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsMskCluster,
 			Create: createAwsMskCluster,
+		},
+		"aws.msk.cluster.encryptionInfo": {
+			// to override args, implement: initAwsMskClusterEncryptionInfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMskClusterEncryptionInfo,
+		},
+		"aws.msk.cluster.clientAuthentication": {
+			// to override args, implement: initAwsMskClusterClientAuthentication(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMskClusterClientAuthentication,
+		},
+		"aws.msk.cluster.brokerNodeGroup": {
+			// to override args, implement: initAwsMskClusterBrokerNodeGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMskClusterBrokerNodeGroup,
+		},
+		"aws.msk.cluster.publicAccess": {
+			// to override args, implement: initAwsMskClusterPublicAccess(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMskClusterPublicAccess,
+		},
+		"aws.msk.cluster.vpcConnectivity": {
+			// to override args, implement: initAwsMskClusterVpcConnectivity(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMskClusterVpcConnectivity,
+		},
+		"aws.msk.cluster.loggingInfo": {
+			// to override args, implement: initAwsMskClusterLoggingInfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMskClusterLoggingInfo,
+		},
+		"aws.msk.cluster.loggingInfo.cloudwatchLogs": {
+			// to override args, implement: initAwsMskClusterLoggingInfoCloudwatchLogs(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMskClusterLoggingInfoCloudwatchLogs,
+		},
+		"aws.msk.cluster.loggingInfo.firehose": {
+			// to override args, implement: initAwsMskClusterLoggingInfoFirehose(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMskClusterLoggingInfoFirehose,
+		},
+		"aws.msk.cluster.loggingInfo.s3": {
+			// to override args, implement: initAwsMskClusterLoggingInfoS3(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMskClusterLoggingInfoS3,
+		},
+		"aws.msk.cluster.monitoring": {
+			// to override args, implement: initAwsMskClusterMonitoring(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMskClusterMonitoring,
+		},
+		"aws.msk.cluster.bootstrapBrokers": {
+			// to override args, implement: initAwsMskClusterBootstrapBrokers(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMskClusterBootstrapBrokers,
+		},
+		"aws.msk.cluster.clusterPolicy": {
+			// to override args, implement: initAwsMskClusterClusterPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMskClusterClusterPolicy,
+		},
+		"aws.msk.cluster.operation": {
+			// to override args, implement: initAwsMskClusterOperation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMskClusterOperation,
+		},
+		"aws.msk.cluster.node": {
+			// to override args, implement: initAwsMskClusterNode(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMskClusterNode,
+		},
+		"aws.msk.cluster.clientVpcConnection": {
+			// to override args, implement: initAwsMskClusterClientVpcConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMskClusterClientVpcConnection,
+		},
+		"aws.msk.cluster.serverlessConfig": {
+			// to override args, implement: initAwsMskClusterServerlessConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMskClusterServerlessConfig,
+		},
+		"aws.msk.cluster.serverlessConfig.vpcConfig": {
+			// to override args, implement: initAwsMskClusterServerlessConfigVpcConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMskClusterServerlessConfigVpcConfig,
+		},
+		"aws.msk.configuration": {
+			Init:   initAwsMskConfiguration,
+			Create: createAwsMskConfiguration,
+		},
+		"aws.msk.replicator": {
+			// to override args, implement: initAwsMskReplicator(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMskReplicator,
+		},
+		"aws.msk.replicator.kafkaCluster": {
+			// to override args, implement: initAwsMskReplicatorKafkaCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMskReplicatorKafkaCluster,
+		},
+		"aws.msk.replicator.replicationInfo": {
+			// to override args, implement: initAwsMskReplicatorReplicationInfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMskReplicatorReplicationInfo,
+		},
+		"aws.msk.replicator.topicReplication": {
+			// to override args, implement: initAwsMskReplicatorTopicReplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMskReplicatorTopicReplication,
+		},
+		"aws.msk.replicator.consumerGroupReplication": {
+			// to override args, implement: initAwsMskReplicatorConsumerGroupReplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMskReplicatorConsumerGroupReplication,
 		},
 		"aws.mq": {
 			// to override args, implement: initAwsMq(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -18931,6 +19046,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.msk.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMsk).GetClusters()).ToDataRes(types.Array(types.Resource("aws.msk.cluster")))
 	},
+	"aws.msk.configurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMsk).GetConfigurations()).ToDataRes(types.Array(types.Resource("aws.msk.configuration")))
+	},
+	"aws.msk.replicators": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMsk).GetReplicators()).ToDataRes(types.Array(types.Resource("aws.msk.replicator")))
+	},
 	"aws.msk.cluster.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMskCluster).GetArn()).ToDataRes(types.String)
 	},
@@ -18976,6 +19097,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.msk.cluster.tlsAuthEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMskCluster).GetTlsAuthEnabled()).ToDataRes(types.Bool)
 	},
+	"aws.msk.cluster.unauthenticatedEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskCluster).GetUnauthenticatedEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.msk.cluster.anyAuthEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskCluster).GetAnyAuthEnabled()).ToDataRes(types.Bool)
+	},
 	"aws.msk.cluster.publicAccess": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMskCluster).GetPublicAccess()).ToDataRes(types.Bool)
 	},
@@ -19009,11 +19136,512 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.msk.cluster.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMskCluster).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
 	},
+	"aws.msk.cluster.storageMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskCluster).GetStorageMode()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.networkType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskCluster).GetNetworkType()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.ebsVolumeSizeGiB": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskCluster).GetEbsVolumeSizeGiB()).ToDataRes(types.Int)
+	},
+	"aws.msk.cluster.zookeeperConnectString": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskCluster).GetZookeeperConnectString()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.zookeeperConnectStringTls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskCluster).GetZookeeperConnectStringTls()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.configurationArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskCluster).GetConfigurationArn()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.configurationRevision": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskCluster).GetConfigurationRevision()).ToDataRes(types.Int)
+	},
+	"aws.msk.cluster.configuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskCluster).GetConfiguration()).ToDataRes(types.Resource("aws.msk.configuration"))
+	},
+	"aws.msk.cluster.encryptionInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskCluster).GetEncryptionInfo()).ToDataRes(types.Resource("aws.msk.cluster.encryptionInfo"))
+	},
+	"aws.msk.cluster.clientAuthentication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskCluster).GetClientAuthentication()).ToDataRes(types.Resource("aws.msk.cluster.clientAuthentication"))
+	},
+	"aws.msk.cluster.brokerNodeGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskCluster).GetBrokerNodeGroup()).ToDataRes(types.Resource("aws.msk.cluster.brokerNodeGroup"))
+	},
+	"aws.msk.cluster.loggingInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskCluster).GetLoggingInfo()).ToDataRes(types.Resource("aws.msk.cluster.loggingInfo"))
+	},
+	"aws.msk.cluster.monitoring": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskCluster).GetMonitoring()).ToDataRes(types.Resource("aws.msk.cluster.monitoring"))
+	},
+	"aws.msk.cluster.bootstrapBrokers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskCluster).GetBootstrapBrokers()).ToDataRes(types.Resource("aws.msk.cluster.bootstrapBrokers"))
+	},
+	"aws.msk.cluster.clusterPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskCluster).GetClusterPolicy()).ToDataRes(types.Resource("aws.msk.cluster.clusterPolicy"))
+	},
+	"aws.msk.cluster.operations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskCluster).GetOperations()).ToDataRes(types.Array(types.Resource("aws.msk.cluster.operation")))
+	},
+	"aws.msk.cluster.nodes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskCluster).GetNodes()).ToDataRes(types.Array(types.Resource("aws.msk.cluster.node")))
+	},
+	"aws.msk.cluster.clientVpcConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskCluster).GetClientVpcConnections()).ToDataRes(types.Array(types.Resource("aws.msk.cluster.clientVpcConnection")))
+	},
+	"aws.msk.cluster.serverlessConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskCluster).GetServerlessConfig()).ToDataRes(types.Resource("aws.msk.cluster.serverlessConfig"))
+	},
 	"aws.msk.cluster.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMskCluster).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"aws.msk.cluster.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMskCluster).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.msk.cluster.encryptionInfo.atRestKmsKeyArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterEncryptionInfo).GetAtRestKmsKeyArn()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.encryptionInfo.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterEncryptionInfo).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.msk.cluster.encryptionInfo.inTransitClientBroker": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterEncryptionInfo).GetInTransitClientBroker()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.encryptionInfo.inTransitInCluster": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterEncryptionInfo).GetInTransitInCluster()).ToDataRes(types.Bool)
+	},
+	"aws.msk.cluster.clientAuthentication.iamEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterClientAuthentication).GetIamEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.msk.cluster.clientAuthentication.scramEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterClientAuthentication).GetScramEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.msk.cluster.clientAuthentication.tlsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterClientAuthentication).GetTlsEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.msk.cluster.clientAuthentication.unauthenticatedEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterClientAuthentication).GetUnauthenticatedEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.msk.cluster.clientAuthentication.anyEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterClientAuthentication).GetAnyEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.msk.cluster.clientAuthentication.scramSecrets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterClientAuthentication).GetScramSecrets()).ToDataRes(types.Array(types.Resource("aws.secretsmanager.secret")))
+	},
+	"aws.msk.cluster.clientAuthentication.certificateAuthorityArns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterClientAuthentication).GetCertificateAuthorityArns()).ToDataRes(types.Array(types.String))
+	},
+	"aws.msk.cluster.clientAuthentication.tlsCertificateAuthorities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterClientAuthentication).GetTlsCertificateAuthorities()).ToDataRes(types.Array(types.Resource("aws.privateca.certificateAuthority")))
+	},
+	"aws.msk.cluster.brokerNodeGroup.instanceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterBrokerNodeGroup).GetInstanceType()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.brokerNodeGroup.brokerAZDistribution": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterBrokerNodeGroup).GetBrokerAZDistribution()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.brokerNodeGroup.zoneIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterBrokerNodeGroup).GetZoneIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.msk.cluster.brokerNodeGroup.networkType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterBrokerNodeGroup).GetNetworkType()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.brokerNodeGroup.ebsVolumeSizeGiB": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterBrokerNodeGroup).GetEbsVolumeSizeGiB()).ToDataRes(types.Int)
+	},
+	"aws.msk.cluster.brokerNodeGroup.ebsProvisionedThroughputEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterBrokerNodeGroup).GetEbsProvisionedThroughputEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.msk.cluster.brokerNodeGroup.ebsProvisionedThroughputMBps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterBrokerNodeGroup).GetEbsProvisionedThroughputMBps()).ToDataRes(types.Int)
+	},
+	"aws.msk.cluster.brokerNodeGroup.storageMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterBrokerNodeGroup).GetStorageMode()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.brokerNodeGroup.publicAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterBrokerNodeGroup).GetPublicAccess()).ToDataRes(types.Resource("aws.msk.cluster.publicAccess"))
+	},
+	"aws.msk.cluster.brokerNodeGroup.vpcConnectivity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterBrokerNodeGroup).GetVpcConnectivity()).ToDataRes(types.Resource("aws.msk.cluster.vpcConnectivity"))
+	},
+	"aws.msk.cluster.brokerNodeGroup.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterBrokerNodeGroup).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
+	"aws.msk.cluster.brokerNodeGroup.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterBrokerNodeGroup).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.msk.cluster.publicAccess.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterPublicAccess).GetType()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.publicAccess.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterPublicAccess).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.msk.cluster.vpcConnectivity.iamEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterVpcConnectivity).GetIamEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.msk.cluster.vpcConnectivity.scramEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterVpcConnectivity).GetScramEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.msk.cluster.vpcConnectivity.tlsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterVpcConnectivity).GetTlsEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.msk.cluster.vpcConnectivity.anyEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterVpcConnectivity).GetAnyEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.msk.cluster.loggingInfo.hasAnyEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterLoggingInfo).GetHasAnyEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.msk.cluster.loggingInfo.cloudwatchLogs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterLoggingInfo).GetCloudwatchLogs()).ToDataRes(types.Resource("aws.msk.cluster.loggingInfo.cloudwatchLogs"))
+	},
+	"aws.msk.cluster.loggingInfo.firehose": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterLoggingInfo).GetFirehose()).ToDataRes(types.Resource("aws.msk.cluster.loggingInfo.firehose"))
+	},
+	"aws.msk.cluster.loggingInfo.s3": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterLoggingInfo).GetS3()).ToDataRes(types.Resource("aws.msk.cluster.loggingInfo.s3"))
+	},
+	"aws.msk.cluster.loggingInfo.cloudwatchLogs.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterLoggingInfoCloudwatchLogs).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.msk.cluster.loggingInfo.cloudwatchLogs.logGroupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterLoggingInfoCloudwatchLogs).GetLogGroupName()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.loggingInfo.cloudwatchLogs.logGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterLoggingInfoCloudwatchLogs).GetLogGroup()).ToDataRes(types.Resource("aws.cloudwatch.loggroup"))
+	},
+	"aws.msk.cluster.loggingInfo.firehose.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterLoggingInfoFirehose).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.msk.cluster.loggingInfo.firehose.deliveryStreamName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterLoggingInfoFirehose).GetDeliveryStreamName()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.loggingInfo.firehose.deliveryStream": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterLoggingInfoFirehose).GetDeliveryStream()).ToDataRes(types.Resource("aws.kinesis.firehoseDeliveryStream"))
+	},
+	"aws.msk.cluster.loggingInfo.s3.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterLoggingInfoS3).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.msk.cluster.loggingInfo.s3.bucketName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterLoggingInfoS3).GetBucketName()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.loggingInfo.s3.prefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterLoggingInfoS3).GetPrefix()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.loggingInfo.s3.bucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterLoggingInfoS3).GetBucket()).ToDataRes(types.Resource("aws.s3.bucket"))
+	},
+	"aws.msk.cluster.monitoring.enhancedMonitoring": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterMonitoring).GetEnhancedMonitoring()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.monitoring.jmxExporterEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterMonitoring).GetJmxExporterEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.msk.cluster.monitoring.nodeExporterEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterMonitoring).GetNodeExporterEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.msk.cluster.monitoring.prometheusAnyEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterMonitoring).GetPrometheusAnyEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.msk.cluster.bootstrapBrokers.plaintext": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterBootstrapBrokers).GetPlaintext()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.bootstrapBrokers.tls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterBootstrapBrokers).GetTls()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.bootstrapBrokers.saslIam": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterBootstrapBrokers).GetSaslIam()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.bootstrapBrokers.saslScram": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterBootstrapBrokers).GetSaslScram()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.bootstrapBrokers.publicTls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterBootstrapBrokers).GetPublicTls()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.bootstrapBrokers.publicSaslIam": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterBootstrapBrokers).GetPublicSaslIam()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.bootstrapBrokers.publicSaslScram": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterBootstrapBrokers).GetPublicSaslScram()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.bootstrapBrokers.vpcConnectivityTls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterBootstrapBrokers).GetVpcConnectivityTls()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.bootstrapBrokers.vpcConnectivitySaslIam": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterBootstrapBrokers).GetVpcConnectivitySaslIam()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.bootstrapBrokers.vpcConnectivitySaslScram": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterBootstrapBrokers).GetVpcConnectivitySaslScram()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.bootstrapBrokers.ipv6Tls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterBootstrapBrokers).GetIpv6Tls()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.bootstrapBrokers.ipv6SaslIam": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterBootstrapBrokers).GetIpv6SaslIam()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.bootstrapBrokers.ipv6SaslScram": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterBootstrapBrokers).GetIpv6SaslScram()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.bootstrapBrokers.hasPublicEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterBootstrapBrokers).GetHasPublicEndpoint()).ToDataRes(types.Bool)
+	},
+	"aws.msk.cluster.bootstrapBrokers.hasPlaintextEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterBootstrapBrokers).GetHasPlaintextEndpoint()).ToDataRes(types.Bool)
+	},
+	"aws.msk.cluster.clusterPolicy.currentVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterClusterPolicy).GetCurrentVersion()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.clusterPolicy.policy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterClusterPolicy).GetPolicy()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.clusterPolicy.hasPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterClusterPolicy).GetHasPolicy()).ToDataRes(types.Bool)
+	},
+	"aws.msk.cluster.clusterPolicy.hasExternalPrincipals": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterClusterPolicy).GetHasExternalPrincipals()).ToDataRes(types.Bool)
+	},
+	"aws.msk.cluster.clusterPolicy.allowsWildcardPrincipal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterClusterPolicy).GetAllowsWildcardPrincipal()).ToDataRes(types.Bool)
+	},
+	"aws.msk.cluster.operation.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterOperation).GetArn()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.operation.operationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterOperation).GetOperationType()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.operation.operationState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterOperation).GetOperationState()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.operation.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterOperation).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.msk.cluster.operation.endTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterOperation).GetEndTime()).ToDataRes(types.Time)
+	},
+	"aws.msk.cluster.operation.errorCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterOperation).GetErrorCode()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.operation.errorString": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterOperation).GetErrorString()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.node.nodeArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterNode).GetNodeArn()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.node.nodeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterNode).GetNodeType()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.node.instanceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterNode).GetInstanceType()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.node.addedToClusterTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterNode).GetAddedToClusterTime()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.node.brokerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterNode).GetBrokerId()).ToDataRes(types.Int)
+	},
+	"aws.msk.cluster.node.clientSubnetId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterNode).GetClientSubnetId()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.node.clientVpcIpAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterNode).GetClientVpcIpAddress()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.node.attachedENIId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterNode).GetAttachedENIId()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.node.endpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterNode).GetEndpoints()).ToDataRes(types.Array(types.String))
+	},
+	"aws.msk.cluster.node.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterNode).GetSubnet()).ToDataRes(types.Resource("aws.vpc.subnet"))
+	},
+	"aws.msk.cluster.node.networkInterface": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterNode).GetNetworkInterface()).ToDataRes(types.Resource("aws.ec2.networkinterface"))
+	},
+	"aws.msk.cluster.clientVpcConnection.vpcConnectionArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterClientVpcConnection).GetVpcConnectionArn()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.clientVpcConnection.authentication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterClientVpcConnection).GetAuthentication()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.clientVpcConnection.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterClientVpcConnection).GetState()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.clientVpcConnection.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterClientVpcConnection).GetOwner()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.clientVpcConnection.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterClientVpcConnection).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.msk.cluster.clientVpcConnection.isCrossAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterClientVpcConnection).GetIsCrossAccount()).ToDataRes(types.Bool)
+	},
+	"aws.msk.cluster.serverlessConfig.iamEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterServerlessConfig).GetIamEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.msk.cluster.serverlessConfig.networkType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterServerlessConfig).GetNetworkType()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.serverlessConfig.vpcConfigs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterServerlessConfig).GetVpcConfigs()).ToDataRes(types.Array(types.Resource("aws.msk.cluster.serverlessConfig.vpcConfig")))
+	},
+	"aws.msk.cluster.serverlessConfig.vpcConfig.subnetIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterServerlessConfigVpcConfig).GetSubnetIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.msk.cluster.serverlessConfig.vpcConfig.securityGroupIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterServerlessConfigVpcConfig).GetSecurityGroupIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.msk.cluster.serverlessConfig.vpcConfig.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterServerlessConfigVpcConfig).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
+	"aws.msk.cluster.serverlessConfig.vpcConfig.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterServerlessConfigVpcConfig).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.msk.configuration.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskConfiguration).GetArn()).ToDataRes(types.String)
+	},
+	"aws.msk.configuration.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskConfiguration).GetName()).ToDataRes(types.String)
+	},
+	"aws.msk.configuration.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskConfiguration).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.msk.configuration.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskConfiguration).GetState()).ToDataRes(types.String)
+	},
+	"aws.msk.configuration.kafkaVersions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskConfiguration).GetKafkaVersions()).ToDataRes(types.Array(types.String))
+	},
+	"aws.msk.configuration.latestRevision": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskConfiguration).GetLatestRevision()).ToDataRes(types.Int)
+	},
+	"aws.msk.configuration.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskConfiguration).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.msk.configuration.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskConfiguration).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.msk.configuration.serverProperties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskConfiguration).GetServerProperties()).ToDataRes(types.String)
+	},
+	"aws.msk.replicator.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicator).GetArn()).ToDataRes(types.String)
+	},
+	"aws.msk.replicator.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicator).GetName()).ToDataRes(types.String)
+	},
+	"aws.msk.replicator.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicator).GetState()).ToDataRes(types.String)
+	},
+	"aws.msk.replicator.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicator).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.msk.replicator.currentVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicator).GetCurrentVersion()).ToDataRes(types.String)
+	},
+	"aws.msk.replicator.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicator).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.msk.replicator.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicator).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.msk.replicator.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicator).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.msk.replicator.stateCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicator).GetStateCode()).ToDataRes(types.String)
+	},
+	"aws.msk.replicator.stateMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicator).GetStateMessage()).ToDataRes(types.String)
+	},
+	"aws.msk.replicator.serviceExecutionRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicator).GetServiceExecutionRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.msk.replicator.kafkaClusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicator).GetKafkaClusters()).ToDataRes(types.Array(types.Resource("aws.msk.replicator.kafkaCluster")))
+	},
+	"aws.msk.replicator.replicationInfoList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicator).GetReplicationInfoList()).ToDataRes(types.Array(types.Resource("aws.msk.replicator.replicationInfo")))
+	},
+	"aws.msk.replicator.isCrossRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicator).GetIsCrossRegion()).ToDataRes(types.Bool)
+	},
+	"aws.msk.replicator.isCrossAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicator).GetIsCrossAccount()).ToDataRes(types.Bool)
+	},
+	"aws.msk.replicator.kafkaCluster.amazonMskClusterArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorKafkaCluster).GetAmazonMskClusterArn()).ToDataRes(types.String)
+	},
+	"aws.msk.replicator.kafkaCluster.kafkaClusterAlias": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorKafkaCluster).GetKafkaClusterAlias()).ToDataRes(types.String)
+	},
+	"aws.msk.replicator.kafkaCluster.subnetIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorKafkaCluster).GetSubnetIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.msk.replicator.kafkaCluster.securityGroupIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorKafkaCluster).GetSecurityGroupIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.msk.replicator.kafkaCluster.cluster": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorKafkaCluster).GetCluster()).ToDataRes(types.Resource("aws.msk.cluster"))
+	},
+	"aws.msk.replicator.kafkaCluster.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorKafkaCluster).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
+	"aws.msk.replicator.kafkaCluster.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorKafkaCluster).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.msk.replicator.replicationInfo.sourceKafkaClusterAlias": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorReplicationInfo).GetSourceKafkaClusterAlias()).ToDataRes(types.String)
+	},
+	"aws.msk.replicator.replicationInfo.targetKafkaClusterAlias": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorReplicationInfo).GetTargetKafkaClusterAlias()).ToDataRes(types.String)
+	},
+	"aws.msk.replicator.replicationInfo.targetCompressionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorReplicationInfo).GetTargetCompressionType()).ToDataRes(types.String)
+	},
+	"aws.msk.replicator.replicationInfo.sourceCluster": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorReplicationInfo).GetSourceCluster()).ToDataRes(types.Resource("aws.msk.cluster"))
+	},
+	"aws.msk.replicator.replicationInfo.targetCluster": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorReplicationInfo).GetTargetCluster()).ToDataRes(types.Resource("aws.msk.cluster"))
+	},
+	"aws.msk.replicator.replicationInfo.topicReplication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorReplicationInfo).GetTopicReplication()).ToDataRes(types.Resource("aws.msk.replicator.topicReplication"))
+	},
+	"aws.msk.replicator.replicationInfo.consumerGroupReplication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorReplicationInfo).GetConsumerGroupReplication()).ToDataRes(types.Resource("aws.msk.replicator.consumerGroupReplication"))
+	},
+	"aws.msk.replicator.topicReplication.topicsToReplicate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorTopicReplication).GetTopicsToReplicate()).ToDataRes(types.Array(types.String))
+	},
+	"aws.msk.replicator.topicReplication.topicsToExclude": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorTopicReplication).GetTopicsToExclude()).ToDataRes(types.Array(types.String))
+	},
+	"aws.msk.replicator.topicReplication.startingPositionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorTopicReplication).GetStartingPositionType()).ToDataRes(types.String)
+	},
+	"aws.msk.replicator.topicReplication.topicNameConfigurationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorTopicReplication).GetTopicNameConfigurationType()).ToDataRes(types.String)
+	},
+	"aws.msk.replicator.topicReplication.copyAccessControlListsForTopics": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorTopicReplication).GetCopyAccessControlListsForTopics()).ToDataRes(types.Bool)
+	},
+	"aws.msk.replicator.topicReplication.copyTopicConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorTopicReplication).GetCopyTopicConfigurations()).ToDataRes(types.Bool)
+	},
+	"aws.msk.replicator.topicReplication.detectAndCopyNewTopics": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorTopicReplication).GetDetectAndCopyNewTopics()).ToDataRes(types.Bool)
+	},
+	"aws.msk.replicator.consumerGroupReplication.consumerGroupsToReplicate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorConsumerGroupReplication).GetConsumerGroupsToReplicate()).ToDataRes(types.Array(types.String))
+	},
+	"aws.msk.replicator.consumerGroupReplication.consumerGroupsToExclude": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorConsumerGroupReplication).GetConsumerGroupsToExclude()).ToDataRes(types.Array(types.String))
+	},
+	"aws.msk.replicator.consumerGroupReplication.synchroniseConsumerGroupOffsets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorConsumerGroupReplication).GetSynchroniseConsumerGroupOffsets()).ToDataRes(types.Bool)
+	},
+	"aws.msk.replicator.consumerGroupReplication.detectAndCopyNewConsumerGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorConsumerGroupReplication).GetDetectAndCopyNewConsumerGroups()).ToDataRes(types.Bool)
 	},
 	"aws.mq.brokers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMq).GetBrokers()).ToDataRes(types.Array(types.Resource("aws.mq.broker")))
@@ -44288,6 +44916,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsMsk).Clusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.msk.configurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMsk).Configurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicators": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMsk).Replicators, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.msk.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsMskCluster).__id, ok = v.Value.(string)
 		return
@@ -44352,6 +44988,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsMskCluster).TlsAuthEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"aws.msk.cluster.unauthenticatedEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskCluster).UnauthenticatedEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.anyAuthEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskCluster).AnyAuthEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.msk.cluster.publicAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsMskCluster).PublicAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -44396,12 +45040,772 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsMskCluster).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.msk.cluster.storageMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskCluster).StorageMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.networkType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskCluster).NetworkType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.ebsVolumeSizeGiB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskCluster).EbsVolumeSizeGiB, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.zookeeperConnectString": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskCluster).ZookeeperConnectString, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.zookeeperConnectStringTls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskCluster).ZookeeperConnectStringTls, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.configurationArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskCluster).ConfigurationArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.configurationRevision": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskCluster).ConfigurationRevision, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.configuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskCluster).Configuration, ok = plugin.RawToTValue[*mqlAwsMskConfiguration](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.encryptionInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskCluster).EncryptionInfo, ok = plugin.RawToTValue[*mqlAwsMskClusterEncryptionInfo](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.clientAuthentication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskCluster).ClientAuthentication, ok = plugin.RawToTValue[*mqlAwsMskClusterClientAuthentication](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.brokerNodeGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskCluster).BrokerNodeGroup, ok = plugin.RawToTValue[*mqlAwsMskClusterBrokerNodeGroup](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.loggingInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskCluster).LoggingInfo, ok = plugin.RawToTValue[*mqlAwsMskClusterLoggingInfo](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.monitoring": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskCluster).Monitoring, ok = plugin.RawToTValue[*mqlAwsMskClusterMonitoring](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.bootstrapBrokers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskCluster).BootstrapBrokers, ok = plugin.RawToTValue[*mqlAwsMskClusterBootstrapBrokers](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.clusterPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskCluster).ClusterPolicy, ok = plugin.RawToTValue[*mqlAwsMskClusterClusterPolicy](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.operations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskCluster).Operations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.nodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskCluster).Nodes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.clientVpcConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskCluster).ClientVpcConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.serverlessConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskCluster).ServerlessConfig, ok = plugin.RawToTValue[*mqlAwsMskClusterServerlessConfig](v.Value, v.Error)
+		return
+	},
 	"aws.msk.cluster.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsMskCluster).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.msk.cluster.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsMskCluster).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.encryptionInfo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterEncryptionInfo).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.msk.cluster.encryptionInfo.atRestKmsKeyArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterEncryptionInfo).AtRestKmsKeyArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.encryptionInfo.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterEncryptionInfo).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.encryptionInfo.inTransitClientBroker": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterEncryptionInfo).InTransitClientBroker, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.encryptionInfo.inTransitInCluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterEncryptionInfo).InTransitInCluster, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.clientAuthentication.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterClientAuthentication).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.msk.cluster.clientAuthentication.iamEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterClientAuthentication).IamEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.clientAuthentication.scramEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterClientAuthentication).ScramEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.clientAuthentication.tlsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterClientAuthentication).TlsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.clientAuthentication.unauthenticatedEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterClientAuthentication).UnauthenticatedEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.clientAuthentication.anyEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterClientAuthentication).AnyEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.clientAuthentication.scramSecrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterClientAuthentication).ScramSecrets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.clientAuthentication.certificateAuthorityArns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterClientAuthentication).CertificateAuthorityArns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.clientAuthentication.tlsCertificateAuthorities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterClientAuthentication).TlsCertificateAuthorities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.brokerNodeGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterBrokerNodeGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.msk.cluster.brokerNodeGroup.instanceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterBrokerNodeGroup).InstanceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.brokerNodeGroup.brokerAZDistribution": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterBrokerNodeGroup).BrokerAZDistribution, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.brokerNodeGroup.zoneIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterBrokerNodeGroup).ZoneIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.brokerNodeGroup.networkType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterBrokerNodeGroup).NetworkType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.brokerNodeGroup.ebsVolumeSizeGiB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterBrokerNodeGroup).EbsVolumeSizeGiB, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.brokerNodeGroup.ebsProvisionedThroughputEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterBrokerNodeGroup).EbsProvisionedThroughputEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.brokerNodeGroup.ebsProvisionedThroughputMBps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterBrokerNodeGroup).EbsProvisionedThroughputMBps, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.brokerNodeGroup.storageMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterBrokerNodeGroup).StorageMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.brokerNodeGroup.publicAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterBrokerNodeGroup).PublicAccess, ok = plugin.RawToTValue[*mqlAwsMskClusterPublicAccess](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.brokerNodeGroup.vpcConnectivity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterBrokerNodeGroup).VpcConnectivity, ok = plugin.RawToTValue[*mqlAwsMskClusterVpcConnectivity](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.brokerNodeGroup.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterBrokerNodeGroup).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.brokerNodeGroup.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterBrokerNodeGroup).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.publicAccess.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterPublicAccess).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.msk.cluster.publicAccess.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterPublicAccess).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.publicAccess.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterPublicAccess).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.vpcConnectivity.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterVpcConnectivity).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.msk.cluster.vpcConnectivity.iamEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterVpcConnectivity).IamEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.vpcConnectivity.scramEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterVpcConnectivity).ScramEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.vpcConnectivity.tlsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterVpcConnectivity).TlsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.vpcConnectivity.anyEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterVpcConnectivity).AnyEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.loggingInfo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterLoggingInfo).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.msk.cluster.loggingInfo.hasAnyEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterLoggingInfo).HasAnyEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.loggingInfo.cloudwatchLogs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterLoggingInfo).CloudwatchLogs, ok = plugin.RawToTValue[*mqlAwsMskClusterLoggingInfoCloudwatchLogs](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.loggingInfo.firehose": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterLoggingInfo).Firehose, ok = plugin.RawToTValue[*mqlAwsMskClusterLoggingInfoFirehose](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.loggingInfo.s3": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterLoggingInfo).S3, ok = plugin.RawToTValue[*mqlAwsMskClusterLoggingInfoS3](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.loggingInfo.cloudwatchLogs.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterLoggingInfoCloudwatchLogs).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.msk.cluster.loggingInfo.cloudwatchLogs.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterLoggingInfoCloudwatchLogs).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.loggingInfo.cloudwatchLogs.logGroupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterLoggingInfoCloudwatchLogs).LogGroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.loggingInfo.cloudwatchLogs.logGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterLoggingInfoCloudwatchLogs).LogGroup, ok = plugin.RawToTValue[*mqlAwsCloudwatchLoggroup](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.loggingInfo.firehose.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterLoggingInfoFirehose).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.msk.cluster.loggingInfo.firehose.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterLoggingInfoFirehose).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.loggingInfo.firehose.deliveryStreamName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterLoggingInfoFirehose).DeliveryStreamName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.loggingInfo.firehose.deliveryStream": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterLoggingInfoFirehose).DeliveryStream, ok = plugin.RawToTValue[*mqlAwsKinesisFirehoseDeliveryStream](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.loggingInfo.s3.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterLoggingInfoS3).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.msk.cluster.loggingInfo.s3.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterLoggingInfoS3).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.loggingInfo.s3.bucketName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterLoggingInfoS3).BucketName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.loggingInfo.s3.prefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterLoggingInfoS3).Prefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.loggingInfo.s3.bucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterLoggingInfoS3).Bucket, ok = plugin.RawToTValue[*mqlAwsS3Bucket](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.monitoring.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterMonitoring).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.msk.cluster.monitoring.enhancedMonitoring": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterMonitoring).EnhancedMonitoring, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.monitoring.jmxExporterEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterMonitoring).JmxExporterEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.monitoring.nodeExporterEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterMonitoring).NodeExporterEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.monitoring.prometheusAnyEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterMonitoring).PrometheusAnyEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.bootstrapBrokers.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterBootstrapBrokers).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.msk.cluster.bootstrapBrokers.plaintext": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterBootstrapBrokers).Plaintext, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.bootstrapBrokers.tls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterBootstrapBrokers).Tls, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.bootstrapBrokers.saslIam": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterBootstrapBrokers).SaslIam, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.bootstrapBrokers.saslScram": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterBootstrapBrokers).SaslScram, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.bootstrapBrokers.publicTls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterBootstrapBrokers).PublicTls, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.bootstrapBrokers.publicSaslIam": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterBootstrapBrokers).PublicSaslIam, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.bootstrapBrokers.publicSaslScram": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterBootstrapBrokers).PublicSaslScram, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.bootstrapBrokers.vpcConnectivityTls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterBootstrapBrokers).VpcConnectivityTls, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.bootstrapBrokers.vpcConnectivitySaslIam": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterBootstrapBrokers).VpcConnectivitySaslIam, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.bootstrapBrokers.vpcConnectivitySaslScram": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterBootstrapBrokers).VpcConnectivitySaslScram, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.bootstrapBrokers.ipv6Tls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterBootstrapBrokers).Ipv6Tls, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.bootstrapBrokers.ipv6SaslIam": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterBootstrapBrokers).Ipv6SaslIam, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.bootstrapBrokers.ipv6SaslScram": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterBootstrapBrokers).Ipv6SaslScram, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.bootstrapBrokers.hasPublicEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterBootstrapBrokers).HasPublicEndpoint, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.bootstrapBrokers.hasPlaintextEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterBootstrapBrokers).HasPlaintextEndpoint, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.clusterPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterClusterPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.msk.cluster.clusterPolicy.currentVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterClusterPolicy).CurrentVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.clusterPolicy.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterClusterPolicy).Policy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.clusterPolicy.hasPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterClusterPolicy).HasPolicy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.clusterPolicy.hasExternalPrincipals": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterClusterPolicy).HasExternalPrincipals, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.clusterPolicy.allowsWildcardPrincipal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterClusterPolicy).AllowsWildcardPrincipal, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.operation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterOperation).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.msk.cluster.operation.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterOperation).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.operation.operationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterOperation).OperationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.operation.operationState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterOperation).OperationState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.operation.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterOperation).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.operation.endTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterOperation).EndTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.operation.errorCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterOperation).ErrorCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.operation.errorString": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterOperation).ErrorString, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.node.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterNode).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.msk.cluster.node.nodeArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterNode).NodeArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.node.nodeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterNode).NodeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.node.instanceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterNode).InstanceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.node.addedToClusterTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterNode).AddedToClusterTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.node.brokerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterNode).BrokerId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.node.clientSubnetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterNode).ClientSubnetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.node.clientVpcIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterNode).ClientVpcIpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.node.attachedENIId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterNode).AttachedENIId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.node.endpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterNode).Endpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.node.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterNode).Subnet, ok = plugin.RawToTValue[*mqlAwsVpcSubnet](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.node.networkInterface": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterNode).NetworkInterface, ok = plugin.RawToTValue[*mqlAwsEc2Networkinterface](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.clientVpcConnection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterClientVpcConnection).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.msk.cluster.clientVpcConnection.vpcConnectionArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterClientVpcConnection).VpcConnectionArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.clientVpcConnection.authentication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterClientVpcConnection).Authentication, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.clientVpcConnection.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterClientVpcConnection).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.clientVpcConnection.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterClientVpcConnection).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.clientVpcConnection.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterClientVpcConnection).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.clientVpcConnection.isCrossAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterClientVpcConnection).IsCrossAccount, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.serverlessConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterServerlessConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.msk.cluster.serverlessConfig.iamEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterServerlessConfig).IamEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.serverlessConfig.networkType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterServerlessConfig).NetworkType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.serverlessConfig.vpcConfigs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterServerlessConfig).VpcConfigs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.serverlessConfig.vpcConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterServerlessConfigVpcConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.msk.cluster.serverlessConfig.vpcConfig.subnetIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterServerlessConfigVpcConfig).SubnetIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.serverlessConfig.vpcConfig.securityGroupIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterServerlessConfigVpcConfig).SecurityGroupIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.serverlessConfig.vpcConfig.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterServerlessConfigVpcConfig).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.serverlessConfig.vpcConfig.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterServerlessConfigVpcConfig).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.msk.configuration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.msk.configuration.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskConfiguration).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.configuration.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskConfiguration).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.configuration.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskConfiguration).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.configuration.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskConfiguration).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.configuration.kafkaVersions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskConfiguration).KafkaVersions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.msk.configuration.latestRevision": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskConfiguration).LatestRevision, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.msk.configuration.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskConfiguration).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.msk.configuration.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskConfiguration).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.configuration.serverProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskConfiguration).ServerProperties, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicator).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.msk.replicator.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicator).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicator).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicator).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicator).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.currentVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicator).CurrentVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicator).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicator).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicator).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.stateCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicator).StateCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.stateMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicator).StateMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.serviceExecutionRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicator).ServiceExecutionRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.kafkaClusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicator).KafkaClusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.replicationInfoList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicator).ReplicationInfoList, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.isCrossRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicator).IsCrossRegion, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.isCrossAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicator).IsCrossAccount, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.kafkaCluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorKafkaCluster).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.msk.replicator.kafkaCluster.amazonMskClusterArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorKafkaCluster).AmazonMskClusterArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.kafkaCluster.kafkaClusterAlias": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorKafkaCluster).KafkaClusterAlias, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.kafkaCluster.subnetIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorKafkaCluster).SubnetIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.kafkaCluster.securityGroupIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorKafkaCluster).SecurityGroupIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.kafkaCluster.cluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorKafkaCluster).Cluster, ok = plugin.RawToTValue[*mqlAwsMskCluster](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.kafkaCluster.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorKafkaCluster).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.kafkaCluster.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorKafkaCluster).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.replicationInfo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorReplicationInfo).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.msk.replicator.replicationInfo.sourceKafkaClusterAlias": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorReplicationInfo).SourceKafkaClusterAlias, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.replicationInfo.targetKafkaClusterAlias": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorReplicationInfo).TargetKafkaClusterAlias, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.replicationInfo.targetCompressionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorReplicationInfo).TargetCompressionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.replicationInfo.sourceCluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorReplicationInfo).SourceCluster, ok = plugin.RawToTValue[*mqlAwsMskCluster](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.replicationInfo.targetCluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorReplicationInfo).TargetCluster, ok = plugin.RawToTValue[*mqlAwsMskCluster](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.replicationInfo.topicReplication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorReplicationInfo).TopicReplication, ok = plugin.RawToTValue[*mqlAwsMskReplicatorTopicReplication](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.replicationInfo.consumerGroupReplication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorReplicationInfo).ConsumerGroupReplication, ok = plugin.RawToTValue[*mqlAwsMskReplicatorConsumerGroupReplication](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.topicReplication.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorTopicReplication).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.msk.replicator.topicReplication.topicsToReplicate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorTopicReplication).TopicsToReplicate, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.topicReplication.topicsToExclude": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorTopicReplication).TopicsToExclude, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.topicReplication.startingPositionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorTopicReplication).StartingPositionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.topicReplication.topicNameConfigurationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorTopicReplication).TopicNameConfigurationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.topicReplication.copyAccessControlListsForTopics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorTopicReplication).CopyAccessControlListsForTopics, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.topicReplication.copyTopicConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorTopicReplication).CopyTopicConfigurations, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.topicReplication.detectAndCopyNewTopics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorTopicReplication).DetectAndCopyNewTopics, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.consumerGroupReplication.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorConsumerGroupReplication).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.msk.replicator.consumerGroupReplication.consumerGroupsToReplicate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorConsumerGroupReplication).ConsumerGroupsToReplicate, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.consumerGroupReplication.consumerGroupsToExclude": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorConsumerGroupReplication).ConsumerGroupsToExclude, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.consumerGroupReplication.synchroniseConsumerGroupOffsets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorConsumerGroupReplication).SynchroniseConsumerGroupOffsets, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.consumerGroupReplication.detectAndCopyNewConsumerGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorConsumerGroupReplication).DetectAndCopyNewConsumerGroups, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.mq.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -108079,7 +109483,9 @@ type mqlAwsMsk struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsMskInternal it will be used here
-	Clusters plugin.TValue[[]any]
+	Clusters       plugin.TValue[[]any]
+	Configurations plugin.TValue[[]any]
+	Replicators    plugin.TValue[[]any]
 }
 
 // createAwsMsk creates a new instance of this resource
@@ -108135,6 +109541,38 @@ func (c *mqlAwsMsk) GetClusters() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsMsk) GetConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Configurations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk", c.__id, "configurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.configurations()
+	})
+}
+
+func (c *mqlAwsMsk) GetReplicators() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Replicators, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk", c.__id, "replicators")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.replicators()
+	})
+}
+
 // mqlAwsMskCluster for the aws.msk.cluster resource
 type mqlAwsMskCluster struct {
 	MqlRuntime *plugin.Runtime
@@ -108155,6 +109593,8 @@ type mqlAwsMskCluster struct {
 	IamAuthEnabled                  plugin.TValue[bool]
 	ScramAuthEnabled                plugin.TValue[bool]
 	TlsAuthEnabled                  plugin.TValue[bool]
+	UnauthenticatedEnabled          plugin.TValue[bool]
+	AnyAuthEnabled                  plugin.TValue[bool]
 	PublicAccess                    plugin.TValue[bool]
 	CloudwatchLogsEnabled           plugin.TValue[bool]
 	CloudwatchLogsGroup             plugin.TValue[string]
@@ -108166,6 +109606,25 @@ type mqlAwsMskCluster struct {
 	NodeExporterEnabled             plugin.TValue[bool]
 	Subnets                         plugin.TValue[[]any]
 	SecurityGroups                  plugin.TValue[[]any]
+	StorageMode                     plugin.TValue[string]
+	NetworkType                     plugin.TValue[string]
+	EbsVolumeSizeGiB                plugin.TValue[int64]
+	ZookeeperConnectString          plugin.TValue[string]
+	ZookeeperConnectStringTls       plugin.TValue[string]
+	ConfigurationArn                plugin.TValue[string]
+	ConfigurationRevision           plugin.TValue[int64]
+	Configuration                   plugin.TValue[*mqlAwsMskConfiguration]
+	EncryptionInfo                  plugin.TValue[*mqlAwsMskClusterEncryptionInfo]
+	ClientAuthentication            plugin.TValue[*mqlAwsMskClusterClientAuthentication]
+	BrokerNodeGroup                 plugin.TValue[*mqlAwsMskClusterBrokerNodeGroup]
+	LoggingInfo                     plugin.TValue[*mqlAwsMskClusterLoggingInfo]
+	Monitoring                      plugin.TValue[*mqlAwsMskClusterMonitoring]
+	BootstrapBrokers                plugin.TValue[*mqlAwsMskClusterBootstrapBrokers]
+	ClusterPolicy                   plugin.TValue[*mqlAwsMskClusterClusterPolicy]
+	Operations                      plugin.TValue[[]any]
+	Nodes                           plugin.TValue[[]any]
+	ClientVpcConnections            plugin.TValue[[]any]
+	ServerlessConfig                plugin.TValue[*mqlAwsMskClusterServerlessConfig]
 	CreatedAt                       plugin.TValue[*time.Time]
 	Tags                            plugin.TValue[map[string]any]
 }
@@ -108290,6 +109749,18 @@ func (c *mqlAwsMskCluster) GetTlsAuthEnabled() *plugin.TValue[bool] {
 	})
 }
 
+func (c *mqlAwsMskCluster) GetUnauthenticatedEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UnauthenticatedEnabled, func() (bool, error) {
+		return c.unauthenticatedEnabled()
+	})
+}
+
+func (c *mqlAwsMskCluster) GetAnyAuthEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AnyAuthEnabled, func() (bool, error) {
+		return c.anyAuthEnabled()
+	})
+}
+
 func (c *mqlAwsMskCluster) GetPublicAccess() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.PublicAccess, func() (bool, error) {
 		return c.publicAccess()
@@ -108376,12 +109847,2225 @@ func (c *mqlAwsMskCluster) GetSecurityGroups() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsMskCluster) GetStorageMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.StorageMode, func() (string, error) {
+		return c.storageMode()
+	})
+}
+
+func (c *mqlAwsMskCluster) GetNetworkType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.NetworkType, func() (string, error) {
+		return c.networkType()
+	})
+}
+
+func (c *mqlAwsMskCluster) GetEbsVolumeSizeGiB() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.EbsVolumeSizeGiB, func() (int64, error) {
+		return c.ebsVolumeSizeGiB()
+	})
+}
+
+func (c *mqlAwsMskCluster) GetZookeeperConnectString() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ZookeeperConnectString, func() (string, error) {
+		return c.zookeeperConnectString()
+	})
+}
+
+func (c *mqlAwsMskCluster) GetZookeeperConnectStringTls() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ZookeeperConnectStringTls, func() (string, error) {
+		return c.zookeeperConnectStringTls()
+	})
+}
+
+func (c *mqlAwsMskCluster) GetConfigurationArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ConfigurationArn, func() (string, error) {
+		return c.configurationArn()
+	})
+}
+
+func (c *mqlAwsMskCluster) GetConfigurationRevision() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ConfigurationRevision, func() (int64, error) {
+		return c.configurationRevision()
+	})
+}
+
+func (c *mqlAwsMskCluster) GetConfiguration() *plugin.TValue[*mqlAwsMskConfiguration] {
+	return plugin.GetOrCompute[*mqlAwsMskConfiguration](&c.Configuration, func() (*mqlAwsMskConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.cluster", c.__id, "configuration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsMskConfiguration), nil
+			}
+		}
+
+		return c.configuration()
+	})
+}
+
+func (c *mqlAwsMskCluster) GetEncryptionInfo() *plugin.TValue[*mqlAwsMskClusterEncryptionInfo] {
+	return plugin.GetOrCompute[*mqlAwsMskClusterEncryptionInfo](&c.EncryptionInfo, func() (*mqlAwsMskClusterEncryptionInfo, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.cluster", c.__id, "encryptionInfo")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsMskClusterEncryptionInfo), nil
+			}
+		}
+
+		return c.encryptionInfo()
+	})
+}
+
+func (c *mqlAwsMskCluster) GetClientAuthentication() *plugin.TValue[*mqlAwsMskClusterClientAuthentication] {
+	return plugin.GetOrCompute[*mqlAwsMskClusterClientAuthentication](&c.ClientAuthentication, func() (*mqlAwsMskClusterClientAuthentication, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.cluster", c.__id, "clientAuthentication")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsMskClusterClientAuthentication), nil
+			}
+		}
+
+		return c.clientAuthentication()
+	})
+}
+
+func (c *mqlAwsMskCluster) GetBrokerNodeGroup() *plugin.TValue[*mqlAwsMskClusterBrokerNodeGroup] {
+	return plugin.GetOrCompute[*mqlAwsMskClusterBrokerNodeGroup](&c.BrokerNodeGroup, func() (*mqlAwsMskClusterBrokerNodeGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.cluster", c.__id, "brokerNodeGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsMskClusterBrokerNodeGroup), nil
+			}
+		}
+
+		return c.brokerNodeGroup()
+	})
+}
+
+func (c *mqlAwsMskCluster) GetLoggingInfo() *plugin.TValue[*mqlAwsMskClusterLoggingInfo] {
+	return plugin.GetOrCompute[*mqlAwsMskClusterLoggingInfo](&c.LoggingInfo, func() (*mqlAwsMskClusterLoggingInfo, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.cluster", c.__id, "loggingInfo")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsMskClusterLoggingInfo), nil
+			}
+		}
+
+		return c.loggingInfo()
+	})
+}
+
+func (c *mqlAwsMskCluster) GetMonitoring() *plugin.TValue[*mqlAwsMskClusterMonitoring] {
+	return plugin.GetOrCompute[*mqlAwsMskClusterMonitoring](&c.Monitoring, func() (*mqlAwsMskClusterMonitoring, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.cluster", c.__id, "monitoring")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsMskClusterMonitoring), nil
+			}
+		}
+
+		return c.monitoring()
+	})
+}
+
+func (c *mqlAwsMskCluster) GetBootstrapBrokers() *plugin.TValue[*mqlAwsMskClusterBootstrapBrokers] {
+	return plugin.GetOrCompute[*mqlAwsMskClusterBootstrapBrokers](&c.BootstrapBrokers, func() (*mqlAwsMskClusterBootstrapBrokers, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.cluster", c.__id, "bootstrapBrokers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsMskClusterBootstrapBrokers), nil
+			}
+		}
+
+		return c.bootstrapBrokers()
+	})
+}
+
+func (c *mqlAwsMskCluster) GetClusterPolicy() *plugin.TValue[*mqlAwsMskClusterClusterPolicy] {
+	return plugin.GetOrCompute[*mqlAwsMskClusterClusterPolicy](&c.ClusterPolicy, func() (*mqlAwsMskClusterClusterPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.cluster", c.__id, "clusterPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsMskClusterClusterPolicy), nil
+			}
+		}
+
+		return c.clusterPolicy()
+	})
+}
+
+func (c *mqlAwsMskCluster) GetOperations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Operations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.cluster", c.__id, "operations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.operations()
+	})
+}
+
+func (c *mqlAwsMskCluster) GetNodes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Nodes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.cluster", c.__id, "nodes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.nodes()
+	})
+}
+
+func (c *mqlAwsMskCluster) GetClientVpcConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ClientVpcConnections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.cluster", c.__id, "clientVpcConnections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.clientVpcConnections()
+	})
+}
+
+func (c *mqlAwsMskCluster) GetServerlessConfig() *plugin.TValue[*mqlAwsMskClusterServerlessConfig] {
+	return plugin.GetOrCompute[*mqlAwsMskClusterServerlessConfig](&c.ServerlessConfig, func() (*mqlAwsMskClusterServerlessConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.cluster", c.__id, "serverlessConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsMskClusterServerlessConfig), nil
+			}
+		}
+
+		return c.serverlessConfig()
+	})
+}
+
 func (c *mqlAwsMskCluster) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
 
 func (c *mqlAwsMskCluster) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
+}
+
+// mqlAwsMskClusterEncryptionInfo for the aws.msk.cluster.encryptionInfo resource
+type mqlAwsMskClusterEncryptionInfo struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsMskClusterEncryptionInfoInternal
+	AtRestKmsKeyArn       plugin.TValue[string]
+	KmsKey                plugin.TValue[*mqlAwsKmsKey]
+	InTransitClientBroker plugin.TValue[string]
+	InTransitInCluster    plugin.TValue[bool]
+}
+
+// createAwsMskClusterEncryptionInfo creates a new instance of this resource
+func createAwsMskClusterEncryptionInfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMskClusterEncryptionInfo{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.msk.cluster.encryptionInfo", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMskClusterEncryptionInfo) MqlName() string {
+	return "aws.msk.cluster.encryptionInfo"
+}
+
+func (c *mqlAwsMskClusterEncryptionInfo) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMskClusterEncryptionInfo) GetAtRestKmsKeyArn() *plugin.TValue[string] {
+	return &c.AtRestKmsKeyArn
+}
+
+func (c *mqlAwsMskClusterEncryptionInfo) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.cluster.encryptionInfo", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsMskClusterEncryptionInfo) GetInTransitClientBroker() *plugin.TValue[string] {
+	return &c.InTransitClientBroker
+}
+
+func (c *mqlAwsMskClusterEncryptionInfo) GetInTransitInCluster() *plugin.TValue[bool] {
+	return &c.InTransitInCluster
+}
+
+// mqlAwsMskClusterClientAuthentication for the aws.msk.cluster.clientAuthentication resource
+type mqlAwsMskClusterClientAuthentication struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsMskClusterClientAuthenticationInternal
+	IamEnabled                plugin.TValue[bool]
+	ScramEnabled              plugin.TValue[bool]
+	TlsEnabled                plugin.TValue[bool]
+	UnauthenticatedEnabled    plugin.TValue[bool]
+	AnyEnabled                plugin.TValue[bool]
+	ScramSecrets              plugin.TValue[[]any]
+	CertificateAuthorityArns  plugin.TValue[[]any]
+	TlsCertificateAuthorities plugin.TValue[[]any]
+}
+
+// createAwsMskClusterClientAuthentication creates a new instance of this resource
+func createAwsMskClusterClientAuthentication(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMskClusterClientAuthentication{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.msk.cluster.clientAuthentication", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMskClusterClientAuthentication) MqlName() string {
+	return "aws.msk.cluster.clientAuthentication"
+}
+
+func (c *mqlAwsMskClusterClientAuthentication) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMskClusterClientAuthentication) GetIamEnabled() *plugin.TValue[bool] {
+	return &c.IamEnabled
+}
+
+func (c *mqlAwsMskClusterClientAuthentication) GetScramEnabled() *plugin.TValue[bool] {
+	return &c.ScramEnabled
+}
+
+func (c *mqlAwsMskClusterClientAuthentication) GetTlsEnabled() *plugin.TValue[bool] {
+	return &c.TlsEnabled
+}
+
+func (c *mqlAwsMskClusterClientAuthentication) GetUnauthenticatedEnabled() *plugin.TValue[bool] {
+	return &c.UnauthenticatedEnabled
+}
+
+func (c *mqlAwsMskClusterClientAuthentication) GetAnyEnabled() *plugin.TValue[bool] {
+	return &c.AnyEnabled
+}
+
+func (c *mqlAwsMskClusterClientAuthentication) GetScramSecrets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ScramSecrets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.cluster.clientAuthentication", c.__id, "scramSecrets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.scramSecrets()
+	})
+}
+
+func (c *mqlAwsMskClusterClientAuthentication) GetCertificateAuthorityArns() *plugin.TValue[[]any] {
+	return &c.CertificateAuthorityArns
+}
+
+func (c *mqlAwsMskClusterClientAuthentication) GetTlsCertificateAuthorities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TlsCertificateAuthorities, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.cluster.clientAuthentication", c.__id, "tlsCertificateAuthorities")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tlsCertificateAuthorities()
+	})
+}
+
+// mqlAwsMskClusterBrokerNodeGroup for the aws.msk.cluster.brokerNodeGroup resource
+type mqlAwsMskClusterBrokerNodeGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsMskClusterBrokerNodeGroupInternal
+	InstanceType                    plugin.TValue[string]
+	BrokerAZDistribution            plugin.TValue[string]
+	ZoneIds                         plugin.TValue[[]any]
+	NetworkType                     plugin.TValue[string]
+	EbsVolumeSizeGiB                plugin.TValue[int64]
+	EbsProvisionedThroughputEnabled plugin.TValue[bool]
+	EbsProvisionedThroughputMBps    plugin.TValue[int64]
+	StorageMode                     plugin.TValue[string]
+	PublicAccess                    plugin.TValue[*mqlAwsMskClusterPublicAccess]
+	VpcConnectivity                 plugin.TValue[*mqlAwsMskClusterVpcConnectivity]
+	Subnets                         plugin.TValue[[]any]
+	SecurityGroups                  plugin.TValue[[]any]
+}
+
+// createAwsMskClusterBrokerNodeGroup creates a new instance of this resource
+func createAwsMskClusterBrokerNodeGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMskClusterBrokerNodeGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.msk.cluster.brokerNodeGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMskClusterBrokerNodeGroup) MqlName() string {
+	return "aws.msk.cluster.brokerNodeGroup"
+}
+
+func (c *mqlAwsMskClusterBrokerNodeGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMskClusterBrokerNodeGroup) GetInstanceType() *plugin.TValue[string] {
+	return &c.InstanceType
+}
+
+func (c *mqlAwsMskClusterBrokerNodeGroup) GetBrokerAZDistribution() *plugin.TValue[string] {
+	return &c.BrokerAZDistribution
+}
+
+func (c *mqlAwsMskClusterBrokerNodeGroup) GetZoneIds() *plugin.TValue[[]any] {
+	return &c.ZoneIds
+}
+
+func (c *mqlAwsMskClusterBrokerNodeGroup) GetNetworkType() *plugin.TValue[string] {
+	return &c.NetworkType
+}
+
+func (c *mqlAwsMskClusterBrokerNodeGroup) GetEbsVolumeSizeGiB() *plugin.TValue[int64] {
+	return &c.EbsVolumeSizeGiB
+}
+
+func (c *mqlAwsMskClusterBrokerNodeGroup) GetEbsProvisionedThroughputEnabled() *plugin.TValue[bool] {
+	return &c.EbsProvisionedThroughputEnabled
+}
+
+func (c *mqlAwsMskClusterBrokerNodeGroup) GetEbsProvisionedThroughputMBps() *plugin.TValue[int64] {
+	return &c.EbsProvisionedThroughputMBps
+}
+
+func (c *mqlAwsMskClusterBrokerNodeGroup) GetStorageMode() *plugin.TValue[string] {
+	return &c.StorageMode
+}
+
+func (c *mqlAwsMskClusterBrokerNodeGroup) GetPublicAccess() *plugin.TValue[*mqlAwsMskClusterPublicAccess] {
+	return plugin.GetOrCompute[*mqlAwsMskClusterPublicAccess](&c.PublicAccess, func() (*mqlAwsMskClusterPublicAccess, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.cluster.brokerNodeGroup", c.__id, "publicAccess")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsMskClusterPublicAccess), nil
+			}
+		}
+
+		return c.publicAccess()
+	})
+}
+
+func (c *mqlAwsMskClusterBrokerNodeGroup) GetVpcConnectivity() *plugin.TValue[*mqlAwsMskClusterVpcConnectivity] {
+	return plugin.GetOrCompute[*mqlAwsMskClusterVpcConnectivity](&c.VpcConnectivity, func() (*mqlAwsMskClusterVpcConnectivity, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.cluster.brokerNodeGroup", c.__id, "vpcConnectivity")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsMskClusterVpcConnectivity), nil
+			}
+		}
+
+		return c.vpcConnectivity()
+	})
+}
+
+func (c *mqlAwsMskClusterBrokerNodeGroup) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.cluster.brokerNodeGroup", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
+}
+
+func (c *mqlAwsMskClusterBrokerNodeGroup) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.cluster.brokerNodeGroup", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+// mqlAwsMskClusterPublicAccess for the aws.msk.cluster.publicAccess resource
+type mqlAwsMskClusterPublicAccess struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsMskClusterPublicAccessInternal it will be used here
+	Type    plugin.TValue[string]
+	Enabled plugin.TValue[bool]
+}
+
+// createAwsMskClusterPublicAccess creates a new instance of this resource
+func createAwsMskClusterPublicAccess(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMskClusterPublicAccess{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.msk.cluster.publicAccess", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMskClusterPublicAccess) MqlName() string {
+	return "aws.msk.cluster.publicAccess"
+}
+
+func (c *mqlAwsMskClusterPublicAccess) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMskClusterPublicAccess) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsMskClusterPublicAccess) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+// mqlAwsMskClusterVpcConnectivity for the aws.msk.cluster.vpcConnectivity resource
+type mqlAwsMskClusterVpcConnectivity struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsMskClusterVpcConnectivityInternal it will be used here
+	IamEnabled   plugin.TValue[bool]
+	ScramEnabled plugin.TValue[bool]
+	TlsEnabled   plugin.TValue[bool]
+	AnyEnabled   plugin.TValue[bool]
+}
+
+// createAwsMskClusterVpcConnectivity creates a new instance of this resource
+func createAwsMskClusterVpcConnectivity(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMskClusterVpcConnectivity{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.msk.cluster.vpcConnectivity", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMskClusterVpcConnectivity) MqlName() string {
+	return "aws.msk.cluster.vpcConnectivity"
+}
+
+func (c *mqlAwsMskClusterVpcConnectivity) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMskClusterVpcConnectivity) GetIamEnabled() *plugin.TValue[bool] {
+	return &c.IamEnabled
+}
+
+func (c *mqlAwsMskClusterVpcConnectivity) GetScramEnabled() *plugin.TValue[bool] {
+	return &c.ScramEnabled
+}
+
+func (c *mqlAwsMskClusterVpcConnectivity) GetTlsEnabled() *plugin.TValue[bool] {
+	return &c.TlsEnabled
+}
+
+func (c *mqlAwsMskClusterVpcConnectivity) GetAnyEnabled() *plugin.TValue[bool] {
+	return &c.AnyEnabled
+}
+
+// mqlAwsMskClusterLoggingInfo for the aws.msk.cluster.loggingInfo resource
+type mqlAwsMskClusterLoggingInfo struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsMskClusterLoggingInfoInternal
+	HasAnyEnabled  plugin.TValue[bool]
+	CloudwatchLogs plugin.TValue[*mqlAwsMskClusterLoggingInfoCloudwatchLogs]
+	Firehose       plugin.TValue[*mqlAwsMskClusterLoggingInfoFirehose]
+	S3             plugin.TValue[*mqlAwsMskClusterLoggingInfoS3]
+}
+
+// createAwsMskClusterLoggingInfo creates a new instance of this resource
+func createAwsMskClusterLoggingInfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMskClusterLoggingInfo{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.msk.cluster.loggingInfo", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMskClusterLoggingInfo) MqlName() string {
+	return "aws.msk.cluster.loggingInfo"
+}
+
+func (c *mqlAwsMskClusterLoggingInfo) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMskClusterLoggingInfo) GetHasAnyEnabled() *plugin.TValue[bool] {
+	return &c.HasAnyEnabled
+}
+
+func (c *mqlAwsMskClusterLoggingInfo) GetCloudwatchLogs() *plugin.TValue[*mqlAwsMskClusterLoggingInfoCloudwatchLogs] {
+	return plugin.GetOrCompute[*mqlAwsMskClusterLoggingInfoCloudwatchLogs](&c.CloudwatchLogs, func() (*mqlAwsMskClusterLoggingInfoCloudwatchLogs, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.cluster.loggingInfo", c.__id, "cloudwatchLogs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsMskClusterLoggingInfoCloudwatchLogs), nil
+			}
+		}
+
+		return c.cloudwatchLogs()
+	})
+}
+
+func (c *mqlAwsMskClusterLoggingInfo) GetFirehose() *plugin.TValue[*mqlAwsMskClusterLoggingInfoFirehose] {
+	return plugin.GetOrCompute[*mqlAwsMskClusterLoggingInfoFirehose](&c.Firehose, func() (*mqlAwsMskClusterLoggingInfoFirehose, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.cluster.loggingInfo", c.__id, "firehose")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsMskClusterLoggingInfoFirehose), nil
+			}
+		}
+
+		return c.firehose()
+	})
+}
+
+func (c *mqlAwsMskClusterLoggingInfo) GetS3() *plugin.TValue[*mqlAwsMskClusterLoggingInfoS3] {
+	return plugin.GetOrCompute[*mqlAwsMskClusterLoggingInfoS3](&c.S3, func() (*mqlAwsMskClusterLoggingInfoS3, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.cluster.loggingInfo", c.__id, "s3")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsMskClusterLoggingInfoS3), nil
+			}
+		}
+
+		return c.s3()
+	})
+}
+
+// mqlAwsMskClusterLoggingInfoCloudwatchLogs for the aws.msk.cluster.loggingInfo.cloudwatchLogs resource
+type mqlAwsMskClusterLoggingInfoCloudwatchLogs struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsMskClusterLoggingInfoCloudwatchLogsInternal
+	Enabled      plugin.TValue[bool]
+	LogGroupName plugin.TValue[string]
+	LogGroup     plugin.TValue[*mqlAwsCloudwatchLoggroup]
+}
+
+// createAwsMskClusterLoggingInfoCloudwatchLogs creates a new instance of this resource
+func createAwsMskClusterLoggingInfoCloudwatchLogs(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMskClusterLoggingInfoCloudwatchLogs{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.msk.cluster.loggingInfo.cloudwatchLogs", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMskClusterLoggingInfoCloudwatchLogs) MqlName() string {
+	return "aws.msk.cluster.loggingInfo.cloudwatchLogs"
+}
+
+func (c *mqlAwsMskClusterLoggingInfoCloudwatchLogs) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMskClusterLoggingInfoCloudwatchLogs) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAwsMskClusterLoggingInfoCloudwatchLogs) GetLogGroupName() *plugin.TValue[string] {
+	return &c.LogGroupName
+}
+
+func (c *mqlAwsMskClusterLoggingInfoCloudwatchLogs) GetLogGroup() *plugin.TValue[*mqlAwsCloudwatchLoggroup] {
+	return plugin.GetOrCompute[*mqlAwsCloudwatchLoggroup](&c.LogGroup, func() (*mqlAwsCloudwatchLoggroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.cluster.loggingInfo.cloudwatchLogs", c.__id, "logGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCloudwatchLoggroup), nil
+			}
+		}
+
+		return c.logGroup()
+	})
+}
+
+// mqlAwsMskClusterLoggingInfoFirehose for the aws.msk.cluster.loggingInfo.firehose resource
+type mqlAwsMskClusterLoggingInfoFirehose struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsMskClusterLoggingInfoFirehoseInternal
+	Enabled            plugin.TValue[bool]
+	DeliveryStreamName plugin.TValue[string]
+	DeliveryStream     plugin.TValue[*mqlAwsKinesisFirehoseDeliveryStream]
+}
+
+// createAwsMskClusterLoggingInfoFirehose creates a new instance of this resource
+func createAwsMskClusterLoggingInfoFirehose(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMskClusterLoggingInfoFirehose{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.msk.cluster.loggingInfo.firehose", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMskClusterLoggingInfoFirehose) MqlName() string {
+	return "aws.msk.cluster.loggingInfo.firehose"
+}
+
+func (c *mqlAwsMskClusterLoggingInfoFirehose) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMskClusterLoggingInfoFirehose) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAwsMskClusterLoggingInfoFirehose) GetDeliveryStreamName() *plugin.TValue[string] {
+	return &c.DeliveryStreamName
+}
+
+func (c *mqlAwsMskClusterLoggingInfoFirehose) GetDeliveryStream() *plugin.TValue[*mqlAwsKinesisFirehoseDeliveryStream] {
+	return plugin.GetOrCompute[*mqlAwsKinesisFirehoseDeliveryStream](&c.DeliveryStream, func() (*mqlAwsKinesisFirehoseDeliveryStream, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.cluster.loggingInfo.firehose", c.__id, "deliveryStream")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKinesisFirehoseDeliveryStream), nil
+			}
+		}
+
+		return c.deliveryStream()
+	})
+}
+
+// mqlAwsMskClusterLoggingInfoS3 for the aws.msk.cluster.loggingInfo.s3 resource
+type mqlAwsMskClusterLoggingInfoS3 struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsMskClusterLoggingInfoS3Internal
+	Enabled    plugin.TValue[bool]
+	BucketName plugin.TValue[string]
+	Prefix     plugin.TValue[string]
+	Bucket     plugin.TValue[*mqlAwsS3Bucket]
+}
+
+// createAwsMskClusterLoggingInfoS3 creates a new instance of this resource
+func createAwsMskClusterLoggingInfoS3(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMskClusterLoggingInfoS3{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.msk.cluster.loggingInfo.s3", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMskClusterLoggingInfoS3) MqlName() string {
+	return "aws.msk.cluster.loggingInfo.s3"
+}
+
+func (c *mqlAwsMskClusterLoggingInfoS3) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMskClusterLoggingInfoS3) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAwsMskClusterLoggingInfoS3) GetBucketName() *plugin.TValue[string] {
+	return &c.BucketName
+}
+
+func (c *mqlAwsMskClusterLoggingInfoS3) GetPrefix() *plugin.TValue[string] {
+	return &c.Prefix
+}
+
+func (c *mqlAwsMskClusterLoggingInfoS3) GetBucket() *plugin.TValue[*mqlAwsS3Bucket] {
+	return plugin.GetOrCompute[*mqlAwsS3Bucket](&c.Bucket, func() (*mqlAwsS3Bucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.cluster.loggingInfo.s3", c.__id, "bucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsS3Bucket), nil
+			}
+		}
+
+		return c.bucket()
+	})
+}
+
+// mqlAwsMskClusterMonitoring for the aws.msk.cluster.monitoring resource
+type mqlAwsMskClusterMonitoring struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsMskClusterMonitoringInternal it will be used here
+	EnhancedMonitoring   plugin.TValue[string]
+	JmxExporterEnabled   plugin.TValue[bool]
+	NodeExporterEnabled  plugin.TValue[bool]
+	PrometheusAnyEnabled plugin.TValue[bool]
+}
+
+// createAwsMskClusterMonitoring creates a new instance of this resource
+func createAwsMskClusterMonitoring(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMskClusterMonitoring{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.msk.cluster.monitoring", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMskClusterMonitoring) MqlName() string {
+	return "aws.msk.cluster.monitoring"
+}
+
+func (c *mqlAwsMskClusterMonitoring) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMskClusterMonitoring) GetEnhancedMonitoring() *plugin.TValue[string] {
+	return &c.EnhancedMonitoring
+}
+
+func (c *mqlAwsMskClusterMonitoring) GetJmxExporterEnabled() *plugin.TValue[bool] {
+	return &c.JmxExporterEnabled
+}
+
+func (c *mqlAwsMskClusterMonitoring) GetNodeExporterEnabled() *plugin.TValue[bool] {
+	return &c.NodeExporterEnabled
+}
+
+func (c *mqlAwsMskClusterMonitoring) GetPrometheusAnyEnabled() *plugin.TValue[bool] {
+	return &c.PrometheusAnyEnabled
+}
+
+// mqlAwsMskClusterBootstrapBrokers for the aws.msk.cluster.bootstrapBrokers resource
+type mqlAwsMskClusterBootstrapBrokers struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsMskClusterBootstrapBrokersInternal it will be used here
+	Plaintext                plugin.TValue[string]
+	Tls                      plugin.TValue[string]
+	SaslIam                  plugin.TValue[string]
+	SaslScram                plugin.TValue[string]
+	PublicTls                plugin.TValue[string]
+	PublicSaslIam            plugin.TValue[string]
+	PublicSaslScram          plugin.TValue[string]
+	VpcConnectivityTls       plugin.TValue[string]
+	VpcConnectivitySaslIam   plugin.TValue[string]
+	VpcConnectivitySaslScram plugin.TValue[string]
+	Ipv6Tls                  plugin.TValue[string]
+	Ipv6SaslIam              plugin.TValue[string]
+	Ipv6SaslScram            plugin.TValue[string]
+	HasPublicEndpoint        plugin.TValue[bool]
+	HasPlaintextEndpoint     plugin.TValue[bool]
+}
+
+// createAwsMskClusterBootstrapBrokers creates a new instance of this resource
+func createAwsMskClusterBootstrapBrokers(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMskClusterBootstrapBrokers{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.msk.cluster.bootstrapBrokers", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMskClusterBootstrapBrokers) MqlName() string {
+	return "aws.msk.cluster.bootstrapBrokers"
+}
+
+func (c *mqlAwsMskClusterBootstrapBrokers) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMskClusterBootstrapBrokers) GetPlaintext() *plugin.TValue[string] {
+	return &c.Plaintext
+}
+
+func (c *mqlAwsMskClusterBootstrapBrokers) GetTls() *plugin.TValue[string] {
+	return &c.Tls
+}
+
+func (c *mqlAwsMskClusterBootstrapBrokers) GetSaslIam() *plugin.TValue[string] {
+	return &c.SaslIam
+}
+
+func (c *mqlAwsMskClusterBootstrapBrokers) GetSaslScram() *plugin.TValue[string] {
+	return &c.SaslScram
+}
+
+func (c *mqlAwsMskClusterBootstrapBrokers) GetPublicTls() *plugin.TValue[string] {
+	return &c.PublicTls
+}
+
+func (c *mqlAwsMskClusterBootstrapBrokers) GetPublicSaslIam() *plugin.TValue[string] {
+	return &c.PublicSaslIam
+}
+
+func (c *mqlAwsMskClusterBootstrapBrokers) GetPublicSaslScram() *plugin.TValue[string] {
+	return &c.PublicSaslScram
+}
+
+func (c *mqlAwsMskClusterBootstrapBrokers) GetVpcConnectivityTls() *plugin.TValue[string] {
+	return &c.VpcConnectivityTls
+}
+
+func (c *mqlAwsMskClusterBootstrapBrokers) GetVpcConnectivitySaslIam() *plugin.TValue[string] {
+	return &c.VpcConnectivitySaslIam
+}
+
+func (c *mqlAwsMskClusterBootstrapBrokers) GetVpcConnectivitySaslScram() *plugin.TValue[string] {
+	return &c.VpcConnectivitySaslScram
+}
+
+func (c *mqlAwsMskClusterBootstrapBrokers) GetIpv6Tls() *plugin.TValue[string] {
+	return &c.Ipv6Tls
+}
+
+func (c *mqlAwsMskClusterBootstrapBrokers) GetIpv6SaslIam() *plugin.TValue[string] {
+	return &c.Ipv6SaslIam
+}
+
+func (c *mqlAwsMskClusterBootstrapBrokers) GetIpv6SaslScram() *plugin.TValue[string] {
+	return &c.Ipv6SaslScram
+}
+
+func (c *mqlAwsMskClusterBootstrapBrokers) GetHasPublicEndpoint() *plugin.TValue[bool] {
+	return &c.HasPublicEndpoint
+}
+
+func (c *mqlAwsMskClusterBootstrapBrokers) GetHasPlaintextEndpoint() *plugin.TValue[bool] {
+	return &c.HasPlaintextEndpoint
+}
+
+// mqlAwsMskClusterClusterPolicy for the aws.msk.cluster.clusterPolicy resource
+type mqlAwsMskClusterClusterPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsMskClusterClusterPolicyInternal it will be used here
+	CurrentVersion          plugin.TValue[string]
+	Policy                  plugin.TValue[string]
+	HasPolicy               plugin.TValue[bool]
+	HasExternalPrincipals   plugin.TValue[bool]
+	AllowsWildcardPrincipal plugin.TValue[bool]
+}
+
+// createAwsMskClusterClusterPolicy creates a new instance of this resource
+func createAwsMskClusterClusterPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMskClusterClusterPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.msk.cluster.clusterPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMskClusterClusterPolicy) MqlName() string {
+	return "aws.msk.cluster.clusterPolicy"
+}
+
+func (c *mqlAwsMskClusterClusterPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMskClusterClusterPolicy) GetCurrentVersion() *plugin.TValue[string] {
+	return &c.CurrentVersion
+}
+
+func (c *mqlAwsMskClusterClusterPolicy) GetPolicy() *plugin.TValue[string] {
+	return &c.Policy
+}
+
+func (c *mqlAwsMskClusterClusterPolicy) GetHasPolicy() *plugin.TValue[bool] {
+	return &c.HasPolicy
+}
+
+func (c *mqlAwsMskClusterClusterPolicy) GetHasExternalPrincipals() *plugin.TValue[bool] {
+	return &c.HasExternalPrincipals
+}
+
+func (c *mqlAwsMskClusterClusterPolicy) GetAllowsWildcardPrincipal() *plugin.TValue[bool] {
+	return &c.AllowsWildcardPrincipal
+}
+
+// mqlAwsMskClusterOperation for the aws.msk.cluster.operation resource
+type mqlAwsMskClusterOperation struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsMskClusterOperationInternal it will be used here
+	Arn            plugin.TValue[string]
+	OperationType  plugin.TValue[string]
+	OperationState plugin.TValue[string]
+	CreatedAt      plugin.TValue[*time.Time]
+	EndTime        plugin.TValue[*time.Time]
+	ErrorCode      plugin.TValue[string]
+	ErrorString    plugin.TValue[string]
+}
+
+// createAwsMskClusterOperation creates a new instance of this resource
+func createAwsMskClusterOperation(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMskClusterOperation{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.msk.cluster.operation", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMskClusterOperation) MqlName() string {
+	return "aws.msk.cluster.operation"
+}
+
+func (c *mqlAwsMskClusterOperation) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMskClusterOperation) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsMskClusterOperation) GetOperationType() *plugin.TValue[string] {
+	return &c.OperationType
+}
+
+func (c *mqlAwsMskClusterOperation) GetOperationState() *plugin.TValue[string] {
+	return &c.OperationState
+}
+
+func (c *mqlAwsMskClusterOperation) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsMskClusterOperation) GetEndTime() *plugin.TValue[*time.Time] {
+	return &c.EndTime
+}
+
+func (c *mqlAwsMskClusterOperation) GetErrorCode() *plugin.TValue[string] {
+	return &c.ErrorCode
+}
+
+func (c *mqlAwsMskClusterOperation) GetErrorString() *plugin.TValue[string] {
+	return &c.ErrorString
+}
+
+// mqlAwsMskClusterNode for the aws.msk.cluster.node resource
+type mqlAwsMskClusterNode struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsMskClusterNodeInternal
+	NodeArn            plugin.TValue[string]
+	NodeType           plugin.TValue[string]
+	InstanceType       plugin.TValue[string]
+	AddedToClusterTime plugin.TValue[string]
+	BrokerId           plugin.TValue[int64]
+	ClientSubnetId     plugin.TValue[string]
+	ClientVpcIpAddress plugin.TValue[string]
+	AttachedENIId      plugin.TValue[string]
+	Endpoints          plugin.TValue[[]any]
+	Subnet             plugin.TValue[*mqlAwsVpcSubnet]
+	NetworkInterface   plugin.TValue[*mqlAwsEc2Networkinterface]
+}
+
+// createAwsMskClusterNode creates a new instance of this resource
+func createAwsMskClusterNode(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMskClusterNode{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.msk.cluster.node", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMskClusterNode) MqlName() string {
+	return "aws.msk.cluster.node"
+}
+
+func (c *mqlAwsMskClusterNode) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMskClusterNode) GetNodeArn() *plugin.TValue[string] {
+	return &c.NodeArn
+}
+
+func (c *mqlAwsMskClusterNode) GetNodeType() *plugin.TValue[string] {
+	return &c.NodeType
+}
+
+func (c *mqlAwsMskClusterNode) GetInstanceType() *plugin.TValue[string] {
+	return &c.InstanceType
+}
+
+func (c *mqlAwsMskClusterNode) GetAddedToClusterTime() *plugin.TValue[string] {
+	return &c.AddedToClusterTime
+}
+
+func (c *mqlAwsMskClusterNode) GetBrokerId() *plugin.TValue[int64] {
+	return &c.BrokerId
+}
+
+func (c *mqlAwsMskClusterNode) GetClientSubnetId() *plugin.TValue[string] {
+	return &c.ClientSubnetId
+}
+
+func (c *mqlAwsMskClusterNode) GetClientVpcIpAddress() *plugin.TValue[string] {
+	return &c.ClientVpcIpAddress
+}
+
+func (c *mqlAwsMskClusterNode) GetAttachedENIId() *plugin.TValue[string] {
+	return &c.AttachedENIId
+}
+
+func (c *mqlAwsMskClusterNode) GetEndpoints() *plugin.TValue[[]any] {
+	return &c.Endpoints
+}
+
+func (c *mqlAwsMskClusterNode) GetSubnet() *plugin.TValue[*mqlAwsVpcSubnet] {
+	return plugin.GetOrCompute[*mqlAwsVpcSubnet](&c.Subnet, func() (*mqlAwsVpcSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.cluster.node", c.__id, "subnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpcSubnet), nil
+			}
+		}
+
+		return c.subnet()
+	})
+}
+
+func (c *mqlAwsMskClusterNode) GetNetworkInterface() *plugin.TValue[*mqlAwsEc2Networkinterface] {
+	return plugin.GetOrCompute[*mqlAwsEc2Networkinterface](&c.NetworkInterface, func() (*mqlAwsEc2Networkinterface, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.cluster.node", c.__id, "networkInterface")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Networkinterface), nil
+			}
+		}
+
+		return c.networkInterface()
+	})
+}
+
+// mqlAwsMskClusterClientVpcConnection for the aws.msk.cluster.clientVpcConnection resource
+type mqlAwsMskClusterClientVpcConnection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsMskClusterClientVpcConnectionInternal it will be used here
+	VpcConnectionArn plugin.TValue[string]
+	Authentication   plugin.TValue[string]
+	State            plugin.TValue[string]
+	Owner            plugin.TValue[string]
+	CreatedAt        plugin.TValue[*time.Time]
+	IsCrossAccount   plugin.TValue[bool]
+}
+
+// createAwsMskClusterClientVpcConnection creates a new instance of this resource
+func createAwsMskClusterClientVpcConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMskClusterClientVpcConnection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.msk.cluster.clientVpcConnection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMskClusterClientVpcConnection) MqlName() string {
+	return "aws.msk.cluster.clientVpcConnection"
+}
+
+func (c *mqlAwsMskClusterClientVpcConnection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMskClusterClientVpcConnection) GetVpcConnectionArn() *plugin.TValue[string] {
+	return &c.VpcConnectionArn
+}
+
+func (c *mqlAwsMskClusterClientVpcConnection) GetAuthentication() *plugin.TValue[string] {
+	return &c.Authentication
+}
+
+func (c *mqlAwsMskClusterClientVpcConnection) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsMskClusterClientVpcConnection) GetOwner() *plugin.TValue[string] {
+	return &c.Owner
+}
+
+func (c *mqlAwsMskClusterClientVpcConnection) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsMskClusterClientVpcConnection) GetIsCrossAccount() *plugin.TValue[bool] {
+	return &c.IsCrossAccount
+}
+
+// mqlAwsMskClusterServerlessConfig for the aws.msk.cluster.serverlessConfig resource
+type mqlAwsMskClusterServerlessConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsMskClusterServerlessConfigInternal it will be used here
+	IamEnabled  plugin.TValue[bool]
+	NetworkType plugin.TValue[string]
+	VpcConfigs  plugin.TValue[[]any]
+}
+
+// createAwsMskClusterServerlessConfig creates a new instance of this resource
+func createAwsMskClusterServerlessConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMskClusterServerlessConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.msk.cluster.serverlessConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMskClusterServerlessConfig) MqlName() string {
+	return "aws.msk.cluster.serverlessConfig"
+}
+
+func (c *mqlAwsMskClusterServerlessConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMskClusterServerlessConfig) GetIamEnabled() *plugin.TValue[bool] {
+	return &c.IamEnabled
+}
+
+func (c *mqlAwsMskClusterServerlessConfig) GetNetworkType() *plugin.TValue[string] {
+	return &c.NetworkType
+}
+
+func (c *mqlAwsMskClusterServerlessConfig) GetVpcConfigs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VpcConfigs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.cluster.serverlessConfig", c.__id, "vpcConfigs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vpcConfigs()
+	})
+}
+
+// mqlAwsMskClusterServerlessConfigVpcConfig for the aws.msk.cluster.serverlessConfig.vpcConfig resource
+type mqlAwsMskClusterServerlessConfigVpcConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsMskClusterServerlessConfigVpcConfigInternal
+	SubnetIds        plugin.TValue[[]any]
+	SecurityGroupIds plugin.TValue[[]any]
+	Subnets          plugin.TValue[[]any]
+	SecurityGroups   plugin.TValue[[]any]
+}
+
+// createAwsMskClusterServerlessConfigVpcConfig creates a new instance of this resource
+func createAwsMskClusterServerlessConfigVpcConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMskClusterServerlessConfigVpcConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.msk.cluster.serverlessConfig.vpcConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMskClusterServerlessConfigVpcConfig) MqlName() string {
+	return "aws.msk.cluster.serverlessConfig.vpcConfig"
+}
+
+func (c *mqlAwsMskClusterServerlessConfigVpcConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMskClusterServerlessConfigVpcConfig) GetSubnetIds() *plugin.TValue[[]any] {
+	return &c.SubnetIds
+}
+
+func (c *mqlAwsMskClusterServerlessConfigVpcConfig) GetSecurityGroupIds() *plugin.TValue[[]any] {
+	return &c.SecurityGroupIds
+}
+
+func (c *mqlAwsMskClusterServerlessConfigVpcConfig) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.cluster.serverlessConfig.vpcConfig", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
+}
+
+func (c *mqlAwsMskClusterServerlessConfigVpcConfig) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.cluster.serverlessConfig.vpcConfig", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+// mqlAwsMskConfiguration for the aws.msk.configuration resource
+type mqlAwsMskConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsMskConfigurationInternal
+	Arn              plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Description      plugin.TValue[string]
+	State            plugin.TValue[string]
+	KafkaVersions    plugin.TValue[[]any]
+	LatestRevision   plugin.TValue[int64]
+	CreatedAt        plugin.TValue[*time.Time]
+	Region           plugin.TValue[string]
+	ServerProperties plugin.TValue[string]
+}
+
+// createAwsMskConfiguration creates a new instance of this resource
+func createAwsMskConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMskConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.msk.configuration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMskConfiguration) MqlName() string {
+	return "aws.msk.configuration"
+}
+
+func (c *mqlAwsMskConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMskConfiguration) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsMskConfiguration) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsMskConfiguration) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsMskConfiguration) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsMskConfiguration) GetKafkaVersions() *plugin.TValue[[]any] {
+	return &c.KafkaVersions
+}
+
+func (c *mqlAwsMskConfiguration) GetLatestRevision() *plugin.TValue[int64] {
+	return &c.LatestRevision
+}
+
+func (c *mqlAwsMskConfiguration) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsMskConfiguration) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsMskConfiguration) GetServerProperties() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ServerProperties, func() (string, error) {
+		return c.serverProperties()
+	})
+}
+
+// mqlAwsMskReplicator for the aws.msk.replicator resource
+type mqlAwsMskReplicator struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsMskReplicatorInternal
+	Arn                  plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	State                plugin.TValue[string]
+	Description          plugin.TValue[string]
+	CurrentVersion       plugin.TValue[string]
+	CreatedAt            plugin.TValue[*time.Time]
+	Region               plugin.TValue[string]
+	Tags                 plugin.TValue[map[string]any]
+	StateCode            plugin.TValue[string]
+	StateMessage         plugin.TValue[string]
+	ServiceExecutionRole plugin.TValue[*mqlAwsIamRole]
+	KafkaClusters        plugin.TValue[[]any]
+	ReplicationInfoList  plugin.TValue[[]any]
+	IsCrossRegion        plugin.TValue[bool]
+	IsCrossAccount       plugin.TValue[bool]
+}
+
+// createAwsMskReplicator creates a new instance of this resource
+func createAwsMskReplicator(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMskReplicator{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.msk.replicator", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMskReplicator) MqlName() string {
+	return "aws.msk.replicator"
+}
+
+func (c *mqlAwsMskReplicator) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMskReplicator) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsMskReplicator) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsMskReplicator) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsMskReplicator) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsMskReplicator) GetCurrentVersion() *plugin.TValue[string] {
+	return &c.CurrentVersion
+}
+
+func (c *mqlAwsMskReplicator) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsMskReplicator) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsMskReplicator) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAwsMskReplicator) GetStateCode() *plugin.TValue[string] {
+	return &c.StateCode
+}
+
+func (c *mqlAwsMskReplicator) GetStateMessage() *plugin.TValue[string] {
+	return &c.StateMessage
+}
+
+func (c *mqlAwsMskReplicator) GetServiceExecutionRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.ServiceExecutionRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.replicator", c.__id, "serviceExecutionRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.serviceExecutionRole()
+	})
+}
+
+func (c *mqlAwsMskReplicator) GetKafkaClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.KafkaClusters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.replicator", c.__id, "kafkaClusters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.kafkaClusters()
+	})
+}
+
+func (c *mqlAwsMskReplicator) GetReplicationInfoList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ReplicationInfoList, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.replicator", c.__id, "replicationInfoList")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.replicationInfoList()
+	})
+}
+
+func (c *mqlAwsMskReplicator) GetIsCrossRegion() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsCrossRegion, func() (bool, error) {
+		return c.isCrossRegion()
+	})
+}
+
+func (c *mqlAwsMskReplicator) GetIsCrossAccount() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsCrossAccount, func() (bool, error) {
+		return c.isCrossAccount()
+	})
+}
+
+// mqlAwsMskReplicatorKafkaCluster for the aws.msk.replicator.kafkaCluster resource
+type mqlAwsMskReplicatorKafkaCluster struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsMskReplicatorKafkaClusterInternal
+	AmazonMskClusterArn plugin.TValue[string]
+	KafkaClusterAlias   plugin.TValue[string]
+	SubnetIds           plugin.TValue[[]any]
+	SecurityGroupIds    plugin.TValue[[]any]
+	Cluster             plugin.TValue[*mqlAwsMskCluster]
+	Subnets             plugin.TValue[[]any]
+	SecurityGroups      plugin.TValue[[]any]
+}
+
+// createAwsMskReplicatorKafkaCluster creates a new instance of this resource
+func createAwsMskReplicatorKafkaCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMskReplicatorKafkaCluster{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.msk.replicator.kafkaCluster", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMskReplicatorKafkaCluster) MqlName() string {
+	return "aws.msk.replicator.kafkaCluster"
+}
+
+func (c *mqlAwsMskReplicatorKafkaCluster) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMskReplicatorKafkaCluster) GetAmazonMskClusterArn() *plugin.TValue[string] {
+	return &c.AmazonMskClusterArn
+}
+
+func (c *mqlAwsMskReplicatorKafkaCluster) GetKafkaClusterAlias() *plugin.TValue[string] {
+	return &c.KafkaClusterAlias
+}
+
+func (c *mqlAwsMskReplicatorKafkaCluster) GetSubnetIds() *plugin.TValue[[]any] {
+	return &c.SubnetIds
+}
+
+func (c *mqlAwsMskReplicatorKafkaCluster) GetSecurityGroupIds() *plugin.TValue[[]any] {
+	return &c.SecurityGroupIds
+}
+
+func (c *mqlAwsMskReplicatorKafkaCluster) GetCluster() *plugin.TValue[*mqlAwsMskCluster] {
+	return plugin.GetOrCompute[*mqlAwsMskCluster](&c.Cluster, func() (*mqlAwsMskCluster, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.replicator.kafkaCluster", c.__id, "cluster")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsMskCluster), nil
+			}
+		}
+
+		return c.cluster()
+	})
+}
+
+func (c *mqlAwsMskReplicatorKafkaCluster) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.replicator.kafkaCluster", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
+}
+
+func (c *mqlAwsMskReplicatorKafkaCluster) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.replicator.kafkaCluster", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+// mqlAwsMskReplicatorReplicationInfo for the aws.msk.replicator.replicationInfo resource
+type mqlAwsMskReplicatorReplicationInfo struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsMskReplicatorReplicationInfoInternal
+	SourceKafkaClusterAlias  plugin.TValue[string]
+	TargetKafkaClusterAlias  plugin.TValue[string]
+	TargetCompressionType    plugin.TValue[string]
+	SourceCluster            plugin.TValue[*mqlAwsMskCluster]
+	TargetCluster            plugin.TValue[*mqlAwsMskCluster]
+	TopicReplication         plugin.TValue[*mqlAwsMskReplicatorTopicReplication]
+	ConsumerGroupReplication plugin.TValue[*mqlAwsMskReplicatorConsumerGroupReplication]
+}
+
+// createAwsMskReplicatorReplicationInfo creates a new instance of this resource
+func createAwsMskReplicatorReplicationInfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMskReplicatorReplicationInfo{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.msk.replicator.replicationInfo", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMskReplicatorReplicationInfo) MqlName() string {
+	return "aws.msk.replicator.replicationInfo"
+}
+
+func (c *mqlAwsMskReplicatorReplicationInfo) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMskReplicatorReplicationInfo) GetSourceKafkaClusterAlias() *plugin.TValue[string] {
+	return &c.SourceKafkaClusterAlias
+}
+
+func (c *mqlAwsMskReplicatorReplicationInfo) GetTargetKafkaClusterAlias() *plugin.TValue[string] {
+	return &c.TargetKafkaClusterAlias
+}
+
+func (c *mqlAwsMskReplicatorReplicationInfo) GetTargetCompressionType() *plugin.TValue[string] {
+	return &c.TargetCompressionType
+}
+
+func (c *mqlAwsMskReplicatorReplicationInfo) GetSourceCluster() *plugin.TValue[*mqlAwsMskCluster] {
+	return plugin.GetOrCompute[*mqlAwsMskCluster](&c.SourceCluster, func() (*mqlAwsMskCluster, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.replicator.replicationInfo", c.__id, "sourceCluster")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsMskCluster), nil
+			}
+		}
+
+		return c.sourceCluster()
+	})
+}
+
+func (c *mqlAwsMskReplicatorReplicationInfo) GetTargetCluster() *plugin.TValue[*mqlAwsMskCluster] {
+	return plugin.GetOrCompute[*mqlAwsMskCluster](&c.TargetCluster, func() (*mqlAwsMskCluster, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.replicator.replicationInfo", c.__id, "targetCluster")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsMskCluster), nil
+			}
+		}
+
+		return c.targetCluster()
+	})
+}
+
+func (c *mqlAwsMskReplicatorReplicationInfo) GetTopicReplication() *plugin.TValue[*mqlAwsMskReplicatorTopicReplication] {
+	return plugin.GetOrCompute[*mqlAwsMskReplicatorTopicReplication](&c.TopicReplication, func() (*mqlAwsMskReplicatorTopicReplication, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.replicator.replicationInfo", c.__id, "topicReplication")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsMskReplicatorTopicReplication), nil
+			}
+		}
+
+		return c.topicReplication()
+	})
+}
+
+func (c *mqlAwsMskReplicatorReplicationInfo) GetConsumerGroupReplication() *plugin.TValue[*mqlAwsMskReplicatorConsumerGroupReplication] {
+	return plugin.GetOrCompute[*mqlAwsMskReplicatorConsumerGroupReplication](&c.ConsumerGroupReplication, func() (*mqlAwsMskReplicatorConsumerGroupReplication, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.replicator.replicationInfo", c.__id, "consumerGroupReplication")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsMskReplicatorConsumerGroupReplication), nil
+			}
+		}
+
+		return c.consumerGroupReplication()
+	})
+}
+
+// mqlAwsMskReplicatorTopicReplication for the aws.msk.replicator.topicReplication resource
+type mqlAwsMskReplicatorTopicReplication struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsMskReplicatorTopicReplicationInternal it will be used here
+	TopicsToReplicate               plugin.TValue[[]any]
+	TopicsToExclude                 plugin.TValue[[]any]
+	StartingPositionType            plugin.TValue[string]
+	TopicNameConfigurationType      plugin.TValue[string]
+	CopyAccessControlListsForTopics plugin.TValue[bool]
+	CopyTopicConfigurations         plugin.TValue[bool]
+	DetectAndCopyNewTopics          plugin.TValue[bool]
+}
+
+// createAwsMskReplicatorTopicReplication creates a new instance of this resource
+func createAwsMskReplicatorTopicReplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMskReplicatorTopicReplication{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.msk.replicator.topicReplication", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMskReplicatorTopicReplication) MqlName() string {
+	return "aws.msk.replicator.topicReplication"
+}
+
+func (c *mqlAwsMskReplicatorTopicReplication) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMskReplicatorTopicReplication) GetTopicsToReplicate() *plugin.TValue[[]any] {
+	return &c.TopicsToReplicate
+}
+
+func (c *mqlAwsMskReplicatorTopicReplication) GetTopicsToExclude() *plugin.TValue[[]any] {
+	return &c.TopicsToExclude
+}
+
+func (c *mqlAwsMskReplicatorTopicReplication) GetStartingPositionType() *plugin.TValue[string] {
+	return &c.StartingPositionType
+}
+
+func (c *mqlAwsMskReplicatorTopicReplication) GetTopicNameConfigurationType() *plugin.TValue[string] {
+	return &c.TopicNameConfigurationType
+}
+
+func (c *mqlAwsMskReplicatorTopicReplication) GetCopyAccessControlListsForTopics() *plugin.TValue[bool] {
+	return &c.CopyAccessControlListsForTopics
+}
+
+func (c *mqlAwsMskReplicatorTopicReplication) GetCopyTopicConfigurations() *plugin.TValue[bool] {
+	return &c.CopyTopicConfigurations
+}
+
+func (c *mqlAwsMskReplicatorTopicReplication) GetDetectAndCopyNewTopics() *plugin.TValue[bool] {
+	return &c.DetectAndCopyNewTopics
+}
+
+// mqlAwsMskReplicatorConsumerGroupReplication for the aws.msk.replicator.consumerGroupReplication resource
+type mqlAwsMskReplicatorConsumerGroupReplication struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsMskReplicatorConsumerGroupReplicationInternal it will be used here
+	ConsumerGroupsToReplicate       plugin.TValue[[]any]
+	ConsumerGroupsToExclude         plugin.TValue[[]any]
+	SynchroniseConsumerGroupOffsets plugin.TValue[bool]
+	DetectAndCopyNewConsumerGroups  plugin.TValue[bool]
+}
+
+// createAwsMskReplicatorConsumerGroupReplication creates a new instance of this resource
+func createAwsMskReplicatorConsumerGroupReplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMskReplicatorConsumerGroupReplication{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.msk.replicator.consumerGroupReplication", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMskReplicatorConsumerGroupReplication) MqlName() string {
+	return "aws.msk.replicator.consumerGroupReplication"
+}
+
+func (c *mqlAwsMskReplicatorConsumerGroupReplication) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMskReplicatorConsumerGroupReplication) GetConsumerGroupsToReplicate() *plugin.TValue[[]any] {
+	return &c.ConsumerGroupsToReplicate
+}
+
+func (c *mqlAwsMskReplicatorConsumerGroupReplication) GetConsumerGroupsToExclude() *plugin.TValue[[]any] {
+	return &c.ConsumerGroupsToExclude
+}
+
+func (c *mqlAwsMskReplicatorConsumerGroupReplication) GetSynchroniseConsumerGroupOffsets() *plugin.TValue[bool] {
+	return &c.SynchroniseConsumerGroupOffsets
+}
+
+func (c *mqlAwsMskReplicatorConsumerGroupReplication) GetDetectAndCopyNewConsumerGroups() *plugin.TValue[bool] {
+	return &c.DetectAndCopyNewConsumerGroups
 }
 
 // mqlAwsMq for the aws.mq resource

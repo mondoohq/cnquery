@@ -1,6 +1,6 @@
 {
   "provider": "aws",
-  "version": "13.14.1",
+  "version": "13.14.3",
   "generated_at": "2026-04-17T08:01:17-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
@@ -322,7 +322,18 @@
     "identitystore:ListUsers",
     "inspector2:ListCoverage",
     "inspector2:ListFindings",
+    "kafka:DescribeClusterV2",
+    "kafka:DescribeConfigurationRevision",
+    "kafka:DescribeReplicator",
+    "kafka:GetBootstrapBrokers",
+    "kafka:GetClusterPolicy",
+    "kafka:ListClientVpcConnections",
+    "kafka:ListClusterOperationsV2",
     "kafka:ListClustersV2",
+    "kafka:ListConfigurations",
+    "kafka:ListNodes",
+    "kafka:ListReplicators",
+    "kafka:ListScramSecrets",
     "keyspaces:GetTable",
     "keyspaces:ListKeyspaces",
     "keyspaces:ListTables",
@@ -2604,9 +2615,75 @@
       "source_file": "aws_inspector.go"
     },
     {
+      "permission": "kafka:DescribeClusterV2",
+      "service": "kafka",
+      "action": "DescribeClusterV2",
+      "source_file": "aws_msk.go"
+    },
+    {
+      "permission": "kafka:DescribeConfigurationRevision",
+      "service": "kafka",
+      "action": "DescribeConfigurationRevision",
+      "source_file": "aws_msk.go"
+    },
+    {
+      "permission": "kafka:DescribeReplicator",
+      "service": "kafka",
+      "action": "DescribeReplicator",
+      "source_file": "aws_msk.go"
+    },
+    {
+      "permission": "kafka:GetBootstrapBrokers",
+      "service": "kafka",
+      "action": "GetBootstrapBrokers",
+      "source_file": "aws_msk.go"
+    },
+    {
+      "permission": "kafka:GetClusterPolicy",
+      "service": "kafka",
+      "action": "GetClusterPolicy",
+      "source_file": "aws_msk.go"
+    },
+    {
+      "permission": "kafka:ListClientVpcConnections",
+      "service": "kafka",
+      "action": "ListClientVpcConnections",
+      "source_file": "aws_msk.go"
+    },
+    {
+      "permission": "kafka:ListClusterOperationsV2",
+      "service": "kafka",
+      "action": "ListClusterOperationsV2",
+      "source_file": "aws_msk.go"
+    },
+    {
       "permission": "kafka:ListClustersV2",
       "service": "kafka",
       "action": "ListClustersV2",
+      "source_file": "aws_msk.go"
+    },
+    {
+      "permission": "kafka:ListConfigurations",
+      "service": "kafka",
+      "action": "ListConfigurations",
+      "source_file": "aws_msk.go"
+    },
+    {
+      "permission": "kafka:ListNodes",
+      "service": "kafka",
+      "action": "ListNodes",
+      "source_file": "aws_msk.go"
+    },
+    {
+      "permission": "kafka:ListReplicators",
+      "service": "kafka",
+      "action": "ListReplicators",
+      "source_file": "aws_msk.go"
+    },
+    {
+      "permission": "kafka:ListScramSecrets",
+      "service": "kafka",
+      "action": "ListScramSecrets",
       "source_file": "aws_msk.go"
     },
     {
