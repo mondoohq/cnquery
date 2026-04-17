@@ -913,7 +913,12 @@ type mqlAwsRdsDbclusterInternal struct {
 	securityGroupIdHandler
 	cacheKmsKeyId               *string
 	cacheActivityStreamKmsKeyId *string
+	cacheMonitoringRoleArn      string
+	cacheParameterGroupName     string
+	cacheAccountID              string
 }
+
+const rdsClusterParameterGroupArnPattern = "arn:aws:rds:%s:%s:cluster-pg:%s"
 
 func (a *mqlAwsRdsDbcluster) id() (string, error) {
 	return a.Arn.Data, nil
@@ -995,6 +1000,11 @@ func newMqlAwsRdsCluster(runtime *plugin.Runtime, region string, accountID strin
 			"earliestRestorableTime":             llx.TimeDataPtr(cluster.EarliestRestorableTime),
 			"masterUserSecret":                   llx.DictData(masterUserSecretToDict(cluster.MasterUserSecret)),
 			"copyTagsToSnapshot":                 llx.BoolDataPtr(cluster.CopyTagsToSnapshot),
+			"databaseName":                       llx.StringDataPtr(cluster.DatabaseName),
+			"crossAccountClone":                  llx.BoolDataPtr(cluster.CrossAccountClone),
+			"replicationSourceIdentifier":        llx.StringDataPtr(cluster.ReplicationSourceIdentifier),
+			"globalWriteForwardingStatus":        llx.StringData(string(cluster.GlobalWriteForwardingStatus)),
+			"upgradeRolloutOrder":                llx.StringData(string(cluster.UpgradeRolloutOrder)),
 		})
 	if err != nil {
 		return nil, err
@@ -1002,8 +1012,45 @@ func newMqlAwsRdsCluster(runtime *plugin.Runtime, region string, accountID strin
 	mqlDbCluster := resource.(*mqlAwsRdsDbcluster)
 	mqlDbCluster.cacheKmsKeyId = cluster.KmsKeyId
 	mqlDbCluster.cacheActivityStreamKmsKeyId = cluster.ActivityStreamKmsKeyId
+	mqlDbCluster.cacheMonitoringRoleArn = convert.ToValue(cluster.MonitoringRoleArn)
+	mqlDbCluster.cacheParameterGroupName = convert.ToValue(cluster.DBClusterParameterGroup)
+	mqlDbCluster.cacheAccountID = accountID
 	mqlDbCluster.setSecurityGroupArns(sgsArns)
 	return mqlDbCluster, nil
+}
+
+func (a *mqlAwsRdsDbcluster) monitoringRole() (*mqlAwsIamRole, error) {
+	if a.cacheMonitoringRoleArn == "" {
+		a.MonitoringRole.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	mqlRole, err := NewResource(a.MqlRuntime, ResourceAwsIamRole,
+		map[string]*llx.RawData{"arn": llx.StringData(a.cacheMonitoringRoleArn)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlRole.(*mqlAwsIamRole), nil
+}
+
+func (a *mqlAwsRdsDbcluster) dbClusterParameterGroup() (*mqlAwsRdsClusterParameterGroup, error) {
+	if a.cacheParameterGroupName == "" {
+		a.DbClusterParameterGroup.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	region := a.Region.Data
+	arn := fmt.Sprintf(rdsClusterParameterGroupArnPattern, region, a.cacheAccountID, a.cacheParameterGroupName)
+	pgID := arn + "/" + a.cacheParameterGroupName
+	mqlPg, err := NewResource(a.MqlRuntime, ResourceAwsRdsClusterParameterGroup,
+		map[string]*llx.RawData{
+			"__id":   llx.StringData(pgID),
+			"arn":    llx.StringData(arn),
+			"name":   llx.StringData(a.cacheParameterGroupName),
+			"region": llx.StringData(region),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlPg.(*mqlAwsRdsClusterParameterGroup), nil
 }
 
 func (a *mqlAwsRdsDbcluster) securityGroups() ([]any, error) {
@@ -1075,6 +1122,8 @@ func newMqlAwsRdsClusterSnapshot(runtime *plugin.Runtime, region string, snapsho
 		map[string]*llx.RawData{
 			"allocatedStorage":      llx.IntDataDefault(snapshot.AllocatedStorage, 0),
 			"arn":                   llx.StringDataPtr(snapshot.DBClusterSnapshotArn),
+			"availabilityZone":      llx.StringData(""),
+			"backupRetentionPeriod": llx.IntDataDefault(snapshot.BackupRetentionPeriod, 0),
 			"createdAt":             llx.TimeDataPtr(snapshot.SnapshotCreateTime),
 			"encrypted":             llx.BoolDataPtr(snapshot.StorageEncrypted),
 			"storageEncryptionType": llx.StringData(string(snapshot.StorageEncryptionType)),
@@ -1082,10 +1131,12 @@ func newMqlAwsRdsClusterSnapshot(runtime *plugin.Runtime, region string, snapsho
 			"engineVersion":         llx.StringDataPtr(snapshot.EngineVersion),
 			"id":                    llx.StringDataPtr(snapshot.DBClusterSnapshotIdentifier),
 			"port":                  llx.IntDataDefault(snapshot.Port, -1),
+			"preferredBackupWindow": llx.StringDataPtr(snapshot.PreferredBackupWindow),
 			"isClusterSnapshot":     llx.BoolData(true),
 			"region":                llx.StringData(region),
 			"status":                llx.StringDataPtr(snapshot.Status),
 			"tags":                  llx.MapData(rdsTagsToMap(snapshot.TagList), types.String),
+			"timezone":              llx.StringData(""),
 			"type":                  llx.StringDataPtr(snapshot.SnapshotType),
 		})
 	if err != nil {
@@ -1103,6 +1154,8 @@ func newMqlAwsRdsDbSnapshot(runtime *plugin.Runtime, region string, snapshot rds
 		map[string]*llx.RawData{
 			"allocatedStorage":      llx.IntDataDefault(snapshot.AllocatedStorage, 0),
 			"arn":                   llx.StringDataPtr(snapshot.DBSnapshotArn),
+			"availabilityZone":      llx.StringDataPtr(snapshot.AvailabilityZone),
+			"backupRetentionPeriod": llx.IntDataDefault(snapshot.BackupRetentionPeriod, 0),
 			"createdAt":             llx.TimeDataPtr(snapshot.SnapshotCreateTime),
 			"encrypted":             llx.BoolDataPtr(snapshot.Encrypted),
 			"storageEncryptionType": llx.StringData(string(snapshot.StorageEncryptionType)),
@@ -1110,10 +1163,12 @@ func newMqlAwsRdsDbSnapshot(runtime *plugin.Runtime, region string, snapshot rds
 			"engineVersion":         llx.StringDataPtr(snapshot.EngineVersion),
 			"id":                    llx.StringDataPtr(snapshot.DBSnapshotIdentifier),
 			"port":                  llx.IntDataDefault(snapshot.Port, -1),
+			"preferredBackupWindow": llx.StringDataPtr(snapshot.PreferredBackupWindow),
 			"isClusterSnapshot":     llx.BoolData(false),
 			"region":                llx.StringData(region),
 			"status":                llx.StringDataPtr(snapshot.Status),
 			"tags":                  llx.MapData(rdsTagsToMap(snapshot.TagList), types.String),
+			"timezone":              llx.StringDataPtr(snapshot.Timezone),
 			"type":                  llx.StringDataPtr(snapshot.SnapshotType),
 		})
 	if err != nil {

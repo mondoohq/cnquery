@@ -7202,6 +7202,20 @@ aws.rds.dbcluster @defaults("id region engine engineVersion") {
   masterUserSecret dict
   // Whether tags are automatically copied to snapshots of the DB cluster
   copyTagsToSnapshot bool
+  // Initial database name created on the DB cluster, if any
+  databaseName string
+  // DB cluster parameter group associated with the cluster
+  dbClusterParameterGroup() aws.rds.clusterParameterGroup
+  // Whether the cluster is a clone of a cluster owned by a different account
+  crossAccountClone bool
+  // Identifier of the source DB cluster or DB instance if this cluster is a read replica
+  replicationSourceIdentifier string
+  // Status of write forwarding for a secondary cluster in an Aurora global cluster
+  globalWriteForwardingStatus string
+  // Order in which engine version updates are rolled out across the cluster
+  upgradeRolloutOrder string
+  // IAM role used by Enhanced Monitoring to send metrics to CloudWatch Logs
+  monitoringRole() aws.iam.role
 }
 
 // Amazon RDS snapshot
@@ -7236,6 +7250,14 @@ private aws.rds.snapshot @defaults("id region type encrypted createdAt") {
   allocatedStorage int
   // Creation date of the snapshot
   createdAt time
+  // Number of days automated backups are retained for the source DB
+  backupRetentionPeriod int
+  // Daily time range during which automated backups are taken on the source DB
+  preferredBackupWindow string
+  // Availability Zone of the source DB instance (empty for cluster snapshots)
+  availabilityZone string
+  // Time zone of the source DB instance, if applicable (empty for cluster snapshots)
+  timezone string
   // KMS key used for snapshot encryption
   kmsKey() aws.kms.key
 }
@@ -11369,6 +11391,8 @@ private aws.appstream.fleet @defaults("name state fleetType region") {
   idleDisconnectTimeoutInSeconds int
   // Whether default internet access is enabled
   enableDefaultInternetAccess bool
+  // Whether Instance Metadata Service Version 1 (IMDSv1) is disabled for the fleet
+  disableIMDSV1 bool
   // Domain join configuration
   domainJoinInfo dict
   // Maximum number of concurrent sessions for the fleet
@@ -11482,6 +11506,8 @@ private aws.appstream.imageBuilder @defaults("name state platform region") {
   appstreamAgentVersion string
   // Whether default internet access is enabled
   enableDefaultInternetAccess bool
+  // Whether Instance Metadata Service Version 1 (IMDSv1) is disabled for the image builder
+  disableIMDSV1 bool
   // Domain join configuration
   domainJoinInfo dict
   // VPC configuration (SubnetIds, SecurityGroupIds)

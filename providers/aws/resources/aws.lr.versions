@@ -182,6 +182,7 @@ aws.appstream.fleet.computeCapacityStatus.draining 13.6.3
 aws.appstream.fleet.computeCapacityStatus.inUse 13.6.3
 aws.appstream.fleet.computeCapacityStatus.running 13.6.3
 aws.appstream.fleet.createdAt 11.15.6
+aws.appstream.fleet.disableIMDSV1 13.14.2
 aws.appstream.fleet.disconnectTimeoutInSeconds 11.15.6
 aws.appstream.fleet.domainJoinInfo 11.15.6
 aws.appstream.fleet.enableDefaultInternetAccess 11.15.6
@@ -207,6 +208,7 @@ aws.appstream.imageBuilder.appstreamAgentVersion 11.15.6
 aws.appstream.imageBuilder.arn 11.15.6
 aws.appstream.imageBuilder.createdAt 11.15.6
 aws.appstream.imageBuilder.description 11.15.6
+aws.appstream.imageBuilder.disableIMDSV1 13.14.2
 aws.appstream.imageBuilder.domainJoinInfo 11.15.6
 aws.appstream.imageBuilder.enableDefaultInternetAccess 11.15.6
 aws.appstream.imageBuilder.iamRole 13.12.1
@@ -4122,7 +4124,10 @@ aws.rds.dbcluster.certificateExpiresAt 11.15.2
 aws.rds.dbcluster.clusterDbInstanceClass 11.15.2
 aws.rds.dbcluster.copyTagsToSnapshot 11.16.1
 aws.rds.dbcluster.createdAt 11.15.2
+aws.rds.dbcluster.crossAccountClone 13.14.2
 aws.rds.dbcluster.databaseInsightsMode 11.15.2
+aws.rds.dbcluster.databaseName 13.14.2
+aws.rds.dbcluster.dbClusterParameterGroup 13.14.2
 aws.rds.dbcluster.deletionProtection 11.15.2
 aws.rds.dbcluster.earliestRestorableTime 11.15.2
 aws.rds.dbcluster.endpoint 11.15.2
@@ -4131,6 +4136,7 @@ aws.rds.dbcluster.engineLifecycleSupport 11.15.2
 aws.rds.dbcluster.engineMode 11.15.2
 aws.rds.dbcluster.engineVersion 11.15.2
 aws.rds.dbcluster.globalClusterIdentifier 11.15.2
+aws.rds.dbcluster.globalWriteForwardingStatus 13.14.2
 aws.rds.dbcluster.hostedZoneId 11.15.2
 aws.rds.dbcluster.httpEndpointEnabled 11.15.2
 aws.rds.dbcluster.iamDatabaseAuthentication 11.15.2
@@ -4141,6 +4147,7 @@ aws.rds.dbcluster.masterUserSecret 11.16.1
 aws.rds.dbcluster.masterUsername 11.15.2
 aws.rds.dbcluster.members 11.15.2
 aws.rds.dbcluster.monitoringInterval 11.15.2
+aws.rds.dbcluster.monitoringRole 13.14.2
 aws.rds.dbcluster.multiAZ 11.15.2
 aws.rds.dbcluster.networkType 11.15.2
 aws.rds.dbcluster.parameterGroupName 11.15.2
@@ -4151,6 +4158,7 @@ aws.rds.dbcluster.preferredBackupWindow 11.15.2
 aws.rds.dbcluster.preferredMaintenanceWindow 11.15.2
 aws.rds.dbcluster.publiclyAccessible 11.15.2
 aws.rds.dbcluster.region 11.15.2
+aws.rds.dbcluster.replicationSourceIdentifier 13.14.2
 aws.rds.dbcluster.securityGroups 11.15.2
 aws.rds.dbcluster.snapshots 11.15.2
 aws.rds.dbcluster.status 11.15.2
@@ -4160,6 +4168,7 @@ aws.rds.dbcluster.storageEncryptionType 13.3.1
 aws.rds.dbcluster.storageIops 11.15.2
 aws.rds.dbcluster.storageType 11.15.2
 aws.rds.dbcluster.tags 11.15.2
+aws.rds.dbcluster.upgradeRolloutOrder 13.14.2
 aws.rds.dbinstance 11.15.2
 aws.rds.dbinstance.activityStreamKmsKey 11.16.1
 aws.rds.dbinstance.activityStreamMode 11.15.2
@@ -4285,6 +4294,8 @@ aws.rds.snapshot 11.15.2
 aws.rds.snapshot.allocatedStorage 11.15.2
 aws.rds.snapshot.arn 11.15.2
 aws.rds.snapshot.attributes 11.15.2
+aws.rds.snapshot.availabilityZone 13.14.2
+aws.rds.snapshot.backupRetentionPeriod 13.14.2
 aws.rds.snapshot.createdAt 11.15.2
 aws.rds.snapshot.encrypted 11.15.2
 aws.rds.snapshot.engine 11.15.2
@@ -4293,10 +4304,12 @@ aws.rds.snapshot.id 11.15.2
 aws.rds.snapshot.isClusterSnapshot 11.15.2
 aws.rds.snapshot.kmsKey 11.15.2
 aws.rds.snapshot.port 11.15.2
+aws.rds.snapshot.preferredBackupWindow 13.14.2
 aws.rds.snapshot.region 11.15.2
 aws.rds.snapshot.status 11.15.2
 aws.rds.snapshot.storageEncryptionType 13.3.1
 aws.rds.snapshot.tags 11.15.2
+aws.rds.snapshot.timezone 13.14.2
 aws.rds.snapshot.type 11.15.2
 aws.redshift 11.15.2
 aws.redshift.cluster 11.15.2

@@ -11956,6 +11956,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.dbcluster.copyTagsToSnapshot": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbcluster).GetCopyTagsToSnapshot()).ToDataRes(types.Bool)
 	},
+	"aws.rds.dbcluster.databaseName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetDatabaseName()).ToDataRes(types.String)
+	},
+	"aws.rds.dbcluster.dbClusterParameterGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetDbClusterParameterGroup()).ToDataRes(types.Resource("aws.rds.clusterParameterGroup"))
+	},
+	"aws.rds.dbcluster.crossAccountClone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetCrossAccountClone()).ToDataRes(types.Bool)
+	},
+	"aws.rds.dbcluster.replicationSourceIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetReplicationSourceIdentifier()).ToDataRes(types.String)
+	},
+	"aws.rds.dbcluster.globalWriteForwardingStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetGlobalWriteForwardingStatus()).ToDataRes(types.String)
+	},
+	"aws.rds.dbcluster.upgradeRolloutOrder": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetUpgradeRolloutOrder()).ToDataRes(types.String)
+	},
+	"aws.rds.dbcluster.monitoringRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetMonitoringRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
 	"aws.rds.snapshot.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsSnapshot).GetArn()).ToDataRes(types.String)
 	},
@@ -12000,6 +12021,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.rds.snapshot.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsSnapshot).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.rds.snapshot.backupRetentionPeriod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsSnapshot).GetBackupRetentionPeriod()).ToDataRes(types.Int)
+	},
+	"aws.rds.snapshot.preferredBackupWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsSnapshot).GetPreferredBackupWindow()).ToDataRes(types.String)
+	},
+	"aws.rds.snapshot.availabilityZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsSnapshot).GetAvailabilityZone()).ToDataRes(types.String)
+	},
+	"aws.rds.snapshot.timezone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsSnapshot).GetTimezone()).ToDataRes(types.String)
 	},
 	"aws.rds.snapshot.kmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsSnapshot).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
@@ -17236,6 +17269,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.appstream.fleet.enableDefaultInternetAccess": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppstreamFleet).GetEnableDefaultInternetAccess()).ToDataRes(types.Bool)
 	},
+	"aws.appstream.fleet.disableIMDSV1": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamFleet).GetDisableIMDSV1()).ToDataRes(types.Bool)
+	},
 	"aws.appstream.fleet.domainJoinInfo": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppstreamFleet).GetDomainJoinInfo()).ToDataRes(types.Dict)
 	},
@@ -17379,6 +17415,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.appstream.imageBuilder.enableDefaultInternetAccess": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppstreamImageBuilder).GetEnableDefaultInternetAccess()).ToDataRes(types.Bool)
+	},
+	"aws.appstream.imageBuilder.disableIMDSV1": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppstreamImageBuilder).GetDisableIMDSV1()).ToDataRes(types.Bool)
 	},
 	"aws.appstream.imageBuilder.domainJoinInfo": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppstreamImageBuilder).GetDomainJoinInfo()).ToDataRes(types.Dict)
@@ -34197,6 +34236,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsRdsDbcluster).CopyTagsToSnapshot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"aws.rds.dbcluster.databaseName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).DatabaseName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.dbClusterParameterGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).DbClusterParameterGroup, ok = plugin.RawToTValue[*mqlAwsRdsClusterParameterGroup](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.crossAccountClone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).CrossAccountClone, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.replicationSourceIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).ReplicationSourceIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.globalWriteForwardingStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).GlobalWriteForwardingStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.upgradeRolloutOrder": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).UpgradeRolloutOrder, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.monitoringRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).MonitoringRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
 	"aws.rds.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsSnapshot).__id, ok = v.Value.(string)
 		return
@@ -34259,6 +34326,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.rds.snapshot.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsSnapshot).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.rds.snapshot.backupRetentionPeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsSnapshot).BackupRetentionPeriod, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.rds.snapshot.preferredBackupWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsSnapshot).PreferredBackupWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.snapshot.availabilityZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsSnapshot).AvailabilityZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.snapshot.timezone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsSnapshot).Timezone, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.rds.snapshot.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -41861,6 +41944,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsAppstreamFleet).EnableDefaultInternetAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"aws.appstream.fleet.disableIMDSV1": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamFleet).DisableIMDSV1, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.appstream.fleet.domainJoinInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAppstreamFleet).DomainJoinInfo, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -42067,6 +42154,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.appstream.imageBuilder.enableDefaultInternetAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAppstreamImageBuilder).EnableDefaultInternetAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.appstream.imageBuilder.disableIMDSV1": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppstreamImageBuilder).DisableIMDSV1, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.appstream.imageBuilder.domainJoinInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -83168,6 +83259,13 @@ type mqlAwsRdsDbcluster struct {
 	ActivityStreamKmsKey               plugin.TValue[*mqlAwsKmsKey]
 	MasterUserSecret                   plugin.TValue[any]
 	CopyTagsToSnapshot                 plugin.TValue[bool]
+	DatabaseName                       plugin.TValue[string]
+	DbClusterParameterGroup            plugin.TValue[*mqlAwsRdsClusterParameterGroup]
+	CrossAccountClone                  plugin.TValue[bool]
+	ReplicationSourceIdentifier        plugin.TValue[string]
+	GlobalWriteForwardingStatus        plugin.TValue[string]
+	UpgradeRolloutOrder                plugin.TValue[string]
+	MonitoringRole                     plugin.TValue[*mqlAwsIamRole]
 }
 
 // createAwsRdsDbcluster creates a new instance of this resource
@@ -83471,6 +83569,58 @@ func (c *mqlAwsRdsDbcluster) GetCopyTagsToSnapshot() *plugin.TValue[bool] {
 	return &c.CopyTagsToSnapshot
 }
 
+func (c *mqlAwsRdsDbcluster) GetDatabaseName() *plugin.TValue[string] {
+	return &c.DatabaseName
+}
+
+func (c *mqlAwsRdsDbcluster) GetDbClusterParameterGroup() *plugin.TValue[*mqlAwsRdsClusterParameterGroup] {
+	return plugin.GetOrCompute[*mqlAwsRdsClusterParameterGroup](&c.DbClusterParameterGroup, func() (*mqlAwsRdsClusterParameterGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.dbcluster", c.__id, "dbClusterParameterGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsRdsClusterParameterGroup), nil
+			}
+		}
+
+		return c.dbClusterParameterGroup()
+	})
+}
+
+func (c *mqlAwsRdsDbcluster) GetCrossAccountClone() *plugin.TValue[bool] {
+	return &c.CrossAccountClone
+}
+
+func (c *mqlAwsRdsDbcluster) GetReplicationSourceIdentifier() *plugin.TValue[string] {
+	return &c.ReplicationSourceIdentifier
+}
+
+func (c *mqlAwsRdsDbcluster) GetGlobalWriteForwardingStatus() *plugin.TValue[string] {
+	return &c.GlobalWriteForwardingStatus
+}
+
+func (c *mqlAwsRdsDbcluster) GetUpgradeRolloutOrder() *plugin.TValue[string] {
+	return &c.UpgradeRolloutOrder
+}
+
+func (c *mqlAwsRdsDbcluster) GetMonitoringRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.MonitoringRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.dbcluster", c.__id, "monitoringRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.monitoringRole()
+	})
+}
+
 // mqlAwsRdsSnapshot for the aws.rds.snapshot resource
 type mqlAwsRdsSnapshot struct {
 	MqlRuntime *plugin.Runtime
@@ -83491,6 +83641,10 @@ type mqlAwsRdsSnapshot struct {
 	Port                  plugin.TValue[int64]
 	AllocatedStorage      plugin.TValue[int64]
 	CreatedAt             plugin.TValue[*time.Time]
+	BackupRetentionPeriod plugin.TValue[int64]
+	PreferredBackupWindow plugin.TValue[string]
+	AvailabilityZone      plugin.TValue[string]
+	Timezone              plugin.TValue[string]
 	KmsKey                plugin.TValue[*mqlAwsKmsKey]
 }
 
@@ -83591,6 +83745,22 @@ func (c *mqlAwsRdsSnapshot) GetAllocatedStorage() *plugin.TValue[int64] {
 
 func (c *mqlAwsRdsSnapshot) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
+}
+
+func (c *mqlAwsRdsSnapshot) GetBackupRetentionPeriod() *plugin.TValue[int64] {
+	return &c.BackupRetentionPeriod
+}
+
+func (c *mqlAwsRdsSnapshot) GetPreferredBackupWindow() *plugin.TValue[string] {
+	return &c.PreferredBackupWindow
+}
+
+func (c *mqlAwsRdsSnapshot) GetAvailabilityZone() *plugin.TValue[string] {
+	return &c.AvailabilityZone
+}
+
+func (c *mqlAwsRdsSnapshot) GetTimezone() *plugin.TValue[string] {
+	return &c.Timezone
 }
 
 func (c *mqlAwsRdsSnapshot) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
@@ -102053,6 +102223,7 @@ type mqlAwsAppstreamFleet struct {
 	DisconnectTimeoutInSeconds     plugin.TValue[int64]
 	IdleDisconnectTimeoutInSeconds plugin.TValue[int64]
 	EnableDefaultInternetAccess    plugin.TValue[bool]
+	DisableIMDSV1                  plugin.TValue[bool]
 	DomainJoinInfo                 plugin.TValue[any]
 	MaxConcurrentSessions          plugin.TValue[int64]
 	MaxSessionsPerInstance         plugin.TValue[int64]
@@ -102139,6 +102310,10 @@ func (c *mqlAwsAppstreamFleet) GetIdleDisconnectTimeoutInSeconds() *plugin.TValu
 
 func (c *mqlAwsAppstreamFleet) GetEnableDefaultInternetAccess() *plugin.TValue[bool] {
 	return &c.EnableDefaultInternetAccess
+}
+
+func (c *mqlAwsAppstreamFleet) GetDisableIMDSV1() *plugin.TValue[bool] {
+	return &c.DisableIMDSV1
 }
 
 func (c *mqlAwsAppstreamFleet) GetDomainJoinInfo() *plugin.TValue[any] {
@@ -102509,6 +102684,7 @@ type mqlAwsAppstreamImageBuilder struct {
 	ImageArn                    plugin.TValue[string]
 	AppstreamAgentVersion       plugin.TValue[string]
 	EnableDefaultInternetAccess plugin.TValue[bool]
+	DisableIMDSV1               plugin.TValue[bool]
 	DomainJoinInfo              plugin.TValue[any]
 	VpcConfig                   plugin.TValue[any]
 	IamRole                     plugin.TValue[*mqlAwsIamRole]
@@ -102590,6 +102766,10 @@ func (c *mqlAwsAppstreamImageBuilder) GetAppstreamAgentVersion() *plugin.TValue[
 
 func (c *mqlAwsAppstreamImageBuilder) GetEnableDefaultInternetAccess() *plugin.TValue[bool] {
 	return &c.EnableDefaultInternetAccess
+}
+
+func (c *mqlAwsAppstreamImageBuilder) GetDisableIMDSV1() *plugin.TValue[bool] {
+	return &c.DisableIMDSV1
 }
 
 func (c *mqlAwsAppstreamImageBuilder) GetDomainJoinInfo() *plugin.TValue[any] {

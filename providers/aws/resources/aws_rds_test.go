@@ -54,3 +54,25 @@ func TestRdsPerformanceInsightsKmsKey(t *testing.T) {
 		assert.True(t, db.PerformanceInsightsKmsKey.IsSet())
 	})
 }
+
+func TestRdsClusterMonitoringRole(t *testing.T) {
+	t.Run("empty arn sets null state", func(t *testing.T) {
+		c := &mqlAwsRdsDbcluster{}
+		result, err := c.monitoringRole()
+		require.NoError(t, err)
+		require.Nil(t, result)
+		assert.True(t, c.MonitoringRole.IsNull())
+		assert.True(t, c.MonitoringRole.IsSet())
+	})
+}
+
+func TestRdsClusterDbClusterParameterGroup(t *testing.T) {
+	t.Run("empty parameter group name sets null state", func(t *testing.T) {
+		c := &mqlAwsRdsDbcluster{}
+		result, err := c.dbClusterParameterGroup()
+		require.NoError(t, err)
+		require.Nil(t, result)
+		assert.True(t, c.DbClusterParameterGroup.IsNull())
+		assert.True(t, c.DbClusterParameterGroup.IsSet())
+	})
+}
