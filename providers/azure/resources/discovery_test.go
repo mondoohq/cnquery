@@ -29,6 +29,10 @@ func TestAllResolvedResources(t *testing.T) {
 		DiscoverySecurityGroups,
 		DiscoveryCosmosDb,
 		DiscoveryVirtualNetworks,
+		DiscoveryContainerRegistries,
+		DiscoveryRecoveryServicesVaults,
+		DiscoverySynapseWorkspaces,
+		DiscoveryDataFactories,
 		DiscoveryStorageContainers,
 	}
 	require.ElementsMatch(t, expected, All)
@@ -52,6 +56,10 @@ func TestAutoResolvedResources(t *testing.T) {
 		DiscoverySecurityGroups,
 		DiscoveryCosmosDb,
 		DiscoveryVirtualNetworks,
+		DiscoveryContainerRegistries,
+		DiscoveryRecoveryServicesVaults,
+		DiscoverySynapseWorkspaces,
+		DiscoveryDataFactories,
 	}
 	require.ElementsMatch(t, expected, Auto)
 }
