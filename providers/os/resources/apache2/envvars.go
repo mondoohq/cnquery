@@ -44,9 +44,21 @@ func ParseEnvvars(content string) map[string]string {
 		vars[key] = value
 	}
 
-	// Second pass: expand $VAR / ${VAR} references using the collected map.
-	for k, v := range vars {
-		vars[k] = expandShellVars(v, vars)
+	// Expand $VAR / ${VAR} references using the collected map. Iterate to a
+	// fixed point so chained references (A=$B, B=$C) fully resolve regardless
+	// of map iteration order. Bounded by len(vars) to guard against cycles.
+	for i := 0; i <= len(vars); i++ {
+		changed := false
+		for k, v := range vars {
+			expanded := expandShellVars(v, vars)
+			if expanded != v {
+				vars[k] = expanded
+				changed = true
+			}
+		}
+		if !changed {
+			break
+		}
 	}
 	return vars
 }

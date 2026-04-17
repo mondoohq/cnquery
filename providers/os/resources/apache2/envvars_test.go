@@ -5,6 +5,7 @@ package apache2
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -76,6 +77,38 @@ export PID=$BASE/apache.pid
 	assert.Equal(t, "/opt/apache/apache.pid", vars["PID"])
 }
 
+// TestParseEnvvarsChainedReferences exercises the fixed-point expansion:
+// A depends on B depends on C, and map iteration order can visit them in any
+// sequence.
+func TestParseEnvvarsChainedReferences(t *testing.T) {
+	vars := ParseEnvvars(`
+export A=${B}/a
+export B=${C}/b
+export C=/root
+`)
+	assert.Equal(t, "/root", vars["C"])
+	assert.Equal(t, "/root/b", vars["B"])
+	assert.Equal(t, "/root/b/a", vars["A"])
+}
+
+// TestParseEnvvarsCyclicReferences ensures the fixed-point loop terminates
+// even when the input contains a reference cycle.
+func TestParseEnvvarsCyclicReferences(t *testing.T) {
+	done := make(chan map[string]string, 1)
+	go func() {
+		done <- ParseEnvvars(`
+export A=${B}
+export B=${A}
+`)
+	}()
+	select {
+	case <-done:
+		// ok — terminated
+	case <-time.After(2 * time.Second):
+		t.Fatal("ParseEnvvars did not terminate on a reference cycle")
+	}
+}
+
 // TestParseWithGlobExpandsEnvvars is the regression test for
 // https://github.com/mondoohq/mql/issues/7173 — Debian's apache2.conf references
 // `${APACHE_RUN_USER}`, which must be resolved from envvars.
@@ -125,6 +158,37 @@ func TestParseWithGlobUnresolvedVarsPreserved(t *testing.T) {
 	cfg, err := ParseWithGlob("/etc/apache2/apache2.conf", fileContent, globExpand, nil)
 	require.NoError(t, err)
 	assert.Equal(t, "${APACHE_RUN_USER}", cfg.Params["User"])
+}
+
+func TestParseWithGlobExpandsInVirtualHost(t *testing.T) {
+	// ${VAR} references inside <VirtualHost> blocks must also be expanded,
+	// since Debian's default site configs rely on that (e.g. SSLCertificateFile
+	// ${APACHE_SSL_DIR}/cert.pem).
+	files := map[string]string{
+		"/etc/apache2/apache2.conf": `
+<VirtualHost *:443>
+    ServerName ${SITE_HOST}
+    DocumentRoot ${SITE_ROOT}
+    SSLEngine on
+</VirtualHost>
+`,
+	}
+	fileContent := func(path string) (string, error) { return files[path], nil }
+	globExpand := func(string) ([]string, error) { return nil, nil }
+
+	vars := map[string]string{
+		"SITE_HOST": "secure.example.com",
+		"SITE_ROOT": "/var/www/secure",
+	}
+
+	cfg, err := ParseWithGlob("/etc/apache2/apache2.conf", fileContent, globExpand, vars)
+	require.NoError(t, err)
+	require.Len(t, cfg.VHosts, 1)
+
+	vh := cfg.VHosts[0]
+	assert.Equal(t, "secure.example.com", vh.ServerName)
+	assert.Equal(t, "/var/www/secure", vh.DocumentRoot)
+	assert.Equal(t, "secure.example.com", vh.Params["ServerName"])
 }
 
 func TestParseWithGlobApacheDefineDirective(t *testing.T) {
