@@ -2725,7 +2725,7 @@ func init() {
 			Create: createAwsKinesisStreamConsumer,
 		},
 		"aws.kinesis.firehoseDeliveryStream": {
-			// to override args, implement: initAwsKinesisFirehoseDeliveryStream(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsKinesisFirehoseDeliveryStream,
 			Create: createAwsKinesisFirehoseDeliveryStream,
 		},
 		"aws.kinesis.firehoseDeliveryStream.destination": {
