@@ -56,7 +56,7 @@ func (a *mqlAwsSagemaker) getEndpointConfigs(conn *connection.AwsConnection) []*
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
+					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS SageMaker endpoint configs")
 						return res, nil
 					}
@@ -389,7 +389,7 @@ func (a *mqlAwsSagemaker) getMonitoringSchedules(conn *connection.AwsConnection)
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
+					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS SageMaker monitoring schedules")
 						return res, nil
 					}
@@ -936,7 +936,7 @@ func (a *mqlAwsSagemaker) getDataQualityJobDefinitions(conn *connection.AwsConne
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
+					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS SageMaker data quality job definitions")
 						return res, nil
 					}
@@ -1148,7 +1148,7 @@ func (a *mqlAwsSagemaker) getModelQualityJobDefinitions(conn *connection.AwsConn
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
+					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS SageMaker model quality job definitions")
 						return res, nil
 					}
@@ -1360,7 +1360,7 @@ func (a *mqlAwsSagemaker) getModelBiasJobDefinitions(conn *connection.AwsConnect
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
+					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS SageMaker model bias job definitions")
 						return res, nil
 					}
@@ -1568,7 +1568,7 @@ func (a *mqlAwsSagemaker) getModelExplainabilityJobDefinitions(conn *connection.
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
+					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS SageMaker model explainability job definitions")
 						return res, nil
 					}

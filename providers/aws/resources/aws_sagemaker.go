@@ -67,7 +67,7 @@ func (a *mqlAwsSagemaker) getEndpoints(conn *connection.AwsConnection) []*jobpoo
 			for paginator.HasMorePages() {
 				endpoints, err := paginator.NextPage(ctx)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
+					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
@@ -167,7 +167,7 @@ func (a *mqlAwsSagemaker) getNotebookInstances(conn *connection.AwsConnection) [
 			for paginator.HasMorePages() {
 				notebookInstances, err := paginator.NextPage(ctx)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
+					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
@@ -774,7 +774,7 @@ func (a *mqlAwsSagemaker) getModels(conn *connection.AwsConnection) []*jobpool.J
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
+					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
@@ -1030,7 +1030,7 @@ func (a *mqlAwsSagemaker) getTrainingJobs(conn *connection.AwsConnection) []*job
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
+					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
@@ -1392,7 +1392,7 @@ func (a *mqlAwsSagemaker) getProcessingJobs(conn *connection.AwsConnection) []*j
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
+					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
@@ -1610,7 +1610,7 @@ func (a *mqlAwsSagemaker) getPipelines(conn *connection.AwsConnection) []*jobpoo
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
+					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
@@ -1787,7 +1787,7 @@ func (a *mqlAwsSagemaker) getDomains(conn *connection.AwsConnection) []*jobpool.
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
+					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
@@ -2124,7 +2124,7 @@ func (a *mqlAwsSagemaker) getInferenceComponents(conn *connection.AwsConnection)
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
+					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS SageMaker inference components")
 						return res, nil
 					}
@@ -2294,7 +2294,7 @@ func (a *mqlAwsSagemaker) getClusters(conn *connection.AwsConnection) []*jobpool
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
+					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS SageMaker clusters")
 						return res, nil
 					}
@@ -2529,7 +2529,7 @@ func (a *mqlAwsSagemakerCluster) nodes() ([]any, error) {
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
-			if Is400AccessDeniedError(err) {
+			if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
 				log.Warn().Str("cluster", clusterName).Msg("error accessing AWS SageMaker cluster nodes")
 				return res, nil
 			}
@@ -2646,7 +2646,7 @@ func (a *mqlAwsSagemaker) getFeatureGroups(conn *connection.AwsConnection) []*jo
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
+					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS SageMaker feature groups")
 						return res, nil
 					}
@@ -2889,7 +2889,7 @@ func (a *mqlAwsSagemaker) getModelPackages(conn *connection.AwsConnection) []*jo
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
+					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS SageMaker model packages")
 						return res, nil
 					}
@@ -3131,7 +3131,7 @@ func (a *mqlAwsSagemaker) getModelPackageGroups(conn *connection.AwsConnection) 
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
+					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS SageMaker model package groups")
 						return res, nil
 					}
@@ -3305,7 +3305,7 @@ func (a *mqlAwsSagemaker) getModelCards(conn *connection.AwsConnection) []*jobpo
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
+					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS SageMaker model cards")
 						return res, nil
 					}
@@ -3475,7 +3475,7 @@ func (a *mqlAwsSagemaker) getSpaces(conn *connection.AwsConnection) []*jobpool.J
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
+					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS SageMaker spaces")
 						return res, nil
 					}
@@ -3673,7 +3673,7 @@ func (a *mqlAwsSagemaker) getUserProfiles(conn *connection.AwsConnection) []*job
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
-					if Is400AccessDeniedError(err) {
+					if Is400AccessDeniedError(err) || IsServiceNotAvailableInRegionError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS SageMaker user profiles")
 						return res, nil
 					}
