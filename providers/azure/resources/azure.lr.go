@@ -973,7 +973,7 @@ func init() {
 			Create: createAzureSubscriptionDataFactoryService,
 		},
 		"azure.subscription.dataFactoryService.factory": {
-			// to override args, implement: initAzureSubscriptionDataFactoryServiceFactory(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAzureSubscriptionDataFactoryServiceFactory,
 			Create: createAzureSubscriptionDataFactoryServiceFactory,
 		},
 		"azure.subscription.synapseService": {
@@ -981,7 +981,7 @@ func init() {
 			Create: createAzureSubscriptionSynapseService,
 		},
 		"azure.subscription.synapseService.workspace": {
-			// to override args, implement: initAzureSubscriptionSynapseServiceWorkspace(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAzureSubscriptionSynapseServiceWorkspace,
 			Create: createAzureSubscriptionSynapseServiceWorkspace,
 		},
 		"azure.subscription.containerRegistryService": {
@@ -989,7 +989,7 @@ func init() {
 			Create: createAzureSubscriptionContainerRegistryService,
 		},
 		"azure.subscription.containerRegistryService.registry": {
-			// to override args, implement: initAzureSubscriptionContainerRegistryServiceRegistry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAzureSubscriptionContainerRegistryServiceRegistry,
 			Create: createAzureSubscriptionContainerRegistryServiceRegistry,
 		},
 		"azure.subscription.containerRegistryService.registry.networkRuleSet": {
@@ -1049,7 +1049,7 @@ func init() {
 			Create: createAzureSubscriptionRecoveryServicesService,
 		},
 		"azure.subscription.recoveryServicesService.vault": {
-			// to override args, implement: initAzureSubscriptionRecoveryServicesServiceVault(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAzureSubscriptionRecoveryServicesServiceVault,
 			Create: createAzureSubscriptionRecoveryServicesServiceVault,
 		},
 		"azure.subscription.recoveryServicesService.vault.securitySettings": {

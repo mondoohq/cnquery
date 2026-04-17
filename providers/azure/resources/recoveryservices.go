@@ -50,6 +50,49 @@ func (a *mqlAzureSubscriptionRecoveryServicesServiceVault) id() (string, error) 
 	return a.Id.Data, nil
 }
 
+func initAzureSubscriptionRecoveryServicesServiceVault(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["id"] = llx.StringData(ids.id)
+		}
+	}
+
+	if args["id"] == nil {
+		return nil, nil, errors.New("id required to fetch azure recovery services vault")
+	}
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	res, err := NewResource(runtime, "azure.subscription.recoveryServicesService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(conn.SubId()),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	svc := res.(*mqlAzureSubscriptionRecoveryServicesService)
+	list := svc.GetVaults()
+	if list.Error != nil {
+		return nil, nil, list.Error
+	}
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
+	for _, entry := range list.Data {
+		vault := entry.(*mqlAzureSubscriptionRecoveryServicesServiceVault)
+		if vault.Id.Data == id {
+			return args, vault, nil
+		}
+	}
+
+	return nil, nil, errors.New("azure recovery services vault does not exist")
+}
+
 func (a *mqlAzureSubscriptionRecoveryServicesService) vaults() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()

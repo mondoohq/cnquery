@@ -139,3 +139,46 @@ func (a *mqlAzureSubscriptionDataFactoryService) factories() ([]any, error) {
 func (a *mqlAzureSubscriptionDataFactoryServiceFactory) id() (string, error) {
 	return a.Id.Data, nil
 }
+
+func initAzureSubscriptionDataFactoryServiceFactory(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["id"] = llx.StringData(ids.id)
+		}
+	}
+
+	if args["id"] == nil {
+		return nil, nil, errors.New("id required to fetch azure data factory")
+	}
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	res, err := NewResource(runtime, "azure.subscription.dataFactoryService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(conn.SubId()),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	svc := res.(*mqlAzureSubscriptionDataFactoryService)
+	list := svc.GetFactories()
+	if list.Error != nil {
+		return nil, nil, list.Error
+	}
+	id, ok := args["id"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("id must be a non-nil string value")
+	}
+	for _, entry := range list.Data {
+		factory := entry.(*mqlAzureSubscriptionDataFactoryServiceFactory)
+		if factory.Id.Data == id {
+			return args, factory, nil
+		}
+	}
+
+	return nil, nil, errors.New("azure data factory does not exist")
+}
