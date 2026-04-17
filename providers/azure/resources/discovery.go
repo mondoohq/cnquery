@@ -50,6 +50,10 @@ const (
 	DiscoverySecurityGroups          = "security-groups"
 	DiscoveryCosmosDb                = "cosmosdb"
 	DiscoveryVirtualNetworks         = "virtual-networks"
+	DiscoveryContainerRegistries     = "container-registries"
+	DiscoveryRecoveryServicesVaults  = "recovery-services-vaults"
+	DiscoverySynapseWorkspaces       = "synapse-workspaces"
+	DiscoveryDataFactories           = "data-factories"
 )
 
 // Auto includes all API resources except storage containers (which require
@@ -87,6 +91,10 @@ var AllAPIResources = []string{
 	DiscoverySecurityGroups,
 	DiscoveryCosmosDb,
 	DiscoveryVirtualNetworks,
+	DiscoveryContainerRegistries,
+	DiscoveryRecoveryServicesVaults,
+	DiscoverySynapseWorkspaces,
+	DiscoveryDataFactories,
 }
 
 // genericDiscoverySpec maps an ARM resource type to the discovery metadata
@@ -116,6 +124,10 @@ var genericDiscoverySpecs = []genericDiscoverySpec{
 	{"Microsoft.KeyVault/vaults", DiscoveryKeyVaults, "keyvault", "vault", false},
 	{"Microsoft.DocumentDB/databaseAccounts", DiscoveryCosmosDb, "cosmosdb", "account", false},
 	{"Microsoft.Network/virtualNetworks", DiscoveryVirtualNetworks, "network", "virtual-network", true},
+	{"Microsoft.ContainerRegistry/registries", DiscoveryContainerRegistries, "containerregistry", "registry", false},
+	{"Microsoft.RecoveryServices/vaults", DiscoveryRecoveryServicesVaults, "recoveryservices", "vault", false},
+	{"Microsoft.Synapse/workspaces", DiscoverySynapseWorkspaces, "synapse", "workspace", false},
+	{"Microsoft.DataFactory/factories", DiscoveryDataFactories, "datafactory", "factory", false},
 }
 
 type azureObject struct {
@@ -644,6 +656,22 @@ func getTitleFamily(azureObject azureObject) (azureObjectPlatformInfo, error) {
 	case "cosmosdb":
 		if azureObject.objectType == "account" {
 			return azureObjectPlatformInfo{title: "Azure Cosmos DB Account", platform: "azure-cosmosdb"}, nil
+		}
+	case "containerregistry":
+		if azureObject.objectType == "registry" {
+			return azureObjectPlatformInfo{title: "Azure Container Registry", platform: "azure-container-registry"}, nil
+		}
+	case "recoveryservices":
+		if azureObject.objectType == "vault" {
+			return azureObjectPlatformInfo{title: "Azure Recovery Services Vault", platform: "azure-recovery-services-vault"}, nil
+		}
+	case "synapse":
+		if azureObject.objectType == "workspace" {
+			return azureObjectPlatformInfo{title: "Azure Synapse Analytics Workspace", platform: "azure-synapse-workspace"}, nil
+		}
+	case "datafactory":
+		if azureObject.objectType == "factory" {
+			return azureObjectPlatformInfo{title: "Azure Data Factory", platform: "azure-datafactory"}, nil
 		}
 	}
 	return azureObjectPlatformInfo{}, fmt.Errorf("missing runtime info for azure object service %s type %s", azureObject.service, azureObject.objectType)
