@@ -12892,22 +12892,16 @@ private aws.msk.cluster.brokerNodeGroup @defaults("instanceType storageMode netw
   ebsProvisionedThroughputMBps int
   // Storage mode: LOCAL or TIERED
   storageMode string
-  // Public access configuration for the brokers
-  publicAccess() aws.msk.cluster.publicAccess
+  // Public access type: DISABLED or SERVICE_PROVIDED_EIPS
+  publicAccessType string
+  // Whether public access is enabled (derived: type != DISABLED)
+  publicAccessEnabled bool
   // VPC-connectivity auth configuration (cross-account access)
   vpcConnectivity() aws.msk.cluster.vpcConnectivity
   // Subnets the brokers are deployed into
   subnets() []aws.vpc.subnet
   // Security groups attached to the broker ENIs
   securityGroups() []aws.ec2.securitygroup
-}
-
-// Public access configuration for MSK brokers
-private aws.msk.cluster.publicAccess @defaults("type enabled") {
-  // Type: DISABLED or SERVICE_PROVIDED_EIPS
-  type string
-  // Whether public access is enabled (derived)
-  enabled bool
 }
 
 // VPC connectivity client authentication configuration
@@ -13139,7 +13133,7 @@ private aws.msk.replicator @defaults("name state region") {
   // State of the replicator
   state string
   // Description of the replicator
-  description string
+  description() string
   // Current version of the replicator
   currentVersion string
   // Time the replicator was created
@@ -13147,11 +13141,11 @@ private aws.msk.replicator @defaults("name state region") {
   // Region where the replicator lives
   region string
   // Tags on the replicator
-  tags map[string]string
+  tags() map[string]string
   // Replication state code
-  stateCode string
+  stateCode() string
   // Replication state message
-  stateMessage string
+  stateMessage() string
   // IAM role the replicator uses to access source/target clusters
   serviceExecutionRole() aws.iam.role
   // Kafka clusters wired into the replicator (source/target)

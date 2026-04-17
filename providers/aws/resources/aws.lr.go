@@ -568,7 +568,6 @@ const (
 	ResourceAwsMskClusterEncryptionInfo                                         string = "aws.msk.cluster.encryptionInfo"
 	ResourceAwsMskClusterClientAuthentication                                   string = "aws.msk.cluster.clientAuthentication"
 	ResourceAwsMskClusterBrokerNodeGroup                                        string = "aws.msk.cluster.brokerNodeGroup"
-	ResourceAwsMskClusterPublicAccess                                           string = "aws.msk.cluster.publicAccess"
 	ResourceAwsMskClusterVpcConnectivity                                        string = "aws.msk.cluster.vpcConnectivity"
 	ResourceAwsMskClusterLoggingInfo                                            string = "aws.msk.cluster.loggingInfo"
 	ResourceAwsMskClusterLoggingInfoCloudwatchLogs                              string = "aws.msk.cluster.loggingInfo.cloudwatchLogs"
@@ -2881,10 +2880,6 @@ func init() {
 		"aws.msk.cluster.brokerNodeGroup": {
 			// to override args, implement: initAwsMskClusterBrokerNodeGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsMskClusterBrokerNodeGroup,
-		},
-		"aws.msk.cluster.publicAccess": {
-			// to override args, implement: initAwsMskClusterPublicAccess(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createAwsMskClusterPublicAccess,
 		},
 		"aws.msk.cluster.vpcConnectivity": {
 			// to override args, implement: initAwsMskClusterVpcConnectivity(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -19259,8 +19254,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.msk.cluster.brokerNodeGroup.storageMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMskClusterBrokerNodeGroup).GetStorageMode()).ToDataRes(types.String)
 	},
-	"aws.msk.cluster.brokerNodeGroup.publicAccess": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsMskClusterBrokerNodeGroup).GetPublicAccess()).ToDataRes(types.Resource("aws.msk.cluster.publicAccess"))
+	"aws.msk.cluster.brokerNodeGroup.publicAccessType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterBrokerNodeGroup).GetPublicAccessType()).ToDataRes(types.String)
+	},
+	"aws.msk.cluster.brokerNodeGroup.publicAccessEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskClusterBrokerNodeGroup).GetPublicAccessEnabled()).ToDataRes(types.Bool)
 	},
 	"aws.msk.cluster.brokerNodeGroup.vpcConnectivity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMskClusterBrokerNodeGroup).GetVpcConnectivity()).ToDataRes(types.Resource("aws.msk.cluster.vpcConnectivity"))
@@ -19270,12 +19268,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.msk.cluster.brokerNodeGroup.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMskClusterBrokerNodeGroup).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
-	},
-	"aws.msk.cluster.publicAccess.type": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsMskClusterPublicAccess).GetType()).ToDataRes(types.String)
-	},
-	"aws.msk.cluster.publicAccess.enabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsMskClusterPublicAccess).GetEnabled()).ToDataRes(types.Bool)
 	},
 	"aws.msk.cluster.vpcConnectivity.iamEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMskClusterVpcConnectivity).GetIamEnabled()).ToDataRes(types.Bool)
@@ -45216,8 +45208,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsMskClusterBrokerNodeGroup).StorageMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.msk.cluster.brokerNodeGroup.publicAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsMskClusterBrokerNodeGroup).PublicAccess, ok = plugin.RawToTValue[*mqlAwsMskClusterPublicAccess](v.Value, v.Error)
+	"aws.msk.cluster.brokerNodeGroup.publicAccessType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterBrokerNodeGroup).PublicAccessType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.cluster.brokerNodeGroup.publicAccessEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskClusterBrokerNodeGroup).PublicAccessEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.msk.cluster.brokerNodeGroup.vpcConnectivity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -45230,18 +45226,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.msk.cluster.brokerNodeGroup.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsMskClusterBrokerNodeGroup).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"aws.msk.cluster.publicAccess.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsMskClusterPublicAccess).__id, ok = v.Value.(string)
-		return
-	},
-	"aws.msk.cluster.publicAccess.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsMskClusterPublicAccess).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.msk.cluster.publicAccess.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsMskClusterPublicAccess).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.msk.cluster.vpcConnectivity.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -110276,7 +110260,8 @@ type mqlAwsMskClusterBrokerNodeGroup struct {
 	EbsProvisionedThroughputEnabled plugin.TValue[bool]
 	EbsProvisionedThroughputMBps    plugin.TValue[int64]
 	StorageMode                     plugin.TValue[string]
-	PublicAccess                    plugin.TValue[*mqlAwsMskClusterPublicAccess]
+	PublicAccessType                plugin.TValue[string]
+	PublicAccessEnabled             plugin.TValue[bool]
 	VpcConnectivity                 plugin.TValue[*mqlAwsMskClusterVpcConnectivity]
 	Subnets                         plugin.TValue[[]any]
 	SecurityGroups                  plugin.TValue[[]any]
@@ -110346,20 +110331,12 @@ func (c *mqlAwsMskClusterBrokerNodeGroup) GetStorageMode() *plugin.TValue[string
 	return &c.StorageMode
 }
 
-func (c *mqlAwsMskClusterBrokerNodeGroup) GetPublicAccess() *plugin.TValue[*mqlAwsMskClusterPublicAccess] {
-	return plugin.GetOrCompute[*mqlAwsMskClusterPublicAccess](&c.PublicAccess, func() (*mqlAwsMskClusterPublicAccess, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.cluster.brokerNodeGroup", c.__id, "publicAccess")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlAwsMskClusterPublicAccess), nil
-			}
-		}
+func (c *mqlAwsMskClusterBrokerNodeGroup) GetPublicAccessType() *plugin.TValue[string] {
+	return &c.PublicAccessType
+}
 
-		return c.publicAccess()
-	})
+func (c *mqlAwsMskClusterBrokerNodeGroup) GetPublicAccessEnabled() *plugin.TValue[bool] {
+	return &c.PublicAccessEnabled
 }
 
 func (c *mqlAwsMskClusterBrokerNodeGroup) GetVpcConnectivity() *plugin.TValue[*mqlAwsMskClusterVpcConnectivity] {
@@ -110408,55 +110385,6 @@ func (c *mqlAwsMskClusterBrokerNodeGroup) GetSecurityGroups() *plugin.TValue[[]a
 
 		return c.securityGroups()
 	})
-}
-
-// mqlAwsMskClusterPublicAccess for the aws.msk.cluster.publicAccess resource
-type mqlAwsMskClusterPublicAccess struct {
-	MqlRuntime *plugin.Runtime
-	__id       string
-	// optional: if you define mqlAwsMskClusterPublicAccessInternal it will be used here
-	Type    plugin.TValue[string]
-	Enabled plugin.TValue[bool]
-}
-
-// createAwsMskClusterPublicAccess creates a new instance of this resource
-func createAwsMskClusterPublicAccess(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlAwsMskClusterPublicAccess{
-		MqlRuntime: runtime,
-	}
-
-	err := SetAllData(res, args)
-	if err != nil {
-		return res, err
-	}
-
-	// to override __id implement: id() (string, error)
-
-	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("aws.msk.cluster.publicAccess", res.__id)
-		if err != nil || args == nil {
-			return res, err
-		}
-		return res, SetAllData(res, args)
-	}
-
-	return res, nil
-}
-
-func (c *mqlAwsMskClusterPublicAccess) MqlName() string {
-	return "aws.msk.cluster.publicAccess"
-}
-
-func (c *mqlAwsMskClusterPublicAccess) MqlID() string {
-	return c.__id
-}
-
-func (c *mqlAwsMskClusterPublicAccess) GetType() *plugin.TValue[string] {
-	return &c.Type
-}
-
-func (c *mqlAwsMskClusterPublicAccess) GetEnabled() *plugin.TValue[bool] {
-	return &c.Enabled
 }
 
 // mqlAwsMskClusterVpcConnectivity for the aws.msk.cluster.vpcConnectivity resource
@@ -111616,7 +111544,9 @@ func (c *mqlAwsMskReplicator) GetState() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsMskReplicator) GetDescription() *plugin.TValue[string] {
-	return &c.Description
+	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
+		return c.description()
+	})
 }
 
 func (c *mqlAwsMskReplicator) GetCurrentVersion() *plugin.TValue[string] {
@@ -111632,15 +111562,21 @@ func (c *mqlAwsMskReplicator) GetRegion() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsMskReplicator) GetTags() *plugin.TValue[map[string]any] {
-	return &c.Tags
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
 }
 
 func (c *mqlAwsMskReplicator) GetStateCode() *plugin.TValue[string] {
-	return &c.StateCode
+	return plugin.GetOrCompute[string](&c.StateCode, func() (string, error) {
+		return c.stateCode()
+	})
 }
 
 func (c *mqlAwsMskReplicator) GetStateMessage() *plugin.TValue[string] {
-	return &c.StateMessage
+	return plugin.GetOrCompute[string](&c.StateMessage, func() (string, error) {
+		return c.stateMessage()
+	})
 }
 
 func (c *mqlAwsMskReplicator) GetServiceExecutionRole() *plugin.TValue[*mqlAwsIamRole] {

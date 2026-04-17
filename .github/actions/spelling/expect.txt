@@ -119,6 +119,7 @@ ekm
 eku
 elbv
 endpointslice
+ENIId
 ERPCLOUD
 eventarc
 Exadata
@@ -365,6 +366,7 @@ rulegroup
 rulegroupreferencestatement
 saas
 Sas
+sasl
 sbom
 scc
 scim
@@ -480,6 +482,7 @@ yara
 zerolog
 zfs
 zfspool
+zookeeper
 zpool
 zrt
 zstd

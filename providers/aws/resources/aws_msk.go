@@ -84,7 +84,6 @@ type mqlAwsMskClusterBrokerNodeGroupInternal struct {
 	region         string
 	accountID      string
 	cacheSubnetIds []string
-	cachePublic    *kafka_types.PublicAccess
 	cacheVpcConn   *kafka_types.VpcConnectivity
 	clusterArn     string
 }
@@ -137,10 +136,11 @@ type mqlAwsMskConfigurationInternal struct {
 }
 
 type mqlAwsMskReplicatorInternal struct {
-	region           string
-	accountID        string
-	cacheDescribe    *kafka.DescribeReplicatorOutput
-	cacheServiceRole *string
+	region       string
+	accountID    string
+	describeOnce sync.Once
+	describeResp *kafka.DescribeReplicatorOutput
+	describeErr  error
 }
 
 type mqlAwsMskReplicatorKafkaClusterInternal struct {
@@ -330,15 +330,7 @@ func (a *mqlAwsMsk) getReplicators(conn *connection.AwsConnection) []*jobpool.Jo
 					if rep.ReplicatorArn == nil {
 						continue
 					}
-					describe, err := svc.DescribeReplicator(ctx, &kafka.DescribeReplicatorInput{ReplicatorArn: rep.ReplicatorArn})
-					if err != nil {
-						if Is400AccessDeniedError(err) {
-							log.Warn().Str("arn", *rep.ReplicatorArn).Msg("access denied fetching replicator")
-							continue
-						}
-						return nil, err
-					}
-					mqlRep, err := newMqlAwsMskReplicator(a.MqlRuntime, region, conn.AccountId(), rep, describe)
+					mqlRep, err := newMqlAwsMskReplicator(a.MqlRuntime, region, conn.AccountId(), rep)
 					if err != nil {
 						return nil, err
 					}
@@ -879,6 +871,7 @@ func (a *mqlAwsMskCluster) networkType() (string, error) {
 		if bni := a.provisioned.BrokerNodeGroupInfo; bni != nil && bni.ConnectivityInfo != nil {
 			return string(bni.ConnectivityInfo.NetworkType), nil
 		}
+		a.NetworkType.State = plugin.StateIsNull | plugin.StateIsSet
 		return "", nil
 	}
 	if a.serverless != nil && a.serverless.ConnectivityInfo != nil {
@@ -1148,13 +1141,16 @@ func (a *mqlAwsMskCluster) brokerNodeGroup() (*mqlAwsMskClusterBrokerNodeGroup, 
 	}
 
 	networkType := ""
-	var publicAccess *kafka_types.PublicAccess
+	publicAccessType := ""
 	var vpcConn *kafka_types.VpcConnectivity
 	if bni.ConnectivityInfo != nil {
 		networkType = string(bni.ConnectivityInfo.NetworkType)
-		publicAccess = bni.ConnectivityInfo.PublicAccess
+		if pa := bni.ConnectivityInfo.PublicAccess; pa != nil && pa.Type != nil {
+			publicAccessType = *pa.Type
+		}
 		vpcConn = bni.ConnectivityInfo.VpcConnectivity
 	}
+	publicAccessEnabled := publicAccessType != "" && publicAccessType != "DISABLED"
 
 	var volumeSize int64
 	var ebsProvThroughEnabled bool
@@ -1188,6 +1184,8 @@ func (a *mqlAwsMskCluster) brokerNodeGroup() (*mqlAwsMskClusterBrokerNodeGroup, 
 		"ebsProvisionedThroughputEnabled": llx.BoolData(ebsProvThroughEnabled),
 		"ebsProvisionedThroughputMBps":    llx.IntData(ebsProvThroughMBps),
 		"storageMode":                     llx.StringData(string(a.provisioned.StorageMode)),
+		"publicAccessType":                llx.StringData(publicAccessType),
+		"publicAccessEnabled":             llx.BoolData(publicAccessEnabled),
 	}
 	resource, err := CreateResource(a.MqlRuntime, "aws.msk.cluster.brokerNodeGroup", args)
 	if err != nil {
@@ -1198,7 +1196,6 @@ func (a *mqlAwsMskCluster) brokerNodeGroup() (*mqlAwsMskClusterBrokerNodeGroup, 
 	mqlBNG.accountID = a.accountID
 	mqlBNG.clusterArn = a.Arn.Data
 	mqlBNG.cacheSubnetIds = bni.ClientSubnets
-	mqlBNG.cachePublic = publicAccess
 	mqlBNG.cacheVpcConn = vpcConn
 	sgs := make([]string, 0, len(bni.SecurityGroups))
 	for _, sg := range bni.SecurityGroups {
@@ -1225,25 +1222,6 @@ func (a *mqlAwsMskClusterBrokerNodeGroup) subnets() ([]any, error) {
 
 func (a *mqlAwsMskClusterBrokerNodeGroup) securityGroups() ([]any, error) {
 	return a.newSecurityGroupResources(a.MqlRuntime)
-}
-
-func (a *mqlAwsMskClusterBrokerNodeGroup) publicAccess() (*mqlAwsMskClusterPublicAccess, error) {
-	typ := ""
-	enabled := false
-	if a.cachePublic != nil && a.cachePublic.Type != nil {
-		typ = *a.cachePublic.Type
-		enabled = typ != "DISABLED"
-	}
-	resource, err := CreateResource(a.MqlRuntime, "aws.msk.cluster.publicAccess",
-		map[string]*llx.RawData{
-			"__id":    llx.StringData(a.clusterArn + "/brokerNodeGroup/publicAccess"),
-			"type":    llx.StringData(typ),
-			"enabled": llx.BoolData(enabled),
-		})
-	if err != nil {
-		return nil, err
-	}
-	return resource.(*mqlAwsMskClusterPublicAccess), nil
 }
 
 func (a *mqlAwsMskClusterBrokerNodeGroup) vpcConnectivity() (*mqlAwsMskClusterVpcConnectivity, error) {
@@ -1894,6 +1872,9 @@ func (a *mqlAwsMskCluster) serverlessConfig() (*mqlAwsMskClusterServerlessConfig
 
 func (a *mqlAwsMskClusterServerlessConfig) vpcConfigs() ([]any, error) {
 	// populated eagerly in aws.msk.cluster.serverlessConfig()
+	if a.VpcConfigs.Data != nil {
+		return a.VpcConfigs.Data, nil
+	}
 	return []any{}, nil
 }
 
@@ -2015,55 +1996,16 @@ func (a *mqlAwsMskConfiguration) serverProperties() (string, error) {
 
 // ===== aws.msk.replicator =====
 
-func newMqlAwsMskReplicator(runtime *plugin.Runtime, region, accountID string, summary kafka_types.ReplicatorSummary, describe *kafka.DescribeReplicatorOutput) (*mqlAwsMskReplicator, error) {
-	var (
-		state       string
-		description string
-		curVersion  string
-		createdAt   *llx.RawData
-		tagsMap     = map[string]any{}
-		stateCode   string
-		stateMsg    string
-		roleArnPtr  *string
-	)
-
-	if describe != nil {
-		if describe.ReplicatorState != "" {
-			state = string(describe.ReplicatorState)
-		}
-		if describe.ReplicatorDescription != nil {
-			description = *describe.ReplicatorDescription
-		}
-		if describe.CurrentVersion != nil {
-			curVersion = *describe.CurrentVersion
-		}
-		if describe.CreationTime != nil {
-			createdAt = llx.TimeData(*describe.CreationTime)
-		} else {
-			createdAt = llx.NilData
-		}
-		for k, v := range describe.Tags {
-			tagsMap[k] = v
-		}
-		if describe.StateInfo != nil {
-			if describe.StateInfo.Code != nil {
-				stateCode = *describe.StateInfo.Code
-			}
-			if describe.StateInfo.Message != nil {
-				stateMsg = *describe.StateInfo.Message
-			}
-		}
-		roleArnPtr = describe.ServiceExecutionRoleArn
+func newMqlAwsMskReplicator(runtime *plugin.Runtime, region, accountID string, summary kafka_types.ReplicatorSummary) (*mqlAwsMskReplicator, error) {
+	var createdAt *llx.RawData
+	if summary.CreationTime != nil {
+		createdAt = llx.TimeData(*summary.CreationTime)
 	} else {
-		state = string(summary.ReplicatorState)
-		if summary.CreationTime != nil {
-			createdAt = llx.TimeData(*summary.CreationTime)
-		} else {
-			createdAt = llx.NilData
-		}
-		if summary.CurrentVersion != nil {
-			curVersion = *summary.CurrentVersion
-		}
+		createdAt = llx.NilData
+	}
+	curVersion := ""
+	if summary.CurrentVersion != nil {
+		curVersion = *summary.CurrentVersion
 	}
 
 	resource, err := CreateResource(runtime, "aws.msk.replicator",
@@ -2071,14 +2013,10 @@ func newMqlAwsMskReplicator(runtime *plugin.Runtime, region, accountID string, s
 			"__id":           llx.StringDataPtr(summary.ReplicatorArn),
 			"arn":            llx.StringDataPtr(summary.ReplicatorArn),
 			"name":           llx.StringDataPtr(summary.ReplicatorName),
-			"state":          llx.StringData(state),
-			"description":    llx.StringData(description),
+			"state":          llx.StringData(string(summary.ReplicatorState)),
 			"currentVersion": llx.StringData(curVersion),
 			"createdAt":      createdAt,
 			"region":         llx.StringData(region),
-			"tags":           llx.MapData(tagsMap, types.String),
-			"stateCode":      llx.StringData(stateCode),
-			"stateMessage":   llx.StringData(stateMsg),
 		})
 	if err != nil {
 		return nil, err
@@ -2086,18 +2024,89 @@ func newMqlAwsMskReplicator(runtime *plugin.Runtime, region, accountID string, s
 	mqlRep := resource.(*mqlAwsMskReplicator)
 	mqlRep.region = region
 	mqlRep.accountID = accountID
-	mqlRep.cacheDescribe = describe
-	mqlRep.cacheServiceRole = roleArnPtr
 	return mqlRep, nil
 }
 
+func (a *mqlAwsMskReplicator) fetchDescribe() (*kafka.DescribeReplicatorOutput, error) {
+	a.describeOnce.Do(func() {
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		svc := conn.Kafka(a.region)
+		out, err := svc.DescribeReplicator(context.Background(), &kafka.DescribeReplicatorInput{ReplicatorArn: &a.Arn.Data})
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				a.describeErr = nil
+				return
+			}
+			a.describeErr = err
+			return
+		}
+		a.describeResp = out
+	})
+	return a.describeResp, a.describeErr
+}
+
+func (a *mqlAwsMskReplicator) description() (string, error) {
+	d, err := a.fetchDescribe()
+	if err != nil {
+		return "", err
+	}
+	if d == nil || d.ReplicatorDescription == nil {
+		a.Description.State = plugin.StateIsNull | plugin.StateIsSet
+		return "", nil
+	}
+	return *d.ReplicatorDescription, nil
+}
+
+func (a *mqlAwsMskReplicator) tags() (map[string]any, error) {
+	d, err := a.fetchDescribe()
+	if err != nil {
+		return nil, err
+	}
+	if d == nil {
+		return map[string]any{}, nil
+	}
+	out := make(map[string]any, len(d.Tags))
+	for k, v := range d.Tags {
+		out[k] = v
+	}
+	return out, nil
+}
+
+func (a *mqlAwsMskReplicator) stateCode() (string, error) {
+	d, err := a.fetchDescribe()
+	if err != nil {
+		return "", err
+	}
+	if d == nil || d.StateInfo == nil || d.StateInfo.Code == nil {
+		a.StateCode.State = plugin.StateIsNull | plugin.StateIsSet
+		return "", nil
+	}
+	return *d.StateInfo.Code, nil
+}
+
+func (a *mqlAwsMskReplicator) stateMessage() (string, error) {
+	d, err := a.fetchDescribe()
+	if err != nil {
+		return "", err
+	}
+	if d == nil || d.StateInfo == nil || d.StateInfo.Message == nil {
+		a.StateMessage.State = plugin.StateIsNull | plugin.StateIsSet
+		return "", nil
+	}
+	return *d.StateInfo.Message, nil
+}
+
 func (a *mqlAwsMskReplicator) serviceExecutionRole() (*mqlAwsIamRole, error) {
-	if a.cacheServiceRole == nil || *a.cacheServiceRole == "" {
+	d, err := a.fetchDescribe()
+	if err != nil {
+		return nil, err
+	}
+	if d == nil || d.ServiceExecutionRoleArn == nil || *d.ServiceExecutionRoleArn == "" {
 		a.ServiceExecutionRole.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
 	mqlRole, err := NewResource(a.MqlRuntime, ResourceAwsIamRole,
-		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheServiceRole)})
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(d.ServiceExecutionRoleArn)})
 	if err != nil {
 		return nil, err
 	}
@@ -2105,11 +2114,15 @@ func (a *mqlAwsMskReplicator) serviceExecutionRole() (*mqlAwsIamRole, error) {
 }
 
 func (a *mqlAwsMskReplicator) kafkaClusters() ([]any, error) {
-	if a.cacheDescribe == nil {
+	d, err := a.fetchDescribe()
+	if err != nil {
+		return nil, err
+	}
+	if d == nil {
 		return []any{}, nil
 	}
-	res := make([]any, 0, len(a.cacheDescribe.KafkaClusters))
-	for _, kc := range a.cacheDescribe.KafkaClusters {
+	res := make([]any, 0, len(d.KafkaClusters))
+	for _, kc := range d.KafkaClusters {
 		alias := ""
 		if kc.KafkaClusterAlias != nil {
 			alias = *kc.KafkaClusterAlias
@@ -2193,19 +2206,23 @@ func (a *mqlAwsMskReplicatorKafkaCluster) securityGroups() ([]any, error) {
 }
 
 func (a *mqlAwsMskReplicator) replicationInfoList() ([]any, error) {
-	if a.cacheDescribe == nil {
+	d, err := a.fetchDescribe()
+	if err != nil {
+		return nil, err
+	}
+	if d == nil {
 		return []any{}, nil
 	}
 	aliasToArn := map[string]string{}
-	for _, kc := range a.cacheDescribe.KafkaClusters {
+	for _, kc := range d.KafkaClusters {
 		if kc.KafkaClusterAlias == nil || kc.AmazonMskCluster == nil || kc.AmazonMskCluster.MskClusterArn == nil {
 			continue
 		}
 		aliasToArn[*kc.KafkaClusterAlias] = *kc.AmazonMskCluster.MskClusterArn
 	}
 
-	res := make([]any, 0, len(a.cacheDescribe.ReplicationInfoList))
-	for _, ri := range a.cacheDescribe.ReplicationInfoList {
+	res := make([]any, 0, len(d.ReplicationInfoList))
+	for _, ri := range d.ReplicationInfoList {
 		srcAlias := ""
 		if ri.SourceKafkaClusterAlias != nil {
 			srcAlias = *ri.SourceKafkaClusterAlias
@@ -2367,11 +2384,15 @@ func (a *mqlAwsMskReplicatorReplicationInfo) consumerGroupReplication() (*mqlAws
 }
 
 func (a *mqlAwsMskReplicator) isCrossRegion() (bool, error) {
-	if a.cacheDescribe == nil {
+	d, err := a.fetchDescribe()
+	if err != nil {
+		return false, err
+	}
+	if d == nil {
 		return false, nil
 	}
 	regions := map[string]struct{}{}
-	for _, kc := range a.cacheDescribe.KafkaClusters {
+	for _, kc := range d.KafkaClusters {
 		if kc.AmazonMskCluster == nil || kc.AmazonMskCluster.MskClusterArn == nil {
 			continue
 		}
@@ -2383,11 +2404,15 @@ func (a *mqlAwsMskReplicator) isCrossRegion() (bool, error) {
 }
 
 func (a *mqlAwsMskReplicator) isCrossAccount() (bool, error) {
-	if a.cacheDescribe == nil {
+	d, err := a.fetchDescribe()
+	if err != nil {
+		return false, err
+	}
+	if d == nil {
 		return false, nil
 	}
 	accounts := map[string]struct{}{}
-	for _, kc := range a.cacheDescribe.KafkaClusters {
+	for _, kc := range d.KafkaClusters {
 		if kc.AmazonMskCluster == nil || kc.AmazonMskCluster.MskClusterArn == nil {
 			continue
 		}

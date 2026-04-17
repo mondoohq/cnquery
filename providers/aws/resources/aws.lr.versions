@@ -3822,7 +3822,8 @@ aws.msk.cluster.brokerNodeGroup.ebsProvisionedThroughputMBps 13.14.2
 aws.msk.cluster.brokerNodeGroup.ebsVolumeSizeGiB 13.14.2
 aws.msk.cluster.brokerNodeGroup.instanceType 13.14.2
 aws.msk.cluster.brokerNodeGroup.networkType 13.14.2
-aws.msk.cluster.brokerNodeGroup.publicAccess 13.14.2
+aws.msk.cluster.brokerNodeGroup.publicAccessEnabled 13.14.2
+aws.msk.cluster.brokerNodeGroup.publicAccessType 13.14.2
 aws.msk.cluster.brokerNodeGroup.securityGroups 13.14.2
 aws.msk.cluster.brokerNodeGroup.storageMode 13.14.2
 aws.msk.cluster.brokerNodeGroup.subnets 13.14.2
@@ -3920,8 +3921,6 @@ aws.msk.cluster.operation.operationState 13.14.2
 aws.msk.cluster.operation.operationType 13.14.2
 aws.msk.cluster.operations 13.14.2
 aws.msk.cluster.publicAccess 11.16.1
-aws.msk.cluster.publicAccess.enabled 13.14.2
-aws.msk.cluster.publicAccess.type 13.14.2
 aws.msk.cluster.region 11.16.1
 aws.msk.cluster.s3LogsBucket 11.16.1
 aws.msk.cluster.s3LogsEnabled 11.16.1
