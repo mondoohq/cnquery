@@ -348,6 +348,7 @@ rbcd
 recaptcha
 regexmatchstatement
 regexpatternsetreferencestatement
+replicators
 resourcegroup
 resourcepolicy
 resourcequota
