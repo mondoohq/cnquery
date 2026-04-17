@@ -100,6 +100,20 @@ func TestResource_SSHD(t *testing.T) {
 		assert.Equal(t, []any{"/etc/ssh/ssh_host_rsa_key", "/etc/ssh/ssh_host_ecdsa_key", "/etc/ssh/ssh_host_ed25519_key"}, res[0].Data.Value)
 	})
 
+	t.Run("parse HostKeyAlgorithms", func(t *testing.T) {
+		res := x.TestQuery(t, "sshd.config.hostkeyalgorithms")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, []any{"ssh-ed25519", "rsa-sha2-512", "ecdsa-sha2-nistp521-cert-v01@openssh.com"}, res[0].Data.Value)
+	})
+
+	t.Run("parse block HostKeyAlgorithms", func(t *testing.T) {
+		res := x.TestQuery(t, "sshd.config.blocks[0].hostkeyalgorithms")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, []any{"ssh-ed25519", "rsa-sha2-512", "ecdsa-sha2-nistp521-cert-v01@openssh.com"}, res[0].Data.Value)
+	})
+
 	t.Run("parse permitRootLogin", func(t *testing.T) {
 		res := x.TestQuery(t, "sshd.config.permitRootLogin")
 		assert.NotEmpty(t, res)

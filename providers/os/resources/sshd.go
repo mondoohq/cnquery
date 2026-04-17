@@ -290,13 +290,22 @@ func (s *mqlSshdConfig) hostkeys(params map[string]any) ([]any, error) {
 	return parseConfigEntrySlice(rawHostKeys)
 }
 
-func (s *mqlSshdConfig) permitRootLogin(params map[string]any) ([]any, error) {
-	rawHostKeys, ok := params["PermitRootLogin"]
+func (s *mqlSshdConfig) hostkeyalgorithms(params map[string]any) ([]any, error) {
+	rawHostKeyAlgorithms, ok := params["HostKeyAlgorithms"]
 	if !ok {
 		return nil, nil
 	}
 
-	return parseConfigEntrySlice(rawHostKeys)
+	return parseConfigEntrySlice(rawHostKeyAlgorithms)
+}
+
+func (s *mqlSshdConfig) permitRootLogin(params map[string]any) ([]any, error) {
+	rawPermitRootLogin, ok := params["PermitRootLogin"]
+	if !ok {
+		return nil, nil
+	}
+
+	return parseConfigEntrySlice(rawPermitRootLogin)
 }
 
 func (s *mqlSshdConfigMatchBlock) context() (*mqlFileContext, error) {
@@ -339,11 +348,20 @@ func (s *mqlSshdConfigMatchBlock) hostkeys(params map[string]any) ([]any, error)
 	return parseConfigEntrySlice(rawHostKeys)
 }
 
-func (s *mqlSshdConfigMatchBlock) permitRootLogin(params map[string]any) ([]any, error) {
-	rawHostKeys, ok := params["PermitRootLogin"]
+func (s *mqlSshdConfigMatchBlock) hostkeyalgorithms(params map[string]any) ([]any, error) {
+	rawHostKeyAlgorithms, ok := params["HostKeyAlgorithms"]
 	if !ok {
 		return nil, nil
 	}
 
-	return parseConfigEntrySlice(rawHostKeys)
+	return parseConfigEntrySlice(rawHostKeyAlgorithms)
+}
+
+func (s *mqlSshdConfigMatchBlock) permitRootLogin(params map[string]any) ([]any, error) {
+	rawPermitRootLogin, ok := params["PermitRootLogin"]
+	if !ok {
+		return nil, nil
+	}
+
+	return parseConfigEntrySlice(rawPermitRootLogin)
 }

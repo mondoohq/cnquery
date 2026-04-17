@@ -744,6 +744,8 @@ sshd.config {
   kexs(params) []string
   // Host keys configured for this SSH server
   hostkeys(params) []string
+  // Host key algorithms configured for this SSH server
+  hostkeyalgorithms(params) []string
   // PermitRootLogin setting in SSH server
   permitRootLogin(params) []string
 }
@@ -762,6 +764,8 @@ private sshd.config.matchBlock @defaults("criteria") @context("file.context") {
   kexs(params) []string
   // Host keys configured for this SSH server
   hostkeys(params) []string
+  // Host key algorithms configured for this SSH server
+  hostkeyalgorithms(params) []string
   // PermitRootLogin setting in SSH server
   permitRootLogin(params) []string
 }
