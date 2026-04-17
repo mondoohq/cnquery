@@ -166,8 +166,9 @@ func parseSkillMd(name, sourcePath, content string) skillInfo {
 	return info
 }
 
-// targetHomeDir resolves the first non-system user's home directory on the target
-// via the users resource, so it works for remote SSH/container connections.
+// targetHomeDir resolves a real user's home directory on the target.
+// It prefers a currently logged-in user (via loggedInUsers / "who"),
+// falling back to the first non-system user if no one is logged in.
 func targetHomeDir(runtime *plugin.Runtime) (string, error) {
 	usersResource, err := CreateResource(runtime, "users", map[string]*llx.RawData{})
 	if err != nil {
@@ -179,13 +180,27 @@ func targetHomeDir(runtime *plugin.Runtime) (string, error) {
 		return "", fmt.Errorf("cannot list users on target: %w", userList.Error)
 	}
 
+	conn := runtime.Connection.(shared.Connection)
+	loggedIn, _ := loggedInUsers(runtime, conn)
+
+	var fallback string
 	for _, u := range userList.Data {
 		user := u.(*mqlUser)
 		home := user.GetHome().Data
-		if home != "" && !isSystemHomeDir(home) {
+		if home == "" || isSystemHomeDir(home) {
+			continue
+		}
+		// Prefer a user that is currently logged in.
+		if loggedIn[user.GetName().Data] {
 			return home, nil
+		}
+		if fallback == "" {
+			fallback = home
 		}
 	}
 
+	if fallback != "" {
+		return fallback, nil
+	}
 	return "", fmt.Errorf("no valid user home directory found on target")
 }
