@@ -59,6 +59,7 @@ type BomFields struct {
 	GithubActionsPackages []BomPackage      `json:"githubactions.packages.list,omitempty"`
 	SwiftPackages         []BomPackage      `json:"swift.packages.list,omitempty"`
 	TerraformPackages     []BomPackage      `json:"terraform.packages.list,omitempty"`
+	JenkinsPackages       []BomPackage      `json:"jenkins.packages.list,omitempty"`
 	KernelInstalled       []KernelInstalled `json:"kernel.installed,omitempty"`
 }
 

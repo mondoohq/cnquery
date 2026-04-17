@@ -198,6 +198,8 @@ const (
 	ResourceHomebrewPackage              string = "homebrew.package"
 	ResourceChocolateyPackages           string = "chocolatey.packages"
 	ResourceChocolateyPackage            string = "chocolatey.package"
+	ResourceJenkinsPackages              string = "jenkins.packages"
+	ResourceJenkinsPackage               string = "jenkins.package"
 	ResourceMacos                        string = "macos"
 	ResourceMacosHardware                string = "macos.hardware"
 	ResourceMacosAlf                     string = "macos.alf"
@@ -1000,6 +1002,14 @@ func init() {
 		"chocolatey.package": {
 			// to override args, implement: initChocolateyPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createChocolateyPackage,
+		},
+		"jenkins.packages": {
+			Init:   initJenkinsPackages,
+			Create: createJenkinsPackages,
+		},
+		"jenkins.package": {
+			// to override args, implement: initJenkinsPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createJenkinsPackage,
 		},
 		"macos": {
 			// to override args, implement: initMacos(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3996,6 +4006,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"chocolatey.package.projectUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlChocolateyPackage).GetProjectUrl()).ToDataRes(types.String)
+	},
+	"jenkins.packages.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJenkinsPackages).GetPath()).ToDataRes(types.String)
+	},
+	"jenkins.packages.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJenkinsPackages).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"jenkins.packages.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJenkinsPackages).GetList()).ToDataRes(types.Array(types.Resource("jenkins.package")))
+	},
+	"jenkins.package.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJenkinsPackage).GetName()).ToDataRes(types.String)
+	},
+	"jenkins.package.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJenkinsPackage).GetVersion()).ToDataRes(types.String)
+	},
+	"jenkins.package.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJenkinsPackage).GetPurl()).ToDataRes(types.String)
+	},
+	"jenkins.package.longName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJenkinsPackage).GetLongName()).ToDataRes(types.String)
+	},
+	"jenkins.package.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJenkinsPackage).GetUrl()).ToDataRes(types.String)
+	},
+	"jenkins.package.dependencies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJenkinsPackage).GetDependencies()).ToDataRes(types.Array(types.String))
+	},
+	"jenkins.package.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJenkinsPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
 	},
 	"macos.computerName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacos).GetComputerName()).ToDataRes(types.String)
@@ -9731,6 +9771,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"chocolatey.package.projectUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlChocolateyPackage).ProjectUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jenkins.packages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJenkinsPackages).__id, ok = v.Value.(string)
+		return
+	},
+	"jenkins.packages.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJenkinsPackages).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jenkins.packages.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJenkinsPackages).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jenkins.packages.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJenkinsPackages).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jenkins.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJenkinsPackage).__id, ok = v.Value.(string)
+		return
+	},
+	"jenkins.package.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJenkinsPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jenkins.package.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJenkinsPackage).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jenkins.package.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJenkinsPackage).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jenkins.package.longName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJenkinsPackage).LongName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jenkins.package.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJenkinsPackage).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jenkins.package.dependencies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJenkinsPackage).Dependencies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"jenkins.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJenkinsPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"macos.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -27000,6 +27088,163 @@ func (c *mqlChocolateyPackage) GetTags() *plugin.TValue[[]any] {
 
 func (c *mqlChocolateyPackage) GetProjectUrl() *plugin.TValue[string] {
 	return &c.ProjectUrl
+}
+
+// mqlJenkinsPackages for the jenkins.packages resource
+type mqlJenkinsPackages struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlJenkinsPackagesInternal
+	Path  plugin.TValue[string]
+	Files plugin.TValue[[]any]
+	List  plugin.TValue[[]any]
+}
+
+// createJenkinsPackages creates a new instance of this resource
+func createJenkinsPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJenkinsPackages{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("jenkins.packages", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJenkinsPackages) MqlName() string {
+	return "jenkins.packages"
+}
+
+func (c *mqlJenkinsPackages) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJenkinsPackages) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlJenkinsPackages) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("jenkins.packages", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+func (c *mqlJenkinsPackages) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("jenkins.packages", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlJenkinsPackage for the jenkins.package resource
+type mqlJenkinsPackage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlJenkinsPackageInternal it will be used here
+	Name         plugin.TValue[string]
+	Version      plugin.TValue[string]
+	Purl         plugin.TValue[string]
+	LongName     plugin.TValue[string]
+	Url          plugin.TValue[string]
+	Dependencies plugin.TValue[[]any]
+	Files        plugin.TValue[[]any]
+}
+
+// createJenkinsPackage creates a new instance of this resource
+func createJenkinsPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJenkinsPackage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("jenkins.package", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJenkinsPackage) MqlName() string {
+	return "jenkins.package"
+}
+
+func (c *mqlJenkinsPackage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJenkinsPackage) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlJenkinsPackage) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlJenkinsPackage) GetPurl() *plugin.TValue[string] {
+	return &c.Purl
+}
+
+func (c *mqlJenkinsPackage) GetLongName() *plugin.TValue[string] {
+	return &c.LongName
+}
+
+func (c *mqlJenkinsPackage) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlJenkinsPackage) GetDependencies() *plugin.TValue[[]any] {
+	return &c.Dependencies
+}
+
+func (c *mqlJenkinsPackage) GetFiles() *plugin.TValue[[]any] {
+	return &c.Files
 }
 
 // mqlMacos for the macos resource

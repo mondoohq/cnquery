@@ -2570,6 +2570,37 @@ private chocolatey.package @defaults("name version") {
   projectUrl string
 }
 
+// Jenkins plugin dependencies
+jenkins.packages {
+  []jenkins.package
+
+  init(path? string)
+
+  // Path to Jenkins plugins directory
+  path string
+
+  // Files used to determine the packages
+  files() []pkgFileInfo
+}
+
+// Jenkins plugin
+private jenkins.package @defaults("name version purl") {
+  // Plugin short name
+  name string
+  // Plugin version
+  version string
+  // Package URL
+  purl string
+  // Plugin long name
+  longName string
+  // Plugin URL
+  url string
+  // Plugin dependencies
+  dependencies []string
+  // Package files
+  files []pkgFileInfo
+}
+
 // macOS specific resources
 macos {
   // macOS computer name

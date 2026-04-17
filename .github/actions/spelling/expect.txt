@@ -171,6 +171,7 @@ hec
 Hns
 horizontalpodautoscaler
 hostedzone
+hpi
 hostkeys
 hotlink
 hvm
@@ -200,6 +201,7 @@ jamf
 jira
 jsonbody
 JFi
+jpi
 jre
 junos
 jupyter
