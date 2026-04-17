@@ -12,6 +12,10 @@ on:
         default: false
         type: boolean
 
+concurrency:
+  group: goreleaser-edge
+  cancel-in-progress: false
+
 env:
   REGISTRY: docker.io
 
