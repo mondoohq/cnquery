@@ -37,11 +37,14 @@ var vsCodeEditors = []vsCodeEditor{
 
 // validHomePrefixes lists path prefixes where real user home directories live.
 // Anything outside these prefixes is treated as a system account.
+// NOTE: Non-standard setups (FreeBSD /usr/home/, NixOS /persist/home/, custom
+// /opt/users/) may need additions here if those targets should be supported.
 var validHomePrefixes = []string{
-	"/Users/", // macOS
-	"/home/",  // Linux
-	"/root",   // Linux root (exact match or /root/)
-	`C:\Users\`, // Windows
+	"/Users/",     // macOS
+	"/home/",      // Linux, FreeBSD default
+	"/root/",      // Linux root
+	"/usr/home/",  // FreeBSD alternate
+	"C:\\Users\\", // Windows
 }
 
 // isSystemHomeDir returns true if home looks like a system-account directory.

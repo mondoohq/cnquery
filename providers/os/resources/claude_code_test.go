@@ -235,12 +235,17 @@ func TestIsSystemHomeDir(t *testing.T) {
 	assert.True(t, isSystemHomeDir("/sbin/nologin"))
 	assert.True(t, isSystemHomeDir("/var/run/something"))
 
+	// Paths that look like root but aren't
+	assert.True(t, isSystemHomeDir("/rootfs"))
+	assert.True(t, isSystemHomeDir("/rootkit"))
+
 	// Real user home directories should NOT be flagged
 	assert.False(t, isSystemHomeDir("/Users/chris"))
 	assert.False(t, isSystemHomeDir("/Users/admin"))
 	assert.False(t, isSystemHomeDir("/home/chris"))
 	assert.False(t, isSystemHomeDir("/root"))
 	assert.False(t, isSystemHomeDir("/root/.config"))
+	assert.False(t, isSystemHomeDir("/usr/home/freebsd"))
 	assert.False(t, isSystemHomeDir(`C:\Users\chris`))
 }
 
