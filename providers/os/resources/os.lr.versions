@@ -246,6 +246,15 @@ cursor.rule.content 13.10.1
 cursor.rule.name 13.10.1
 cursor.rule.source 13.10.1
 cursor.rules 13.10.1
+cursor.skill 13.10.1
+cursor.skill.allowedTools 13.10.1
+cursor.skill.argumentHint 13.10.1
+cursor.skill.content 13.10.1
+cursor.skill.description 13.10.1
+cursor.skill.name 13.10.1
+cursor.skill.sha256 13.10.1
+cursor.skill.source 13.10.1
+cursor.skills 13.10.1
 docker 9.0.0
 docker.container 9.0.0
 docker.container.command 9.0.0

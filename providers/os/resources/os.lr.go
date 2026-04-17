@@ -262,6 +262,7 @@ const (
 	ResourceCursor                       string = "cursor"
 	ResourceCursorMcpServer              string = "cursor.mcpServer"
 	ResourceCursorRule                   string = "cursor.rule"
+	ResourceCursorSkill                  string = "cursor.skill"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -1251,6 +1252,10 @@ func init() {
 		"cursor.rule": {
 			// to override args, implement: initCursorRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createCursorRule,
+		},
+		"cursor.skill": {
+			// to override args, implement: initCursorSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCursorSkill,
 		},
 	}
 }
@@ -5295,6 +5300,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cursor.rules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCursor).GetRules()).ToDataRes(types.Array(types.Resource("cursor.rule")))
 	},
+	"cursor.skills": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCursor).GetSkills()).ToDataRes(types.Array(types.Resource("cursor.skill")))
+	},
 	"cursor.mcpServer.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCursorMcpServer).GetName()).ToDataRes(types.String)
 	},
@@ -5318,6 +5326,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"cursor.rule.source": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCursorRule).GetSource()).ToDataRes(types.String)
+	},
+	"cursor.skill.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCursorSkill).GetName()).ToDataRes(types.String)
+	},
+	"cursor.skill.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCursorSkill).GetDescription()).ToDataRes(types.String)
+	},
+	"cursor.skill.allowedTools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCursorSkill).GetAllowedTools()).ToDataRes(types.Array(types.String))
+	},
+	"cursor.skill.argumentHint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCursorSkill).GetArgumentHint()).ToDataRes(types.String)
+	},
+	"cursor.skill.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCursorSkill).GetSource()).ToDataRes(types.String)
+	},
+	"cursor.skill.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCursorSkill).GetContent()).ToDataRes(types.String)
+	},
+	"cursor.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCursorSkill).GetSha256()).ToDataRes(types.String)
 	},
 }
 
@@ -11603,6 +11632,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlCursor).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"cursor.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCursor).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"cursor.mcpServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCursorMcpServer).__id, ok = v.Value.(string)
 		return
@@ -11641,6 +11674,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"cursor.rule.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCursorRule).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cursor.skill.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCursorSkill).__id, ok = v.Value.(string)
+		return
+	},
+	"cursor.skill.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCursorSkill).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cursor.skill.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCursorSkill).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cursor.skill.allowedTools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCursorSkill).AllowedTools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cursor.skill.argumentHint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCursorSkill).ArgumentHint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cursor.skill.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCursorSkill).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cursor.skill.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCursorSkill).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cursor.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCursorSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -32179,6 +32244,7 @@ type mqlCursor struct {
 	ConfigPath plugin.TValue[string]
 	McpServers plugin.TValue[[]any]
 	Rules      plugin.TValue[[]any]
+	Skills     plugin.TValue[[]any]
 }
 
 // createCursor creates a new instance of this resource
@@ -32251,6 +32317,22 @@ func (c *mqlCursor) GetRules() *plugin.TValue[[]any] {
 		}
 
 		return c.rules()
+	})
+}
+
+func (c *mqlCursor) GetSkills() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Skills, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cursor", c.__id, "skills")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.skills()
 	})
 }
 
@@ -32380,4 +32462,80 @@ func (c *mqlCursorRule) GetContent() *plugin.TValue[string] {
 
 func (c *mqlCursorRule) GetSource() *plugin.TValue[string] {
 	return &c.Source
+}
+
+// mqlCursorSkill for the cursor.skill resource
+type mqlCursorSkill struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCursorSkillInternal it will be used here
+	Name         plugin.TValue[string]
+	Description  plugin.TValue[string]
+	AllowedTools plugin.TValue[[]any]
+	ArgumentHint plugin.TValue[string]
+	Source       plugin.TValue[string]
+	Content      plugin.TValue[string]
+	Sha256       plugin.TValue[string]
+}
+
+// createCursorSkill creates a new instance of this resource
+func createCursorSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCursorSkill{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cursor.skill", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCursorSkill) MqlName() string {
+	return "cursor.skill"
+}
+
+func (c *mqlCursorSkill) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCursorSkill) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlCursorSkill) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlCursorSkill) GetAllowedTools() *plugin.TValue[[]any] {
+	return &c.AllowedTools
+}
+
+func (c *mqlCursorSkill) GetArgumentHint() *plugin.TValue[string] {
+	return &c.ArgumentHint
+}
+
+func (c *mqlCursorSkill) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlCursorSkill) GetContent() *plugin.TValue[string] {
+	return &c.Content
+}
+
+func (c *mqlCursorSkill) GetSha256() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
+		return c.sha256()
+	})
 }

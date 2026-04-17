@@ -3728,6 +3728,8 @@ cursor @defaults("configPath") @maturity("preview") {
   mcpServers() []cursor.mcpServer
   // Cursor rules (global and project-scoped)
   rules() []cursor.rule
+  // Installed skills
+  skills() []cursor.skill
 }
 
 // Cursor MCP server configuration
@@ -3752,4 +3754,22 @@ private cursor.rule @defaults("name") @maturity("preview") {
   content string
   // Source path of the rule file
   source string
+}
+
+// Cursor skill
+private cursor.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
 }
