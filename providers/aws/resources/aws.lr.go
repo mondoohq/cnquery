@@ -574,6 +574,14 @@ const (
 	ResourceAwsBatchJobDefinitionContainerProperties                            string = "aws.batch.jobDefinition.containerProperties"
 	ResourceAwsBatchJobDefinitionRetryStrategy                                  string = "aws.batch.jobDefinition.retryStrategy"
 	ResourceAwsBatchJobDefinitionTimeout                                        string = "aws.batch.jobDefinition.timeout"
+	ResourceAwsBatchJob                                                         string = "aws.batch.job"
+	ResourceAwsBatchJobDependency                                               string = "aws.batch.job.dependency"
+	ResourceAwsBatchSchedulingPolicy                                            string = "aws.batch.schedulingPolicy"
+	ResourceAwsBatchJobQueueComputeEnvironmentOrder                             string = "aws.batch.jobQueue.computeEnvironmentOrder"
+	ResourceAwsBatchJobDefinitionContainerPropertiesSecret                      string = "aws.batch.jobDefinition.containerProperties.secret"
+	ResourceAwsBatchJobDefinitionNodeRangeProperty                              string = "aws.batch.jobDefinition.nodeRangeProperty"
+	ResourceAwsBatchJobDefinitionEksPodProperties                               string = "aws.batch.jobDefinition.eksPodProperties"
+	ResourceAwsBatchJobDefinitionEksContainer                                   string = "aws.batch.jobDefinition.eksContainer"
 	ResourceAwsLightsail                                                        string = "aws.lightsail"
 	ResourceAwsLightsailInstance                                                string = "aws.lightsail.instance"
 	ResourceAwsLightsailDatabase                                                string = "aws.lightsail.database"
@@ -2852,7 +2860,7 @@ func init() {
 			Create: createAwsBatch,
 		},
 		"aws.batch.computeEnvironment": {
-			// to override args, implement: initAwsBatchComputeEnvironment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsBatchComputeEnvironment,
 			Create: createAwsBatchComputeEnvironment,
 		},
 		"aws.batch.jobQueue": {
@@ -2874,6 +2882,38 @@ func init() {
 		"aws.batch.jobDefinition.timeout": {
 			// to override args, implement: initAwsBatchJobDefinitionTimeout(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsBatchJobDefinitionTimeout,
+		},
+		"aws.batch.job": {
+			// to override args, implement: initAwsBatchJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBatchJob,
+		},
+		"aws.batch.job.dependency": {
+			// to override args, implement: initAwsBatchJobDependency(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBatchJobDependency,
+		},
+		"aws.batch.schedulingPolicy": {
+			Init:   initAwsBatchSchedulingPolicy,
+			Create: createAwsBatchSchedulingPolicy,
+		},
+		"aws.batch.jobQueue.computeEnvironmentOrder": {
+			// to override args, implement: initAwsBatchJobQueueComputeEnvironmentOrder(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBatchJobQueueComputeEnvironmentOrder,
+		},
+		"aws.batch.jobDefinition.containerProperties.secret": {
+			// to override args, implement: initAwsBatchJobDefinitionContainerPropertiesSecret(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBatchJobDefinitionContainerPropertiesSecret,
+		},
+		"aws.batch.jobDefinition.nodeRangeProperty": {
+			// to override args, implement: initAwsBatchJobDefinitionNodeRangeProperty(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBatchJobDefinitionNodeRangeProperty,
+		},
+		"aws.batch.jobDefinition.eksPodProperties": {
+			// to override args, implement: initAwsBatchJobDefinitionEksPodProperties(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBatchJobDefinitionEksPodProperties,
+		},
+		"aws.batch.jobDefinition.eksContainer": {
+			// to override args, implement: initAwsBatchJobDefinitionEksContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBatchJobDefinitionEksContainer,
 		},
 		"aws.lightsail": {
 			// to override args, implement: initAwsLightsail(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -19050,6 +19090,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.batch.jobDefinitions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBatch).GetJobDefinitions()).ToDataRes(types.Array(types.Resource("aws.batch.jobDefinition")))
 	},
+	"aws.batch.schedulingPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatch).GetSchedulingPolicies()).ToDataRes(types.Array(types.Resource("aws.batch.schedulingPolicy")))
+	},
+	"aws.batch.jobs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatch).GetJobs()).ToDataRes(types.Array(types.Resource("aws.batch.job")))
+	},
 	"aws.batch.computeEnvironment.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBatchComputeEnvironment).GetArn()).ToDataRes(types.String)
 	},
@@ -19104,6 +19150,60 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.batch.computeEnvironment.iamRole": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBatchComputeEnvironment).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
 	},
+	"aws.batch.computeEnvironment.serviceRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchComputeEnvironment).GetServiceRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.batch.computeEnvironment.instanceRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchComputeEnvironment).GetInstanceRole()).ToDataRes(types.Resource("aws.iam.instanceProfile"))
+	},
+	"aws.batch.computeEnvironment.spotIamFleetRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchComputeEnvironment).GetSpotIamFleetRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.batch.computeEnvironment.ec2KeyPair": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchComputeEnvironment).GetEc2KeyPair()).ToDataRes(types.String)
+	},
+	"aws.batch.computeEnvironment.bidPercentage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchComputeEnvironment).GetBidPercentage()).ToDataRes(types.Int)
+	},
+	"aws.batch.computeEnvironment.placementGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchComputeEnvironment).GetPlacementGroup()).ToDataRes(types.String)
+	},
+	"aws.batch.computeEnvironment.imageId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchComputeEnvironment).GetImageId()).ToDataRes(types.String)
+	},
+	"aws.batch.computeEnvironment.image": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchComputeEnvironment).GetImage()).ToDataRes(types.Resource("aws.ec2.image"))
+	},
+	"aws.batch.computeEnvironment.ec2Configurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchComputeEnvironment).GetEc2Configurations()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.batch.computeEnvironment.launchTemplateId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchComputeEnvironment).GetLaunchTemplateId()).ToDataRes(types.String)
+	},
+	"aws.batch.computeEnvironment.launchTemplateName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchComputeEnvironment).GetLaunchTemplateName()).ToDataRes(types.String)
+	},
+	"aws.batch.computeEnvironment.launchTemplateVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchComputeEnvironment).GetLaunchTemplateVersion()).ToDataRes(types.String)
+	},
+	"aws.batch.computeEnvironment.launchTemplateOverrides": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchComputeEnvironment).GetLaunchTemplateOverrides()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.batch.computeEnvironment.eksCluster": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchComputeEnvironment).GetEksCluster()).ToDataRes(types.Resource("aws.eks.cluster"))
+	},
+	"aws.batch.computeEnvironment.eksKubernetesNamespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchComputeEnvironment).GetEksKubernetesNamespace()).ToDataRes(types.String)
+	},
+	"aws.batch.computeEnvironment.updateTerminateJobsOnUpdate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchComputeEnvironment).GetUpdateTerminateJobsOnUpdate()).ToDataRes(types.Bool)
+	},
+	"aws.batch.computeEnvironment.updateJobExecutionTimeoutMinutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchComputeEnvironment).GetUpdateJobExecutionTimeoutMinutes()).ToDataRes(types.Int)
+	},
+	"aws.batch.computeEnvironment.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchComputeEnvironment).GetUuid()).ToDataRes(types.String)
+	},
 	"aws.batch.computeEnvironment.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBatchComputeEnvironment).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -19131,6 +19231,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.batch.jobQueue.computeEnvironmentOrder": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBatchJobQueue).GetComputeEnvironmentOrder()).ToDataRes(types.Array(types.Dict))
 	},
+	"aws.batch.jobQueue.computeEnvironmentOrderTyped": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobQueue).GetComputeEnvironmentOrderTyped()).ToDataRes(types.Array(types.Resource("aws.batch.jobQueue.computeEnvironmentOrder")))
+	},
+	"aws.batch.jobQueue.schedulingPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobQueue).GetSchedulingPolicy()).ToDataRes(types.Resource("aws.batch.schedulingPolicy"))
+	},
+	"aws.batch.jobQueue.jobStateTimeLimitActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobQueue).GetJobStateTimeLimitActions()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.batch.jobQueue.jobs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobQueue).GetJobs()).ToDataRes(types.Array(types.Resource("aws.batch.job")))
+	},
 	"aws.batch.jobQueue.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBatchJobQueue).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -19152,6 +19264,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.batch.jobDefinition.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBatchJobDefinition).GetStatus()).ToDataRes(types.String)
 	},
+	"aws.batch.jobDefinition.platformCapabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinition).GetPlatformCapabilities()).ToDataRes(types.Array(types.String))
+	},
+	"aws.batch.jobDefinition.propagateTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinition).GetPropagateTags()).ToDataRes(types.Bool)
+	},
+	"aws.batch.jobDefinition.schedulingPriority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinition).GetSchedulingPriority()).ToDataRes(types.Int)
+	},
+	"aws.batch.jobDefinition.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinition).GetParameters()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"aws.batch.jobDefinition.container": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBatchJobDefinition).GetContainer()).ToDataRes(types.Resource("aws.batch.jobDefinition.containerProperties"))
 	},
@@ -19160,6 +19284,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.batch.jobDefinition.nodeProperties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBatchJobDefinition).GetNodeProperties()).ToDataRes(types.Dict)
+	},
+	"aws.batch.jobDefinition.nodeMainNode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinition).GetNodeMainNode()).ToDataRes(types.Int)
+	},
+	"aws.batch.jobDefinition.nodeNumNodes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinition).GetNodeNumNodes()).ToDataRes(types.Int)
+	},
+	"aws.batch.jobDefinition.nodeRangeProperties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinition).GetNodeRangeProperties()).ToDataRes(types.Array(types.Resource("aws.batch.jobDefinition.nodeRangeProperty")))
+	},
+	"aws.batch.jobDefinition.eks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinition).GetEks()).ToDataRes(types.Resource("aws.batch.jobDefinition.eksPodProperties"))
+	},
+	"aws.batch.jobDefinition.ecs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinition).GetEcs()).ToDataRes(types.Dict)
 	},
 	"aws.batch.jobDefinition.retry": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBatchJobDefinition).GetRetry()).ToDataRes(types.Resource("aws.batch.jobDefinition.retryStrategy"))
@@ -19197,6 +19336,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.batch.jobDefinition.containerProperties.environment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBatchJobDefinitionContainerProperties).GetEnvironment()).ToDataRes(types.Array(types.Dict))
 	},
+	"aws.batch.jobDefinition.containerProperties.environmentVariables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionContainerProperties).GetEnvironmentVariables()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"aws.batch.jobDefinition.containerProperties.privileged": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBatchJobDefinitionContainerProperties).GetPrivileged()).ToDataRes(types.Bool)
 	},
@@ -19206,14 +19348,50 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.batch.jobDefinition.containerProperties.resourceRequirements": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBatchJobDefinitionContainerProperties).GetResourceRequirements()).ToDataRes(types.Array(types.Dict))
 	},
+	"aws.batch.jobDefinition.containerProperties.resourceRequirementsMap": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionContainerProperties).GetResourceRequirementsMap()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"aws.batch.jobDefinition.containerProperties.logConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBatchJobDefinitionContainerProperties).GetLogConfiguration()).ToDataRes(types.Dict)
+	},
+	"aws.batch.jobDefinition.containerProperties.logDriver": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionContainerProperties).GetLogDriver()).ToDataRes(types.String)
+	},
+	"aws.batch.jobDefinition.containerProperties.logOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionContainerProperties).GetLogOptions()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.batch.jobDefinition.containerProperties.logSecretOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionContainerProperties).GetLogSecretOptions()).ToDataRes(types.Array(types.Resource("aws.batch.jobDefinition.containerProperties.secret")))
 	},
 	"aws.batch.jobDefinition.containerProperties.linuxParameters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBatchJobDefinitionContainerProperties).GetLinuxParameters()).ToDataRes(types.Dict)
 	},
+	"aws.batch.jobDefinition.containerProperties.linuxInitProcessEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionContainerProperties).GetLinuxInitProcessEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.batch.jobDefinition.containerProperties.linuxMaxSwap": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionContainerProperties).GetLinuxMaxSwap()).ToDataRes(types.Int)
+	},
+	"aws.batch.jobDefinition.containerProperties.linuxSharedMemorySize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionContainerProperties).GetLinuxSharedMemorySize()).ToDataRes(types.Int)
+	},
+	"aws.batch.jobDefinition.containerProperties.linuxSwappiness": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionContainerProperties).GetLinuxSwappiness()).ToDataRes(types.Int)
+	},
+	"aws.batch.jobDefinition.containerProperties.linuxDevices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionContainerProperties).GetLinuxDevices()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.batch.jobDefinition.containerProperties.linuxTmpfs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionContainerProperties).GetLinuxTmpfs()).ToDataRes(types.Array(types.Dict))
+	},
 	"aws.batch.jobDefinition.containerProperties.fargateConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBatchJobDefinitionContainerProperties).GetFargateConfig()).ToDataRes(types.Dict)
+	},
+	"aws.batch.jobDefinition.containerProperties.fargatePlatformVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionContainerProperties).GetFargatePlatformVersion()).ToDataRes(types.String)
+	},
+	"aws.batch.jobDefinition.containerProperties.secrets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionContainerProperties).GetSecrets()).ToDataRes(types.Array(types.Resource("aws.batch.jobDefinition.containerProperties.secret")))
 	},
 	"aws.batch.jobDefinition.retryStrategy.attempts": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBatchJobDefinitionRetryStrategy).GetAttempts()).ToDataRes(types.Int)
@@ -19223,6 +19401,219 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.batch.jobDefinition.timeout.attemptDurationSeconds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBatchJobDefinitionTimeout).GetAttemptDurationSeconds()).ToDataRes(types.Int)
+	},
+	"aws.batch.job.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJob).GetId()).ToDataRes(types.String)
+	},
+	"aws.batch.job.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJob).GetArn()).ToDataRes(types.String)
+	},
+	"aws.batch.job.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJob).GetName()).ToDataRes(types.String)
+	},
+	"aws.batch.job.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJob).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.batch.job.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJob).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.batch.job.statusReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJob).GetStatusReason()).ToDataRes(types.String)
+	},
+	"aws.batch.job.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJob).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.batch.job.startedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJob).GetStartedAt()).ToDataRes(types.Time)
+	},
+	"aws.batch.job.stoppedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJob).GetStoppedAt()).ToDataRes(types.Time)
+	},
+	"aws.batch.job.jobDefinitionArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJob).GetJobDefinitionArn()).ToDataRes(types.String)
+	},
+	"aws.batch.job.jobDefinition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJob).GetJobDefinition()).ToDataRes(types.Resource("aws.batch.jobDefinition"))
+	},
+	"aws.batch.job.jobQueueArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJob).GetJobQueueArn()).ToDataRes(types.String)
+	},
+	"aws.batch.job.jobQueue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJob).GetJobQueue()).ToDataRes(types.Resource("aws.batch.jobQueue"))
+	},
+	"aws.batch.job.schedulingPriority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJob).GetSchedulingPriority()).ToDataRes(types.Int)
+	},
+	"aws.batch.job.shareIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJob).GetShareIdentifier()).ToDataRes(types.String)
+	},
+	"aws.batch.job.propagateTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJob).GetPropagateTags()).ToDataRes(types.Bool)
+	},
+	"aws.batch.job.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJob).GetParameters()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.batch.job.container": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJob).GetContainer()).ToDataRes(types.Dict)
+	},
+	"aws.batch.job.logStreamName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJob).GetLogStreamName()).ToDataRes(types.String)
+	},
+	"aws.batch.job.dependsOn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJob).GetDependsOn()).ToDataRes(types.Array(types.Resource("aws.batch.job.dependency")))
+	},
+	"aws.batch.job.attempts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJob).GetAttempts()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.batch.job.arrayProperties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJob).GetArrayProperties()).ToDataRes(types.Dict)
+	},
+	"aws.batch.job.nodeDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJob).GetNodeDetails()).ToDataRes(types.Dict)
+	},
+	"aws.batch.job.isCancelled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJob).GetIsCancelled()).ToDataRes(types.Bool)
+	},
+	"aws.batch.job.isTerminated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJob).GetIsTerminated()).ToDataRes(types.Bool)
+	},
+	"aws.batch.job.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJob).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.batch.job.dependency.jobId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDependency).GetJobId()).ToDataRes(types.String)
+	},
+	"aws.batch.job.dependency.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDependency).GetType()).ToDataRes(types.String)
+	},
+	"aws.batch.job.dependency.job": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDependency).GetJob()).ToDataRes(types.Resource("aws.batch.job"))
+	},
+	"aws.batch.schedulingPolicy.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchSchedulingPolicy).GetArn()).ToDataRes(types.String)
+	},
+	"aws.batch.schedulingPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchSchedulingPolicy).GetName()).ToDataRes(types.String)
+	},
+	"aws.batch.schedulingPolicy.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchSchedulingPolicy).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.batch.schedulingPolicy.hasFairSharePolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchSchedulingPolicy).GetHasFairSharePolicy()).ToDataRes(types.Bool)
+	},
+	"aws.batch.schedulingPolicy.shareDecaySeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchSchedulingPolicy).GetShareDecaySeconds()).ToDataRes(types.Int)
+	},
+	"aws.batch.schedulingPolicy.computeReservation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchSchedulingPolicy).GetComputeReservation()).ToDataRes(types.Int)
+	},
+	"aws.batch.schedulingPolicy.shareDistribution": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchSchedulingPolicy).GetShareDistribution()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.batch.schedulingPolicy.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchSchedulingPolicy).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.batch.jobQueue.computeEnvironmentOrder.order": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobQueueComputeEnvironmentOrder).GetOrder()).ToDataRes(types.Int)
+	},
+	"aws.batch.jobQueue.computeEnvironmentOrder.computeEnvironmentArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobQueueComputeEnvironmentOrder).GetComputeEnvironmentArn()).ToDataRes(types.String)
+	},
+	"aws.batch.jobQueue.computeEnvironmentOrder.computeEnvironment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobQueueComputeEnvironmentOrder).GetComputeEnvironment()).ToDataRes(types.Resource("aws.batch.computeEnvironment"))
+	},
+	"aws.batch.jobDefinition.containerProperties.secret.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionContainerPropertiesSecret).GetName()).ToDataRes(types.String)
+	},
+	"aws.batch.jobDefinition.containerProperties.secret.valueFrom": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionContainerPropertiesSecret).GetValueFrom()).ToDataRes(types.String)
+	},
+	"aws.batch.jobDefinition.containerProperties.secret.secretsManagerSecret": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionContainerPropertiesSecret).GetSecretsManagerSecret()).ToDataRes(types.Resource("aws.secretsmanager.secret"))
+	},
+	"aws.batch.jobDefinition.containerProperties.secret.ssmParameter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionContainerPropertiesSecret).GetSsmParameter()).ToDataRes(types.Resource("aws.ssm.parameter"))
+	},
+	"aws.batch.jobDefinition.nodeRangeProperty.targetNodes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionNodeRangeProperty).GetTargetNodes()).ToDataRes(types.String)
+	},
+	"aws.batch.jobDefinition.nodeRangeProperty.container": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionNodeRangeProperty).GetContainer()).ToDataRes(types.Resource("aws.batch.jobDefinition.containerProperties"))
+	},
+	"aws.batch.jobDefinition.nodeRangeProperty.ecsProperties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionNodeRangeProperty).GetEcsProperties()).ToDataRes(types.Dict)
+	},
+	"aws.batch.jobDefinition.nodeRangeProperty.instanceTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionNodeRangeProperty).GetInstanceTypes()).ToDataRes(types.Array(types.String))
+	},
+	"aws.batch.jobDefinition.eksPodProperties.serviceAccountName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionEksPodProperties).GetServiceAccountName()).ToDataRes(types.String)
+	},
+	"aws.batch.jobDefinition.eksPodProperties.hostNetwork": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionEksPodProperties).GetHostNetwork()).ToDataRes(types.Bool)
+	},
+	"aws.batch.jobDefinition.eksPodProperties.shareProcessNamespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionEksPodProperties).GetShareProcessNamespace()).ToDataRes(types.Bool)
+	},
+	"aws.batch.jobDefinition.eksPodProperties.dnsPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionEksPodProperties).GetDnsPolicy()).ToDataRes(types.String)
+	},
+	"aws.batch.jobDefinition.eksPodProperties.imagePullSecrets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionEksPodProperties).GetImagePullSecrets()).ToDataRes(types.Array(types.String))
+	},
+	"aws.batch.jobDefinition.eksPodProperties.metadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionEksPodProperties).GetMetadata()).ToDataRes(types.Dict)
+	},
+	"aws.batch.jobDefinition.eksPodProperties.containers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionEksPodProperties).GetContainers()).ToDataRes(types.Array(types.Resource("aws.batch.jobDefinition.eksContainer")))
+	},
+	"aws.batch.jobDefinition.eksPodProperties.initContainers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionEksPodProperties).GetInitContainers()).ToDataRes(types.Array(types.Resource("aws.batch.jobDefinition.eksContainer")))
+	},
+	"aws.batch.jobDefinition.eksPodProperties.volumes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionEksPodProperties).GetVolumes()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.batch.jobDefinition.eksContainer.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionEksContainer).GetName()).ToDataRes(types.String)
+	},
+	"aws.batch.jobDefinition.eksContainer.image": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionEksContainer).GetImage()).ToDataRes(types.String)
+	},
+	"aws.batch.jobDefinition.eksContainer.imagePullPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionEksContainer).GetImagePullPolicy()).ToDataRes(types.String)
+	},
+	"aws.batch.jobDefinition.eksContainer.command": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionEksContainer).GetCommand()).ToDataRes(types.Array(types.String))
+	},
+	"aws.batch.jobDefinition.eksContainer.args": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionEksContainer).GetArgs()).ToDataRes(types.Array(types.String))
+	},
+	"aws.batch.jobDefinition.eksContainer.env": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionEksContainer).GetEnv()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.batch.jobDefinition.eksContainer.resources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionEksContainer).GetResources()).ToDataRes(types.Dict)
+	},
+	"aws.batch.jobDefinition.eksContainer.volumeMounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionEksContainer).GetVolumeMounts()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.batch.jobDefinition.eksContainer.securityContextPrivileged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionEksContainer).GetSecurityContextPrivileged()).ToDataRes(types.Bool)
+	},
+	"aws.batch.jobDefinition.eksContainer.securityContextAllowPrivilegeEscalation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionEksContainer).GetSecurityContextAllowPrivilegeEscalation()).ToDataRes(types.Bool)
+	},
+	"aws.batch.jobDefinition.eksContainer.securityContextReadOnlyRootFilesystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionEksContainer).GetSecurityContextReadOnlyRootFilesystem()).ToDataRes(types.Bool)
+	},
+	"aws.batch.jobDefinition.eksContainer.securityContextRunAsNonRoot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionEksContainer).GetSecurityContextRunAsNonRoot()).ToDataRes(types.Bool)
+	},
+	"aws.batch.jobDefinition.eksContainer.securityContextRunAsUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionEksContainer).GetSecurityContextRunAsUser()).ToDataRes(types.Int)
+	},
+	"aws.batch.jobDefinition.eksContainer.securityContextRunAsGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchJobDefinitionEksContainer).GetSecurityContextRunAsGroup()).ToDataRes(types.Int)
 	},
 	"aws.lightsail.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsail).GetInstances()).ToDataRes(types.Array(types.Resource("aws.lightsail.instance")))
@@ -44125,6 +44516,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsBatch).JobDefinitions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.batch.schedulingPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatch).SchedulingPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatch).Jobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.batch.computeEnvironment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBatchComputeEnvironment).__id, ok = v.Value.(string)
 		return
@@ -44201,6 +44600,78 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsBatchComputeEnvironment).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
 		return
 	},
+	"aws.batch.computeEnvironment.serviceRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchComputeEnvironment).ServiceRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.batch.computeEnvironment.instanceRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchComputeEnvironment).InstanceRole, ok = plugin.RawToTValue[*mqlAwsIamInstanceProfile](v.Value, v.Error)
+		return
+	},
+	"aws.batch.computeEnvironment.spotIamFleetRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchComputeEnvironment).SpotIamFleetRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.batch.computeEnvironment.ec2KeyPair": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchComputeEnvironment).Ec2KeyPair, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.batch.computeEnvironment.bidPercentage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchComputeEnvironment).BidPercentage, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.batch.computeEnvironment.placementGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchComputeEnvironment).PlacementGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.batch.computeEnvironment.imageId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchComputeEnvironment).ImageId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.batch.computeEnvironment.image": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchComputeEnvironment).Image, ok = plugin.RawToTValue[*mqlAwsEc2Image](v.Value, v.Error)
+		return
+	},
+	"aws.batch.computeEnvironment.ec2Configurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchComputeEnvironment).Ec2Configurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.batch.computeEnvironment.launchTemplateId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchComputeEnvironment).LaunchTemplateId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.batch.computeEnvironment.launchTemplateName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchComputeEnvironment).LaunchTemplateName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.batch.computeEnvironment.launchTemplateVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchComputeEnvironment).LaunchTemplateVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.batch.computeEnvironment.launchTemplateOverrides": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchComputeEnvironment).LaunchTemplateOverrides, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.batch.computeEnvironment.eksCluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchComputeEnvironment).EksCluster, ok = plugin.RawToTValue[*mqlAwsEksCluster](v.Value, v.Error)
+		return
+	},
+	"aws.batch.computeEnvironment.eksKubernetesNamespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchComputeEnvironment).EksKubernetesNamespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.batch.computeEnvironment.updateTerminateJobsOnUpdate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchComputeEnvironment).UpdateTerminateJobsOnUpdate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.batch.computeEnvironment.updateJobExecutionTimeoutMinutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchComputeEnvironment).UpdateJobExecutionTimeoutMinutes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.batch.computeEnvironment.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchComputeEnvironment).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.batch.computeEnvironment.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBatchComputeEnvironment).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -44241,6 +44712,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsBatchJobQueue).ComputeEnvironmentOrder, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.batch.jobQueue.computeEnvironmentOrderTyped": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobQueue).ComputeEnvironmentOrderTyped, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobQueue.schedulingPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobQueue).SchedulingPolicy, ok = plugin.RawToTValue[*mqlAwsBatchSchedulingPolicy](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobQueue.jobStateTimeLimitActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobQueue).JobStateTimeLimitActions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobQueue.jobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobQueue).Jobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.batch.jobQueue.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBatchJobQueue).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -44273,6 +44760,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsBatchJobDefinition).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.batch.jobDefinition.platformCapabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinition).PlatformCapabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.propagateTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinition).PropagateTags, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.schedulingPriority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinition).SchedulingPriority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinition).Parameters, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"aws.batch.jobDefinition.container": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBatchJobDefinition).Container, ok = plugin.RawToTValue[*mqlAwsBatchJobDefinitionContainerProperties](v.Value, v.Error)
 		return
@@ -44283,6 +44786,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.batch.jobDefinition.nodeProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBatchJobDefinition).NodeProperties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.nodeMainNode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinition).NodeMainNode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.nodeNumNodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinition).NodeNumNodes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.nodeRangeProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinition).NodeRangeProperties, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.eks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinition).Eks, ok = plugin.RawToTValue[*mqlAwsBatchJobDefinitionEksPodProperties](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.ecs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinition).Ecs, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.batch.jobDefinition.retry": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -44337,6 +44860,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsBatchJobDefinitionContainerProperties).Environment, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.batch.jobDefinition.containerProperties.environmentVariables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionContainerProperties).EnvironmentVariables, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"aws.batch.jobDefinition.containerProperties.privileged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBatchJobDefinitionContainerProperties).Privileged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -44349,16 +44876,64 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsBatchJobDefinitionContainerProperties).ResourceRequirements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.batch.jobDefinition.containerProperties.resourceRequirementsMap": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionContainerProperties).ResourceRequirementsMap, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"aws.batch.jobDefinition.containerProperties.logConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBatchJobDefinitionContainerProperties).LogConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.containerProperties.logDriver": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionContainerProperties).LogDriver, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.containerProperties.logOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionContainerProperties).LogOptions, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.containerProperties.logSecretOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionContainerProperties).LogSecretOptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.batch.jobDefinition.containerProperties.linuxParameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBatchJobDefinitionContainerProperties).LinuxParameters, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.batch.jobDefinition.containerProperties.linuxInitProcessEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionContainerProperties).LinuxInitProcessEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.containerProperties.linuxMaxSwap": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionContainerProperties).LinuxMaxSwap, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.containerProperties.linuxSharedMemorySize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionContainerProperties).LinuxSharedMemorySize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.containerProperties.linuxSwappiness": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionContainerProperties).LinuxSwappiness, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.containerProperties.linuxDevices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionContainerProperties).LinuxDevices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.containerProperties.linuxTmpfs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionContainerProperties).LinuxTmpfs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.batch.jobDefinition.containerProperties.fargateConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBatchJobDefinitionContainerProperties).FargateConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.containerProperties.fargatePlatformVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionContainerProperties).FargatePlatformVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.containerProperties.secrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionContainerProperties).Secrets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.batch.jobDefinition.retryStrategy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -44379,6 +44954,322 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.batch.jobDefinition.timeout.attemptDurationSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBatchJobDefinitionTimeout).AttemptDurationSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.batch.job.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJob).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.batch.job.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJob).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.batch.job.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJob).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.batch.job.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJob).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.batch.job.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJob).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.batch.job.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJob).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.batch.job.statusReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJob).StatusReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.batch.job.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJob).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.batch.job.startedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJob).StartedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.batch.job.stoppedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJob).StoppedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.batch.job.jobDefinitionArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJob).JobDefinitionArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.batch.job.jobDefinition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJob).JobDefinition, ok = plugin.RawToTValue[*mqlAwsBatchJobDefinition](v.Value, v.Error)
+		return
+	},
+	"aws.batch.job.jobQueueArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJob).JobQueueArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.batch.job.jobQueue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJob).JobQueue, ok = plugin.RawToTValue[*mqlAwsBatchJobQueue](v.Value, v.Error)
+		return
+	},
+	"aws.batch.job.schedulingPriority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJob).SchedulingPriority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.batch.job.shareIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJob).ShareIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.batch.job.propagateTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJob).PropagateTags, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.batch.job.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJob).Parameters, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.batch.job.container": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJob).Container, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.batch.job.logStreamName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJob).LogStreamName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.batch.job.dependsOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJob).DependsOn, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.batch.job.attempts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJob).Attempts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.batch.job.arrayProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJob).ArrayProperties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.batch.job.nodeDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJob).NodeDetails, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.batch.job.isCancelled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJob).IsCancelled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.batch.job.isTerminated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJob).IsTerminated, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.batch.job.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJob).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.batch.job.dependency.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDependency).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.batch.job.dependency.jobId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDependency).JobId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.batch.job.dependency.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDependency).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.batch.job.dependency.job": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDependency).Job, ok = plugin.RawToTValue[*mqlAwsBatchJob](v.Value, v.Error)
+		return
+	},
+	"aws.batch.schedulingPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchSchedulingPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.batch.schedulingPolicy.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchSchedulingPolicy).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.batch.schedulingPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchSchedulingPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.batch.schedulingPolicy.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchSchedulingPolicy).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.batch.schedulingPolicy.hasFairSharePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchSchedulingPolicy).HasFairSharePolicy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.batch.schedulingPolicy.shareDecaySeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchSchedulingPolicy).ShareDecaySeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.batch.schedulingPolicy.computeReservation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchSchedulingPolicy).ComputeReservation, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.batch.schedulingPolicy.shareDistribution": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchSchedulingPolicy).ShareDistribution, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.batch.schedulingPolicy.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchSchedulingPolicy).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobQueue.computeEnvironmentOrder.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobQueueComputeEnvironmentOrder).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.batch.jobQueue.computeEnvironmentOrder.order": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobQueueComputeEnvironmentOrder).Order, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobQueue.computeEnvironmentOrder.computeEnvironmentArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobQueueComputeEnvironmentOrder).ComputeEnvironmentArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobQueue.computeEnvironmentOrder.computeEnvironment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobQueueComputeEnvironmentOrder).ComputeEnvironment, ok = plugin.RawToTValue[*mqlAwsBatchComputeEnvironment](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.containerProperties.secret.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionContainerPropertiesSecret).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.batch.jobDefinition.containerProperties.secret.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionContainerPropertiesSecret).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.containerProperties.secret.valueFrom": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionContainerPropertiesSecret).ValueFrom, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.containerProperties.secret.secretsManagerSecret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionContainerPropertiesSecret).SecretsManagerSecret, ok = plugin.RawToTValue[*mqlAwsSecretsmanagerSecret](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.containerProperties.secret.ssmParameter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionContainerPropertiesSecret).SsmParameter, ok = plugin.RawToTValue[*mqlAwsSsmParameter](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.nodeRangeProperty.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionNodeRangeProperty).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.batch.jobDefinition.nodeRangeProperty.targetNodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionNodeRangeProperty).TargetNodes, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.nodeRangeProperty.container": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionNodeRangeProperty).Container, ok = plugin.RawToTValue[*mqlAwsBatchJobDefinitionContainerProperties](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.nodeRangeProperty.ecsProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionNodeRangeProperty).EcsProperties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.nodeRangeProperty.instanceTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionNodeRangeProperty).InstanceTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.eksPodProperties.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionEksPodProperties).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.batch.jobDefinition.eksPodProperties.serviceAccountName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionEksPodProperties).ServiceAccountName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.eksPodProperties.hostNetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionEksPodProperties).HostNetwork, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.eksPodProperties.shareProcessNamespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionEksPodProperties).ShareProcessNamespace, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.eksPodProperties.dnsPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionEksPodProperties).DnsPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.eksPodProperties.imagePullSecrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionEksPodProperties).ImagePullSecrets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.eksPodProperties.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionEksPodProperties).Metadata, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.eksPodProperties.containers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionEksPodProperties).Containers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.eksPodProperties.initContainers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionEksPodProperties).InitContainers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.eksPodProperties.volumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionEksPodProperties).Volumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.eksContainer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionEksContainer).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.batch.jobDefinition.eksContainer.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionEksContainer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.eksContainer.image": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionEksContainer).Image, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.eksContainer.imagePullPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionEksContainer).ImagePullPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.eksContainer.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionEksContainer).Command, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.eksContainer.args": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionEksContainer).Args, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.eksContainer.env": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionEksContainer).Env, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.eksContainer.resources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionEksContainer).Resources, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.eksContainer.volumeMounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionEksContainer).VolumeMounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.eksContainer.securityContextPrivileged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionEksContainer).SecurityContextPrivileged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.eksContainer.securityContextAllowPrivilegeEscalation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionEksContainer).SecurityContextAllowPrivilegeEscalation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.eksContainer.securityContextReadOnlyRootFilesystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionEksContainer).SecurityContextReadOnlyRootFilesystem, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.eksContainer.securityContextRunAsNonRoot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionEksContainer).SecurityContextRunAsNonRoot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.eksContainer.securityContextRunAsUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionEksContainer).SecurityContextRunAsUser, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.batch.jobDefinition.eksContainer.securityContextRunAsGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchJobDefinitionEksContainer).SecurityContextRunAsGroup, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.lightsail.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -107760,6 +108651,8 @@ type mqlAwsBatch struct {
 	ComputeEnvironments plugin.TValue[[]any]
 	JobQueues           plugin.TValue[[]any]
 	JobDefinitions      plugin.TValue[[]any]
+	SchedulingPolicies  plugin.TValue[[]any]
+	Jobs                plugin.TValue[[]any]
 }
 
 // createAwsBatch creates a new instance of this resource
@@ -107847,30 +108740,80 @@ func (c *mqlAwsBatch) GetJobDefinitions() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsBatch) GetSchedulingPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SchedulingPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.batch", c.__id, "schedulingPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.schedulingPolicies()
+	})
+}
+
+func (c *mqlAwsBatch) GetJobs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Jobs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.batch", c.__id, "jobs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.jobs()
+	})
+}
+
 // mqlAwsBatchComputeEnvironment for the aws.batch.computeEnvironment resource
 type mqlAwsBatchComputeEnvironment struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsBatchComputeEnvironmentInternal
-	Arn                        plugin.TValue[string]
-	Name                       plugin.TValue[string]
-	Region                     plugin.TValue[string]
-	State                      plugin.TValue[string]
-	Status                     plugin.TValue[string]
-	StatusReason               plugin.TValue[string]
-	Type                       plugin.TValue[string]
-	ContainerOrchestrationType plugin.TValue[string]
-	EcsCluster                 plugin.TValue[*mqlAwsEcsCluster]
-	MaxVcpus                   plugin.TValue[int64]
-	MinVcpus                   plugin.TValue[int64]
-	DesiredVcpus               plugin.TValue[int64]
-	ComputeResourceType        plugin.TValue[string]
-	InstanceTypes              plugin.TValue[[]any]
-	AllocationStrategy         plugin.TValue[string]
-	Subnets                    plugin.TValue[[]any]
-	SecurityGroups             plugin.TValue[[]any]
-	IamRole                    plugin.TValue[*mqlAwsIamRole]
-	Tags                       plugin.TValue[map[string]any]
+	Arn                              plugin.TValue[string]
+	Name                             plugin.TValue[string]
+	Region                           plugin.TValue[string]
+	State                            plugin.TValue[string]
+	Status                           plugin.TValue[string]
+	StatusReason                     plugin.TValue[string]
+	Type                             plugin.TValue[string]
+	ContainerOrchestrationType       plugin.TValue[string]
+	EcsCluster                       plugin.TValue[*mqlAwsEcsCluster]
+	MaxVcpus                         plugin.TValue[int64]
+	MinVcpus                         plugin.TValue[int64]
+	DesiredVcpus                     plugin.TValue[int64]
+	ComputeResourceType              plugin.TValue[string]
+	InstanceTypes                    plugin.TValue[[]any]
+	AllocationStrategy               plugin.TValue[string]
+	Subnets                          plugin.TValue[[]any]
+	SecurityGroups                   plugin.TValue[[]any]
+	IamRole                          plugin.TValue[*mqlAwsIamRole]
+	ServiceRole                      plugin.TValue[*mqlAwsIamRole]
+	InstanceRole                     plugin.TValue[*mqlAwsIamInstanceProfile]
+	SpotIamFleetRole                 plugin.TValue[*mqlAwsIamRole]
+	Ec2KeyPair                       plugin.TValue[string]
+	BidPercentage                    plugin.TValue[int64]
+	PlacementGroup                   plugin.TValue[string]
+	ImageId                          plugin.TValue[string]
+	Image                            plugin.TValue[*mqlAwsEc2Image]
+	Ec2Configurations                plugin.TValue[[]any]
+	LaunchTemplateId                 plugin.TValue[string]
+	LaunchTemplateName               plugin.TValue[string]
+	LaunchTemplateVersion            plugin.TValue[string]
+	LaunchTemplateOverrides          plugin.TValue[[]any]
+	EksCluster                       plugin.TValue[*mqlAwsEksCluster]
+	EksKubernetesNamespace           plugin.TValue[string]
+	UpdateTerminateJobsOnUpdate      plugin.TValue[bool]
+	UpdateJobExecutionTimeoutMinutes plugin.TValue[int64]
+	Uuid                             plugin.TValue[string]
+	Tags                             plugin.TValue[map[string]any]
 }
 
 // createAwsBatchComputeEnvironment creates a new instance of this resource
@@ -108037,6 +108980,164 @@ func (c *mqlAwsBatchComputeEnvironment) GetIamRole() *plugin.TValue[*mqlAwsIamRo
 	})
 }
 
+func (c *mqlAwsBatchComputeEnvironment) GetServiceRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.ServiceRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.batch.computeEnvironment", c.__id, "serviceRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.serviceRole()
+	})
+}
+
+func (c *mqlAwsBatchComputeEnvironment) GetInstanceRole() *plugin.TValue[*mqlAwsIamInstanceProfile] {
+	return plugin.GetOrCompute[*mqlAwsIamInstanceProfile](&c.InstanceRole, func() (*mqlAwsIamInstanceProfile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.batch.computeEnvironment", c.__id, "instanceRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamInstanceProfile), nil
+			}
+		}
+
+		return c.instanceRole()
+	})
+}
+
+func (c *mqlAwsBatchComputeEnvironment) GetSpotIamFleetRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.SpotIamFleetRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.batch.computeEnvironment", c.__id, "spotIamFleetRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.spotIamFleetRole()
+	})
+}
+
+func (c *mqlAwsBatchComputeEnvironment) GetEc2KeyPair() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Ec2KeyPair, func() (string, error) {
+		return c.ec2KeyPair()
+	})
+}
+
+func (c *mqlAwsBatchComputeEnvironment) GetBidPercentage() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.BidPercentage, func() (int64, error) {
+		return c.bidPercentage()
+	})
+}
+
+func (c *mqlAwsBatchComputeEnvironment) GetPlacementGroup() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PlacementGroup, func() (string, error) {
+		return c.placementGroup()
+	})
+}
+
+func (c *mqlAwsBatchComputeEnvironment) GetImageId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ImageId, func() (string, error) {
+		return c.imageId()
+	})
+}
+
+func (c *mqlAwsBatchComputeEnvironment) GetImage() *plugin.TValue[*mqlAwsEc2Image] {
+	return plugin.GetOrCompute[*mqlAwsEc2Image](&c.Image, func() (*mqlAwsEc2Image, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.batch.computeEnvironment", c.__id, "image")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Image), nil
+			}
+		}
+
+		return c.image()
+	})
+}
+
+func (c *mqlAwsBatchComputeEnvironment) GetEc2Configurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Ec2Configurations, func() ([]any, error) {
+		return c.ec2Configurations()
+	})
+}
+
+func (c *mqlAwsBatchComputeEnvironment) GetLaunchTemplateId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LaunchTemplateId, func() (string, error) {
+		return c.launchTemplateId()
+	})
+}
+
+func (c *mqlAwsBatchComputeEnvironment) GetLaunchTemplateName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LaunchTemplateName, func() (string, error) {
+		return c.launchTemplateName()
+	})
+}
+
+func (c *mqlAwsBatchComputeEnvironment) GetLaunchTemplateVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LaunchTemplateVersion, func() (string, error) {
+		return c.launchTemplateVersion()
+	})
+}
+
+func (c *mqlAwsBatchComputeEnvironment) GetLaunchTemplateOverrides() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LaunchTemplateOverrides, func() ([]any, error) {
+		return c.launchTemplateOverrides()
+	})
+}
+
+func (c *mqlAwsBatchComputeEnvironment) GetEksCluster() *plugin.TValue[*mqlAwsEksCluster] {
+	return plugin.GetOrCompute[*mqlAwsEksCluster](&c.EksCluster, func() (*mqlAwsEksCluster, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.batch.computeEnvironment", c.__id, "eksCluster")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEksCluster), nil
+			}
+		}
+
+		return c.eksCluster()
+	})
+}
+
+func (c *mqlAwsBatchComputeEnvironment) GetEksKubernetesNamespace() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.EksKubernetesNamespace, func() (string, error) {
+		return c.eksKubernetesNamespace()
+	})
+}
+
+func (c *mqlAwsBatchComputeEnvironment) GetUpdateTerminateJobsOnUpdate() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UpdateTerminateJobsOnUpdate, func() (bool, error) {
+		return c.updateTerminateJobsOnUpdate()
+	})
+}
+
+func (c *mqlAwsBatchComputeEnvironment) GetUpdateJobExecutionTimeoutMinutes() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.UpdateJobExecutionTimeoutMinutes, func() (int64, error) {
+		return c.updateJobExecutionTimeoutMinutes()
+	})
+}
+
+func (c *mqlAwsBatchComputeEnvironment) GetUuid() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Uuid, func() (string, error) {
+		return c.uuid()
+	})
+}
+
 func (c *mqlAwsBatchComputeEnvironment) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
@@ -108046,15 +109147,19 @@ type mqlAwsBatchJobQueue struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsBatchJobQueueInternal
-	Arn                     plugin.TValue[string]
-	Name                    plugin.TValue[string]
-	Region                  plugin.TValue[string]
-	State                   plugin.TValue[string]
-	Status                  plugin.TValue[string]
-	StatusReason            plugin.TValue[string]
-	Priority                plugin.TValue[int64]
-	ComputeEnvironmentOrder plugin.TValue[[]any]
-	Tags                    plugin.TValue[map[string]any]
+	Arn                          plugin.TValue[string]
+	Name                         plugin.TValue[string]
+	Region                       plugin.TValue[string]
+	State                        plugin.TValue[string]
+	Status                       plugin.TValue[string]
+	StatusReason                 plugin.TValue[string]
+	Priority                     plugin.TValue[int64]
+	ComputeEnvironmentOrder      plugin.TValue[[]any]
+	ComputeEnvironmentOrderTyped plugin.TValue[[]any]
+	SchedulingPolicy             plugin.TValue[*mqlAwsBatchSchedulingPolicy]
+	JobStateTimeLimitActions     plugin.TValue[[]any]
+	Jobs                         plugin.TValue[[]any]
+	Tags                         plugin.TValue[map[string]any]
 }
 
 // createAwsBatchJobQueue creates a new instance of this resource
@@ -108123,6 +109228,60 @@ func (c *mqlAwsBatchJobQueue) GetComputeEnvironmentOrder() *plugin.TValue[[]any]
 	})
 }
 
+func (c *mqlAwsBatchJobQueue) GetComputeEnvironmentOrderTyped() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ComputeEnvironmentOrderTyped, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.batch.jobQueue", c.__id, "computeEnvironmentOrderTyped")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.computeEnvironmentOrderTyped()
+	})
+}
+
+func (c *mqlAwsBatchJobQueue) GetSchedulingPolicy() *plugin.TValue[*mqlAwsBatchSchedulingPolicy] {
+	return plugin.GetOrCompute[*mqlAwsBatchSchedulingPolicy](&c.SchedulingPolicy, func() (*mqlAwsBatchSchedulingPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.batch.jobQueue", c.__id, "schedulingPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsBatchSchedulingPolicy), nil
+			}
+		}
+
+		return c.schedulingPolicy()
+	})
+}
+
+func (c *mqlAwsBatchJobQueue) GetJobStateTimeLimitActions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.JobStateTimeLimitActions, func() ([]any, error) {
+		return c.jobStateTimeLimitActions()
+	})
+}
+
+func (c *mqlAwsBatchJobQueue) GetJobs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Jobs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.batch.jobQueue", c.__id, "jobs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.jobs()
+	})
+}
+
 func (c *mqlAwsBatchJobQueue) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
@@ -108132,20 +109291,29 @@ type mqlAwsBatchJobDefinition struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsBatchJobDefinitionInternal
-	Arn                 plugin.TValue[string]
-	Name                plugin.TValue[string]
-	Region              plugin.TValue[string]
-	Revision            plugin.TValue[int64]
-	Type                plugin.TValue[string]
-	Status              plugin.TValue[string]
-	Container           plugin.TValue[*mqlAwsBatchJobDefinitionContainerProperties]
-	ContainerProperties plugin.TValue[any]
-	NodeProperties      plugin.TValue[any]
-	Retry               plugin.TValue[*mqlAwsBatchJobDefinitionRetryStrategy]
-	RetryStrategy       plugin.TValue[any]
-	JobTimeout          plugin.TValue[*mqlAwsBatchJobDefinitionTimeout]
-	Timeout             plugin.TValue[any]
-	Tags                plugin.TValue[map[string]any]
+	Arn                  plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Region               plugin.TValue[string]
+	Revision             plugin.TValue[int64]
+	Type                 plugin.TValue[string]
+	Status               plugin.TValue[string]
+	PlatformCapabilities plugin.TValue[[]any]
+	PropagateTags        plugin.TValue[bool]
+	SchedulingPriority   plugin.TValue[int64]
+	Parameters           plugin.TValue[map[string]any]
+	Container            plugin.TValue[*mqlAwsBatchJobDefinitionContainerProperties]
+	ContainerProperties  plugin.TValue[any]
+	NodeProperties       plugin.TValue[any]
+	NodeMainNode         plugin.TValue[int64]
+	NodeNumNodes         plugin.TValue[int64]
+	NodeRangeProperties  plugin.TValue[[]any]
+	Eks                  plugin.TValue[*mqlAwsBatchJobDefinitionEksPodProperties]
+	Ecs                  plugin.TValue[any]
+	Retry                plugin.TValue[*mqlAwsBatchJobDefinitionRetryStrategy]
+	RetryStrategy        plugin.TValue[any]
+	JobTimeout           plugin.TValue[*mqlAwsBatchJobDefinitionTimeout]
+	Timeout              plugin.TValue[any]
+	Tags                 plugin.TValue[map[string]any]
 }
 
 // createAwsBatchJobDefinition creates a new instance of this resource
@@ -108204,6 +109372,30 @@ func (c *mqlAwsBatchJobDefinition) GetStatus() *plugin.TValue[string] {
 	return &c.Status
 }
 
+func (c *mqlAwsBatchJobDefinition) GetPlatformCapabilities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PlatformCapabilities, func() ([]any, error) {
+		return c.platformCapabilities()
+	})
+}
+
+func (c *mqlAwsBatchJobDefinition) GetPropagateTags() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PropagateTags, func() (bool, error) {
+		return c.propagateTags()
+	})
+}
+
+func (c *mqlAwsBatchJobDefinition) GetSchedulingPriority() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.SchedulingPriority, func() (int64, error) {
+		return c.schedulingPriority()
+	})
+}
+
+func (c *mqlAwsBatchJobDefinition) GetParameters() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Parameters, func() (map[string]any, error) {
+		return c.parameters()
+	})
+}
+
 func (c *mqlAwsBatchJobDefinition) GetContainer() *plugin.TValue[*mqlAwsBatchJobDefinitionContainerProperties] {
 	return plugin.GetOrCompute[*mqlAwsBatchJobDefinitionContainerProperties](&c.Container, func() (*mqlAwsBatchJobDefinitionContainerProperties, error) {
 		if c.MqlRuntime.HasRecording {
@@ -108229,6 +109421,56 @@ func (c *mqlAwsBatchJobDefinition) GetContainerProperties() *plugin.TValue[any] 
 func (c *mqlAwsBatchJobDefinition) GetNodeProperties() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.NodeProperties, func() (any, error) {
 		return c.nodeProperties()
+	})
+}
+
+func (c *mqlAwsBatchJobDefinition) GetNodeMainNode() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.NodeMainNode, func() (int64, error) {
+		return c.nodeMainNode()
+	})
+}
+
+func (c *mqlAwsBatchJobDefinition) GetNodeNumNodes() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.NodeNumNodes, func() (int64, error) {
+		return c.nodeNumNodes()
+	})
+}
+
+func (c *mqlAwsBatchJobDefinition) GetNodeRangeProperties() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NodeRangeProperties, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.batch.jobDefinition", c.__id, "nodeRangeProperties")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.nodeRangeProperties()
+	})
+}
+
+func (c *mqlAwsBatchJobDefinition) GetEks() *plugin.TValue[*mqlAwsBatchJobDefinitionEksPodProperties] {
+	return plugin.GetOrCompute[*mqlAwsBatchJobDefinitionEksPodProperties](&c.Eks, func() (*mqlAwsBatchJobDefinitionEksPodProperties, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.batch.jobDefinition", c.__id, "eks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsBatchJobDefinitionEksPodProperties), nil
+			}
+		}
+
+		return c.eks()
+	})
+}
+
+func (c *mqlAwsBatchJobDefinition) GetEcs() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Ecs, func() (any, error) {
+		return c.ecs()
 	})
 }
 
@@ -108285,19 +109527,32 @@ type mqlAwsBatchJobDefinitionContainerProperties struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsBatchJobDefinitionContainerPropertiesInternal
-	Image                  plugin.TValue[string]
-	Vcpus                  plugin.TValue[int64]
-	Memory                 plugin.TValue[int64]
-	Command                plugin.TValue[[]any]
-	JobRole                plugin.TValue[*mqlAwsIamRole]
-	ExecutionRole          plugin.TValue[*mqlAwsIamRole]
-	Environment            plugin.TValue[[]any]
-	Privileged             plugin.TValue[bool]
-	ReadonlyRootFilesystem plugin.TValue[bool]
-	ResourceRequirements   plugin.TValue[[]any]
-	LogConfiguration       plugin.TValue[any]
-	LinuxParameters        plugin.TValue[any]
-	FargateConfig          plugin.TValue[any]
+	Image                   plugin.TValue[string]
+	Vcpus                   plugin.TValue[int64]
+	Memory                  plugin.TValue[int64]
+	Command                 plugin.TValue[[]any]
+	JobRole                 plugin.TValue[*mqlAwsIamRole]
+	ExecutionRole           plugin.TValue[*mqlAwsIamRole]
+	Environment             plugin.TValue[[]any]
+	EnvironmentVariables    plugin.TValue[map[string]any]
+	Privileged              plugin.TValue[bool]
+	ReadonlyRootFilesystem  plugin.TValue[bool]
+	ResourceRequirements    plugin.TValue[[]any]
+	ResourceRequirementsMap plugin.TValue[map[string]any]
+	LogConfiguration        plugin.TValue[any]
+	LogDriver               plugin.TValue[string]
+	LogOptions              plugin.TValue[map[string]any]
+	LogSecretOptions        plugin.TValue[[]any]
+	LinuxParameters         plugin.TValue[any]
+	LinuxInitProcessEnabled plugin.TValue[bool]
+	LinuxMaxSwap            plugin.TValue[int64]
+	LinuxSharedMemorySize   plugin.TValue[int64]
+	LinuxSwappiness         plugin.TValue[int64]
+	LinuxDevices            plugin.TValue[[]any]
+	LinuxTmpfs              plugin.TValue[[]any]
+	FargateConfig           plugin.TValue[any]
+	FargatePlatformVersion  plugin.TValue[string]
+	Secrets                 plugin.TValue[[]any]
 }
 
 // createAwsBatchJobDefinitionContainerProperties creates a new instance of this resource
@@ -108389,6 +109644,12 @@ func (c *mqlAwsBatchJobDefinitionContainerProperties) GetEnvironment() *plugin.T
 	return &c.Environment
 }
 
+func (c *mqlAwsBatchJobDefinitionContainerProperties) GetEnvironmentVariables() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.EnvironmentVariables, func() (map[string]any, error) {
+		return c.environmentVariables()
+	})
+}
+
 func (c *mqlAwsBatchJobDefinitionContainerProperties) GetPrivileged() *plugin.TValue[bool] {
 	return &c.Privileged
 }
@@ -108401,16 +109662,108 @@ func (c *mqlAwsBatchJobDefinitionContainerProperties) GetResourceRequirements() 
 	return &c.ResourceRequirements
 }
 
+func (c *mqlAwsBatchJobDefinitionContainerProperties) GetResourceRequirementsMap() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.ResourceRequirementsMap, func() (map[string]any, error) {
+		return c.resourceRequirementsMap()
+	})
+}
+
 func (c *mqlAwsBatchJobDefinitionContainerProperties) GetLogConfiguration() *plugin.TValue[any] {
 	return &c.LogConfiguration
+}
+
+func (c *mqlAwsBatchJobDefinitionContainerProperties) GetLogDriver() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LogDriver, func() (string, error) {
+		return c.logDriver()
+	})
+}
+
+func (c *mqlAwsBatchJobDefinitionContainerProperties) GetLogOptions() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.LogOptions, func() (map[string]any, error) {
+		return c.logOptions()
+	})
+}
+
+func (c *mqlAwsBatchJobDefinitionContainerProperties) GetLogSecretOptions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LogSecretOptions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.batch.jobDefinition.containerProperties", c.__id, "logSecretOptions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.logSecretOptions()
+	})
 }
 
 func (c *mqlAwsBatchJobDefinitionContainerProperties) GetLinuxParameters() *plugin.TValue[any] {
 	return &c.LinuxParameters
 }
 
+func (c *mqlAwsBatchJobDefinitionContainerProperties) GetLinuxInitProcessEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LinuxInitProcessEnabled, func() (bool, error) {
+		return c.linuxInitProcessEnabled()
+	})
+}
+
+func (c *mqlAwsBatchJobDefinitionContainerProperties) GetLinuxMaxSwap() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.LinuxMaxSwap, func() (int64, error) {
+		return c.linuxMaxSwap()
+	})
+}
+
+func (c *mqlAwsBatchJobDefinitionContainerProperties) GetLinuxSharedMemorySize() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.LinuxSharedMemorySize, func() (int64, error) {
+		return c.linuxSharedMemorySize()
+	})
+}
+
+func (c *mqlAwsBatchJobDefinitionContainerProperties) GetLinuxSwappiness() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.LinuxSwappiness, func() (int64, error) {
+		return c.linuxSwappiness()
+	})
+}
+
+func (c *mqlAwsBatchJobDefinitionContainerProperties) GetLinuxDevices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LinuxDevices, func() ([]any, error) {
+		return c.linuxDevices()
+	})
+}
+
+func (c *mqlAwsBatchJobDefinitionContainerProperties) GetLinuxTmpfs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LinuxTmpfs, func() ([]any, error) {
+		return c.linuxTmpfs()
+	})
+}
+
 func (c *mqlAwsBatchJobDefinitionContainerProperties) GetFargateConfig() *plugin.TValue[any] {
 	return &c.FargateConfig
+}
+
+func (c *mqlAwsBatchJobDefinitionContainerProperties) GetFargatePlatformVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.FargatePlatformVersion, func() (string, error) {
+		return c.fargatePlatformVersion()
+	})
+}
+
+func (c *mqlAwsBatchJobDefinitionContainerProperties) GetSecrets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Secrets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.batch.jobDefinition.containerProperties", c.__id, "secrets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.secrets()
+	})
 }
 
 // mqlAwsBatchJobDefinitionRetryStrategy for the aws.batch.jobDefinition.retryStrategy resource
@@ -108514,6 +109867,828 @@ func (c *mqlAwsBatchJobDefinitionTimeout) MqlID() string {
 
 func (c *mqlAwsBatchJobDefinitionTimeout) GetAttemptDurationSeconds() *plugin.TValue[int64] {
 	return &c.AttemptDurationSeconds
+}
+
+// mqlAwsBatchJob for the aws.batch.job resource
+type mqlAwsBatchJob struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsBatchJobInternal
+	Id                 plugin.TValue[string]
+	Arn                plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Region             plugin.TValue[string]
+	Status             plugin.TValue[string]
+	StatusReason       plugin.TValue[string]
+	CreatedAt          plugin.TValue[*time.Time]
+	StartedAt          plugin.TValue[*time.Time]
+	StoppedAt          plugin.TValue[*time.Time]
+	JobDefinitionArn   plugin.TValue[string]
+	JobDefinition      plugin.TValue[*mqlAwsBatchJobDefinition]
+	JobQueueArn        plugin.TValue[string]
+	JobQueue           plugin.TValue[*mqlAwsBatchJobQueue]
+	SchedulingPriority plugin.TValue[int64]
+	ShareIdentifier    plugin.TValue[string]
+	PropagateTags      plugin.TValue[bool]
+	Parameters         plugin.TValue[map[string]any]
+	Container          plugin.TValue[any]
+	LogStreamName      plugin.TValue[string]
+	DependsOn          plugin.TValue[[]any]
+	Attempts           plugin.TValue[[]any]
+	ArrayProperties    plugin.TValue[any]
+	NodeDetails        plugin.TValue[any]
+	IsCancelled        plugin.TValue[bool]
+	IsTerminated       plugin.TValue[bool]
+	Tags               plugin.TValue[map[string]any]
+}
+
+// createAwsBatchJob creates a new instance of this resource
+func createAwsBatchJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBatchJob{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.batch.job", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBatchJob) MqlName() string {
+	return "aws.batch.job"
+}
+
+func (c *mqlAwsBatchJob) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBatchJob) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsBatchJob) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsBatchJob) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsBatchJob) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsBatchJob) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsBatchJob) GetStatusReason() *plugin.TValue[string] {
+	return &c.StatusReason
+}
+
+func (c *mqlAwsBatchJob) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsBatchJob) GetStartedAt() *plugin.TValue[*time.Time] {
+	return &c.StartedAt
+}
+
+func (c *mqlAwsBatchJob) GetStoppedAt() *plugin.TValue[*time.Time] {
+	return &c.StoppedAt
+}
+
+func (c *mqlAwsBatchJob) GetJobDefinitionArn() *plugin.TValue[string] {
+	return &c.JobDefinitionArn
+}
+
+func (c *mqlAwsBatchJob) GetJobDefinition() *plugin.TValue[*mqlAwsBatchJobDefinition] {
+	return plugin.GetOrCompute[*mqlAwsBatchJobDefinition](&c.JobDefinition, func() (*mqlAwsBatchJobDefinition, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.batch.job", c.__id, "jobDefinition")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsBatchJobDefinition), nil
+			}
+		}
+
+		return c.jobDefinition()
+	})
+}
+
+func (c *mqlAwsBatchJob) GetJobQueueArn() *plugin.TValue[string] {
+	return &c.JobQueueArn
+}
+
+func (c *mqlAwsBatchJob) GetJobQueue() *plugin.TValue[*mqlAwsBatchJobQueue] {
+	return plugin.GetOrCompute[*mqlAwsBatchJobQueue](&c.JobQueue, func() (*mqlAwsBatchJobQueue, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.batch.job", c.__id, "jobQueue")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsBatchJobQueue), nil
+			}
+		}
+
+		return c.jobQueue()
+	})
+}
+
+func (c *mqlAwsBatchJob) GetSchedulingPriority() *plugin.TValue[int64] {
+	return &c.SchedulingPriority
+}
+
+func (c *mqlAwsBatchJob) GetShareIdentifier() *plugin.TValue[string] {
+	return &c.ShareIdentifier
+}
+
+func (c *mqlAwsBatchJob) GetPropagateTags() *plugin.TValue[bool] {
+	return &c.PropagateTags
+}
+
+func (c *mqlAwsBatchJob) GetParameters() *plugin.TValue[map[string]any] {
+	return &c.Parameters
+}
+
+func (c *mqlAwsBatchJob) GetContainer() *plugin.TValue[any] {
+	return &c.Container
+}
+
+func (c *mqlAwsBatchJob) GetLogStreamName() *plugin.TValue[string] {
+	return &c.LogStreamName
+}
+
+func (c *mqlAwsBatchJob) GetDependsOn() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DependsOn, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.batch.job", c.__id, "dependsOn")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.dependsOn()
+	})
+}
+
+func (c *mqlAwsBatchJob) GetAttempts() *plugin.TValue[[]any] {
+	return &c.Attempts
+}
+
+func (c *mqlAwsBatchJob) GetArrayProperties() *plugin.TValue[any] {
+	return &c.ArrayProperties
+}
+
+func (c *mqlAwsBatchJob) GetNodeDetails() *plugin.TValue[any] {
+	return &c.NodeDetails
+}
+
+func (c *mqlAwsBatchJob) GetIsCancelled() *plugin.TValue[bool] {
+	return &c.IsCancelled
+}
+
+func (c *mqlAwsBatchJob) GetIsTerminated() *plugin.TValue[bool] {
+	return &c.IsTerminated
+}
+
+func (c *mqlAwsBatchJob) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+// mqlAwsBatchJobDependency for the aws.batch.job.dependency resource
+type mqlAwsBatchJobDependency struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsBatchJobDependencyInternal it will be used here
+	JobId plugin.TValue[string]
+	Type  plugin.TValue[string]
+	Job   plugin.TValue[*mqlAwsBatchJob]
+}
+
+// createAwsBatchJobDependency creates a new instance of this resource
+func createAwsBatchJobDependency(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBatchJobDependency{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.batch.job.dependency", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBatchJobDependency) MqlName() string {
+	return "aws.batch.job.dependency"
+}
+
+func (c *mqlAwsBatchJobDependency) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBatchJobDependency) GetJobId() *plugin.TValue[string] {
+	return &c.JobId
+}
+
+func (c *mqlAwsBatchJobDependency) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsBatchJobDependency) GetJob() *plugin.TValue[*mqlAwsBatchJob] {
+	return plugin.GetOrCompute[*mqlAwsBatchJob](&c.Job, func() (*mqlAwsBatchJob, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.batch.job.dependency", c.__id, "job")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsBatchJob), nil
+			}
+		}
+
+		return c.job()
+	})
+}
+
+// mqlAwsBatchSchedulingPolicy for the aws.batch.schedulingPolicy resource
+type mqlAwsBatchSchedulingPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsBatchSchedulingPolicyInternal it will be used here
+	Arn                plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Region             plugin.TValue[string]
+	HasFairSharePolicy plugin.TValue[bool]
+	ShareDecaySeconds  plugin.TValue[int64]
+	ComputeReservation plugin.TValue[int64]
+	ShareDistribution  plugin.TValue[[]any]
+	Tags               plugin.TValue[map[string]any]
+}
+
+// createAwsBatchSchedulingPolicy creates a new instance of this resource
+func createAwsBatchSchedulingPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBatchSchedulingPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.batch.schedulingPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBatchSchedulingPolicy) MqlName() string {
+	return "aws.batch.schedulingPolicy"
+}
+
+func (c *mqlAwsBatchSchedulingPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBatchSchedulingPolicy) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsBatchSchedulingPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsBatchSchedulingPolicy) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsBatchSchedulingPolicy) GetHasFairSharePolicy() *plugin.TValue[bool] {
+	return &c.HasFairSharePolicy
+}
+
+func (c *mqlAwsBatchSchedulingPolicy) GetShareDecaySeconds() *plugin.TValue[int64] {
+	return &c.ShareDecaySeconds
+}
+
+func (c *mqlAwsBatchSchedulingPolicy) GetComputeReservation() *plugin.TValue[int64] {
+	return &c.ComputeReservation
+}
+
+func (c *mqlAwsBatchSchedulingPolicy) GetShareDistribution() *plugin.TValue[[]any] {
+	return &c.ShareDistribution
+}
+
+func (c *mqlAwsBatchSchedulingPolicy) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+// mqlAwsBatchJobQueueComputeEnvironmentOrder for the aws.batch.jobQueue.computeEnvironmentOrder resource
+type mqlAwsBatchJobQueueComputeEnvironmentOrder struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsBatchJobQueueComputeEnvironmentOrderInternal
+	Order                 plugin.TValue[int64]
+	ComputeEnvironmentArn plugin.TValue[string]
+	ComputeEnvironment    plugin.TValue[*mqlAwsBatchComputeEnvironment]
+}
+
+// createAwsBatchJobQueueComputeEnvironmentOrder creates a new instance of this resource
+func createAwsBatchJobQueueComputeEnvironmentOrder(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBatchJobQueueComputeEnvironmentOrder{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.batch.jobQueue.computeEnvironmentOrder", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBatchJobQueueComputeEnvironmentOrder) MqlName() string {
+	return "aws.batch.jobQueue.computeEnvironmentOrder"
+}
+
+func (c *mqlAwsBatchJobQueueComputeEnvironmentOrder) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBatchJobQueueComputeEnvironmentOrder) GetOrder() *plugin.TValue[int64] {
+	return &c.Order
+}
+
+func (c *mqlAwsBatchJobQueueComputeEnvironmentOrder) GetComputeEnvironmentArn() *plugin.TValue[string] {
+	return &c.ComputeEnvironmentArn
+}
+
+func (c *mqlAwsBatchJobQueueComputeEnvironmentOrder) GetComputeEnvironment() *plugin.TValue[*mqlAwsBatchComputeEnvironment] {
+	return plugin.GetOrCompute[*mqlAwsBatchComputeEnvironment](&c.ComputeEnvironment, func() (*mqlAwsBatchComputeEnvironment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.batch.jobQueue.computeEnvironmentOrder", c.__id, "computeEnvironment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsBatchComputeEnvironment), nil
+			}
+		}
+
+		return c.computeEnvironment()
+	})
+}
+
+// mqlAwsBatchJobDefinitionContainerPropertiesSecret for the aws.batch.jobDefinition.containerProperties.secret resource
+type mqlAwsBatchJobDefinitionContainerPropertiesSecret struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsBatchJobDefinitionContainerPropertiesSecretInternal it will be used here
+	Name                 plugin.TValue[string]
+	ValueFrom            plugin.TValue[string]
+	SecretsManagerSecret plugin.TValue[*mqlAwsSecretsmanagerSecret]
+	SsmParameter         plugin.TValue[*mqlAwsSsmParameter]
+}
+
+// createAwsBatchJobDefinitionContainerPropertiesSecret creates a new instance of this resource
+func createAwsBatchJobDefinitionContainerPropertiesSecret(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBatchJobDefinitionContainerPropertiesSecret{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.batch.jobDefinition.containerProperties.secret", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBatchJobDefinitionContainerPropertiesSecret) MqlName() string {
+	return "aws.batch.jobDefinition.containerProperties.secret"
+}
+
+func (c *mqlAwsBatchJobDefinitionContainerPropertiesSecret) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBatchJobDefinitionContainerPropertiesSecret) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsBatchJobDefinitionContainerPropertiesSecret) GetValueFrom() *plugin.TValue[string] {
+	return &c.ValueFrom
+}
+
+func (c *mqlAwsBatchJobDefinitionContainerPropertiesSecret) GetSecretsManagerSecret() *plugin.TValue[*mqlAwsSecretsmanagerSecret] {
+	return plugin.GetOrCompute[*mqlAwsSecretsmanagerSecret](&c.SecretsManagerSecret, func() (*mqlAwsSecretsmanagerSecret, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.batch.jobDefinition.containerProperties.secret", c.__id, "secretsManagerSecret")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSecretsmanagerSecret), nil
+			}
+		}
+
+		return c.secretsManagerSecret()
+	})
+}
+
+func (c *mqlAwsBatchJobDefinitionContainerPropertiesSecret) GetSsmParameter() *plugin.TValue[*mqlAwsSsmParameter] {
+	return plugin.GetOrCompute[*mqlAwsSsmParameter](&c.SsmParameter, func() (*mqlAwsSsmParameter, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.batch.jobDefinition.containerProperties.secret", c.__id, "ssmParameter")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSsmParameter), nil
+			}
+		}
+
+		return c.ssmParameter()
+	})
+}
+
+// mqlAwsBatchJobDefinitionNodeRangeProperty for the aws.batch.jobDefinition.nodeRangeProperty resource
+type mqlAwsBatchJobDefinitionNodeRangeProperty struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsBatchJobDefinitionNodeRangePropertyInternal
+	TargetNodes   plugin.TValue[string]
+	Container     plugin.TValue[*mqlAwsBatchJobDefinitionContainerProperties]
+	EcsProperties plugin.TValue[any]
+	InstanceTypes plugin.TValue[[]any]
+}
+
+// createAwsBatchJobDefinitionNodeRangeProperty creates a new instance of this resource
+func createAwsBatchJobDefinitionNodeRangeProperty(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBatchJobDefinitionNodeRangeProperty{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.batch.jobDefinition.nodeRangeProperty", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBatchJobDefinitionNodeRangeProperty) MqlName() string {
+	return "aws.batch.jobDefinition.nodeRangeProperty"
+}
+
+func (c *mqlAwsBatchJobDefinitionNodeRangeProperty) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBatchJobDefinitionNodeRangeProperty) GetTargetNodes() *plugin.TValue[string] {
+	return &c.TargetNodes
+}
+
+func (c *mqlAwsBatchJobDefinitionNodeRangeProperty) GetContainer() *plugin.TValue[*mqlAwsBatchJobDefinitionContainerProperties] {
+	return plugin.GetOrCompute[*mqlAwsBatchJobDefinitionContainerProperties](&c.Container, func() (*mqlAwsBatchJobDefinitionContainerProperties, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.batch.jobDefinition.nodeRangeProperty", c.__id, "container")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsBatchJobDefinitionContainerProperties), nil
+			}
+		}
+
+		return c.container()
+	})
+}
+
+func (c *mqlAwsBatchJobDefinitionNodeRangeProperty) GetEcsProperties() *plugin.TValue[any] {
+	return &c.EcsProperties
+}
+
+func (c *mqlAwsBatchJobDefinitionNodeRangeProperty) GetInstanceTypes() *plugin.TValue[[]any] {
+	return &c.InstanceTypes
+}
+
+// mqlAwsBatchJobDefinitionEksPodProperties for the aws.batch.jobDefinition.eksPodProperties resource
+type mqlAwsBatchJobDefinitionEksPodProperties struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsBatchJobDefinitionEksPodPropertiesInternal
+	ServiceAccountName    plugin.TValue[string]
+	HostNetwork           plugin.TValue[bool]
+	ShareProcessNamespace plugin.TValue[bool]
+	DnsPolicy             plugin.TValue[string]
+	ImagePullSecrets      plugin.TValue[[]any]
+	Metadata              plugin.TValue[any]
+	Containers            plugin.TValue[[]any]
+	InitContainers        plugin.TValue[[]any]
+	Volumes               plugin.TValue[[]any]
+}
+
+// createAwsBatchJobDefinitionEksPodProperties creates a new instance of this resource
+func createAwsBatchJobDefinitionEksPodProperties(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBatchJobDefinitionEksPodProperties{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.batch.jobDefinition.eksPodProperties", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBatchJobDefinitionEksPodProperties) MqlName() string {
+	return "aws.batch.jobDefinition.eksPodProperties"
+}
+
+func (c *mqlAwsBatchJobDefinitionEksPodProperties) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBatchJobDefinitionEksPodProperties) GetServiceAccountName() *plugin.TValue[string] {
+	return &c.ServiceAccountName
+}
+
+func (c *mqlAwsBatchJobDefinitionEksPodProperties) GetHostNetwork() *plugin.TValue[bool] {
+	return &c.HostNetwork
+}
+
+func (c *mqlAwsBatchJobDefinitionEksPodProperties) GetShareProcessNamespace() *plugin.TValue[bool] {
+	return &c.ShareProcessNamespace
+}
+
+func (c *mqlAwsBatchJobDefinitionEksPodProperties) GetDnsPolicy() *plugin.TValue[string] {
+	return &c.DnsPolicy
+}
+
+func (c *mqlAwsBatchJobDefinitionEksPodProperties) GetImagePullSecrets() *plugin.TValue[[]any] {
+	return &c.ImagePullSecrets
+}
+
+func (c *mqlAwsBatchJobDefinitionEksPodProperties) GetMetadata() *plugin.TValue[any] {
+	return &c.Metadata
+}
+
+func (c *mqlAwsBatchJobDefinitionEksPodProperties) GetContainers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Containers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.batch.jobDefinition.eksPodProperties", c.__id, "containers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.containers()
+	})
+}
+
+func (c *mqlAwsBatchJobDefinitionEksPodProperties) GetInitContainers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InitContainers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.batch.jobDefinition.eksPodProperties", c.__id, "initContainers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.initContainers()
+	})
+}
+
+func (c *mqlAwsBatchJobDefinitionEksPodProperties) GetVolumes() *plugin.TValue[[]any] {
+	return &c.Volumes
+}
+
+// mqlAwsBatchJobDefinitionEksContainer for the aws.batch.jobDefinition.eksContainer resource
+type mqlAwsBatchJobDefinitionEksContainer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsBatchJobDefinitionEksContainerInternal it will be used here
+	Name                                    plugin.TValue[string]
+	Image                                   plugin.TValue[string]
+	ImagePullPolicy                         plugin.TValue[string]
+	Command                                 plugin.TValue[[]any]
+	Args                                    plugin.TValue[[]any]
+	Env                                     plugin.TValue[map[string]any]
+	Resources                               plugin.TValue[any]
+	VolumeMounts                            plugin.TValue[[]any]
+	SecurityContextPrivileged               plugin.TValue[bool]
+	SecurityContextAllowPrivilegeEscalation plugin.TValue[bool]
+	SecurityContextReadOnlyRootFilesystem   plugin.TValue[bool]
+	SecurityContextRunAsNonRoot             plugin.TValue[bool]
+	SecurityContextRunAsUser                plugin.TValue[int64]
+	SecurityContextRunAsGroup               plugin.TValue[int64]
+}
+
+// createAwsBatchJobDefinitionEksContainer creates a new instance of this resource
+func createAwsBatchJobDefinitionEksContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBatchJobDefinitionEksContainer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.batch.jobDefinition.eksContainer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBatchJobDefinitionEksContainer) MqlName() string {
+	return "aws.batch.jobDefinition.eksContainer"
+}
+
+func (c *mqlAwsBatchJobDefinitionEksContainer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBatchJobDefinitionEksContainer) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsBatchJobDefinitionEksContainer) GetImage() *plugin.TValue[string] {
+	return &c.Image
+}
+
+func (c *mqlAwsBatchJobDefinitionEksContainer) GetImagePullPolicy() *plugin.TValue[string] {
+	return &c.ImagePullPolicy
+}
+
+func (c *mqlAwsBatchJobDefinitionEksContainer) GetCommand() *plugin.TValue[[]any] {
+	return &c.Command
+}
+
+func (c *mqlAwsBatchJobDefinitionEksContainer) GetArgs() *plugin.TValue[[]any] {
+	return &c.Args
+}
+
+func (c *mqlAwsBatchJobDefinitionEksContainer) GetEnv() *plugin.TValue[map[string]any] {
+	return &c.Env
+}
+
+func (c *mqlAwsBatchJobDefinitionEksContainer) GetResources() *plugin.TValue[any] {
+	return &c.Resources
+}
+
+func (c *mqlAwsBatchJobDefinitionEksContainer) GetVolumeMounts() *plugin.TValue[[]any] {
+	return &c.VolumeMounts
+}
+
+func (c *mqlAwsBatchJobDefinitionEksContainer) GetSecurityContextPrivileged() *plugin.TValue[bool] {
+	return &c.SecurityContextPrivileged
+}
+
+func (c *mqlAwsBatchJobDefinitionEksContainer) GetSecurityContextAllowPrivilegeEscalation() *plugin.TValue[bool] {
+	return &c.SecurityContextAllowPrivilegeEscalation
+}
+
+func (c *mqlAwsBatchJobDefinitionEksContainer) GetSecurityContextReadOnlyRootFilesystem() *plugin.TValue[bool] {
+	return &c.SecurityContextReadOnlyRootFilesystem
+}
+
+func (c *mqlAwsBatchJobDefinitionEksContainer) GetSecurityContextRunAsNonRoot() *plugin.TValue[bool] {
+	return &c.SecurityContextRunAsNonRoot
+}
+
+func (c *mqlAwsBatchJobDefinitionEksContainer) GetSecurityContextRunAsUser() *plugin.TValue[int64] {
+	return &c.SecurityContextRunAsUser
+}
+
+func (c *mqlAwsBatchJobDefinitionEksContainer) GetSecurityContextRunAsGroup() *plugin.TValue[int64] {
+	return &c.SecurityContextRunAsGroup
 }
 
 // mqlAwsLightsail for the aws.lightsail resource

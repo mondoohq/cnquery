@@ -12856,6 +12856,10 @@ aws.batch @defaults("computeEnvironments") {
   jobQueues() []aws.batch.jobQueue
   // List of Batch job definitions
   jobDefinitions() []aws.batch.jobDefinition
+  // List of Batch fair-share scheduling policies
+  schedulingPolicies() []aws.batch.schedulingPolicy
+  // Non-terminal jobs across all queues (SUBMITTED/PENDING/RUNNABLE/STARTING/RUNNING). Terminal jobs excluded by default due to volume.
+  jobs() []aws.batch.job
 }
 
 // AWS Batch compute environment
@@ -12894,8 +12898,44 @@ private aws.batch.computeEnvironment @defaults("arn name state status") {
   subnets() []aws.vpc.subnet
   // Security groups for the compute resources
   securityGroups() []aws.ec2.securitygroup
-  // IAM role for the compute environment
+  // Deprecated: use serviceRole() instead
   iamRole() aws.iam.role
+  // IAM service role granting Batch access to other AWS services
+  serviceRole() aws.iam.role
+  // Instance profile attached to EC2 instances in the compute environment
+  instanceRole() aws.iam.instanceProfile
+  // IAM role granting the Spot fleet access to spot instances
+  spotIamFleetRole() aws.iam.role
+  // SSH key pair name for EC2 instances. Presence is an audit signal.
+  ec2KeyPair() string
+  // Maximum percentage of On-Demand price to pay for spot instances
+  bidPercentage() int
+  // Placement group name for the compute environment
+  placementGroup() string
+  // AMI ID (deprecated by AWS in favor of ec2Configurations)
+  imageId() string
+  // Typed AMI reference (nullable on Fargate)
+  image() aws.ec2.image
+  // Per-architecture image configurations (imageType, imageIdOverride, imageKubernetesVersion)
+  ec2Configurations() []dict
+  // Launch template ID
+  launchTemplateId() string
+  // Launch template name
+  launchTemplateName() string
+  // Launch template version
+  launchTemplateVersion() string
+  // Launch template overrides (per-instance-type userdata/version overrides)
+  launchTemplateOverrides() []dict
+  // EKS cluster backing the compute environment (EKS orchestration only)
+  eksCluster() aws.eks.cluster
+  // Kubernetes namespace for EKS-backed compute (EKS orchestration only)
+  eksKubernetesNamespace() string
+  // Whether to terminate running jobs when the compute environment is updated
+  updateTerminateJobsOnUpdate() bool
+  // Maximum duration (minutes) a job may run during a compute-environment update
+  updateJobExecutionTimeoutMinutes() int
+  // Service-generated unique identifier for the compute environment
+  uuid() string
   // Tags for the compute environment
   tags map[string]string
 }
@@ -12916,8 +12956,16 @@ private aws.batch.jobQueue @defaults("arn name state status") {
   statusReason string
   // Priority of the job queue (lower is higher priority)
   priority int
-  // Compute environments attached to this queue (ordered by priority)
+  // Deprecated: use computeEnvironmentOrderTyped() instead
   computeEnvironmentOrder() []dict
+  // Compute environments attached to this queue (ordered by priority)
+  computeEnvironmentOrderTyped() []aws.batch.jobQueue.computeEnvironmentOrder
+  // Fair-share scheduling policy attached to this queue (null when absent)
+  schedulingPolicy() aws.batch.schedulingPolicy
+  // Actions taken when jobs remain in a state longer than the configured threshold
+  jobStateTimeLimitActions() []dict
+  // Non-terminal jobs in this queue (SUBMITTED/PENDING/RUNNABLE/STARTING/RUNNING)
+  jobs() []aws.batch.job
   // Tags for the job queue
   tags map[string]string
 }
@@ -12936,12 +12984,30 @@ private aws.batch.jobDefinition @defaults("arn name type status") {
   type string
   // Status: ACTIVE or INACTIVE
   status string
+  // Platform capabilities (EC2 or FARGATE)
+  platformCapabilities() []string
+  // Whether to propagate definition tags to the ECS task
+  propagateTags() bool
+  // Scheduling priority within fair-share queues (higher wins)
+  schedulingPriority() int
+  // Default parameter substitution values
+  parameters() map[string]string
   // Typed container properties with IAM role references
   container() aws.batch.jobDefinition.containerProperties
   // Deprecated: Use container() instead
   containerProperties() dict
-  // Node properties for multi-node jobs
+  // Deprecated: Use nodeMainNode/nodeNumNodes/nodeRangeProperties instead
   nodeProperties() dict
+  // Index (0-based) of the main node for multi-node parallel jobs
+  nodeMainNode() int
+  // Total number of nodes for multi-node parallel jobs
+  nodeNumNodes() int
+  // Per-node-range container specs for multi-node parallel jobs
+  nodeRangeProperties() []aws.batch.jobDefinition.nodeRangeProperty
+  // Typed EKS pod properties (populated when running on EKS-backed compute)
+  eks() aws.batch.jobDefinition.eksPodProperties
+  // Explicit ECS task properties (populated when running on ECS with explicit shape)
+  ecs() dict
   // Typed retry strategy
   retry() aws.batch.jobDefinition.retryStrategy
   // Deprecated: Use retry() instead
@@ -12962,33 +13028,59 @@ private aws.batch.jobDefinition.containerProperties @defaults("image") {
   vcpus int
   // Memory in MiB reserved
   memory int
-  // Command to run in the container
+  // Command to run in the container. Warning: may contain sensitive data (inline credentials, tokens).
   command []string
   // IAM role for the container to access AWS resources
   jobRole() aws.iam.role
   // IAM role for ECS agent and Docker daemon
   executionRole() aws.iam.role
-  // Environment variables
+  // Deprecated: use environmentVariables instead
   environment []dict
+  // Environment variables passed to the container. Warning: values may contain plaintext secrets.
+  environmentVariables() map[string]string
   // Whether the container has elevated privileges
   privileged bool
   // Whether the container is read-only
   readonlyRootFilesystem bool
-  // Resource requirements (GPU, etc.)
+  // Deprecated: use resourceRequirementsMap instead
   resourceRequirements []dict
-  // Log configuration
+  // Resource requirements keyed by type (GPU, MEMORY, VCPU)
+  resourceRequirementsMap() map[string]string
+  // Deprecated: use logDriver, logOptions, and logSecretOptions instead
   logConfiguration dict
-  // Linux parameters
+  // Log driver (awslogs, fluentd, gelf, journald, json-file, splunk, syslog, awsfirelens)
+  logDriver() string
+  // Log driver configuration options
+  logOptions() map[string]string
+  // Secrets injected into the log configuration (e.g., Splunk tokens)
+  logSecretOptions() []aws.batch.jobDefinition.containerProperties.secret
+  // Deprecated: use linuxInitProcessEnabled, linuxMaxSwap, linuxSharedMemorySize, linuxSwappiness, linuxDevices, linuxTmpfs instead
   linuxParameters dict
-  // Fargate platform configuration
+  // Whether an init process runs inside the container
+  linuxInitProcessEnabled() bool
+  // Total amount of swap memory (in MiB) the container can use
+  linuxMaxSwap() int
+  // Size (in MiB) of the /dev/shm volume
+  linuxSharedMemorySize() int
+  // Memory swappiness (0-100)
+  linuxSwappiness() int
+  // Host devices exposed to the container (hostPath, containerPath, permissions)
+  linuxDevices() []dict
+  // Tmpfs mounts (containerPath, size, mountOptions)
+  linuxTmpfs() []dict
+  // Deprecated: use fargatePlatformVersion instead
   fargateConfig dict
+  // Fargate platform version (e.g., LATEST, 1.4.0)
+  fargatePlatformVersion() string
+  // Secrets to expose to the container
+  secrets() []aws.batch.jobDefinition.containerProperties.secret
 }
 
 // AWS Batch job definition retry strategy
 private aws.batch.jobDefinition.retryStrategy @defaults("attempts") {
   // Number of retry attempts
   attempts int
-  // Conditions for retry evaluation
+  // Conditions for retry evaluation (action, onExitCode, onReason, onStatusReason)
   evaluateOnExit []dict
 }
 
@@ -12996,6 +13088,180 @@ private aws.batch.jobDefinition.retryStrategy @defaults("attempts") {
 private aws.batch.jobDefinition.timeout @defaults("attemptDurationSeconds") {
   // Time limit in seconds for each job attempt
   attemptDurationSeconds int
+}
+
+// AWS Batch job (runtime). Lists default to non-terminal statuses only.
+aws.batch.job @defaults("id name status jobQueueArn") {
+  // Job ID
+  id string
+  // Job ARN
+  arn string
+  // Job name
+  name string
+  // Region of the job
+  region string
+  // Status: SUBMITTED, PENDING, RUNNABLE, STARTING, RUNNING, SUCCEEDED, FAILED
+  status string
+  // Reason the job entered its current status
+  statusReason string
+  // Job creation time
+  createdAt time
+  // Time the job moved to STARTING
+  startedAt time
+  // Time the job reached a terminal state
+  stoppedAt time
+  // Job definition ARN (revision-scoped)
+  jobDefinitionArn string
+  // Typed job definition reference
+  jobDefinition() aws.batch.jobDefinition
+  // Job queue ARN
+  jobQueueArn string
+  // Typed job queue reference
+  jobQueue() aws.batch.jobQueue
+  // Scheduling priority override (higher wins in fair-share queues)
+  schedulingPriority int
+  // Fair-share identifier selecting which share weight applies
+  shareIdentifier string
+  // Whether definition tags were propagated to the ECS task
+  propagateTags bool
+  // Parameter substitution values at submission time
+  parameters map[string]string
+  // Effective runtime container state (command, env, resourceRequirements, logStreamName). Includes any overrides applied at submission.
+  container dict
+  // Stream name in CloudWatch Logs where the job wrote logs
+  logStreamName string
+  // Job dependencies with typed job references
+  dependsOn() []aws.batch.job.dependency
+  // Attempt history (exit code, reason, timestamps per attempt)
+  attempts []dict
+  // Array job properties (size, index, status summary). Null for non-array jobs.
+  arrayProperties dict
+  // Multi-node-parallel child-node details. Null for non-MNP jobs.
+  nodeDetails dict
+  // Whether the job has been cancelled
+  isCancelled bool
+  // Whether the job has been terminated
+  isTerminated bool
+  // Tags for the job
+  tags map[string]string
+}
+
+// AWS Batch job dependency (jobId is natural key, resolved via typed job() ref)
+private aws.batch.job.dependency @defaults("jobId type") {
+  // Dependent job ID
+  jobId string
+  // Dependency type: N_TO_N or SEQUENTIAL
+  type string
+  // Typed reference to the dependent job
+  job() aws.batch.job
+}
+
+// AWS Batch fair-share scheduling policy
+aws.batch.schedulingPolicy @defaults("arn name") {
+  // ARN of the scheduling policy
+  arn string
+  // Name of the scheduling policy
+  name string
+  // Region of the scheduling policy
+  region string
+  // Whether a fair-share policy is configured
+  hasFairSharePolicy bool
+  // Seconds over which fair-share usage decays
+  shareDecaySeconds int
+  // Percentage of resources reserved for new share identifiers
+  computeReservation int
+  // Per-identifier share distribution (shareIdentifier, weightFactor)
+  shareDistribution []dict
+  // Tags for the scheduling policy
+  tags map[string]string
+}
+
+// AWS Batch job queue compute environment order entry
+private aws.batch.jobQueue.computeEnvironmentOrder @defaults("order computeEnvironmentArn") {
+  // Order of the compute environment (lower is tried first)
+  order int
+  // ARN of the compute environment
+  computeEnvironmentArn string
+  // Typed reference to the compute environment
+  computeEnvironment() aws.batch.computeEnvironment
+}
+
+// AWS Batch container secret reference. `valueFrom` is an ARN to Secrets Manager or Systems Manager Parameter Store.
+private aws.batch.jobDefinition.containerProperties.secret @defaults("name valueFrom") {
+  // Name of the secret as exposed to the container
+  name string
+  // ARN of the Secrets Manager secret or full/short name of the Systems Manager parameter
+  valueFrom string
+  // Resolved Secrets Manager secret (null when valueFrom doesn't point to Secrets Manager)
+  secretsManagerSecret() aws.secretsmanager.secret
+  // Resolved Systems Manager parameter (null when valueFrom doesn't point to SSM Parameter Store)
+  ssmParameter() aws.ssm.parameter
+}
+
+// AWS Batch multi-node parallel (MNP) node-range property
+private aws.batch.jobDefinition.nodeRangeProperty @defaults("targetNodes") {
+  // Node range selector (e.g., "0:", "0,1", "0:2")
+  targetNodes string
+  // Container properties for nodes matching the range
+  container() aws.batch.jobDefinition.containerProperties
+  // Explicit ECS properties for nodes matching the range (dict — variant shape)
+  ecsProperties dict
+  // Instance type override for the range
+  instanceTypes []string
+}
+
+// AWS Batch EKS pod properties (single pod spec for an EKS-backed Batch job)
+private aws.batch.jobDefinition.eksPodProperties {
+  // Kubernetes service account name (audit signal for IRSA / permissions scope)
+  serviceAccountName string
+  // Whether containers share the host network namespace
+  hostNetwork bool
+  // Whether containers share a process namespace
+  shareProcessNamespace bool
+  // DNS policy (ClusterFirst, Default, None, ClusterFirstWithHostNet)
+  dnsPolicy string
+  // Image pull secret names
+  imagePullSecrets []string
+  // Pod metadata (labels, annotations)
+  metadata dict
+  // Main pod containers
+  containers() []aws.batch.jobDefinition.eksContainer
+  // Init containers (run before main containers)
+  initContainers() []aws.batch.jobDefinition.eksContainer
+  // Pod volumes (emptyDir/hostPath/secret/configMap variants)
+  volumes []dict
+}
+
+// AWS Batch EKS container spec. Security context is flattened onto the container for direct audit queries.
+private aws.batch.jobDefinition.eksContainer @defaults("name image") {
+  // Container name (unique within the pod)
+  name string
+  // Container image
+  image string
+  // Image pull policy: Always, IfNotPresent, Never
+  imagePullPolicy string
+  // Entrypoint override
+  command []string
+  // Command arguments
+  args []string
+  // Environment variables. Warning: values may contain plaintext secrets.
+  env map[string]string
+  // CPU/memory requests and limits
+  resources dict
+  // Volume mounts (name, mountPath, subPath, readOnly)
+  volumeMounts []dict
+  // Whether the container runs with root privileges (audit signal)
+  securityContextPrivileged bool
+  // Whether the container is allowed to escalate privileges beyond its parent process
+  securityContextAllowPrivilegeEscalation bool
+  // Whether the root filesystem is read-only
+  securityContextReadOnlyRootFilesystem bool
+  // Whether the container must run as a non-root user
+  securityContextRunAsNonRoot bool
+  // UID the container runs as (null = container default, typically root)
+  securityContextRunAsUser int
+  // GID the container runs as
+  securityContextRunAsGroup int
 }
 
 // Amazon Lightsail

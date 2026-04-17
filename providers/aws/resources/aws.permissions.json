@@ -1,7 +1,7 @@
 {
   "provider": "aws",
-  "version": "13.13.3",
-  "generated_at": "2026-04-16T13:02:13-07:00",
+  "version": "13.14.1",
+  "generated_at": "2026-04-16T22:15:19-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -44,6 +44,10 @@
     "batch:DescribeComputeEnvironments",
     "batch:DescribeJobDefinitions",
     "batch:DescribeJobQueues",
+    "batch:DescribeJobs",
+    "batch:DescribeSchedulingPolicies",
+    "batch:ListJobs",
+    "batch:ListSchedulingPolicies",
     "bedrock:ListCustomModels",
     "bedrock:ListGuardrails",
     "bedrock:ListProvisionedModelThroughputs",
@@ -875,6 +879,30 @@
       "permission": "batch:DescribeJobQueues",
       "service": "batch",
       "action": "DescribeJobQueues",
+      "source_file": "aws_batch.go"
+    },
+    {
+      "permission": "batch:DescribeJobs",
+      "service": "batch",
+      "action": "DescribeJobs",
+      "source_file": "aws_batch.go"
+    },
+    {
+      "permission": "batch:DescribeSchedulingPolicies",
+      "service": "batch",
+      "action": "DescribeSchedulingPolicies",
+      "source_file": "aws_batch.go"
+    },
+    {
+      "permission": "batch:ListJobs",
+      "service": "batch",
+      "action": "ListJobs",
+      "source_file": "aws_batch.go"
+    },
+    {
+      "permission": "batch:ListSchedulingPolicies",
+      "service": "batch",
+      "action": "ListSchedulingPolicies",
       "source_file": "aws_batch.go"
     },
     {
