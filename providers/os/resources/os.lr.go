@@ -192,6 +192,8 @@ const (
 	ResourceGithubactionsPackage         string = "githubactions.package"
 	ResourceSwiftPackages                string = "swift.packages"
 	ResourceSwiftPackage                 string = "swift.package"
+	ResourceTerraformPackages            string = "terraform.packages"
+	ResourceTerraformPackage             string = "terraform.package"
 	ResourceMacos                        string = "macos"
 	ResourceMacosHardware                string = "macos.hardware"
 	ResourceMacosAlf                     string = "macos.alf"
@@ -966,6 +968,14 @@ func init() {
 		"swift.package": {
 			// to override args, implement: initSwiftPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createSwiftPackage,
+		},
+		"terraform.packages": {
+			Init:   initTerraformPackages,
+			Create: createTerraformPackages,
+		},
+		"terraform.package": {
+			// to override args, implement: initTerraformPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createTerraformPackage,
 		},
 		"macos": {
 			// to override args, implement: initMacos(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3826,6 +3836,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"swift.package.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSwiftPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"terraform.packages.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformPackages).GetPath()).ToDataRes(types.String)
+	},
+	"terraform.packages.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformPackages).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"terraform.packages.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformPackages).GetList()).ToDataRes(types.Array(types.Resource("terraform.package")))
+	},
+	"terraform.package.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformPackage).GetId()).ToDataRes(types.String)
+	},
+	"terraform.package.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformPackage).GetName()).ToDataRes(types.String)
+	},
+	"terraform.package.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformPackage).GetVersion()).ToDataRes(types.String)
+	},
+	"terraform.package.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformPackage).GetPurl()).ToDataRes(types.String)
+	},
+	"terraform.package.cpes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformPackage).GetCpes()).ToDataRes(types.Array(types.Resource("cpe")))
+	},
+	"terraform.package.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
 	},
 	"macos.computerName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacos).GetComputerName()).ToDataRes(types.String)
@@ -9314,6 +9351,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"swift.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSwiftPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"terraform.packages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformPackages).__id, ok = v.Value.(string)
+		return
+	},
+	"terraform.packages.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformPackages).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"terraform.packages.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformPackages).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"terraform.packages.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformPackages).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"terraform.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformPackage).__id, ok = v.Value.(string)
+		return
+	},
+	"terraform.package.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformPackage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"terraform.package.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"terraform.package.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformPackage).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"terraform.package.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformPackage).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"terraform.package.cpes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformPackage).Cpes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"terraform.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"macos.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25941,6 +26022,193 @@ func (c *mqlSwiftPackage) GetFiles() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("swift.package", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+// mqlTerraformPackages for the terraform.packages resource
+type mqlTerraformPackages struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlTerraformPackagesInternal
+	Path  plugin.TValue[string]
+	Files plugin.TValue[[]any]
+	List  plugin.TValue[[]any]
+}
+
+// createTerraformPackages creates a new instance of this resource
+func createTerraformPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTerraformPackages{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("terraform.packages", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTerraformPackages) MqlName() string {
+	return "terraform.packages"
+}
+
+func (c *mqlTerraformPackages) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTerraformPackages) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlTerraformPackages) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("terraform.packages", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+func (c *mqlTerraformPackages) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("terraform.packages", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlTerraformPackage for the terraform.package resource
+type mqlTerraformPackage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlTerraformPackageInternal it will be used here
+	Id      plugin.TValue[string]
+	Name    plugin.TValue[string]
+	Version plugin.TValue[string]
+	Purl    plugin.TValue[string]
+	Cpes    plugin.TValue[[]any]
+	Files   plugin.TValue[[]any]
+}
+
+// createTerraformPackage creates a new instance of this resource
+func createTerraformPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTerraformPackage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("terraform.package", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTerraformPackage) MqlName() string {
+	return "terraform.package"
+}
+
+func (c *mqlTerraformPackage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTerraformPackage) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlTerraformPackage) GetName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Name, func() (string, error) {
+		return c.name()
+	})
+}
+
+func (c *mqlTerraformPackage) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlTerraformPackage) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
+	})
+}
+
+func (c *mqlTerraformPackage) GetCpes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Cpes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("terraform.package", c.__id, "cpes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.cpes()
+	})
+}
+
+func (c *mqlTerraformPackage) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("terraform.package", c.__id, "files")
 			if err != nil {
 				return nil, err
 			}

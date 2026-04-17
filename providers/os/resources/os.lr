@@ -2462,6 +2462,38 @@ swift.package @defaults("name version purl") {
   files() []pkgFileInfo
 }
 
+// Terraform provider dependencies (SBOM cataloger).
+// Note: the terraform.* namespace is also used by the dedicated Terraform provider
+// for IaC resource scanning. These SBOM resources focus on provider version inventory
+// from .terraform.lock.hcl, not Terraform configuration analysis.
+terraform.packages {
+  []terraform.package
+
+  init(path? string)
+
+  // Path to search for .terraform.lock.hcl
+  path string
+
+  // Files used to determine the packages
+  files() []pkgFileInfo
+}
+
+// Terraform provider dependency
+terraform.package @defaults("name version purl") {
+  // ID is the terraform.package unique identifier
+  id string
+  // Name of the provider (namespace/type)
+  name() string
+  // Version of the provider
+  version() string
+  // Package URL
+  purl() string
+  // Common Platform Enumeration (CPE) for the provider
+  cpes() []core.cpe
+  // Package files
+  files() []pkgFileInfo
+}
+
 // macOS specific resources
 macos {
   // macOS computer name

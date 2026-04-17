@@ -58,6 +58,7 @@ type BomFields struct {
 	PhpPackages           []BomPackage      `json:"php.packages.list,omitempty"`
 	GithubActionsPackages []BomPackage      `json:"githubactions.packages.list,omitempty"`
 	SwiftPackages         []BomPackage      `json:"swift.packages.list,omitempty"`
+	TerraformPackages     []BomPackage      `json:"terraform.packages.list,omitempty"`
 	KernelInstalled       []KernelInstalled `json:"kernel.installed,omitempty"`
 }
 

@@ -49,8 +49,10 @@ breakglass
 BINPACK
 blackhole
 bytematchstatement
+cafd
 cavium
 cbf
+ccf
 cdn
 ceph
 certificatechains
@@ -75,6 +77,7 @@ computeagent
 cooldown
 corosync
 cpe
+CPWn
 crowdstrike
 cryptokey
 ctx
@@ -158,6 +161,7 @@ gvnic
 hadoop
 HBFNV
 HCMCLOUD
+IBgt
 headerorder
 hec
 Hns
@@ -191,6 +195,7 @@ issuewild
 jamf
 jira
 jsonbody
+JFi
 jre
 junos
 jupyter
@@ -238,6 +243,7 @@ minfree
 MINIMALUSER
 Mirrorings
 mkey
+Mnfz
 mlag
 mls
 modelarmor
@@ -430,6 +436,7 @@ valkey
 VAULTNAME
 vcpus
 vdcs
+VDhir
 vendored
 vdev
 verifiedaccess

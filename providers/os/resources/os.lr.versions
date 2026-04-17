@@ -1300,6 +1300,17 @@ systemd.timer.running 13.7.1
 systemd.timer.static 13.7.1
 systemd.timers 13.7.1
 systemd.timers.list 13.7.1
+terraform.package 13.10.1
+terraform.package.cpes 13.10.1
+terraform.package.files 13.10.1
+terraform.package.id 13.10.1
+terraform.package.name 13.10.1
+terraform.package.purl 13.10.1
+terraform.package.version 13.10.1
+terraform.packages 13.10.1
+terraform.packages.files 13.10.1
+terraform.packages.list 13.10.1
+terraform.packages.path 13.10.1
 ufw 13.2.8
 ufw.application 13.2.8
 ufw.application.description 13.2.8
