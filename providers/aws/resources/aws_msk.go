@@ -714,9 +714,6 @@ func (a *mqlAwsMskCluster) anyAuthEnabled() (bool, error) {
 			if ca.Tls != nil && ca.Tls.Enabled != nil && *ca.Tls.Enabled {
 				return true, nil
 			}
-			if ca.Unauthenticated != nil && ca.Unauthenticated.Enabled != nil && *ca.Unauthenticated.Enabled {
-				return true, nil
-			}
 		}
 		return false, nil
 	}
@@ -1064,7 +1061,7 @@ func (a *mqlAwsMskCluster) clientAuthentication() (*mqlAwsMskClusterClientAuthen
 			iam = *sca.Sasl.Iam.Enabled
 		}
 	}
-	any_ = iam || scram || tls || unauth
+	any_ = iam || scram || tls
 
 	caArnsAny := make([]any, 0, len(caArns))
 	for _, v := range caArns {
@@ -1867,14 +1864,6 @@ func (a *mqlAwsMskCluster) serverlessConfig() (*mqlAwsMskClusterServerlessConfig
 		return nil, err
 	}
 	return resource.(*mqlAwsMskClusterServerlessConfig), nil
-}
-
-func (a *mqlAwsMskClusterServerlessConfig) vpcConfigs() ([]any, error) {
-	// populated eagerly in aws.msk.cluster.serverlessConfig()
-	if a.VpcConfigs.Data != nil {
-		return a.VpcConfigs.Data, nil
-	}
-	return []any{}, nil
 }
 
 func hashSorted(vals []string) string {

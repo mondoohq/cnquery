@@ -12774,7 +12774,7 @@ private aws.msk.cluster @defaults("name state clusterType region") {
   tlsAuthEnabled() bool
   // Whether unauthenticated traffic to the cluster is enabled
   unauthenticatedEnabled() bool
-  // Whether any authentication mode (IAM/SCRAM/TLS/Unauthenticated) is enabled
+  // Whether any real client auth mechanism (IAM/SCRAM/TLS) is enabled; unauthenticated traffic is reported separately
   anyAuthEnabled() bool
   // Whether public access is enabled
   publicAccess() bool
@@ -12864,7 +12864,7 @@ private aws.msk.cluster.clientAuthentication @defaults("iamEnabled scramEnabled 
   tlsEnabled bool
   // Whether unauthenticated traffic is enabled
   unauthenticatedEnabled bool
-  // Whether any of the auth modes is enabled
+  // Whether any real auth mode (IAM/SCRAM/TLS) is enabled; unauthenticated is reported separately
   anyEnabled bool
   // SCRAM secrets associated with the cluster (lazy: ListScramSecrets)
   scramSecrets() []aws.secretsmanager.secret
@@ -13087,7 +13087,7 @@ private aws.msk.cluster.serverlessConfig @defaults("iamEnabled networkType") {
   // Network type of the serverless cluster: IPv4 or DUAL
   networkType string
   // VPC configurations for the serverless cluster
-  vpcConfigs() []aws.msk.cluster.serverlessConfig.vpcConfig
+  vpcConfigs []aws.msk.cluster.serverlessConfig.vpcConfig
 }
 
 // VPC configuration entry for a serverless MSK cluster

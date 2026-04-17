@@ -111293,19 +111293,7 @@ func (c *mqlAwsMskClusterServerlessConfig) GetNetworkType() *plugin.TValue[strin
 }
 
 func (c *mqlAwsMskClusterServerlessConfig) GetVpcConfigs() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.VpcConfigs, func() ([]any, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.cluster.serverlessConfig", c.__id, "vpcConfigs")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.([]any), nil
-			}
-		}
-
-		return c.vpcConfigs()
-	})
+	return &c.VpcConfigs
 }
 
 // mqlAwsMskClusterServerlessConfigVpcConfig for the aws.msk.cluster.serverlessConfig.vpcConfig resource
