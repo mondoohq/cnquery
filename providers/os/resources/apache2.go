@@ -546,30 +546,82 @@ func (s *mqlApache2Conf) envvars() (*mqlApache2ConfEnvvars, error) {
 		return nil, nil
 	}
 
+	res, err := CreateResource(s.MqlRuntime, "apache2.conf.envvars", map[string]*llx.RawData{
+		"__id": llx.StringData("apache2.conf.envvars/" + path),
+		"path": llx.StringData(path),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlApache2ConfEnvvars), nil
+}
+
+// initApache2ConfEnvvars resolves the envvars file path from the platform
+// default when the resource is created directly (no arguments).
+func initApache2ConfEnvvars(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if x, ok := args["path"]; ok {
+		path, ok := x.Value.(string)
+		if !ok {
+			return nil, nil, errors.New("wrong type for 'path' in apache2.conf.envvars initialization, it must be a string")
+		}
+		f, err := CreateResource(runtime, "file", map[string]*llx.RawData{
+			"path": llx.StringData(path),
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+		args["file"] = llx.ResourceData(f, "file")
+		delete(args, "path")
+	}
+	return args, nil, nil
+}
+
+func (s *mqlApache2ConfEnvvars) id() (string, error) {
+	file := s.GetFile()
+	if file.Error != nil {
+		return "", file.Error
+	}
+	if file.Data == nil {
+		return "apache2.conf.envvars", nil
+	}
+	return "apache2.conf.envvars/" + file.Data.Path.Data, nil
+}
+
+// file is the default getter: if the envvars resource was constructed without
+// an explicit file, resolve it from the host's platform.
+func (s *mqlApache2ConfEnvvars) file() (*mqlFile, error) {
+	conn := s.MqlRuntime.Connection.(shared.Connection)
+	path := apacheEnvvarsPath(conn)
+	if path == "" {
+		s.File.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
 	f, err := CreateResource(s.MqlRuntime, "file", map[string]*llx.RawData{
 		"path": llx.StringData(path),
 	})
 	if err != nil {
 		return nil, err
 	}
+	return f.(*mqlFile), nil
+}
 
-	params := map[string]any{}
-	content := f.(*mqlFile).GetContent()
-	if content.Error == nil {
-		for k, v := range apache2.ParseEnvvars(content.Data) {
-			params[k] = v
-		}
+// params reads the envvars file and returns the parsed assignments.
+func (s *mqlApache2ConfEnvvars) params(file *mqlFile) (map[string]any, error) {
+	if file == nil {
+		return map[string]any{}, nil
 	}
-
-	res, err := CreateResource(s.MqlRuntime, "apache2.conf.envvars", map[string]*llx.RawData{
-		"__id":   llx.StringData("apache2.conf.envvars/" + path),
-		"file":   llx.ResourceData(f, "file"),
-		"params": llx.MapData(params, types.String),
-	})
-	if err != nil {
-		return nil, err
+	if exists := file.GetExists(); exists.Error != nil || !exists.Data {
+		return map[string]any{}, nil
 	}
-	return res.(*mqlApache2ConfEnvvars), nil
+	content := file.GetContent()
+	if content.Error != nil {
+		return nil, content.Error
+	}
+	out := map[string]any{}
+	for k, v := range apache2.ParseEnvvars(content.Data) {
+		out[k] = v
+	}
+	return out, nil
 }
 
 func (s *mqlApache2Conf) listenAddresses(params map[string]any) ([]any, error) {

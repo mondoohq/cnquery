@@ -872,10 +872,11 @@ apache2.conf {
 
 // Apache2 environment variables (e.g. Debian's /etc/apache2/envvars)
 private apache2.conf.envvars @defaults("file.path") {
+  init(path? string)
   // File defining the environment variables
-  file file
+  file() file
   // Parsed variable assignments (after shell expansion)
-  params map[string]string
+  params(file) map[string]string
 }
 
 // Apache2 loaded module

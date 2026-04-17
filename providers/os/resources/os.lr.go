@@ -529,7 +529,7 @@ func init() {
 			Create: createApache2Conf,
 		},
 		"apache2.conf.envvars": {
-			// to override args, implement: initApache2ConfEnvvars(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initApache2ConfEnvvars,
 			Create: createApache2ConfEnvvars,
 		},
 		"apache2.conf.module": {
@@ -17418,7 +17418,12 @@ func createApache2ConfEnvvars(runtime *plugin.Runtime, args map[string]*llx.RawD
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("apache2.conf.envvars", res.__id)
@@ -17440,11 +17445,30 @@ func (c *mqlApache2ConfEnvvars) MqlID() string {
 }
 
 func (c *mqlApache2ConfEnvvars) GetFile() *plugin.TValue[*mqlFile] {
-	return &c.File
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("apache2.conf.envvars", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
 }
 
 func (c *mqlApache2ConfEnvvars) GetParams() *plugin.TValue[map[string]any] {
-	return &c.Params
+	return plugin.GetOrCompute[map[string]any](&c.Params, func() (map[string]any, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.params(vargFile.Data)
+	})
 }
 
 // mqlApache2ConfModule for the apache2.conf.module resource
