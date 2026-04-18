@@ -205,6 +205,54 @@ func parseAlloyDBClusterName(name string) *alloyDBClusterParts {
 	}
 }
 
+func initGcpProjectAlloydbServiceCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 3 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if args == nil {
+			args = make(map[string]*llx.RawData)
+		}
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["location"] = llx.StringData(ids.region)
+			args["projectId"] = llx.StringData(ids.project)
+		} else {
+			return nil, nil, errors.New("no asset identifier found")
+		}
+	}
+
+	obj, err := CreateResource(runtime, "gcp.project.alloydbService", map[string]*llx.RawData{
+		"projectId": args["projectId"],
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	alloydbSvc := obj.(*mqlGcpProjectAlloydbService)
+	clusters := alloydbSvc.GetClusters()
+	if clusters.Error != nil {
+		return nil, nil, clusters.Error
+	}
+
+	nameVal := args["name"].Value.(string)
+	locationVal := ""
+	if args["location"] != nil {
+		locationVal = args["location"].Value.(string)
+	}
+	for _, c := range clusters.Data {
+		cluster := c.(*mqlGcpProjectAlloydbServiceCluster)
+		nameParts := strings.Split(cluster.Name.Data, "/")
+		clusterName := nameParts[len(nameParts)-1]
+
+		if clusterName == nameVal && (locationVal == "" || cluster.Location.Data == locationVal) {
+			return args, cluster, nil
+		}
+	}
+
+	return nil, nil, fmt.Errorf("AlloyDB cluster %q not found", nameVal)
+}
+
 func (g *mqlGcpProjectAlloydbServiceCluster) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error

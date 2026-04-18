@@ -58,6 +58,7 @@ const (
 	DiscoverLoggingBuckets          = "logging-buckets"
 	DiscoverApiKeys                 = "apikeys"
 	DiscoverIamServiceAccounts      = "iam-service-accounts"
+	DiscoverAlloyDBClusters         = "alloydb-clusters"
 )
 
 // All includes every discovery target: Auto covers all of them for GCP.
@@ -93,6 +94,7 @@ var Auto = []string{
 	DiscoverLoggingBuckets,
 	DiscoverApiKeys,
 	DiscoverIamServiceAccounts,
+	DiscoverAlloyDBClusters,
 }
 
 var AllAPIResources = []string{
@@ -122,6 +124,7 @@ var AllAPIResources = []string{
 	DiscoverLoggingBuckets,
 	DiscoverApiKeys,
 	DiscoverIamServiceAccounts,
+	DiscoverAlloyDBClusters,
 }
 
 // List of all CloudSQL types, this will be used during discovery
@@ -1069,6 +1072,40 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 					Kind:                  "gcp-object",
 					Family:                []string{"google"},
 					TechnologyUrlSegments: connection.ResourceTechnologyUrl("dataproc", gcpProject.Id.Data, location, "cluster", cluster.Name.Data),
+				},
+				Labels:      mapStrInterfaceToMapStrStr(cluster.GetLabels().Data),
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
+			})
+		}
+	}
+
+	if stringx.ContainsAnyOf(discoveryTargets, DiscoverAlloyDBClusters) {
+		alloydbService := gcpProject.GetAlloydb()
+		if alloydbService.Error != nil {
+			return nil, alloydbService.Error
+		}
+		clusters := alloydbService.Data.GetClusters()
+		if clusters.Error != nil {
+			return nil, clusters.Error
+		}
+		for i := range clusters.Data {
+			cluster := clusters.Data[i].(*mqlGcpProjectAlloydbServiceCluster)
+			nameParts := strings.Split(cluster.Name.Data, "/")
+			clusterName := nameParts[len(nameParts)-1]
+			location := cluster.Location.Data
+
+			assetList = append(assetList, &inventory.Asset{
+				PlatformIds: []string{
+					connection.NewResourcePlatformID("alloydb", gcpProject.Id.Data, location, "cluster", clusterName),
+				},
+				Name: clusterName,
+				Platform: &inventory.Platform{
+					Name:                  "gcp-alloydb-cluster",
+					Title:                 connection.GetTitleForPlatformName("gcp-alloydb-cluster"),
+					Runtime:               "gcp",
+					Kind:                  "gcp-object",
+					Family:                []string{"google"},
+					TechnologyUrlSegments: connection.ResourceTechnologyUrl("alloydb", gcpProject.Id.Data, location, "cluster", clusterName),
 				},
 				Labels:      mapStrInterfaceToMapStrStr(cluster.GetLabels().Data),
 				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},

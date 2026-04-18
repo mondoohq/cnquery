@@ -1084,7 +1084,7 @@ func init() {
 			Create: createGcpProjectAlloydbService,
 		},
 		"gcp.project.alloydbService.cluster": {
-			// to override args, implement: initGcpProjectAlloydbServiceCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectAlloydbServiceCluster,
 			Create: createGcpProjectAlloydbServiceCluster,
 		},
 		"gcp.project.alloydbService.instance": {

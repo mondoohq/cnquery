@@ -144,6 +144,8 @@ func GetTitleForPlatformName(name string) string {
 		return "GCP Cloud Function"
 	case "gcp-dataproc-cluster":
 		return "GCP Dataproc Cluster"
+	case "gcp-alloydb-cluster":
+		return "GCP AlloyDB Cluster"
 	case "gcp-logging-bucket":
 		return "GCP Logging Bucket"
 	case "gcp-apikey":
@@ -252,6 +254,13 @@ func ResourceTechnologyUrl(service, project, region, objectType, name string) []
 			return []string{"gcp", project, "dataproc", region, "cluster"}
 		default:
 			return []string{"gcp", project, "dataproc", region, "other"}
+		}
+	case "alloydb":
+		switch objectType {
+		case "cluster":
+			return []string{"gcp", project, "alloydb", region, "cluster"}
+		default:
+			return []string{"gcp", project, "alloydb", region, "other"}
 		}
 	case "logging":
 		switch objectType {

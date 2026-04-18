@@ -68,6 +68,7 @@ Examples with the GCP project configured:
 				resources.DiscoverLoggingBuckets,
 				resources.DiscoverApiKeys,
 				resources.DiscoverIamServiceAccounts,
+				resources.DiscoverAlloyDBClusters,
 			},
 			Flags: []plugin.Flag{
 				{
