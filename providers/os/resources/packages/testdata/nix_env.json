@@ -1,0 +1,14 @@
+{
+  "nixpkgs.curl": {
+    "pname": "curl",
+    "version": "8.7.1"
+  },
+  "nixpkgs.git": {
+    "pname": "git",
+    "version": "2.44.0"
+  },
+  "nixpkgs.openssl": {
+    "pname": "openssl",
+    "version": "3.3.0"
+  }
+}

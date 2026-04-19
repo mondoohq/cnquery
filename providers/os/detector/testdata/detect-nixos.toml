@@ -1,0 +1,35 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "6.6.63"
+
+[files."/etc/os-release"]
+content = """
+BUG_REPORT_URL="https://github.com/NixOS/nixpkgs/issues"
+BUILD_ID="24.11.20241215.5d67ea6"
+CPE_NAME="cpe:/o:nixos:nixos:24.11"
+DOCUMENTATION_URL="https://nixos.org/learn.html"
+HOME_URL="https://nixos.org/"
+ID=nixos
+ID_LIKE=""
+IMAGE_ID=""
+IMAGE_VERSION=""
+LOGO="nix-snowflake"
+NAME=NixOS
+PRETTY_NAME="NixOS 24.11 (Vicuna)"
+SUPPORT_END="2025-06-30"
+SUPPORT_URL="https://nixos.org/community.html"
+VARIANT=""
+VARIANT_ID=""
+VERSION="24.11 (Vicuna)"
+VERSION_CODENAME=vicuna
+VERSION_ID="24.11"
+"""
+
+[files."/nix/store"]
+[files."/nix/store".stat]
+isdir = true

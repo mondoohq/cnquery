@@ -712,6 +712,31 @@ var suseMicroOs = &PlatformResolver{
 	},
 }
 
+var nixos = &PlatformResolver{
+	Name:     "nixos",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		// NixOS sets ID=nixos in /etc/os-release
+		if pf.Name == "nixos" {
+			return true, nil
+		}
+
+		// Nix container images (e.g., nixos/nix) may lack /etc/os-release entirely.
+		// Detect them by the presence of /nix/store.
+		nixStoreExists, err := afero.Exists(conn.FileSystem(), "/nix/store")
+		if err != nil {
+			return false, nil
+		}
+		if nixStoreExists {
+			pf.Name = "nixos"
+			pf.Title = "NixOS"
+			return true, nil
+		}
+
+		return false, nil
+	},
+}
+
 var gentoo = &PlatformResolver{
 	Name:     "gentoo",
 	IsFamily: false,
@@ -1235,7 +1260,7 @@ var eulerFamily = &PlatformResolver{
 var linuxFamily = &PlatformResolver{
 	Name:     inventory.FAMILY_LINUX,
 	IsFamily: true,
-	Children: []*PlatformResolver{archFamily, redhatFamily, debianFamily, suseFamily, eulerFamily, bottlerocket, amazonlinux, alpine, wolfi, gentoo, busybox, photon, windriver, lede, openwrt, plcnext, mageia, azurelinux, flatcar, defaultLinux},
+	Children: []*PlatformResolver{archFamily, redhatFamily, debianFamily, suseFamily, eulerFamily, bottlerocket, amazonlinux, alpine, wolfi, nixos, gentoo, busybox, photon, windriver, lede, openwrt, plcnext, mageia, azurelinux, flatcar, defaultLinux},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		detected := false
 		osrd := NewOSReleaseDetector(conn)
@@ -1323,6 +1348,13 @@ var linuxFamily = &PlatformResolver{
 		}
 
 		if err == nil {
+			detected = true
+		}
+
+		// Nix container images (e.g., nixos/nix) may lack /etc/os-release entirely.
+		// If /nix/store exists, we know it's a Linux system.
+		nixStoreExists, nixErr := afero.Exists(conn.FileSystem(), "/nix/store")
+		if nixErr == nil && nixStoreExists {
 			detected = true
 		}
 

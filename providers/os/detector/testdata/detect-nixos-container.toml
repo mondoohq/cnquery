@@ -1,0 +1,5 @@
+# nixos/nix container image: no /etc/os-release, detected via /nix/store
+
+[files."/nix/store"]
+[files."/nix/store".stat]
+isdir = true

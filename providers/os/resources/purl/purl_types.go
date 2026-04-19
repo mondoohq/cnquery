@@ -28,6 +28,7 @@ var (
 	TypeDebian  = Type(packageurl.TypeDebian)
 	TypeAlpm    = Type(packageurl.TypeAlpm)
 	TypeEbuild  = Type(packageurl.TypeEbuild)
+	TypeNix     = Type(packageurl.TypeNix)
 	TypeRPM     = Type(packageurl.TypeRPM)
 
 	KnownTypes = map[Type]struct{}{
@@ -40,6 +41,7 @@ var (
 		TypeDebian:      {},
 		TypeAlpm:        {},
 		TypeEbuild:      {},
+		TypeNix:         {},
 		TypeRPM:         {},
 	}
 )

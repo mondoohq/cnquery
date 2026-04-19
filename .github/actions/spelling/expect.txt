@@ -13,8 +13,8 @@ afero
 AJD
 Akismet
 alamofire
-alpm
 alloydb
+alpm
 alpn
 antigravity
 antispam
@@ -126,13 +126,13 @@ DBFS
 DBRS
 ddl
 ddos
-dhcpcd
 dedup
 dedupratio
 defc
 deliverychannel
 depsdev
 dfw
+dhcpcd
 directoryservice
 diskread
 diskwrite
@@ -352,6 +352,7 @@ NFSv
 nft
 NINEl
 nio
+nixpkgs
 nmap
 noc
 nocerts
@@ -393,8 +394,8 @@ OSGi
 ospf
 OTP
 ovmf
-owpjy
 OVS
+owpjy
 pacman
 pagerduty
 panos

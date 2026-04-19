@@ -153,6 +153,13 @@ func ResolveSystemPkgManagers(conn shared.Connection) ([]OperatingSystemPkgManag
 		}
 	}
 
+	// Nix can be installed on any Linux or macOS system.
+	if asset.Platform.IsFamily("linux") || asset.Platform.Name == "macos" {
+		if _, err := conn.FileSystem().Stat("/nix/store"); err == nil {
+			pms = append(pms, &NixPkgManager{conn: conn, platform: asset.Platform})
+		}
+	}
+
 	if len(pms) == 0 {
 		return nil, errors.New("could not detect suitable package manager for platform: " + asset.Platform.Name)
 	}

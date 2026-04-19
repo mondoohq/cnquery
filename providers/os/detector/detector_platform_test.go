@@ -667,6 +667,26 @@ func TestOracleLinux8Detector(t *testing.T) {
 	assert.Equal(t, []string{"redhat", "linux", "unix", "os"}, di.Family)
 }
 
+func TestNixOSDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-nixos.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "nixos", di.Name, "os name should be identified")
+	assert.Equal(t, "NixOS 24.11 (Vicuna)", di.Title, "os title should be identified")
+	assert.Equal(t, "24.11", di.Version, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
+}
+
+func TestNixOSContainerDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-nixos-container.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "nixos", di.Name, "os name should be identified")
+	assert.Equal(t, "NixOS", di.Title, "os title should be identified")
+	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
+}
+
 func TestGentooLinuxDetector(t *testing.T) {
 	di, err := detectPlatformFromMock("./testdata/detect-gentoo.toml")
 	assert.Nil(t, err, "was able to create the provider")

@@ -512,6 +512,8 @@ func TestDetectDeviceType_LinuxNoSignals_DefaultServer(t *testing.T) {
 		{"opensuse leap 15", "opensuse-leap", "openSUSE Leap 15.6", []string{"suse", "linux", "unix", "os"}},
 		// detect-opensuse-tumbleweed.toml
 		{"opensuse tumbleweed", "opensuse-tumbleweed", "openSUSE Tumbleweed", []string{"suse", "linux", "unix", "os"}},
+		// detect-nixos.toml
+		{"nixos", "nixos", "NixOS 24.11 (Vicuna)", []string{"linux", "unix", "os"}},
 		// detect-gentoo.toml
 		{"gentoo", "gentoo", "Gentoo Linux", []string{"linux", "unix", "os"}},
 		// detect-kalirolling.toml
