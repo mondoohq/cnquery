@@ -1,0 +1,68 @@
+{
+  "Devices": [
+    {
+      "DeviceId": "4a4907dbb1b96c6a1177dfd1b95eb41c781d1265",
+      "Guid": [
+        "1199a818-4c52-5137-b536-d59e2e2cada9"
+      ],
+      "Flags": [
+        "registered"
+      ]
+    },
+    {
+      "Name": "Intel Management Engine",
+      "DeviceId": "5fed1486be004d67ea79838d2e83aaa11bb72645",
+      "Vendor": "Intel Corporation",
+      "VendorId": "MEI:0x8086",
+      "Version": "14.1.53.1649",
+      "VersionFormat": "intel-me",
+      "Guid": [
+        "2800f812-b7b4-2d4b-aca8-46e0ff65814c",
+        "a65d125e-0c76-5876-bad3-6956a2f25e5e"
+      ],
+      "Summary": "Hardware and firmware technology for remote out-of-band management",
+      "Plugin": "mei",
+      "Protocol": "org.uefi.capsule",
+      "Flags": [
+        "internal",
+        "registered",
+        "can-verify"
+      ]
+    },
+    {
+      "Name": "UEFI Device Firmware",
+      "DeviceId": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0",
+      "Vendor": "Dell Inc.",
+      "VendorId": "PCI:0x1028",
+      "Version": "1.2.3",
+      "VersionFormat": "triplet",
+      "Guid": [
+        "8ceeeffd-51b6-580c-9b75-69143227aff8"
+      ],
+      "Summary": "UEFI firmware for system devices",
+      "Plugin": "uefi-capsule",
+      "Protocol": "org.uefi.capsule",
+      "Flags": [
+        "internal",
+        "updatable",
+        "registered"
+      ]
+    },
+    {
+      "Name": "Samsung SSD 980 PRO",
+      "DeviceId": "b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1",
+      "Vendor": "Samsung",
+      "Version": "5B2QGXA7",
+      "VersionFormat": "plain",
+      "Guid": [
+        "aaaa1111-2222-3333-4444-555566667777"
+      ],
+      "Summary": "NVMe solid state drive",
+      "Plugin": "nvme",
+      "Flags": [
+        "internal",
+        "registered"
+      ]
+    }
+  ]
+}

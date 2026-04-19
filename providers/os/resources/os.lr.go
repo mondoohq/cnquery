@@ -35,6 +35,8 @@ const (
 	ResourceMachineChassis               string = "machine.chassis"
 	ResourceMachineCpu                   string = "machine.cpu"
 	ResourceMachineSecureboot            string = "machine.secureboot"
+	ResourceFirmware                     string = "firmware"
+	ResourceFirmwareDevice               string = "firmware.device"
 	ResourceOs                           string = "os"
 	ResourceOsDate                       string = "os.date"
 	ResourceOsUpdate                     string = "os.update"
@@ -416,6 +418,14 @@ func init() {
 		"machine.secureboot": {
 			// to override args, implement: initMachineSecureboot(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMachineSecureboot,
+		},
+		"firmware": {
+			// to override args, implement: initFirmware(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFirmware,
+		},
+		"firmware.device": {
+			// to override args, implement: initFirmwareDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFirmwareDevice,
 		},
 		"os": {
 			// to override args, implement: initOs(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1927,6 +1937,48 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"machine.secureboot.setupMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMachineSecureboot).GetSetupMode()).ToDataRes(types.Bool)
+	},
+	"firmware.devices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirmware).GetDevices()).ToDataRes(types.Array(types.Resource("firmware.device")))
+	},
+	"firmware.device.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirmwareDevice).GetName()).ToDataRes(types.String)
+	},
+	"firmware.device.deviceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirmwareDevice).GetDeviceId()).ToDataRes(types.String)
+	},
+	"firmware.device.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirmwareDevice).GetVersion()).ToDataRes(types.String)
+	},
+	"firmware.device.vendor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirmwareDevice).GetVendor()).ToDataRes(types.String)
+	},
+	"firmware.device.vendorId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirmwareDevice).GetVendorId()).ToDataRes(types.String)
+	},
+	"firmware.device.summary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirmwareDevice).GetSummary()).ToDataRes(types.String)
+	},
+	"firmware.device.guid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirmwareDevice).GetGuid()).ToDataRes(types.Array(types.String))
+	},
+	"firmware.device.plugin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirmwareDevice).GetPlugin()).ToDataRes(types.String)
+	},
+	"firmware.device.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirmwareDevice).GetProtocol()).ToDataRes(types.String)
+	},
+	"firmware.device.flags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirmwareDevice).GetFlags()).ToDataRes(types.Array(types.String))
+	},
+	"firmware.device.versionFormat": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirmwareDevice).GetVersionFormat()).ToDataRes(types.String)
+	},
+	"firmware.device.updatable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirmwareDevice).GetUpdatable()).ToDataRes(types.Bool)
+	},
+	"firmware.device.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFirmwareDevice).GetPurl()).ToDataRes(types.String)
 	},
 	"os.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOs).GetName()).ToDataRes(types.String)
@@ -7146,6 +7198,70 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"machine.secureboot.setupMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMachineSecureboot).SetupMode, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"firmware.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirmware).__id, ok = v.Value.(string)
+		return
+	},
+	"firmware.devices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirmware).Devices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"firmware.device.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirmwareDevice).__id, ok = v.Value.(string)
+		return
+	},
+	"firmware.device.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirmwareDevice).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firmware.device.deviceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirmwareDevice).DeviceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firmware.device.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirmwareDevice).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firmware.device.vendor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirmwareDevice).Vendor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firmware.device.vendorId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirmwareDevice).VendorId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firmware.device.summary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirmwareDevice).Summary, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firmware.device.guid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirmwareDevice).Guid, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"firmware.device.plugin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirmwareDevice).Plugin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firmware.device.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirmwareDevice).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firmware.device.flags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirmwareDevice).Flags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"firmware.device.versionFormat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirmwareDevice).VersionFormat, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"firmware.device.updatable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirmwareDevice).Updatable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"firmware.device.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFirmwareDevice).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"os.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16088,6 +16204,176 @@ func (c *mqlMachineSecureboot) GetSetupMode() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.SetupMode, func() (bool, error) {
 		return c.setupMode()
 	})
+}
+
+// mqlFirmware for the firmware resource
+type mqlFirmware struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlFirmwareInternal it will be used here
+	Devices plugin.TValue[[]any]
+}
+
+// createFirmware creates a new instance of this resource
+func createFirmware(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFirmware{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("firmware", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFirmware) MqlName() string {
+	return "firmware"
+}
+
+func (c *mqlFirmware) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFirmware) GetDevices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Devices, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("firmware", c.__id, "devices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.devices()
+	})
+}
+
+// mqlFirmwareDevice for the firmware.device resource
+type mqlFirmwareDevice struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlFirmwareDeviceInternal it will be used here
+	Name          plugin.TValue[string]
+	DeviceId      plugin.TValue[string]
+	Version       plugin.TValue[string]
+	Vendor        plugin.TValue[string]
+	VendorId      plugin.TValue[string]
+	Summary       plugin.TValue[string]
+	Guid          plugin.TValue[[]any]
+	Plugin        plugin.TValue[string]
+	Protocol      plugin.TValue[string]
+	Flags         plugin.TValue[[]any]
+	VersionFormat plugin.TValue[string]
+	Updatable     plugin.TValue[bool]
+	Purl          plugin.TValue[string]
+}
+
+// createFirmwareDevice creates a new instance of this resource
+func createFirmwareDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFirmwareDevice{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("firmware.device", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFirmwareDevice) MqlName() string {
+	return "firmware.device"
+}
+
+func (c *mqlFirmwareDevice) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFirmwareDevice) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlFirmwareDevice) GetDeviceId() *plugin.TValue[string] {
+	return &c.DeviceId
+}
+
+func (c *mqlFirmwareDevice) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlFirmwareDevice) GetVendor() *plugin.TValue[string] {
+	return &c.Vendor
+}
+
+func (c *mqlFirmwareDevice) GetVendorId() *plugin.TValue[string] {
+	return &c.VendorId
+}
+
+func (c *mqlFirmwareDevice) GetSummary() *plugin.TValue[string] {
+	return &c.Summary
+}
+
+func (c *mqlFirmwareDevice) GetGuid() *plugin.TValue[[]any] {
+	return &c.Guid
+}
+
+func (c *mqlFirmwareDevice) GetPlugin() *plugin.TValue[string] {
+	return &c.Plugin
+}
+
+func (c *mqlFirmwareDevice) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlFirmwareDevice) GetFlags() *plugin.TValue[[]any] {
+	return &c.Flags
+}
+
+func (c *mqlFirmwareDevice) GetVersionFormat() *plugin.TValue[string] {
+	return &c.VersionFormat
+}
+
+func (c *mqlFirmwareDevice) GetUpdatable() *plugin.TValue[bool] {
+	return &c.Updatable
+}
+
+func (c *mqlFirmwareDevice) GetPurl() *plugin.TValue[string] {
+	return &c.Purl
 }
 
 // mqlOs for the os resource

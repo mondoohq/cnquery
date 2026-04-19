@@ -158,6 +158,8 @@ frontdoor
 frontmatter
 ftps
 fumadocs
+fwupd
+fwupdmgr
 functionapp
 gcfs
 gcs
