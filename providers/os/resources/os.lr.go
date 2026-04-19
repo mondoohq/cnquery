@@ -217,6 +217,8 @@ const (
 	ResourcePrologPackage                string = "prolog.package"
 	ResourceCondaPackages                string = "conda.packages"
 	ResourceCondaPackage                 string = "conda.package"
+	ResourceJuliaPackages                string = "julia.packages"
+	ResourceJuliaPackage                 string = "julia.package"
 	ResourceMacos                        string = "macos"
 	ResourceMacosHardware                string = "macos.hardware"
 	ResourceMacosAlf                     string = "macos.alf"
@@ -1146,6 +1148,14 @@ func init() {
 		"conda.package": {
 			// to override args, implement: initCondaPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createCondaPackage,
+		},
+		"julia.packages": {
+			Init:   initJuliaPackages,
+			Create: createJuliaPackages,
+		},
+		"julia.package": {
+			// to override args, implement: initJuliaPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createJuliaPackage,
 		},
 		"macos": {
 			// to override args, implement: initMacos(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4604,6 +4614,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"conda.package.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCondaPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"julia.packages.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJuliaPackages).GetPath()).ToDataRes(types.String)
+	},
+	"julia.packages.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJuliaPackages).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"julia.packages.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJuliaPackages).GetList()).ToDataRes(types.Array(types.Resource("julia.package")))
+	},
+	"julia.package.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJuliaPackage).GetId()).ToDataRes(types.String)
+	},
+	"julia.package.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJuliaPackage).GetName()).ToDataRes(types.String)
+	},
+	"julia.package.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJuliaPackage).GetVersion()).ToDataRes(types.String)
+	},
+	"julia.package.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJuliaPackage).GetPurl()).ToDataRes(types.String)
+	},
+	"julia.package.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJuliaPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
 	},
 	"macos.computerName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacos).GetComputerName()).ToDataRes(types.String)
@@ -11464,6 +11498,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"conda.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCondaPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"julia.packages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJuliaPackages).__id, ok = v.Value.(string)
+		return
+	},
+	"julia.packages.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJuliaPackages).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"julia.packages.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJuliaPackages).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"julia.packages.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJuliaPackages).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"julia.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJuliaPackage).__id, ok = v.Value.(string)
+		return
+	},
+	"julia.package.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJuliaPackage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"julia.package.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJuliaPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"julia.package.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJuliaPackage).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"julia.package.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJuliaPackage).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"julia.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJuliaPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"macos.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -31568,6 +31642,176 @@ func (c *mqlCondaPackage) GetFiles() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("conda.package", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+// mqlJuliaPackages for the julia.packages resource
+type mqlJuliaPackages struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlJuliaPackagesInternal
+	Path  plugin.TValue[string]
+	Files plugin.TValue[[]any]
+	List  plugin.TValue[[]any]
+}
+
+// createJuliaPackages creates a new instance of this resource
+func createJuliaPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJuliaPackages{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("julia.packages", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJuliaPackages) MqlName() string {
+	return "julia.packages"
+}
+
+func (c *mqlJuliaPackages) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJuliaPackages) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlJuliaPackages) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("julia.packages", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+func (c *mqlJuliaPackages) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("julia.packages", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlJuliaPackage for the julia.package resource
+type mqlJuliaPackage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlJuliaPackageInternal it will be used here
+	Id      plugin.TValue[string]
+	Name    plugin.TValue[string]
+	Version plugin.TValue[string]
+	Purl    plugin.TValue[string]
+	Files   plugin.TValue[[]any]
+}
+
+// createJuliaPackage creates a new instance of this resource
+func createJuliaPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJuliaPackage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("julia.package", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJuliaPackage) MqlName() string {
+	return "julia.package"
+}
+
+func (c *mqlJuliaPackage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJuliaPackage) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlJuliaPackage) GetName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Name, func() (string, error) {
+		return c.name()
+	})
+}
+
+func (c *mqlJuliaPackage) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlJuliaPackage) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
+	})
+}
+
+func (c *mqlJuliaPackage) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("julia.package", c.__id, "files")
 			if err != nil {
 				return nil, err
 			}

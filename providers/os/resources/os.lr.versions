@@ -773,6 +773,16 @@ journald.config.section.param.name 11.4.69
 journald.config.section.param.value 11.4.69
 journald.config.section.params 11.4.69
 journald.config.sections 11.4.51
+julia.package 13.13.1
+julia.package.files 13.13.1
+julia.package.id 13.13.1
+julia.package.name 13.13.1
+julia.package.purl 13.13.1
+julia.package.version 13.13.1
+julia.packages 13.13.1
+julia.packages.files 13.13.1
+julia.packages.list 13.13.1
+julia.packages.path 13.13.1
 junie 13.13.1
 junie.configPath 13.13.1
 junie.skill 13.13.1

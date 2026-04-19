@@ -67,6 +67,7 @@ type BomFields struct {
 	ElixirPackages        []BomPackage      `json:"elixir.packages.list,omitempty"`
 	ErlangPackages        []BomPackage      `json:"erlang.packages.list,omitempty"`
 	PrologPackages        []BomPackage      `json:"prolog.packages.list,omitempty"`
+	JuliaPackages         []BomPackage      `json:"julia.packages.list,omitempty"`
 	CondaPackages         []BomPackage      `json:"conda.packages.list,omitempty"`
 	KernelInstalled       []KernelInstalled `json:"kernel.installed,omitempty"`
 }

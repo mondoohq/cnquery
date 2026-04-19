@@ -2850,6 +2850,33 @@ private conda.package @defaults("name version purl") {
   files() []pkgFileInfo
 }
 
+// Julia packages (Manifest.toml)
+julia.packages {
+  []julia.package
+
+  init(path? string)
+
+  // Path to search for Manifest.toml
+  path string
+
+  // Files used to determine the packages
+  files() []pkgFileInfo
+}
+
+// Julia package dependency
+private julia.package @defaults("name version purl") {
+  // ID is the julia.package unique identifier
+  id string
+  // Package name
+  name() string
+  // Package version
+  version() string
+  // Package URL
+  purl() string
+  // Package files
+  files() []pkgFileInfo
+}
+
 // macOS specific resources
 macos {
   // macOS computer name

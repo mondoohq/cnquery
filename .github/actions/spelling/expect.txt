@@ -220,6 +220,7 @@ jkl
 jpi
 jre
 jsonbody
+julia
 junie
 junos
 jupyter
@@ -457,6 +458,7 @@ timestream
 tokenauth
 tokenid
 tokio
+toml
 toplevel
 toport
 tpl
