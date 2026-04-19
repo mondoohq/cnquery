@@ -1,0 +1,7 @@
+active-repositories: hackage.haskell.org:merge
+constraints: any.aeson ==2.2.1.0,
+             any.base ==4.19.0.0,
+             any.bytestring ==0.12.1.0,
+             any.text ==2.1.1,
+             aeson +ordered-keymap,
+             any.containers ==0.6.8

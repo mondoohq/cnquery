@@ -63,6 +63,7 @@ type BomFields struct {
 	WordpressPackages     []BomPackage      `json:"wordpress.packages.list,omitempty"`
 	RubyPackages          []BomPackage      `json:"ruby.packages.list,omitempty"`
 	DartPackages          []BomPackage      `json:"dart.packages.list,omitempty"`
+	HaskellPackages       []BomPackage      `json:"haskell.packages.list,omitempty"`
 	KernelInstalled       []KernelInstalled `json:"kernel.installed,omitempty"`
 }
 

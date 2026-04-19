@@ -6,6 +6,7 @@ ACCOUNTADMIN
 activedirectory
 ACTIVEMQ
 adr
+aeson
 afero
 Akismet
 alamofire
@@ -207,6 +208,7 @@ istio
 issuewild
 jamf
 jira
+jkl
 jsonbody
 JFi
 jpi
@@ -216,6 +218,7 @@ junos
 jupyter
 JVM
 kerberoastable
+keymap
 keyspace
 kilocode
 kiro
@@ -261,6 +264,7 @@ minfree
 MINIMALUSER
 Mirrorings
 mkey
+mno
 Mnfz
 mlag
 mls

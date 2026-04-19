@@ -207,6 +207,8 @@ const (
 	ResourceRubyPackage                  string = "ruby.package"
 	ResourceDartPackages                 string = "dart.packages"
 	ResourceDartPackage                  string = "dart.package"
+	ResourceHaskellPackages              string = "haskell.packages"
+	ResourceHaskellPackage               string = "haskell.package"
 	ResourceMacos                        string = "macos"
 	ResourceMacosHardware                string = "macos.hardware"
 	ResourceMacosAlf                     string = "macos.alf"
@@ -1096,6 +1098,14 @@ func init() {
 		"dart.package": {
 			// to override args, implement: initDartPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDartPackage,
+		},
+		"haskell.packages": {
+			Init:   initHaskellPackages,
+			Create: createHaskellPackages,
+		},
+		"haskell.package": {
+			// to override args, implement: initHaskellPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHaskellPackage,
 		},
 		"macos": {
 			// to override args, implement: initMacos(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4434,6 +4444,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"dart.package.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDartPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"haskell.packages.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaskellPackages).GetPath()).ToDataRes(types.String)
+	},
+	"haskell.packages.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaskellPackages).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"haskell.packages.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaskellPackages).GetList()).ToDataRes(types.Array(types.Resource("haskell.package")))
+	},
+	"haskell.package.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaskellPackage).GetId()).ToDataRes(types.String)
+	},
+	"haskell.package.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaskellPackage).GetName()).ToDataRes(types.String)
+	},
+	"haskell.package.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaskellPackage).GetVersion()).ToDataRes(types.String)
+	},
+	"haskell.package.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaskellPackage).GetPurl()).ToDataRes(types.String)
+	},
+	"haskell.package.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHaskellPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
 	},
 	"macos.computerName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacos).GetComputerName()).ToDataRes(types.String)
@@ -11094,6 +11128,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"dart.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDartPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haskell.packages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaskellPackages).__id, ok = v.Value.(string)
+		return
+	},
+	"haskell.packages.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaskellPackages).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haskell.packages.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaskellPackages).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haskell.packages.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaskellPackages).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"haskell.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaskellPackage).__id, ok = v.Value.(string)
+		return
+	},
+	"haskell.package.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaskellPackage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haskell.package.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaskellPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haskell.package.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaskellPackage).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haskell.package.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaskellPackage).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"haskell.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHaskellPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"macos.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -30348,6 +30422,176 @@ func (c *mqlDartPackage) GetFiles() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("dart.package", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+// mqlHaskellPackages for the haskell.packages resource
+type mqlHaskellPackages struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlHaskellPackagesInternal
+	Path  plugin.TValue[string]
+	Files plugin.TValue[[]any]
+	List  plugin.TValue[[]any]
+}
+
+// createHaskellPackages creates a new instance of this resource
+func createHaskellPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHaskellPackages{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("haskell.packages", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHaskellPackages) MqlName() string {
+	return "haskell.packages"
+}
+
+func (c *mqlHaskellPackages) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHaskellPackages) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlHaskellPackages) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("haskell.packages", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+func (c *mqlHaskellPackages) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("haskell.packages", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlHaskellPackage for the haskell.package resource
+type mqlHaskellPackage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlHaskellPackageInternal it will be used here
+	Id      plugin.TValue[string]
+	Name    plugin.TValue[string]
+	Version plugin.TValue[string]
+	Purl    plugin.TValue[string]
+	Files   plugin.TValue[[]any]
+}
+
+// createHaskellPackage creates a new instance of this resource
+func createHaskellPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHaskellPackage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("haskell.package", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHaskellPackage) MqlName() string {
+	return "haskell.package"
+}
+
+func (c *mqlHaskellPackage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHaskellPackage) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlHaskellPackage) GetName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Name, func() (string, error) {
+		return c.name()
+	})
+}
+
+func (c *mqlHaskellPackage) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlHaskellPackage) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
+	})
+}
+
+func (c *mqlHaskellPackage) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("haskell.package", c.__id, "files")
 			if err != nil {
 				return nil, err
 			}

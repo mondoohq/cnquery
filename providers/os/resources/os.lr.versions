@@ -635,6 +635,16 @@ grub.config.entry.title 13.2.7
 grub.config.grubPath 13.2.7
 grub.config.params 13.2.7
 grub.config.passwordProtected 13.2.7
+haskell.package 13.13.1
+haskell.package.files 13.13.1
+haskell.package.id 13.13.1
+haskell.package.name 13.13.1
+haskell.package.purl 13.13.1
+haskell.package.version 13.13.1
+haskell.packages 13.13.1
+haskell.packages.files 13.13.1
+haskell.packages.list 13.13.1
+haskell.packages.path 13.13.1
 homebrew.package 13.10.1
 homebrew.package.appName 13.10.1
 homebrew.package.autoUpdates 13.10.1

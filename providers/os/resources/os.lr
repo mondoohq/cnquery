@@ -2715,6 +2715,33 @@ dart.package @defaults("name version purl") {
   files() []pkgFileInfo
 }
 
+// Haskell packages (Stack and Cabal)
+haskell.packages {
+  []haskell.package
+
+  init(path? string)
+
+  // Path to search for stack.yaml.lock or cabal.project.freeze
+  path string
+
+  // Files used to determine the packages
+  files() []pkgFileInfo
+}
+
+// Haskell package dependency
+haskell.package @defaults("name version purl") {
+  // ID is the haskell.package unique identifier
+  id string
+  // Package name
+  name() string
+  // Package version
+  version() string
+  // Package URL
+  purl() string
+  // Package files
+  files() []pkgFileInfo
+}
+
 // macOS specific resources
 macos {
   // macOS computer name
