@@ -444,6 +444,7 @@ TValue
 Twt
 udid
 uefi
+uek
 UNAVAIL
 unifi
 Uocm
