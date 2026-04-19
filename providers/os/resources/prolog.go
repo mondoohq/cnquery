@@ -59,7 +59,10 @@ func (r *mqlPrologPackages) gatherData() error {
 		path = "/usr/lib/swi-prolog/pack"
 	}
 
-	packs, _ := packpl.ScanPackDir(afs, path)
+	packs, err := packpl.ScanPackDir(afs, path)
+	if err != nil {
+		return err
+	}
 	pkgs := packpl.ToPackages(packs)
 	slices.SortFunc(pkgs, languages.SortFn)
 
