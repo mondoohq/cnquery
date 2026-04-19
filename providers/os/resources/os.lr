@@ -4178,3 +4178,227 @@ zed @defaults("configPath") @maturity("preview") {
   // Extension names installed
   extensions() []string
 }
+
+// Roo Code instance configuration
+// URL: https://roocode.com/
+roo @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Roo Code configuration directory
+  configPath string
+  // Installed skills
+  skills() []roo.skill
+}
+
+// Roo Code skill
+private roo.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// Cline instance configuration
+// URL: https://cline.bot/
+cline @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Cline configuration directory
+  configPath string
+  // Installed skills
+  skills() []cline.skill
+}
+
+// Cline skill
+private cline.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// Kiro CLI instance configuration
+// URL: https://kiro.dev/
+kiro @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Kiro configuration directory
+  configPath string
+  // Installed skills
+  skills() []kiro.skill
+}
+
+// Kiro skill
+private kiro.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// Continue instance configuration
+// URL: https://continue.dev/
+continuedev @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Continue configuration directory
+  configPath string
+  // Installed skills
+  skills() []continuedev.skill
+}
+
+// Continue skill
+private continuedev.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// Trae instance configuration
+// URL: https://trae.ai/
+trae @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Trae configuration directory
+  configPath string
+  // Installed skills
+  skills() []trae.skill
+}
+
+// Trae skill
+private trae.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// OpenCode instance configuration
+// URL: https://opencode.ai/
+opencode @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the OpenCode configuration directory
+  configPath string
+  // Installed skills
+  skills() []opencode.skill
+}
+
+// OpenCode skill
+private opencode.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// Pi instance configuration
+// URL: https://pi.dev/
+pi @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Pi configuration directory
+  configPath string
+  // Installed skills
+  skills() []pi.skill
+}
+
+// Pi skill
+private pi.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// Mistral Vibe instance configuration
+// URL: https://docs.mistral.ai/tools/vibe/
+mistral.vibe @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Mistral Vibe configuration directory
+  configPath string
+  // Installed skills
+  skills() []mistral.vibe.skill
+}
+
+// Mistral Vibe skill
+private mistral.vibe.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
