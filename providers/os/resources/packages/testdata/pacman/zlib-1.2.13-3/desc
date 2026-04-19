@@ -1,0 +1,35 @@
+%NAME%
+zlib
+
+%VERSION%
+1:1.2.13-3
+
+%BASE%
+zlib
+
+%DESC%
+Compression library implementing the deflate compression method found in gzip and PKZIP
+
+%URL%
+https://www.zlib.net/
+
+%ARCH%
+x86_64
+
+%BUILDDATE%
+1700000000
+
+%INSTALLDATE%
+1700100000
+
+%PACKAGER%
+Test Packager <packager@example.com>
+
+%SIZE%
+360448
+
+%DEPENDS%
+glibc
+
+%PROVIDES%
+libz.so=1-64

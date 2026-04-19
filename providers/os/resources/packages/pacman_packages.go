@@ -7,13 +7,16 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"path"
 	"regexp"
-
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers/os/resources/purl"
+	"strings"
 
 	"github.com/cockroachdb/errors"
+	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers/os/resources/purl"
 )
 
 const (
@@ -57,12 +60,110 @@ func (ppm *PacmanPkgManager) Format() string {
 }
 
 func (ppm *PacmanPkgManager) List() ([]Package, error) {
-	cmd, err := ppm.conn.RunCommand("pacman -Q")
-	if err != nil {
-		return nil, fmt.Errorf("could not read pacman package list")
+	// Primary: pacman -Q CLI
+	if ppm.conn.Capabilities().Has(shared.Capability_RunCommand) {
+		cmd, err := ppm.conn.RunCommand("pacman -Q")
+		if err == nil && cmd.ExitStatus == 0 {
+			return ParsePacmanPackages(ppm.platform, cmd.Stdout), nil
+		}
+		log.Debug().Err(err).Msg("mql[pacman]> could not run pacman -Q, falling back to filesystem")
 	}
 
-	return ParsePacmanPackages(ppm.platform, cmd.Stdout), nil
+	// Fallback: parse /var/lib/pacman/local/*/desc files
+	return ppm.listFromFS()
+}
+
+func (ppm *PacmanPkgManager) listFromFS() ([]Package, error) {
+	afs := &afero.Afero{Fs: ppm.conn.FileSystem()}
+	return ParsePacmanDB(ppm.platform, afs, "/var/lib/pacman/local")
+}
+
+// ParsePacmanDB parses the pacman local database directory structure.
+// Each subdirectory contains a `desc` file with package metadata.
+func ParsePacmanDB(pf *inventory.Platform, afs *afero.Afero, dbPath string) ([]Package, error) {
+	entries, err := afs.ReadDir(dbPath)
+	if err != nil {
+		return nil, fmt.Errorf("could not read pacman database at %s: %w", dbPath, err)
+	}
+
+	var pkgs []Package
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+
+		// path.Join (not filepath.Join) is intentional — these are always
+		// Linux filesystem paths, even when mql runs on a different OS.
+		descPath := path.Join(dbPath, entry.Name(), "desc")
+		pkg, err := parsePacmanDesc(pf, afs, descPath)
+		if err != nil {
+			log.Debug().Err(err).Str("path", descPath).Msg("mql[pacman]> could not parse desc")
+			continue
+		}
+		if pkg != nil {
+			pkgs = append(pkgs, *pkg)
+		}
+	}
+
+	return pkgs, nil
+}
+
+// parsePacmanDesc parses a single pacman desc file.
+// The format uses %KEY% sections followed by values on subsequent lines.
+func parsePacmanDesc(pf *inventory.Platform, afs *afero.Afero, descPath string) (*Package, error) {
+	f, err := afs.Open(descPath)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	fields := parsePacmanDescSections(f)
+
+	name := fields["%NAME%"]
+	version := fields["%VERSION%"]
+	if name == "" {
+		return nil, nil
+	}
+
+	return &Package{
+		Name:        name,
+		Version:     version,
+		Arch:        fields["%ARCH%"],
+		Description: fields["%DESC%"],
+		Format:      PacmanPkgFormat,
+		PUrl:        purl.NewPackageURL(pf, purl.TypeAlpm, name, version).String(),
+	}, nil
+}
+
+// parsePacmanDescSections reads a desc file and returns a map of section key to value.
+func parsePacmanDescSections(r io.Reader) map[string]string {
+	fields := make(map[string]string)
+	scanner := bufio.NewScanner(r)
+	var currentKey string
+
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		// Section header: %KEY% (at least 3 chars, exactly two % signs)
+		if len(line) >= 3 && line[0] == '%' && line[len(line)-1] == '%' && strings.Count(line, "%") == 2 {
+			currentKey = line
+			continue
+		}
+
+		// Empty line ends a section value
+		if line == "" {
+			currentKey = ""
+			continue
+		}
+
+		// Value line — only keep the first value line per section
+		// (multi-value sections like %DEPENDS% are not needed for SBOM)
+		if currentKey != "" && fields[currentKey] == "" {
+			fields[currentKey] = line
+		}
+	}
+
+	return fields
 }
 
 func (ppm *PacmanPkgManager) Available() (map[string]PackageUpdate, error) {

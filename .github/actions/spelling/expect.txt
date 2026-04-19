@@ -13,6 +13,7 @@ afero
 AJD
 Akismet
 alamofire
+alpm
 alloydb
 alpn
 antispam
@@ -386,8 +387,9 @@ OSGi
 ospf
 OTP
 ovmf
-OVS
 owpjy
+OVS
+pacman
 pagerduty
 panos
 parallelquery

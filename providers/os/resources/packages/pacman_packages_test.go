@@ -7,9 +7,10 @@ import (
 	"strings"
 	"testing"
 
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers/os/resources/packages"
 )
 
@@ -89,4 +90,46 @@ argon2 20190702-2`
 		Format:  packages.PacmanPkgFormat,
 	}
 	assert.Contains(t, m, p, "pkg detected")
+}
+
+func TestParsePacmanDB(t *testing.T) {
+	pf := &inventory.Platform{
+		Name:    "arch",
+		Version: "",
+		Arch:    "x86_64",
+		Family:  []string{"arch", "linux", "unix", "os"},
+		Labels: map[string]string{
+			"distro-id": "arch",
+		},
+	}
+
+	afs := &afero.Afero{Fs: afero.NewOsFs()}
+	pkgs, err := packages.ParsePacmanDB(pf, afs, "./testdata/pacman")
+	require.NoError(t, err)
+	assert.Equal(t, 3, len(pkgs))
+
+	var zlib *packages.Package
+	for i := range pkgs {
+		if pkgs[i].Name == "zlib" {
+			zlib = &pkgs[i]
+			break
+		}
+	}
+	require.NotNil(t, zlib)
+	assert.Equal(t, "1:1.2.13-3", zlib.Version)
+	assert.Equal(t, "x86_64", zlib.Arch)
+	assert.Contains(t, zlib.Description, "Compression library")
+	assert.Equal(t, "pacman", zlib.Format)
+	assert.Contains(t, zlib.PUrl, "pkg:alpm/arch/zlib")
+
+	var openssl *packages.Package
+	for i := range pkgs {
+		if pkgs[i].Name == "openssl" {
+			openssl = &pkgs[i]
+			break
+		}
+	}
+	require.NotNil(t, openssl)
+	assert.Equal(t, "3.2.1-1", openssl.Version)
+	assert.Contains(t, openssl.Description, "Open Source toolkit")
 }
