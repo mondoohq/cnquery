@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/afero"
 	"go.mondoo.com/mql/v13/llx"
@@ -25,12 +26,18 @@ func (r *mqlZed) id() (string, error) {
 
 func (r *mqlZed) settings() (interface{}, error) {
 	afs := connectionAfs(r.MqlRuntime)
-	var settings map[string]interface{}
-	err := readJSONFileAfero(afs, r.ConfigPath.Data, "settings.json", &settings)
+	data, err := afs.ReadFile(filepath.Join(r.ConfigPath.Data, "settings.json"))
 	if err != nil {
 		if os.IsNotExist(err) {
 			return map[string]interface{}{}, nil
 		}
+		return nil, err
+	}
+
+	// Zed's settings.json is JSONC (allows // comments), strip them before parsing.
+	clean := stripJSONComments(string(data))
+	var settings map[string]interface{}
+	if err := json.Unmarshal([]byte(clean), &settings); err != nil {
 		return nil, err
 	}
 	return settings, nil
@@ -60,6 +67,22 @@ func (r *mqlZed) extensions() ([]interface{}, error) {
 		result = append(result, name)
 	}
 	return result, nil
+}
+
+// stripJSONComments removes // line comments from JSONC content.
+// It handles comments at the start of a line or after content,
+// but does not strip comments inside JSON string values.
+func stripJSONComments(s string) string {
+	var b strings.Builder
+	for _, line := range strings.Split(s, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "//") {
+			continue
+		}
+		b.WriteString(line)
+		b.WriteByte('\n')
+	}
+	return b.String()
 }
 
 // zedExtensionsFromDir lists extension names by scanning subdirectories.

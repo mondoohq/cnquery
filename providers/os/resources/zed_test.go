@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -65,6 +66,47 @@ func TestZedExtensionsFromDir(t *testing.T) {
 	}
 	assert.Contains(t, names, "html")
 	assert.Contains(t, names, "toml")
+}
+
+func TestStripJSONComments(t *testing.T) {
+	input := `// Zed settings
+{
+  // UI settings
+  "ui_font_size": 16,
+  "theme": "One Dark"
+}
+`
+	got := stripJSONComments(input)
+	assert.NotContains(t, got, "//")
+	assert.Contains(t, got, `"ui_font_size": 16`)
+
+	var parsed map[string]interface{}
+	require.NoError(t, json.Unmarshal([]byte(got), &parsed))
+	assert.Equal(t, float64(16), parsed["ui_font_size"])
+}
+
+func TestZedSettingsJSONC(t *testing.T) {
+	dir := t.TempDir()
+	writeTestFile(t, dir, "settings.json", `// Zed Settings
+//
+// For information on how to configure Zed, see the Zed
+// documentation: https://zed.dev/docs/configuring-zed
+{
+  "ui_font_size": 14,
+  // Use system theme
+  "theme": {
+    "mode": "system"
+  }
+}`)
+
+	afs := testAfero()
+	data, err := afs.ReadFile(dir + "/settings.json")
+	require.NoError(t, err)
+
+	clean := stripJSONComments(string(data))
+	var settings map[string]interface{}
+	require.NoError(t, json.Unmarshal([]byte(clean), &settings))
+	assert.Equal(t, float64(14), settings["ui_font_size"])
 }
 
 func TestZedConfigMissing(t *testing.T) {
