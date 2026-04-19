@@ -64,6 +64,8 @@ type BomFields struct {
 	RubyPackages          []BomPackage      `json:"ruby.packages.list,omitempty"`
 	DartPackages          []BomPackage      `json:"dart.packages.list,omitempty"`
 	HaskellPackages       []BomPackage      `json:"haskell.packages.list,omitempty"`
+	ElixirPackages        []BomPackage      `json:"elixir.packages.list,omitempty"`
+	ErlangPackages        []BomPackage      `json:"erlang.packages.list,omitempty"`
 	KernelInstalled       []KernelInstalled `json:"kernel.installed,omitempty"`
 }
 

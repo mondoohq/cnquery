@@ -60,6 +60,7 @@ bytematchstatement
 cafd
 cavium
 cbf
+chabc
 ccf
 cdn
 ceph
@@ -81,6 +82,7 @@ Cmk
 cmnd
 cname
 compressratio
+cowlib
 computeagent
 continuedev
 cooldown
@@ -126,6 +128,7 @@ eip
 ekm
 eku
 elbv
+erlang
 endpointslice
 ENIId
 ERPCLOUD
@@ -135,6 +138,7 @@ exo
 faa
 failback
 fce
+fdfhash
 FEBLx
 fargate
 filestore
@@ -177,6 +181,7 @@ HCMCLOUD
 IBgt
 headerorder
 hec
+hexpm
 Hns
 horizontalpodautoscaler
 hostedzone

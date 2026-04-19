@@ -209,6 +209,10 @@ const (
 	ResourceDartPackage                  string = "dart.package"
 	ResourceHaskellPackages              string = "haskell.packages"
 	ResourceHaskellPackage               string = "haskell.package"
+	ResourceElixirPackages               string = "elixir.packages"
+	ResourceElixirPackage                string = "elixir.package"
+	ResourceErlangPackages               string = "erlang.packages"
+	ResourceErlangPackage                string = "erlang.package"
 	ResourceMacos                        string = "macos"
 	ResourceMacosHardware                string = "macos.hardware"
 	ResourceMacosAlf                     string = "macos.alf"
@@ -1106,6 +1110,22 @@ func init() {
 		"haskell.package": {
 			// to override args, implement: initHaskellPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createHaskellPackage,
+		},
+		"elixir.packages": {
+			Init:   initElixirPackages,
+			Create: createElixirPackages,
+		},
+		"elixir.package": {
+			// to override args, implement: initElixirPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createElixirPackage,
+		},
+		"erlang.packages": {
+			Init:   initErlangPackages,
+			Create: createErlangPackages,
+		},
+		"erlang.package": {
+			// to override args, implement: initErlangPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createErlangPackage,
 		},
 		"macos": {
 			// to override args, implement: initMacos(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4468,6 +4488,54 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"haskell.package.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHaskellPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"elixir.packages.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlElixirPackages).GetPath()).ToDataRes(types.String)
+	},
+	"elixir.packages.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlElixirPackages).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"elixir.packages.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlElixirPackages).GetList()).ToDataRes(types.Array(types.Resource("elixir.package")))
+	},
+	"elixir.package.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlElixirPackage).GetId()).ToDataRes(types.String)
+	},
+	"elixir.package.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlElixirPackage).GetName()).ToDataRes(types.String)
+	},
+	"elixir.package.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlElixirPackage).GetVersion()).ToDataRes(types.String)
+	},
+	"elixir.package.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlElixirPackage).GetPurl()).ToDataRes(types.String)
+	},
+	"elixir.package.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlElixirPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"erlang.packages.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlErlangPackages).GetPath()).ToDataRes(types.String)
+	},
+	"erlang.packages.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlErlangPackages).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"erlang.packages.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlErlangPackages).GetList()).ToDataRes(types.Array(types.Resource("erlang.package")))
+	},
+	"erlang.package.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlErlangPackage).GetId()).ToDataRes(types.String)
+	},
+	"erlang.package.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlErlangPackage).GetName()).ToDataRes(types.String)
+	},
+	"erlang.package.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlErlangPackage).GetVersion()).ToDataRes(types.String)
+	},
+	"erlang.package.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlErlangPackage).GetPurl()).ToDataRes(types.String)
+	},
+	"erlang.package.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlErlangPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
 	},
 	"macos.computerName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacos).GetComputerName()).ToDataRes(types.String)
@@ -11168,6 +11236,86 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"haskell.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHaskellPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"elixir.packages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlElixirPackages).__id, ok = v.Value.(string)
+		return
+	},
+	"elixir.packages.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlElixirPackages).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"elixir.packages.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlElixirPackages).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"elixir.packages.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlElixirPackages).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"elixir.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlElixirPackage).__id, ok = v.Value.(string)
+		return
+	},
+	"elixir.package.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlElixirPackage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"elixir.package.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlElixirPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"elixir.package.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlElixirPackage).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"elixir.package.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlElixirPackage).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"elixir.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlElixirPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"erlang.packages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlErlangPackages).__id, ok = v.Value.(string)
+		return
+	},
+	"erlang.packages.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlErlangPackages).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"erlang.packages.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlErlangPackages).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"erlang.packages.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlErlangPackages).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"erlang.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlErlangPackage).__id, ok = v.Value.(string)
+		return
+	},
+	"erlang.package.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlErlangPackage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"erlang.package.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlErlangPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"erlang.package.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlErlangPackage).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"erlang.package.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlErlangPackage).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"erlang.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlErlangPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"macos.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -30592,6 +30740,346 @@ func (c *mqlHaskellPackage) GetFiles() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("haskell.package", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+// mqlElixirPackages for the elixir.packages resource
+type mqlElixirPackages struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlElixirPackagesInternal
+	Path  plugin.TValue[string]
+	Files plugin.TValue[[]any]
+	List  plugin.TValue[[]any]
+}
+
+// createElixirPackages creates a new instance of this resource
+func createElixirPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlElixirPackages{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("elixir.packages", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlElixirPackages) MqlName() string {
+	return "elixir.packages"
+}
+
+func (c *mqlElixirPackages) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlElixirPackages) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlElixirPackages) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("elixir.packages", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+func (c *mqlElixirPackages) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("elixir.packages", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlElixirPackage for the elixir.package resource
+type mqlElixirPackage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlElixirPackageInternal it will be used here
+	Id      plugin.TValue[string]
+	Name    plugin.TValue[string]
+	Version plugin.TValue[string]
+	Purl    plugin.TValue[string]
+	Files   plugin.TValue[[]any]
+}
+
+// createElixirPackage creates a new instance of this resource
+func createElixirPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlElixirPackage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("elixir.package", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlElixirPackage) MqlName() string {
+	return "elixir.package"
+}
+
+func (c *mqlElixirPackage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlElixirPackage) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlElixirPackage) GetName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Name, func() (string, error) {
+		return c.name()
+	})
+}
+
+func (c *mqlElixirPackage) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlElixirPackage) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
+	})
+}
+
+func (c *mqlElixirPackage) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("elixir.package", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+// mqlErlangPackages for the erlang.packages resource
+type mqlErlangPackages struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlErlangPackagesInternal
+	Path  plugin.TValue[string]
+	Files plugin.TValue[[]any]
+	List  plugin.TValue[[]any]
+}
+
+// createErlangPackages creates a new instance of this resource
+func createErlangPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlErlangPackages{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("erlang.packages", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlErlangPackages) MqlName() string {
+	return "erlang.packages"
+}
+
+func (c *mqlErlangPackages) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlErlangPackages) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlErlangPackages) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("erlang.packages", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+func (c *mqlErlangPackages) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("erlang.packages", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlErlangPackage for the erlang.package resource
+type mqlErlangPackage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlErlangPackageInternal it will be used here
+	Id      plugin.TValue[string]
+	Name    plugin.TValue[string]
+	Version plugin.TValue[string]
+	Purl    plugin.TValue[string]
+	Files   plugin.TValue[[]any]
+}
+
+// createErlangPackage creates a new instance of this resource
+func createErlangPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlErlangPackage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("erlang.package", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlErlangPackage) MqlName() string {
+	return "erlang.package"
+}
+
+func (c *mqlErlangPackage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlErlangPackage) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlErlangPackage) GetName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Name, func() (string, error) {
+		return c.name()
+	})
+}
+
+func (c *mqlErlangPackage) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlErlangPackage) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
+	})
+}
+
+func (c *mqlErlangPackage) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("erlang.package", c.__id, "files")
 			if err != nil {
 				return nil, err
 			}

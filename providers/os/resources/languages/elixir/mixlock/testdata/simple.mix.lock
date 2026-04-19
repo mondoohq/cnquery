@@ -1,0 +1,7 @@
+%{
+  "jason": {:hex, :jason, "1.4.1", "af1chabc123", [:mix], [], "hexpm", "fdfhash456"},
+  "plug": {:hex, :plug, "1.15.3", "abc123def", [:mix], [{:mime, "~> 2.0", [hex: :mime, repo: "hexpm"]}, {:plug_crypto, "~> 2.0", [hex: :plug_crypto, repo: "hexpm"]}], "hexpm", "def456ghi"},
+  "mime": {:hex, :mime, "2.0.5", "ghi789jkl", [:mix], [], "hexpm", "jkl012mno"},
+  "plug_crypto": {:hex, :plug_crypto, "2.0.0", "mno345pqr", [:mix], [], "hexpm", "pqr678stu"},
+  "telemetry": {:hex, :telemetry, "1.2.1", "stu901vwx", [:rebar3, :mix], [], "hexpm", "vwx234yza"},
+}
