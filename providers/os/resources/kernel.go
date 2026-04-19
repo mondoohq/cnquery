@@ -4,13 +4,16 @@
 package resources
 
 import (
+	"bytes"
 	"io"
+	"regexp"
 	"strings"
 	"sync"
 
 	"github.com/cockroachdb/errors"
 	"github.com/package-url/packageurl-go"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -531,4 +534,199 @@ func initKernelModule(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 
 func (k *mqlKernelModule) id() (string, error) {
 	return k.Name.Data, nil
+}
+
+type mqlKernelModuleInternal struct {
+	modInfoFetched bool
+	modInfoLock    sync.Mutex
+	modInfo        *kernel.ModuleInfo
+}
+
+// fetchModInfo lazily reads the .modinfo ELF section from the module's .ko file.
+func (k *mqlKernelModule) fetchModInfo() *kernel.ModuleInfo {
+	if k.modInfoFetched {
+		return k.modInfo
+	}
+	k.modInfoLock.Lock()
+	defer k.modInfoLock.Unlock()
+	if k.modInfoFetched {
+		return k.modInfo
+	}
+
+	k.modInfoFetched = true
+
+	conn := k.MqlRuntime.Connection.(shared.Connection)
+	moduleName := k.Name.Data
+
+	// Try modinfo CLI first (works over SSH, handles compressed modules)
+	if conn.Capabilities().Has(shared.Capability_RunCommand) {
+		info := fetchModInfoViaCLI(conn, moduleName)
+		if info != nil {
+			k.modInfo = info
+			return info
+		}
+	}
+
+	// Fall back to reading the .ko file directly
+	afs := &afero.Afero{Fs: conn.FileSystem()}
+
+	// Get running kernel version to find module path
+	obj, err := CreateResource(k.MqlRuntime, "kernel", map[string]*llx.RawData{})
+	if err != nil {
+		return nil
+	}
+	kern := obj.(*mqlKernel)
+	info := kern.GetInfo()
+	if info.Error != nil {
+		return nil
+	}
+	kernelInfo, ok := info.Data.(map[string]any)
+	if !ok {
+		return nil
+	}
+	kernelVersion, _ := kernelInfo["version"].(string)
+	if kernelVersion == "" {
+		return nil
+	}
+
+	// Try common module paths
+	paths := []string{
+		"/lib/modules/" + kernelVersion + "/kernel",
+		"/lib/modules/" + kernelVersion,
+	}
+
+	for _, basePath := range paths {
+		koPath := findModuleFile(afs, basePath, moduleName)
+		if koPath == "" {
+			continue
+		}
+
+		modInfo := readModInfoFromFile(afs, koPath)
+		if modInfo != nil {
+			k.modInfo = modInfo
+			return modInfo
+		}
+	}
+
+	return nil
+}
+
+// validModuleName checks that a module name contains only safe characters.
+var validModuleName = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
+
+// fetchModInfoViaCLI runs `modinfo <module>` and parses the output.
+// This is the preferred method as it works with compressed modules and over SSH.
+func fetchModInfoViaCLI(conn shared.Connection, moduleName string) *kernel.ModuleInfo {
+	// Reject module names with shell metacharacters to prevent command injection
+	if !validModuleName.MatchString(moduleName) {
+		return nil
+	}
+	cmd, err := conn.RunCommand("modinfo " + moduleName)
+	if err != nil || cmd.ExitStatus != 0 || cmd.Stdout == nil {
+		return nil
+	}
+
+	data, err := io.ReadAll(cmd.Stdout)
+	if err != nil {
+		return nil
+	}
+
+	info := &kernel.ModuleInfo{}
+	for _, line := range strings.Split(string(data), "\n") {
+		key, value, ok := strings.Cut(line, ":")
+		if !ok {
+			continue
+		}
+		key = strings.TrimSpace(key)
+		value = strings.TrimSpace(value)
+
+		switch key {
+		case "version":
+			info.Version = value
+		case "author":
+			info.Author = value
+		case "license":
+			info.License = value
+		case "description":
+			info.Description = value
+		}
+	}
+
+	// Only return if we got at least some data
+	if info.Version != "" || info.Description != "" || info.License != "" {
+		return info
+	}
+	return nil
+}
+
+// findModuleFile searches for a .ko file matching the module name.
+// This is a best-effort lookup that checks direct paths only. Kernel modules
+// live in nested subdirectories (e.g., kernel/drivers/net/e1000.ko), so this
+// fallback may not find all modules. The modinfo CLI path is the expected primary.
+func findModuleFile(afs *afero.Afero, basePath, moduleName string) string {
+	// Module names use underscores internally but filenames may use dashes
+	nameVariants := []string{moduleName, strings.ReplaceAll(moduleName, "_", "-")}
+
+	for _, name := range nameVariants {
+		// Try common suffixes: .ko, .ko.xz, .ko.zst, .ko.gz
+		for _, suffix := range []string{".ko", ".ko.xz", ".ko.zst", ".ko.gz"} {
+			// Direct path
+			candidate := basePath + "/" + name + suffix
+			if exists, _ := afs.Exists(candidate); exists {
+				if suffix == ".ko" {
+					return candidate
+				}
+				// Compressed modules can't be parsed by debug/elf directly
+				return ""
+			}
+		}
+	}
+
+	return ""
+}
+
+// readModInfoFromFile reads and parses the .modinfo section from a .ko file.
+func readModInfoFromFile(afs *afero.Afero, koPath string) *kernel.ModuleInfo {
+	data, err := afs.ReadFile(koPath)
+	if err != nil {
+		return nil
+	}
+
+	info, err := kernel.ParseModuleInfo(bytes.NewReader(data))
+	if err != nil {
+		log.Debug().Err(err).Str("path", koPath).Msg("could not parse kernel module modinfo")
+		return nil
+	}
+
+	return info
+}
+
+// version returns the module version from .modinfo.
+// Returns empty string (not error) when the version is unavailable — this is
+// intentional since most built-in kernel modules don't have a version field.
+func (k *mqlKernelModule) version() (string, error) {
+	info := k.fetchModInfo()
+	if info == nil {
+		return "", nil
+	}
+	return info.Version, nil
+}
+
+// description returns the module description from .modinfo.
+// Returns empty string (not error) when unavailable.
+func (k *mqlKernelModule) description() (string, error) {
+	info := k.fetchModInfo()
+	if info == nil {
+		return "", nil
+	}
+	return info.Description, nil
+}
+
+func (k *mqlKernelModule) purl() (string, error) {
+	info := k.fetchModInfo()
+	if info == nil || info.Version == "" {
+		return "", nil
+	}
+	return packageurl.NewPackageURL(
+		"generic", "", "linux-kernel-module/"+k.Name.Data, info.Version, nil, "").String(), nil
 }

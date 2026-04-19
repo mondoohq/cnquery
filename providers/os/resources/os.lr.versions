@@ -670,9 +670,12 @@ kernel.info 9.0.0
 kernel.installed 9.0.0
 kernel.installedVersions 13.13.1
 kernel.module 9.0.0
+kernel.module.description 13.13.1
 kernel.module.loaded 9.0.0
 kernel.module.name 9.0.0
+kernel.module.purl 13.13.1
 kernel.module.size 9.0.0
+kernel.module.version 13.13.1
 kernel.modules 9.0.0
 kernel.parameters 9.0.0
 kernel.running 13.13.1
