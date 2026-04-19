@@ -79,6 +79,7 @@ cmnd
 cname
 compressratio
 computeagent
+continuedev
 cooldown
 corosync
 cpe
@@ -213,6 +214,7 @@ jupyter
 JVM
 kerberoastable
 keyspace
+kiro
 kqueue
 krbtgt
 kts
@@ -302,6 +304,7 @@ ondemand
 ontap
 opcplc
 openai
+opencode
 opensearch
 openssl
 openvpn
@@ -436,6 +439,7 @@ toplevel
 toport
 tpl
 tpu
+trae
 trainingjob
 transitgateway
 transitives

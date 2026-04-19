@@ -90,12 +90,12 @@ func (r *mqlCline) id() (string, error) {
 }
 
 func (r *mqlCline) skills() ([]interface{}, error) {
-	// Cline skills live at ~/.agents/skills/ (shared agents dir)
-	home, err := targetHomeDir(r.MqlRuntime)
-	if err != nil {
-		return nil, nil
-	}
-	return skillsFromDir(r.MqlRuntime, filepath.Join(home, ".agents", "skills"), "cline.skill")
+	// Cline uses a shared ~/.agents/skills/ directory (not relative to its
+	// own ~/.cline config dir). This matches the vercel-labs/skills definition.
+	// When a custom configPath is provided, derive the skills path from the
+	// same parent directory to stay consistent.
+	skillsDir := filepath.Join(filepath.Dir(r.ConfigPath.Data), ".agents", "skills")
+	return skillsFromDir(r.MqlRuntime, skillsDir, "cline.skill")
 }
 
 func (r *mqlClineSkill) id() (string, error)     { return "cline.skill/" + r.Name.Data, nil }
