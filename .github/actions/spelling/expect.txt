@@ -71,13 +71,14 @@ claude
 clcerts
 cloudflare
 Clusterwide
-cocoapods
-codeql
 cmdline
 cmek
 Cmk
 cmnd
 cname
+cocoapods
+codeql
+conan
 compressratio
 computeagent
 continuedev

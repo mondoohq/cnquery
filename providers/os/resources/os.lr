@@ -2715,6 +2715,41 @@ dart.package @defaults("name version purl") {
   files() []pkgFileInfo
 }
 
+// C/C++ Conan packages
+conan.packages {
+  []conan.package
+
+  init(path? string)
+
+  // Path to search for conan.lock
+  path string
+
+  // Root project (may not exist)
+  root() conan.package
+
+  // List of direct dependencies (v2 lock files only; empty for v1 lock files)
+  directDependencies() []conan.package
+
+  // Files used to determine the packages
+  files() []pkgFileInfo
+}
+
+// C/C++ Conan package dependency
+conan.package @defaults("name version purl") {
+  // ID is the conan.package unique identifier
+  id string
+  // Package name
+  name() string
+  // Package version
+  version() string
+  // Package URL
+  purl() string
+  // Common Platform Enumeration (CPE) for the package
+  cpes() []core.cpe
+  // Package files
+  files() []pkgFileInfo
+}
+
 // macOS specific resources
 macos {
   // macOS computer name

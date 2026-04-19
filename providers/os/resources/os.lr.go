@@ -207,6 +207,8 @@ const (
 	ResourceRubyPackage                  string = "ruby.package"
 	ResourceDartPackages                 string = "dart.packages"
 	ResourceDartPackage                  string = "dart.package"
+	ResourceConanPackages                string = "conan.packages"
+	ResourceConanPackage                 string = "conan.package"
 	ResourceMacos                        string = "macos"
 	ResourceMacosHardware                string = "macos.hardware"
 	ResourceMacosAlf                     string = "macos.alf"
@@ -1084,6 +1086,14 @@ func init() {
 		"dart.package": {
 			// to override args, implement: initDartPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDartPackage,
+		},
+		"conan.packages": {
+			Init:   initConanPackages,
+			Create: createConanPackages,
+		},
+		"conan.package": {
+			// to override args, implement: initConanPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createConanPackage,
 		},
 		"macos": {
 			// to override args, implement: initMacos(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4374,6 +4384,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"dart.package.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDartPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"conan.packages.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlConanPackages).GetPath()).ToDataRes(types.String)
+	},
+	"conan.packages.root": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlConanPackages).GetRoot()).ToDataRes(types.Resource("conan.package"))
+	},
+	"conan.packages.directDependencies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlConanPackages).GetDirectDependencies()).ToDataRes(types.Array(types.Resource("conan.package")))
+	},
+	"conan.packages.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlConanPackages).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"conan.packages.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlConanPackages).GetList()).ToDataRes(types.Array(types.Resource("conan.package")))
+	},
+	"conan.package.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlConanPackage).GetId()).ToDataRes(types.String)
+	},
+	"conan.package.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlConanPackage).GetName()).ToDataRes(types.String)
+	},
+	"conan.package.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlConanPackage).GetVersion()).ToDataRes(types.String)
+	},
+	"conan.package.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlConanPackage).GetPurl()).ToDataRes(types.String)
+	},
+	"conan.package.cpes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlConanPackage).GetCpes()).ToDataRes(types.Array(types.Resource("cpe")))
+	},
+	"conan.package.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlConanPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
 	},
 	"macos.computerName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacos).GetComputerName()).ToDataRes(types.String)
@@ -10872,6 +10915,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"dart.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDartPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"conan.packages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlConanPackages).__id, ok = v.Value.(string)
+		return
+	},
+	"conan.packages.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlConanPackages).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"conan.packages.root": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlConanPackages).Root, ok = plugin.RawToTValue[*mqlConanPackage](v.Value, v.Error)
+		return
+	},
+	"conan.packages.directDependencies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlConanPackages).DirectDependencies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"conan.packages.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlConanPackages).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"conan.packages.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlConanPackages).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"conan.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlConanPackage).__id, ok = v.Value.(string)
+		return
+	},
+	"conan.package.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlConanPackage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"conan.package.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlConanPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"conan.package.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlConanPackage).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"conan.package.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlConanPackage).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"conan.package.cpes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlConanPackage).Cpes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"conan.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlConanPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"macos.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -29862,6 +29957,227 @@ func (c *mqlDartPackage) GetFiles() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("dart.package", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+// mqlConanPackages for the conan.packages resource
+type mqlConanPackages struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlConanPackagesInternal
+	Path               plugin.TValue[string]
+	Root               plugin.TValue[*mqlConanPackage]
+	DirectDependencies plugin.TValue[[]any]
+	Files              plugin.TValue[[]any]
+	List               plugin.TValue[[]any]
+}
+
+// createConanPackages creates a new instance of this resource
+func createConanPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlConanPackages{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("conan.packages", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlConanPackages) MqlName() string {
+	return "conan.packages"
+}
+
+func (c *mqlConanPackages) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlConanPackages) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlConanPackages) GetRoot() *plugin.TValue[*mqlConanPackage] {
+	return plugin.GetOrCompute[*mqlConanPackage](&c.Root, func() (*mqlConanPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("conan.packages", c.__id, "root")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlConanPackage), nil
+			}
+		}
+
+		return c.root()
+	})
+}
+
+func (c *mqlConanPackages) GetDirectDependencies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DirectDependencies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("conan.packages", c.__id, "directDependencies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.directDependencies()
+	})
+}
+
+func (c *mqlConanPackages) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("conan.packages", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+func (c *mqlConanPackages) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("conan.packages", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlConanPackage for the conan.package resource
+type mqlConanPackage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlConanPackageInternal it will be used here
+	Id      plugin.TValue[string]
+	Name    plugin.TValue[string]
+	Version plugin.TValue[string]
+	Purl    plugin.TValue[string]
+	Cpes    plugin.TValue[[]any]
+	Files   plugin.TValue[[]any]
+}
+
+// createConanPackage creates a new instance of this resource
+func createConanPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlConanPackage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("conan.package", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlConanPackage) MqlName() string {
+	return "conan.package"
+}
+
+func (c *mqlConanPackage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlConanPackage) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlConanPackage) GetName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Name, func() (string, error) {
+		return c.name()
+	})
+}
+
+func (c *mqlConanPackage) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlConanPackage) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
+	})
+}
+
+func (c *mqlConanPackage) GetCpes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Cpes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("conan.package", c.__id, "cpes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.cpes()
+	})
+}
+
+func (c *mqlConanPackage) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("conan.package", c.__id, "files")
 			if err != nil {
 				return nil, err
 			}
