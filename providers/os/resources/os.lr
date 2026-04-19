@@ -2680,6 +2680,41 @@ ruby.package @defaults("name version purl") {
   files() []pkgFileInfo
 }
 
+// Dart/Flutter packages
+dart.packages {
+  []dart.package
+
+  init(path? string)
+
+  // Path to search for pubspec.lock
+  path string
+
+  // Root project (may not exist)
+  root() dart.package
+
+  // List of direct dependencies
+  directDependencies() []dart.package
+
+  // Files used to determine the packages
+  files() []pkgFileInfo
+}
+
+// Dart/Flutter package dependency
+dart.package @defaults("name version purl") {
+  // ID is the dart.package unique identifier
+  id string
+  // Package name
+  name() string
+  // Package version
+  version() string
+  // Package URL
+  purl() string
+  // Common Platform Enumeration (CPE) for the package
+  cpes() []core.cpe
+  // Package files
+  files() []pkgFileInfo
+}
+
 // macOS specific resources
 macos {
   // macOS computer name

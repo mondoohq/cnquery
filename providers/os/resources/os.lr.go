@@ -205,6 +205,8 @@ const (
 	ResourceWordpressPackage             string = "wordpress.package"
 	ResourceRubyPackages                 string = "ruby.packages"
 	ResourceRubyPackage                  string = "ruby.package"
+	ResourceDartPackages                 string = "dart.packages"
+	ResourceDartPackage                  string = "dart.package"
 	ResourceMacos                        string = "macos"
 	ResourceMacosHardware                string = "macos.hardware"
 	ResourceMacosAlf                     string = "macos.alf"
@@ -1050,6 +1052,14 @@ func init() {
 		"ruby.package": {
 			// to override args, implement: initRubyPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createRubyPackage,
+		},
+		"dart.packages": {
+			Init:   initDartPackages,
+			Create: createDartPackages,
+		},
+		"dart.package": {
+			// to override args, implement: initDartPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDartPackage,
 		},
 		"macos": {
 			// to override args, implement: initMacos(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4211,6 +4221,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ruby.package.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRubyPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"dart.packages.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDartPackages).GetPath()).ToDataRes(types.String)
+	},
+	"dart.packages.root": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDartPackages).GetRoot()).ToDataRes(types.Resource("dart.package"))
+	},
+	"dart.packages.directDependencies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDartPackages).GetDirectDependencies()).ToDataRes(types.Array(types.Resource("dart.package")))
+	},
+	"dart.packages.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDartPackages).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"dart.packages.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDartPackages).GetList()).ToDataRes(types.Array(types.Resource("dart.package")))
+	},
+	"dart.package.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDartPackage).GetId()).ToDataRes(types.String)
+	},
+	"dart.package.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDartPackage).GetName()).ToDataRes(types.String)
+	},
+	"dart.package.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDartPackage).GetVersion()).ToDataRes(types.String)
+	},
+	"dart.package.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDartPackage).GetPurl()).ToDataRes(types.String)
+	},
+	"dart.package.cpes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDartPackage).GetCpes()).ToDataRes(types.Array(types.Resource("cpe")))
+	},
+	"dart.package.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDartPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
 	},
 	"macos.computerName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacos).GetComputerName()).ToDataRes(types.String)
@@ -10333,6 +10376,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ruby.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlRubyPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"dart.packages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDartPackages).__id, ok = v.Value.(string)
+		return
+	},
+	"dart.packages.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDartPackages).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"dart.packages.root": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDartPackages).Root, ok = plugin.RawToTValue[*mqlDartPackage](v.Value, v.Error)
+		return
+	},
+	"dart.packages.directDependencies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDartPackages).DirectDependencies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"dart.packages.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDartPackages).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"dart.packages.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDartPackages).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"dart.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDartPackage).__id, ok = v.Value.(string)
+		return
+	},
+	"dart.package.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDartPackage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"dart.package.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDartPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"dart.package.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDartPackage).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"dart.package.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDartPackage).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"dart.package.cpes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDartPackage).Cpes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"dart.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDartPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"macos.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -28574,6 +28669,227 @@ func (c *mqlRubyPackage) GetFiles() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("ruby.package", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+// mqlDartPackages for the dart.packages resource
+type mqlDartPackages struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlDartPackagesInternal
+	Path               plugin.TValue[string]
+	Root               plugin.TValue[*mqlDartPackage]
+	DirectDependencies plugin.TValue[[]any]
+	Files              plugin.TValue[[]any]
+	List               plugin.TValue[[]any]
+}
+
+// createDartPackages creates a new instance of this resource
+func createDartPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDartPackages{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("dart.packages", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDartPackages) MqlName() string {
+	return "dart.packages"
+}
+
+func (c *mqlDartPackages) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDartPackages) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlDartPackages) GetRoot() *plugin.TValue[*mqlDartPackage] {
+	return plugin.GetOrCompute[*mqlDartPackage](&c.Root, func() (*mqlDartPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("dart.packages", c.__id, "root")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDartPackage), nil
+			}
+		}
+
+		return c.root()
+	})
+}
+
+func (c *mqlDartPackages) GetDirectDependencies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DirectDependencies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("dart.packages", c.__id, "directDependencies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.directDependencies()
+	})
+}
+
+func (c *mqlDartPackages) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("dart.packages", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+func (c *mqlDartPackages) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("dart.packages", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlDartPackage for the dart.package resource
+type mqlDartPackage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDartPackageInternal it will be used here
+	Id      plugin.TValue[string]
+	Name    plugin.TValue[string]
+	Version plugin.TValue[string]
+	Purl    plugin.TValue[string]
+	Cpes    plugin.TValue[[]any]
+	Files   plugin.TValue[[]any]
+}
+
+// createDartPackage creates a new instance of this resource
+func createDartPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDartPackage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("dart.package", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDartPackage) MqlName() string {
+	return "dart.package"
+}
+
+func (c *mqlDartPackage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDartPackage) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlDartPackage) GetName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Name, func() (string, error) {
+		return c.name()
+	})
+}
+
+func (c *mqlDartPackage) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlDartPackage) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
+	})
+}
+
+func (c *mqlDartPackage) GetCpes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Cpes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("dart.package", c.__id, "cpes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.cpes()
+	})
+}
+
+func (c *mqlDartPackage) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("dart.package", c.__id, "files")
 			if err != nil {
 				return nil, err
 			}

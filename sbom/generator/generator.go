@@ -384,6 +384,25 @@ func GenerateBom(r *reporter.Report) []*sbom.Sbom {
 
 				bom.Packages = append(bom.Packages, bomPkg)
 			}
+
+			for _, pkg := range rb.DartPackages {
+				bomPkg := &sbom.Package{
+					Name:    pkg.Name,
+					Version: pkg.Version,
+					Purl:    pkg.Purl,
+					Cpes:    pkg.CPEs,
+					Type:    "pub",
+				}
+
+				for _, filepath := range pkg.FilePaths {
+					bomPkg.EvidenceList = append(bomPkg.EvidenceList, &sbom.Evidence{
+						Type:  sbom.EvidenceType_EVIDENCE_TYPE_FILE,
+						Value: filepath,
+					})
+				}
+
+				bom.Packages = append(bom.Packages, bomPkg)
+			}
 		}
 		boms = append(boms, bom)
 	}
