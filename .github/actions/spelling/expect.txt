@@ -22,6 +22,7 @@ artifactregistry
 aspnet
 asdk
 atlassian
+augment
 auditlog
 Auths
 AVRO
@@ -210,11 +211,13 @@ jsonbody
 JFi
 jpi
 jre
+junie
 junos
 jupyter
 JVM
 kerberoastable
 keyspace
+kilocode
 kiro
 kqueue
 krbtgt
@@ -307,6 +310,7 @@ opcplc
 openai
 openclaw
 opencode
+openhands
 opensearch
 openssl
 openvpn
@@ -354,6 +358,7 @@ QAwr
 QGA
 querypack
 quorate
+qwen
 RABBITMQ
 rai
 raidz

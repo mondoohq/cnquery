@@ -292,3 +292,119 @@ func (r *mqlSnowflakeCortexSkill) id() (string, error) {
 	return "snowflake.cortex.skill/" + r.Name.Data, nil
 }
 func (r *mqlSnowflakeCortexSkill) sha256() (string, error) { return contentSHA256(r.Content.Data), nil }
+
+// --- Junie (JetBrains) ---
+
+const defaultJunieConfigDir = ".junie"
+
+func initJunie(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initConfigPath(runtime, args, "junie", defaultJunieConfigDir)
+}
+
+func (r *mqlJunie) id() (string, error) {
+	return "junie/" + r.ConfigPath.Data, nil
+}
+
+func (r *mqlJunie) skills() ([]interface{}, error) {
+	return skillsFromDir(r.MqlRuntime, filepath.Join(r.ConfigPath.Data, "skills"), "junie.skill")
+}
+
+func (r *mqlJunieSkill) id() (string, error)     { return "junie.skill/" + r.Name.Data, nil }
+func (r *mqlJunieSkill) sha256() (string, error) { return contentSHA256(r.Content.Data), nil }
+
+// --- Augment ---
+
+const defaultAugmentConfigDir = ".augment"
+
+func initAugment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initConfigPath(runtime, args, "augment", defaultAugmentConfigDir)
+}
+
+func (r *mqlAugment) id() (string, error) {
+	return "augment/" + r.ConfigPath.Data, nil
+}
+
+func (r *mqlAugment) skills() ([]interface{}, error) {
+	return skillsFromDir(r.MqlRuntime, filepath.Join(r.ConfigPath.Data, "skills"), "augment.skill")
+}
+
+func (r *mqlAugmentSkill) id() (string, error)     { return "augment.skill/" + r.Name.Data, nil }
+func (r *mqlAugmentSkill) sha256() (string, error) { return contentSHA256(r.Content.Data), nil }
+
+// --- Warp ---
+
+const defaultWarpConfigDir = ".warp"
+
+func initWarp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initConfigPath(runtime, args, "warp", defaultWarpConfigDir)
+}
+
+func (r *mqlWarp) id() (string, error) {
+	return "warp/" + r.ConfigPath.Data, nil
+}
+
+func (r *mqlWarp) skills() ([]interface{}, error) {
+	// Warp uses shared ~/.agents/skills/ directory
+	skillsDir := filepath.Join(filepath.Dir(r.ConfigPath.Data), ".agents", "skills")
+	return skillsFromDir(r.MqlRuntime, skillsDir, "warp.skill")
+}
+
+func (r *mqlWarpSkill) id() (string, error)     { return "warp.skill/" + r.Name.Data, nil }
+func (r *mqlWarpSkill) sha256() (string, error) { return contentSHA256(r.Content.Data), nil }
+
+// --- Kilo Code ---
+
+const defaultKiloCodeConfigDir = ".kilocode"
+
+func initKilocode(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initConfigPath(runtime, args, "kilocode", defaultKiloCodeConfigDir)
+}
+
+func (r *mqlKilocode) id() (string, error) {
+	return "kilocode/" + r.ConfigPath.Data, nil
+}
+
+func (r *mqlKilocode) skills() ([]interface{}, error) {
+	return skillsFromDir(r.MqlRuntime, filepath.Join(r.ConfigPath.Data, "skills"), "kilocode.skill")
+}
+
+func (r *mqlKilocodeSkill) id() (string, error)     { return "kilocode.skill/" + r.Name.Data, nil }
+func (r *mqlKilocodeSkill) sha256() (string, error) { return contentSHA256(r.Content.Data), nil }
+
+// --- OpenHands ---
+
+const defaultOpenHandsConfigDir = ".openhands"
+
+func initOpenhands(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initConfigPath(runtime, args, "openhands", defaultOpenHandsConfigDir)
+}
+
+func (r *mqlOpenhands) id() (string, error) {
+	return "openhands/" + r.ConfigPath.Data, nil
+}
+
+func (r *mqlOpenhands) skills() ([]interface{}, error) {
+	return skillsFromDir(r.MqlRuntime, filepath.Join(r.ConfigPath.Data, "skills"), "openhands.skill")
+}
+
+func (r *mqlOpenhandsSkill) id() (string, error)     { return "openhands.skill/" + r.Name.Data, nil }
+func (r *mqlOpenhandsSkill) sha256() (string, error) { return contentSHA256(r.Content.Data), nil }
+
+// --- Qwen Code ---
+
+const defaultQwenCodeConfigDir = ".qwen"
+
+func initQwenCode(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initConfigPath(runtime, args, "qwen.code", defaultQwenCodeConfigDir)
+}
+
+func (r *mqlQwenCode) id() (string, error) {
+	return "qwen.code/" + r.ConfigPath.Data, nil
+}
+
+func (r *mqlQwenCode) skills() ([]interface{}, error) {
+	return skillsFromDir(r.MqlRuntime, filepath.Join(r.ConfigPath.Data, "skills"), "qwen.code.skill")
+}
+
+func (r *mqlQwenCodeSkill) id() (string, error)     { return "qwen.code.skill/" + r.Name.Data, nil }
+func (r *mqlQwenCodeSkill) sha256() (string, error) { return contentSHA256(r.Content.Data), nil }
