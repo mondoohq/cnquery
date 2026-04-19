@@ -247,6 +247,42 @@ machine.secureboot @defaults("enabled") {
   setupMode() bool
 }
 
+// Firmware inventory (Linux via fwupd, macOS via system_profiler, Windows via WMI/syscall)
+firmware @defaults("devices") {
+  // All firmware devices detected on the system
+  devices() []firmware.device
+}
+
+// Firmware device with version and vendor metadata
+private firmware.device @defaults("name version vendor") {
+  // Device name
+  name string
+  // Device identifier (fwupd DeviceId, IORegistry path, or PnP DeviceID)
+  deviceId string
+  // Installed firmware version
+  version string
+  // Device vendor name
+  vendor string
+  // Vendor identifier (e.g., "PCI:0x8086")
+  vendorId string
+  // Device description
+  summary string
+  // Device GUIDs
+  guid []string
+  // Plugin or data source name
+  plugin string
+  // Firmware update protocol
+  protocol string
+  // Device capability flags
+  flags []string
+  // Version format hint (e.g., "triplet", "intel-me")
+  versionFormat string
+  // Whether the device supports firmware updates
+  updatable bool
+  // Package URL
+  purl string
+}
+
 // Operating system information
 os {
   // Pretty hostname on macOS/Linux or device name on Windows

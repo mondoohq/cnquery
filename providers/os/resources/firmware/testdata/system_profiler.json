@@ -1,0 +1,64 @@
+{
+  "SPHardwareDataType": [
+    {
+      "_name": "Hardware Overview",
+      "boot_rom_version": "10151.140.19",
+      "model_identifier": "Mac14,6",
+      "machine_model": "MacBook Pro",
+      "serial_number": "ABCD1234567"
+    }
+  ],
+  "SPNVMeDataType": [
+    {
+      "_name": "Apple SSD Controller",
+      "_items": [
+        {
+          "_name": "APPLE SSD AP2048Z",
+          "device_revision": "419.120.",
+          "device_model": "APPLE SSD AP2048Z",
+          "device_serial": "SN12345678"
+        }
+      ]
+    }
+  ],
+  "SPUSBDataType": [
+    {
+      "_name": "USB Hub",
+      "bcd_device": "3.00",
+      "manufacturer": "Apple Inc.",
+      "vendor_id": "0x05ac",
+      "product_id": "0x8104",
+      "_items": [
+        {
+          "_name": "YubiKey OTP+FIDO+CCID",
+          "bcd_device": "5.43",
+          "manufacturer": "Yubico",
+          "vendor_id": "0x1050",
+          "product_id": "0x0407"
+        }
+      ]
+    }
+  ],
+  "SPThunderboltDataType": [
+    {
+      "_name": "Thunderbolt Bus",
+      "device_firmware_version": "65.4.0",
+      "vendor_name": "Apple Inc.",
+      "device_id_key": "TB-00001"
+    }
+  ],
+  "SPBluetoothDataType": [
+    {
+      "_name": "Apple Bluetooth Module",
+      "fw_version": "22.1670.2.2"
+    }
+  ],
+  "SPDisplaysDataType": [
+    {
+      "_name": "Apple M2 Max",
+      "sppci_vendor": "Apple",
+      "spdisplays_revision-id": "0x0001",
+      "spdisplays_device-id": "0x0001"
+    }
+  ]
+}
