@@ -1071,6 +1071,12 @@ kernel.module @defaults("name loaded") {
   size string
   // Whether the module is loaded
   loaded bool
+  // Module version from .modinfo (may be empty)
+  version() string
+  // Module description from .modinfo (may be empty)
+  description() string
+  // Package URL (generated when version is available)
+  purl() string
 }
 
 // Docker host resource

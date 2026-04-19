@@ -2538,6 +2538,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"kernel.module.loaded": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKernelModule).GetLoaded()).ToDataRes(types.Bool)
 	},
+	"kernel.module.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernelModule).GetVersion()).ToDataRes(types.String)
+	},
+	"kernel.module.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernelModule).GetDescription()).ToDataRes(types.String)
+	},
+	"kernel.module.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernelModule).GetPurl()).ToDataRes(types.String)
+	},
 	"docker.images": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDocker).GetImages()).ToDataRes(types.Array(types.Resource("docker.image")))
 	},
@@ -7685,6 +7694,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"kernel.module.loaded": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlKernelModule).Loaded, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"kernel.module.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelModule).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kernel.module.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelModule).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kernel.module.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelModule).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"docker.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19394,10 +19415,13 @@ func (c *mqlKernelVersion) GetCpes() *plugin.TValue[[]any] {
 type mqlKernelModule struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlKernelModuleInternal it will be used here
-	Name   plugin.TValue[string]
-	Size   plugin.TValue[string]
-	Loaded plugin.TValue[bool]
+	mqlKernelModuleInternal
+	Name        plugin.TValue[string]
+	Size        plugin.TValue[string]
+	Loaded      plugin.TValue[bool]
+	Version     plugin.TValue[string]
+	Description plugin.TValue[string]
+	Purl        plugin.TValue[string]
 }
 
 // createKernelModule creates a new instance of this resource
@@ -19447,6 +19471,24 @@ func (c *mqlKernelModule) GetSize() *plugin.TValue[string] {
 
 func (c *mqlKernelModule) GetLoaded() *plugin.TValue[bool] {
 	return &c.Loaded
+}
+
+func (c *mqlKernelModule) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlKernelModule) GetDescription() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
+		return c.description()
+	})
+}
+
+func (c *mqlKernelModule) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
+	})
 }
 
 // mqlDocker for the docker resource
