@@ -4584,3 +4584,171 @@ private snowflake.cortex.skill @defaults("name") @maturity("preview") {
   // SHA-256 hash of the skill content
   sha256() string
 }
+
+// Junie (JetBrains) instance configuration
+// URL: https://www.jetbrains.com/junie/
+junie @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Junie configuration directory
+  configPath string
+  // Installed skills
+  skills() []junie.skill
+}
+
+// Junie skill
+private junie.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// Augment instance configuration
+// URL: https://www.augmentcode.com/
+augment @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Augment configuration directory
+  configPath string
+  // Installed skills
+  skills() []augment.skill
+}
+
+// Augment skill
+private augment.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// Warp AI terminal instance configuration
+// URL: https://www.warp.dev/
+warp @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Warp configuration directory
+  configPath string
+  // Installed skills
+  skills() []warp.skill
+}
+
+// Warp skill
+private warp.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// Kilo Code instance configuration
+// URL: https://kilocode.ai/
+kilocode @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Kilo Code configuration directory
+  configPath string
+  // Installed skills
+  skills() []kilocode.skill
+}
+
+// Kilo Code skill
+private kilocode.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// OpenHands instance configuration
+// URL: https://www.all-hands.dev/
+openhands @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the OpenHands configuration directory
+  configPath string
+  // Installed skills
+  skills() []openhands.skill
+}
+
+// OpenHands skill
+private openhands.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// Qwen Code (Alibaba) instance configuration
+// URL: https://qwen.ai/qwencode
+qwen.code @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Qwen Code configuration directory
+  configPath string
+  // Installed skills
+  skills() []qwen.code.skill
+}
+
+// Qwen Code skill
+private qwen.code.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
