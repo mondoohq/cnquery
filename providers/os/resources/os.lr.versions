@@ -249,6 +249,16 @@ command.command 9.0.0
 command.exitcode 9.0.0
 command.stderr 9.0.0
 command.stdout 9.0.0
+conda.package 13.13.1
+conda.package.files 13.13.1
+conda.package.id 13.13.1
+conda.package.name 13.13.1
+conda.package.purl 13.13.1
+conda.package.version 13.13.1
+conda.packages 13.13.1
+conda.packages.files 13.13.1
+conda.packages.list 13.13.1
+conda.packages.path 13.13.1
 container.image 9.0.1
 container.image.identifier 9.0.1
 container.image.identifierType 9.0.1

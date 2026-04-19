@@ -215,6 +215,8 @@ const (
 	ResourceErlangPackage                string = "erlang.package"
 	ResourcePrologPackages               string = "prolog.packages"
 	ResourcePrologPackage                string = "prolog.package"
+	ResourceCondaPackages                string = "conda.packages"
+	ResourceCondaPackage                 string = "conda.package"
 	ResourceMacos                        string = "macos"
 	ResourceMacosHardware                string = "macos.hardware"
 	ResourceMacosAlf                     string = "macos.alf"
@@ -1136,6 +1138,14 @@ func init() {
 		"prolog.package": {
 			// to override args, implement: initPrologPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createPrologPackage,
+		},
+		"conda.packages": {
+			Init:   initCondaPackages,
+			Create: createCondaPackages,
+		},
+		"conda.package": {
+			// to override args, implement: initCondaPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCondaPackage,
 		},
 		"macos": {
 			// to override args, implement: initMacos(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4570,6 +4580,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"prolog.package.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPrologPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"conda.packages.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCondaPackages).GetPath()).ToDataRes(types.String)
+	},
+	"conda.packages.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCondaPackages).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"conda.packages.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCondaPackages).GetList()).ToDataRes(types.Array(types.Resource("conda.package")))
+	},
+	"conda.package.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCondaPackage).GetId()).ToDataRes(types.String)
+	},
+	"conda.package.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCondaPackage).GetName()).ToDataRes(types.String)
+	},
+	"conda.package.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCondaPackage).GetVersion()).ToDataRes(types.String)
+	},
+	"conda.package.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCondaPackage).GetPurl()).ToDataRes(types.String)
+	},
+	"conda.package.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCondaPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
 	},
 	"macos.computerName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacos).GetComputerName()).ToDataRes(types.String)
@@ -11390,6 +11424,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"prolog.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPrologPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"conda.packages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCondaPackages).__id, ok = v.Value.(string)
+		return
+	},
+	"conda.packages.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCondaPackages).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"conda.packages.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCondaPackages).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"conda.packages.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCondaPackages).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"conda.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCondaPackage).__id, ok = v.Value.(string)
+		return
+	},
+	"conda.package.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCondaPackage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"conda.package.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCondaPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"conda.package.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCondaPackage).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"conda.package.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCondaPackage).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"conda.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCondaPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"macos.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -31324,6 +31398,176 @@ func (c *mqlPrologPackage) GetFiles() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("prolog.package", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+// mqlCondaPackages for the conda.packages resource
+type mqlCondaPackages struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlCondaPackagesInternal
+	Path  plugin.TValue[string]
+	Files plugin.TValue[[]any]
+	List  plugin.TValue[[]any]
+}
+
+// createCondaPackages creates a new instance of this resource
+func createCondaPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCondaPackages{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("conda.packages", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCondaPackages) MqlName() string {
+	return "conda.packages"
+}
+
+func (c *mqlCondaPackages) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCondaPackages) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlCondaPackages) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("conda.packages", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+func (c *mqlCondaPackages) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("conda.packages", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlCondaPackage for the conda.package resource
+type mqlCondaPackage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCondaPackageInternal it will be used here
+	Id      plugin.TValue[string]
+	Name    plugin.TValue[string]
+	Version plugin.TValue[string]
+	Purl    plugin.TValue[string]
+	Files   plugin.TValue[[]any]
+}
+
+// createCondaPackage creates a new instance of this resource
+func createCondaPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCondaPackage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("conda.package", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCondaPackage) MqlName() string {
+	return "conda.package"
+}
+
+func (c *mqlCondaPackage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCondaPackage) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlCondaPackage) GetName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Name, func() (string, error) {
+		return c.name()
+	})
+}
+
+func (c *mqlCondaPackage) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlCondaPackage) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
+	})
+}
+
+func (c *mqlCondaPackage) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("conda.package", c.__id, "files")
 			if err != nil {
 				return nil, err
 			}

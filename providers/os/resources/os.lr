@@ -2823,6 +2823,33 @@ prolog.package @defaults("name version purl") {
   files() []pkgFileInfo
 }
 
+// Conda packages (conda-meta or environment.yml)
+conda.packages {
+  []conda.package
+
+  init(path? string)
+
+  // Path to search for conda-meta or environment.yml
+  path string
+
+  // Files used to determine the packages
+  files() []pkgFileInfo
+}
+
+// Conda package dependency
+private conda.package @defaults("name version purl") {
+  // ID is the conda.package unique identifier
+  id string
+  // Package name
+  name() string
+  // Package version
+  version() string
+  // Package URL
+  purl() string
+  // Package files
+  files() []pkgFileInfo
+}
+
 // macOS specific resources
 macos {
   // macOS computer name

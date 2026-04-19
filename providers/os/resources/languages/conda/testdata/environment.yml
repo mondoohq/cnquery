@@ -1,0 +1,11 @@
+name: myenv
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - numpy=1.26.4
+  - pandas=2.2.1=py312h526ad5a_0
+  - scikit-learn=1.4.0
+  - python=3.12.2
+  - pip:
+    - requests==2.31.0
