@@ -2796,6 +2796,33 @@ erlang.package @defaults("name version purl") {
   files() []pkgFileInfo
 }
 
+// SWI-Prolog packs
+prolog.packages {
+  []prolog.package
+
+  init(path? string)
+
+  // Path to search for SWI-Prolog packs directory
+  path string
+
+  // Files used to determine the packages
+  files() []pkgFileInfo
+}
+
+// SWI-Prolog pack
+prolog.package @defaults("name version purl") {
+  // ID is the prolog.package unique identifier
+  id string
+  // Pack name
+  name() string
+  // Pack version
+  version() string
+  // Package URL
+  purl() string
+  // Package files
+  files() []pkgFileInfo
+}
+
 // macOS specific resources
 macos {
   // macOS computer name

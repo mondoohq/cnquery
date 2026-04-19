@@ -1423,6 +1423,16 @@ process.pid 9.0.1
 process.state 9.0.1
 processes 9.0.1
 processes.list 9.0.1
+prolog.package 13.13.1
+prolog.package.files 13.13.1
+prolog.package.id 13.13.1
+prolog.package.name 13.13.1
+prolog.package.purl 13.13.1
+prolog.package.version 13.13.1
+prolog.packages 13.13.1
+prolog.packages.files 13.13.1
+prolog.packages.list 13.13.1
+prolog.packages.path 13.13.1
 python 9.0.1
 python.package 9.0.1
 python.package.author 9.0.1

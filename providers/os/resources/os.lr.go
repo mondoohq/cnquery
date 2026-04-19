@@ -213,6 +213,8 @@ const (
 	ResourceElixirPackage                string = "elixir.package"
 	ResourceErlangPackages               string = "erlang.packages"
 	ResourceErlangPackage                string = "erlang.package"
+	ResourcePrologPackages               string = "prolog.packages"
+	ResourcePrologPackage                string = "prolog.package"
 	ResourceMacos                        string = "macos"
 	ResourceMacosHardware                string = "macos.hardware"
 	ResourceMacosAlf                     string = "macos.alf"
@@ -1126,6 +1128,14 @@ func init() {
 		"erlang.package": {
 			// to override args, implement: initErlangPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createErlangPackage,
+		},
+		"prolog.packages": {
+			Init:   initPrologPackages,
+			Create: createPrologPackages,
+		},
+		"prolog.package": {
+			// to override args, implement: initPrologPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createPrologPackage,
 		},
 		"macos": {
 			// to override args, implement: initMacos(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4536,6 +4546,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"erlang.package.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlErlangPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"prolog.packages.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPrologPackages).GetPath()).ToDataRes(types.String)
+	},
+	"prolog.packages.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPrologPackages).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"prolog.packages.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPrologPackages).GetList()).ToDataRes(types.Array(types.Resource("prolog.package")))
+	},
+	"prolog.package.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPrologPackage).GetId()).ToDataRes(types.String)
+	},
+	"prolog.package.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPrologPackage).GetName()).ToDataRes(types.String)
+	},
+	"prolog.package.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPrologPackage).GetVersion()).ToDataRes(types.String)
+	},
+	"prolog.package.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPrologPackage).GetPurl()).ToDataRes(types.String)
+	},
+	"prolog.package.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPrologPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
 	},
 	"macos.computerName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacos).GetComputerName()).ToDataRes(types.String)
@@ -11316,6 +11350,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"erlang.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlErlangPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"prolog.packages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPrologPackages).__id, ok = v.Value.(string)
+		return
+	},
+	"prolog.packages.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPrologPackages).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"prolog.packages.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPrologPackages).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"prolog.packages.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPrologPackages).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"prolog.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPrologPackage).__id, ok = v.Value.(string)
+		return
+	},
+	"prolog.package.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPrologPackage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"prolog.package.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPrologPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"prolog.package.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPrologPackage).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"prolog.package.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPrologPackage).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"prolog.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPrologPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"macos.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -31080,6 +31154,176 @@ func (c *mqlErlangPackage) GetFiles() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("erlang.package", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+// mqlPrologPackages for the prolog.packages resource
+type mqlPrologPackages struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlPrologPackagesInternal
+	Path  plugin.TValue[string]
+	Files plugin.TValue[[]any]
+	List  plugin.TValue[[]any]
+}
+
+// createPrologPackages creates a new instance of this resource
+func createPrologPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPrologPackages{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("prolog.packages", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPrologPackages) MqlName() string {
+	return "prolog.packages"
+}
+
+func (c *mqlPrologPackages) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPrologPackages) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlPrologPackages) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("prolog.packages", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+func (c *mqlPrologPackages) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("prolog.packages", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlPrologPackage for the prolog.package resource
+type mqlPrologPackage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlPrologPackageInternal it will be used here
+	Id      plugin.TValue[string]
+	Name    plugin.TValue[string]
+	Version plugin.TValue[string]
+	Purl    plugin.TValue[string]
+	Files   plugin.TValue[[]any]
+}
+
+// createPrologPackage creates a new instance of this resource
+func createPrologPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPrologPackage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("prolog.package", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPrologPackage) MqlName() string {
+	return "prolog.package"
+}
+
+func (c *mqlPrologPackage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPrologPackage) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlPrologPackage) GetName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Name, func() (string, error) {
+		return c.name()
+	})
+}
+
+func (c *mqlPrologPackage) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlPrologPackage) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
+	})
+}
+
+func (c *mqlPrologPackage) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("prolog.package", c.__id, "files")
 			if err != nil {
 				return nil, err
 			}
