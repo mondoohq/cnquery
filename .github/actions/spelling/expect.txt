@@ -108,6 +108,7 @@ cowlib
 cpe
 CPWn
 cpx
+cran
 crowdstrike
 cryptokey
 ctx
@@ -450,6 +451,7 @@ recaptcha
 regexmatchstatement
 regexpatternsetreferencestatement
 rehydration
+renv
 replicators
 resourcegroup
 resourcepolicy

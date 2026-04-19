@@ -2952,6 +2952,33 @@ private julia.package @defaults("name version purl") {
   files() []pkgFileInfo
 }
 
+// R packages (renv.lock)
+r.packages {
+  []r.package
+
+  init(path? string)
+
+  // Path to search for renv.lock
+  path string
+
+  // Files used to determine the packages
+  files() []pkgFileInfo
+}
+
+// R package dependency
+private r.package @defaults("name version purl") {
+  // ID is the r.package unique identifier
+  id string
+  // Package name
+  name() string
+  // Package version
+  version() string
+  // Package URL
+  purl() string
+  // Package files
+  files() []pkgFileInfo
+}
+
 // macOS specific resources
 macos {
   // macOS computer name
