@@ -4,18 +4,27 @@
 package resources
 
 import (
+	"io"
 	"strings"
 	"sync"
 
 	"github.com/cockroachdb/errors"
+	"github.com/package-url/packageurl-go"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/providers/os/resources/cpe"
 	"go.mondoo.com/mql/v13/providers/os/resources/kernel"
+	"go.mondoo.com/mql/v13/types"
 )
+
+// kernelPURL generates a PURL for a Linux kernel version.
+func kernelPURL(version string) string {
+	return packageurl.NewPackageURL("generic", "", "linux-kernel", version, nil, "").String()
+}
 
 func initKernel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	// this resource is only supported on linux
@@ -220,6 +229,113 @@ func (k *mqlKernel) installed() ([]any, error) {
 	return convert.JsonToDictSlice(res)
 }
 
+func (k *mqlKernel) installedVersions() ([]any, error) {
+	// Reuse the installed() logic to get KernelVersion entries,
+	// then convert them to typed kernel.version resources with PURL/CPE.
+	installedRaw := k.GetInstalled()
+	if installedRaw.Error != nil {
+		return nil, installedRaw.Error
+	}
+
+	// Re-parse the KernelVersion data from installed()
+	conn := k.MqlRuntime.Connection.(shared.Connection)
+	platform := conn.Asset().Platform
+
+	if !platform.IsFamily(inventory.FAMILY_LINUX) {
+		return []any{}, nil
+	}
+
+	info := k.GetInfo()
+	if info.Error != nil {
+		return []any{}, nil
+	}
+	kernelInfo, ok := info.Data.(map[string]any)
+	if !ok {
+		return []any{}, nil
+	}
+	runningKernelVersion, _ := kernelInfo["version"].(string)
+
+	// Get installed kernel packages
+	raw, err := CreateResource(k.MqlRuntime, "packages", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	packages := raw.(*mqlPackages)
+	tlist := packages.GetList()
+	if tlist.Error != nil {
+		return nil, tlist.Error
+	}
+
+	var versions []any
+	for _, mqlPkg := range tlist.Data {
+		pkg := mqlPkg.(*mqlPackage)
+		name := pkg.Name.Data
+		version := pkg.Version.Data
+
+		// Apply the same distro-specific filtering as installed()
+		isKernel := false
+		running := false
+
+		if platform.IsFamily("debian") && strings.HasPrefix(name, "linux-image") {
+			isKernel = true
+			kernelName := strings.TrimPrefix(name, "linux-image-")
+			running = kernelName == runningKernelVersion
+		} else if platform.IsFamily("redhat") || platform.Name == "amazonlinux" || platform.Name == "oraclelinux" {
+			if name == "kernel" || name == "kernel-uek" {
+				isKernel = true
+				arch := pkg.Arch.Data
+				kernelName := version + "." + arch
+				running = kernelName == runningKernelVersion
+			}
+		} else if platform.Name == "photon" && strings.HasPrefix(name, "linux") {
+			isKernel = true
+		} else if platform.IsFamily("suse") && strings.HasPrefix(name, "kernel-") {
+			isKernel = true
+			kernelType := strings.TrimPrefix(name, "kernel")
+			if strings.HasSuffix(runningKernelVersion, kernelType) && strings.HasPrefix(version, strings.TrimSuffix(runningKernelVersion, kernelType)) {
+				running = true
+			}
+		}
+
+		if !isKernel {
+			continue
+		}
+
+		purlStr := kernelPURL(version)
+
+		cpeEntries := []any{}
+		cpeStrs, err := cpe.NewPackage2Cpe("linux", "linux_kernel", version, "", "")
+		if err == nil {
+			for _, c := range cpeStrs {
+				cpeRes, err := k.MqlRuntime.CreateSharedResource("cpe", map[string]*llx.RawData{
+					"uri": llx.StringData(c),
+				})
+				if err == nil {
+					cpeEntries = append(cpeEntries, cpeRes)
+				}
+			}
+		}
+
+		versionRes, err := CreateResource(k.MqlRuntime, "kernel.version", map[string]*llx.RawData{
+			"name":    llx.StringData(name),
+			"version": llx.StringData(version),
+			"running": llx.BoolData(running),
+			"purl":    llx.StringData(purlStr),
+			"cpes":    llx.ArrayData(cpeEntries, types.Resource("cpe")),
+		})
+		if err != nil {
+			return nil, err
+		}
+		versions = append(versions, versionRes)
+	}
+
+	return versions, nil
+}
+
+func (k *mqlKernelVersion) id() (string, error) {
+	return "kernel.version/" + k.Name.Data + "@" + k.Version.Data, nil
+}
+
 func (k *mqlKernel) info() (any, error) {
 	// find suitable kernel module manager
 	conn := k.MqlRuntime.Connection.(shared.Connection)
@@ -235,6 +351,69 @@ func (k *mqlKernel) info() (any, error) {
 	}
 
 	return convert.JsonToDict(kernelInfo)
+}
+
+func (k *mqlKernel) running() (*mqlKernelVersion, error) {
+	conn := k.MqlRuntime.Connection.(shared.Connection)
+
+	// Get kernel info from the existing manager
+	mm, err := kernel.ResolveManager(conn)
+	if mm == nil || err != nil {
+		return nil, errors.Wrap(err, "could not detect suitable kernel module manager for platform")
+	}
+
+	kernelInfo, err := mm.Info()
+	if err != nil {
+		return nil, err
+	}
+
+	// Get architecture from platform
+	arch := ""
+	if platform := conn.Asset().Platform; platform != nil {
+		arch = platform.Arch
+	}
+
+	// Read full /proc/version string
+	fullVersion := ""
+	if f, err := conn.FileSystem().Open("/proc/version"); err == nil {
+		defer f.Close()
+		if data, err := io.ReadAll(f); err == nil {
+			fullVersion = strings.TrimSpace(string(data))
+		}
+	}
+
+	// Generate PURL and CPEs
+	purlStr := kernelPURL(kernelInfo.Version)
+
+	cpeEntries := []any{}
+	cpeStrs, err := cpe.NewPackage2Cpe("linux", "linux_kernel", kernelInfo.Version, "", "")
+	if err == nil {
+		for _, c := range cpeStrs {
+			cpeRes, err := k.MqlRuntime.CreateSharedResource("cpe", map[string]*llx.RawData{
+				"uri": llx.StringData(c),
+			})
+			if err == nil {
+				cpeEntries = append(cpeEntries, cpeRes)
+			}
+		}
+	}
+
+	res, err := CreateResource(k.MqlRuntime, "kernel.version", map[string]*llx.RawData{
+		"name":        llx.StringData(kernelInfo.Version),
+		"version":     llx.StringData(kernelInfo.Version),
+		"running":     llx.BoolData(true),
+		"path":        llx.StringData(kernelInfo.Path),
+		"device":      llx.StringData(kernelInfo.Device),
+		"arch":        llx.StringData(arch),
+		"fullVersion": llx.StringData(fullVersion),
+		"purl":        llx.StringData(purlStr),
+		"cpes":        llx.ArrayData(cpeEntries, types.Resource("cpe")),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return res.(*mqlKernelVersion), nil
 }
 
 func (k *mqlKernel) parameters() (map[string]any, error) {

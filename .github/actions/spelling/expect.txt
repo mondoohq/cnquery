@@ -282,6 +282,7 @@ nft
 NINEl
 nio
 nmap
+Nvidia
 noc
 nocerts
 nodegroup

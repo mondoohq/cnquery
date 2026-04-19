@@ -93,6 +93,7 @@ const (
 	ResourceSystemdSocket                string = "systemd.socket"
 	ResourceSystemdSockets               string = "systemd.sockets"
 	ResourceKernel                       string = "kernel"
+	ResourceKernelVersion                string = "kernel.version"
 	ResourceKernelModule                 string = "kernel.module"
 	ResourceDocker                       string = "docker"
 	ResourceDockerFile                   string = "docker.file"
@@ -601,6 +602,10 @@ func init() {
 		"kernel": {
 			Init:   initKernel,
 			Create: createKernel,
+		},
+		"kernel.version": {
+			// to override args, implement: initKernelVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createKernelVersion,
 		},
 		"kernel.module": {
 			Init:   initKernelModule,
@@ -2482,6 +2487,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"kernel.info": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKernel).GetInfo()).ToDataRes(types.Dict)
 	},
+	"kernel.running": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernel).GetRunning()).ToDataRes(types.Resource("kernel.version"))
+	},
 	"kernel.parameters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKernel).GetParameters()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -2490,6 +2498,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"kernel.installed": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKernel).GetInstalled()).ToDataRes(types.Array(types.Dict))
+	},
+	"kernel.installedVersions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernel).GetInstalledVersions()).ToDataRes(types.Array(types.Resource("kernel.version")))
+	},
+	"kernel.version.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernelVersion).GetName()).ToDataRes(types.String)
+	},
+	"kernel.version.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernelVersion).GetVersion()).ToDataRes(types.String)
+	},
+	"kernel.version.running": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernelVersion).GetRunning()).ToDataRes(types.Bool)
+	},
+	"kernel.version.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernelVersion).GetPath()).ToDataRes(types.String)
+	},
+	"kernel.version.device": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernelVersion).GetDevice()).ToDataRes(types.String)
+	},
+	"kernel.version.arch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernelVersion).GetArch()).ToDataRes(types.String)
+	},
+	"kernel.version.fullVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernelVersion).GetFullVersion()).ToDataRes(types.String)
+	},
+	"kernel.version.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernelVersion).GetPurl()).ToDataRes(types.String)
+	},
+	"kernel.version.cpes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernelVersion).GetCpes()).ToDataRes(types.Array(types.Resource("cpe")))
 	},
 	"kernel.module.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKernelModule).GetName()).ToDataRes(types.String)
@@ -7573,6 +7611,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlKernel).Info, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"kernel.running": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernel).Running, ok = plugin.RawToTValue[*mqlKernelVersion](v.Value, v.Error)
+		return
+	},
 	"kernel.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlKernel).Parameters, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -7583,6 +7625,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"kernel.installed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlKernel).Installed, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"kernel.installedVersions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernel).InstalledVersions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"kernel.version.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelVersion).__id, ok = v.Value.(string)
+		return
+	},
+	"kernel.version.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelVersion).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kernel.version.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelVersion).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kernel.version.running": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelVersion).Running, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"kernel.version.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelVersion).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kernel.version.device": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelVersion).Device, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kernel.version.arch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelVersion).Arch, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kernel.version.fullVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelVersion).FullVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kernel.version.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelVersion).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kernel.version.cpes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelVersion).Cpes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"kernel.module.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19109,10 +19195,12 @@ type mqlKernel struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlKernelInternal
-	Info       plugin.TValue[any]
-	Parameters plugin.TValue[map[string]any]
-	Modules    plugin.TValue[[]any]
-	Installed  plugin.TValue[[]any]
+	Info              plugin.TValue[any]
+	Running           plugin.TValue[*mqlKernelVersion]
+	Parameters        plugin.TValue[map[string]any]
+	Modules           plugin.TValue[[]any]
+	Installed         plugin.TValue[[]any]
+	InstalledVersions plugin.TValue[[]any]
 }
 
 // createKernel creates a new instance of this resource
@@ -19153,6 +19241,22 @@ func (c *mqlKernel) GetInfo() *plugin.TValue[any] {
 	})
 }
 
+func (c *mqlKernel) GetRunning() *plugin.TValue[*mqlKernelVersion] {
+	return plugin.GetOrCompute[*mqlKernelVersion](&c.Running, func() (*mqlKernelVersion, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("kernel", c.__id, "running")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlKernelVersion), nil
+			}
+		}
+
+		return c.running()
+	})
+}
+
 func (c *mqlKernel) GetParameters() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Parameters, func() (map[string]any, error) {
 		return c.parameters()
@@ -19179,6 +19283,111 @@ func (c *mqlKernel) GetInstalled() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Installed, func() ([]any, error) {
 		return c.installed()
 	})
+}
+
+func (c *mqlKernel) GetInstalledVersions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InstalledVersions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("kernel", c.__id, "installedVersions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.installedVersions()
+	})
+}
+
+// mqlKernelVersion for the kernel.version resource
+type mqlKernelVersion struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlKernelVersionInternal it will be used here
+	Name        plugin.TValue[string]
+	Version     plugin.TValue[string]
+	Running     plugin.TValue[bool]
+	Path        plugin.TValue[string]
+	Device      plugin.TValue[string]
+	Arch        plugin.TValue[string]
+	FullVersion plugin.TValue[string]
+	Purl        plugin.TValue[string]
+	Cpes        plugin.TValue[[]any]
+}
+
+// createKernelVersion creates a new instance of this resource
+func createKernelVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlKernelVersion{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("kernel.version", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlKernelVersion) MqlName() string {
+	return "kernel.version"
+}
+
+func (c *mqlKernelVersion) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlKernelVersion) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlKernelVersion) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlKernelVersion) GetRunning() *plugin.TValue[bool] {
+	return &c.Running
+}
+
+func (c *mqlKernelVersion) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlKernelVersion) GetDevice() *plugin.TValue[string] {
+	return &c.Device
+}
+
+func (c *mqlKernelVersion) GetArch() *plugin.TValue[string] {
+	return &c.Arch
+}
+
+func (c *mqlKernelVersion) GetFullVersion() *plugin.TValue[string] {
+	return &c.FullVersion
+}
+
+func (c *mqlKernelVersion) GetPurl() *plugin.TValue[string] {
+	return &c.Purl
+}
+
+func (c *mqlKernelVersion) GetCpes() *plugin.TValue[[]any] {
+	return &c.Cpes
 }
 
 // mqlKernelModule for the kernel.module resource
