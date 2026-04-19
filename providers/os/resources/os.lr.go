@@ -305,6 +305,14 @@ const (
 	ResourcePiSkill                      string = "pi.skill"
 	ResourceMistralVibe                  string = "mistral.vibe"
 	ResourceMistralVibeSkill             string = "mistral.vibe.skill"
+	ResourceAntigravity                  string = "antigravity"
+	ResourceAntigravitySkill             string = "antigravity.skill"
+	ResourceIbmBob                       string = "ibm.bob"
+	ResourceIbmBobSkill                  string = "ibm.bob.skill"
+	ResourceOpenclaw                     string = "openclaw"
+	ResourceOpenclawSkill                string = "openclaw.skill"
+	ResourceSnowflakeCortex              string = "snowflake.cortex"
+	ResourceSnowflakeCortexSkill         string = "snowflake.cortex.skill"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -1466,6 +1474,38 @@ func init() {
 		"mistral.vibe.skill": {
 			// to override args, implement: initMistralVibeSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMistralVibeSkill,
+		},
+		"antigravity": {
+			Init:   initAntigravity,
+			Create: createAntigravity,
+		},
+		"antigravity.skill": {
+			// to override args, implement: initAntigravitySkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAntigravitySkill,
+		},
+		"ibm.bob": {
+			Init:   initIbmBob,
+			Create: createIbmBob,
+		},
+		"ibm.bob.skill": {
+			// to override args, implement: initIbmBobSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createIbmBobSkill,
+		},
+		"openclaw": {
+			Init:   initOpenclaw,
+			Create: createOpenclaw,
+		},
+		"openclaw.skill": {
+			// to override args, implement: initOpenclawSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOpenclawSkill,
+		},
+		"snowflake.cortex": {
+			Init:   initSnowflakeCortex,
+			Create: createSnowflakeCortex,
+		},
+		"snowflake.cortex.skill": {
+			// to override args, implement: initSnowflakeCortexSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSnowflakeCortexSkill,
 		},
 	}
 }
@@ -6190,6 +6230,114 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"mistral.vibe.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMistralVibeSkill).GetSha256()).ToDataRes(types.String)
+	},
+	"antigravity.configPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAntigravity).GetConfigPath()).ToDataRes(types.String)
+	},
+	"antigravity.skills": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAntigravity).GetSkills()).ToDataRes(types.Array(types.Resource("antigravity.skill")))
+	},
+	"antigravity.skill.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAntigravitySkill).GetName()).ToDataRes(types.String)
+	},
+	"antigravity.skill.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAntigravitySkill).GetDescription()).ToDataRes(types.String)
+	},
+	"antigravity.skill.allowedTools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAntigravitySkill).GetAllowedTools()).ToDataRes(types.Array(types.String))
+	},
+	"antigravity.skill.argumentHint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAntigravitySkill).GetArgumentHint()).ToDataRes(types.String)
+	},
+	"antigravity.skill.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAntigravitySkill).GetSource()).ToDataRes(types.String)
+	},
+	"antigravity.skill.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAntigravitySkill).GetContent()).ToDataRes(types.String)
+	},
+	"antigravity.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAntigravitySkill).GetSha256()).ToDataRes(types.String)
+	},
+	"ibm.bob.configPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmBob).GetConfigPath()).ToDataRes(types.String)
+	},
+	"ibm.bob.skills": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmBob).GetSkills()).ToDataRes(types.Array(types.Resource("ibm.bob.skill")))
+	},
+	"ibm.bob.skill.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmBobSkill).GetName()).ToDataRes(types.String)
+	},
+	"ibm.bob.skill.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmBobSkill).GetDescription()).ToDataRes(types.String)
+	},
+	"ibm.bob.skill.allowedTools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmBobSkill).GetAllowedTools()).ToDataRes(types.Array(types.String))
+	},
+	"ibm.bob.skill.argumentHint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmBobSkill).GetArgumentHint()).ToDataRes(types.String)
+	},
+	"ibm.bob.skill.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmBobSkill).GetSource()).ToDataRes(types.String)
+	},
+	"ibm.bob.skill.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmBobSkill).GetContent()).ToDataRes(types.String)
+	},
+	"ibm.bob.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmBobSkill).GetSha256()).ToDataRes(types.String)
+	},
+	"openclaw.configPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenclaw).GetConfigPath()).ToDataRes(types.String)
+	},
+	"openclaw.skills": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenclaw).GetSkills()).ToDataRes(types.Array(types.Resource("openclaw.skill")))
+	},
+	"openclaw.skill.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenclawSkill).GetName()).ToDataRes(types.String)
+	},
+	"openclaw.skill.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenclawSkill).GetDescription()).ToDataRes(types.String)
+	},
+	"openclaw.skill.allowedTools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenclawSkill).GetAllowedTools()).ToDataRes(types.Array(types.String))
+	},
+	"openclaw.skill.argumentHint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenclawSkill).GetArgumentHint()).ToDataRes(types.String)
+	},
+	"openclaw.skill.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenclawSkill).GetSource()).ToDataRes(types.String)
+	},
+	"openclaw.skill.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenclawSkill).GetContent()).ToDataRes(types.String)
+	},
+	"openclaw.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenclawSkill).GetSha256()).ToDataRes(types.String)
+	},
+	"snowflake.cortex.configPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeCortex).GetConfigPath()).ToDataRes(types.String)
+	},
+	"snowflake.cortex.skills": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeCortex).GetSkills()).ToDataRes(types.Array(types.Resource("snowflake.cortex.skill")))
+	},
+	"snowflake.cortex.skill.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeCortexSkill).GetName()).ToDataRes(types.String)
+	},
+	"snowflake.cortex.skill.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeCortexSkill).GetDescription()).ToDataRes(types.String)
+	},
+	"snowflake.cortex.skill.allowedTools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeCortexSkill).GetAllowedTools()).ToDataRes(types.Array(types.String))
+	},
+	"snowflake.cortex.skill.argumentHint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeCortexSkill).GetArgumentHint()).ToDataRes(types.String)
+	},
+	"snowflake.cortex.skill.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeCortexSkill).GetSource()).ToDataRes(types.String)
+	},
+	"snowflake.cortex.skill.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeCortexSkill).GetContent()).ToDataRes(types.String)
+	},
+	"snowflake.cortex.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeCortexSkill).GetSha256()).ToDataRes(types.String)
 	},
 }
 
@@ -13561,6 +13709,182 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"mistral.vibe.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMistralVibeSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"antigravity.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAntigravity).__id, ok = v.Value.(string)
+		return
+	},
+	"antigravity.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAntigravity).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"antigravity.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAntigravity).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"antigravity.skill.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAntigravitySkill).__id, ok = v.Value.(string)
+		return
+	},
+	"antigravity.skill.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAntigravitySkill).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"antigravity.skill.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAntigravitySkill).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"antigravity.skill.allowedTools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAntigravitySkill).AllowedTools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"antigravity.skill.argumentHint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAntigravitySkill).ArgumentHint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"antigravity.skill.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAntigravitySkill).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"antigravity.skill.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAntigravitySkill).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"antigravity.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAntigravitySkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.bob.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmBob).__id, ok = v.Value.(string)
+		return
+	},
+	"ibm.bob.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmBob).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.bob.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmBob).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ibm.bob.skill.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmBobSkill).__id, ok = v.Value.(string)
+		return
+	},
+	"ibm.bob.skill.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmBobSkill).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.bob.skill.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmBobSkill).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.bob.skill.allowedTools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmBobSkill).AllowedTools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ibm.bob.skill.argumentHint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmBobSkill).ArgumentHint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.bob.skill.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmBobSkill).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.bob.skill.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmBobSkill).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.bob.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmBobSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openclaw.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenclaw).__id, ok = v.Value.(string)
+		return
+	},
+	"openclaw.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenclaw).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openclaw.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenclaw).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openclaw.skill.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenclawSkill).__id, ok = v.Value.(string)
+		return
+	},
+	"openclaw.skill.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenclawSkill).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openclaw.skill.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenclawSkill).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openclaw.skill.allowedTools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenclawSkill).AllowedTools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openclaw.skill.argumentHint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenclawSkill).ArgumentHint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openclaw.skill.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenclawSkill).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openclaw.skill.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenclawSkill).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openclaw.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenclawSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.cortex.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeCortex).__id, ok = v.Value.(string)
+		return
+	},
+	"snowflake.cortex.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeCortex).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.cortex.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeCortex).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.cortex.skill.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeCortexSkill).__id, ok = v.Value.(string)
+		return
+	},
+	"snowflake.cortex.skill.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeCortexSkill).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.cortex.skill.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeCortexSkill).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.cortex.skill.allowedTools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeCortexSkill).AllowedTools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.cortex.skill.argumentHint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeCortexSkill).ArgumentHint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.cortex.skill.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeCortexSkill).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.cortex.skill.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeCortexSkill).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.cortex.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeCortexSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -37713,6 +38037,594 @@ func (c *mqlMistralVibeSkill) GetContent() *plugin.TValue[string] {
 }
 
 func (c *mqlMistralVibeSkill) GetSha256() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
+		return c.sha256()
+	})
+}
+
+// mqlAntigravity for the antigravity resource
+type mqlAntigravity struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAntigravityInternal it will be used here
+	ConfigPath plugin.TValue[string]
+	Skills     plugin.TValue[[]any]
+}
+
+// createAntigravity creates a new instance of this resource
+func createAntigravity(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAntigravity{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("antigravity", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAntigravity) MqlName() string {
+	return "antigravity"
+}
+
+func (c *mqlAntigravity) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAntigravity) GetConfigPath() *plugin.TValue[string] {
+	return &c.ConfigPath
+}
+
+func (c *mqlAntigravity) GetSkills() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Skills, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("antigravity", c.__id, "skills")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.skills()
+	})
+}
+
+// mqlAntigravitySkill for the antigravity.skill resource
+type mqlAntigravitySkill struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAntigravitySkillInternal it will be used here
+	Name         plugin.TValue[string]
+	Description  plugin.TValue[string]
+	AllowedTools plugin.TValue[[]any]
+	ArgumentHint plugin.TValue[string]
+	Source       plugin.TValue[string]
+	Content      plugin.TValue[string]
+	Sha256       plugin.TValue[string]
+}
+
+// createAntigravitySkill creates a new instance of this resource
+func createAntigravitySkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAntigravitySkill{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("antigravity.skill", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAntigravitySkill) MqlName() string {
+	return "antigravity.skill"
+}
+
+func (c *mqlAntigravitySkill) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAntigravitySkill) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAntigravitySkill) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAntigravitySkill) GetAllowedTools() *plugin.TValue[[]any] {
+	return &c.AllowedTools
+}
+
+func (c *mqlAntigravitySkill) GetArgumentHint() *plugin.TValue[string] {
+	return &c.ArgumentHint
+}
+
+func (c *mqlAntigravitySkill) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlAntigravitySkill) GetContent() *plugin.TValue[string] {
+	return &c.Content
+}
+
+func (c *mqlAntigravitySkill) GetSha256() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
+		return c.sha256()
+	})
+}
+
+// mqlIbmBob for the ibm.bob resource
+type mqlIbmBob struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlIbmBobInternal it will be used here
+	ConfigPath plugin.TValue[string]
+	Skills     plugin.TValue[[]any]
+}
+
+// createIbmBob creates a new instance of this resource
+func createIbmBob(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlIbmBob{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ibm.bob", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlIbmBob) MqlName() string {
+	return "ibm.bob"
+}
+
+func (c *mqlIbmBob) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlIbmBob) GetConfigPath() *plugin.TValue[string] {
+	return &c.ConfigPath
+}
+
+func (c *mqlIbmBob) GetSkills() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Skills, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ibm.bob", c.__id, "skills")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.skills()
+	})
+}
+
+// mqlIbmBobSkill for the ibm.bob.skill resource
+type mqlIbmBobSkill struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlIbmBobSkillInternal it will be used here
+	Name         plugin.TValue[string]
+	Description  plugin.TValue[string]
+	AllowedTools plugin.TValue[[]any]
+	ArgumentHint plugin.TValue[string]
+	Source       plugin.TValue[string]
+	Content      plugin.TValue[string]
+	Sha256       plugin.TValue[string]
+}
+
+// createIbmBobSkill creates a new instance of this resource
+func createIbmBobSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlIbmBobSkill{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ibm.bob.skill", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlIbmBobSkill) MqlName() string {
+	return "ibm.bob.skill"
+}
+
+func (c *mqlIbmBobSkill) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlIbmBobSkill) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlIbmBobSkill) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlIbmBobSkill) GetAllowedTools() *plugin.TValue[[]any] {
+	return &c.AllowedTools
+}
+
+func (c *mqlIbmBobSkill) GetArgumentHint() *plugin.TValue[string] {
+	return &c.ArgumentHint
+}
+
+func (c *mqlIbmBobSkill) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlIbmBobSkill) GetContent() *plugin.TValue[string] {
+	return &c.Content
+}
+
+func (c *mqlIbmBobSkill) GetSha256() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
+		return c.sha256()
+	})
+}
+
+// mqlOpenclaw for the openclaw resource
+type mqlOpenclaw struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOpenclawInternal it will be used here
+	ConfigPath plugin.TValue[string]
+	Skills     plugin.TValue[[]any]
+}
+
+// createOpenclaw creates a new instance of this resource
+func createOpenclaw(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenclaw{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openclaw", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenclaw) MqlName() string {
+	return "openclaw"
+}
+
+func (c *mqlOpenclaw) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenclaw) GetConfigPath() *plugin.TValue[string] {
+	return &c.ConfigPath
+}
+
+func (c *mqlOpenclaw) GetSkills() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Skills, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openclaw", c.__id, "skills")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.skills()
+	})
+}
+
+// mqlOpenclawSkill for the openclaw.skill resource
+type mqlOpenclawSkill struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOpenclawSkillInternal it will be used here
+	Name         plugin.TValue[string]
+	Description  plugin.TValue[string]
+	AllowedTools plugin.TValue[[]any]
+	ArgumentHint plugin.TValue[string]
+	Source       plugin.TValue[string]
+	Content      plugin.TValue[string]
+	Sha256       plugin.TValue[string]
+}
+
+// createOpenclawSkill creates a new instance of this resource
+func createOpenclawSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenclawSkill{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openclaw.skill", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenclawSkill) MqlName() string {
+	return "openclaw.skill"
+}
+
+func (c *mqlOpenclawSkill) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenclawSkill) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOpenclawSkill) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOpenclawSkill) GetAllowedTools() *plugin.TValue[[]any] {
+	return &c.AllowedTools
+}
+
+func (c *mqlOpenclawSkill) GetArgumentHint() *plugin.TValue[string] {
+	return &c.ArgumentHint
+}
+
+func (c *mqlOpenclawSkill) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlOpenclawSkill) GetContent() *plugin.TValue[string] {
+	return &c.Content
+}
+
+func (c *mqlOpenclawSkill) GetSha256() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
+		return c.sha256()
+	})
+}
+
+// mqlSnowflakeCortex for the snowflake.cortex resource
+type mqlSnowflakeCortex struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSnowflakeCortexInternal it will be used here
+	ConfigPath plugin.TValue[string]
+	Skills     plugin.TValue[[]any]
+}
+
+// createSnowflakeCortex creates a new instance of this resource
+func createSnowflakeCortex(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSnowflakeCortex{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("snowflake.cortex", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSnowflakeCortex) MqlName() string {
+	return "snowflake.cortex"
+}
+
+func (c *mqlSnowflakeCortex) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSnowflakeCortex) GetConfigPath() *plugin.TValue[string] {
+	return &c.ConfigPath
+}
+
+func (c *mqlSnowflakeCortex) GetSkills() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Skills, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.cortex", c.__id, "skills")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.skills()
+	})
+}
+
+// mqlSnowflakeCortexSkill for the snowflake.cortex.skill resource
+type mqlSnowflakeCortexSkill struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSnowflakeCortexSkillInternal it will be used here
+	Name         plugin.TValue[string]
+	Description  plugin.TValue[string]
+	AllowedTools plugin.TValue[[]any]
+	ArgumentHint plugin.TValue[string]
+	Source       plugin.TValue[string]
+	Content      plugin.TValue[string]
+	Sha256       plugin.TValue[string]
+}
+
+// createSnowflakeCortexSkill creates a new instance of this resource
+func createSnowflakeCortexSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSnowflakeCortexSkill{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("snowflake.cortex.skill", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSnowflakeCortexSkill) MqlName() string {
+	return "snowflake.cortex.skill"
+}
+
+func (c *mqlSnowflakeCortexSkill) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSnowflakeCortexSkill) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlSnowflakeCortexSkill) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlSnowflakeCortexSkill) GetAllowedTools() *plugin.TValue[[]any] {
+	return &c.AllowedTools
+}
+
+func (c *mqlSnowflakeCortexSkill) GetArgumentHint() *plugin.TValue[string] {
+	return &c.ArgumentHint
+}
+
+func (c *mqlSnowflakeCortexSkill) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlSnowflakeCortexSkill) GetContent() *plugin.TValue[string] {
+	return &c.Content
+}
+
+func (c *mqlSnowflakeCortexSkill) GetSha256() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
 		return c.sha256()
 	})

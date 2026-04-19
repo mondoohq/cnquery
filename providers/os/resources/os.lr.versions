@@ -1,6 +1,17 @@
 # Copyright Mondoo, Inc. 2024, 2026
 # SPDX-License-Identifier: BUSL-1.1
 
+antigravity 13.13.1
+antigravity.configPath 13.13.1
+antigravity.skill 13.13.1
+antigravity.skill.allowedTools 13.13.1
+antigravity.skill.argumentHint 13.13.1
+antigravity.skill.content 13.13.1
+antigravity.skill.description 13.13.1
+antigravity.skill.name 13.13.1
+antigravity.skill.sha256 13.13.1
+antigravity.skill.source 13.13.1
+antigravity.skills 13.13.1
 apache2 11.8.14
 apache2.conf 11.8.14
 apache2.conf.directories 11.8.14
@@ -619,6 +630,17 @@ homebrew.package.type 13.10.1
 homebrew.package.version 13.10.1
 homebrew.packages 13.10.1
 homebrew.packages.list 13.10.1
+ibm.bob 13.13.1
+ibm.bob.configPath 13.13.1
+ibm.bob.skill 13.13.1
+ibm.bob.skill.allowedTools 13.13.1
+ibm.bob.skill.argumentHint 13.13.1
+ibm.bob.skill.content 13.13.1
+ibm.bob.skill.description 13.13.1
+ibm.bob.skill.name 13.13.1
+ibm.bob.skill.sha256 13.13.1
+ibm.bob.skill.source 13.13.1
+ibm.bob.skills 13.13.1
 ip6tables 9.0.0
 ip6tables.forward 13.2.9
 ip6tables.forwardPolicy 13.2.9
@@ -1120,6 +1142,17 @@ openai.codex.skill.sha256 13.10.1
 openai.codex.skill.source 13.8.2
 openai.codex.skills 13.8.2
 openai.codex.version 13.8.2
+openclaw 13.13.1
+openclaw.configPath 13.13.1
+openclaw.skill 13.13.1
+openclaw.skill.allowedTools 13.13.1
+openclaw.skill.argumentHint 13.13.1
+openclaw.skill.content 13.13.1
+openclaw.skill.description 13.13.1
+openclaw.skill.name 13.13.1
+openclaw.skill.sha256 13.13.1
+openclaw.skill.source 13.13.1
+openclaw.skills 13.13.1
 opencode 13.13.1
 opencode.configPath 13.13.1
 opencode.skill 13.13.1
@@ -1431,6 +1464,17 @@ shadow.entry.reserved 9.0.1
 shadow.entry.user 9.0.1
 shadow.entry.warndays 9.0.1
 shadow.list 9.0.1
+snowflake.cortex 13.13.1
+snowflake.cortex.configPath 13.13.1
+snowflake.cortex.skill 13.13.1
+snowflake.cortex.skill.allowedTools 13.13.1
+snowflake.cortex.skill.argumentHint 13.13.1
+snowflake.cortex.skill.content 13.13.1
+snowflake.cortex.skill.description 13.13.1
+snowflake.cortex.skill.name 13.13.1
+snowflake.cortex.skill.sha256 13.13.1
+snowflake.cortex.skill.source 13.13.1
+snowflake.cortex.skills 13.13.1
 sshd 9.0.0
 sshd.config 9.0.0
 sshd.config.blocks 10.0.5

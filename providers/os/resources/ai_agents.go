@@ -214,3 +214,81 @@ func (r *mqlMistralVibe) skills() ([]interface{}, error) {
 
 func (r *mqlMistralVibeSkill) id() (string, error)     { return "mistral.vibe.skill/" + r.Name.Data, nil }
 func (r *mqlMistralVibeSkill) sha256() (string, error) { return contentSHA256(r.Content.Data), nil }
+
+// --- Antigravity (Google) ---
+
+const defaultAntigravityConfigDir = ".gemini/antigravity"
+
+func initAntigravity(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initConfigPath(runtime, args, "antigravity", defaultAntigravityConfigDir)
+}
+
+func (r *mqlAntigravity) id() (string, error) {
+	return "antigravity/" + r.ConfigPath.Data, nil
+}
+
+func (r *mqlAntigravity) skills() ([]interface{}, error) {
+	return skillsFromDir(r.MqlRuntime, filepath.Join(r.ConfigPath.Data, "skills"), "antigravity.skill")
+}
+
+func (r *mqlAntigravitySkill) id() (string, error)     { return "antigravity.skill/" + r.Name.Data, nil }
+func (r *mqlAntigravitySkill) sha256() (string, error) { return contentSHA256(r.Content.Data), nil }
+
+// --- IBM Bob ---
+
+const defaultBobConfigDir = ".bob"
+
+func initIbmBob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initConfigPath(runtime, args, "ibm.bob", defaultBobConfigDir)
+}
+
+func (r *mqlIbmBob) id() (string, error) {
+	return "ibm.bob/" + r.ConfigPath.Data, nil
+}
+
+func (r *mqlIbmBob) skills() ([]interface{}, error) {
+	return skillsFromDir(r.MqlRuntime, filepath.Join(r.ConfigPath.Data, "skills"), "ibm.bob.skill")
+}
+
+func (r *mqlIbmBobSkill) id() (string, error)     { return "ibm.bob.skill/" + r.Name.Data, nil }
+func (r *mqlIbmBobSkill) sha256() (string, error) { return contentSHA256(r.Content.Data), nil }
+
+// --- OpenClaw ---
+
+const defaultOpenClawConfigDir = ".openclaw"
+
+func initOpenclaw(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initConfigPath(runtime, args, "openclaw", defaultOpenClawConfigDir)
+}
+
+func (r *mqlOpenclaw) id() (string, error) {
+	return "openclaw/" + r.ConfigPath.Data, nil
+}
+
+func (r *mqlOpenclaw) skills() ([]interface{}, error) {
+	return skillsFromDir(r.MqlRuntime, filepath.Join(r.ConfigPath.Data, "skills"), "openclaw.skill")
+}
+
+func (r *mqlOpenclawSkill) id() (string, error)     { return "openclaw.skill/" + r.Name.Data, nil }
+func (r *mqlOpenclawSkill) sha256() (string, error) { return contentSHA256(r.Content.Data), nil }
+
+// --- Snowflake Cortex Code ---
+
+const defaultCortexConfigDir = ".snowflake/cortex"
+
+func initSnowflakeCortex(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initConfigPath(runtime, args, "snowflake.cortex", defaultCortexConfigDir)
+}
+
+func (r *mqlSnowflakeCortex) id() (string, error) {
+	return "snowflake.cortex/" + r.ConfigPath.Data, nil
+}
+
+func (r *mqlSnowflakeCortex) skills() ([]interface{}, error) {
+	return skillsFromDir(r.MqlRuntime, filepath.Join(r.ConfigPath.Data, "skills"), "snowflake.cortex.skill")
+}
+
+func (r *mqlSnowflakeCortexSkill) id() (string, error) {
+	return "snowflake.cortex.skill/" + r.Name.Data, nil
+}
+func (r *mqlSnowflakeCortexSkill) sha256() (string, error) { return contentSHA256(r.Content.Data), nil }

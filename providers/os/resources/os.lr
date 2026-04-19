@@ -4402,3 +4402,115 @@ private mistral.vibe.skill @defaults("name") @maturity("preview") {
   // SHA-256 hash of the skill content
   sha256() string
 }
+
+// Antigravity (Google) instance configuration
+// URL: https://antigravity.google/
+antigravity @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Antigravity configuration directory
+  configPath string
+  // Installed skills
+  skills() []antigravity.skill
+}
+
+// Antigravity skill
+private antigravity.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// IBM Bob instance configuration
+// URL: https://www.ibm.com/products/bob
+ibm.bob @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Bob configuration directory
+  configPath string
+  // Installed skills
+  skills() []ibm.bob.skill
+}
+
+// IBM Bob skill
+private ibm.bob.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// OpenClaw instance configuration
+// URL: https://openclaw.ai/
+openclaw @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the OpenClaw configuration directory
+  configPath string
+  // Installed skills
+  skills() []openclaw.skill
+}
+
+// OpenClaw skill
+private openclaw.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// Snowflake Cortex Code instance configuration
+// URL: https://www.snowflake.com/en/product/features/cortex-code/
+snowflake.cortex @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Cortex configuration directory
+  configPath string
+  // Installed skills
+  skills() []snowflake.cortex.skill
+}
+
+// Snowflake Cortex Code skill
+private snowflake.cortex.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}

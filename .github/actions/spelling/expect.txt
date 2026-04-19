@@ -13,6 +13,7 @@ AJD
 advancedthreatprotection
 alloydb
 alpn
+antigravity
 antispam
 apparmor
 appslot
@@ -304,6 +305,7 @@ ondemand
 ontap
 opcplc
 openai
+openclaw
 opencode
 opensearch
 openssl
