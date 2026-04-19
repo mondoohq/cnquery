@@ -7,9 +7,9 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/spf13/afero"
+	"github.com/tailscale/hujson"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
@@ -34,10 +34,14 @@ func (r *mqlZed) settings() (interface{}, error) {
 		return nil, err
 	}
 
-	// Zed's settings.json is JSONC (allows // comments), strip them before parsing.
-	clean := stripJSONComments(string(data))
+	// Zed's settings.json is JSONC (allows // and /* */ comments, trailing commas).
+	// Use hujson to normalize to standard JSON before parsing.
+	clean, err := hujson.Standardize(data)
+	if err != nil {
+		return nil, err
+	}
 	var settings map[string]interface{}
-	if err := json.Unmarshal([]byte(clean), &settings); err != nil {
+	if err := json.Unmarshal(clean, &settings); err != nil {
 		return nil, err
 	}
 	return settings, nil
@@ -67,22 +71,6 @@ func (r *mqlZed) extensions() ([]interface{}, error) {
 		result = append(result, name)
 	}
 	return result, nil
-}
-
-// stripJSONComments removes // line comments from JSONC content.
-// It handles comments at the start of a line or after content,
-// but does not strip comments inside JSON string values.
-func stripJSONComments(s string) string {
-	var b strings.Builder
-	for _, line := range strings.Split(s, "\n") {
-		trimmed := strings.TrimSpace(line)
-		if strings.HasPrefix(trimmed, "//") {
-			continue
-		}
-		b.WriteString(line)
-		b.WriteByte('\n')
-	}
-	return b.String()
 }
 
 // zedExtensionsFromDir lists extension names by scanning subdirectories.

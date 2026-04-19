@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tailscale/hujson"
 )
 
 func createTestZedConfig(t *testing.T) string {
@@ -68,34 +69,18 @@ func TestZedExtensionsFromDir(t *testing.T) {
 	assert.Contains(t, names, "toml")
 }
 
-func TestStripJSONComments(t *testing.T) {
-	input := `// Zed settings
-{
-  // UI settings
-  "ui_font_size": 16,
-  "theme": "One Dark"
-}
-`
-	got := stripJSONComments(input)
-	assert.NotContains(t, got, "//")
-	assert.Contains(t, got, `"ui_font_size": 16`)
-
-	var parsed map[string]interface{}
-	require.NoError(t, json.Unmarshal([]byte(got), &parsed))
-	assert.Equal(t, float64(16), parsed["ui_font_size"])
-}
-
 func TestZedSettingsJSONC(t *testing.T) {
 	dir := t.TempDir()
+	// Realistic Zed JSONC: line comments, inline comments, block comments, trailing commas
 	writeTestFile(t, dir, "settings.json", `// Zed Settings
 //
 // For information on how to configure Zed, see the Zed
 // documentation: https://zed.dev/docs/configuring-zed
 {
-  "ui_font_size": 14,
-  // Use system theme
+  "ui_font_size": 14, // default
+  /* Use system theme */
   "theme": {
-    "mode": "system"
+    "mode": "system",
   }
 }`)
 
@@ -103,10 +88,15 @@ func TestZedSettingsJSONC(t *testing.T) {
 	data, err := afs.ReadFile(dir + "/settings.json")
 	require.NoError(t, err)
 
-	clean := stripJSONComments(string(data))
+	clean, err := hujson.Standardize(data)
+	require.NoError(t, err)
+
 	var settings map[string]interface{}
-	require.NoError(t, json.Unmarshal([]byte(clean), &settings))
+	require.NoError(t, json.Unmarshal(clean, &settings))
 	assert.Equal(t, float64(14), settings["ui_font_size"])
+
+	theme := settings["theme"].(map[string]interface{})
+	assert.Equal(t, "system", theme["mode"])
 }
 
 func TestZedConfigMissing(t *testing.T) {
