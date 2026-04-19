@@ -27,6 +27,7 @@ var (
 	TypeApk     = Type(packageurl.TypeApk)
 	TypeDebian  = Type(packageurl.TypeDebian)
 	TypeAlpm    = Type(packageurl.TypeAlpm)
+	TypeEbuild  = Type(packageurl.TypeEbuild)
 	TypeRPM     = Type(packageurl.TypeRPM)
 
 	KnownTypes = map[Type]struct{}{
@@ -38,6 +39,7 @@ var (
 		TypeApk:         {},
 		TypeDebian:      {},
 		TypeAlpm:        {},
+		TypeEbuild:      {},
 		TypeRPM:         {},
 	}
 )

@@ -140,7 +140,7 @@ func ResolveSystemPkgManagers(conn shared.Connection) ([]OperatingSystemPkgManag
 	case asset.Platform.Name == "aix":
 		pms = append(pms, &AixPkgManager{conn: conn, platform: asset.Platform})
 	case asset.Platform.Name == "gentoo":
-		pms = append(pms, &GentooPkgManager{conn: conn})
+		pms = append(pms, &GentooPkgManager{conn: conn, platform: asset.Platform})
 	case asset.Platform.IsFamily("linux"):
 		// no clear package manager for linux platform found
 		// most likely we land here if we have a yocto-based system

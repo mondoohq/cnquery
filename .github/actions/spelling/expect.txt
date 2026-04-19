@@ -16,6 +16,7 @@ alamofire
 alpm
 alloydb
 alpn
+antigravity
 antispam
 aof
 apm
@@ -31,6 +32,7 @@ ASGs
 aspnet
 atlassian
 auditlog
+augment
 Auths
 autoaccept
 autoclass
@@ -41,6 +43,7 @@ autoprovision
 autoreplace
 Autoscalers
 autotrim
+AVRO
 awsapps
 AWSCURRENT
 awsfirelens
@@ -112,9 +115,9 @@ customresources
 cwes
 cyclonedx
 dast
+databricks
 datadog
 datadoghq
-databricks
 datapath
 datasource
 datastream
@@ -123,6 +126,7 @@ DBFS
 DBRS
 ddl
 ddos
+dhcpcd
 dedup
 dedupratio
 defc
@@ -143,6 +147,7 @@ DRdf
 dsse
 Duf
 eas
+ebuild
 ecc
 Ecmp
 EDNS
@@ -258,8 +263,8 @@ julia
 junie
 junos
 jupyter
-jwks
 JVM
+jwks
 kerberoastable
 keymap
 keyspace
@@ -326,8 +331,8 @@ mongodb
 Mpim
 msk
 mtls
-multiplatform
 MULTIAZ
+multiplatform
 myapp
 mychart
 myproject
@@ -404,6 +409,7 @@ pipefail
 pki
 podfile
 Policer
+portage
 portgroup
 posix
 postgre
@@ -421,12 +427,14 @@ pubspec
 pushconfig
 pve
 PVEAPI
+PVR
 pyspark
 pzi
 pzs
 QAwr
 qcow
 QGA
+qlist
 querypack
 quorate
 qwen
@@ -444,12 +452,15 @@ resourcegroup
 resourcepolicy
 resourcequota
 richrule
+RODC
 roku
 rootdir
 rpo
 RRULE
+RSAES
 RSASSA
 RSession
+RStudio
 rtl
 rtsp
 rulegroup
