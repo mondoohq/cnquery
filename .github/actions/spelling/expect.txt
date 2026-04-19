@@ -282,6 +282,7 @@ nft
 NINEl
 nio
 nmap
+Nvidia
 noc
 nocerts
 nodegroup
@@ -443,6 +444,7 @@ TValue
 Twt
 udid
 uefi
+uek
 UNAVAIL
 unifi
 Uocm

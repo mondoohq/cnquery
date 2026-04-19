@@ -1025,14 +1025,40 @@ systemd.sockets {
 
 // System kernel information
 kernel @defaults("info") {
-  // Active kernel information
-  info() dict
+  // Deprecated: use running instead for typed access with SBOM identifiers
+  info() @maturity("deprecated") dict
+  // Running kernel with typed fields and SBOM identifiers
+  running() kernel.version
   // Kernel parameters map
   parameters() map[string]string
   // List of kernel modules
   modules() []kernel.module
-  // Installed versions
-  installed() []dict
+  // Deprecated: use installedVersions instead
+  installed() @maturity("deprecated") []dict
+  // Installed kernel versions with SBOM identifiers
+  installedVersions() []kernel.version
+}
+
+// Kernel version with SBOM identifiers
+kernel.version @defaults("name version running") {
+  // Kernel package name (e.g., "linux-image-6.8.0-40-generic")
+  name string
+  // Kernel version string (e.g., "6.8.0-40-generic")
+  version string
+  // Whether this is the currently running kernel
+  running bool
+  // Boot path (e.g., "/boot/vmlinuz-6.8.0-40-generic"), available for running kernel
+  path string
+  // Boot device, available for running kernel
+  device string
+  // Architecture (e.g., "x86_64"), available for running kernel
+  arch string
+  // Full version string from /proc/version, available for running kernel
+  fullVersion string
+  // Package URL
+  purl string
+  // Common Platform Enumeration (CPE) for the kernel
+  cpes []core.cpe
 }
 
 // System kernel module information

@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/package-url/packageurl-go"
 	"github.com/pkg/errors"
 	"go.mondoo.com/mql/v13"
 	"go.mondoo.com/mql/v13/cli/reporter"
@@ -98,11 +99,22 @@ func GenerateBom(r *reporter.Report) []*sbom.Sbom {
 				bom.Asset.Labels = map[string]string{}
 			}
 
-			// store version of running kernel
+			// store version of running kernel as asset label (backwards compatible)
+			// and emit each installed kernel as an SBOM package
 			for _, kernel := range rb.KernelInstalled {
 				if kernel.Running {
 					bom.Asset.Labels[LABEL_KERNEL_RUNNING] = kernel.Version
 				}
+
+				kernelPurl := packageurl.NewPackageURL(
+					"generic", "", "linux-kernel", kernel.Version, nil, "").String()
+
+				bom.Packages = append(bom.Packages, &sbom.Package{
+					Name:    kernel.Name,
+					Version: kernel.Version,
+					Purl:    kernelPurl,
+					Type:    "kernel",
+				})
 			}
 
 			if rb.Packages != nil {
