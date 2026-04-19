@@ -22,6 +22,7 @@ artifactregistry
 aspnet
 asdk
 atlassian
+augment
 auditlog
 Auths
 AVRO
@@ -71,14 +72,13 @@ claude
 clcerts
 cloudflare
 Clusterwide
+cocoapods
+codeql
 cmdline
 cmek
 Cmk
 cmnd
 cname
-cocoapods
-codeql
-conan
 compressratio
 computeagent
 continuedev
@@ -211,11 +211,13 @@ jsonbody
 JFi
 jpi
 jre
+junie
 junos
 jupyter
 JVM
 kerberoastable
 keyspace
+kilocode
 kiro
 kqueue
 krbtgt
@@ -308,6 +310,7 @@ opcplc
 openai
 openclaw
 opencode
+openhands
 opensearch
 openssl
 openvpn
@@ -356,6 +359,7 @@ QAwr
 QGA
 querypack
 quorate
+qwen
 RABBITMQ
 rai
 raidz

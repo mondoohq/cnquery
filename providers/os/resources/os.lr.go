@@ -207,8 +207,6 @@ const (
 	ResourceRubyPackage                  string = "ruby.package"
 	ResourceDartPackages                 string = "dart.packages"
 	ResourceDartPackage                  string = "dart.package"
-	ResourceConanPackages                string = "conan.packages"
-	ResourceConanPackage                 string = "conan.package"
 	ResourceMacos                        string = "macos"
 	ResourceMacosHardware                string = "macos.hardware"
 	ResourceMacosAlf                     string = "macos.alf"
@@ -317,6 +315,18 @@ const (
 	ResourceOpenclawSkill                string = "openclaw.skill"
 	ResourceSnowflakeCortex              string = "snowflake.cortex"
 	ResourceSnowflakeCortexSkill         string = "snowflake.cortex.skill"
+	ResourceJunie                        string = "junie"
+	ResourceJunieSkill                   string = "junie.skill"
+	ResourceAugment                      string = "augment"
+	ResourceAugmentSkill                 string = "augment.skill"
+	ResourceWarp                         string = "warp"
+	ResourceWarpSkill                    string = "warp.skill"
+	ResourceKilocode                     string = "kilocode"
+	ResourceKilocodeSkill                string = "kilocode.skill"
+	ResourceOpenhands                    string = "openhands"
+	ResourceOpenhandsSkill               string = "openhands.skill"
+	ResourceQwenCode                     string = "qwen.code"
+	ResourceQwenCodeSkill                string = "qwen.code.skill"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -1087,14 +1097,6 @@ func init() {
 			// to override args, implement: initDartPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDartPackage,
 		},
-		"conan.packages": {
-			Init:   initConanPackages,
-			Create: createConanPackages,
-		},
-		"conan.package": {
-			// to override args, implement: initConanPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createConanPackage,
-		},
 		"macos": {
 			// to override args, implement: initMacos(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMacos,
@@ -1526,6 +1528,54 @@ func init() {
 		"snowflake.cortex.skill": {
 			// to override args, implement: initSnowflakeCortexSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createSnowflakeCortexSkill,
+		},
+		"junie": {
+			Init:   initJunie,
+			Create: createJunie,
+		},
+		"junie.skill": {
+			// to override args, implement: initJunieSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createJunieSkill,
+		},
+		"augment": {
+			Init:   initAugment,
+			Create: createAugment,
+		},
+		"augment.skill": {
+			// to override args, implement: initAugmentSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAugmentSkill,
+		},
+		"warp": {
+			Init:   initWarp,
+			Create: createWarp,
+		},
+		"warp.skill": {
+			// to override args, implement: initWarpSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWarpSkill,
+		},
+		"kilocode": {
+			Init:   initKilocode,
+			Create: createKilocode,
+		},
+		"kilocode.skill": {
+			// to override args, implement: initKilocodeSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createKilocodeSkill,
+		},
+		"openhands": {
+			Init:   initOpenhands,
+			Create: createOpenhands,
+		},
+		"openhands.skill": {
+			// to override args, implement: initOpenhandsSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOpenhandsSkill,
+		},
+		"qwen.code": {
+			Init:   initQwenCode,
+			Create: createQwenCode,
+		},
+		"qwen.code.skill": {
+			// to override args, implement: initQwenCodeSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createQwenCodeSkill,
 		},
 	}
 }
@@ -4385,39 +4435,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"dart.package.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDartPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
 	},
-	"conan.packages.path": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlConanPackages).GetPath()).ToDataRes(types.String)
-	},
-	"conan.packages.root": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlConanPackages).GetRoot()).ToDataRes(types.Resource("conan.package"))
-	},
-	"conan.packages.directDependencies": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlConanPackages).GetDirectDependencies()).ToDataRes(types.Array(types.Resource("conan.package")))
-	},
-	"conan.packages.files": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlConanPackages).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
-	},
-	"conan.packages.list": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlConanPackages).GetList()).ToDataRes(types.Array(types.Resource("conan.package")))
-	},
-	"conan.package.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlConanPackage).GetId()).ToDataRes(types.String)
-	},
-	"conan.package.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlConanPackage).GetName()).ToDataRes(types.String)
-	},
-	"conan.package.version": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlConanPackage).GetVersion()).ToDataRes(types.String)
-	},
-	"conan.package.purl": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlConanPackage).GetPurl()).ToDataRes(types.String)
-	},
-	"conan.package.cpes": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlConanPackage).GetCpes()).ToDataRes(types.Array(types.Resource("cpe")))
-	},
-	"conan.package.files": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlConanPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
-	},
 	"macos.computerName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacos).GetComputerName()).ToDataRes(types.String)
 	},
@@ -6424,6 +6441,168 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"snowflake.cortex.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeCortexSkill).GetSha256()).ToDataRes(types.String)
+	},
+	"junie.configPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJunie).GetConfigPath()).ToDataRes(types.String)
+	},
+	"junie.skills": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJunie).GetSkills()).ToDataRes(types.Array(types.Resource("junie.skill")))
+	},
+	"junie.skill.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJunieSkill).GetName()).ToDataRes(types.String)
+	},
+	"junie.skill.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJunieSkill).GetDescription()).ToDataRes(types.String)
+	},
+	"junie.skill.allowedTools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJunieSkill).GetAllowedTools()).ToDataRes(types.Array(types.String))
+	},
+	"junie.skill.argumentHint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJunieSkill).GetArgumentHint()).ToDataRes(types.String)
+	},
+	"junie.skill.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJunieSkill).GetSource()).ToDataRes(types.String)
+	},
+	"junie.skill.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJunieSkill).GetContent()).ToDataRes(types.String)
+	},
+	"junie.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJunieSkill).GetSha256()).ToDataRes(types.String)
+	},
+	"augment.configPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAugment).GetConfigPath()).ToDataRes(types.String)
+	},
+	"augment.skills": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAugment).GetSkills()).ToDataRes(types.Array(types.Resource("augment.skill")))
+	},
+	"augment.skill.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAugmentSkill).GetName()).ToDataRes(types.String)
+	},
+	"augment.skill.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAugmentSkill).GetDescription()).ToDataRes(types.String)
+	},
+	"augment.skill.allowedTools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAugmentSkill).GetAllowedTools()).ToDataRes(types.Array(types.String))
+	},
+	"augment.skill.argumentHint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAugmentSkill).GetArgumentHint()).ToDataRes(types.String)
+	},
+	"augment.skill.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAugmentSkill).GetSource()).ToDataRes(types.String)
+	},
+	"augment.skill.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAugmentSkill).GetContent()).ToDataRes(types.String)
+	},
+	"augment.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAugmentSkill).GetSha256()).ToDataRes(types.String)
+	},
+	"warp.configPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWarp).GetConfigPath()).ToDataRes(types.String)
+	},
+	"warp.skills": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWarp).GetSkills()).ToDataRes(types.Array(types.Resource("warp.skill")))
+	},
+	"warp.skill.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWarpSkill).GetName()).ToDataRes(types.String)
+	},
+	"warp.skill.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWarpSkill).GetDescription()).ToDataRes(types.String)
+	},
+	"warp.skill.allowedTools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWarpSkill).GetAllowedTools()).ToDataRes(types.Array(types.String))
+	},
+	"warp.skill.argumentHint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWarpSkill).GetArgumentHint()).ToDataRes(types.String)
+	},
+	"warp.skill.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWarpSkill).GetSource()).ToDataRes(types.String)
+	},
+	"warp.skill.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWarpSkill).GetContent()).ToDataRes(types.String)
+	},
+	"warp.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWarpSkill).GetSha256()).ToDataRes(types.String)
+	},
+	"kilocode.configPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKilocode).GetConfigPath()).ToDataRes(types.String)
+	},
+	"kilocode.skills": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKilocode).GetSkills()).ToDataRes(types.Array(types.Resource("kilocode.skill")))
+	},
+	"kilocode.skill.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKilocodeSkill).GetName()).ToDataRes(types.String)
+	},
+	"kilocode.skill.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKilocodeSkill).GetDescription()).ToDataRes(types.String)
+	},
+	"kilocode.skill.allowedTools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKilocodeSkill).GetAllowedTools()).ToDataRes(types.Array(types.String))
+	},
+	"kilocode.skill.argumentHint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKilocodeSkill).GetArgumentHint()).ToDataRes(types.String)
+	},
+	"kilocode.skill.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKilocodeSkill).GetSource()).ToDataRes(types.String)
+	},
+	"kilocode.skill.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKilocodeSkill).GetContent()).ToDataRes(types.String)
+	},
+	"kilocode.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKilocodeSkill).GetSha256()).ToDataRes(types.String)
+	},
+	"openhands.configPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenhands).GetConfigPath()).ToDataRes(types.String)
+	},
+	"openhands.skills": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenhands).GetSkills()).ToDataRes(types.Array(types.Resource("openhands.skill")))
+	},
+	"openhands.skill.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenhandsSkill).GetName()).ToDataRes(types.String)
+	},
+	"openhands.skill.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenhandsSkill).GetDescription()).ToDataRes(types.String)
+	},
+	"openhands.skill.allowedTools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenhandsSkill).GetAllowedTools()).ToDataRes(types.Array(types.String))
+	},
+	"openhands.skill.argumentHint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenhandsSkill).GetArgumentHint()).ToDataRes(types.String)
+	},
+	"openhands.skill.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenhandsSkill).GetSource()).ToDataRes(types.String)
+	},
+	"openhands.skill.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenhandsSkill).GetContent()).ToDataRes(types.String)
+	},
+	"openhands.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenhandsSkill).GetSha256()).ToDataRes(types.String)
+	},
+	"qwen.code.configPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQwenCode).GetConfigPath()).ToDataRes(types.String)
+	},
+	"qwen.code.skills": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQwenCode).GetSkills()).ToDataRes(types.Array(types.Resource("qwen.code.skill")))
+	},
+	"qwen.code.skill.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQwenCodeSkill).GetName()).ToDataRes(types.String)
+	},
+	"qwen.code.skill.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQwenCodeSkill).GetDescription()).ToDataRes(types.String)
+	},
+	"qwen.code.skill.allowedTools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQwenCodeSkill).GetAllowedTools()).ToDataRes(types.Array(types.String))
+	},
+	"qwen.code.skill.argumentHint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQwenCodeSkill).GetArgumentHint()).ToDataRes(types.String)
+	},
+	"qwen.code.skill.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQwenCodeSkill).GetSource()).ToDataRes(types.String)
+	},
+	"qwen.code.skill.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQwenCodeSkill).GetContent()).ToDataRes(types.String)
+	},
+	"qwen.code.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQwenCodeSkill).GetSha256()).ToDataRes(types.String)
 	},
 }
 
@@ -10917,58 +11096,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDartPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"conan.packages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlConanPackages).__id, ok = v.Value.(string)
-		return
-	},
-	"conan.packages.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlConanPackages).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"conan.packages.root": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlConanPackages).Root, ok = plugin.RawToTValue[*mqlConanPackage](v.Value, v.Error)
-		return
-	},
-	"conan.packages.directDependencies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlConanPackages).DirectDependencies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"conan.packages.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlConanPackages).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"conan.packages.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlConanPackages).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"conan.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlConanPackage).__id, ok = v.Value.(string)
-		return
-	},
-	"conan.package.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlConanPackage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"conan.package.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlConanPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"conan.package.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlConanPackage).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"conan.package.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlConanPackage).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"conan.package.cpes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlConanPackage).Cpes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"conan.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlConanPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
 	"macos.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMacos).__id, ok = v.Value.(string)
 		return
@@ -14075,6 +14202,270 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"snowflake.cortex.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeCortexSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"junie.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJunie).__id, ok = v.Value.(string)
+		return
+	},
+	"junie.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJunie).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"junie.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJunie).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"junie.skill.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJunieSkill).__id, ok = v.Value.(string)
+		return
+	},
+	"junie.skill.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJunieSkill).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"junie.skill.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJunieSkill).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"junie.skill.allowedTools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJunieSkill).AllowedTools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"junie.skill.argumentHint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJunieSkill).ArgumentHint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"junie.skill.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJunieSkill).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"junie.skill.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJunieSkill).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"junie.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJunieSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"augment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAugment).__id, ok = v.Value.(string)
+		return
+	},
+	"augment.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAugment).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"augment.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAugment).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"augment.skill.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAugmentSkill).__id, ok = v.Value.(string)
+		return
+	},
+	"augment.skill.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAugmentSkill).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"augment.skill.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAugmentSkill).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"augment.skill.allowedTools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAugmentSkill).AllowedTools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"augment.skill.argumentHint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAugmentSkill).ArgumentHint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"augment.skill.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAugmentSkill).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"augment.skill.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAugmentSkill).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"augment.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAugmentSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"warp.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWarp).__id, ok = v.Value.(string)
+		return
+	},
+	"warp.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWarp).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"warp.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWarp).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"warp.skill.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWarpSkill).__id, ok = v.Value.(string)
+		return
+	},
+	"warp.skill.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWarpSkill).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"warp.skill.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWarpSkill).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"warp.skill.allowedTools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWarpSkill).AllowedTools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"warp.skill.argumentHint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWarpSkill).ArgumentHint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"warp.skill.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWarpSkill).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"warp.skill.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWarpSkill).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"warp.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWarpSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kilocode.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKilocode).__id, ok = v.Value.(string)
+		return
+	},
+	"kilocode.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKilocode).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kilocode.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKilocode).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"kilocode.skill.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKilocodeSkill).__id, ok = v.Value.(string)
+		return
+	},
+	"kilocode.skill.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKilocodeSkill).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kilocode.skill.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKilocodeSkill).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kilocode.skill.allowedTools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKilocodeSkill).AllowedTools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"kilocode.skill.argumentHint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKilocodeSkill).ArgumentHint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kilocode.skill.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKilocodeSkill).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kilocode.skill.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKilocodeSkill).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kilocode.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKilocodeSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openhands.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenhands).__id, ok = v.Value.(string)
+		return
+	},
+	"openhands.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenhands).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openhands.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenhands).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openhands.skill.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenhandsSkill).__id, ok = v.Value.(string)
+		return
+	},
+	"openhands.skill.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenhandsSkill).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openhands.skill.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenhandsSkill).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openhands.skill.allowedTools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenhandsSkill).AllowedTools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openhands.skill.argumentHint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenhandsSkill).ArgumentHint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openhands.skill.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenhandsSkill).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openhands.skill.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenhandsSkill).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openhands.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenhandsSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"qwen.code.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCode).__id, ok = v.Value.(string)
+		return
+	},
+	"qwen.code.configPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCode).ConfigPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"qwen.code.skills": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCode).Skills, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"qwen.code.skill.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCodeSkill).__id, ok = v.Value.(string)
+		return
+	},
+	"qwen.code.skill.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCodeSkill).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"qwen.code.skill.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCodeSkill).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"qwen.code.skill.allowedTools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCodeSkill).AllowedTools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"qwen.code.skill.argumentHint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCodeSkill).ArgumentHint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"qwen.code.skill.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCodeSkill).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"qwen.code.skill.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCodeSkill).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"qwen.code.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCodeSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -29969,227 +30360,6 @@ func (c *mqlDartPackage) GetFiles() *plugin.TValue[[]any] {
 	})
 }
 
-// mqlConanPackages for the conan.packages resource
-type mqlConanPackages struct {
-	MqlRuntime *plugin.Runtime
-	__id       string
-	mqlConanPackagesInternal
-	Path               plugin.TValue[string]
-	Root               plugin.TValue[*mqlConanPackage]
-	DirectDependencies plugin.TValue[[]any]
-	Files              plugin.TValue[[]any]
-	List               plugin.TValue[[]any]
-}
-
-// createConanPackages creates a new instance of this resource
-func createConanPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlConanPackages{
-		MqlRuntime: runtime,
-	}
-
-	err := SetAllData(res, args)
-	if err != nil {
-		return res, err
-	}
-
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("conan.packages", res.__id)
-		if err != nil || args == nil {
-			return res, err
-		}
-		return res, SetAllData(res, args)
-	}
-
-	return res, nil
-}
-
-func (c *mqlConanPackages) MqlName() string {
-	return "conan.packages"
-}
-
-func (c *mqlConanPackages) MqlID() string {
-	return c.__id
-}
-
-func (c *mqlConanPackages) GetPath() *plugin.TValue[string] {
-	return &c.Path
-}
-
-func (c *mqlConanPackages) GetRoot() *plugin.TValue[*mqlConanPackage] {
-	return plugin.GetOrCompute[*mqlConanPackage](&c.Root, func() (*mqlConanPackage, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("conan.packages", c.__id, "root")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlConanPackage), nil
-			}
-		}
-
-		return c.root()
-	})
-}
-
-func (c *mqlConanPackages) GetDirectDependencies() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.DirectDependencies, func() ([]any, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("conan.packages", c.__id, "directDependencies")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.([]any), nil
-			}
-		}
-
-		return c.directDependencies()
-	})
-}
-
-func (c *mqlConanPackages) GetFiles() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("conan.packages", c.__id, "files")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.([]any), nil
-			}
-		}
-
-		return c.files()
-	})
-}
-
-func (c *mqlConanPackages) GetList() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("conan.packages", c.__id, "list")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.([]any), nil
-			}
-		}
-
-		return c.list()
-	})
-}
-
-// mqlConanPackage for the conan.package resource
-type mqlConanPackage struct {
-	MqlRuntime *plugin.Runtime
-	__id       string
-	// optional: if you define mqlConanPackageInternal it will be used here
-	Id      plugin.TValue[string]
-	Name    plugin.TValue[string]
-	Version plugin.TValue[string]
-	Purl    plugin.TValue[string]
-	Cpes    plugin.TValue[[]any]
-	Files   plugin.TValue[[]any]
-}
-
-// createConanPackage creates a new instance of this resource
-func createConanPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlConanPackage{
-		MqlRuntime: runtime,
-	}
-
-	err := SetAllData(res, args)
-	if err != nil {
-		return res, err
-	}
-
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("conan.package", res.__id)
-		if err != nil || args == nil {
-			return res, err
-		}
-		return res, SetAllData(res, args)
-	}
-
-	return res, nil
-}
-
-func (c *mqlConanPackage) MqlName() string {
-	return "conan.package"
-}
-
-func (c *mqlConanPackage) MqlID() string {
-	return c.__id
-}
-
-func (c *mqlConanPackage) GetId() *plugin.TValue[string] {
-	return &c.Id
-}
-
-func (c *mqlConanPackage) GetName() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.Name, func() (string, error) {
-		return c.name()
-	})
-}
-
-func (c *mqlConanPackage) GetVersion() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
-		return c.version()
-	})
-}
-
-func (c *mqlConanPackage) GetPurl() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
-		return c.purl()
-	})
-}
-
-func (c *mqlConanPackage) GetCpes() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.Cpes, func() ([]any, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("conan.package", c.__id, "cpes")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.([]any), nil
-			}
-		}
-
-		return c.cpes()
-	})
-}
-
-func (c *mqlConanPackage) GetFiles() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("conan.package", c.__id, "files")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.([]any), nil
-			}
-		}
-
-		return c.files()
-	})
-}
-
 // mqlMacos for the macos resource
 type mqlMacos struct {
 	MqlRuntime *plugin.Runtime
@@ -39257,6 +39427,888 @@ func (c *mqlSnowflakeCortexSkill) GetContent() *plugin.TValue[string] {
 }
 
 func (c *mqlSnowflakeCortexSkill) GetSha256() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
+		return c.sha256()
+	})
+}
+
+// mqlJunie for the junie resource
+type mqlJunie struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlJunieInternal it will be used here
+	ConfigPath plugin.TValue[string]
+	Skills     plugin.TValue[[]any]
+}
+
+// createJunie creates a new instance of this resource
+func createJunie(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJunie{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("junie", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJunie) MqlName() string {
+	return "junie"
+}
+
+func (c *mqlJunie) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJunie) GetConfigPath() *plugin.TValue[string] {
+	return &c.ConfigPath
+}
+
+func (c *mqlJunie) GetSkills() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Skills, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("junie", c.__id, "skills")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.skills()
+	})
+}
+
+// mqlJunieSkill for the junie.skill resource
+type mqlJunieSkill struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlJunieSkillInternal it will be used here
+	Name         plugin.TValue[string]
+	Description  plugin.TValue[string]
+	AllowedTools plugin.TValue[[]any]
+	ArgumentHint plugin.TValue[string]
+	Source       plugin.TValue[string]
+	Content      plugin.TValue[string]
+	Sha256       plugin.TValue[string]
+}
+
+// createJunieSkill creates a new instance of this resource
+func createJunieSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlJunieSkill{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("junie.skill", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlJunieSkill) MqlName() string {
+	return "junie.skill"
+}
+
+func (c *mqlJunieSkill) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlJunieSkill) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlJunieSkill) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlJunieSkill) GetAllowedTools() *plugin.TValue[[]any] {
+	return &c.AllowedTools
+}
+
+func (c *mqlJunieSkill) GetArgumentHint() *plugin.TValue[string] {
+	return &c.ArgumentHint
+}
+
+func (c *mqlJunieSkill) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlJunieSkill) GetContent() *plugin.TValue[string] {
+	return &c.Content
+}
+
+func (c *mqlJunieSkill) GetSha256() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
+		return c.sha256()
+	})
+}
+
+// mqlAugment for the augment resource
+type mqlAugment struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAugmentInternal it will be used here
+	ConfigPath plugin.TValue[string]
+	Skills     plugin.TValue[[]any]
+}
+
+// createAugment creates a new instance of this resource
+func createAugment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAugment{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("augment", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAugment) MqlName() string {
+	return "augment"
+}
+
+func (c *mqlAugment) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAugment) GetConfigPath() *plugin.TValue[string] {
+	return &c.ConfigPath
+}
+
+func (c *mqlAugment) GetSkills() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Skills, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("augment", c.__id, "skills")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.skills()
+	})
+}
+
+// mqlAugmentSkill for the augment.skill resource
+type mqlAugmentSkill struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAugmentSkillInternal it will be used here
+	Name         plugin.TValue[string]
+	Description  plugin.TValue[string]
+	AllowedTools plugin.TValue[[]any]
+	ArgumentHint plugin.TValue[string]
+	Source       plugin.TValue[string]
+	Content      plugin.TValue[string]
+	Sha256       plugin.TValue[string]
+}
+
+// createAugmentSkill creates a new instance of this resource
+func createAugmentSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAugmentSkill{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("augment.skill", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAugmentSkill) MqlName() string {
+	return "augment.skill"
+}
+
+func (c *mqlAugmentSkill) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAugmentSkill) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAugmentSkill) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAugmentSkill) GetAllowedTools() *plugin.TValue[[]any] {
+	return &c.AllowedTools
+}
+
+func (c *mqlAugmentSkill) GetArgumentHint() *plugin.TValue[string] {
+	return &c.ArgumentHint
+}
+
+func (c *mqlAugmentSkill) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlAugmentSkill) GetContent() *plugin.TValue[string] {
+	return &c.Content
+}
+
+func (c *mqlAugmentSkill) GetSha256() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
+		return c.sha256()
+	})
+}
+
+// mqlWarp for the warp resource
+type mqlWarp struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWarpInternal it will be used here
+	ConfigPath plugin.TValue[string]
+	Skills     plugin.TValue[[]any]
+}
+
+// createWarp creates a new instance of this resource
+func createWarp(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWarp{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("warp", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWarp) MqlName() string {
+	return "warp"
+}
+
+func (c *mqlWarp) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWarp) GetConfigPath() *plugin.TValue[string] {
+	return &c.ConfigPath
+}
+
+func (c *mqlWarp) GetSkills() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Skills, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("warp", c.__id, "skills")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.skills()
+	})
+}
+
+// mqlWarpSkill for the warp.skill resource
+type mqlWarpSkill struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWarpSkillInternal it will be used here
+	Name         plugin.TValue[string]
+	Description  plugin.TValue[string]
+	AllowedTools plugin.TValue[[]any]
+	ArgumentHint plugin.TValue[string]
+	Source       plugin.TValue[string]
+	Content      plugin.TValue[string]
+	Sha256       plugin.TValue[string]
+}
+
+// createWarpSkill creates a new instance of this resource
+func createWarpSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWarpSkill{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("warp.skill", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWarpSkill) MqlName() string {
+	return "warp.skill"
+}
+
+func (c *mqlWarpSkill) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWarpSkill) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlWarpSkill) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlWarpSkill) GetAllowedTools() *plugin.TValue[[]any] {
+	return &c.AllowedTools
+}
+
+func (c *mqlWarpSkill) GetArgumentHint() *plugin.TValue[string] {
+	return &c.ArgumentHint
+}
+
+func (c *mqlWarpSkill) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlWarpSkill) GetContent() *plugin.TValue[string] {
+	return &c.Content
+}
+
+func (c *mqlWarpSkill) GetSha256() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
+		return c.sha256()
+	})
+}
+
+// mqlKilocode for the kilocode resource
+type mqlKilocode struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlKilocodeInternal it will be used here
+	ConfigPath plugin.TValue[string]
+	Skills     plugin.TValue[[]any]
+}
+
+// createKilocode creates a new instance of this resource
+func createKilocode(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlKilocode{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("kilocode", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlKilocode) MqlName() string {
+	return "kilocode"
+}
+
+func (c *mqlKilocode) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlKilocode) GetConfigPath() *plugin.TValue[string] {
+	return &c.ConfigPath
+}
+
+func (c *mqlKilocode) GetSkills() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Skills, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("kilocode", c.__id, "skills")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.skills()
+	})
+}
+
+// mqlKilocodeSkill for the kilocode.skill resource
+type mqlKilocodeSkill struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlKilocodeSkillInternal it will be used here
+	Name         plugin.TValue[string]
+	Description  plugin.TValue[string]
+	AllowedTools plugin.TValue[[]any]
+	ArgumentHint plugin.TValue[string]
+	Source       plugin.TValue[string]
+	Content      plugin.TValue[string]
+	Sha256       plugin.TValue[string]
+}
+
+// createKilocodeSkill creates a new instance of this resource
+func createKilocodeSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlKilocodeSkill{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("kilocode.skill", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlKilocodeSkill) MqlName() string {
+	return "kilocode.skill"
+}
+
+func (c *mqlKilocodeSkill) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlKilocodeSkill) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlKilocodeSkill) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlKilocodeSkill) GetAllowedTools() *plugin.TValue[[]any] {
+	return &c.AllowedTools
+}
+
+func (c *mqlKilocodeSkill) GetArgumentHint() *plugin.TValue[string] {
+	return &c.ArgumentHint
+}
+
+func (c *mqlKilocodeSkill) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlKilocodeSkill) GetContent() *plugin.TValue[string] {
+	return &c.Content
+}
+
+func (c *mqlKilocodeSkill) GetSha256() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
+		return c.sha256()
+	})
+}
+
+// mqlOpenhands for the openhands resource
+type mqlOpenhands struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOpenhandsInternal it will be used here
+	ConfigPath plugin.TValue[string]
+	Skills     plugin.TValue[[]any]
+}
+
+// createOpenhands creates a new instance of this resource
+func createOpenhands(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenhands{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openhands", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenhands) MqlName() string {
+	return "openhands"
+}
+
+func (c *mqlOpenhands) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenhands) GetConfigPath() *plugin.TValue[string] {
+	return &c.ConfigPath
+}
+
+func (c *mqlOpenhands) GetSkills() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Skills, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openhands", c.__id, "skills")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.skills()
+	})
+}
+
+// mqlOpenhandsSkill for the openhands.skill resource
+type mqlOpenhandsSkill struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOpenhandsSkillInternal it will be used here
+	Name         plugin.TValue[string]
+	Description  plugin.TValue[string]
+	AllowedTools plugin.TValue[[]any]
+	ArgumentHint plugin.TValue[string]
+	Source       plugin.TValue[string]
+	Content      plugin.TValue[string]
+	Sha256       plugin.TValue[string]
+}
+
+// createOpenhandsSkill creates a new instance of this resource
+func createOpenhandsSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenhandsSkill{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openhands.skill", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenhandsSkill) MqlName() string {
+	return "openhands.skill"
+}
+
+func (c *mqlOpenhandsSkill) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenhandsSkill) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOpenhandsSkill) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOpenhandsSkill) GetAllowedTools() *plugin.TValue[[]any] {
+	return &c.AllowedTools
+}
+
+func (c *mqlOpenhandsSkill) GetArgumentHint() *plugin.TValue[string] {
+	return &c.ArgumentHint
+}
+
+func (c *mqlOpenhandsSkill) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlOpenhandsSkill) GetContent() *plugin.TValue[string] {
+	return &c.Content
+}
+
+func (c *mqlOpenhandsSkill) GetSha256() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
+		return c.sha256()
+	})
+}
+
+// mqlQwenCode for the qwen.code resource
+type mqlQwenCode struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlQwenCodeInternal it will be used here
+	ConfigPath plugin.TValue[string]
+	Skills     plugin.TValue[[]any]
+}
+
+// createQwenCode creates a new instance of this resource
+func createQwenCode(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlQwenCode{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("qwen.code", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlQwenCode) MqlName() string {
+	return "qwen.code"
+}
+
+func (c *mqlQwenCode) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlQwenCode) GetConfigPath() *plugin.TValue[string] {
+	return &c.ConfigPath
+}
+
+func (c *mqlQwenCode) GetSkills() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Skills, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("qwen.code", c.__id, "skills")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.skills()
+	})
+}
+
+// mqlQwenCodeSkill for the qwen.code.skill resource
+type mqlQwenCodeSkill struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlQwenCodeSkillInternal it will be used here
+	Name         plugin.TValue[string]
+	Description  plugin.TValue[string]
+	AllowedTools plugin.TValue[[]any]
+	ArgumentHint plugin.TValue[string]
+	Source       plugin.TValue[string]
+	Content      plugin.TValue[string]
+	Sha256       plugin.TValue[string]
+}
+
+// createQwenCodeSkill creates a new instance of this resource
+func createQwenCodeSkill(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlQwenCodeSkill{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("qwen.code.skill", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlQwenCodeSkill) MqlName() string {
+	return "qwen.code.skill"
+}
+
+func (c *mqlQwenCodeSkill) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlQwenCodeSkill) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlQwenCodeSkill) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlQwenCodeSkill) GetAllowedTools() *plugin.TValue[[]any] {
+	return &c.AllowedTools
+}
+
+func (c *mqlQwenCodeSkill) GetArgumentHint() *plugin.TValue[string] {
+	return &c.ArgumentHint
+}
+
+func (c *mqlQwenCodeSkill) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlQwenCodeSkill) GetContent() *plugin.TValue[string] {
+	return &c.Content
+}
+
+func (c *mqlQwenCodeSkill) GetSha256() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
 		return c.sha256()
 	})
