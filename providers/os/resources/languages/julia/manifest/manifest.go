@@ -4,6 +4,7 @@
 package manifest
 
 import (
+	"errors"
 	"io"
 
 	"github.com/BurntSushi/toml"
@@ -25,13 +26,15 @@ func (e *Extractor) Parse(r io.Reader, filename string) (languages.Bom, error) {
 		return nil, err
 	}
 
-	// Try v2 format first (Julia >= 1.7), then v1
-	pkgs, err := parseManifestV2(data, filename)
-	if err != nil || len(pkgs) == 0 {
-		pkgs, err = parseManifestV1(data, filename)
-		if err != nil {
-			return nil, err
-		}
+	// Try v2 format first (Julia >= 1.7), then fall back to v1
+	pkgs, errV2 := parseManifestV2(data, filename)
+	if errV2 == nil && len(pkgs) > 0 {
+		return &manifestBom{transitive: pkgs}, nil
+	}
+
+	pkgs, errV1 := parseManifestV1(data, filename)
+	if errV1 != nil {
+		return nil, errors.Join(errV2, errV1)
 	}
 
 	return &manifestBom{transitive: pkgs}, nil
@@ -106,7 +109,9 @@ func parseManifestV1(data []byte, filename string) (languages.Packages, error) {
 
 	var pkgs languages.Packages
 	for name, entries := range raw {
-		// Skip metadata keys
+		// Defensive guard: skip v2-only metadata keys. In practice these
+		// are scalar strings that would fail TOML unmarshalling into
+		// []manifestV1Package, but we guard against it explicitly.
 		if name == "julia_version" || name == "manifest_format" {
 			continue
 		}

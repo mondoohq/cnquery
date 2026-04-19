@@ -24,7 +24,7 @@ var defaultJuliaPaths = []string{
 	"/app",
 	"/usr/src/app",
 	"/home/*/app",
-	"/home/*",
+	"/home/*/.julia/environments/v*",
 }
 
 func initJuliaPackages(_ *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
