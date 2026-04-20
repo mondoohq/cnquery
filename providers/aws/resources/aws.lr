@@ -2268,6 +2268,8 @@ private aws.sagemaker.clusterInstanceGroup @defaults("instanceGroupName instance
   instanceRequirements dict
   // Breakdown of instance types and counts within a flexible instance group
   instanceTypeDetails []aws.sagemaker.clusterInstanceGroup.instanceTypeDetail
+  // Network interface type for the instance group (e.g., efa, efa-only)
+  networkInterfaceType string
 }
 
 // Instance type detail within a flexible SageMaker HyperPod instance group
@@ -2298,6 +2300,8 @@ private aws.sagemaker.clusterNode @defaults("instanceId instanceGroupName instan
   privateDnsHostname string
   // Region where the node exists
   region string
+  // Network interface type for the node (e.g., efa, efa-only)
+  networkInterfaceType() string
 }
 
 // AWS SageMaker feature group

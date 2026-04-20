@@ -2448,6 +2448,10 @@ func (a *mqlAwsSagemakerCluster) instanceGroups() ([]any, error) {
 			itdRes.cacheParentGroupID = a.Region.Data + "/" + a.Name.Data + "/" + igName
 			instanceTypeDetails = append(instanceTypeDetails, mqlITD)
 		}
+		var networkInterfaceType string
+		if ig.NetworkInterface != nil {
+			networkInterfaceType = string(ig.NetworkInterface.InterfaceType)
+		}
 		mqlIG, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerClusterInstanceGroup,
 			map[string]*llx.RawData{
 				"instanceGroupName":    llx.StringDataPtr(ig.InstanceGroupName),
@@ -2459,6 +2463,7 @@ func (a *mqlAwsSagemakerCluster) instanceGroups() ([]any, error) {
 				"threadsPerCore":       llx.IntData(threadsPerCore),
 				"instanceRequirements": llx.DictData(instanceRequirements),
 				"instanceTypeDetails":  llx.ArrayData(instanceTypeDetails, types.Resource("aws.sagemaker.clusterInstanceGroup.instanceTypeDetail")),
+				"networkInterfaceType": llx.StringData(networkInterfaceType),
 			})
 		if err != nil {
 			return nil, err
@@ -2604,6 +2609,52 @@ func (a *mqlAwsSagemakerClusterInstanceGroupInstanceTypeDetail) id() (string, er
 
 type mqlAwsSagemakerClusterNodeInternal struct {
 	cacheClusterName string
+	fetched          bool
+	fetchLock        sync.Mutex
+	cacheDescribe    *sagemakerTypes.ClusterNodeDetails
+}
+
+func (a *mqlAwsSagemakerClusterNode) fetchDetails() (*sagemakerTypes.ClusterNodeDetails, error) {
+	if a.fetched {
+		return a.cacheDescribe, nil
+	}
+	a.fetchLock.Lock()
+	defer a.fetchLock.Unlock()
+	if a.fetched {
+		return a.cacheDescribe, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Sagemaker(a.Region.Data)
+	ctx := context.Background()
+	clusterName := a.cacheClusterName
+	nodeId := a.InstanceId.Data
+
+	resp, err := svc.DescribeClusterNode(ctx, &sagemaker.DescribeClusterNodeInput{
+		ClusterName: &clusterName,
+		NodeId:      &nodeId,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			a.fetched = true
+			return nil, nil
+		}
+		return nil, err
+	}
+	a.cacheDescribe = resp.NodeDetails
+	a.fetched = true
+	return a.cacheDescribe, nil
+}
+
+func (a *mqlAwsSagemakerClusterNode) networkInterfaceType() (string, error) {
+	details, err := a.fetchDetails()
+	if err != nil {
+		return "", err
+	}
+	if details == nil || details.NetworkInterface == nil {
+		return "", nil
+	}
+	return string(details.NetworkInterface.InterfaceType), nil
 }
 
 func (a *mqlAwsSagemakerClusterNode) id() (string, error) {

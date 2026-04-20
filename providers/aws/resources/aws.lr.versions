@@ -4976,6 +4976,7 @@ aws.sagemaker.clusterInstanceGroup.instanceTypeDetail.instanceType 13.12.2
 aws.sagemaker.clusterInstanceGroup.instanceTypeDetail.threadsPerCore 13.12.2
 aws.sagemaker.clusterInstanceGroup.instanceTypeDetails 13.12.2
 aws.sagemaker.clusterInstanceGroup.lifecycleConfig 13.12.0
+aws.sagemaker.clusterInstanceGroup.networkInterfaceType 13.15.2
 aws.sagemaker.clusterInstanceGroup.region 13.12.0
 aws.sagemaker.clusterInstanceGroup.status 13.12.0
 aws.sagemaker.clusterInstanceGroup.targetCount 13.12.0
@@ -4985,6 +4986,7 @@ aws.sagemaker.clusterNode.instanceGroupName 13.12.0
 aws.sagemaker.clusterNode.instanceId 13.12.0
 aws.sagemaker.clusterNode.instanceType 13.12.0
 aws.sagemaker.clusterNode.launchedAt 13.12.0
+aws.sagemaker.clusterNode.networkInterfaceType 13.15.2
 aws.sagemaker.clusterNode.privateDnsHostname 13.12.0
 aws.sagemaker.clusterNode.region 13.12.0
 aws.sagemaker.clusterNode.status 13.12.0

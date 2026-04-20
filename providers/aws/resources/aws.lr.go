@@ -6092,6 +6092,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.sagemaker.clusterInstanceGroup.instanceTypeDetails": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerClusterInstanceGroup).GetInstanceTypeDetails()).ToDataRes(types.Array(types.Resource("aws.sagemaker.clusterInstanceGroup.instanceTypeDetail")))
 	},
+	"aws.sagemaker.clusterInstanceGroup.networkInterfaceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterInstanceGroup).GetNetworkInterfaceType()).ToDataRes(types.String)
+	},
 	"aws.sagemaker.clusterInstanceGroup.instanceTypeDetail.instanceType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerClusterInstanceGroupInstanceTypeDetail).GetInstanceType()).ToDataRes(types.String)
 	},
@@ -6124,6 +6127,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.sagemaker.clusterNode.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerClusterNode).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.clusterNode.networkInterfaceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterNode).GetNetworkInterfaceType()).ToDataRes(types.String)
 	},
 	"aws.sagemaker.featureGroup.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerFeatureGroup).GetArn()).ToDataRes(types.String)
@@ -26041,6 +26047,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSagemakerClusterInstanceGroup).InstanceTypeDetails, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.sagemaker.clusterInstanceGroup.networkInterfaceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterInstanceGroup).NetworkInterfaceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.sagemaker.clusterInstanceGroup.instanceTypeDetail.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerClusterInstanceGroupInstanceTypeDetail).__id, ok = v.Value.(string)
 		return
@@ -26091,6 +26101,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.sagemaker.clusterNode.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerClusterNode).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterNode.networkInterfaceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterNode).NetworkInterfaceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.featureGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -60746,6 +60760,7 @@ type mqlAwsSagemakerClusterInstanceGroup struct {
 	LifecycleConfig      plugin.TValue[any]
 	InstanceRequirements plugin.TValue[any]
 	InstanceTypeDetails  plugin.TValue[[]any]
+	NetworkInterfaceType plugin.TValue[string]
 }
 
 // createAwsSagemakerClusterInstanceGroup creates a new instance of this resource
@@ -60843,6 +60858,10 @@ func (c *mqlAwsSagemakerClusterInstanceGroup) GetInstanceTypeDetails() *plugin.T
 	return &c.InstanceTypeDetails
 }
 
+func (c *mqlAwsSagemakerClusterInstanceGroup) GetNetworkInterfaceType() *plugin.TValue[string] {
+	return &c.NetworkInterfaceType
+}
+
 // mqlAwsSagemakerClusterInstanceGroupInstanceTypeDetail for the aws.sagemaker.clusterInstanceGroup.instanceTypeDetail resource
 type mqlAwsSagemakerClusterInstanceGroupInstanceTypeDetail struct {
 	MqlRuntime *plugin.Runtime
@@ -60907,14 +60926,15 @@ type mqlAwsSagemakerClusterNode struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsSagemakerClusterNodeInternal
-	InstanceId         plugin.TValue[string]
-	InstanceGroupName  plugin.TValue[string]
-	InstanceType       plugin.TValue[string]
-	Status             plugin.TValue[string]
-	StatusMessage      plugin.TValue[string]
-	LaunchedAt         plugin.TValue[*time.Time]
-	PrivateDnsHostname plugin.TValue[string]
-	Region             plugin.TValue[string]
+	InstanceId           plugin.TValue[string]
+	InstanceGroupName    plugin.TValue[string]
+	InstanceType         plugin.TValue[string]
+	Status               plugin.TValue[string]
+	StatusMessage        plugin.TValue[string]
+	LaunchedAt           plugin.TValue[*time.Time]
+	PrivateDnsHostname   plugin.TValue[string]
+	Region               plugin.TValue[string]
+	NetworkInterfaceType plugin.TValue[string]
 }
 
 // createAwsSagemakerClusterNode creates a new instance of this resource
@@ -60984,6 +61004,12 @@ func (c *mqlAwsSagemakerClusterNode) GetPrivateDnsHostname() *plugin.TValue[stri
 
 func (c *mqlAwsSagemakerClusterNode) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+func (c *mqlAwsSagemakerClusterNode) GetNetworkInterfaceType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.NetworkInterfaceType, func() (string, error) {
+		return c.networkInterfaceType()
+	})
 }
 
 // mqlAwsSagemakerFeatureGroup for the aws.sagemaker.featureGroup resource

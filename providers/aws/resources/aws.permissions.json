@@ -1,7 +1,7 @@
 {
   "provider": "aws",
-  "version": "13.14.1",
-  "generated_at": "2026-04-17T11:35:02-07:00",
+  "version": "13.15.1",
+  "generated_at": "2026-04-20T13:18:14-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -470,6 +470,7 @@
     "sagemaker:DescribeArtifact",
     "sagemaker:DescribeAutoMLJob",
     "sagemaker:DescribeCluster",
+    "sagemaker:DescribeClusterNode",
     "sagemaker:DescribeCodeRepository",
     "sagemaker:DescribeCompilationJob",
     "sagemaker:DescribeContext",
@@ -3549,6 +3550,12 @@
       "permission": "sagemaker:DescribeCluster",
       "service": "sagemaker",
       "action": "DescribeCluster",
+      "source_file": "aws_sagemaker.go"
+    },
+    {
+      "permission": "sagemaker:DescribeClusterNode",
+      "service": "sagemaker",
+      "action": "DescribeClusterNode",
       "source_file": "aws_sagemaker.go"
     },
     {
