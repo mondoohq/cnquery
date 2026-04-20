@@ -792,7 +792,7 @@ func init() {
 			Create: createGcpProjectApiKey,
 		},
 		"gcp.project.apiKey.restrictions": {
-			// to override args, implement: initGcpProjectApiKeyRestrictions(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectApiKeyRestrictions,
 			Create: createGcpProjectApiKeyRestrictions,
 		},
 		"gcp.project.loggingservice": {
