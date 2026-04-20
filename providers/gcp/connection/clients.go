@@ -55,9 +55,24 @@ func (c *GcpConnection) Client(scope ...string) (*http.Client, error) {
 	return defaultAuth(ctx, scope...)
 }
 
-// defaultAuth implements the
+// defaultAuth builds an HTTP client from Application Default Credentials.
+// It routes through transport.NewHTTPClient with option.WithCredentials so that
+// the quota project (from quota_project_id in the ADC JSON, or the
+// GOOGLE_CLOUD_QUOTA_PROJECT env var) is propagated as the X-Goog-User-Project
+// header. Going through googleoauth.DefaultClient skips that plumbing and
+// causes APIs that bill the caller (apikeys, serviceusage,
+// cloudresourcemanager) to fail with 403 against Google's default SDK project.
 func defaultAuth(ctx context.Context, scope ...string) (*http.Client, error) {
-	return googleoauth.DefaultClient(ctx, scope...)
+	creds, err := googleoauth.FindDefaultCredentials(ctx, scope...)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to find google default credentials")
+	}
+
+	client, _, err := transport.NewHTTPClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create google http client")
+	}
+	return client, nil
 }
 
 // serviceAccountAuth implements
