@@ -84,10 +84,7 @@ func (r *mqlCondaPackages) gatherData() error {
 				continue
 			}
 			if len(matches) == 0 {
-				if strings.ContainsAny(sp, "*?[") {
-					continue
-				}
-				matches = []string{sp}
+				continue
 			}
 			for _, match := range matches {
 				t, f := collectCondaPackages(afs, match)

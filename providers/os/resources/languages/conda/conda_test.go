@@ -68,9 +68,9 @@ func TestParseCondaDep(t *testing.T) {
 		{"scikit-learn=1.4.0", "scikit-learn", "1.4.0"},
 	}
 	for _, tt := range tests {
-		got := parseCondaDep(tt.input)
-		assert.Equal(t, tt.name, got.Name, "parseCondaDep(%q) name", tt.input)
-		assert.Equal(t, tt.version, got.Version, "parseCondaDep(%q) version", tt.input)
+		name, version := parseCondaDep(tt.input)
+		assert.Equal(t, tt.name, name, "parseCondaDep(%q) name", tt.input)
+		assert.Equal(t, tt.version, version, "parseCondaDep(%q) version", tt.input)
 	}
 }
 

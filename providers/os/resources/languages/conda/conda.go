@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/afero"
 	"go.mondoo.com/mql/v13/providers/os/resources/languages"
 	"go.mondoo.com/mql/v13/sbom"
+	"gopkg.in/yaml.v3"
 )
 
 // condaMetaPackage represents a single JSON file in conda-meta/.
@@ -93,59 +94,39 @@ func ParseCondaMeta(afs *afero.Afero, condaMetaDir string) (languages.Packages, 
 	return pkgs, filePaths
 }
 
-// envYmlDep represents a dependency line in environment.yml.
-// Format: "name=version=build" or just "name=version" or "name"
-type envYmlLine struct {
-	Name    string
-	Version string
+// condaEnvironment represents a conda environment.yml file.
+type condaEnvironment struct {
+	Name         string        `yaml:"name"`
+	Dependencies []interface{} `yaml:"dependencies"`
 }
 
 // ParseEnvironmentYml parses a conda environment.yml file.
-// It extracts package names and versions from the dependencies list.
+// It extracts conda package names and versions from the dependencies list.
+// Nested sub-sections (e.g., pip dependencies) are skipped.
 func ParseEnvironmentYml(r io.Reader, filename string) (languages.Packages, error) {
-	data, err := io.ReadAll(r)
-	if err != nil {
+	var env condaEnvironment
+	if err := yaml.NewDecoder(r).Decode(&env); err != nil {
 		return nil, err
 	}
 
-	// Simple line-based parsing of the dependencies section
-	// (avoiding a full YAML dependency for this simple format)
 	var pkgs languages.Packages
-	inDeps := false
-
-	for _, line := range strings.Split(string(data), "\n") {
-		trimmed := strings.TrimSpace(line)
-
-		if trimmed == "dependencies:" {
-			inDeps = true
+	for _, dep := range env.Dependencies {
+		// String entries are conda packages (e.g., "numpy=1.26.4")
+		// Map entries are nested sub-sections (e.g., pip: [...]) — skip them
+		depStr, ok := dep.(string)
+		if !ok {
 			continue
 		}
 
-		// End of dependencies section
-		if inDeps && !strings.HasPrefix(trimmed, "- ") && !strings.HasPrefix(trimmed, "#") && trimmed != "" {
-			break
-		}
-
-		if !inDeps || !strings.HasPrefix(trimmed, "- ") {
-			continue
-		}
-
-		dep := strings.TrimPrefix(trimmed, "- ")
-		// Skip pip sub-section marker
-		if dep == "pip:" {
-			inDeps = false
-			continue
-		}
-
-		parsed := parseCondaDep(dep)
-		if parsed.Name == "" {
+		name, version := parseCondaDep(depStr)
+		if name == "" {
 			continue
 		}
 
 		pkgs = append(pkgs, &languages.Package{
-			Name:    parsed.Name,
-			Version: parsed.Version,
-			Purl:    NewPackageUrl(parsed.Name, parsed.Version, ""),
+			Name:    name,
+			Version: version,
+			Purl:    NewPackageUrl(name, version, ""),
 			EvidenceList: []*sbom.Evidence{
 				{Type: sbom.EvidenceType_EVIDENCE_TYPE_FILE, Value: filename},
 			},
@@ -155,16 +136,16 @@ func ParseEnvironmentYml(r io.Reader, filename string) (languages.Packages, erro
 	return pkgs, nil
 }
 
-// parseCondaDep parses a conda dependency string.
+// parseCondaDep parses a conda dependency string into name and version.
 // Formats: "numpy=1.26.4=py312h5b0bcb5_0", "numpy=1.26.4", "numpy"
-func parseCondaDep(dep string) envYmlLine {
+func parseCondaDep(dep string) (string, string) {
 	parts := strings.SplitN(dep, "=", 3)
 	name := strings.TrimSpace(parts[0])
 	version := ""
 	if len(parts) >= 2 {
 		version = strings.TrimSpace(parts[1])
 	}
-	return envYmlLine{Name: name, Version: version}
+	return name, version
 }
 
 // NewPackageUrl creates a Conda package URL.
