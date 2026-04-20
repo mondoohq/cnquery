@@ -870,6 +870,17 @@ apache2.conf {
   virtualHosts(file) []apache2.conf.virtualHost
   // Directory blocks
   directories(file) []apache2.conf.directory
+  // Environment variables sourced by Apache at startup (e.g. Debian's /etc/apache2/envvars)
+  envvars() apache2.conf.envvars
+}
+
+// Apache2 environment variables (e.g. Debian's /etc/apache2/envvars)
+private apache2.conf.envvars @defaults("file.path") {
+  init(path? string)
+  // File defining the environment variables
+  file() file
+  // Parsed variable assignments (after shell expansion)
+  params(file) map[string]string
 }
 
 // Apache2 loaded module
@@ -1484,6 +1495,7 @@ firewalld @defaults("status defaultZone") {
 
 // firewalld zone configuration
 private firewalld.zone @defaults("name target") {
+  init(name? string)
   // Zone name (e.g., "public", "internal", "dmz")
   name string
   // Default target (default, ACCEPT, REJECT, DROP)
@@ -1522,8 +1534,12 @@ private firewalld.richrule @defaults("family rule") {
   rule string
   // Source address/subnet, empty if not specified
   source string
+  // True when the source address is negated (e.g., `source NOT address="..."`)
+  sourceInverted bool
   // Destination address/subnet, empty if not specified
   destination string
+  // True when the destination address is negated (e.g., `destination NOT address="..."`)
+  destinationInverted bool
   // Action (accept, reject, drop, mark), empty if not specified
   action string
 }
@@ -2401,6 +2417,412 @@ php.package @defaults("name version purl") {
   purl() string
   // Common Platform Enumeration (CPE) for the package
   cpes() []core.cpe
+  // Package files
+  files() []pkgFileInfo
+}
+
+// GitHub Actions dependencies
+githubactions.packages {
+  []githubactions.package
+
+  init(path? string)
+
+  // Path to search for workflow files (directory or specific .yml file)
+  path string
+
+  // Files used to determine the packages
+  files() []pkgFileInfo
+}
+
+// GitHub Actions action reference
+githubactions.package @defaults("name version purl") {
+  // ID is the githubactions.package unique identifier
+  id string
+  // Name of the action (owner/repo or owner/repo/path)
+  name() string
+  // Version (tag, branch, or commit SHA)
+  version() string
+  // Package URL
+  purl() string
+  // Package files
+  files() []pkgFileInfo
+}
+
+// Swift packages (SPM and CocoaPods)
+swift.packages {
+  []swift.package
+
+  init(path? string)
+
+  // Path to search for Swift package files
+  path string
+
+  // Files used to determine the packages
+  files() []pkgFileInfo
+}
+
+// Swift package dependency
+swift.package @defaults("name version purl") {
+  // ID is the swift.package unique identifier
+  id string
+  // Name of the package
+  name() string
+  // Version of the package
+  version() string
+  // Package URL
+  purl() string
+  // Common Platform Enumeration (CPE) for the package
+  cpes() []core.cpe
+  // Package files
+  files() []pkgFileInfo
+}
+
+// Terraform provider dependencies (SBOM cataloger).
+// Note: the terraform.* namespace is also used by the dedicated Terraform provider
+// for IaC resource scanning. These SBOM resources focus on provider version inventory
+// from .terraform.lock.hcl, not Terraform configuration analysis.
+terraform.packages {
+  []terraform.package
+
+  init(path? string)
+
+  // Path to search for .terraform.lock.hcl
+  path string
+
+  // Files used to determine the packages
+  files() []pkgFileInfo
+}
+
+// Terraform provider dependency
+terraform.package @defaults("name version purl") {
+  // ID is the terraform.package unique identifier
+  id string
+  // Name of the provider (namespace/type)
+  name() string
+  // Version of the provider
+  version() string
+  // Package URL
+  purl() string
+  // Common Platform Enumeration (CPE) for the provider
+  cpes() []core.cpe
+  // Package files
+  files() []pkgFileInfo
+}
+
+// Homebrew packages (macOS and Linux)
+homebrew.packages {
+  []homebrew.package
+}
+
+// Homebrew package (formula or cask)
+private homebrew.package @defaults("name version type") {
+  // Package name (formula name or cask token)
+  name string
+  // Currently installed version
+  version string
+  // Latest stable version available (equals version when up-to-date)
+  latestVersion string
+  // Package URL
+  purl string
+  // Package description
+  description string
+  // Homepage URL
+  homepage string
+  // Install path
+  path string
+  // Package type: "formula" or "cask"
+  type string
+  // Application name (casks only)
+  appName string
+  // Whether the cask manages its own updates
+  autoUpdates bool
+  // Whether this package was explicitly installed (not a dependency)
+  installedOnRequest bool
+  // Whether this package was installed as a dependency
+  installedAsDependency bool
+  // Whether a newer version is available
+  outdated bool
+  // Whether the version is pinned
+  pinned bool
+  // Homebrew tap (e.g., "homebrew/core")
+  tap string
+  // Homebrew install prefix (e.g., "/opt/homebrew")
+  prefix string
+}
+
+// Chocolatey packages (Windows)
+chocolatey.packages {
+  []chocolatey.package
+}
+
+// Chocolatey package
+private chocolatey.package @defaults("name version") {
+  // Package name
+  name string
+  // Package version
+  version string
+  // Package URL
+  purl string
+  // Short description
+  summary string
+  // Full description
+  description string
+  // Package author(s)
+  author string
+  // License name
+  license string
+  // License URL
+  licenseUrl string
+  // Package install path
+  path string
+  // Whether the package is pinned (won't auto-upgrade)
+  pinned bool
+  // Package dependencies
+  dependencies []string
+  // Package tags
+  tags []string
+  // Upstream project URL
+  projectUrl string
+}
+
+// Jenkins plugin dependencies
+jenkins.packages {
+  []jenkins.package
+
+  init(path? string)
+
+  // Path to Jenkins plugins directory
+  path string
+
+  // Files used to determine the packages
+  files() []pkgFileInfo
+}
+
+// Jenkins plugin
+private jenkins.package @defaults("name version purl") {
+  // Plugin short name
+  name string
+  // Plugin version
+  version string
+  // Package URL
+  purl string
+  // Plugin long name
+  longName string
+  // Plugin URL
+  url string
+  // Plugin dependencies
+  dependencies []string
+  // Package files
+  files []pkgFileInfo
+}
+
+// WordPress plugin dependencies
+wordpress.packages {
+  []wordpress.package
+
+  init(path? string)
+
+  // Path to WordPress plugins directory (wp-content/plugins/)
+  path string
+
+  // Files used to determine the packages
+  files() []pkgFileInfo
+}
+
+// WordPress plugin
+private wordpress.package @defaults("name version purl") {
+  // Plugin slug (directory name)
+  name string
+  // Plugin version (from Stable tag)
+  version string
+  // Package URL
+  purl string
+  // Plugin display name
+  displayName string
+  // License
+  license string
+  // Minimum required WordPress version
+  requiresWp string
+  // Maximum tested WordPress version
+  testedUpTo string
+  // Package files
+  files []pkgFileInfo
+}
+
+// Ruby/Gem packages
+ruby.packages {
+  []ruby.package
+
+  init(path? string)
+
+  // Path to search for Gemfile.lock
+  path string
+
+  // Root project (may not exist)
+  root() ruby.package
+
+  // List of direct dependencies
+  directDependencies() []ruby.package
+
+  // Files used to determine the packages
+  files() []pkgFileInfo
+}
+
+// Ruby gem package
+ruby.package @defaults("name version purl") {
+  // ID is the ruby.package unique identifier
+  id string
+  // Gem name
+  name() string
+  // Gem version
+  version() string
+  // Package URL
+  purl() string
+  // Common Platform Enumeration (CPE) for the package
+  cpes() []core.cpe
+  // Package files
+  files() []pkgFileInfo
+}
+
+// Dart/Flutter packages
+dart.packages {
+  []dart.package
+
+  init(path? string)
+
+  // Path to search for pubspec.lock
+  path string
+
+  // Root project (may not exist)
+  root() dart.package
+
+  // List of direct dependencies
+  directDependencies() []dart.package
+
+  // Files used to determine the packages
+  files() []pkgFileInfo
+}
+
+// Dart/Flutter package dependency
+dart.package @defaults("name version purl") {
+  // ID is the dart.package unique identifier
+  id string
+  // Package name
+  name() string
+  // Package version
+  version() string
+  // Package URL
+  purl() string
+  // Common Platform Enumeration (CPE) for the package
+  cpes() []core.cpe
+  // Package files
+  files() []pkgFileInfo
+}
+
+// Haskell packages (Stack and Cabal)
+haskell.packages {
+  []haskell.package
+
+  init(path? string)
+
+  // Path to search for stack.yaml.lock or cabal.project.freeze
+  path string
+
+  // Files used to determine the packages
+  files() []pkgFileInfo
+}
+
+// Haskell package dependency
+haskell.package @defaults("name version purl") {
+  // ID is the haskell.package unique identifier
+  id string
+  // Package name
+  name() string
+  // Package version
+  version() string
+  // Package URL
+  purl() string
+  // Package files
+  files() []pkgFileInfo
+}
+
+// Elixir packages (Hex via mix.lock)
+elixir.packages {
+  []elixir.package
+
+  init(path? string)
+
+  // Path to search for mix.lock
+  path string
+
+  // Files used to determine the packages
+  files() []pkgFileInfo
+}
+
+// Elixir Hex package dependency
+elixir.package @defaults("name version purl") {
+  // ID is the elixir.package unique identifier
+  id string
+  // Package name
+  name() string
+  // Package version
+  version() string
+  // Package URL
+  purl() string
+  // Package files
+  files() []pkgFileInfo
+}
+
+// Erlang packages (Hex via rebar.lock)
+erlang.packages {
+  []erlang.package
+
+  init(path? string)
+
+  // Path to search for rebar.lock
+  path string
+
+  // Files used to determine the packages
+  files() []pkgFileInfo
+}
+
+// Erlang Hex package dependency
+erlang.package @defaults("name version purl") {
+  // ID is the erlang.package unique identifier
+  id string
+  // Package name
+  name() string
+  // Package version
+  version() string
+  // Package URL
+  purl() string
+  // Package files
+  files() []pkgFileInfo
+}
+
+// SWI-Prolog packs
+prolog.packages {
+  []prolog.package
+
+  init(path? string)
+
+  // Path to search for SWI-Prolog packs directory
+  path string
+
+  // Files used to determine the packages
+  files() []pkgFileInfo
+}
+
+// SWI-Prolog pack
+prolog.package @defaults("name version purl") {
+  // ID is the prolog.package unique identifier
+  id string
+  // Pack name
+  name() string
+  // Pack version
+  version() string
+  // Package URL
+  purl() string
   // Package files
   files() []pkgFileInfo
 }
@@ -3459,6 +3881,7 @@ zfs.dataset @defaults("name type usedBytes") {
 }
 
 // Claude Code instance configuration
+// URL: https://claude.ai/code
 claude.code @defaults("configPath") @maturity("preview") {
   init(configPath? string)
   // Path to the Claude Code configuration directory
@@ -3523,6 +3946,8 @@ private claude.code.skill @defaults("name") @maturity("preview") {
   source string
   // Full content of the skill definition
   content string
+  // SHA-256 hash of the skill content
+  sha256() string
 }
 
 // Claude Code project
@@ -3544,6 +3969,7 @@ private claude.code.mcpServer @defaults("name") @maturity("preview") {
 }
 
 // OpenAI Codex CLI instance configuration
+// URL: https://openai.com/index/introducing-codex/
 openai.codex @defaults("configPath") @maturity("preview") {
   init(configPath? string)
   // Path to the Codex configuration directory
@@ -3600,6 +4026,8 @@ private openai.codex.skill @defaults("name") @maturity("preview") {
   plugin string
   // Full content of the skill definition
   content string
+  // SHA-256 hash of the skill content
+  sha256() string
 }
 
 // OpenAI Codex MCP server
@@ -3624,4 +4052,780 @@ private openai.codex.connector @defaults("name") @maturity("preview") {
   id string
   // Plugin that provides this connector
   plugin string
+}
+
+// Cursor editor instance configuration
+// URL: https://www.cursor.com/
+cursor @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Cursor configuration directory
+  configPath string
+  // MCP servers
+  mcpServers() []cursor.mcpServer
+  // Cursor rules (global and project-scoped)
+  rules() []cursor.rule
+  // Installed skills
+  skills() []cursor.skill
+}
+
+// Cursor MCP server configuration
+private cursor.mcpServer @defaults("name") @maturity("preview") {
+  // Server name
+  name string
+  // Server command (for stdio type)
+  command string
+  // Server URL (for sse/streamable-http type)
+  url string
+  // Server arguments
+  args []string
+  // Whether environment variables are configured
+  hasEnv bool
+}
+
+// Cursor rule file
+private cursor.rule @defaults("name") @maturity("preview") {
+  // Rule name (derived from filename)
+  name string
+  // Full content of the rule file
+  content string
+  // Source path of the rule file
+  source string
+}
+
+// Cursor skill
+private cursor.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// GitHub Copilot instance configuration
+// URL: https://github.com/features/copilot
+github.copilot @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the GitHub Copilot configuration directory
+  configPath string
+  // Authenticated GitHub accounts
+  accounts() []github.copilot.account
+  // MCP servers
+  mcpServers() []github.copilot.mcpServer
+  // Installed skills
+  skills() []github.copilot.skill
+}
+
+// GitHub Copilot authenticated account
+private github.copilot.account @defaults("user") @maturity("preview") {
+  // GitHub username
+  user string
+  // GitHub App ID
+  githubAppId string
+}
+
+// GitHub Copilot MCP server configuration
+private github.copilot.mcpServer @defaults("name") @maturity("preview") {
+  // Server name
+  name string
+  // Server type (e.g. "stdio")
+  type string
+  // Server command
+  command string
+  // Server arguments
+  args []string
+}
+
+// GitHub Copilot skill
+private github.copilot.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// Goose AI agent configuration
+// URL: https://block.github.io/goose/
+goose @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Goose configuration directory
+  configPath string
+  // Active AI provider name
+  provider() string
+  // Active model name
+  model() string
+  // Whether telemetry is enabled
+  telemetryEnabled() bool
+  // Configured extensions
+  extensions() []goose.extension
+  // Installed skills
+  skills() []goose.skill
+}
+
+// Goose extension
+private goose.extension @defaults("name") @maturity("preview") {
+  // Extension name
+  name string
+  // Whether the extension is enabled
+  enabled bool
+  // Extension type (platform or builtin)
+  type string
+  // Extension description
+  description string
+  // Whether the extension is bundled with Goose
+  bundled bool
+  // Extension timeout in seconds (0 = no timeout)
+  timeout int
+}
+
+// Goose skill
+private goose.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// Gemini CLI instance configuration
+// URL: https://github.com/google-gemini/gemini-cli
+gemini @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Gemini configuration directory
+  configPath string
+  // Authentication type
+  authType() string
+  // Settings dictionary
+  settings() dict
+  // MCP servers
+  mcpServers() []gemini.mcpServer
+  // Installed skills
+  skills() []gemini.skill
+}
+
+// Gemini MCP server configuration
+private gemini.mcpServer @defaults("name") @maturity("preview") {
+  // Server name
+  name string
+  // Server command
+  command string
+  // Server arguments
+  args []string
+  // Whether environment variables are configured
+  hasEnv bool
+}
+
+// Gemini skill
+private gemini.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// Windsurf editor instance configuration
+// URL: https://windsurf.com/
+windsurf @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Windsurf configuration directory
+  configPath string
+  // Global rules / memories
+  rules() []windsurf.rule
+  // MCP servers
+  mcpServers() []windsurf.mcpServer
+  // Installed skills
+  skills() []windsurf.skill
+}
+
+// Windsurf rule / memory file
+private windsurf.rule @defaults("name") @maturity("preview") {
+  // Rule name (derived from filename)
+  name string
+  // Full content of the rule file
+  content string
+  // Source path of the rule file
+  source string
+}
+
+// Windsurf MCP server configuration
+private windsurf.mcpServer @defaults("name") @maturity("preview") {
+  // Server name
+  name string
+  // Server command
+  command string
+  // Server arguments
+  args []string
+  // Whether environment variables are configured
+  hasEnv bool
+}
+
+// Windsurf skill
+private windsurf.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// Zed editor instance configuration
+// URL: https://zed.dev/
+zed @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Zed configuration directory
+  configPath string
+  // Settings dictionary
+  settings() dict
+  // Extension names installed
+  extensions() []string
+}
+
+// Roo Code instance configuration
+// URL: https://roocode.com/
+roo @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Roo Code configuration directory
+  configPath string
+  // Installed skills
+  skills() []roo.skill
+}
+
+// Roo Code skill
+private roo.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// Cline instance configuration
+// URL: https://cline.bot/
+cline @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Cline configuration directory
+  configPath string
+  // Installed skills
+  skills() []cline.skill
+}
+
+// Cline skill
+private cline.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// Kiro CLI instance configuration
+// URL: https://kiro.dev/
+kiro @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Kiro configuration directory
+  configPath string
+  // Installed skills
+  skills() []kiro.skill
+}
+
+// Kiro skill
+private kiro.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// Continue instance configuration
+// URL: https://continue.dev/
+continuedev @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Continue configuration directory
+  configPath string
+  // Installed skills
+  skills() []continuedev.skill
+}
+
+// Continue skill
+private continuedev.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// Trae instance configuration
+// URL: https://trae.ai/
+trae @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Trae configuration directory
+  configPath string
+  // Installed skills
+  skills() []trae.skill
+}
+
+// Trae skill
+private trae.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// OpenCode instance configuration
+// URL: https://opencode.ai/
+opencode @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the OpenCode configuration directory
+  configPath string
+  // Installed skills
+  skills() []opencode.skill
+}
+
+// OpenCode skill
+private opencode.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// Pi instance configuration
+// URL: https://pi.dev/
+pi @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Pi configuration directory
+  configPath string
+  // Installed skills
+  skills() []pi.skill
+}
+
+// Pi skill
+private pi.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// Mistral Vibe instance configuration
+// URL: https://docs.mistral.ai/tools/vibe/
+mistral.vibe @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Mistral Vibe configuration directory
+  configPath string
+  // Installed skills
+  skills() []mistral.vibe.skill
+}
+
+// Mistral Vibe skill
+private mistral.vibe.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// Antigravity (Google) instance configuration
+// URL: https://antigravity.google/
+antigravity @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Antigravity configuration directory
+  configPath string
+  // Installed skills
+  skills() []antigravity.skill
+}
+
+// Antigravity skill
+private antigravity.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// IBM Bob instance configuration
+// URL: https://www.ibm.com/products/bob
+ibm.bob @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Bob configuration directory
+  configPath string
+  // Installed skills
+  skills() []ibm.bob.skill
+}
+
+// IBM Bob skill
+private ibm.bob.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// OpenClaw instance configuration
+// URL: https://openclaw.ai/
+openclaw @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the OpenClaw configuration directory
+  configPath string
+  // Installed skills
+  skills() []openclaw.skill
+}
+
+// OpenClaw skill
+private openclaw.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// Snowflake Cortex Code instance configuration
+// URL: https://www.snowflake.com/en/product/features/cortex-code/
+snowflake.cortex @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Cortex configuration directory
+  configPath string
+  // Installed skills
+  skills() []snowflake.cortex.skill
+}
+
+// Snowflake Cortex Code skill
+private snowflake.cortex.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// Junie (JetBrains) instance configuration
+// URL: https://www.jetbrains.com/junie/
+junie @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Junie configuration directory
+  configPath string
+  // Installed skills
+  skills() []junie.skill
+}
+
+// Junie skill
+private junie.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// Augment instance configuration
+// URL: https://www.augmentcode.com/
+augment @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Augment configuration directory
+  configPath string
+  // Installed skills
+  skills() []augment.skill
+}
+
+// Augment skill
+private augment.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// Warp AI terminal instance configuration
+// URL: https://www.warp.dev/
+warp @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Warp configuration directory
+  configPath string
+  // Installed skills
+  skills() []warp.skill
+}
+
+// Warp skill
+private warp.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// Kilo Code instance configuration
+// URL: https://kilocode.ai/
+kilocode @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Kilo Code configuration directory
+  configPath string
+  // Installed skills
+  skills() []kilocode.skill
+}
+
+// Kilo Code skill
+private kilocode.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// OpenHands instance configuration
+// URL: https://www.all-hands.dev/
+openhands @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the OpenHands configuration directory
+  configPath string
+  // Installed skills
+  skills() []openhands.skill
+}
+
+// OpenHands skill
+private openhands.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
+}
+
+// Qwen Code (Alibaba) instance configuration
+// URL: https://qwen.ai/qwencode
+qwen.code @defaults("configPath") @maturity("preview") {
+  init(configPath? string)
+  // Path to the Qwen Code configuration directory
+  configPath string
+  // Installed skills
+  skills() []qwen.code.skill
+}
+
+// Qwen Code skill
+private qwen.code.skill @defaults("name") @maturity("preview") {
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Tools the skill is allowed to use
+  allowedTools []string
+  // Hint for expected arguments
+  argumentHint string
+  // Source path of the skill definition
+  source string
+  // Full content of the skill definition
+  content string
+  // SHA-256 hash of the skill content
+  sha256() string
 }

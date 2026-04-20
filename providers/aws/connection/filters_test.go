@@ -253,6 +253,8 @@ func TestDiscoveryFiltersFromOpts(t *testing.T) {
 			"ecs:discover-instances":      "false",
 			// Account-level filters
 			"propagate-account-tags": "true",
+			"account-tag:Owner":      "team-a",
+			"account-tag:CostCenter": "cc-42",
 		}
 		expected := DiscoveryFilters{
 			General: GeneralDiscoveryFilters{
@@ -281,6 +283,10 @@ func TestDiscoveryFiltersFromOpts(t *testing.T) {
 				ExcludeTags: []string{"tag1", "tag2"},
 			},
 			PropagateAccountTags: true,
+			AccountTags: map[string]string{
+				"Owner":      "team-a",
+				"CostCenter": "cc-42",
+			},
 		}
 
 		actual := DiscoveryFiltersFromOpts(opts)
@@ -303,7 +309,8 @@ func TestDiscoveryFiltersFromOpts(t *testing.T) {
 				Tags:        []string{},
 				ExcludeTags: []string{},
 			},
-			Ecs: EcsDiscoveryFilters{},
+			Ecs:         EcsDiscoveryFilters{},
+			AccountTags: map[string]string{},
 		}
 		actual := DiscoveryFiltersFromOpts(map[string]string{})
 		require.Equal(t, expected, actual)
@@ -325,7 +332,8 @@ func TestDiscoveryFiltersFromOpts(t *testing.T) {
 				Tags:        []string{},
 				ExcludeTags: []string{},
 			},
-			Ecs: EcsDiscoveryFilters{},
+			Ecs:         EcsDiscoveryFilters{},
+			AccountTags: map[string]string{},
 		}
 		actual := DiscoveryFiltersFromOpts(nil)
 		require.Equal(t, expected, actual)

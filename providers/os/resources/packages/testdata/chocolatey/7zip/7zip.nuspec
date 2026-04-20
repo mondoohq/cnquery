@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>7zip</id>
+    <version>24.08</version>
+    <title>7-Zip</title>
+    <authors>Igor Pavlov</authors>
+    <owners>chocolatey-community</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <licenseUrl>https://www.7-zip.org/license.txt</licenseUrl>
+    <projectUrl>https://www.7-zip.org/</projectUrl>
+    <description>7-Zip is a file archiver with a high compression ratio.</description>
+    <summary>7-Zip is a file archiver with a high compression ratio.</summary>
+    <tags>7zip archive compression admin</tags>
+  </metadata>
+</package>

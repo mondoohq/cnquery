@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
@@ -34,19 +35,31 @@ var vsCodeEditors = []vsCodeEditor{
 	{".kiro/extensions", "Kiro"},
 }
 
-// invalidHomeDirs contains home directories that should be skipped (system accounts)
-var invalidHomeDirs = map[string]bool{
-	"":                      true,
-	"/var/empty":            true,
-	"/nonexistent":          true,
-	"/dev/null":             true,
-	"/":                     true,
-	"/var":                  true,
-	"/usr":                  true,
-	"/bin":                  true,
-	"/sbin":                 true,
-	"C:\\Windows\\System32": true,
-	"C:\\Windows\\system32\\config\\systemprofile": true,
+// validHomePrefixes lists path prefixes where real user home directories live.
+// Anything outside these prefixes is treated as a system account.
+// NOTE: Non-standard setups (FreeBSD /usr/home/, NixOS /persist/home/, custom
+// /opt/users/) may need additions here if those targets should be supported.
+var validHomePrefixes = []string{
+	"/Users/",     // macOS
+	"/home/",      // Linux, FreeBSD default
+	"/root/",      // Linux root
+	"/usr/home/",  // FreeBSD alternate
+	"C:\\Users\\", // Windows
+}
+
+// isSystemHomeDir returns true if home looks like a system-account directory.
+// It uses an allowlist approach: only paths under known user-home prefixes
+// (e.g. /Users/, /home/, /root) are considered real users.
+func isSystemHomeDir(home string) bool {
+	if home == "" {
+		return true
+	}
+	for _, p := range validHomePrefixes {
+		if strings.HasPrefix(home, p) || home == strings.TrimSuffix(p, "/") {
+			return false
+		}
+	}
+	return true
 }
 
 // vscodePackageJSON represents the package.json structure for VS Code extensions
@@ -87,7 +100,7 @@ func (c *mqlVscode) paths() ([]any, error) {
 		user := u.(*mqlUser)
 		homeDir := user.GetHome().Data
 
-		if invalidHomeDirs[homeDir] {
+		if isSystemHomeDir(homeDir) {
 			continue
 		}
 
@@ -133,7 +146,7 @@ func (c *mqlVscode) extensions() ([]any, error) {
 		user := u.(*mqlUser)
 		homeDir := user.GetHome().Data
 
-		if invalidHomeDirs[homeDir] {
+		if isSystemHomeDir(homeDir) {
 			continue
 		}
 

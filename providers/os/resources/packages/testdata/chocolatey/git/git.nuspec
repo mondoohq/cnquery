@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>git</id>
+    <version>2.45.2</version>
+    <title>Git</title>
+    <authors>The Git Development Community</authors>
+    <owners>ferventcoder</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <licenseUrl>https://opensource.org/licenses/GPL-2.0</licenseUrl>
+    <projectUrl>https://gitforwindows.org/</projectUrl>
+    <description>Git for Windows focuses on offering a lightweight, native set of tools that bring the full feature set of the Git SCM to Windows.</description>
+    <summary>Git (install) is a fast, scalable, distributed revision control system.</summary>
+    <tags>git vcs dvcs version-control admin</tags>
+    <dependencies>
+      <dependency id="git.install" version="[2.45.2]" />
+    </dependencies>
+  </metadata>
+</package>

@@ -47,16 +47,27 @@ type KernelInstalled struct {
 }
 
 type BomFields struct {
-	Asset           *BomAsset         `json:"asset,omitempty"`
-	Packages        []BomPackage      `json:"packages.list,omitempty"`
-	PythonPackages  []BomPackage      `json:"python.packages,omitempty"`
-	NpmPackages     []BomPackage      `json:"npm.packages.list,omitempty"`
-	GoPackages      []BomPackage      `json:"go.packages.list,omitempty"`
-	JavaPackages    []BomPackage      `json:"java.packages.list,omitempty"`
-	RustPackages    []BomPackage      `json:"rust.packages.list,omitempty"`
-	DotnetPackages  []BomPackage      `json:"dotnet.packages.list,omitempty"`
-	PhpPackages     []BomPackage      `json:"php.packages.list,omitempty"`
-	KernelInstalled []KernelInstalled `json:"kernel.installed,omitempty"`
+	Asset                 *BomAsset         `json:"asset,omitempty"`
+	Packages              []BomPackage      `json:"packages.list,omitempty"`
+	PythonPackages        []BomPackage      `json:"python.packages,omitempty"`
+	NpmPackages           []BomPackage      `json:"npm.packages.list,omitempty"`
+	GoPackages            []BomPackage      `json:"go.packages.list,omitempty"`
+	JavaPackages          []BomPackage      `json:"java.packages.list,omitempty"`
+	RustPackages          []BomPackage      `json:"rust.packages.list,omitempty"`
+	DotnetPackages        []BomPackage      `json:"dotnet.packages.list,omitempty"`
+	PhpPackages           []BomPackage      `json:"php.packages.list,omitempty"`
+	GithubActionsPackages []BomPackage      `json:"githubactions.packages.list,omitempty"`
+	SwiftPackages         []BomPackage      `json:"swift.packages.list,omitempty"`
+	TerraformPackages     []BomPackage      `json:"terraform.packages.list,omitempty"`
+	JenkinsPackages       []BomPackage      `json:"jenkins.packages.list,omitempty"`
+	WordpressPackages     []BomPackage      `json:"wordpress.packages.list,omitempty"`
+	RubyPackages          []BomPackage      `json:"ruby.packages.list,omitempty"`
+	DartPackages          []BomPackage      `json:"dart.packages.list,omitempty"`
+	HaskellPackages       []BomPackage      `json:"haskell.packages.list,omitempty"`
+	ElixirPackages        []BomPackage      `json:"elixir.packages.list,omitempty"`
+	ErlangPackages        []BomPackage      `json:"erlang.packages.list,omitempty"`
+	PrologPackages        []BomPackage      `json:"prolog.packages.list,omitempty"`
+	KernelInstalled       []KernelInstalled `json:"kernel.installed,omitempty"`
 }
 
 func (b *BomFields) ToJSON() ([]byte, error) {

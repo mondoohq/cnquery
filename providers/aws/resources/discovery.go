@@ -133,7 +133,10 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 	}
 
 	if conn.Filters.PropagateAccountTags {
-		accountTags := fetchPrimaryAccountTags(awsAccount)
+		accountTags := conn.Filters.AccountTags
+		if len(accountTags) == 0 {
+			accountTags = fetchPrimaryAccountTags(awsAccount)
+		}
 		primaryAccountId := trimAwsAccountIdToJustId(awsAccount.Id.Data)
 		applyAccountTagsToAssets(in.Spec.Assets, accountTags, primaryAccountId)
 	}

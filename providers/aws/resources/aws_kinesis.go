@@ -5,10 +5,12 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/firehose"
 	firehose_types "github.com/aws/aws-sdk-go-v2/service/firehose/types"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
@@ -483,6 +485,51 @@ func newMqlAwsKinesisFirehoseDeliveryStream(runtime *plugin.Runtime, region stri
 	mqlStream.cacheDestinations = stream.Destinations
 	mqlStream.cacheRegion = region
 	return mqlStream, nil
+}
+
+// initAwsKinesisFirehoseDeliveryStream allows typed refs (e.g. from
+// aws.msk.cluster.loggingInfo.firehose.deliveryStream) to resolve a stream
+// by arn. It fetches the delivery stream description and populates scalar
+// fields; access-denied falls back to an arn-only shell.
+func initAwsKinesisFirehoseDeliveryStream(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) >= 2 {
+		return args, nil, nil
+	}
+	if args["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch aws firehose delivery stream")
+	}
+	arnVal := args["arn"].Value.(string)
+	parsed, err := arn.Parse(arnVal)
+	if err != nil {
+		args["__id"] = llx.StringData(arnVal)
+		return args, nil, nil
+	}
+	// resource portion is "deliverystream/<name>"
+	name := strings.TrimPrefix(parsed.Resource, "deliverystream/")
+	if name == "" || name == parsed.Resource {
+		return nil, nil, fmt.Errorf("unexpected firehose arn format: %s", arnVal)
+	}
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Firehose(parsed.Region)
+	out, err := svc.DescribeDeliveryStream(context.Background(), &firehose.DescribeDeliveryStreamInput{
+		DeliveryStreamName: &name,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			args["__id"] = llx.StringData(arnVal)
+			return args, nil, nil
+		}
+		return nil, nil, err
+	}
+	if out.DeliveryStreamDescription == nil {
+		args["__id"] = llx.StringData(arnVal)
+		return args, nil, nil
+	}
+	mqlStream, err := newMqlAwsKinesisFirehoseDeliveryStream(runtime, parsed.Region, out.DeliveryStreamDescription)
+	if err != nil {
+		return nil, nil, err
+	}
+	return nil, mqlStream, nil
 }
 
 func (a *mqlAwsKinesisFirehoseDeliveryStream) destinations() ([]any, error) {

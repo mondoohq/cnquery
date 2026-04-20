@@ -540,6 +540,7 @@ func (s *Tester) parseHello(conn net.Conn, conf *ScanConfig) (bool, error) {
 	header := make([]byte, 5)
 	var success bool
 	var done bool
+	hasAlert := false
 
 	for !done {
 		_, err := io.ReadFull(reader, header)
@@ -568,6 +569,9 @@ func (s *Tester) parseHello(conn net.Conn, conf *ScanConfig) (bool, error) {
 
 		typ := "0x" + hex.EncodeToString(header[0:1])
 		headerVersion := VERSIONS_LOOKUP[string(header[1:3])]
+		if headerVersion == "" && hasAlert {
+			break
+		}
 
 		msgLen := bytes2int(header[3:5])
 		if msgLen == 0 {
@@ -588,6 +592,7 @@ func (s *Tester) parseHello(conn net.Conn, conf *ScanConfig) (bool, error) {
 
 		switch header[0] {
 		case CONTENT_TYPE_Alert:
+			hasAlert = true
 			// Do not grab the version here, instead use the pre-provided
 			// There is a nice edge-case in TLS1.3 which is handled further down,
 			// but not required here since we are dealing with an error
@@ -625,6 +630,10 @@ func (s *Tester) parseHello(conn net.Conn, conf *ScanConfig) (bool, error) {
 			done = true
 
 		default:
+			if hasAlert {
+				done = true
+				break
+			}
 			s.addError("Unhandled TLS/SSL response (received '" + typ + "')")
 		}
 	}

@@ -139,7 +139,7 @@ type AlpinePkgManager struct {
 }
 
 func (apm *AlpinePkgManager) Name() string {
-	return "Alpine Package Manager"
+	return "apk Package Manager"
 }
 
 func (apm *AlpinePkgManager) Format() string {

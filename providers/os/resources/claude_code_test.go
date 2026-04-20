@@ -215,6 +215,40 @@ func TestFindLatestBackupAferoEmpty(t *testing.T) {
 	assert.Contains(t, err.Error(), "no backup files found")
 }
 
+func TestIsSystemHomeDir(t *testing.T) {
+	// Empty or missing
+	assert.True(t, isSystemHomeDir(""))
+
+	// macOS system accounts
+	assert.True(t, isSystemHomeDir("/var/db/astris"))
+	assert.True(t, isSystemHomeDir("/var/db/analyticsd"))
+	assert.True(t, isSystemHomeDir("/var/empty"))
+	assert.True(t, isSystemHomeDir("/var/virusmails"))
+	assert.True(t, isSystemHomeDir("/Library/WebServer"))
+	assert.True(t, isSystemHomeDir("/nonexistent"))
+	assert.True(t, isSystemHomeDir("/dev/null"))
+	assert.True(t, isSystemHomeDir("/"))
+
+	// Linux system accounts
+	assert.True(t, isSystemHomeDir("/usr/share"))
+	assert.True(t, isSystemHomeDir("/bin/false"))
+	assert.True(t, isSystemHomeDir("/sbin/nologin"))
+	assert.True(t, isSystemHomeDir("/var/run/something"))
+
+	// Paths that look like root but aren't
+	assert.True(t, isSystemHomeDir("/rootfs"))
+	assert.True(t, isSystemHomeDir("/rootkit"))
+
+	// Real user home directories should NOT be flagged
+	assert.False(t, isSystemHomeDir("/Users/chris"))
+	assert.False(t, isSystemHomeDir("/Users/admin"))
+	assert.False(t, isSystemHomeDir("/home/chris"))
+	assert.False(t, isSystemHomeDir("/root"))
+	assert.False(t, isSystemHomeDir("/root/.config"))
+	assert.False(t, isSystemHomeDir("/usr/home/freebsd"))
+	assert.False(t, isSystemHomeDir(`C:\Users\chris`))
+}
+
 func TestClaudeConfigIntegration(t *testing.T) {
 	afs := testAfero()
 	dir := createTestClaudeConfig(t)

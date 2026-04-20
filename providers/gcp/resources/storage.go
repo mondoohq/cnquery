@@ -239,7 +239,7 @@ func storageLifecycleRulesToArrayInterface(runtime *plugin.Runtime, bucketId str
 				continue
 			}
 			ruleRawData["action"] = llx.ResourceData(action, action.MqlName())
-			skip = true
+			skip = false
 		}
 
 		// create rule condition resource

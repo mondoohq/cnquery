@@ -9,9 +9,50 @@ import (
 	"sync"
 
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 	"go.mondoo.com/mql/v13/types"
 )
+
+// initFirewalldZone resolves `firewalld.zone("name")` lookups by name against
+// the zones exposed by the firewalld resource. When the resource is being
+// constructed from the firewalld.zones() accessor (i.e. all fields populated),
+// we fall through and let the default factory handle it.
+func initFirewalldZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) != 1 {
+		return args, nil, nil
+	}
+	nameArg, ok := args["name"]
+	if !ok {
+		return args, nil, nil
+	}
+	name, ok := nameArg.Value.(string)
+	if !ok || name == "" {
+		return args, nil, nil
+	}
+
+	o, err := CreateResource(runtime, "firewalld", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	fw := o.(*mqlFirewalld)
+	zones := fw.GetZones()
+	if zones.Error != nil {
+		return nil, nil, zones.Error
+	}
+
+	for _, z := range zones.Data {
+		zone, ok := z.(*mqlFirewalldZone)
+		if !ok {
+			continue
+		}
+		if zone.Name.Data == name {
+			return nil, zone, nil
+		}
+	}
+
+	return nil, nil, fmt.Errorf("firewalld zone %q not found", name)
+}
 
 type mqlFirewalldInternal struct {
 	fetched      bool
@@ -126,11 +167,13 @@ func (f *mqlFirewalld) zones() ([]any, error) {
 		for _, rr := range z.richRules {
 			parsed := parseFirewalldRichRule(rr)
 			r, err := CreateResource(f.MqlRuntime, "firewalld.richrule", map[string]*llx.RawData{
-				"family":      llx.StringData(parsed.family),
-				"rule":        llx.StringData(rr),
-				"source":      llx.StringData(parsed.source),
-				"destination": llx.StringData(parsed.destination),
-				"action":      llx.StringData(parsed.action),
+				"family":              llx.StringData(parsed.family),
+				"rule":                llx.StringData(rr),
+				"source":              llx.StringData(parsed.source),
+				"sourceInverted":      llx.BoolData(parsed.sourceInverted),
+				"destination":         llx.StringData(parsed.destination),
+				"destinationInverted": llx.BoolData(parsed.destinationInverted),
+				"action":              llx.StringData(parsed.action),
 			})
 			if err != nil {
 				return nil, err
@@ -312,14 +355,17 @@ func splitNonEmpty(s string) []string {
 
 // parsedRichRule holds the parsed components of a firewalld rich rule.
 type parsedRichRule struct {
-	family      string
-	source      string
-	destination string
-	action      string
+	family              string
+	source              string
+	sourceInverted      bool
+	destination         string
+	destinationInverted bool
+	action              string
 }
 
 // parseFirewalldRichRule extracts structured fields from a rich rule string.
 // Example: `rule family="ipv4" source address="10.0.0.0/8" accept`
+// Example: `rule family="ipv4" source NOT address="127.0.0.1" destination NOT address="127.0.0.1" drop`
 func parseFirewalldRichRule(rule string) parsedRichRule {
 	var rr parsedRichRule
 
@@ -330,15 +376,26 @@ func parseFirewalldRichRule(rule string) parsedRichRule {
 		}
 	}
 
-	// Extract source address
-	if _, after, ok := strings.Cut(rule, `source address="`); ok {
+	// Extract source address — prefer the NOT-inverted form so `source NOT address="..."`
+	// isn't misread as a plain source match via a short-circuit on `address="..."`.
+	if _, after, ok := strings.Cut(rule, `source NOT address="`); ok {
+		if val, _, ok := strings.Cut(after, `"`); ok {
+			rr.source = val
+			rr.sourceInverted = true
+		}
+	} else if _, after, ok := strings.Cut(rule, `source address="`); ok {
 		if val, _, ok := strings.Cut(after, `"`); ok {
 			rr.source = val
 		}
 	}
 
-	// Extract destination address
-	if _, after, ok := strings.Cut(rule, `destination address="`); ok {
+	// Extract destination address (same NOT-first ordering as source)
+	if _, after, ok := strings.Cut(rule, `destination NOT address="`); ok {
+		if val, _, ok := strings.Cut(after, `"`); ok {
+			rr.destination = val
+			rr.destinationInverted = true
+		}
+	} else if _, after, ok := strings.Cut(rule, `destination address="`); ok {
 		if val, _, ok := strings.Cut(after, `"`); ok {
 			rr.destination = val
 		}

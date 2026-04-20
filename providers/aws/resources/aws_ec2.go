@@ -1486,6 +1486,7 @@ func initAwsEc2Networkinterface(runtime *plugin.Runtime, args map[string]*llx.Ra
 
 func buildNetworkInterfaceResource(runtime *plugin.Runtime, region string, eni ec2types.NetworkInterface) (map[string]*llx.RawData, plugin.Resource, error) {
 	args := map[string]*llx.RawData{
+		"__id":             llx.StringDataPtr(eni.NetworkInterfaceId),
 		"availabilityZone": llx.StringDataPtr(eni.AvailabilityZone),
 		"description":      llx.StringDataPtr(eni.Description),
 		"id":               llx.StringDataPtr(eni.NetworkInterfaceId),

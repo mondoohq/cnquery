@@ -891,7 +891,10 @@ func (g *mqlGcpProjectComputeService) disks() ([]any, error) {
 	wg.Add(len(zones.Data))
 	mux := &sync.Mutex{}
 
-	var result error
+	var (
+		result error
+		errMux sync.Mutex
+	)
 	for i := range zones.Data {
 		z := zones.Data[i].(*mqlGcpProjectComputeServiceZone)
 		zoneName := z.GetName()
@@ -964,6 +967,9 @@ func (g *mqlGcpProjectComputeService) disks() ([]any, error) {
 				return nil
 			}); err != nil {
 				log.Error().Err(err).Send()
+				errMux.Lock()
+				result = err
+				errMux.Unlock()
 			}
 			wg.Done()
 		}(computeSvc, projectId, z, zoneName.Data)
@@ -2046,11 +2052,15 @@ func (g *mqlGcpProjectComputeService) routers() ([]any, error) {
 	wg.Add(len(regions.Data))
 	mux := &sync.Mutex{}
 
+	var (
+		result error
+		errMux sync.Mutex
+	)
 	for i := range regions.Data {
 		r := regions.Data[i].(*mqlGcpProjectComputeServiceRegion)
 		regionName := r.GetName()
-		if err != nil {
-			return nil, err
+		if regionName.Error != nil {
+			return nil, regionName.Error
 		}
 		go func(svc *compute.Service, project string, region *mqlGcpProjectComputeServiceRegion, regionName string) {
 			req := computeSvc.Routers.List(projectId, regionName)
@@ -2069,13 +2079,16 @@ func (g *mqlGcpProjectComputeService) routers() ([]any, error) {
 				return nil
 			}); err != nil {
 				log.Error().Err(err).Send()
+				errMux.Lock()
+				result = err
+				errMux.Unlock()
 			}
 			wg.Done()
 		}(computeSvc, projectId, r, regionName.Data)
 	}
 
 	wg.Wait()
-	return res, nil
+	return res, result
 }
 
 func (g *mqlGcpProjectComputeService) backendServices() ([]any, error) {

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>chocolatey</id>
+    <version>2.3.0</version>
+    <title>Chocolatey</title>
+    <authors>Chocolatey Software, Inc</authors>
+    <owners>chocolatey</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <licenseUrl>https://github.com/chocolatey/choco/blob/master/LICENSE</licenseUrl>
+    <projectUrl>https://chocolatey.org</projectUrl>
+    <description>Chocolatey is a package manager for Windows.</description>
+    <summary>The package manager for Windows.</summary>
+    <tags>chocolatey package-manager admin</tags>
+    <dependencies>
+      <dependency id="chocolatey.lib" version="[2.3.0]" />
+      <dependency id="chocolatey-core.extension" version="[1.4.0]" />
+    </dependencies>
+  </metadata>
+</package>

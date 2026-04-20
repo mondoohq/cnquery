@@ -7,6 +7,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
@@ -78,9 +80,14 @@ func (a *mqlAwsAutoscalingGroup) targetGroups() ([]any, error) {
 }
 
 type mqlAwsAutoscalingGroupInternal struct {
-	groupInstances  []ec2types.Instance
-	targetGroupArns []string
-	region          string
+	groupInstances            []ec2types.Instance
+	targetGroupArns           []string
+	region                    string
+	cacheServiceLinkedRoleArn string
+	cacheLaunchTemplateArn    string
+	cacheLaunchTemplateId     string
+	cacheLaunchTemplateName   string
+	cacheSubnetIds            []string
 }
 
 func initAwsAutoscalingGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -102,54 +109,162 @@ func initAwsAutoscalingGroup(runtime *plugin.Runtime, args map[string]*llx.RawDa
 
 	if len(ags.AutoScalingGroups) == 1 {
 		group := ags.AutoScalingGroups[0]
-		lbNames := []any{}
-		for _, name := range group.LoadBalancerNames {
-			lbNames = append(lbNames, name)
-		}
-		availabilityZones := []any{}
-		for _, zone := range group.AvailabilityZones {
-			availabilityZones = append(availabilityZones, zone)
-		}
-
-		groupArn := convert.ToValue(group.AutoScalingGroupARN)
-		tagSpecs, err := createTagSpecifications(runtime, group.Tags, groupArn)
+		newArgs, err := autoscalingGroupArgs(runtime, group, region)
 		if err != nil {
 			return nil, nil, err
 		}
-
-		args["arn"] = llx.StringData(groupArn)
-		args["availabilityZones"] = llx.ArrayData(availabilityZones, types.String)
-		args["capacityRebalance"] = llx.BoolDataPtr(group.CapacityRebalance)
-		args["createdAt"] = llx.TimeDataPtr(group.CreatedTime)
-		args["defaultCooldown"] = llx.IntDataDefault(group.DefaultCooldown, 0)
-		args["defaultInstanceWarmup"] = llx.IntDataDefault(group.DefaultInstanceWarmup, 0)
-		args["desiredCapacity"] = llx.IntDataDefault(group.DesiredCapacity, 0)
-		args["healthCheckGracePeriod"] = llx.IntDataDefault(group.HealthCheckGracePeriod, 0)
-		args["healthCheckType"] = llx.StringDataPtr(group.HealthCheckType)
-		args["launchConfigurationName"] = llx.StringDataPtr(group.LaunchConfigurationName)
-		args["loadBalancerNames"] = llx.ArrayData(lbNames, types.String)
-		args["maxInstanceLifetime"] = llx.IntDataDefault(group.MaxInstanceLifetime, 0)
-		args["maxSize"] = llx.IntDataDefault(group.MaxSize, 0)
-		args["minSize"] = llx.IntDataDefault(group.MinSize, 0)
-		args["name"] = llx.StringDataPtr(group.AutoScalingGroupName)
-		args["region"] = llx.StringData(region)
-		args["tags"] = llx.MapData(autoscalingTagsToMap(group.Tags), types.String)
-		args["tagSpecifications"] = llx.ArrayData(tagSpecs, types.Resource(ResourceAwsAutoscalingGroupTag))
-		args["desiredCapacityType"] = llx.StringDataPtr(group.DesiredCapacityType)
-		args["warmPoolSize"] = llx.IntDataDefault(group.WarmPoolSize, 0)
-		args["predictedCapacity"] = llx.IntDataDefault(group.PredictedCapacity, 0)
-		args["placementGroup"] = llx.StringDataPtr(group.PlacementGroup)
-		args["newInstancesProtectedFromScaleIn"] = llx.BoolDataPtr(group.NewInstancesProtectedFromScaleIn)
+		maps.Copy(args, newArgs)
 		mqlGroup, err := CreateResource(runtime, ResourceAwsAutoscalingGroup, args)
 		if err != nil {
 			return args, nil, err
 		}
-		mqlGroup.(*mqlAwsAutoscalingGroup).groupInstances = group.Instances
-		mqlGroup.(*mqlAwsAutoscalingGroup).targetGroupArns = group.TargetGroupARNs
-		mqlGroup.(*mqlAwsAutoscalingGroup).region = region
+		populateAutoscalingGroupInternals(mqlGroup.(*mqlAwsAutoscalingGroup), group, region, conn.AccountId())
 		return args, mqlGroup, nil
 	}
 	return args, nil, nil
+}
+
+// autoscalingGroupArgs builds the lr-field arg map from an SDK AutoScalingGroup.
+// Caller is responsible for populating internal cache fields via
+// populateAutoscalingGroupInternals after the resource is created.
+func autoscalingGroupArgs(runtime *plugin.Runtime, group ec2types.AutoScalingGroup, region string) (map[string]*llx.RawData, error) {
+	lbNames := []any{}
+	for _, name := range group.LoadBalancerNames {
+		lbNames = append(lbNames, name)
+	}
+	availabilityZones := []any{}
+	for _, zone := range group.AvailabilityZones {
+		availabilityZones = append(availabilityZones, zone)
+	}
+	availabilityZoneIds := []any{}
+	for _, id := range group.AvailabilityZoneIds {
+		availabilityZoneIds = append(availabilityZoneIds, id)
+	}
+	terminationPolicies := []any{}
+	for _, p := range group.TerminationPolicies {
+		terminationPolicies = append(terminationPolicies, p)
+	}
+
+	enabledMetrics, err := convert.JsonToDictSlice(group.EnabledMetrics)
+	if err != nil {
+		return nil, err
+	}
+	suspendedProcesses, err := convert.JsonToDictSlice(group.SuspendedProcesses)
+	if err != nil {
+		return nil, err
+	}
+	trafficSources, err := convert.JsonToDictSlice(group.TrafficSources)
+	if err != nil {
+		return nil, err
+	}
+	azDistribution, err := convert.JsonToDict(group.AvailabilityZoneDistribution)
+	if err != nil {
+		return nil, err
+	}
+	azImpairmentPolicy, err := convert.JsonToDict(group.AvailabilityZoneImpairmentPolicy)
+	if err != nil {
+		return nil, err
+	}
+	capacityReservation, err := convert.JsonToDict(group.CapacityReservationSpecification)
+	if err != nil {
+		return nil, err
+	}
+	instanceLifecyclePolicy, err := convert.JsonToDict(group.InstanceLifecyclePolicy)
+	if err != nil {
+		return nil, err
+	}
+	instanceMaintenancePolicy, err := convert.JsonToDict(group.InstanceMaintenancePolicy)
+	if err != nil {
+		return nil, err
+	}
+	mixedInstancesPolicy, err := convert.JsonToDict(group.MixedInstancesPolicy)
+	if err != nil {
+		return nil, err
+	}
+	warmPoolConfiguration, err := convert.JsonToDict(group.WarmPoolConfiguration)
+	if err != nil {
+		return nil, err
+	}
+
+	groupArn := convert.ToValue(group.AutoScalingGroupARN)
+	tagSpecs, err := createTagSpecifications(runtime, group.Tags, groupArn)
+	if err != nil {
+		return nil, err
+	}
+
+	launchTemplateVersion := ""
+	if group.LaunchTemplate != nil {
+		launchTemplateVersion = convert.ToValue(group.LaunchTemplate.Version)
+	}
+
+	return map[string]*llx.RawData{
+		"arn":                              llx.StringData(groupArn),
+		"availabilityZones":                llx.ArrayData(availabilityZones, types.String),
+		"availabilityZoneIds":              llx.ArrayData(availabilityZoneIds, types.String),
+		"availabilityZoneDistribution":     llx.DictData(azDistribution),
+		"availabilityZoneImpairmentPolicy": llx.DictData(azImpairmentPolicy),
+		"capacityRebalance":                llx.BoolDataPtr(group.CapacityRebalance),
+		"capacityReservationSpecification": llx.DictData(capacityReservation),
+		"context":                          llx.StringDataPtr(group.Context),
+		"createdAt":                        llx.TimeDataPtr(group.CreatedTime),
+		"defaultCooldown":                  llx.IntDataDefault(group.DefaultCooldown, 0),
+		"defaultInstanceWarmup":            llx.IntDataDefault(group.DefaultInstanceWarmup, 0),
+		"deletionProtection":               llx.StringData(string(group.DeletionProtection)),
+		"desiredCapacity":                  llx.IntDataDefault(group.DesiredCapacity, 0),
+		"desiredCapacityType":              llx.StringDataPtr(group.DesiredCapacityType),
+		"enabledMetrics":                   llx.ArrayData(enabledMetrics, types.Dict),
+		"healthCheckGracePeriod":           llx.IntDataDefault(group.HealthCheckGracePeriod, 0),
+		"healthCheckType":                  llx.StringDataPtr(group.HealthCheckType),
+		"instanceLifecyclePolicy":          llx.DictData(instanceLifecyclePolicy),
+		"instanceMaintenancePolicy":        llx.DictData(instanceMaintenancePolicy),
+		"launchConfigurationName":          llx.StringDataPtr(group.LaunchConfigurationName),
+		"launchTemplateVersion":            llx.StringData(launchTemplateVersion),
+		"loadBalancerNames":                llx.ArrayData(lbNames, types.String),
+		"maxInstanceLifetime":              llx.IntDataDefault(group.MaxInstanceLifetime, 0),
+		"maxSize":                          llx.IntDataDefault(group.MaxSize, 0),
+		"minSize":                          llx.IntDataDefault(group.MinSize, 0),
+		"mixedInstancesPolicy":             llx.DictData(mixedInstancesPolicy),
+		"name":                             llx.StringDataPtr(group.AutoScalingGroupName),
+		"newInstancesProtectedFromScaleIn": llx.BoolDataPtr(group.NewInstancesProtectedFromScaleIn),
+		"placementGroup":                   llx.StringDataPtr(group.PlacementGroup),
+		"predictedCapacity":                llx.IntDataDefault(group.PredictedCapacity, 0),
+		"region":                           llx.StringData(region),
+		"status":                           llx.StringDataPtr(group.Status),
+		"suspendedProcesses":               llx.ArrayData(suspendedProcesses, types.Dict),
+		"tagSpecifications":                llx.ArrayData(tagSpecs, types.Resource(ResourceAwsAutoscalingGroupTag)),
+		"tags":                             llx.MapData(autoscalingTagsToMap(group.Tags), types.String),
+		"terminationPolicies":              llx.ArrayData(terminationPolicies, types.String),
+		"trafficSources":                   llx.ArrayData(trafficSources, types.Dict),
+		"warmPoolConfiguration":            llx.DictData(warmPoolConfiguration),
+		"warmPoolSize":                     llx.IntDataDefault(group.WarmPoolSize, 0),
+	}, nil
+}
+
+func populateAutoscalingGroupInternals(mqlGroup *mqlAwsAutoscalingGroup, group ec2types.AutoScalingGroup, region, accountID string) {
+	mqlGroup.groupInstances = group.Instances
+	mqlGroup.targetGroupArns = group.TargetGroupARNs
+	mqlGroup.region = region
+	mqlGroup.cacheServiceLinkedRoleArn = convert.ToValue(group.ServiceLinkedRoleARN)
+
+	if group.LaunchTemplate != nil {
+		mqlGroup.cacheLaunchTemplateId = convert.ToValue(group.LaunchTemplate.LaunchTemplateId)
+		mqlGroup.cacheLaunchTemplateName = convert.ToValue(group.LaunchTemplate.LaunchTemplateName)
+		if mqlGroup.cacheLaunchTemplateId != "" {
+			mqlGroup.cacheLaunchTemplateArn = fmt.Sprintf(launchTemplateArnPattern, region, accountID, mqlGroup.cacheLaunchTemplateId)
+		}
+	}
+
+	if group.VPCZoneIdentifier != nil {
+		raw := strings.TrimSpace(*group.VPCZoneIdentifier)
+		if raw != "" {
+			for id := range strings.SplitSeq(raw, ",") {
+				id = strings.TrimSpace(id)
+				if id != "" {
+					mqlGroup.cacheSubnetIds = append(mqlGroup.cacheSubnetIds, id)
+				}
+			}
+		}
+	}
 }
 
 func (a *mqlAwsAutoscaling) getGroups(conn *connection.AwsConnection) []*jobpool.Job {
@@ -177,53 +292,15 @@ func (a *mqlAwsAutoscaling) getGroups(conn *connection.AwsConnection) []*jobpool
 					return nil, err
 				}
 				for _, group := range groups.AutoScalingGroups {
-					lbNames := []any{}
-					for _, name := range group.LoadBalancerNames {
-						lbNames = append(lbNames, name)
-					}
-					availabilityZones := []any{}
-					for _, zone := range group.AvailabilityZones {
-						availabilityZones = append(availabilityZones, zone)
-					}
-
-					groupArn := convert.ToValue(group.AutoScalingGroupARN)
-					tagSpecs, err := createTagSpecifications(a.MqlRuntime, group.Tags, groupArn)
+					args, err := autoscalingGroupArgs(a.MqlRuntime, group, region)
 					if err != nil {
 						return nil, err
 					}
-
-					mqlGroup, err := CreateResource(a.MqlRuntime, ResourceAwsAutoscalingGroup,
-						map[string]*llx.RawData{
-							"arn":                              llx.StringData(groupArn),
-							"availabilityZones":                llx.ArrayData(availabilityZones, types.String),
-							"capacityRebalance":                llx.BoolDataPtr(group.CapacityRebalance),
-							"createdAt":                        llx.TimeDataPtr(group.CreatedTime),
-							"defaultCooldown":                  llx.IntDataDefault(group.DefaultCooldown, 0),
-							"defaultInstanceWarmup":            llx.IntDataDefault(group.DefaultInstanceWarmup, 0),
-							"desiredCapacity":                  llx.IntDataDefault(group.DesiredCapacity, 0),
-							"healthCheckGracePeriod":           llx.IntDataDefault(group.HealthCheckGracePeriod, 0),
-							"healthCheckType":                  llx.StringDataPtr(group.HealthCheckType),
-							"launchConfigurationName":          llx.StringDataPtr(group.LaunchConfigurationName),
-							"loadBalancerNames":                llx.ArrayData(lbNames, types.String),
-							"maxInstanceLifetime":              llx.IntDataDefault(group.MaxInstanceLifetime, 0),
-							"maxSize":                          llx.IntDataDefault(group.MaxSize, 0),
-							"minSize":                          llx.IntDataDefault(group.MinSize, 0),
-							"name":                             llx.StringDataPtr(group.AutoScalingGroupName),
-							"region":                           llx.StringData(region),
-							"tags":                             llx.MapData(autoscalingTagsToMap(group.Tags), types.String),
-							"tagSpecifications":                llx.ArrayData(tagSpecs, types.Resource(ResourceAwsAutoscalingGroupTag)),
-							"desiredCapacityType":              llx.StringDataPtr(group.DesiredCapacityType),
-							"warmPoolSize":                     llx.IntDataDefault(group.WarmPoolSize, 0),
-							"predictedCapacity":                llx.IntDataDefault(group.PredictedCapacity, 0),
-							"placementGroup":                   llx.StringDataPtr(group.PlacementGroup),
-							"newInstancesProtectedFromScaleIn": llx.BoolDataPtr(group.NewInstancesProtectedFromScaleIn),
-						})
+					mqlGroup, err := CreateResource(a.MqlRuntime, ResourceAwsAutoscalingGroup, args)
 					if err != nil {
 						return nil, err
 					}
-					mqlGroup.(*mqlAwsAutoscalingGroup).groupInstances = group.Instances
-					mqlGroup.(*mqlAwsAutoscalingGroup).targetGroupArns = group.TargetGroupARNs
-					mqlGroup.(*mqlAwsAutoscalingGroup).region = region
+					populateAutoscalingGroupInternals(mqlGroup.(*mqlAwsAutoscalingGroup), group, region, conn.AccountId())
 					res = append(res, mqlGroup)
 				}
 			}
@@ -287,4 +364,56 @@ func (a *mqlAwsAutoscalingGroup) launchConfiguration() (*mqlAwsEc2Launchconfigur
 		return nil, err
 	}
 	return mqlLc.(*mqlAwsEc2Launchconfiguration), nil
+}
+
+func (a *mqlAwsAutoscalingGroup) launchTemplate() (*mqlAwsEc2Launchtemplate, error) {
+	if a.cacheLaunchTemplateArn == "" {
+		a.LaunchTemplate.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	mqlLt, err := NewResource(a.MqlRuntime, "aws.ec2.launchtemplate",
+		map[string]*llx.RawData{
+			"arn":    llx.StringData(a.cacheLaunchTemplateArn),
+			"id":     llx.StringData(a.cacheLaunchTemplateId),
+			"name":   llx.StringData(a.cacheLaunchTemplateName),
+			"region": llx.StringData(a.region),
+		})
+	if err != nil {
+		return nil, err
+	}
+	lt := mqlLt.(*mqlAwsEc2Launchtemplate)
+	if lt.launchTemplateId == "" {
+		lt.launchTemplateId = a.cacheLaunchTemplateId
+		lt.region = a.region
+	}
+	return lt, nil
+}
+
+func (a *mqlAwsAutoscalingGroup) serviceLinkedRole() (*mqlAwsIamRole, error) {
+	if a.cacheServiceLinkedRoleArn == "" {
+		a.ServiceLinkedRole.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	mqlRole, err := NewResource(a.MqlRuntime, "aws.iam.role",
+		map[string]*llx.RawData{"arn": llx.StringData(a.cacheServiceLinkedRoleArn)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlRole.(*mqlAwsIamRole), nil
+}
+
+func (a *mqlAwsAutoscalingGroup) subnets() ([]any, error) {
+	res := []any{}
+	for _, id := range a.cacheSubnetIds {
+		mqlSubnet, err := NewResource(a.MqlRuntime, "aws.vpc.subnet",
+			map[string]*llx.RawData{
+				"id":     llx.StringData(id),
+				"region": llx.StringData(a.region),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlSubnet)
+	}
+	return res, nil
 }

@@ -4064,12 +4064,50 @@ private aws.autoscaling.group @defaults("name region minSize maxSize") {
   desiredCapacity int
   // List of availability zones associated with the group
   availabilityZones []string
+  // List of availability zone IDs associated with the group
+  availabilityZoneIds []string
+  // Capacity distribution across Availability Zones (CapacityDistributionStrategy, CapacityReservationTarget)
+  availabilityZoneDistribution dict
+  // Availability Zone impairment policy (ImpairedZoneHealthCheckBehavior, ZonalShiftEnabled)
+  availabilityZoneImpairmentPolicy dict
   // Whether Capacity Rebalancing is enabled
   capacityRebalance bool
+  // Capacity reservation specification (CapacityReservationPreference, CapacityReservationTarget)
+  capacityReservationSpecification dict
+  // Reserved user context string
+  context string
   // Duration of the default instance warmup, in seconds
   defaultInstanceWarmup int
+  // Deletion protection setting: "none" or "prevent-force-deletion"
+  deletionProtection string
+  // Metrics enabled for the group (each entry has Metric and Granularity fields)
+  enabledMetrics []dict
   // EC2 instances associated with the group
   instances() []aws.ec2.instance
+  // Instance lifecycle policy (DesiredConfiguration) for the group
+  instanceLifecyclePolicy dict
+  // Instance maintenance policy (MinHealthyPercentage, MaxHealthyPercentage)
+  instanceMaintenancePolicy dict
+  // Launch template used by the group
+  launchTemplate() aws.ec2.launchtemplate
+  // Version of the launch template used by the group
+  launchTemplateVersion string
+  // Mixed instances policy (LaunchTemplate + InstancesDistribution) for the group
+  mixedInstancesPolicy dict
+  // Service-linked IAM role used by the group to call other AWS services
+  serviceLinkedRole() aws.iam.role
+  // Subnets associated with the group
+  subnets() []aws.vpc.subnet
+  // Current state of the group when a delete operation is in progress
+  status string
+  // Suspended Auto Scaling processes (each entry has ProcessName and SuspensionReason)
+  suspendedProcesses []dict
+  // Termination policies for the group
+  terminationPolicies []string
+  // Traffic sources associated with the group (target groups, VPC Lattice, etc.)
+  trafficSources []dict
+  // Warm pool configuration (MaxGroupPreparedCapacity, MinSize, PoolState, InstanceReusePolicy)
+  warmPoolConfiguration dict
   // Unit of measurement for desired capacity (attribute-based instance type selection)
   desiredCapacityType string
   // Current size of the warm pool
@@ -7164,6 +7202,20 @@ aws.rds.dbcluster @defaults("id region engine engineVersion") {
   masterUserSecret dict
   // Whether tags are automatically copied to snapshots of the DB cluster
   copyTagsToSnapshot bool
+  // Initial database name created on the DB cluster, if any
+  databaseName string
+  // DB cluster parameter group associated with the cluster
+  dbClusterParameterGroup() aws.rds.clusterParameterGroup
+  // Whether the cluster is a clone of a cluster owned by a different account
+  crossAccountClone bool
+  // Identifier of the source DB cluster or DB instance if this cluster is a read replica
+  replicationSourceIdentifier string
+  // Status of write forwarding for a secondary cluster in an Aurora global cluster
+  globalWriteForwardingStatus string
+  // Order in which engine version updates are rolled out across the cluster
+  upgradeRolloutOrder string
+  // IAM role used by Enhanced Monitoring to send metrics to CloudWatch Logs
+  monitoringRole() aws.iam.role
 }
 
 // Amazon RDS snapshot
@@ -7198,6 +7250,14 @@ private aws.rds.snapshot @defaults("id region type encrypted createdAt") {
   allocatedStorage int
   // Creation date of the snapshot
   createdAt time
+  // Number of days automated backups are retained for the source DB
+  backupRetentionPeriod int
+  // Daily time range during which automated backups are taken on the source DB
+  preferredBackupWindow string
+  // Availability Zone of the source DB instance (empty for cluster snapshots)
+  availabilityZone string
+  // Time zone of the source DB instance, if applicable (empty for cluster snapshots)
+  timezone string
   // KMS key used for snapshot encryption
   kmsKey() aws.kms.key
 }
@@ -7320,6 +7380,28 @@ aws.rds.dbinstance @defaults("id region engine engineVersion") {
   masterUserSecret dict
   // Whether the DB instance uses a customer-owned IP address (CoIP) for Outpost deployments
   customerOwnedIpEnabled bool
+  // IAM roles attached to the DB instance for accessing other AWS services (S3 import, Lambda, etc.)
+  associatedRoles() []aws.rds.dbinstance.associatedRole
+  // DB subnet group placement (VpcId, SubnetGroupStatus, Subnets, SupportedNetworkTypes)
+  dbSubnetGroup dict
+  // Active Directory domain memberships for the DB instance (Domain, Status, FQDN, IAMRoleName, OU, AuthSecretArn, DnsIps)
+  domainMemberships []dict
+  // Open mode for an Oracle read replica: "open-read-only" or "mounted"
+  replicaMode string
+  // Whether the DB instance is configured as Oracle multi-tenant CDB
+  multiTenant bool
+}
+
+// IAM role associated with an RDS DB instance for accessing other AWS services
+private aws.rds.dbinstance.associatedRole @defaults("featureName status") {
+  // ARN of the IAM role
+  roleArn string
+  // IAM role attached to the DB instance
+  iamRole() aws.iam.role
+  // Feature the role is associated with (e.g., s3Import, s3Export, Lambda)
+  featureName string
+  // Status of the role association (ACTIVE, PENDING, INVALID)
+  status string
 }
 
 // Amazon RDS pending maintenance action
@@ -11331,6 +11413,8 @@ private aws.appstream.fleet @defaults("name state fleetType region") {
   idleDisconnectTimeoutInSeconds int
   // Whether default internet access is enabled
   enableDefaultInternetAccess bool
+  // Whether Instance Metadata Service Version 1 (IMDSv1) is disabled for the fleet
+  disableIMDSV1 bool
   // Domain join configuration
   domainJoinInfo dict
   // Maximum number of concurrent sessions for the fleet
@@ -11444,6 +11528,8 @@ private aws.appstream.imageBuilder @defaults("name state platform region") {
   appstreamAgentVersion string
   // Whether default internet access is enabled
   enableDefaultInternetAccess bool
+  // Whether Instance Metadata Service Version 1 (IMDSv1) is disabled for the image builder
+  disableIMDSV1 bool
   // Domain join configuration
   domainJoinInfo dict
   // VPC configuration (SubnetIds, SecurityGroupIds)
@@ -12731,9 +12817,13 @@ private aws.glue.workflow @defaults("name region") {
 }
 
 // Amazon MSK (Managed Streaming for Apache Kafka)
-aws.msk @defaults("clusters") {
+aws.msk @defaults("clusters replicators") {
   // List of MSK clusters
   clusters() []aws.msk.cluster
+  // List of MSK configurations
+  configurations() []aws.msk.configuration
+  // List of MSK replicators
+  replicators() []aws.msk.replicator
 }
 
 // Amazon MSK cluster
@@ -12768,6 +12858,10 @@ private aws.msk.cluster @defaults("name state clusterType region") {
   scramAuthEnabled() bool
   // Whether TLS client authentication is enabled
   tlsAuthEnabled() bool
+  // Whether unauthenticated traffic to the cluster is enabled
+  unauthenticatedEnabled() bool
+  // Whether any real client auth mechanism (IAM/SCRAM/TLS) is enabled; unauthenticated traffic is reported separately
+  anyAuthEnabled() bool
   // Whether public access is enabled
   publicAccess() bool
   // Whether CloudWatch logging is enabled for broker logs
@@ -12790,10 +12884,430 @@ private aws.msk.cluster @defaults("name state clusterType region") {
   subnets() []aws.vpc.subnet
   // Security groups attached to the cluster
   securityGroups() []aws.ec2.securitygroup
+  // Storage mode: LOCAL or TIERED (TIERED-storage bucket is AWS-managed and not customer-visible)
+  storageMode() string
+  // Network type of the cluster: IPv4 or DUAL
+  networkType() string
+  // EBS volume size in GiB for the data drive on each broker node
+  ebsVolumeSizeGiB() int
+  // Plaintext ZooKeeper connection string (legacy clusters)
+  zookeeperConnectString() string
+  // TLS ZooKeeper connection string
+  zookeeperConnectStringTls() string
+  // ARN of the pinned MSK configuration for this cluster
+  configurationArn() string
+  // Revision of the pinned MSK configuration for this cluster
+  configurationRevision() int
+  // MSK configuration pinned to this cluster
+  configuration() aws.msk.configuration
+  // Encryption information for the cluster
+  encryptionInfo() aws.msk.cluster.encryptionInfo
+  // Client authentication configuration
+  clientAuthentication() aws.msk.cluster.clientAuthentication
+  // Broker node group configuration (provisioned clusters only)
+  brokerNodeGroup() aws.msk.cluster.brokerNodeGroup
+  // Broker logging configuration
+  loggingInfo() aws.msk.cluster.loggingInfo
+  // Enhanced and open monitoring configuration
+  monitoring() aws.msk.cluster.monitoring
+  // Bootstrap broker endpoints (lazy-loaded via GetBootstrapBrokers)
+  bootstrapBrokers() aws.msk.cluster.bootstrapBrokers
+  // Resource-based cluster policy (lazy-loaded via GetClusterPolicy)
+  clusterPolicy() aws.msk.cluster.clusterPolicy
+  // Cluster operation history (lazy-loaded via ListClusterOperationsV2)
+  operations() []aws.msk.cluster.operation
+  // Broker and controller nodes in the cluster (lazy-loaded via ListNodes)
+  nodes() []aws.msk.cluster.node
+  // Cross-account client VPC connections (lazy-loaded via ListClientVpcConnections)
+  clientVpcConnections() []aws.msk.cluster.clientVpcConnection
+  // Serverless cluster configuration (null on PROVISIONED clusters)
+  serverlessConfig() aws.msk.cluster.serverlessConfig
   // Date the cluster was created
   createdAt time
   // Tags for the cluster
   tags map[string]string
+}
+
+// Encryption configuration for an MSK cluster
+private aws.msk.cluster.encryptionInfo @defaults("inTransitClientBroker inTransitInCluster") {
+  // ARN of the KMS key used for encryption at rest (AWS-managed on SERVERLESS)
+  atRestKmsKeyArn string
+  // KMS key used for encryption at rest
+  kmsKey() aws.kms.key
+  // Encryption setting for data in transit between clients and brokers: TLS, TLS_PLAINTEXT, or PLAINTEXT
+  inTransitClientBroker string
+  // Whether broker-to-broker communication within the cluster is encrypted
+  inTransitInCluster bool
+}
+
+// Client authentication configuration for an MSK cluster
+private aws.msk.cluster.clientAuthentication @defaults("iamEnabled scramEnabled tlsEnabled unauthenticatedEnabled") {
+  // Whether IAM (SASL/IAM) authentication is enabled
+  iamEnabled bool
+  // Whether SASL/SCRAM authentication is enabled
+  scramEnabled bool
+  // Whether mTLS client authentication is enabled
+  tlsEnabled bool
+  // Whether unauthenticated traffic is enabled
+  unauthenticatedEnabled bool
+  // Whether any real auth mode (IAM/SCRAM/TLS) is enabled; unauthenticated is reported separately
+  anyEnabled bool
+  // SCRAM secrets associated with the cluster (lazy: ListScramSecrets)
+  scramSecrets() []aws.secretsmanager.secret
+  // ACM Private CA ARNs accepted for mTLS client authentication
+  certificateAuthorityArns []string
+  // ACM Private CAs accepted for mTLS client authentication
+  tlsCertificateAuthorities() []aws.privateca.certificateAuthority
+}
+
+// Broker node group configuration (provisioned clusters only)
+private aws.msk.cluster.brokerNodeGroup @defaults("instanceType storageMode networkType") {
+  // EC2 instance type used for Apache Kafka brokers
+  instanceType string
+  // Distribution of broker nodes across Availability Zones (DEFAULT)
+  brokerAZDistribution string
+  // Availability Zone IDs the brokers are deployed into
+  zoneIds []string
+  // Network type of the cluster: IPv4 or DUAL
+  networkType string
+  // EBS volume size in GiB for the data drive on each broker node
+  ebsVolumeSizeGiB int
+  // Whether EBS provisioned throughput is enabled
+  ebsProvisionedThroughputEnabled bool
+  // Provisioned throughput in MiB/s (0 when disabled)
+  ebsProvisionedThroughputMBps int
+  // Storage mode: LOCAL or TIERED
+  storageMode string
+  // Public access type: DISABLED or SERVICE_PROVIDED_EIPS
+  publicAccessType string
+  // Whether public access is enabled (derived: type != DISABLED)
+  publicAccessEnabled bool
+  // VPC-connectivity auth configuration (cross-account access)
+  vpcConnectivity() aws.msk.cluster.vpcConnectivity
+  // Subnets the brokers are deployed into
+  subnets() []aws.vpc.subnet
+  // Security groups attached to the broker ENIs
+  securityGroups() []aws.ec2.securitygroup
+}
+
+// VPC connectivity client authentication configuration
+private aws.msk.cluster.vpcConnectivity @defaults("iamEnabled scramEnabled tlsEnabled") {
+  // Whether SASL/IAM authentication is enabled for VPC connectivity
+  iamEnabled bool
+  // Whether SASL/SCRAM authentication is enabled for VPC connectivity
+  scramEnabled bool
+  // Whether mTLS client authentication is enabled for VPC connectivity
+  tlsEnabled bool
+  // Whether any VPC-connectivity auth mode is enabled
+  anyEnabled bool
+}
+
+// Broker logging configuration for an MSK cluster
+private aws.msk.cluster.loggingInfo @defaults("hasAnyEnabled") {
+  // Whether any of the broker log destinations is enabled
+  hasAnyEnabled bool
+  // CloudWatch Logs destination (null when not configured)
+  cloudwatchLogs() aws.msk.cluster.loggingInfo.cloudwatchLogs
+  // Kinesis Firehose destination (null when not configured)
+  firehose() aws.msk.cluster.loggingInfo.firehose
+  // S3 destination (null when not configured)
+  s3() aws.msk.cluster.loggingInfo.s3
+}
+
+// CloudWatch Logs broker log destination
+private aws.msk.cluster.loggingInfo.cloudwatchLogs @defaults("enabled logGroupName") {
+  // Whether CloudWatch Logs delivery is enabled
+  enabled bool
+  // Name of the CloudWatch log group
+  logGroupName string
+  // CloudWatch log group resource
+  logGroup() aws.cloudwatch.loggroup
+}
+
+// Kinesis Firehose broker log destination
+private aws.msk.cluster.loggingInfo.firehose @defaults("enabled deliveryStreamName") {
+  // Whether Firehose delivery is enabled
+  enabled bool
+  // Name of the Firehose delivery stream
+  deliveryStreamName string
+  // Firehose delivery stream resource
+  deliveryStream() aws.kinesis.firehoseDeliveryStream
+}
+
+// S3 broker log destination
+private aws.msk.cluster.loggingInfo.s3 @defaults("enabled bucketName") {
+  // Whether S3 delivery is enabled
+  enabled bool
+  // Name of the S3 bucket
+  bucketName string
+  // Prefix prepended to log object keys
+  prefix string
+  // S3 bucket resource
+  bucket() aws.s3.bucket
+}
+
+// Enhanced and open monitoring configuration for an MSK cluster
+private aws.msk.cluster.monitoring @defaults("enhancedMonitoring jmxExporterEnabled nodeExporterEnabled") {
+  // Enhanced monitoring level: DEFAULT, PER_BROKER, PER_TOPIC_PER_BROKER, PER_TOPIC_PER_PARTITION
+  enhancedMonitoring string
+  // Whether the JMX exporter is enabled
+  jmxExporterEnabled bool
+  // Whether the node exporter is enabled
+  nodeExporterEnabled bool
+  // Whether either Prometheus exporter is enabled
+  prometheusAnyEnabled bool
+}
+
+// Bootstrap broker endpoints for an MSK cluster (from GetBootstrapBrokers)
+private aws.msk.cluster.bootstrapBrokers @defaults("hasPublicEndpoint hasPlaintextEndpoint") {
+  // Plaintext (unencrypted) broker connection string
+  plaintext string
+  // TLS broker connection string
+  tls string
+  // SASL/IAM broker connection string
+  saslIam string
+  // SASL/SCRAM broker connection string
+  saslScram string
+  // Public TLS broker connection string
+  publicTls string
+  // Public SASL/IAM broker connection string
+  publicSaslIam string
+  // Public SASL/SCRAM broker connection string
+  publicSaslScram string
+  // VPC-connectivity TLS broker connection string
+  vpcConnectivityTls string
+  // VPC-connectivity SASL/IAM broker connection string
+  vpcConnectivitySaslIam string
+  // VPC-connectivity SASL/SCRAM broker connection string
+  vpcConnectivitySaslScram string
+  // IPv6 TLS broker connection string
+  ipv6Tls string
+  // IPv6 SASL/IAM broker connection string
+  ipv6SaslIam string
+  // IPv6 SASL/SCRAM broker connection string
+  ipv6SaslScram string
+  // Whether any public endpoint is exposed
+  hasPublicEndpoint bool
+  // Whether any plaintext endpoint is exposed
+  hasPlaintextEndpoint bool
+}
+
+// Resource-based policy attached to an MSK cluster
+private aws.msk.cluster.clusterPolicy @defaults("hasPolicy hasExternalPrincipals allowsWildcardPrincipal") {
+  // Current version of the policy
+  currentVersion string
+  // Raw policy document (JSON)
+  policy string
+  // Whether a policy is attached
+  hasPolicy bool
+  // Whether the policy grants access to principals outside this account
+  hasExternalPrincipals bool
+  // Whether the policy grants access to a wildcard principal ("*")
+  allowsWildcardPrincipal bool
+}
+
+// Summary of an MSK cluster operation
+private aws.msk.cluster.operation @defaults("operationType operationState createdAt") {
+  // ARN of the operation
+  arn string
+  // Type of the operation (e.g., UPDATE_BROKER_COUNT, UPDATE_SECURITY)
+  operationType string
+  // State of the operation (e.g., PENDING, UPDATE_IN_PROGRESS, UPDATE_COMPLETE)
+  operationState string
+  // Time at which the operation was started
+  createdAt time
+  // Time at which the operation finished
+  endTime time
+  // Error code if the operation failed
+  errorCode string
+  // Error message if the operation failed
+  errorString string
+}
+
+// Broker or controller node in an MSK cluster
+private aws.msk.cluster.node @defaults("nodeType brokerId instanceType") {
+  // ARN of the node
+  nodeArn string
+  // Type of the node: BROKER or CONTROLLER
+  nodeType string
+  // EC2 instance type of the node
+  instanceType string
+  // Time the node was added to the cluster
+  addedToClusterTime string
+  // Broker ID (zero for controller nodes)
+  brokerId int
+  // Client subnet ID the broker ENI sits in
+  clientSubnetId string
+  // Client-facing VPC IP address of the broker
+  clientVpcIpAddress string
+  // ID of the ENI attached to the broker node
+  attachedENIId string
+  // Broker access endpoints
+  endpoints []string
+  // Subnet the broker ENI sits in
+  subnet() aws.vpc.subnet
+  // Network interface attached to the broker node
+  networkInterface() aws.ec2.networkinterface
+}
+
+// Cross-account client VPC connection to an MSK cluster
+private aws.msk.cluster.clientVpcConnection @defaults("state owner authentication") {
+  // ARN of the VPC connection
+  vpcConnectionArn string
+  // Authentication scheme of the VPC connection
+  authentication string
+  // State of the VPC connection
+  state string
+  // Account ID that owns the VPC connection
+  owner string
+  // Time the VPC connection was created
+  createdAt time
+  // Whether the VPC connection is cross-account (owner differs from cluster account)
+  isCrossAccount bool
+}
+
+// Serverless cluster configuration
+private aws.msk.cluster.serverlessConfig @defaults("iamEnabled networkType") {
+  // Whether SASL/IAM authentication is enabled (serverless supports IAM only)
+  iamEnabled bool
+  // Network type of the serverless cluster: IPv4 or DUAL
+  networkType string
+  // VPC configurations for the serverless cluster
+  vpcConfigs []aws.msk.cluster.serverlessConfig.vpcConfig
+}
+
+// VPC configuration entry for a serverless MSK cluster
+private aws.msk.cluster.serverlessConfig.vpcConfig @defaults("subnetIds") {
+  // Subnet IDs the serverless cluster is attached to
+  subnetIds []string
+  // Security group IDs attached to the serverless cluster
+  securityGroupIds []string
+  // Subnets the serverless cluster is attached to
+  subnets() []aws.vpc.subnet
+  // Security groups attached to the serverless cluster
+  securityGroups() []aws.ec2.securitygroup
+}
+
+// Amazon MSK configuration (server.properties wrapper)
+private aws.msk.configuration @defaults("name state latestRevision region") {
+  // ARN of the configuration
+  arn string
+  // Name of the configuration
+  name string
+  // Description of the configuration
+  description string
+  // State of the configuration: ACTIVE, DELETING, or DELETE_FAILED
+  state string
+  // Apache Kafka versions supported by this configuration
+  kafkaVersions []string
+  // Latest revision number
+  latestRevision int
+  // Time the configuration was created
+  createdAt time
+  // Region where the configuration lives
+  region string
+  // Contents of the server.properties file (lazy-loaded via DescribeConfigurationRevision)
+  serverProperties() string
+}
+
+// Amazon MSK replicator
+private aws.msk.replicator @defaults("name state region") {
+  // ARN of the replicator
+  arn string
+  // Name of the replicator
+  name string
+  // State of the replicator
+  state string
+  // Description of the replicator
+  description() string
+  // Current version of the replicator
+  currentVersion string
+  // Time the replicator was created
+  createdAt time
+  // Region where the replicator lives
+  region string
+  // Tags on the replicator
+  tags() map[string]string
+  // Replication state code
+  stateCode() string
+  // Replication state message
+  stateMessage() string
+  // IAM role the replicator uses to access source/target clusters
+  serviceExecutionRole() aws.iam.role
+  // Kafka clusters wired into the replicator (source/target)
+  kafkaClusters() []aws.msk.replicator.kafkaCluster
+  // Replication flow configurations between source and target clusters
+  replicationInfoList() []aws.msk.replicator.replicationInfo
+  // Whether source and target clusters live in different regions
+  isCrossRegion() bool
+  // Whether source and target clusters live in different accounts
+  isCrossAccount() bool
+}
+
+// Kafka cluster referenced by an MSK replicator
+private aws.msk.replicator.kafkaCluster @defaults("kafkaClusterAlias amazonMskClusterArn") {
+  // ARN of the MSK cluster
+  amazonMskClusterArn string
+  // Alias used to prefix names of replicated topics
+  kafkaClusterAlias string
+  // Subnet IDs the replicator attaches ENIs to in the client VPC
+  subnetIds []string
+  // Security group IDs attached to the replicator ENIs
+  securityGroupIds []string
+  // MSK cluster resource (tolerates cross-account ARNs)
+  cluster() aws.msk.cluster
+  // Subnets the replicator attaches ENIs to
+  subnets() []aws.vpc.subnet
+  // Security groups attached to the replicator ENIs
+  securityGroups() []aws.ec2.securitygroup
+}
+
+// A source-to-target replication flow
+private aws.msk.replicator.replicationInfo @defaults("sourceKafkaClusterAlias targetKafkaClusterAlias") {
+  // Alias of the source Kafka cluster
+  sourceKafkaClusterAlias string
+  // Alias of the target Kafka cluster
+  targetKafkaClusterAlias string
+  // Compression type used when producing records to the target cluster
+  targetCompressionType string
+  // MSK cluster resource for the source alias
+  sourceCluster() aws.msk.cluster
+  // MSK cluster resource for the target alias
+  targetCluster() aws.msk.cluster
+  // Topic replication configuration
+  topicReplication() aws.msk.replicator.topicReplication
+  // Consumer group replication configuration
+  consumerGroupReplication() aws.msk.replicator.consumerGroupReplication
+}
+
+// Topic replication configuration for a replicator replication flow
+private aws.msk.replicator.topicReplication @defaults("startingPositionType copyTopicConfigurations detectAndCopyNewTopics") {
+  // Regular expression patterns of topics to replicate
+  topicsToReplicate []string
+  // Regular expression patterns of topics to exclude from replication
+  topicsToExclude []string
+  // Starting position type (e.g., LATEST, EARLIEST)
+  startingPositionType string
+  // Replicated topic naming convention (e.g., IDENTICAL, PREFIXED_WITH_SOURCE_CLUSTER_ALIAS)
+  topicNameConfigurationType string
+  // Whether topic ACLs are periodically copied
+  copyAccessControlListsForTopics bool
+  // Whether topic configurations are periodically copied
+  copyTopicConfigurations bool
+  // Whether new topics are detected and copied
+  detectAndCopyNewTopics bool
+}
+
+// Consumer group replication configuration for a replicator replication flow
+private aws.msk.replicator.consumerGroupReplication @defaults("synchroniseConsumerGroupOffsets detectAndCopyNewConsumerGroups") {
+  // Regular expression patterns of consumer groups to replicate
+  consumerGroupsToReplicate []string
+  // Regular expression patterns of consumer groups to exclude from replication
+  consumerGroupsToExclude []string
+  // Whether consumer group offsets are synchronised to the target cluster
+  synchroniseConsumerGroupOffsets bool
+  // Whether new consumer groups are detected and copied
+  detectAndCopyNewConsumerGroups bool
 }
 
 // Amazon MQ
@@ -12856,6 +13370,10 @@ aws.batch @defaults("computeEnvironments") {
   jobQueues() []aws.batch.jobQueue
   // List of Batch job definitions
   jobDefinitions() []aws.batch.jobDefinition
+  // List of Batch fair-share scheduling policies
+  schedulingPolicies() []aws.batch.schedulingPolicy
+  // Non-terminal jobs across all queues (SUBMITTED/PENDING/RUNNABLE/STARTING/RUNNING). Terminal jobs excluded by default due to volume.
+  jobs() []aws.batch.job
 }
 
 // AWS Batch compute environment
@@ -12894,8 +13412,44 @@ private aws.batch.computeEnvironment @defaults("arn name state status") {
   subnets() []aws.vpc.subnet
   // Security groups for the compute resources
   securityGroups() []aws.ec2.securitygroup
-  // IAM role for the compute environment
+  // Deprecated: use serviceRole() instead
   iamRole() aws.iam.role
+  // IAM service role granting Batch access to other AWS services
+  serviceRole() aws.iam.role
+  // Instance profile attached to EC2 instances in the compute environment
+  instanceRole() aws.iam.instanceProfile
+  // IAM role granting the Spot fleet access to spot instances
+  spotIamFleetRole() aws.iam.role
+  // SSH key pair name for EC2 instances. Presence is an audit signal.
+  ec2KeyPair() string
+  // Maximum percentage of On-Demand price to pay for spot instances
+  bidPercentage() int
+  // Placement group name for the compute environment
+  placementGroup() string
+  // AMI ID (deprecated by AWS in favor of ec2Configurations)
+  imageId() string
+  // Typed AMI reference (nullable on Fargate)
+  image() aws.ec2.image
+  // Per-architecture image configurations (imageType, imageIdOverride, imageKubernetesVersion)
+  ec2Configurations() []dict
+  // Launch template ID
+  launchTemplateId() string
+  // Launch template name
+  launchTemplateName() string
+  // Launch template version
+  launchTemplateVersion() string
+  // Launch template overrides (per-instance-type userdata/version overrides)
+  launchTemplateOverrides() []dict
+  // EKS cluster backing the compute environment (EKS orchestration only)
+  eksCluster() aws.eks.cluster
+  // Kubernetes namespace for EKS-backed compute (EKS orchestration only)
+  eksKubernetesNamespace() string
+  // Whether to terminate running jobs when the compute environment is updated
+  updateTerminateJobsOnUpdate() bool
+  // Maximum duration (minutes) a job may run during a compute-environment update
+  updateJobExecutionTimeoutMinutes() int
+  // Service-generated unique identifier for the compute environment
+  uuid() string
   // Tags for the compute environment
   tags map[string]string
 }
@@ -12916,8 +13470,16 @@ private aws.batch.jobQueue @defaults("arn name state status") {
   statusReason string
   // Priority of the job queue (lower is higher priority)
   priority int
-  // Compute environments attached to this queue (ordered by priority)
+  // Deprecated: use computeEnvironmentOrderTyped() instead
   computeEnvironmentOrder() []dict
+  // Compute environments attached to this queue (ordered by priority)
+  computeEnvironmentOrderTyped() []aws.batch.jobQueue.computeEnvironmentOrder
+  // Fair-share scheduling policy attached to this queue (null when absent)
+  schedulingPolicy() aws.batch.schedulingPolicy
+  // Actions taken when jobs remain in a state longer than the configured threshold
+  jobStateTimeLimitActions() []dict
+  // Non-terminal jobs in this queue (SUBMITTED/PENDING/RUNNABLE/STARTING/RUNNING)
+  jobs() []aws.batch.job
   // Tags for the job queue
   tags map[string]string
 }
@@ -12936,12 +13498,30 @@ private aws.batch.jobDefinition @defaults("arn name type status") {
   type string
   // Status: ACTIVE or INACTIVE
   status string
+  // Platform capabilities (EC2 or FARGATE)
+  platformCapabilities() []string
+  // Whether to propagate definition tags to the ECS task
+  propagateTags() bool
+  // Scheduling priority within fair-share queues (higher wins)
+  schedulingPriority() int
+  // Default parameter substitution values
+  parameters() map[string]string
   // Typed container properties with IAM role references
   container() aws.batch.jobDefinition.containerProperties
   // Deprecated: Use container() instead
   containerProperties() dict
-  // Node properties for multi-node jobs
+  // Deprecated: Use nodeMainNode/nodeNumNodes/nodeRangeProperties instead
   nodeProperties() dict
+  // Index (0-based) of the main node for multi-node parallel jobs
+  nodeMainNode() int
+  // Total number of nodes for multi-node parallel jobs
+  nodeNumNodes() int
+  // Per-node-range container specs for multi-node parallel jobs
+  nodeRangeProperties() []aws.batch.jobDefinition.nodeRangeProperty
+  // Typed EKS pod properties (populated when running on EKS-backed compute)
+  eks() aws.batch.jobDefinition.eksPodProperties
+  // Explicit ECS task properties (populated when running on ECS with explicit shape)
+  ecs() dict
   // Typed retry strategy
   retry() aws.batch.jobDefinition.retryStrategy
   // Deprecated: Use retry() instead
@@ -12962,33 +13542,59 @@ private aws.batch.jobDefinition.containerProperties @defaults("image") {
   vcpus int
   // Memory in MiB reserved
   memory int
-  // Command to run in the container
+  // Command to run in the container. Warning: may contain sensitive data (inline credentials, tokens).
   command []string
   // IAM role for the container to access AWS resources
   jobRole() aws.iam.role
   // IAM role for ECS agent and Docker daemon
   executionRole() aws.iam.role
-  // Environment variables
+  // Deprecated: use environmentVariables instead
   environment []dict
+  // Environment variables passed to the container. Warning: values may contain plaintext secrets.
+  environmentVariables() map[string]string
   // Whether the container has elevated privileges
   privileged bool
   // Whether the container is read-only
   readonlyRootFilesystem bool
-  // Resource requirements (GPU, etc.)
+  // Deprecated: use resourceRequirementsMap instead
   resourceRequirements []dict
-  // Log configuration
+  // Resource requirements keyed by type (GPU, MEMORY, VCPU)
+  resourceRequirementsMap() map[string]string
+  // Deprecated: use logDriver, logOptions, and logSecretOptions instead
   logConfiguration dict
-  // Linux parameters
+  // Log driver (awslogs, fluentd, gelf, journald, json-file, splunk, syslog, awsfirelens)
+  logDriver() string
+  // Log driver configuration options
+  logOptions() map[string]string
+  // Secrets injected into the log configuration (e.g., Splunk tokens)
+  logSecretOptions() []aws.batch.jobDefinition.containerProperties.secret
+  // Deprecated: use linuxInitProcessEnabled, linuxMaxSwap, linuxSharedMemorySize, linuxSwappiness, linuxDevices, linuxTmpfs instead
   linuxParameters dict
-  // Fargate platform configuration
+  // Whether an init process runs inside the container
+  linuxInitProcessEnabled() bool
+  // Total amount of swap memory (in MiB) the container can use
+  linuxMaxSwap() int
+  // Size (in MiB) of the /dev/shm volume
+  linuxSharedMemorySize() int
+  // Memory swappiness (0-100)
+  linuxSwappiness() int
+  // Host devices exposed to the container (hostPath, containerPath, permissions)
+  linuxDevices() []dict
+  // Tmpfs mounts (containerPath, size, mountOptions)
+  linuxTmpfs() []dict
+  // Deprecated: use fargatePlatformVersion instead
   fargateConfig dict
+  // Fargate platform version (e.g., LATEST, 1.4.0)
+  fargatePlatformVersion() string
+  // Secrets to expose to the container
+  secrets() []aws.batch.jobDefinition.containerProperties.secret
 }
 
 // AWS Batch job definition retry strategy
 private aws.batch.jobDefinition.retryStrategy @defaults("attempts") {
   // Number of retry attempts
   attempts int
-  // Conditions for retry evaluation
+  // Conditions for retry evaluation (action, onExitCode, onReason, onStatusReason)
   evaluateOnExit []dict
 }
 
@@ -12996,6 +13602,180 @@ private aws.batch.jobDefinition.retryStrategy @defaults("attempts") {
 private aws.batch.jobDefinition.timeout @defaults("attemptDurationSeconds") {
   // Time limit in seconds for each job attempt
   attemptDurationSeconds int
+}
+
+// AWS Batch job (runtime). Lists default to non-terminal statuses only.
+aws.batch.job @defaults("id name status jobQueueArn") {
+  // Job ID
+  id string
+  // Job ARN
+  arn string
+  // Job name
+  name string
+  // Region of the job
+  region string
+  // Status: SUBMITTED, PENDING, RUNNABLE, STARTING, RUNNING, SUCCEEDED, FAILED
+  status string
+  // Reason the job entered its current status
+  statusReason string
+  // Job creation time
+  createdAt time
+  // Time the job moved to STARTING
+  startedAt time
+  // Time the job reached a terminal state
+  stoppedAt time
+  // Job definition ARN (revision-scoped)
+  jobDefinitionArn string
+  // Typed job definition reference
+  jobDefinition() aws.batch.jobDefinition
+  // Job queue ARN
+  jobQueueArn string
+  // Typed job queue reference
+  jobQueue() aws.batch.jobQueue
+  // Scheduling priority override (higher wins in fair-share queues)
+  schedulingPriority int
+  // Fair-share identifier selecting which share weight applies
+  shareIdentifier string
+  // Whether definition tags were propagated to the ECS task
+  propagateTags bool
+  // Parameter substitution values at submission time
+  parameters map[string]string
+  // Effective runtime container state (command, env, resourceRequirements, logStreamName). Includes any overrides applied at submission.
+  container dict
+  // Stream name in CloudWatch Logs where the job wrote logs
+  logStreamName string
+  // Job dependencies with typed job references
+  dependsOn() []aws.batch.job.dependency
+  // Attempt history (exit code, reason, timestamps per attempt)
+  attempts []dict
+  // Array job properties (size, index, status summary). Null for non-array jobs.
+  arrayProperties dict
+  // Multi-node-parallel child-node details. Null for non-MNP jobs.
+  nodeDetails dict
+  // Whether the job has been cancelled
+  isCancelled bool
+  // Whether the job has been terminated
+  isTerminated bool
+  // Tags for the job
+  tags map[string]string
+}
+
+// AWS Batch job dependency (jobId is natural key, resolved via typed job() ref)
+private aws.batch.job.dependency @defaults("jobId type") {
+  // Dependent job ID
+  jobId string
+  // Dependency type: N_TO_N or SEQUENTIAL
+  type string
+  // Typed reference to the dependent job
+  job() aws.batch.job
+}
+
+// AWS Batch fair-share scheduling policy
+aws.batch.schedulingPolicy @defaults("arn name") {
+  // ARN of the scheduling policy
+  arn string
+  // Name of the scheduling policy
+  name string
+  // Region of the scheduling policy
+  region string
+  // Whether a fair-share policy is configured
+  hasFairSharePolicy bool
+  // Seconds over which fair-share usage decays
+  shareDecaySeconds int
+  // Percentage of resources reserved for new share identifiers
+  computeReservation int
+  // Per-identifier share distribution (shareIdentifier, weightFactor)
+  shareDistribution []dict
+  // Tags for the scheduling policy
+  tags map[string]string
+}
+
+// AWS Batch job queue compute environment order entry
+private aws.batch.jobQueue.computeEnvironmentOrder @defaults("order computeEnvironmentArn") {
+  // Order of the compute environment (lower is tried first)
+  order int
+  // ARN of the compute environment
+  computeEnvironmentArn string
+  // Typed reference to the compute environment
+  computeEnvironment() aws.batch.computeEnvironment
+}
+
+// AWS Batch container secret reference. `valueFrom` is an ARN to Secrets Manager or Systems Manager Parameter Store.
+private aws.batch.jobDefinition.containerProperties.secret @defaults("name valueFrom") {
+  // Name of the secret as exposed to the container
+  name string
+  // ARN of the Secrets Manager secret or full/short name of the Systems Manager parameter
+  valueFrom string
+  // Resolved Secrets Manager secret (null when valueFrom doesn't point to Secrets Manager)
+  secretsManagerSecret() aws.secretsmanager.secret
+  // Resolved Systems Manager parameter (null when valueFrom doesn't point to SSM Parameter Store)
+  ssmParameter() aws.ssm.parameter
+}
+
+// AWS Batch multi-node parallel (MNP) node-range property
+private aws.batch.jobDefinition.nodeRangeProperty @defaults("targetNodes") {
+  // Node range selector (e.g., "0:", "0,1", "0:2")
+  targetNodes string
+  // Container properties for nodes matching the range
+  container() aws.batch.jobDefinition.containerProperties
+  // Explicit ECS properties for nodes matching the range (dict — variant shape)
+  ecsProperties dict
+  // Instance type override for the range
+  instanceTypes []string
+}
+
+// AWS Batch EKS pod properties (single pod spec for an EKS-backed Batch job)
+private aws.batch.jobDefinition.eksPodProperties {
+  // Kubernetes service account name (audit signal for IRSA / permissions scope)
+  serviceAccountName string
+  // Whether containers share the host network namespace
+  hostNetwork bool
+  // Whether containers share a process namespace
+  shareProcessNamespace bool
+  // DNS policy (ClusterFirst, Default, None, ClusterFirstWithHostNet)
+  dnsPolicy string
+  // Image pull secret names
+  imagePullSecrets []string
+  // Pod metadata (labels, annotations)
+  metadata dict
+  // Main pod containers
+  containers() []aws.batch.jobDefinition.eksContainer
+  // Init containers (run before main containers)
+  initContainers() []aws.batch.jobDefinition.eksContainer
+  // Pod volumes (emptyDir/hostPath/secret/configMap variants)
+  volumes []dict
+}
+
+// AWS Batch EKS container spec. Security context is flattened onto the container for direct audit queries.
+private aws.batch.jobDefinition.eksContainer @defaults("name image") {
+  // Container name (unique within the pod)
+  name string
+  // Container image
+  image string
+  // Image pull policy: Always, IfNotPresent, Never
+  imagePullPolicy string
+  // Entrypoint override
+  command []string
+  // Command arguments
+  args []string
+  // Environment variables. Warning: values may contain plaintext secrets.
+  env map[string]string
+  // CPU/memory requests and limits
+  resources dict
+  // Volume mounts (name, mountPath, subPath, readOnly)
+  volumeMounts []dict
+  // Whether the container runs with root privileges (audit signal)
+  securityContextPrivileged bool
+  // Whether the container is allowed to escalate privileges beyond its parent process
+  securityContextAllowPrivilegeEscalation bool
+  // Whether the root filesystem is read-only
+  securityContextReadOnlyRootFilesystem bool
+  // Whether the container must run as a non-root user
+  securityContextRunAsNonRoot bool
+  // UID the container runs as (null = container default, typically root)
+  securityContextRunAsUser int
+  // GID the container runs as
+  securityContextRunAsGroup int
 }
 
 // Amazon Lightsail

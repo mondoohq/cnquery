@@ -1,0 +1,5 @@
+[{<<"cowboy">>,{pkg,<<"cowboy">>,<<"2.10.0">>,<<"ABC123HASH">>},0},
+ {<<"cowlib">>,{pkg,<<"cowlib">>,<<"2.12.1">>,<<"DEF456HASH">>},0},
+ {<<"ranch">>,{pkg,<<"ranch">>,<<"2.1.0">>,<<"GHI789HASH">>},0},
+ {<<"jsx">>,{pkg,<<"jsx">>,<<"3.1.0">>,<<"JKL012HASH">>},1},
+ {<<"hackney">>,{pkg,<<"hackney">>,<<"1.20.1">>,<<"MNO345HASH">>},0}].

@@ -481,6 +481,24 @@ for {
   - `securityPolicyUrl string` → `securityPolicy() gcp.project.computeService.securityPolicy`
   - `interconnectUrl string` → `interconnect() gcp.project.computeService.interconnect`
   - `vpnGatewayUrl string` → `vpnGateway() gcp.project.computeService.vpnGateway`
+- **When to create a sub-resource.** A sub-resource (`aws.foo.bar`) is appropriate only when it meets **one of two bars**:
+  1. **Clear ID.** It has a stable unique identifier — an ARN, a name-with-region, or another natural key returned by the API. Synthetic composite IDs like `<parentArn>/leaf` do **not** count.
+  2. **Nested typed reference.** It exists to hold typed refs to other modeled resources (e.g. a `computeEnvironmentOrder` sub-resource whose reason to exist is `computeEnvironment() aws.batch.computeEnvironment`).
+
+  If neither applies, **do not create a sub-resource**. Instead:
+  - **Flatten scalars into the parent** with a disambiguating prefix. Prefer `linuxMaxSwap int`, `linuxSharedMemorySize int`, `fargatePlatformVersion string` over a single-scalar `linuxParameters`/`fargatePlatformConfiguration` sub-resource.
+  - **Use `map[string]string`** for name/value pair lists that would otherwise be a struct with two string fields (e.g. `environmentVariables map[string]string` rather than a `{name, value}` sub-resource — keys of `GPU`/`MEMORY`/`VCPU` work the same way for resource requirements).
+  - **Use `[]dict`** for small heterogeneous structs (e.g. Linux devices, tmpfs mounts, evaluate-on-exit conditions) where no individual field warrants its own typed audit query.
+
+  **Why:** A sub-resource has real cost — a generated struct, `__id` stability, serialization, test surface, and a new entry in `.lr.versions` for every field. Creating them for pure data containers bloats the schema without giving auditors new query power. Scalars on the parent are already queryable; a map lets you do `resourceRequirements["GPU"]` without a new resource type.
+
+  **Examples (Batch):**
+  - ✓ `aws.batch.jobQueue.computeEnvironmentOrder` — nests typed `computeEnvironment()` ref
+  - ✓ `aws.batch.jobDefinition.containerProperties.secret` — `valueFrom` is the ARN (and will eventually resolve to a typed ref)
+  - ✗ `{name, value}` env var — use `map[string]string`
+  - ✗ `{type, value}` resource requirement — use `map[string]string` keyed by type
+  - ✗ `{platformVersion}` single-scalar config — flatten to `fargatePlatformVersion` on parent
+  - ✗ `{hostPath, containerPath, permissions}` device / `{containerPath, size, mountOptions}` tmpfs — use `[]dict`
 - Every resource and field has an explicit entry in `.lr.versions`. New entries must use the **next patch version** after the provider's current version (e.g., if the provider is at `13.1.1`, new fields should be `13.1.2`). The provider's current version is in `providers/<name>/config/config.go` (look for the `Version` field). Do **not** rely on the highest version in `.lr.versions` — it may be stale from before a major version bump. The `versions` command does this automatically, but verify the result. Existing entries are never overwritten.
 - **Match SDK types faithfully:** If an SDK field is `*bool`, use `bool` in `.lr` and `llx.BoolDataPtr()` in Go — don't cast it to `string`. If an SDK enum has only two states (Enabled/Disabled), prefer `bool`. Use `*type` intermediate variables with `llx.*DataPtr` helpers to preserve nil semantics.
 - **Consistency with existing fields:** Before adding new fields to a resource, check how its existing fields handle pointers, nil checks, and type conversions. Follow the same pattern.
