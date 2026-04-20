@@ -13,7 +13,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "oci",
 	ID:              "go.mondoo.com/cnquery/v9/providers/oci",
-	Version:         "13.2.1",
+	Version:         "13.3.0",
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
 		{
