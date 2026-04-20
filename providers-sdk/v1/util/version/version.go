@@ -232,27 +232,37 @@ func checkGoModUpdate(providerPath string, updateStrategy UpdateStrategy, ignore
 	goModTidy(providerPath)
 
 	// Detect and revert any dependency downgrades caused by ordering issues
-	// during sequential go get -u calls or go mod tidy.
-	revertDowngrades(providerPath, goModPath, beforeVersions)
+	// during sequential go get -u calls or go mod tidy. Loop because reverting
+	// one downgrade via go get can cause a different transitive dep to be
+	// downgraded.
+	const maxDowngradeFixPasses = 5
+	for pass := range maxDowngradeFixPasses {
+		reverted := revertDowngrades(providerPath, goModPath, beforeVersions)
+		if reverted == 0 {
+			break
+		}
+		log.Info().Int("pass", pass+1).Int("reverted", reverted).Msg("reverted dependency downgrades, running go mod tidy")
+		goModTidy(providerPath)
+	}
 
 	log.Info().Msgf("All dependencies updated and cleaned up successfully.")
 }
 
 // revertDowngrades compares the current go.mod dependency versions against
 // the versions recorded before the update. Any dependency whose version
-// decreased is restored to its original version via "go get", followed by
-// a final "go mod tidy".
-func revertDowngrades(providerPath, goModPath string, beforeVersions map[string]string) {
+// decreased is restored to its original version via "go get". It returns
+// the number of dependencies that were reverted.
+func revertDowngrades(providerPath, goModPath string, beforeVersions map[string]string) int {
 	modContent, err := os.ReadFile(goModPath)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to read go.mod for downgrade check")
-		return
+		return 0
 	}
 
 	modFile, err := modfile.Parse("go.mod", modContent, nil)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to parse go.mod for downgrade check")
-		return
+		return 0
 	}
 
 	var reverted int
@@ -277,10 +287,7 @@ func revertDowngrades(providerPath, goModPath string, beforeVersions map[string]
 		}
 	}
 
-	if reverted > 0 {
-		log.Info().Int("count", reverted).Msg("reverted dependency downgrades, running go mod tidy")
-		goModTidy(providerPath)
-	}
+	return reverted
 }
 
 func goModTidy(providerPath string) {
