@@ -4,9 +4,11 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -18,7 +20,9 @@ import (
 	"go.mondoo.com/mql/v13/cli/theme"
 	"go.mondoo.com/mql/v13/cli/theme/colors"
 	"go.mondoo.com/mql/v13/providers"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
+	"go.mondoo.com/mql/v13/types"
 	"go.mondoo.com/mql/v13/utils/sortx"
 )
 
@@ -26,7 +30,13 @@ func init() {
 	rootCmd.AddCommand(ProvidersCmd)
 	ProvidersCmd.AddCommand(listProvidersCmd)
 	ProvidersCmd.AddCommand(installProviderCmd)
+	ProvidersCmd.AddCommand(infoProviderCmd)
+	ProvidersCmd.AddCommand(resourcesProviderCmd)
 
+	ProvidersCmd.Flags().Bool("json", false, "Output in JSON format")
+	listProvidersCmd.Flags().Bool("json", false, "Output in JSON format")
+	infoProviderCmd.Flags().Bool("json", false, "Output in JSON format")
+	resourcesProviderCmd.Flags().Bool("json", false, "Output in JSON format")
 	installProviderCmd.Flags().StringP("file", "f", "", "Install a provider via a file")
 	installProviderCmd.Flags().String("url", "", "Install a provider via a URL")
 }
@@ -37,7 +47,7 @@ var ProvidersCmd = &cobra.Command{
 	Long:   `Manage your providers. List and install new ones or update existing ones`,
 	PreRun: func(cmd *cobra.Command, args []string) {},
 	Run: func(cmd *cobra.Command, args []string) {
-		list()
+		listCmd(cmd)
 	},
 }
 
@@ -47,7 +57,7 @@ var listProvidersCmd = &cobra.Command{
 	Long:   "",
 	PreRun: func(cmd *cobra.Command, args []string) {},
 	Run: func(cmd *cobra.Command, args []string) {
-		list()
+		listCmd(cmd)
 	},
 }
 
@@ -79,6 +89,443 @@ var installProviderCmd = &cobra.Command{
 		installProviderByName(args[0])
 	},
 }
+
+var infoProviderCmd = &cobra.Command{
+	Use:    "info <provider> [<provider>...]",
+	Short:  "Show detailed information about one or more providers",
+	Long:   "Show detailed information about one or more providers including connectors and their flags.",
+	Args:   cobra.MinimumNArgs(1),
+	PreRun: func(cmd *cobra.Command, args []string) {},
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return infoProviders(cmd, args)
+	},
+}
+
+var resourcesProviderCmd = &cobra.Command{
+	Use:   "resources <provider> [<resource>]",
+	Short: "List resources or show resource details for a provider",
+	Long: `List all resources available in a provider, or show detailed field information
+for a specific resource. The schema includes core and network resources.
+
+Examples:
+  cnspec providers resources aws              # list all resources
+  cnspec providers resources aws --json       # list all resources as JSON
+  cnspec providers resources aws aws.ec2.instance         # show resource details
+  cnspec providers resources aws aws.ec2.instance --json  # show resource details as JSON`,
+	Args:   cobra.RangeArgs(1, 2),
+	PreRun: func(cmd *cobra.Command, args []string) {},
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if len(args) == 1 {
+			return listResources(cmd, args[0])
+		}
+		return showResource(cmd, args[0], args[1])
+	},
+}
+
+// --- helpers ---
+
+func isJsonOutput(cmd *cobra.Command) bool {
+	j, _ := cmd.Flags().GetBool("json")
+	return j
+}
+
+func writeJSON(v any) error {
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	return enc.Encode(v)
+}
+
+func flagTypeString(ft plugin.FlagType) string {
+	switch ft {
+	case plugin.FlagType_Bool:
+		return "bool"
+	case plugin.FlagType_Int:
+		return "int"
+	case plugin.FlagType_String:
+		return "string"
+	case plugin.FlagType_List:
+		return "list"
+	case plugin.FlagType_KeyValue:
+		return "keyvalue"
+	default:
+		return "string"
+	}
+}
+
+// loadProviderSchema loads a provider's schema merged with core and network
+// resources, matching the pattern used by the MCP server.
+func loadProviderSchema(providerName string) (resources.ResourcesSchema, error) {
+	existing, err := providers.ListActive()
+	if err != nil {
+		return nil, fmt.Errorf("failed to list providers: %w", err)
+	}
+
+	baseSchema := &resources.Schema{
+		Resources:    map[string]*resources.ResourceInfo{},
+		Dependencies: map[string]*resources.ProviderInfo{},
+	}
+
+	schema, err := loadSingleProviderSchema(existing, providerName)
+	if err != nil {
+		return nil, err
+	}
+	baseSchema.Add(schema)
+
+	// Always include core and network resources, as they are available
+	// when querying any provider.
+	coreSchema, err := loadSingleProviderSchema(existing, "core")
+	if err != nil {
+		return nil, err
+	}
+	baseSchema.Add(coreSchema)
+
+	networkSchema, err := loadSingleProviderSchema(existing, "network")
+	if err != nil {
+		return nil, err
+	}
+	baseSchema.Add(networkSchema)
+
+	return baseSchema, nil
+}
+
+func loadSingleProviderSchema(existing providers.Providers, providerName string) (resources.ResourcesSchema, error) {
+	provider := existing.Lookup(providers.ProviderLookup{ProviderName: providerName})
+	if provider == nil {
+		return nil, fmt.Errorf("provider %q not found", providerName)
+	}
+	if provider.HasBinary {
+		if err := provider.LoadResources(); err != nil {
+			return nil, fmt.Errorf("failed to load resources for provider %q: %w", providerName, err)
+		}
+	}
+	return provider.Schema, nil
+}
+
+// --- providers list ---
+
+type providerListEntry struct {
+	Name       string   `json:"name"`
+	Version    string   `json:"version"`
+	Connectors []string `json:"connectors"`
+}
+
+func listCmd(cmd *cobra.Command) {
+	all, err := providers.ListAll()
+	if err != nil {
+		log.Error().Err(err).Msg("failed to list providers")
+	}
+
+	if isJsonOutput(cmd) {
+		entries := make([]providerListEntry, 0, len(all))
+		for _, p := range all {
+			conns := make([]string, 0, len(p.Connectors))
+			for _, c := range p.Connectors {
+				if !c.IsHidden {
+					conns = append(conns, c.Name)
+				}
+			}
+			entries = append(entries, providerListEntry{
+				Name:       p.Name,
+				Version:    p.Version,
+				Connectors: conns,
+			})
+		}
+		sort.Slice(entries, func(i, j int) bool {
+			return entries[i].Name < entries[j].Name
+		})
+		if err := writeJSON(entries); err != nil {
+			log.Fatal().Err(err).Msg("failed to write JSON output")
+		}
+		return
+	}
+
+	printProviders(all)
+}
+
+// --- providers info ---
+
+type providerInfoEntry struct {
+	Name       string          `json:"name"`
+	ID         string          `json:"id"`
+	Version    string          `json:"version"`
+	Path       string          `json:"path,omitempty"`
+	Connectors []connectorInfo `json:"connectors"`
+}
+
+type connectorInfo struct {
+	Name      string     `json:"name"`
+	Short     string     `json:"short,omitempty"`
+	Aliases   []string   `json:"aliases,omitempty"`
+	Discovery []string   `json:"discovery,omitempty"`
+	Flags     []flagInfo `json:"flags,omitempty"`
+}
+
+type flagInfo struct {
+	Long    string `json:"long"`
+	Short   string `json:"short,omitempty"`
+	Default string `json:"default,omitempty"`
+	Desc    string `json:"desc,omitempty"`
+	Type    string `json:"type"`
+}
+
+func infoProviders(cmd *cobra.Command, names []string) error {
+	existing, err := providers.ListActive()
+	if err != nil {
+		return fmt.Errorf("failed to list providers: %w", err)
+	}
+
+	entries := make([]providerInfoEntry, 0, len(names))
+	for _, name := range names {
+		p := existing.Lookup(providers.ProviderLookup{ProviderName: name})
+		if p == nil {
+			return fmt.Errorf("provider %q not found", name)
+		}
+
+		conns := make([]connectorInfo, 0, len(p.Connectors))
+		for _, c := range p.Connectors {
+			if c.IsHidden {
+				continue
+			}
+			flags := make([]flagInfo, 0, len(c.Flags))
+			for _, f := range c.Flags {
+				if f.Option&plugin.FlagOption_Hidden != 0 {
+					continue
+				}
+				flags = append(flags, flagInfo{
+					Long:    f.Long,
+					Short:   f.Short,
+					Default: f.Default,
+					Desc:    f.Desc,
+					Type:    flagTypeString(f.Type),
+				})
+			}
+			ci := connectorInfo{
+				Name:  c.Name,
+				Short: c.Short,
+				Flags: flags,
+			}
+			if len(c.Aliases) > 0 {
+				ci.Aliases = c.Aliases
+			}
+			if len(c.Discovery) > 0 {
+				ci.Discovery = c.Discovery
+			}
+			conns = append(conns, ci)
+		}
+
+		entries = append(entries, providerInfoEntry{
+			Name:       p.Name,
+			ID:         p.ID,
+			Version:    p.Version,
+			Path:       p.Path,
+			Connectors: conns,
+		})
+	}
+
+	if isJsonOutput(cmd) {
+		return writeJSON(entries)
+	}
+
+	for i, e := range entries {
+		if i > 0 {
+			fmt.Println()
+		}
+		fmt.Printf("%s %s\n", theme.DefaultTheme.Primary(e.Name), e.Version)
+		fmt.Printf("  ID:   %s\n", e.ID)
+		if e.Path != "" {
+			fmt.Printf("  Path: %s\n", e.Path)
+		}
+		if len(e.Connectors) > 0 {
+			fmt.Println("  Connectors:")
+			for _, c := range e.Connectors {
+				desc := ""
+				if c.Short != "" {
+					desc = " - " + c.Short
+				}
+				fmt.Printf("    %s%s\n", theme.DefaultTheme.Secondary(c.Name), desc)
+				for _, f := range c.Flags {
+					flagStr := "      --" + f.Long
+					if f.Short != "" {
+						flagStr += ", -" + f.Short
+					}
+					flagStr += " (" + f.Type + ")"
+					if f.Desc != "" {
+						flagStr += "  " + f.Desc
+					}
+					fmt.Println(flagStr)
+				}
+			}
+		}
+	}
+	return nil
+}
+
+// --- providers resources (list mode) ---
+
+type resourceList struct {
+	Provider       string            `json:"provider"`
+	TotalResources int               `json:"total_resources"`
+	Resources      []resourceSummary `json:"resources"`
+}
+
+type resourceSummary struct {
+	Name       string   `json:"name"`
+	Title      string   `json:"title,omitempty"`
+	Desc       string   `json:"desc,omitempty"`
+	Private    bool     `json:"private"`
+	Defaults   []string `json:"defaults,omitempty"`
+	FieldCount int      `json:"field_count"`
+}
+
+func listResources(cmd *cobra.Command, providerName string) error {
+	schema, err := loadProviderSchema(providerName)
+	if err != nil {
+		return err
+	}
+
+	allResources := schema.AllResources()
+	summaries := make([]resourceSummary, 0, len(allResources))
+	for name, ri := range allResources {
+		if ri.Private {
+			continue
+		}
+		// The map key is the canonical resource name (e.g. "aws.ec2.instance").
+		// ri.Name may be empty for some resources.
+		resourceName := name
+		if resourceName == "" {
+			resourceName = ri.Name
+		}
+		var defaults []string
+		if ri.Defaults != "" {
+			defaults = strings.Split(ri.Defaults, " ")
+		}
+		summaries = append(summaries, resourceSummary{
+			Name:       resourceName,
+			Title:      ri.Title,
+			Desc:       ri.Desc,
+			Private:    ri.Private,
+			Defaults:   defaults,
+			FieldCount: len(ri.Fields),
+		})
+	}
+	sort.Slice(summaries, func(i, j int) bool {
+		return summaries[i].Name < summaries[j].Name
+	})
+
+	if isJsonOutput(cmd) {
+		return writeJSON(resourceList{
+			Provider:       providerName,
+			TotalResources: len(summaries),
+			Resources:      summaries,
+		})
+	}
+
+	fmt.Printf("%s (%d resources)\n\n", theme.DefaultTheme.Primary(providerName), len(summaries))
+	for _, r := range summaries {
+		title := ""
+		if r.Title != "" {
+			title = " - " + r.Title
+		}
+		fmt.Printf("  %s%s\n", theme.DefaultTheme.Secondary(r.Name), title)
+	}
+	fmt.Println()
+	return nil
+}
+
+// --- providers resources (detail mode) ---
+
+type resourceDetail struct {
+	Name       string        `json:"name"`
+	Title      string        `json:"title,omitempty"`
+	Desc       string        `json:"desc,omitempty"`
+	Private    bool          `json:"private"`
+	Defaults   []string      `json:"defaults,omitempty"`
+	FieldCount int           `json:"field_count"`
+	Fields     []fieldDetail `json:"fields"`
+}
+
+type fieldDetail struct {
+	Name        string `json:"name"`
+	Type        string `json:"type"`
+	Title       string `json:"title,omitempty"`
+	Desc        string `json:"desc,omitempty"`
+	IsMandatory bool   `json:"is_mandatory,omitempty"`
+}
+
+func showResource(cmd *cobra.Command, providerName string, resourceName string) error {
+	schema, err := loadProviderSchema(providerName)
+	if err != nil {
+		return err
+	}
+
+	ri := schema.Lookup(resourceName)
+	if ri == nil {
+		return fmt.Errorf("resource %q not found in provider %q", resourceName, providerName)
+	}
+
+	fields := make([]fieldDetail, 0, len(ri.Fields))
+	for _, f := range ri.Fields {
+		if f.IsPrivate {
+			continue
+		}
+		fields = append(fields, fieldDetail{
+			Name:        f.Name,
+			Type:        types.Type(f.Type).Label(),
+			Title:       f.Title,
+			Desc:        f.Desc,
+			IsMandatory: f.IsMandatory,
+		})
+	}
+	sort.Slice(fields, func(i, j int) bool {
+		return fields[i].Name < fields[j].Name
+	})
+
+	var defaults []string
+	if ri.Defaults != "" {
+		defaults = strings.Split(ri.Defaults, " ")
+	}
+
+	detail := resourceDetail{
+		Name:       ri.Name,
+		Title:      ri.Title,
+		Desc:       ri.Desc,
+		Private:    ri.Private,
+		Defaults:   defaults,
+		FieldCount: len(fields),
+		Fields:     fields,
+	}
+
+	if isJsonOutput(cmd) {
+		return writeJSON(detail)
+	}
+
+	fmt.Printf("%s\n", theme.DefaultTheme.Primary(ri.Name))
+	if ri.Title != "" {
+		fmt.Printf("  %s\n", ri.Title)
+	}
+	if ri.Desc != "" {
+		fmt.Printf("  %s\n", ri.Desc)
+	}
+	fmt.Println()
+	fmt.Printf("  Fields (%d):\n", len(fields))
+	for _, f := range fields {
+		mandatory := ""
+		if f.IsMandatory {
+			mandatory = " (required)"
+		}
+		title := ""
+		if f.Title != "" {
+			title = " - " + f.Title
+		}
+		fmt.Printf("    %-30s %s%s%s\n",
+			theme.DefaultTheme.Secondary(f.Name),
+			f.Type, mandatory, title)
+	}
+	fmt.Println()
+	return nil
+}
+
+// --- existing functions ---
 
 func installProviderByName(name string) {
 	parts := strings.Split(name, "@")
@@ -129,15 +576,6 @@ func installProviderFile(path string) {
 		log.Fatal().Err(err).Msg("failed to install")
 	}
 	providers.PrintInstallResults(installed)
-}
-
-func list() {
-	list, err := providers.ListAll()
-	if err != nil {
-		log.Error().Err(err).Msg("failed to list providers")
-	}
-
-	printProviders(list)
 }
 
 func printProviders(p []*providers.Provider) {

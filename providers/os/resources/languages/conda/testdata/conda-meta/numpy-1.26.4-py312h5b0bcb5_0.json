@@ -1,0 +1,6 @@
+{
+  "name": "numpy",
+  "version": "1.26.4",
+  "build_string": "py312h5b0bcb5_0",
+  "channel": "https://repo.anaconda.com/pkgs/main"
+}

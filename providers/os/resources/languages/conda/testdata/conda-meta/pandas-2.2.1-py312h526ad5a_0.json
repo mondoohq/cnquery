@@ -1,0 +1,6 @@
+{
+  "name": "pandas",
+  "version": "2.2.1",
+  "build_string": "py312h526ad5a_0",
+  "channel": "https://repo.anaconda.com/pkgs/main"
+}
