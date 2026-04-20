@@ -351,7 +351,9 @@ func (o *mqlOciNetwork) getSecurityLists(conn *connection.OciConnection) []*jobp
 				if err != nil {
 					return nil, err
 				}
-				mqlInstance.(*mqlOciNetworkSecurityList).cacheVcnId = stringValue(securityList.VcnId)
+				sl := mqlInstance.(*mqlOciNetworkSecurityList)
+				sl.cacheVcnId = stringValue(securityList.VcnId)
+				sl.cacheRegion = stringValue(region.RegionKey)
 				res = append(res, mqlInstance)
 			}
 
@@ -364,6 +366,49 @@ func (o *mqlOciNetwork) getSecurityLists(conn *connection.OciConnection) []*jobp
 
 type mqlOciNetworkSecurityListInternal struct {
 	cacheVcnId string
+	// cacheRegion is the region key (e.g. "IAD") discovered when the security
+	// list was enumerated. Used by discovery to emit per-region platform IDs
+	// without re-parsing the OCID.
+	cacheRegion string
+}
+
+// initOciNetworkSecurityList resolves a single security list from the scan
+// asset's PlatformId when policies reference `oci.network.securityList` on a
+// discovered oci-network-securitylist asset. Explicit id takes precedence.
+func initOciNetworkSecurityList(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	id := ociArgString(args, "id")
+	if id == "" {
+		conn := runtime.Connection.(*connection.OciConnection)
+		if conn.Conf == nil || conn.Conf.PlatformId == "" {
+			return args, nil, nil
+		}
+		parsed, ok := parseOciObjectPlatformID(conn.Conf.PlatformId)
+		if !ok || parsed.service != "network" || parsed.objectType != "securitylist" {
+			return args, nil, nil
+		}
+		id = parsed.id
+	}
+
+	obj, err := CreateResource(runtime, "oci.network", nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	network := obj.(*mqlOciNetwork)
+	list := network.GetSecurityLists()
+	if list.Error != nil {
+		return nil, nil, list.Error
+	}
+	for _, raw := range list.Data {
+		sl := raw.(*mqlOciNetworkSecurityList)
+		if sl.Id.Data == id {
+			return args, sl, nil
+		}
+	}
+	return nil, nil, errors.New("oci.network.securityList not found: " + id)
 }
 
 func (o *mqlOciNetworkSecurityList) id() (string, error) {

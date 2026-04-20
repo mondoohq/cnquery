@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
@@ -175,6 +176,37 @@ func initOciObjectStorageBucket(runtime *plugin.Runtime, args map[string]*llx.Ra
 	if id, ok := args["id"]; ok && id.Value != nil {
 		if idStr, ok := id.Value.(string); ok && idStr != "" {
 			return args, nil, nil
+		}
+	}
+
+	// When cnspec scans a discovered oci-objectstorage-bucket asset the only
+	// context we have is the Conf.PlatformId. Parse out namespace/name so the
+	// singular `oci.objectStorage.bucket` resolves to that specific bucket
+	// without the policy having to pass explicit args.
+	if ociArgString(args, "namespace") == "" && ociArgString(args, "name") == "" {
+		if conn, ok := runtime.Connection.(*connection.OciConnection); ok && conn.Conf != nil && conn.Conf.PlatformId != "" {
+			if parsed, ok := parseOciObjectPlatformID(conn.Conf.PlatformId); ok &&
+				parsed.service == "objectstorage" && parsed.objectType == "bucket" {
+				// Bucket platform ids encode "<namespace>/<name>".
+				if slash := strings.IndexByte(parsed.id, '/'); slash > 0 && slash < len(parsed.id)-1 {
+					if args == nil {
+						args = map[string]*llx.RawData{}
+					}
+					args["namespace"] = llx.StringData(parsed.id[:slash])
+					args["name"] = llx.StringData(parsed.id[slash+1:])
+					if parsed.region != "" && parsed.region != "unknown" {
+						// region is a typed oci.region resource; we have only
+						// its id (the region key). Create the reference so
+						// subsequent accessors can use it.
+						regionRes, err := NewResource(runtime, "oci.region", map[string]*llx.RawData{
+							"id": llx.StringData(parsed.region),
+						})
+						if err == nil {
+							args["region"] = llx.ResourceData(regionRes, "oci.region")
+						}
+					}
+				}
+			}
 		}
 	}
 

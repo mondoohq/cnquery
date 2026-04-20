@@ -5,12 +5,14 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/identity"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
@@ -157,6 +159,62 @@ func (o *mqlOciIdentity) getUsers(conn *connection.OciConnection) []*jobpool.Job
 
 func (o *mqlOciIdentityUser) id() (string, error) {
 	return "oci.identity.user/" + o.Id.Data, nil
+}
+
+// initOciIdentityUser resolves a single user resource when policies reference
+// `oci.identity.user` on a discovered oci-identity-user asset. If the caller
+// passes an explicit `id` we use it directly; otherwise we parse the
+// connection's Conf.PlatformId to extract the OCID. Matching uses the existing
+// listing path so we reuse the auth/pagination work done by `users()`.
+func initOciIdentityUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// Fully populated — nothing to do.
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	id := ociArgString(args, "id")
+	if id == "" {
+		conn := runtime.Connection.(*connection.OciConnection)
+		if conn.Conf == nil || conn.Conf.PlatformId == "" {
+			return args, nil, nil
+		}
+		parsed, ok := parseOciObjectPlatformID(conn.Conf.PlatformId)
+		if !ok || parsed.service != "identity" || parsed.objectType != "user" {
+			return args, nil, nil
+		}
+		id = parsed.id
+	}
+
+	res, err := findOciIdentityUser(runtime, id)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, res, nil
+}
+
+// findOciIdentityUser locates a user by OCID by materialising the tenancy's
+// user list and filtering. We accept the list cost (typically small) to avoid
+// duplicating the ListUsers/pagination/region-fanout logic.
+func findOciIdentityUser(runtime *plugin.Runtime, id string) (plugin.Resource, error) {
+	if id == "" {
+		return nil, errors.New("id required to fetch oci.identity.user")
+	}
+	obj, err := CreateResource(runtime, "oci.identity", nil)
+	if err != nil {
+		return nil, err
+	}
+	identity := obj.(*mqlOciIdentity)
+	list := identity.GetUsers()
+	if list.Error != nil {
+		return nil, list.Error
+	}
+	for _, raw := range list.Data {
+		user := raw.(*mqlOciIdentityUser)
+		if user.Id.Data == id {
+			return user, nil
+		}
+	}
+	return nil, errors.New("oci.identity.user not found: " + id)
 }
 
 func (o *mqlOciIdentityUser) apiKeys() ([]any, error) {
@@ -591,6 +649,46 @@ func (o *mqlOciIdentity) getPolicies(conn *connection.OciConnection) []*jobpool.
 
 func (o *mqlOciIdentityPolicy) id() (string, error) {
 	return "oci.identity.policy/" + o.Id.Data, nil
+}
+
+// initOciIdentityPolicy mirrors initOciIdentityUser: explicit id wins, else
+// fall back to the discovered asset's PlatformId to resolve the specific
+// policy, else leave the resource unresolved (MQL will error if fields are
+// read).
+func initOciIdentityPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	id := ociArgString(args, "id")
+	if id == "" {
+		conn := runtime.Connection.(*connection.OciConnection)
+		if conn.Conf == nil || conn.Conf.PlatformId == "" {
+			return args, nil, nil
+		}
+		parsed, ok := parseOciObjectPlatformID(conn.Conf.PlatformId)
+		if !ok || parsed.service != "identity" || parsed.objectType != "policy" {
+			return args, nil, nil
+		}
+		id = parsed.id
+	}
+
+	obj, err := CreateResource(runtime, "oci.identity", nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	identity := obj.(*mqlOciIdentity)
+	list := identity.GetPolicies()
+	if list.Error != nil {
+		return nil, nil, list.Error
+	}
+	for _, raw := range list.Data {
+		policy := raw.(*mqlOciIdentityPolicy)
+		if policy.Id.Data == id {
+			return args, policy, nil
+		}
+	}
+	return nil, nil, errors.New("oci.identity.policy not found: " + id)
 }
 
 func (o *mqlOciIdentityUser) mfaDevices() ([]any, error) {
