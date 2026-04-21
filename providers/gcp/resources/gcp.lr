@@ -1065,6 +1065,8 @@ private gcp.project.computeService.attachedDisk {
 private gcp.project.computeService.snapshot @defaults("name") {
   // Unique identifier
   id string
+  // Project ID
+  projectId string
   // Name of the resource
   name string
   // Optional description
@@ -1109,6 +1111,8 @@ private gcp.project.computeService.snapshot @defaults("name") {
   sourceSnapshotSchedulePolicy string
   // ID of the snapshot schedule policy
   sourceSnapshotSchedulePolicyId string
+  // IAM policy bindings for this snapshot (includes allUsers / allAuthenticatedUsers grants when the snapshot is publicly shared)
+  iamPolicy() []gcp.resourcemanager.binding
 }
 
 // Google Cloud (GCP) Compute
@@ -1151,6 +1155,8 @@ private gcp.project.computeService.image @defaults("id name") {
   sourceImage() gcp.project.computeService.image
   // Source snapshot used to create this image
   sourceSnapshot() gcp.project.computeService.snapshot
+  // IAM policy bindings for this image (includes allUsers / allAuthenticatedUsers grants when the image is publicly shared)
+  iamPolicy() []gcp.resourcemanager.binding
 }
 
 // Google Cloud (GCP) Compute firewall
@@ -1883,6 +1889,20 @@ private gcp.project.sqlService.instance.settings.ipConfiguration {
   enablePrivatePathForGoogleCloudServices bool
   // Specifies how the server CA certificate is signed (GOOGLE_MANAGED_INTERNAL_CA, GOOGLE_MANAGED_CAS_CA)
   serverCaMode string
+  // Private Service Connect configuration
+  pscConfig gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig
+}
+
+// Google Cloud (GCP) SQL instance Private Service Connect configuration
+private gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig @defaults("pscEnabled") {
+  // Internal ID for this resource
+  id string
+  // Whether Private Service Connect is enabled on the instance
+  pscEnabled bool
+  // List of consumer projects that are allow-listed to create a PSC endpoint to the Cloud SQL instance
+  allowedConsumerProjects []string
+  // Whether auto-creation of PSC DNS records for the Cloud SQL instance is enabled
+  pscAutoConnections []dict
 }
 
 // Google Cloud (GCP) SQL instance settings maintenance window

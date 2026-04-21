@@ -326,6 +326,25 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 					mqlAclEntries = append(mqlAclEntries, mqlAclEntry)
 				}
 
+				var mqlPscCfg plugin.Resource
+				if s.IpConfiguration.PscConfig != nil {
+					pscAutoConnections := make([]any, 0, len(s.IpConfiguration.PscConfig.PscAutoConnections))
+					for _, c := range s.IpConfiguration.PscConfig.PscAutoConnections {
+						if d, err := convert.JsonToDict(c); err == nil {
+							pscAutoConnections = append(pscAutoConnections, d)
+						}
+					}
+					mqlPscCfg, err = CreateResource(g.MqlRuntime, "gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig", map[string]*llx.RawData{
+						"id":                      llx.StringData(fmt.Sprintf("%s/settings/ipConfiguration/pscConfig", instanceId)),
+						"pscEnabled":              llx.BoolData(s.IpConfiguration.PscConfig.PscEnabled),
+						"allowedConsumerProjects": llx.ArrayData(convert.SliceAnyToInterface(s.IpConfiguration.PscConfig.AllowedConsumerProjects), types.String),
+						"pscAutoConnections":      llx.ArrayData(pscAutoConnections, types.Dict),
+					})
+					if err != nil {
+						return err
+					}
+				}
+
 				mqlIpCfg, err = CreateResource(g.MqlRuntime, "gcp.project.sqlService.instance.settings.ipConfiguration", map[string]*llx.RawData{
 					"allocatedIpRange":                        llx.StringData(s.IpConfiguration.AllocatedIpRange),
 					"authorizedNetworks":                      llx.ArrayData(mqlAclEntries, types.Dict),
@@ -336,6 +355,7 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 					"requireSsl":     llx.BoolData(s.IpConfiguration.RequireSsl),
 					"sslMode":        llx.StringData(s.IpConfiguration.SslMode),
 					"serverCaMode":   llx.StringData(s.IpConfiguration.ServerCaMode),
+					"pscConfig":      llx.ResourceData(mqlPscCfg, "gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig"),
 				})
 				if err != nil {
 					return err
@@ -674,6 +694,10 @@ func (g *mqlGcpProjectSqlServiceInstanceSettingsDenyMaintenancePeriod) id() (str
 }
 
 func (g *mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration) id() (string, error) {
+	return g.Id.Data, g.Id.Error
+}
+
+func (g *mqlGcpProjectSqlServiceInstanceSettingsIpConfigurationPscConfig) id() (string, error) {
 	return g.Id.Data, g.Id.Error
 }
 

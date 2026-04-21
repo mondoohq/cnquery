@@ -1174,6 +1174,7 @@ func (g *mqlGcpProjectComputeService) snapshots() ([]any, error) {
 		for _, snapshot := range page.Items {
 			mqlSnapshpt, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.snapshot", map[string]*llx.RawData{
 				"id":                             llx.StringData(strconv.FormatUint(snapshot.Id, 10)),
+				"projectId":                      llx.StringData(projectId),
 				"name":                           llx.StringData(snapshot.Name),
 				"description":                    llx.StringData(snapshot.Description),
 				"architecture":                   llx.StringData(snapshot.Architecture),
@@ -3145,4 +3146,74 @@ func (g *mqlGcpProjectComputeService) storagePools() ([]any, error) {
 		return nil, err
 	}
 	return res, nil
+}
+
+func computeIamBindingsToResources(runtime *plugin.Runtime, idPrefix string, bindings []*compute.Binding) ([]any, error) {
+	res := make([]any, 0, len(bindings))
+	for i, b := range bindings {
+		mqlBinding, err := CreateResource(runtime, "gcp.resourcemanager.binding", map[string]*llx.RawData{
+			"id":      llx.StringData(idPrefix + "-" + strconv.Itoa(i)),
+			"role":    llx.StringData(b.Role),
+			"members": llx.ArrayData(convert.SliceAnyToInterface(b.Members), types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlBinding)
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectComputeServiceImage) iamPolicy() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	projectId := g.ProjectId.Data
+	name := g.Name.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+	ctx := context.Background()
+	svc, err := compute.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+	policy, err := svc.Images.GetIamPolicy(projectId, name).Context(ctx).Do()
+	if err != nil {
+		return nil, err
+	}
+	return computeIamBindingsToResources(g.MqlRuntime, name, policy.Bindings)
+}
+
+func (g *mqlGcpProjectComputeServiceSnapshot) iamPolicy() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	projectId := g.ProjectId.Data
+	name := g.Name.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+	ctx := context.Background()
+	svc, err := compute.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+	policy, err := svc.Snapshots.GetIamPolicy(projectId, name).Context(ctx).Do()
+	if err != nil {
+		return nil, err
+	}
+	return computeIamBindingsToResources(g.MqlRuntime, name, policy.Bindings)
 }

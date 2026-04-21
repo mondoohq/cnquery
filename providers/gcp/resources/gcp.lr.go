@@ -71,6 +71,7 @@ const (
 	ResourceGcpProjectSqlServiceInstanceSettingsBackupconfiguration                    string = "gcp.project.sqlService.instance.settings.backupconfiguration"
 	ResourceGcpProjectSqlServiceInstanceSettingsDenyMaintenancePeriod                  string = "gcp.project.sqlService.instance.settings.denyMaintenancePeriod"
 	ResourceGcpProjectSqlServiceInstanceSettingsIpConfiguration                        string = "gcp.project.sqlService.instance.settings.ipConfiguration"
+	ResourceGcpProjectSqlServiceInstanceSettingsIpConfigurationPscConfig               string = "gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig"
 	ResourceGcpProjectSqlServiceInstanceSettingsMaintenanceWindow                      string = "gcp.project.sqlService.instance.settings.maintenanceWindow"
 	ResourceGcpProjectSqlServiceInstanceSettingsPasswordValidationPolicy               string = "gcp.project.sqlService.instance.settings.passwordValidationPolicy"
 	ResourceGcpProjectBigqueryService                                                  string = "gcp.project.bigqueryService"
@@ -558,6 +559,10 @@ func init() {
 		"gcp.project.sqlService.instance.settings.ipConfiguration": {
 			// to override args, implement: initGcpProjectSqlServiceInstanceSettingsIpConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectSqlServiceInstanceSettingsIpConfiguration,
+		},
+		"gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig": {
+			// to override args, implement: initGcpProjectSqlServiceInstanceSettingsIpConfigurationPscConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectSqlServiceInstanceSettingsIpConfigurationPscConfig,
 		},
 		"gcp.project.sqlService.instance.settings.maintenanceWindow": {
 			// to override args, implement: initGcpProjectSqlServiceInstanceSettingsMaintenanceWindow(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3049,6 +3054,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.snapshot.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSnapshot).GetId()).ToDataRes(types.String)
 	},
+	"gcp.project.computeService.snapshot.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSnapshot).GetProjectId()).ToDataRes(types.String)
+	},
 	"gcp.project.computeService.snapshot.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSnapshot).GetName()).ToDataRes(types.String)
 	},
@@ -3115,6 +3123,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.snapshot.sourceSnapshotSchedulePolicyId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSnapshot).GetSourceSnapshotSchedulePolicyId()).ToDataRes(types.String)
 	},
+	"gcp.project.computeService.snapshot.iamPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSnapshot).GetIamPolicy()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.binding")))
+	},
 	"gcp.project.computeService.image.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceImage).GetId()).ToDataRes(types.String)
 	},
@@ -3171,6 +3182,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.image.sourceSnapshot": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceImage).GetSourceSnapshot()).ToDataRes(types.Resource("gcp.project.computeService.snapshot"))
+	},
+	"gcp.project.computeService.image.iamPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceImage).GetIamPolicy()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.binding")))
 	},
 	"gcp.project.computeService.firewall.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceFirewall).GetId()).ToDataRes(types.String)
@@ -4089,6 +4103,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.sqlService.instance.settings.ipConfiguration.serverCaMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).GetServerCaMode()).ToDataRes(types.String)
+	},
+	"gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).GetPscConfig()).ToDataRes(types.Resource("gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig"))
+	},
+	"gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfigurationPscConfig).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig.pscEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfigurationPscConfig).GetPscEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig.allowedConsumerProjects": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfigurationPscConfig).GetAllowedConsumerProjects()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig.pscAutoConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfigurationPscConfig).GetPscAutoConnections()).ToDataRes(types.Array(types.Dict))
 	},
 	"gcp.project.sqlService.instance.settings.maintenanceWindow.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstanceSettingsMaintenanceWindow).GetId()).ToDataRes(types.String)
@@ -13050,6 +13079,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceSnapshot).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.snapshot.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSnapshot).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.snapshot.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceSnapshot).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -13138,6 +13171,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceSnapshot).SourceSnapshotSchedulePolicyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.snapshot.iamPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSnapshot).IamPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.image.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceImage).__id, ok = v.Value.(string)
 		return
@@ -13216,6 +13253,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.image.sourceSnapshot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceImage).SourceSnapshot, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceSnapshot](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.image.iamPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceImage).IamPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.firewall.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14532,6 +14573,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.sqlService.instance.settings.ipConfiguration.serverCaMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).ServerCaMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).PscConfig, ok = plugin.RawToTValue[*mqlGcpProjectSqlServiceInstanceSettingsIpConfigurationPscConfig](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfigurationPscConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfigurationPscConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig.pscEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfigurationPscConfig).PscEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig.allowedConsumerProjects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfigurationPscConfig).AllowedConsumerProjects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig.pscAutoConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfigurationPscConfig).PscAutoConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.sqlService.instance.settings.maintenanceWindow.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -30047,6 +30112,7 @@ type mqlGcpProjectComputeServiceSnapshot struct {
 	__id       string
 	// optional: if you define mqlGcpProjectComputeServiceSnapshotInternal it will be used here
 	Id                             plugin.TValue[string]
+	ProjectId                      plugin.TValue[string]
 	Name                           plugin.TValue[string]
 	Description                    plugin.TValue[string]
 	Architecture                   plugin.TValue[string]
@@ -30069,6 +30135,7 @@ type mqlGcpProjectComputeServiceSnapshot struct {
 	SourceDisk                     plugin.TValue[string]
 	SourceSnapshotSchedulePolicy   plugin.TValue[string]
 	SourceSnapshotSchedulePolicyId plugin.TValue[string]
+	IamPolicy                      plugin.TValue[[]any]
 }
 
 // createGcpProjectComputeServiceSnapshot creates a new instance of this resource
@@ -30110,6 +30177,10 @@ func (c *mqlGcpProjectComputeServiceSnapshot) MqlID() string {
 
 func (c *mqlGcpProjectComputeServiceSnapshot) GetId() *plugin.TValue[string] {
 	return &c.Id
+}
+
+func (c *mqlGcpProjectComputeServiceSnapshot) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
 }
 
 func (c *mqlGcpProjectComputeServiceSnapshot) GetName() *plugin.TValue[string] {
@@ -30200,6 +30271,22 @@ func (c *mqlGcpProjectComputeServiceSnapshot) GetSourceSnapshotSchedulePolicyId(
 	return &c.SourceSnapshotSchedulePolicyId
 }
 
+func (c *mqlGcpProjectComputeServiceSnapshot) GetIamPolicy() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IamPolicy, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.snapshot", c.__id, "iamPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.iamPolicy()
+	})
+}
+
 // mqlGcpProjectComputeServiceImage for the gcp.project.computeService.image resource
 type mqlGcpProjectComputeServiceImage struct {
 	MqlRuntime *plugin.Runtime
@@ -30224,6 +30311,7 @@ type mqlGcpProjectComputeServiceImage struct {
 	SourceDisk                plugin.TValue[*mqlGcpProjectComputeServiceDisk]
 	SourceImage               plugin.TValue[*mqlGcpProjectComputeServiceImage]
 	SourceSnapshot            plugin.TValue[*mqlGcpProjectComputeServiceSnapshot]
+	IamPolicy                 plugin.TValue[[]any]
 }
 
 // createGcpProjectComputeServiceImage creates a new instance of this resource
@@ -30372,6 +30460,22 @@ func (c *mqlGcpProjectComputeServiceImage) GetSourceSnapshot() *plugin.TValue[*m
 		}
 
 		return c.sourceSnapshot()
+	})
+}
+
+func (c *mqlGcpProjectComputeServiceImage) GetIamPolicy() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IamPolicy, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.image", c.__id, "iamPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.iamPolicy()
 	})
 }
 
@@ -33031,6 +33135,7 @@ type mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration struct {
 	SslMode                                 plugin.TValue[string]
 	EnablePrivatePathForGoogleCloudServices plugin.TValue[bool]
 	ServerCaMode                            plugin.TValue[string]
+	PscConfig                               plugin.TValue[*mqlGcpProjectSqlServiceInstanceSettingsIpConfigurationPscConfig]
 }
 
 // createGcpProjectSqlServiceInstanceSettingsIpConfiguration creates a new instance of this resource
@@ -33104,6 +33209,74 @@ func (c *mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration) GetEnablePrivat
 
 func (c *mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration) GetServerCaMode() *plugin.TValue[string] {
 	return &c.ServerCaMode
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration) GetPscConfig() *plugin.TValue[*mqlGcpProjectSqlServiceInstanceSettingsIpConfigurationPscConfig] {
+	return &c.PscConfig
+}
+
+// mqlGcpProjectSqlServiceInstanceSettingsIpConfigurationPscConfig for the gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig resource
+type mqlGcpProjectSqlServiceInstanceSettingsIpConfigurationPscConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectSqlServiceInstanceSettingsIpConfigurationPscConfigInternal it will be used here
+	Id                      plugin.TValue[string]
+	PscEnabled              plugin.TValue[bool]
+	AllowedConsumerProjects plugin.TValue[[]any]
+	PscAutoConnections      plugin.TValue[[]any]
+}
+
+// createGcpProjectSqlServiceInstanceSettingsIpConfigurationPscConfig creates a new instance of this resource
+func createGcpProjectSqlServiceInstanceSettingsIpConfigurationPscConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectSqlServiceInstanceSettingsIpConfigurationPscConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceSettingsIpConfigurationPscConfig) MqlName() string {
+	return "gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig"
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceSettingsIpConfigurationPscConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceSettingsIpConfigurationPscConfig) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceSettingsIpConfigurationPscConfig) GetPscEnabled() *plugin.TValue[bool] {
+	return &c.PscEnabled
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceSettingsIpConfigurationPscConfig) GetAllowedConsumerProjects() *plugin.TValue[[]any] {
+	return &c.AllowedConsumerProjects
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceSettingsIpConfigurationPscConfig) GetPscAutoConnections() *plugin.TValue[[]any] {
+	return &c.PscAutoConnections
 }
 
 // mqlGcpProjectSqlServiceInstanceSettingsMaintenanceWindow for the gcp.project.sqlService.instance.settings.maintenanceWindow resource

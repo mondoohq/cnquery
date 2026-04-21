@@ -1219,6 +1219,7 @@ gcp.project.computeService.image.description 9.0.0
 gcp.project.computeService.image.diskSizeGb 9.0.0
 gcp.project.computeService.image.enableConfidentialCompute 11.6.6
 gcp.project.computeService.image.family 9.0.0
+gcp.project.computeService.image.iamPolicy 13.10.1
 gcp.project.computeService.image.id 9.0.0
 gcp.project.computeService.image.labels 9.0.0
 gcp.project.computeService.image.licenses 9.0.0
@@ -1602,10 +1603,12 @@ gcp.project.computeService.snapshot.description 9.0.0
 gcp.project.computeService.snapshot.diskSizeGb 9.0.0
 gcp.project.computeService.snapshot.downloadBytes 9.0.0
 gcp.project.computeService.snapshot.enableConfidentialCompute 11.6.6
+gcp.project.computeService.snapshot.iamPolicy 13.10.1
 gcp.project.computeService.snapshot.id 9.0.0
 gcp.project.computeService.snapshot.labels 9.0.0
 gcp.project.computeService.snapshot.licenses 9.0.0
 gcp.project.computeService.snapshot.name 9.0.0
+gcp.project.computeService.snapshot.projectId 13.10.1
 gcp.project.computeService.snapshot.satisfiesPzi 11.6.6
 gcp.project.computeService.snapshot.satisfiesPzs 11.6.6
 gcp.project.computeService.snapshot.snapshotType 9.0.0
@@ -3067,6 +3070,11 @@ gcp.project.sqlService.instance.settings.ipConfiguration.enablePrivatePathForGoo
 gcp.project.sqlService.instance.settings.ipConfiguration.id 9.0.0
 gcp.project.sqlService.instance.settings.ipConfiguration.ipv4Enabled 9.0.0
 gcp.project.sqlService.instance.settings.ipConfiguration.privateNetwork 9.0.0
+gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig 13.10.1
+gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig.allowedConsumerProjects 13.10.1
+gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig.id 13.10.1
+gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig.pscAutoConnections 13.10.1
+gcp.project.sqlService.instance.settings.ipConfiguration.pscConfig.pscEnabled 13.10.1
 gcp.project.sqlService.instance.settings.ipConfiguration.requireSsl 9.0.0
 gcp.project.sqlService.instance.settings.ipConfiguration.serverCaMode 13.2.3
 gcp.project.sqlService.instance.settings.ipConfiguration.sslMode 9.0.0
