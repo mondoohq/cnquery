@@ -64,14 +64,14 @@ func TestMerge_MatchByMRN(t *testing.T) {
 	require.NoError(t, err)
 	assert.Len(t, merged.Assets, 1)
 
-	// pkg\x001 should have both fields merged.
-	res, ok := merged.Assets[0].resources["pkg\x001"]
+	// pkg\x1e1 should have both fields merged.
+	res, ok := merged.Assets[0].resources["pkg\x1e1"]
 	require.True(t, ok)
 	assert.Equal(t, "curl", res.Fields["name"].Value)
 	assert.Equal(t, "7.88", res.Fields["version"].Value)
 
-	// pkg\x002 should exist from r2.
-	_, ok = merged.Assets[0].resources["pkg\x002"]
+	// pkg\x1e2 should exist from r2.
+	_, ok = merged.Assets[0].resources["pkg\x1e2"]
 	assert.True(t, ok)
 }
 
@@ -109,7 +109,7 @@ func TestMerge_MatchByPlatformID(t *testing.T) {
 	assert.ElementsMatch(t, []string{"pid-1", "pid-2", "pid-3"}, merged.Assets[0].Asset.PlatformIds)
 
 	// Resources should be merged.
-	res, ok := merged.Assets[0].resources["os\x00"]
+	res, ok := merged.Assets[0].resources["os\x1e"]
 	require.True(t, ok)
 	assert.Equal(t, "linux", res.Fields["name"].Value)
 	assert.Equal(t, "amd64", res.Fields["arch"].Value)
@@ -118,17 +118,17 @@ func TestMerge_MatchByPlatformID(t *testing.T) {
 func TestMerge_IdsLookup(t *testing.T) {
 	r1 := newMergeTestRecording(&Asset{
 		Asset:     &inventory.Asset{Mrn: "mrn://a", Platform: &inventory.Platform{}},
-		IdsLookup: map[string]string{"res\x00": "resolved-1"},
+		IdsLookup: map[string]string{"res\x1e": "resolved-1"},
 	})
 	r2 := newMergeTestRecording(&Asset{
 		Asset:     &inventory.Asset{Mrn: "mrn://a", Platform: &inventory.Platform{}},
-		IdsLookup: map[string]string{"res2\x00": "resolved-2"},
+		IdsLookup: map[string]string{"res2\x1e": "resolved-2"},
 	})
 
 	merged, err := Merge([]*recording{r1, r2}, MergeOpts{})
 	require.NoError(t, err)
-	assert.Equal(t, "resolved-1", merged.Assets[0].IdsLookup["res\x00"])
-	assert.Equal(t, "resolved-2", merged.Assets[0].IdsLookup["res2\x00"])
+	assert.Equal(t, "resolved-1", merged.Assets[0].IdsLookup["res\x1e"])
+	assert.Equal(t, "resolved-2", merged.Assets[0].IdsLookup["res2\x1e"])
 }
 
 func TestMerge_Connections(t *testing.T) {
@@ -166,7 +166,7 @@ func TestMerge_FieldConflictLastWins(t *testing.T) {
 
 	merged, err := Merge([]*recording{r1, r2}, MergeOpts{})
 	require.NoError(t, err)
-	res, ok := merged.Assets[0].resources["pkg\x001"]
+	res, ok := merged.Assets[0].resources["pkg\x1e1"]
 	require.True(t, ok)
 	assert.Equal(t, "2.0", res.Fields["version"].Value)
 }

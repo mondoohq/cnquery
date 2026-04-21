@@ -111,7 +111,7 @@ func (n *Upstream) GetResource(_ llx.AssetRecordingLookup, resource string, id s
 	n.lock.Lock()
 	defer n.lock.Unlock()
 
-	cacheID := resource + "\x00" + id
+	cacheID := resource + keySep + id
 	if exist, ok := n.resourcesCache[cacheID]; ok {
 		return exist.fields, true
 	}

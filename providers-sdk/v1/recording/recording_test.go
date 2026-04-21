@@ -55,7 +55,7 @@ func TestAddAndGetData(t *testing.T) {
 		r.AddData(req)
 
 		// Verify the resource was created
-		resourceKey := "aws.ec2.instance\x00i-12345"
+		resourceKey := "aws.ec2.instance\x1ei-12345"
 		res, exists := r.Assets[0].resources[resourceKey]
 		assert.True(t, exists)
 		assert.Equal(t, "aws.ec2.instance", res.Resource)
@@ -100,7 +100,7 @@ func TestAddAndGetData(t *testing.T) {
 		r.AddData(req2)
 
 		// Verify both fields exist
-		resourceKey := "aws.ec2.instance\x00i-67890"
+		resourceKey := "aws.ec2.instance\x1ei-67890"
 		res, exists := r.Assets[0].resources[resourceKey]
 		assert.True(t, exists)
 		assert.Equal(t, 2, len(res.Fields))
@@ -131,7 +131,7 @@ func TestAddAndGetData(t *testing.T) {
 		}
 		r.AddData(req)
 
-		lookupKey := "aws.ec2.instance\x00"
+		lookupKey := "aws.ec2.instance\x1e"
 		actualID, exists := r.Assets[0].IdsLookup[lookupKey]
 		assert.True(t, exists)
 		assert.Equal(t, "arn:aws:ec2:us-east-1:123456789012:instance/i-abc123", actualID)
@@ -202,7 +202,7 @@ func TestAddAndGetData(t *testing.T) {
 		r.AddData(req)
 
 		// Verify resource exists but has no fields
-		resourceKey := "aws.ec2.instance\x00i-field-test"
+		resourceKey := "aws.ec2.instance\x1ei-field-test"
 		res, exists := r.Assets[0].resources[resourceKey]
 		assert.True(t, exists)
 		assert.Equal(t, "aws.ec2.instance", res.Resource)
@@ -253,7 +253,7 @@ func TestAddAndGetData(t *testing.T) {
 		r.AddData(req2)
 
 		// Verify the field was overwritten
-		resourceKey := "aws.ec2.instance\x00i-overwrite"
+		resourceKey := "aws.ec2.instance\x1ei-overwrite"
 		res, exists := r.Assets[0].resources[resourceKey]
 		assert.True(t, exists)
 		assert.Equal(t, 1, len(res.Fields))
@@ -302,15 +302,15 @@ func TestAddAndGetData(t *testing.T) {
 		// Verify all resources exist
 		assert.Equal(t, 3, len(r.Assets[0].resources))
 
-		res1, exists := r.Assets[0].resources["aws.ec2.instance\x00i-multi-1"]
+		res1, exists := r.Assets[0].resources["aws.ec2.instance\x1ei-multi-1"]
 		assert.True(t, exists)
 		assert.Equal(t, "instance-1", res1.Fields["name"].Value)
 
-		res2, exists := r.Assets[0].resources["aws.ec2.instance\x00i-multi-2"]
+		res2, exists := r.Assets[0].resources["aws.ec2.instance\x1ei-multi-2"]
 		assert.True(t, exists)
 		assert.Equal(t, "instance-2", res2.Fields["name"].Value)
 
-		res3, exists := r.Assets[0].resources["aws.s3.bucket\x00bucket-1"]
+		res3, exists := r.Assets[0].resources["aws.s3.bucket\x1ebucket-1"]
 		assert.True(t, exists)
 		assert.Equal(t, "my-bucket", res3.Fields["name"].Value)
 
@@ -447,7 +447,7 @@ func TestGetAssetData(t *testing.T) {
 		assert.True(t, ok)
 
 		// Verify the resource recording exists
-		resourceKey := "aws.ec2.instance\x00i-12345"
+		resourceKey := "aws.ec2.instance\x1ei-12345"
 		rec, exists := data[resourceKey]
 		assert.True(t, exists)
 		assert.Equal(t, "aws.ec2.instance", rec.Resource)
@@ -462,7 +462,7 @@ func TestGetAssetData(t *testing.T) {
 		assert.True(t, ok)
 
 		// Verify asset metadata is included
-		assetKey := "asset\x00"
+		assetKey := "asset\x1e"
 		rec, exists := data[assetKey]
 		assert.True(t, exists)
 		assert.Equal(t, "asset", rec.Resource)
@@ -492,11 +492,11 @@ func TestGetAssetData(t *testing.T) {
 		assert.True(t, ok)
 
 		// Verify the lookup entry is stored as an internal lookup resource
-		lookupKey := "mql/internal-lookup-id\x00aws.ec2.instance\x00"
+		lookupKey := "mql/internal-lookup-id\x1eaws.ec2.instance\x1e"
 		rec, exists := data[lookupKey]
 		assert.True(t, exists, "internal lookup resource should exist")
 		assert.Equal(t, "mql/internal-lookup-id", rec.Resource)
-		assert.Equal(t, "aws.ec2.instance\x00", rec.Id)
+		assert.Equal(t, "aws.ec2.instance\x1e", rec.Id)
 		assert.Equal(t, "arn:aws:ec2:us-east-1:123456789012:instance/i-abc123", string(rec.Fields["value"].Data.Value))
 	})
 
@@ -535,15 +535,15 @@ func TestGetAssetData(t *testing.T) {
 		// Verify all resources are included (3 resources + 1 asset metadata)
 		assert.Equal(t, 4, len(data))
 
-		rec1, exists := data["aws.ec2.instance\x00i-1"]
+		rec1, exists := data["aws.ec2.instance\x1ei-1"]
 		assert.True(t, exists)
 		assert.Equal(t, "instance-1", string(rec1.Fields["name"].Data.Value))
 
-		rec2, exists := data["aws.ec2.instance\x00i-2"]
+		rec2, exists := data["aws.ec2.instance\x1ei-2"]
 		assert.True(t, exists)
 		assert.Equal(t, "instance-2", string(rec2.Fields["name"].Data.Value))
 
-		rec3, exists := data["aws.s3.bucket\x00my-bucket"]
+		rec3, exists := data["aws.s3.bucket\x1emy-bucket"]
 		assert.True(t, exists)
 		assert.Equal(t, "bucket-name", string(rec3.Fields["name"].Data.Value))
 	})
@@ -572,7 +572,7 @@ func TestGetAssetData(t *testing.T) {
 		data, ok := r.GetAssetData("test-mrn")
 		assert.True(t, ok)
 
-		rec, exists := data["aws.ec2.instance\x00i-multi"]
+		rec, exists := data["aws.ec2.instance\x1ei-multi"]
 		assert.True(t, exists)
 		assert.Equal(t, 2, len(rec.Fields))
 		assert.Equal(t, "my-instance", string(rec.Fields["name"].Data.Value))

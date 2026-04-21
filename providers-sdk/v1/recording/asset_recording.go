@@ -30,8 +30,8 @@ type Asset struct {
 	// the same behavior when reading/replaying recordings.
 	//
 	// The key is the resource name + request ID, e.g.
-	// "aws.ec2.instance\x00123": "i-1234567890abcdef0"
-	// "azure.subscription\x001": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+	// "aws.ec2.instance\x1e123": "i-1234567890abcdef0"
+	// "azure.subscription\x1e1": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 	IdsLookup map[string]string `json:"idsLookup,omitempty"`
 
 	connections map[string]*connection `json:"-"`
@@ -79,7 +79,7 @@ func (asset *Asset) finalize() {
 }
 
 func (asset *Asset) GetResource(name string, id string) (*Resource, bool) {
-	r, ok := asset.resources[name+"\x00"+id]
+	r, ok := asset.resources[name+keySep+id]
 	return r, ok
 }
 
@@ -88,7 +88,7 @@ func (asset *Asset) RefreshCache() {
 	asset.connections = make(map[string]*connection, len(asset.Connections))
 
 	for _, resource := range asset.Resources {
-		asset.resources[resource.Resource+"\x00"+resource.ID] = &resource
+		asset.resources[resource.Resource+keySep+resource.ID] = &resource
 	}
 
 	for _, conn := range asset.Connections {

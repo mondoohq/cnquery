@@ -22,6 +22,11 @@ var _ llx.Recording = &recording{}
 
 const internalLookupId = "mql/internal-lookup-id"
 
+// keySep is the separator used to build composite map keys (e.g. resource + id).
+// We use the ASCII Record Separator (\x1e) instead of \x00 because Postgres
+// does not allow null bytes in text/JSON columns.
+const keySep = "\x1e"
+
 type recording struct {
 	Assets []*Asset `json:"assets"`
 	Path   string   `json:"-"`
@@ -399,17 +404,17 @@ func (r *recording) AddData(req llx.AddDataReq) {
 	}
 
 	if req.RequestResourceId != req.ResourceID {
-		asset.IdsLookup[req.Resource+"\x00"+req.RequestResourceId] = req.ResourceID
+		asset.IdsLookup[req.Resource+keySep+req.RequestResourceId] = req.ResourceID
 	}
 
-	obj, exist := asset.resources[req.Resource+"\x00"+req.ResourceID]
+	obj, exist := asset.resources[req.Resource+keySep+req.ResourceID]
 	if !exist {
 		obj = &Resource{
 			Resource: req.Resource,
 			ID:       req.ResourceID,
 			Fields:   map[string]*llx.RawData{},
 		}
-		asset.resources[req.Resource+"\x00"+req.ResourceID] = obj
+		asset.resources[req.Resource+keySep+req.ResourceID] = obj
 	}
 
 	if req.Field != "" {
@@ -424,7 +429,7 @@ func (r *recording) resolveResource(lookup llx.AssetRecordingLookup, resource st
 	}
 
 	// overwrite resourceId if there exists a lookup entry
-	if lookupId, ok := asset.IdsLookup[resource+"\x00"+id]; ok {
+	if lookupId, ok := asset.IdsLookup[resource+keySep+id]; ok {
 		id = lookupId
 	}
 
@@ -435,7 +440,7 @@ func (r *recording) resolveResource(lookup llx.AssetRecordingLookup, resource st
 		return assetResource, id, true
 	}
 
-	obj, exist := asset.resources[resource+"\x00"+id]
+	obj, exist := asset.resources[resource+keySep+id]
 	if !exist {
 		return nil, "", false
 	}
@@ -527,7 +532,7 @@ func (r *recording) GetAssetData(assetMrn string) (map[string]*llx.ResourceRecor
 	// we need to also store the id lookups as part of the resource recording
 	// so that they can be reused later when only reading the resource recording
 	for k, v := range cur.IdsLookup {
-		res[internalLookupId+"\x00"+k] = &llx.ResourceRecording{
+		res[internalLookupId+keySep+k] = &llx.ResourceRecording{
 			Resource: internalLookupId,
 			Id:       k,
 			Fields: map[string]*llx.Result{
@@ -560,7 +565,7 @@ func (r *recording) SetAssetRecording(id uint32, reco *Asset) {
 // This method makes sure the asset metadata is always included in the data
 // dump of a recording
 func ensureAssetMetadata(resources map[string]*Resource, asset *inventory.Asset) {
-	id := "asset\x00"
+	id := "asset" + keySep
 	existing, ok := resources[id]
 	if !ok {
 		existing = &Resource{

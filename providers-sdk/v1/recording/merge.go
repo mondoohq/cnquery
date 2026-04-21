@@ -118,7 +118,7 @@ func mergeAssets(existing, incoming *Asset) {
 		existing.connections[k] = conn
 	}
 
-	// Merge resources (keyed by "Resource\x00ID").
+	// Merge resources (keyed by "Resource\x1eID").
 	for key, res := range incoming.resources {
 		if existingRes, ok := existing.resources[key]; ok {
 			mergeResourceFields(existingRes, res)
