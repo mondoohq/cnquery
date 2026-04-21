@@ -318,7 +318,7 @@ func reconnectResource(v any, resource *Resource) (any, error) {
 
 	// TODO: Not sure yet if we need to check the recording for the reference.
 	// Unless it is used by the code, we may get away with it.
-	// if _, ok = asset.resources[name+"\x00"+id]; !ok {
+	// if _, ok = asset.resources[name+keySep+id]; !ok {
 	// 	return errors.New("cannot find resource '" + resource.Resource + "' (ID:" + resource.ID + ") in recording")
 	// }
 
