@@ -3352,6 +3352,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.subnetwork.reservedInternalRange": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSubnetwork).GetReservedInternalRange()).ToDataRes(types.String)
 	},
+	"gcp.project.computeService.subnetwork.networkUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSubnetwork).GetNetworkUrl()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.subnetwork.network": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSubnetwork).GetNetwork()).ToDataRes(types.Resource("gcp.project.computeService.network"))
+	},
 	"gcp.project.computeService.subnetwork.logConfig.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSubnetworkLogConfig).GetId()).ToDataRes(types.String)
 	},
@@ -4393,8 +4399,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.dnsService.managedzone.dnssecEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDnsServiceManagedzone).GetDnssecEnabled()).ToDataRes(types.Bool)
 	},
+	"gcp.project.dnsService.managedzone.privateVisibilityConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDnsServiceManagedzone).GetPrivateVisibilityConfig()).ToDataRes(types.Dict)
+	},
 	"gcp.project.dnsService.managedzone.recordSets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDnsServiceManagedzone).GetRecordSets()).ToDataRes(types.Array(types.Resource("gcp.project.dnsService.recordset")))
+	},
+	"gcp.project.dnsService.managedzone.iamPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDnsServiceManagedzone).GetIamPolicy()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.binding")))
 	},
 	"gcp.project.dnsService.recordset.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDnsServiceRecordset).GetProjectId()).ToDataRes(types.String)
@@ -5662,6 +5674,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.iamService.serviceAccount.keys": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceServiceAccount).GetKeys()).ToDataRes(types.Array(types.Resource("gcp.project.iamService.serviceAccount.key")))
 	},
+	"gcp.project.iamService.serviceAccount.lastAuthenticatedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceServiceAccount).GetLastAuthenticatedTime()).ToDataRes(types.Time)
+	},
 	"gcp.project.iamService.serviceAccount.key.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceServiceAccountKey).GetName()).ToDataRes(types.String)
 	},
@@ -6370,6 +6385,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.cloudRunService.service.etag": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudRunServiceService).GetEtag()).ToDataRes(types.String)
 	},
+	"gcp.project.cloudRunService.service.iamPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudRunServiceService).GetIamPolicy()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.binding")))
+	},
 	"gcp.project.cloudRunService.service.revisionTemplate.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudRunServiceServiceRevisionTemplate).GetId()).ToDataRes(types.String)
 	},
@@ -6564,6 +6582,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.cloudRunService.job.etag": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudRunServiceJob).GetEtag()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudRunService.job.iamPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudRunServiceJob).GetIamPolicy()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.binding")))
 	},
 	"gcp.project.cloudRunService.job.executionTemplate.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudRunServiceJobExecutionTemplate).GetId()).ToDataRes(types.String)
@@ -13449,6 +13470,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceSubnetwork).ReservedInternalRange, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.subnetwork.networkUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSubnetwork).NetworkUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.subnetwork.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSubnetwork).Network, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceNetwork](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.subnetwork.logConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceSubnetworkLogConfig).__id, ok = v.Value.(string)
 		return
@@ -14957,8 +14986,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectDnsServiceManagedzone).DnssecEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"gcp.project.dnsService.managedzone.privateVisibilityConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDnsServiceManagedzone).PrivateVisibilityConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.dnsService.managedzone.recordSets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDnsServiceManagedzone).RecordSets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dnsService.managedzone.iamPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDnsServiceManagedzone).IamPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.dnsService.recordset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16885,6 +16922,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectIamServiceServiceAccount).Keys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.iamService.serviceAccount.lastAuthenticatedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceServiceAccount).LastAuthenticatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"gcp.project.iamService.serviceAccount.key.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectIamServiceServiceAccountKey).__id, ok = v.Value.(string)
 		return
@@ -17921,6 +17962,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectCloudRunServiceService).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.cloudRunService.service.iamPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudRunServiceService).IamPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.cloudRunService.service.revisionTemplate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudRunServiceServiceRevisionTemplate).__id, ok = v.Value.(string)
 		return
@@ -18199,6 +18244,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.cloudRunService.job.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudRunServiceJob).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudRunService.job.iamPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudRunServiceJob).IamPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.cloudRunService.job.executionTemplate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -30663,6 +30712,8 @@ type mqlGcpProjectComputeServiceSubnetwork struct {
 	State                   plugin.TValue[string]
 	Created                 plugin.TValue[*time.Time]
 	ReservedInternalRange   plugin.TValue[string]
+	NetworkUrl              plugin.TValue[string]
+	Network                 plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
 }
 
 // createGcpProjectComputeServiceSubnetwork creates a new instance of this resource
@@ -30804,6 +30855,26 @@ func (c *mqlGcpProjectComputeServiceSubnetwork) GetCreated() *plugin.TValue[*tim
 
 func (c *mqlGcpProjectComputeServiceSubnetwork) GetReservedInternalRange() *plugin.TValue[string] {
 	return &c.ReservedInternalRange
+}
+
+func (c *mqlGcpProjectComputeServiceSubnetwork) GetNetworkUrl() *plugin.TValue[string] {
+	return &c.NetworkUrl
+}
+
+func (c *mqlGcpProjectComputeServiceSubnetwork) GetNetwork() *plugin.TValue[*mqlGcpProjectComputeServiceNetwork] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceNetwork](&c.Network, func() (*mqlGcpProjectComputeServiceNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.subnetwork", c.__id, "network")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceNetwork), nil
+			}
+		}
+
+		return c.network()
+	})
 }
 
 // mqlGcpProjectComputeServiceSubnetworkLogConfig for the gcp.project.computeService.subnetwork.logConfig resource
@@ -33958,20 +34029,22 @@ type mqlGcpProjectDnsServiceManagedzone struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectDnsServiceManagedzoneInternal it will be used here
-	Id                  plugin.TValue[string]
-	ProjectId           plugin.TValue[string]
-	Name                plugin.TValue[string]
-	Description         plugin.TValue[string]
-	DnssecConfig        plugin.TValue[any]
-	DnsName             plugin.TValue[string]
-	NameServerSet       plugin.TValue[string]
-	NameServers         plugin.TValue[[]any]
-	Visibility          plugin.TValue[string]
-	Created             plugin.TValue[*time.Time]
-	Labels              plugin.TValue[map[string]any]
-	CloudLoggingEnabled plugin.TValue[bool]
-	DnssecEnabled       plugin.TValue[bool]
-	RecordSets          plugin.TValue[[]any]
+	Id                      plugin.TValue[string]
+	ProjectId               plugin.TValue[string]
+	Name                    plugin.TValue[string]
+	Description             plugin.TValue[string]
+	DnssecConfig            plugin.TValue[any]
+	DnsName                 plugin.TValue[string]
+	NameServerSet           plugin.TValue[string]
+	NameServers             plugin.TValue[[]any]
+	Visibility              plugin.TValue[string]
+	Created                 plugin.TValue[*time.Time]
+	Labels                  plugin.TValue[map[string]any]
+	CloudLoggingEnabled     plugin.TValue[bool]
+	DnssecEnabled           plugin.TValue[bool]
+	PrivateVisibilityConfig plugin.TValue[any]
+	RecordSets              plugin.TValue[[]any]
+	IamPolicy               plugin.TValue[[]any]
 }
 
 // createGcpProjectDnsServiceManagedzone creates a new instance of this resource
@@ -34063,6 +34136,10 @@ func (c *mqlGcpProjectDnsServiceManagedzone) GetDnssecEnabled() *plugin.TValue[b
 	return &c.DnssecEnabled
 }
 
+func (c *mqlGcpProjectDnsServiceManagedzone) GetPrivateVisibilityConfig() *plugin.TValue[any] {
+	return &c.PrivateVisibilityConfig
+}
+
 func (c *mqlGcpProjectDnsServiceManagedzone) GetRecordSets() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.RecordSets, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -34076,6 +34153,22 @@ func (c *mqlGcpProjectDnsServiceManagedzone) GetRecordSets() *plugin.TValue[[]an
 		}
 
 		return c.recordSets()
+	})
+}
+
+func (c *mqlGcpProjectDnsServiceManagedzone) GetIamPolicy() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IamPolicy, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.dnsService.managedzone", c.__id, "iamPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.iamPolicy()
 	})
 }
 
@@ -39077,15 +39170,16 @@ type mqlGcpProjectIamServiceServiceAccount struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectIamServiceServiceAccountInternal it will be used here
-	ProjectId      plugin.TValue[string]
-	Name           plugin.TValue[string]
-	UniqueId       plugin.TValue[string]
-	Email          plugin.TValue[string]
-	DisplayName    plugin.TValue[string]
-	Description    plugin.TValue[string]
-	Oauth2ClientId plugin.TValue[string]
-	Disabled       plugin.TValue[bool]
-	Keys           plugin.TValue[[]any]
+	ProjectId             plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	UniqueId              plugin.TValue[string]
+	Email                 plugin.TValue[string]
+	DisplayName           plugin.TValue[string]
+	Description           plugin.TValue[string]
+	Oauth2ClientId        plugin.TValue[string]
+	Disabled              plugin.TValue[bool]
+	Keys                  plugin.TValue[[]any]
+	LastAuthenticatedTime plugin.TValue[*time.Time]
 }
 
 // createGcpProjectIamServiceServiceAccount creates a new instance of this resource
@@ -39170,6 +39264,12 @@ func (c *mqlGcpProjectIamServiceServiceAccount) GetKeys() *plugin.TValue[[]any] 
 		}
 
 		return c.keys()
+	})
+}
+
+func (c *mqlGcpProjectIamServiceServiceAccount) GetLastAuthenticatedTime() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LastAuthenticatedTime, func() (*time.Time, error) {
+		return c.lastAuthenticatedTime()
 	})
 }
 
@@ -41334,6 +41434,7 @@ type mqlGcpProjectCloudRunServiceService struct {
 	BinaryAuthorization   plugin.TValue[any]
 	Uid                   plugin.TValue[string]
 	Etag                  plugin.TValue[string]
+	IamPolicy             plugin.TValue[[]any]
 }
 
 // createGcpProjectCloudRunServiceService creates a new instance of this resource
@@ -41499,6 +41600,22 @@ func (c *mqlGcpProjectCloudRunServiceService) GetUid() *plugin.TValue[string] {
 
 func (c *mqlGcpProjectCloudRunServiceService) GetEtag() *plugin.TValue[string] {
 	return &c.Etag
+}
+
+func (c *mqlGcpProjectCloudRunServiceService) GetIamPolicy() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IamPolicy, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.cloudRunService.service", c.__id, "iamPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.iamPolicy()
+	})
 }
 
 // mqlGcpProjectCloudRunServiceServiceRevisionTemplate for the gcp.project.cloudRunService.service.revisionTemplate resource
@@ -41919,6 +42036,7 @@ type mqlGcpProjectCloudRunServiceJob struct {
 	SatisfiesPzs       plugin.TValue[bool]
 	Uid                plugin.TValue[string]
 	Etag               plugin.TValue[string]
+	IamPolicy          plugin.TValue[[]any]
 }
 
 // createGcpProjectCloudRunServiceJob creates a new instance of this resource
@@ -42056,6 +42174,22 @@ func (c *mqlGcpProjectCloudRunServiceJob) GetUid() *plugin.TValue[string] {
 
 func (c *mqlGcpProjectCloudRunServiceJob) GetEtag() *plugin.TValue[string] {
 	return &c.Etag
+}
+
+func (c *mqlGcpProjectCloudRunServiceJob) GetIamPolicy() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IamPolicy, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.cloudRunService.job", c.__id, "iamPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.iamPolicy()
+	})
 }
 
 // mqlGcpProjectCloudRunServiceJobExecutionTemplate for the gcp.project.cloudRunService.job.executionTemplate resource

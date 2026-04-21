@@ -23,6 +23,7 @@ import (
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
+	runv2 "google.golang.org/api/run/v2"
 )
 
 func (g *mqlGcpProjectCloudRunService) id() (string, error) {
@@ -511,6 +512,90 @@ func (g *mqlGcpProjectCloudRunService) services() ([]any, error) {
 	}
 	wg.Wait()
 	return services, nil
+}
+
+func cloudRunIamBindings(runtime *plugin.Runtime, resourcePath string, bindings []*runv2.GoogleIamV1Binding) ([]any, error) {
+	res := make([]any, 0, len(bindings))
+	for i, b := range bindings {
+		mqlBinding, err := CreateResource(runtime, "gcp.resourcemanager.binding", map[string]*llx.RawData{
+			"id":      llx.StringData(resourcePath + "-" + strconv.Itoa(i)),
+			"role":    llx.StringData(b.Role),
+			"members": llx.ArrayData(convert.SliceAnyToInterface(b.Members), types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlBinding)
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectCloudRunServiceService) iamPolicy() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+	if g.Region.Error != nil {
+		return nil, g.Region.Error
+	}
+	region := g.Region.Data
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	name := g.Name.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	client, err := conn.Client(runv2.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	runSvc, err := runv2.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	resourcePath := fmt.Sprintf("projects/%s/locations/%s/services/%s", projectId, region, name)
+	policy, err := runSvc.Projects.Locations.Services.GetIamPolicy(resourcePath).Context(ctx).Do()
+	if err != nil {
+		return nil, err
+	}
+	return cloudRunIamBindings(g.MqlRuntime, resourcePath, policy.Bindings)
+}
+
+func (g *mqlGcpProjectCloudRunServiceJob) iamPolicy() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+	if g.Region.Error != nil {
+		return nil, g.Region.Error
+	}
+	region := g.Region.Data
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	name := g.Name.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	client, err := conn.Client(runv2.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	runSvc, err := runv2.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	resourcePath := fmt.Sprintf("projects/%s/locations/%s/jobs/%s", projectId, region, name)
+	policy, err := runSvc.Projects.Locations.Jobs.GetIamPolicy(resourcePath).Context(ctx).Do()
+	if err != nil {
+		return nil, err
+	}
+	return cloudRunIamBindings(g.MqlRuntime, resourcePath, policy.Bindings)
 }
 
 func (g *mqlGcpProjectCloudRunServiceServiceRevisionTemplate) serviceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {

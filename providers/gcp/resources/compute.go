@@ -1800,6 +1800,25 @@ func (g *mqlGcpProjectComputeServiceSubnetwork) region() (*mqlGcpProjectComputeS
 	return nil, errors.New(fmt.Sprintf("region %s not found", regionName))
 }
 
+func (g *mqlGcpProjectComputeServiceSubnetwork) network() (*mqlGcpProjectComputeServiceNetwork, error) {
+	if g.NetworkUrl.Error != nil {
+		return nil, g.NetworkUrl.Error
+	}
+	url := g.NetworkUrl.Data
+	if url == "" {
+		g.Network.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	net, err := getNetworkByUrl(url, g.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if net == nil {
+		g.Network.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return net, nil
+}
+
 func newMqlRegion(runtime *plugin.Runtime, r *compute.Region) (any, error) {
 	deprecated, err := convert.JsonToDict(r.Deprecated)
 	if err != nil {
@@ -1866,6 +1885,7 @@ func newMqlSubnetwork(projectId string, runtime *plugin.Runtime, subnetwork *com
 		"state":                   llx.StringData(subnetwork.GetState()),
 		"created":                 llx.TimeDataPtr(parseTime(subnetwork.GetCreationTimestamp())),
 		"reservedInternalRange":   llx.StringData(subnetwork.GetReservedInternalRange()),
+		"networkUrl":              llx.StringData(subnetwork.GetNetwork()),
 	}
 	if region != nil {
 		args["region"] = llx.ResourceData(region, "gcp.project.computeService.region")

@@ -1283,6 +1283,10 @@ gcp.project.computeService.subnetwork @defaults("name") {
   created time
   // The URL of the reserved internal range
   reservedInternalRange string
+  // URL of the parent VPC network this subnetwork belongs to
+  networkUrl string
+  // Parent VPC network this subnetwork belongs to
+  network() gcp.project.computeService.network
 }
 
 // Google Cloud (GCP) Compute VPC network partitioning log configuration
@@ -2125,8 +2129,12 @@ private gcp.project.dnsService.managedzone @defaults("name") {
   cloudLoggingEnabled bool
   // Whether DNSSEC is enabled
   dnssecEnabled bool
+  // Authorized VPC networks and GKE clusters for a private zone (empty for public zones)
+  privateVisibilityConfig dict
   // Cloud DNS record set in the zone
   recordSets() []gcp.project.dnsService.recordset
+  // IAM policy bindings for this managed zone
+  iamPolicy() []gcp.resourcemanager.binding
 }
 
 // Google Cloud (GCP) DNS record set
@@ -3214,6 +3222,8 @@ private gcp.project.iamService.serviceAccount @defaults("displayName name") {
   disabled bool
   // Service account keys
   keys() []gcp.project.iamService.serviceAccount.key
+  // Timestamp when the service account was last used to authenticate (from Policy Intelligence)
+  lastAuthenticatedTime() time
 }
 
 // Google Cloud (GCP) service account keys
@@ -3777,6 +3787,8 @@ private gcp.project.cloudRunService.service @defaults("name") {
   uid string
   // ETag for optimistic locking
   etag string
+  // IAM policy bindings for this Cloud Run service
+  iamPolicy() []gcp.resourcemanager.binding
 }
 
 // Google Cloud (GCP) Run service revision template
@@ -3928,6 +3940,8 @@ private gcp.project.cloudRunService.job {
   uid string
   // ETag for optimistic locking
   etag string
+  // IAM policy bindings for this Cloud Run job
+  iamPolicy() []gcp.resourcemanager.binding
 }
 
 // Google Cloud (GCP) Run job execution template
