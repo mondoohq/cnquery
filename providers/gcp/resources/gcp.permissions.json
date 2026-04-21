@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.9.0",
-  "generated_at": "2026-04-20T17:29:40-07:00",
+  "generated_at": "2026-04-20T19:01:10-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.list",
@@ -133,7 +133,7 @@
     "monitoring.uptimeCheckConfigs.list",
     "orgpolicy.constraints.list",
     "orgpolicy.policies.list",
-    "policyanalyzer.activities.query",
+    "policyanalyzer.serviceAccountLastAuthenticationActivities.query",
     "privateca.caPools.list",
     "privateca.certificateAuthorities.list",
     "privateca.certificates.list",
@@ -967,7 +967,7 @@
       "source_file": "orgpolicy.go"
     },
     {
-      "permission": "policyanalyzer.activities.query",
+      "permission": "policyanalyzer.serviceAccountLastAuthenticationActivities.query",
       "service": "policyanalyzer",
       "action": "Activities.Query",
       "source_file": "iam.go"

@@ -147,7 +147,7 @@ var validatedGCPPermissions = []string{
 	"monitoring.uptimeCheckConfigs.list",
 	"orgpolicy.constraints.list",
 	"orgpolicy.policies.list",
-	"policyanalyzer.activities.query",
+	"policyanalyzer.serviceAccountLastAuthenticationActivities.query",
 	"privateca.caPools.list",
 	"privateca.certificateAuthorities.list",
 	"privateca.certificates.list",
