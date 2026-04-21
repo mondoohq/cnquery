@@ -10043,9 +10043,9 @@ private aws.ec2.networkinterface @defaults("id privateIpAddress macAddress") {
   attachmentStatus string
   // When the network interface was attached (null when not attached)
   attachmentTime time
-  // Index of the network card
+  // Index of the network card (null when not attached)
   networkCardIndex int
-  // Position of the attachment in the device ordering
+  // Position of the attachment in the device ordering (null when not attached; 0 is the primary ENI)
   deviceIndex int
   // Whether the network interface is deleted when the instance is terminated
   deleteOnTermination bool

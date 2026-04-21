@@ -1500,18 +1500,14 @@ func buildNetworkInterfaceResource(runtime *plugin.Runtime, region string, eni e
 	}
 	var attachmentStatus string
 	var attachmentTime *time.Time
-	var deviceIndex, networkCardIndex int64
+	var deviceIndex, networkCardIndex *int32
 	var deleteOnTermination bool
 	var attachmentInstanceID *string
 	if eni.Attachment != nil {
 		attachmentStatus = string(eni.Attachment.Status)
 		attachmentTime = eni.Attachment.AttachTime
-		if eni.Attachment.DeviceIndex != nil {
-			deviceIndex = int64(*eni.Attachment.DeviceIndex)
-		}
-		if eni.Attachment.NetworkCardIndex != nil {
-			networkCardIndex = int64(*eni.Attachment.NetworkCardIndex)
-		}
+		deviceIndex = eni.Attachment.DeviceIndex
+		networkCardIndex = eni.Attachment.NetworkCardIndex
 		deleteOnTermination = convert.ToValue(eni.Attachment.DeleteOnTermination)
 		attachmentInstanceID = eni.Attachment.InstanceId
 	}
@@ -1535,8 +1531,8 @@ func buildNetworkInterfaceResource(runtime *plugin.Runtime, region string, eni e
 		"publicDnsName":       llx.StringData(publicDnsName),
 		"attachmentStatus":    llx.StringData(attachmentStatus),
 		"attachmentTime":      llx.TimeDataPtr(attachmentTime),
-		"deviceIndex":         llx.IntData(deviceIndex),
-		"networkCardIndex":    llx.IntData(networkCardIndex),
+		"deviceIndex":         llx.IntDataPtr(deviceIndex),
+		"networkCardIndex":    llx.IntDataPtr(networkCardIndex),
 		"deleteOnTermination": llx.BoolData(deleteOnTermination),
 	}
 	res, err := CreateResource(runtime, ResourceAwsEc2Networkinterface, args)

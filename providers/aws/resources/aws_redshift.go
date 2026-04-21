@@ -93,9 +93,11 @@ func (a *mqlAwsRedshift) getClusters(conn *connection.AwsConnection) []*jobpool.
 						if cluster.Endpoint.Port != nil {
 							endpointPort = int64(*cluster.Endpoint.Port)
 						}
-						for _, ve := range cluster.Endpoint.VpcEndpoints {
-							d, _ := convert.JsonToDict(ve)
-							endpointVpcEndpoints = append(endpointVpcEndpoints, d)
+						if len(cluster.Endpoint.VpcEndpoints) > 0 {
+							endpointVpcEndpoints, err = convert.JsonToDictSlice(cluster.Endpoint.VpcEndpoints)
+							if err != nil {
+								return nil, err
+							}
 						}
 					}
 
