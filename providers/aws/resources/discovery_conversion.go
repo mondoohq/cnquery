@@ -224,6 +224,18 @@ func getPlatformName(awsObject awsObject) string {
 		if awsObject.objectType == "distribution" {
 			return "aws-cloudfront-distribution"
 		}
+	case "neptune":
+		if awsObject.objectType == "cluster" {
+			return "aws-neptune-cluster"
+		}
+	case "emr":
+		if awsObject.objectType == "cluster" {
+			return "aws-emr-cluster"
+		}
+	case "documentdb":
+		if awsObject.objectType == "cluster" {
+			return "aws-documentdb-cluster"
+		}
 	}
 	return ""
 }

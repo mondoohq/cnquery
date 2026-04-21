@@ -71,7 +71,8 @@ jobs:
         uses: goreleaser/goreleaser-action@ec59f474b9834571250b370d4735c50f8e2d1e29 # v7.0.0
         with:
           distribution: goreleaser
-          version: latest
+          # auto-update: source=github-releases repo=goreleaser/goreleaser updates=minor
+          version: v2.15.3
           args: release -f .github/.goreleaser-edge.yml --clean --timeout 120m
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

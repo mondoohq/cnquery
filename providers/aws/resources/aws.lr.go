@@ -1699,7 +1699,7 @@ func init() {
 			Create: createAwsEmr,
 		},
 		"aws.emr.cluster": {
-			// to override args, implement: initAwsEmrCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsEmrCluster,
 			Create: createAwsEmrCluster,
 		},
 		"aws.emr.cluster.encryptionConfiguration": {
@@ -2563,7 +2563,7 @@ func init() {
 			Create: createAwsNeptune,
 		},
 		"aws.neptune.cluster": {
-			// to override args, implement: initAwsNeptuneCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsNeptuneCluster,
 			Create: createAwsNeptuneCluster,
 		},
 		"aws.neptune.instance": {
@@ -2591,7 +2591,7 @@ func init() {
 			Create: createAwsDocumentdb,
 		},
 		"aws.documentdb.cluster": {
-			// to override args, implement: initAwsDocumentdbCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsDocumentdbCluster,
 			Create: createAwsDocumentdbCluster,
 		},
 		"aws.documentdb.instance": {

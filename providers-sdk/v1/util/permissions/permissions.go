@@ -991,6 +991,13 @@ var gcpPermissionOverrides = map[string]map[string]string{
 		// Source Repositories uses "source.repos" not "sourcerepo.repos"
 		"Repos.List": "source.repos.list",
 	},
+	"policyanalyzer": {
+		// The Policy Analyzer API uses per-activity-type permissions. We only
+		// call the serviceAccountLastAuthentication activity type today; other
+		// activity types (e.g. serviceAccountKeyLastAuthentication) need their
+		// own entries if added.
+		"Activities.Query": "policyanalyzer.serviceAccountLastAuthenticationActivities.query",
+	},
 }
 
 // gcpOrgLevelPermissions are permissions that only apply at the organization

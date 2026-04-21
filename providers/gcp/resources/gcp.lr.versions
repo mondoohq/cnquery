@@ -843,6 +843,7 @@ gcp.project.cloudRunService.job.executionTemplate.taskTemplate.vpcAccess 9.0.0
 gcp.project.cloudRunService.job.executionTemplate.template 9.0.0
 gcp.project.cloudRunService.job.expired 9.0.0
 gcp.project.cloudRunService.job.generation 9.0.0
+gcp.project.cloudRunService.job.iamPolicy 13.9.1
 gcp.project.cloudRunService.job.id 9.0.0
 gcp.project.cloudRunService.job.labels 9.0.0
 gcp.project.cloudRunService.job.lastModifier 9.0.0
@@ -878,6 +879,7 @@ gcp.project.cloudRunService.service.description 9.0.0
 gcp.project.cloudRunService.service.etag 13.1.2
 gcp.project.cloudRunService.service.expired 9.0.0
 gcp.project.cloudRunService.service.generation 9.0.0
+gcp.project.cloudRunService.service.iamPolicy 13.9.1
 gcp.project.cloudRunService.service.id 9.0.0
 gcp.project.cloudRunService.service.ingress 9.0.0
 gcp.project.cloudRunService.service.labels 9.0.0
@@ -1676,6 +1678,8 @@ gcp.project.computeService.subnetwork.logConfig.id 9.0.0
 gcp.project.computeService.subnetwork.logConfig.metadata 9.0.0
 gcp.project.computeService.subnetwork.logConfig.metadataFields 9.0.0
 gcp.project.computeService.subnetwork.name 9.0.0
+gcp.project.computeService.subnetwork.network 13.9.1
+gcp.project.computeService.subnetwork.networkUrl 13.9.1
 gcp.project.computeService.subnetwork.privateIpGoogleAccess 9.0.0
 gcp.project.computeService.subnetwork.privateIpv6GoogleAccess 9.0.0
 gcp.project.computeService.subnetwork.projectId 9.0.0
@@ -2007,11 +2011,13 @@ gcp.project.dnsService.managedzone.description 9.0.0
 gcp.project.dnsService.managedzone.dnsName 9.0.0
 gcp.project.dnsService.managedzone.dnssecConfig 9.0.0
 gcp.project.dnsService.managedzone.dnssecEnabled 13.1.2
+gcp.project.dnsService.managedzone.iamPolicy 13.9.1
 gcp.project.dnsService.managedzone.id 9.0.0
 gcp.project.dnsService.managedzone.labels 11.6.6
 gcp.project.dnsService.managedzone.name 9.0.0
 gcp.project.dnsService.managedzone.nameServerSet 9.0.0
 gcp.project.dnsService.managedzone.nameServers 9.0.0
+gcp.project.dnsService.managedzone.privateVisibilityConfig 13.9.1
 gcp.project.dnsService.managedzone.projectId 9.0.0
 gcp.project.dnsService.managedzone.recordSets 9.0.0
 gcp.project.dnsService.managedzone.visibility 9.0.0
@@ -2406,6 +2412,7 @@ gcp.project.iamService.serviceAccount.key.name 9.0.0
 gcp.project.iamService.serviceAccount.key.validAfterTime 9.0.0
 gcp.project.iamService.serviceAccount.key.validBeforeTime 9.0.0
 gcp.project.iamService.serviceAccount.keys 9.0.0
+gcp.project.iamService.serviceAccount.lastAuthenticatedTime 13.9.1
 gcp.project.iamService.serviceAccount.name 9.0.0
 gcp.project.iamService.serviceAccount.oauth2ClientId 9.0.0
 gcp.project.iamService.serviceAccount.projectId 9.0.0

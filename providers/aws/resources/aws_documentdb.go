@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/docdb"
@@ -127,6 +128,45 @@ func newMqlAwsDocumentdbCluster(runtime *plugin.Runtime, region string, accountI
 
 func (a *mqlAwsDocumentdbCluster) securityGroups() ([]any, error) {
 	return a.newSecurityGroupResources(a.MqlRuntime)
+}
+
+func initAwsDocumentdbCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
+
+	if args["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch documentdb cluster")
+	}
+
+	obj, err := CreateResource(runtime, "aws.documentdb", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	d := obj.(*mqlAwsDocumentdb)
+
+	rawResources := d.GetClusters()
+	if rawResources.Error != nil {
+		return nil, nil, rawResources.Error
+	}
+
+	arnVal, ok := args["arn"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("arn must be a string")
+	}
+	for _, rawResource := range rawResources.Data {
+		cluster := rawResource.(*mqlAwsDocumentdbCluster)
+		if cluster.Arn.Data == arnVal {
+			return args, cluster, nil
+		}
+	}
+	return nil, nil, errors.New("documentdb cluster does not exist")
 }
 
 type mqlAwsDocumentdbClusterInternal struct {

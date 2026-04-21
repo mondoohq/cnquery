@@ -184,20 +184,41 @@ func (g *mqlGcpProjectDnsService) managedZones() ([]any, error) {
 				}
 			}
 
+			var mqlPrivateVisibilityCfg map[string]any
+			if managedZone.PrivateVisibilityConfig != nil {
+				networks := make([]any, 0, len(managedZone.PrivateVisibilityConfig.Networks))
+				for _, n := range managedZone.PrivateVisibilityConfig.Networks {
+					networks = append(networks, map[string]any{
+						"networkUrl": n.NetworkUrl,
+					})
+				}
+				gkeClusters := make([]any, 0, len(managedZone.PrivateVisibilityConfig.GkeClusters))
+				for _, c := range managedZone.PrivateVisibilityConfig.GkeClusters {
+					gkeClusters = append(gkeClusters, map[string]any{
+						"gkeClusterName": c.GkeClusterName,
+					})
+				}
+				mqlPrivateVisibilityCfg = map[string]any{
+					"networks":    networks,
+					"gkeClusters": gkeClusters,
+				}
+			}
+
 			mqlManagedZone, err := CreateResource(g.MqlRuntime, "gcp.project.dnsService.managedzone", map[string]*llx.RawData{
-				"id":                  llx.StringData(strconv.FormatInt(int64(managedZone.Id), 10)),
-				"projectId":           llx.StringData(projectId),
-				"name":                llx.StringData(managedZone.Name),
-				"description":         llx.StringData(managedZone.Description),
-				"dnssecConfig":        llx.DictData(mqlDnssecCfg),
-				"dnsName":             llx.StringData(managedZone.DnsName),
-				"nameServerSet":       llx.StringData(managedZone.NameServerSet),
-				"nameServers":         llx.ArrayData(convert.SliceAnyToInterface(managedZone.NameServers), types.String),
-				"visibility":          llx.StringData(managedZone.Visibility),
-				"created":             llx.TimeDataPtr(parseTime(managedZone.CreationTime)),
-				"labels":              llx.MapData(convert.MapToInterfaceMap(managedZone.Labels), types.String),
-				"cloudLoggingEnabled": llx.BoolData(managedZone.CloudLoggingConfig != nil && managedZone.CloudLoggingConfig.EnableLogging),
-				"dnssecEnabled":       llx.BoolData(managedZone.DnssecConfig != nil && managedZone.DnssecConfig.State == "on"),
+				"id":                      llx.StringData(strconv.FormatInt(int64(managedZone.Id), 10)),
+				"projectId":               llx.StringData(projectId),
+				"name":                    llx.StringData(managedZone.Name),
+				"description":             llx.StringData(managedZone.Description),
+				"dnssecConfig":            llx.DictData(mqlDnssecCfg),
+				"dnsName":                 llx.StringData(managedZone.DnsName),
+				"nameServerSet":           llx.StringData(managedZone.NameServerSet),
+				"nameServers":             llx.ArrayData(convert.SliceAnyToInterface(managedZone.NameServers), types.String),
+				"visibility":              llx.StringData(managedZone.Visibility),
+				"created":                 llx.TimeDataPtr(parseTime(managedZone.CreationTime)),
+				"labels":                  llx.MapData(convert.MapToInterfaceMap(managedZone.Labels), types.String),
+				"cloudLoggingEnabled":     llx.BoolData(managedZone.CloudLoggingConfig != nil && managedZone.CloudLoggingConfig.EnableLogging),
+				"dnssecEnabled":           llx.BoolData(managedZone.DnssecConfig != nil && managedZone.DnssecConfig.State == "on"),
+				"privateVisibilityConfig": llx.DictData(mqlPrivateVisibilityCfg),
 			})
 			if err != nil {
 				return err
@@ -331,6 +352,50 @@ func (g *mqlGcpProjectDnsServiceRecordset) id() (string, error) {
 	}
 	id := g.Name.Data
 	return "gcp.project.dnsService.recordset/" + projectId + "/" + id, nil
+}
+
+func (g *mqlGcpProjectDnsServiceManagedzone) iamPolicy() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	zoneName := g.Name.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	client, err := conn.Client(dns.CloudPlatformReadOnlyScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	dnsSvc, err := dns.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	resourcePath := "projects/" + projectId + "/managedZones/" + zoneName
+	policy, err := dnsSvc.ManagedZones.GetIamPolicy(resourcePath, &dns.GoogleIamV1GetIamPolicyRequest{}).Context(ctx).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]any, 0, len(policy.Bindings))
+	for i, b := range policy.Bindings {
+		mqlBinding, err := CreateResource(g.MqlRuntime, "gcp.resourcemanager.binding", map[string]*llx.RawData{
+			"id":      llx.StringData(resourcePath + "-" + strconv.Itoa(i)),
+			"role":    llx.StringData(b.Role),
+			"members": llx.ArrayData(convert.SliceAnyToInterface(b.Members), types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlBinding)
+	}
+	return res, nil
 }
 
 func (g *mqlGcpProjectDnsServiceManagedzone) recordSets() ([]any, error) {

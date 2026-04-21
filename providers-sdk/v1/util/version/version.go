@@ -31,6 +31,7 @@ import (
 	"go.mondoo.com/mql/v13/logger"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"golang.org/x/mod/modfile"
+	"golang.org/x/mod/semver"
 )
 
 var rootCmd = &cobra.Command{
@@ -141,6 +142,12 @@ func checkGoModUpdate(providerPath string, updateStrategy UpdateStrategy, ignore
 		return
 	}
 
+	// Save all dependency versions before updating so we can detect downgrades later.
+	beforeVersions := make(map[string]string, len(modFile.Require))
+	for _, req := range modFile.Require {
+		beforeVersions[req.Mod.Path] = req.Mod.Version
+	}
+
 	// Iterate through the require statements and update dependencies
 	for _, require := range modFile.Require {
 		// Skip indirect dependencies
@@ -224,7 +231,63 @@ func checkGoModUpdate(providerPath string, updateStrategy UpdateStrategy, ignore
 	// Run 'go mod tidy' to clean up the go.mod and go.sum files
 	goModTidy(providerPath)
 
+	// Detect and revert any dependency downgrades caused by ordering issues
+	// during sequential go get -u calls or go mod tidy. Loop because reverting
+	// one downgrade via go get can cause a different transitive dep to be
+	// downgraded.
+	const maxDowngradeFixPasses = 5
+	for pass := range maxDowngradeFixPasses {
+		reverted := revertDowngrades(providerPath, goModPath, beforeVersions)
+		if reverted == 0 {
+			break
+		}
+		log.Info().Int("pass", pass+1).Int("reverted", reverted).Msg("reverted dependency downgrades, running go mod tidy")
+		goModTidy(providerPath)
+	}
+
 	log.Info().Msgf("All dependencies updated and cleaned up successfully.")
+}
+
+// revertDowngrades compares the current go.mod dependency versions against
+// the versions recorded before the update. Any dependency whose version
+// decreased is restored to its original version via "go get". It returns
+// the number of dependencies that were reverted.
+func revertDowngrades(providerPath, goModPath string, beforeVersions map[string]string) int {
+	modContent, err := os.ReadFile(goModPath)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to read go.mod for downgrade check")
+		return 0
+	}
+
+	modFile, err := modfile.Parse("go.mod", modContent, nil)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to parse go.mod for downgrade check")
+		return 0
+	}
+
+	var reverted int
+	for _, req := range modFile.Require {
+		before, ok := beforeVersions[req.Mod.Path]
+		if !ok {
+			continue // new dependency, not a downgrade
+		}
+		if semver.Compare(before, req.Mod.Version) > 0 {
+			log.Warn().Str("package", req.Mod.Path).Str("before", before).Str("after", req.Mod.Version).
+				Msg("detected downgrade, reverting")
+
+			cmd := exec.Command("go", "get", req.Mod.Path+"@"+before)
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			cmd.Dir = providerPath
+			if err := cmd.Run(); err != nil {
+				log.Error().Err(err).Str("package", req.Mod.Path).Msg("failed to revert downgrade")
+				continue
+			}
+			reverted++
+		}
+	}
+
+	return reverted
 }
 
 func goModTidy(providerPath string) {

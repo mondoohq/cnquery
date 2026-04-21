@@ -119,7 +119,7 @@ func init() {
 			Create: createOciIdentity,
 		},
 		"oci.identity.user": {
-			// to override args, implement: initOciIdentityUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOciIdentityUser,
 			Create: createOciIdentityUser,
 		},
 		"oci.identity.mfaDevice": {
@@ -143,7 +143,7 @@ func init() {
 			Create: createOciIdentityGroup,
 		},
 		"oci.identity.policy": {
-			// to override args, implement: initOciIdentityPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOciIdentityPolicy,
 			Create: createOciIdentityPolicy,
 		},
 		"oci.compute": {
@@ -183,7 +183,7 @@ func init() {
 			Create: createOciNetworkSubnet,
 		},
 		"oci.network.securityList": {
-			// to override args, implement: initOciNetworkSecurityList(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOciNetworkSecurityList,
 			Create: createOciNetworkSecurityList,
 		},
 		"oci.network.networkSecurityGroup": {

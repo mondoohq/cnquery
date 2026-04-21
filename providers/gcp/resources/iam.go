@@ -5,8 +5,10 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
@@ -14,8 +16,10 @@ import (
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
 
 	admin "cloud.google.com/go/iam/admin/apiv1"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
+	policyanalyzer "google.golang.org/api/policyanalyzer/v1"
 	adminpb "google.golang.org/genproto/googleapis/iam/admin/v1"
 )
 
@@ -289,4 +293,89 @@ func (g *mqlGcpProjectIamServiceServiceAccount) keys() ([]any, error) {
 		mqlKeys = append(mqlKeys, mqlKey)
 	}
 	return mqlKeys, nil
+}
+
+// lastAuthActivity matches the JSON shape returned by the Policy Analyzer
+// serviceAccountLastAuthentication activity type.
+type lastAuthActivity struct {
+	ServiceAccount struct {
+		ProjectNumber    string `json:"projectNumber"`
+		FullResourceName string `json:"fullResourceName"`
+	} `json:"serviceAccount"`
+	LastAuthenticatedTime string `json:"lastAuthenticatedTime"`
+}
+
+func (g *mqlGcpProjectIamServiceServiceAccount) lastAuthenticatedTime() (*time.Time, error) {
+	// If the SA wasn't found at init time, UniqueId is null; skip the call.
+	if g.UniqueId.IsNull() {
+		g.LastAuthenticatedTime.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+	if g.Email.Error != nil {
+		return nil, g.Email.Error
+	}
+	email := g.Email.Data
+	if email == "" {
+		g.LastAuthenticatedTime.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	client, err := conn.Client(policyanalyzer.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	paSvc, err := policyanalyzer.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	parent := fmt.Sprintf("projects/%s/locations/global/activityTypes/serviceAccountLastAuthentication", projectId)
+	filter := fmt.Sprintf("activities.full_resource_name=\"//iam.googleapis.com/projects/%s/serviceAccounts/%s\"", projectId, email)
+	resp, err := paSvc.Projects.Locations.ActivityTypes.Activities.Query(parent).Filter(filter).Context(ctx).Do()
+	if err != nil {
+		// Gracefully degrade if the Policy Analyzer API is disabled or the
+		// caller lacks the policyanalyzer.* permissions.
+		if gerr, ok := err.(*googleapi.Error); ok && (gerr.Code == 403 || gerr.Code == 404) {
+			log.Debug().Str("email", email).Int("code", gerr.Code).Msg("policyanalyzer lastAuthenticatedTime unavailable")
+			g.LastAuthenticatedTime.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	var latest *time.Time
+	for _, a := range resp.Activities {
+		if a == nil || len(a.Activity) == 0 {
+			continue
+		}
+		var parsed lastAuthActivity
+		if err := json.Unmarshal(a.Activity, &parsed); err != nil {
+			log.Debug().Err(err).Msg("failed to parse lastAuthenticatedTime activity")
+			continue
+		}
+		if parsed.LastAuthenticatedTime == "" {
+			continue
+		}
+		t, err := time.Parse(time.RFC3339, parsed.LastAuthenticatedTime)
+		if err != nil {
+			log.Debug().Err(err).Str("value", parsed.LastAuthenticatedTime).Msg("failed to parse lastAuthenticatedTime timestamp")
+			continue
+		}
+		if latest == nil || t.After(*latest) {
+			latest = &t
+		}
+	}
+
+	if latest == nil {
+		g.LastAuthenticatedTime.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return latest, nil
 }

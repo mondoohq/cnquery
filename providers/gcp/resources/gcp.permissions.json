@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
-  "version": "13.7.1",
-  "generated_at": "2026-04-14T21:28:47+03:00",
+  "version": "13.9.0",
+  "generated_at": "2026-04-20T19:01:10-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.list",
@@ -103,6 +103,7 @@
     "dlp.inspectTemplates.list",
     "dlp.jobTriggers.list",
     "dlp.storedInfoTypes.list",
+    "dns.managedZones.getIamPolicy",
     "dns.managedZones.list",
     "dns.policies.list",
     "dns.resourceRecordSets.list",
@@ -132,6 +133,7 @@
     "monitoring.uptimeCheckConfigs.list",
     "orgpolicy.constraints.list",
     "orgpolicy.policies.list",
+    "policyanalyzer.serviceAccountLastAuthenticationActivities.query",
     "privateca.caPools.list",
     "privateca.certificateAuthorities.list",
     "privateca.certificates.list",
@@ -140,8 +142,10 @@
     "redis.instances.list",
     "resourcemanager.projects.get",
     "resourcemanager.projects.getIamPolicy",
+    "run.jobs.getIamPolicy",
     "run.jobs.list",
     "run.operations.list",
+    "run.services.getIamPolicy",
     "run.services.list",
     "secretmanager.secrets.getIamPolicy",
     "secretmanager.secrets.list",
@@ -783,6 +787,12 @@
       "source_file": "dlp.go"
     },
     {
+      "permission": "dns.managedZones.getIamPolicy",
+      "service": "dns",
+      "action": "ManagedZones.GetIamPolicy",
+      "source_file": "dns.go"
+    },
+    {
       "permission": "dns.managedZones.list",
       "service": "dns",
       "action": "ManagedZones.List",
@@ -957,6 +967,12 @@
       "source_file": "orgpolicy.go"
     },
     {
+      "permission": "policyanalyzer.serviceAccountLastAuthenticationActivities.query",
+      "service": "policyanalyzer",
+      "action": "Activities.Query",
+      "source_file": "iam.go"
+    },
+    {
       "permission": "privateca.caPools.list",
       "service": "privateca",
       "action": "ListCaPools",
@@ -1002,7 +1018,7 @@
     {
       "permission": "resourcemanager.folders.list",
       "service": "resourcemanager",
-      "action": "Folders.Search",
+      "action": "Folders.List",
       "source_file": "folder.go",
       "scope": "org"
     },
@@ -1047,6 +1063,12 @@
       "scope": "org"
     },
     {
+      "permission": "run.jobs.getIamPolicy",
+      "service": "run",
+      "action": "Jobs.GetIamPolicy",
+      "source_file": "cloudrun.go"
+    },
+    {
       "permission": "run.jobs.list",
       "service": "run",
       "action": "ListJobs",
@@ -1056,6 +1078,12 @@
       "permission": "run.operations.list",
       "service": "run",
       "action": "ListOperations",
+      "source_file": "cloudrun.go"
+    },
+    {
+      "permission": "run.services.getIamPolicy",
+      "service": "run",
+      "action": "Services.GetIamPolicy",
       "source_file": "cloudrun.go"
     },
     {

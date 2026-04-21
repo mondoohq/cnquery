@@ -59,6 +59,9 @@ const (
 	DiscoverySecretsManagerSecrets      = "secretsmanager-secrets"
 	DiscoveryElasticacheClusters        = "elasticache-clusters"
 	DiscoveryCloudfrontDistributions    = "cloudfront-distributions"
+	DiscoveryNeptuneClusters            = "neptune-clusters"
+	DiscoveryEMRClusters                = "emr-clusters"
+	DiscoveryDocumentDBClusters         = "documentdb-clusters"
 )
 
 var AllAPIResources = []string{
@@ -92,6 +95,9 @@ var AllAPIResources = []string{
 	DiscoverySecretsManagerSecrets,
 	DiscoveryElasticacheClusters,
 	DiscoveryCloudfrontDistributions,
+	DiscoveryNeptuneClusters,
+	DiscoveryEMRClusters,
+	DiscoveryDocumentDBClusters,
 }
 
 var Auto = append(
@@ -1104,6 +1110,90 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 				awsObject: awsObject{
 					account: accountId, region: "global", arn: f.Arn.Data,
 					id: f.DomainName.Data, service: "cloudfront", objectType: "distribution",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
+		}
+	case DiscoveryNeptuneClusters:
+		res, err := NewResource(runtime, "aws.neptune", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		n := res.(*mqlAwsNeptune)
+
+		cs := n.GetClusters()
+		if cs == nil {
+			return assetList, nil
+		}
+
+		for i := range cs.Data {
+			f := cs.Data[i].(*mqlAwsNeptuneCluster)
+
+			name := f.ClusterIdentifier.Data
+			if name == "" {
+				name = f.Name.Data
+			}
+			m := mqlObject{
+				name: name, labels: map[string]string{},
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.ClusterIdentifier.Data, service: "neptune", objectType: "cluster",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
+		}
+	case DiscoveryEMRClusters:
+		res, err := NewResource(runtime, "aws.emr", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		e := res.(*mqlAwsEmr)
+
+		cs := e.GetClusters()
+		if cs == nil {
+			return assetList, nil
+		}
+
+		for i := range cs.Data {
+			f := cs.Data[i].(*mqlAwsEmrCluster)
+
+			region, err := GetRegionFromArn(f.Arn.Data)
+			if err != nil {
+				log.Warn().Err(err).Str("arn", f.Arn.Data).Msg("failed to parse region from EMR cluster ARN")
+				continue
+			}
+			m := mqlObject{
+				name: f.Name.Data, labels: map[string]string{},
+				awsObject: awsObject{
+					account: accountId, region: region, arn: f.Arn.Data,
+					id: f.Id.Data, service: "emr", objectType: "cluster",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
+		}
+	case DiscoveryDocumentDBClusters:
+		res, err := NewResource(runtime, "aws.documentdb", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		d := res.(*mqlAwsDocumentdb)
+
+		cs := d.GetClusters()
+		if cs == nil {
+			return assetList, nil
+		}
+
+		for i := range cs.Data {
+			f := cs.Data[i].(*mqlAwsDocumentdbCluster)
+
+			m := mqlObject{
+				name: f.Name.Data, labels: map[string]string{},
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.ClusterIdentifier.Data, service: "documentdb", objectType: "cluster",
 				},
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))

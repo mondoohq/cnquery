@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -31,6 +32,7 @@ func (g *mqlGcpProject) apiKeys() ([]any, error) {
 		return nil, err
 	}
 	if !serviceEnabled {
+		log.Debug().Str("service", service_apikeys).Str("project", projectId).Msg("gcp service is not enabled, skipping")
 		return nil, nil
 	}
 
@@ -223,4 +225,46 @@ func (g *mqlGcpProjectApiKeyRestrictions) id() (string, error) {
 		return "", g.ParentResourcePath.Error
 	}
 	return fmt.Sprintf("%s/restrictions", g.ParentResourcePath.Data), nil
+}
+
+// Always bootstrap through the parent key. apiKeys() populates restrictions
+// via CreateResource (which bypasses Init), so any NewResource call here is
+// a top-level `gcp.project.apiKey.restrictions` query — partial args would
+// pass through to Create and yield a bare stub whose fields all error with
+// "cannot convert primitive with NO type information".
+func initGcpProjectApiKeyRestrictions(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	ids := getAssetIdentifier(runtime)
+	if ids == nil {
+		return nil, nil, errors.New("no asset identifier found; gcp.project.apiKey.restrictions requires a gcp-apikey asset context")
+	}
+
+	obj, err := NewResource(runtime, "gcp.project.apiKey", map[string]*llx.RawData{
+		"id":        llx.StringData(ids.name),
+		"projectId": llx.StringData(ids.project),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	key := obj.(*mqlGcpProjectApiKey)
+	restrictions := key.GetRestrictions()
+	if restrictions.Error != nil {
+		return nil, nil, restrictions.Error
+	}
+	if restrictions.Data == nil {
+		// Key has no restrictions. Null out all fields so the Create fallthrough
+		// produces a resource whose TValues are StateIsNull|StateIsSet (via
+		// RawToTValue's nil path) instead of a bare stub. Matches the pattern
+		// in initGcpProjectIamServiceAccount.
+		if args == nil {
+			args = make(map[string]*llx.RawData)
+		}
+		args["parentResourcePath"] = llx.NilData
+		args["androidKeyRestrictions"] = llx.NilData
+		args["apiTargets"] = llx.NilData
+		args["browserKeyRestrictions"] = llx.NilData
+		args["iosKeyRestrictions"] = llx.NilData
+		args["serverKeyRestrictions"] = llx.NilData
+		return args, nil, nil
+	}
+	return args, restrictions.Data, nil
 }

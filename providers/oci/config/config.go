@@ -7,12 +7,13 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/oci/provider"
+	"go.mondoo.com/mql/v13/providers/oci/resources"
 )
 
 var Config = plugin.Provider{
 	Name:            "oci",
 	ID:              "go.mondoo.com/cnquery/v9/providers/oci",
-	Version:         "13.2.0",
+	Version:         "13.3.0",
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
 		{
@@ -27,7 +28,13 @@ Examples:
   cnspec shell oci --profile MYPROFILE
   cnspec shell oci --config-file /path/to/config --profile MYPROFILE
 `,
-			Discovery: []string{},
+			Discovery: []string{
+				resources.DiscoveryTenancy,
+				resources.DiscoverySecurityLists,
+				resources.DiscoveryUsers,
+				resources.DiscoveryPolicies,
+				resources.DiscoveryBuckets,
+			},
 			Flags: []plugin.Flag{
 				{
 					Long:    "tenancy",

@@ -109,6 +109,15 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		})
 	}
 
+	conf.Discover = &inventory.Discovery{Targets: []string{}}
+	if x, ok := flags["discover"]; ok && len(x.Array) != 0 {
+		for i := range x.Array {
+			conf.Discover.Targets = append(conf.Discover.Targets, string(x.Array[i].Value))
+		}
+	} else {
+		conf.Discover.Targets = []string{resources.DiscoveryAuto}
+	}
+
 	asset := inventory.Asset{
 		Connections: []*inventory.Config{conf},
 	}
@@ -137,12 +146,31 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		}
 	}
 
+	inv, err := s.discover(conn)
+	if err != nil {
+		return nil, err
+	}
+
 	return &plugin.ConnectRes{
 		Id:        conn.ID(),
 		Name:      conn.Name(),
 		Asset:     req.Asset,
-		Inventory: nil,
+		Inventory: inv,
 	}, nil
+}
+
+// discover runs the per-resource discovery pass when the connection config
+// requests it. Returns nil inventory when discovery was not requested so the
+// common "tenancy-only" scan path skips the extra work.
+func (s *Service) discover(conn *connection.OciConnection) (*inventory.Inventory, error) {
+	if conn.Conf == nil || len(conn.Conf.GetDiscover().GetTargets()) == 0 {
+		return nil, nil
+	}
+	runtime, err := s.GetRuntime(conn.ID())
+	if err != nil {
+		return nil, err
+	}
+	return resources.Discover(runtime)
 }
 
 func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*connection.OciConnection, error) {
