@@ -12,7 +12,6 @@ afero
 AJD
 Akismet
 alamofire
-AJD
 alloydb
 alpn
 anaconda
@@ -37,7 +36,6 @@ autoprovision
 autoreplace
 Autoscalers
 autotrim
-AVRO
 awsapps
 AWSCURRENT
 awsfirelens
@@ -144,8 +142,6 @@ fargate
 fce
 fdfhash
 FEBLx
-fargate
-FEBLx
 filestore
 filesz
 filevault
@@ -190,7 +186,6 @@ Hns
 horizontalpodautoscaler
 hostedzone
 hostkeyalgorithms
-hpi
 hostkeys
 hotlink
 hpi
@@ -221,8 +216,6 @@ istio
 jamf
 JFi
 jira
-jre
-jsonbody
 jkl
 jpi
 jre
@@ -393,14 +386,11 @@ resourcegroup
 resourcepolicy
 resourcequota
 richrule
-RODC
 rootdir
 rpo
 RRULE
-RSAES
 RSASSA
 RSession
-RStudio
 rtl
 rtsp
 rulegroup
@@ -491,8 +481,6 @@ vcpus
 vdcs
 vdev
 VDhir
-vendored
-vdev
 vendored
 verifiedaccess
 vertexai
