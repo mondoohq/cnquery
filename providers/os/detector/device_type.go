@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	// LabelDeviceType is the platform label key for the device type classification.
-	LabelDeviceType = "mondoo.com/device-type"
+	// MetadataDeviceType is the platform metadata key for the device type classification.
+	MetadataDeviceType = "mondoo.com/device-type"
 
 	// DeviceTypeServer indicates a system primarily used to run services
 	// without an interactive desktop session.
@@ -73,6 +73,9 @@ var desktopPlatformNames = map[string]bool{
 
 // serverPlatformNames lists platform names that are inherently server-oriented
 // or minimal distributions with no desktop use case.
+// Note: Alpine has a desktop edition, but the vast majority of Alpine installs
+// are containers or servers. Desktop Alpine users will be detected via the
+// systemd target or session directory fallbacks.
 var serverPlatformNames = map[string]bool{
 	"alpine":       true,
 	"bottlerocket": true,
@@ -99,18 +102,18 @@ var desktopSessionDirs = []string{
 
 // DetectDeviceType classifies a platform as server, workstation, or container
 // based on all available platform metadata and filesystem signals. It sets the
-// LabelDeviceType label on the platform.
+// MetadataDeviceType key in the platform's Metadata map.
 func DetectDeviceType(pf *inventory.Platform, conn shared.Connection) {
 	if pf == nil {
 		return
 	}
 
-	if pf.Labels == nil {
-		pf.Labels = map[string]string{}
+	if pf.Metadata == nil {
+		pf.Metadata = map[string]string{}
 	}
 
 	deviceType := classifyDeviceType(pf, conn)
-	pf.Labels[LabelDeviceType] = deviceType
+	pf.Metadata[MetadataDeviceType] = deviceType
 	log.Debug().Str("device-type", deviceType).Msg("platform> detected device type")
 }
 
@@ -120,13 +123,16 @@ func classifyDeviceType(pf *inventory.Platform, conn shared.Connection) string {
 		return DeviceTypeContainer
 	}
 
-	// Check VARIANT_ID for container indicators (e.g. "container", "container-arm64").
+	// Read VARIANT_ID once and reuse across checks.
 	variantID := variantIDFromPlatform(pf)
+
+	// Check VARIANT_ID for container indicators (e.g. "container", "container-arm64").
 	if isContainerVariant(variantID) {
 		return DeviceTypeContainer
 	}
 
-	// macOS is always a workstation.
+	// macOS is always a workstation. Currently the only darwin platform mql
+	// detects is macOS; if iOS/visionOS targets are added this may need revisiting.
 	if pf.IsFamily("darwin") || pf.Name == "macos" {
 		return DeviceTypeWorkstation
 	}
@@ -138,7 +144,7 @@ func classifyDeviceType(pf *inventory.Platform, conn shared.Connection) string {
 
 	// Linux and other Unix systems.
 	if pf.IsFamily("linux") || pf.IsFamily("unix") {
-		return classifyLinux(pf, conn)
+		return classifyLinux(pf, variantID, conn)
 	}
 
 	// Unknown platform: default to server (safe assumption for headless systems).
@@ -183,9 +189,8 @@ func classifyWindows(pf *inventory.Platform) string {
 	}
 }
 
-func classifyLinux(pf *inventory.Platform, conn shared.Connection) string {
+func classifyLinux(pf *inventory.Platform, variantID string, conn shared.Connection) string {
 	// 1. Check VARIANT_ID from os-release (most reliable when present, but rare).
-	variantID := variantIDFromPlatform(pf)
 	if variantID != "" {
 		if desktopVariantIDs[variantID] {
 			return DeviceTypeWorkstation
@@ -215,12 +220,13 @@ func classifyLinux(pf *inventory.Platform, conn shared.Connection) string {
 
 	// 4. Check systemd default target (covers Ubuntu, Debian, CentOS, Arch, etc.).
 	if conn != nil {
-		if dt := detectFromSystemdTarget(conn.FileSystem()); dt != "" {
+		fs := conn.FileSystem()
+		if dt := detectFromSystemdTarget(fs); dt != "" {
 			return dt
 		}
 
 		// 5. Check for desktop session directories.
-		if hasDesktopSessions(conn.FileSystem()) {
+		if hasDesktopSessions(fs) {
 			return DeviceTypeWorkstation
 		}
 	}
@@ -234,6 +240,7 @@ func classifyLinux(pf *inventory.Platform, conn shared.Connection) string {
 func detectFromSystemdTarget(fs afero.Fs) string {
 	lr, ok := fs.(afero.LinkReader)
 	if !ok {
+		log.Debug().Msg("device-type> filesystem does not support symlink reading")
 		return ""
 	}
 

@@ -68,7 +68,7 @@ func TestDetectDeviceType_Containers(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			DetectDeviceType(tt.pf, nil)
-			assert.Equal(t, DeviceTypeContainer, tt.pf.Labels[LabelDeviceType])
+			assert.Equal(t, DeviceTypeContainer, tt.pf.Metadata[MetadataDeviceType])
 		})
 	}
 }
@@ -85,7 +85,7 @@ func TestDetectDeviceType_MacOS(t *testing.T) {
 		Family: []string{"darwin", "bsd", "unix", "os"},
 	}
 	DetectDeviceType(pf, nil)
-	assert.Equal(t, DeviceTypeWorkstation, pf.Labels[LabelDeviceType])
+	assert.Equal(t, DeviceTypeWorkstation, pf.Metadata[MetadataDeviceType])
 }
 
 // ---------------------------------------------------------------------------
@@ -238,7 +238,7 @@ func TestDetectDeviceType_Windows(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			DetectDeviceType(tt.pf, nil)
-			assert.Equal(t, tt.expected, tt.pf.Labels[LabelDeviceType])
+			assert.Equal(t, tt.expected, tt.pf.Metadata[MetadataDeviceType])
 		})
 	}
 }
@@ -345,7 +345,7 @@ func TestDetectDeviceType_LinuxWithVariantID(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			DetectDeviceType(tt.pf, nil)
-			assert.Equal(t, tt.expected, tt.pf.Labels[LabelDeviceType])
+			assert.Equal(t, tt.expected, tt.pf.Metadata[MetadataDeviceType])
 		})
 	}
 }
@@ -382,7 +382,7 @@ func TestDetectDeviceType_DesktopDistros(t *testing.T) {
 				Family: tt.family,
 			}
 			DetectDeviceType(pf, nil)
-			assert.Equal(t, DeviceTypeWorkstation, pf.Labels[LabelDeviceType])
+			assert.Equal(t, DeviceTypeWorkstation, pf.Metadata[MetadataDeviceType])
 		})
 	}
 }
@@ -421,7 +421,7 @@ func TestDetectDeviceType_ServerDistros(t *testing.T) {
 				Family: tt.family,
 			}
 			DetectDeviceType(pf, nil)
-			assert.Equal(t, DeviceTypeServer, pf.Labels[LabelDeviceType])
+			assert.Equal(t, DeviceTypeServer, pf.Metadata[MetadataDeviceType])
 		})
 	}
 }
@@ -462,7 +462,7 @@ func TestDetectDeviceType_TitleHeuristics(t *testing.T) {
 				Family: tt.family,
 			}
 			DetectDeviceType(pf, nil)
-			assert.Equal(t, tt.expected, pf.Labels[LabelDeviceType])
+			assert.Equal(t, tt.expected, pf.Metadata[MetadataDeviceType])
 		})
 	}
 }
@@ -532,7 +532,7 @@ func TestDetectDeviceType_LinuxNoSignals_DefaultServer(t *testing.T) {
 			}
 			// No connection provided: no filesystem checks possible.
 			DetectDeviceType(pf, nil)
-			assert.Equal(t, DeviceTypeServer, pf.Labels[LabelDeviceType],
+			assert.Equal(t, DeviceTypeServer, pf.Metadata[MetadataDeviceType],
 				"%s should default to server without filesystem signals", tt.name)
 		})
 	}
@@ -568,7 +568,7 @@ func TestDetectDeviceType_Unix(t *testing.T) {
 				Family: tt.family,
 			}
 			DetectDeviceType(pf, nil)
-			assert.Equal(t, DeviceTypeServer, pf.Labels[LabelDeviceType])
+			assert.Equal(t, DeviceTypeServer, pf.Metadata[MetadataDeviceType])
 		})
 	}
 }
@@ -584,7 +584,7 @@ func TestDetectDeviceType_VariantInMetadata(t *testing.T) {
 		Metadata: map[string]string{"variant-id": "kde"},
 	}
 	DetectDeviceType(pf, nil)
-	assert.Equal(t, DeviceTypeWorkstation, pf.Labels[LabelDeviceType])
+	assert.Equal(t, DeviceTypeWorkstation, pf.Metadata[MetadataDeviceType])
 }
 
 // ---------------------------------------------------------------------------
@@ -596,28 +596,28 @@ func TestDetectDeviceType_UnknownPlatform(t *testing.T) {
 		Name: "something-unknown",
 	}
 	DetectDeviceType(pf, nil)
-	assert.Equal(t, DeviceTypeServer, pf.Labels[LabelDeviceType])
+	assert.Equal(t, DeviceTypeServer, pf.Metadata[MetadataDeviceType])
 }
 
-func TestDetectDeviceType_NilLabelsInitialized(t *testing.T) {
+func TestDetectDeviceType_NilMetadataInitialized(t *testing.T) {
 	pf := &inventory.Platform{
 		Name:   "windows",
 		Family: []string{"windows", "os"},
 	}
 	DetectDeviceType(pf, nil)
-	assert.NotNil(t, pf.Labels)
-	assert.Equal(t, DeviceTypeWorkstation, pf.Labels[LabelDeviceType])
+	assert.NotNil(t, pf.Metadata)
+	assert.Equal(t, DeviceTypeWorkstation, pf.Metadata[MetadataDeviceType])
 }
 
-func TestDetectDeviceType_ExistingLabelsPreserved(t *testing.T) {
+func TestDetectDeviceType_ExistingMetadataPreserved(t *testing.T) {
 	pf := &inventory.Platform{
-		Name:   "alpine",
-		Family: []string{"linux", "unix", "os"},
-		Labels: map[string]string{"some-existing-label": "value"},
+		Name:     "alpine",
+		Family:   []string{"linux", "unix", "os"},
+		Metadata: map[string]string{"some-existing-key": "value"},
 	}
 	DetectDeviceType(pf, nil)
-	assert.Equal(t, DeviceTypeServer, pf.Labels[LabelDeviceType])
-	assert.Equal(t, "value", pf.Labels["some-existing-label"])
+	assert.Equal(t, DeviceTypeServer, pf.Metadata[MetadataDeviceType])
+	assert.Equal(t, "value", pf.Metadata["some-existing-key"])
 }
 
 // ---------------------------------------------------------------------------
@@ -761,7 +761,7 @@ func TestDetectDeviceType_EmbeddedLinux(t *testing.T) {
 				Family: tt.family,
 			}
 			DetectDeviceType(pf, nil)
-			assert.Equal(t, DeviceTypeServer, pf.Labels[LabelDeviceType],
+			assert.Equal(t, DeviceTypeServer, pf.Metadata[MetadataDeviceType],
 				"%s should be classified as server (embedded/IoT)", tt.name)
 		})
 	}
@@ -797,7 +797,7 @@ func TestDetectDeviceType_SecurityDistros(t *testing.T) {
 				Family: tt.family,
 			}
 			DetectDeviceType(pf, nil)
-			assert.Equal(t, tt.expected, pf.Labels[LabelDeviceType])
+			assert.Equal(t, tt.expected, pf.Metadata[MetadataDeviceType])
 		})
 	}
 }
@@ -834,7 +834,7 @@ func TestDetectDeviceType_EnterpriseLinux(t *testing.T) {
 				Family: tt.family,
 			}
 			DetectDeviceType(pf, nil)
-			assert.Equal(t, DeviceTypeServer, pf.Labels[LabelDeviceType])
+			assert.Equal(t, DeviceTypeServer, pf.Metadata[MetadataDeviceType])
 		})
 	}
 }
@@ -876,7 +876,7 @@ func TestDetectDeviceType_DesktopDistrosWithoutNameMatch(t *testing.T) {
 			}
 			// Without filesystem: defaults to server (no signal available)
 			DetectDeviceType(pf, nil)
-			assert.Equal(t, DeviceTypeServer, pf.Labels[LabelDeviceType],
+			assert.Equal(t, DeviceTypeServer, pf.Metadata[MetadataDeviceType],
 				"%s defaults to server without filesystem signals", tt.name)
 		})
 	}
