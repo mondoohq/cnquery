@@ -204,7 +204,10 @@ func getNetworkByUrl(networkUrl string, runtime *plugin.Runtime) (*mqlGcpProject
 	parts := strings.Split(params, "/")
 	resId := resourceId{Project: parts[1], Region: parts[2], Name: parts[4]}
 
-	res, err := CreateResource(runtime, "gcp.project.computeService.network", map[string]*llx.RawData{
+	// Use NewResource so initGcpProjectComputeServiceNetwork runs and
+	// populates every field (scalars like autoCreateSubnetworks would
+	// otherwise surface as "no type information" when accessed).
+	res, err := NewResource(runtime, "gcp.project.computeService.network", map[string]*llx.RawData{
 		"name":      llx.StringData(resId.Name),
 		"projectId": llx.StringData(resId.Project),
 	})
@@ -229,7 +232,9 @@ func getSubnetworkByUrl(subnetUrl string, runtime *plugin.Runtime) (*mqlGcpProje
 	// regionUrl is the full URL up to and including the region segment
 	regionUrl := "https://www.googleapis.com/compute/v1/projects/" + resId.Project + "/regions/" + resId.Region
 
-	res, err := CreateResource(runtime, "gcp.project.computeService.subnetwork", map[string]*llx.RawData{
+	// Use NewResource so initGcpProjectComputeServiceSubnetwork runs and
+	// populates every field instead of leaving the resource partially set.
+	res, err := NewResource(runtime, "gcp.project.computeService.subnetwork", map[string]*llx.RawData{
 		"name":      llx.StringData(resId.Name),
 		"projectId": llx.StringData(resId.Project),
 		"regionUrl": llx.StringData(regionUrl),

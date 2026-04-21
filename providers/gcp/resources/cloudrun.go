@@ -654,6 +654,14 @@ func (g *mqlGcpProjectCloudRunService) jobs() ([]any, error) {
 		return nil, g.Regions.Error
 	}
 	regions := g.Regions.Data
+	if len(regions) == 0 {
+		// regions data has not been fetched, we need to get it
+		r, err := g.regions()
+		if err != nil {
+			return nil, err
+		}
+		regions = r
+	}
 
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
