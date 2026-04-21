@@ -8141,6 +8141,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.opensearch.domain.tlsSecurityPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOpensearchDomain).GetTlsSecurityPolicy()).ToDataRes(types.String)
 	},
+	"aws.opensearch.domain.customEndpointEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetCustomEndpointEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.opensearch.domain.customEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetCustomEndpoint()).ToDataRes(types.String)
+	},
+	"aws.opensearch.domain.customEndpointCertificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetCustomEndpointCertificate()).ToDataRes(types.Resource("aws.acm.certificate"))
+	},
 	"aws.opensearch.domain.samlEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOpensearchDomain).GetSamlEnabled()).ToDataRes(types.Bool)
 	},
@@ -12842,6 +12851,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.redshift.cluster.publiclyAccessible": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftCluster).GetPubliclyAccessible()).ToDataRes(types.Bool)
 	},
+	"aws.redshift.cluster.endpointAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetEndpointAddress()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.endpointPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetEndpointPort()).ToDataRes(types.Int)
+	},
+	"aws.redshift.cluster.endpointVpcEndpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetEndpointVpcEndpoints()).ToDataRes(types.Array(types.Dict))
+	},
 	"aws.redshift.cluster.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftCluster).GetRegion()).ToDataRes(types.String)
 	},
@@ -13576,6 +13594,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.apigateway.restapi.disableExecuteApiEndpoint": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApigatewayRestapi).GetDisableExecuteApiEndpoint()).ToDataRes(types.Bool)
+	},
+	"aws.apigateway.restapi.endpointTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayRestapi).GetEndpointTypes()).ToDataRes(types.Array(types.String))
+	},
+	"aws.apigateway.restapi.endpointVpcEndpointIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayRestapi).GetEndpointVpcEndpointIds()).ToDataRes(types.Array(types.String))
 	},
 	"aws.apigateway.restapi.minimumCompressionSize": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApigatewayRestapi).GetMinimumCompressionSize()).ToDataRes(types.Int)
@@ -15647,6 +15671,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.networkinterface.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Networkinterface).GetRegion()).ToDataRes(types.String)
 	},
+	"aws.ec2.networkinterface.interfaceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Networkinterface).GetInterfaceType()).ToDataRes(types.String)
+	},
+	"aws.ec2.networkinterface.publicIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Networkinterface).GetPublicIp()).ToDataRes(types.String)
+	},
+	"aws.ec2.networkinterface.publicDnsName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Networkinterface).GetPublicDnsName()).ToDataRes(types.String)
+	},
+	"aws.ec2.networkinterface.elasticIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Networkinterface).GetElasticIp()).ToDataRes(types.Resource("aws.ec2.eip"))
+	},
+	"aws.ec2.networkinterface.instance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Networkinterface).GetInstance()).ToDataRes(types.Resource("aws.ec2.instance"))
+	},
+	"aws.ec2.networkinterface.attachmentStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Networkinterface).GetAttachmentStatus()).ToDataRes(types.String)
+	},
+	"aws.ec2.networkinterface.attachmentTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Networkinterface).GetAttachmentTime()).ToDataRes(types.Time)
+	},
+	"aws.ec2.networkinterface.networkCardIndex": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Networkinterface).GetNetworkCardIndex()).ToDataRes(types.Int)
+	},
+	"aws.ec2.networkinterface.deviceIndex": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Networkinterface).GetDeviceIndex()).ToDataRes(types.Int)
+	},
+	"aws.ec2.networkinterface.deleteOnTermination": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Networkinterface).GetDeleteOnTermination()).ToDataRes(types.Bool)
+	},
 	"aws.ec2.keypair.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Keypair).GetArn()).ToDataRes(types.String)
 	},
@@ -17059,6 +17113,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.documentdb.instance.certificateAuthority": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbInstance).GetCertificateAuthority()).ToDataRes(types.String)
+	},
+	"aws.documentdb.instance.publiclyAccessible": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetPubliclyAccessible()).ToDataRes(types.Bool)
 	},
 	"aws.documentdb.instance.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbInstance).GetTags()).ToDataRes(types.Map(types.String, types.String))
@@ -29024,6 +29081,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsOpensearchDomain).TlsSecurityPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.opensearch.domain.customEndpointEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).CustomEndpointEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.customEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).CustomEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.customEndpointCertificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).CustomEndpointCertificate, ok = plugin.RawToTValue[*mqlAwsAcmCertificate](v.Value, v.Error)
+		return
+	},
 	"aws.opensearch.domain.samlEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsOpensearchDomain).SamlEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -35984,6 +36053,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsRedshiftCluster).PubliclyAccessible, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"aws.redshift.cluster.endpointAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).EndpointAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.endpointPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).EndpointPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.endpointVpcEndpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).EndpointVpcEndpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.redshift.cluster.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRedshiftCluster).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -37054,6 +37135,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.apigateway.restapi.disableExecuteApiEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsApigatewayRestapi).DisableExecuteApiEndpoint, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.restapi.endpointTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayRestapi).EndpointTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.restapi.endpointVpcEndpointIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayRestapi).EndpointVpcEndpointIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.apigateway.restapi.minimumCompressionSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -40072,6 +40161,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2Networkinterface).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.networkinterface.interfaceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Networkinterface).InterfaceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.networkinterface.publicIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Networkinterface).PublicIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.networkinterface.publicDnsName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Networkinterface).PublicDnsName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.networkinterface.elasticIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Networkinterface).ElasticIp, ok = plugin.RawToTValue[*mqlAwsEc2Eip](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.networkinterface.instance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Networkinterface).Instance, ok = plugin.RawToTValue[*mqlAwsEc2Instance](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.networkinterface.attachmentStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Networkinterface).AttachmentStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.networkinterface.attachmentTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Networkinterface).AttachmentTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.networkinterface.networkCardIndex": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Networkinterface).NetworkCardIndex, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.networkinterface.deviceIndex": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Networkinterface).DeviceIndex, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.networkinterface.deleteOnTermination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Networkinterface).DeleteOnTermination, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.keypair.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Keypair).__id, ok = v.Value.(string)
 		return
@@ -42118,6 +42247,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.documentdb.instance.certificateAuthority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDocumentdbInstance).CertificateAuthority, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instance.publiclyAccessible": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).PubliclyAccessible, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.documentdb.instance.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -68900,6 +69033,9 @@ type mqlAwsOpensearchDomain struct {
 	Vpc                         plugin.TValue[*mqlAwsVpc]
 	EnforceHTTPS                plugin.TValue[bool]
 	TlsSecurityPolicy           plugin.TValue[string]
+	CustomEndpointEnabled       plugin.TValue[bool]
+	CustomEndpoint              plugin.TValue[string]
+	CustomEndpointCertificate   plugin.TValue[*mqlAwsAcmCertificate]
 	SamlEnabled                 plugin.TValue[bool]
 	AnonymousAuthEnabled        plugin.TValue[bool]
 	InternalUserDatabaseEnabled plugin.TValue[bool]
@@ -69097,6 +69233,30 @@ func (c *mqlAwsOpensearchDomain) GetEnforceHTTPS() *plugin.TValue[bool] {
 
 func (c *mqlAwsOpensearchDomain) GetTlsSecurityPolicy() *plugin.TValue[string] {
 	return &c.TlsSecurityPolicy
+}
+
+func (c *mqlAwsOpensearchDomain) GetCustomEndpointEnabled() *plugin.TValue[bool] {
+	return &c.CustomEndpointEnabled
+}
+
+func (c *mqlAwsOpensearchDomain) GetCustomEndpoint() *plugin.TValue[string] {
+	return &c.CustomEndpoint
+}
+
+func (c *mqlAwsOpensearchDomain) GetCustomEndpointCertificate() *plugin.TValue[*mqlAwsAcmCertificate] {
+	return plugin.GetOrCompute[*mqlAwsAcmCertificate](&c.CustomEndpointCertificate, func() (*mqlAwsAcmCertificate, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.opensearch.domain", c.__id, "customEndpointCertificate")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsAcmCertificate), nil
+			}
+		}
+
+		return c.customEndpointCertificate()
+	})
 }
 
 func (c *mqlAwsOpensearchDomain) GetSamlEnabled() *plugin.TValue[bool] {
@@ -87313,6 +87473,9 @@ type mqlAwsRedshiftCluster struct {
 	Parameters                       plugin.TValue[[]any]
 	PreferredMaintenanceWindow       plugin.TValue[string]
 	PubliclyAccessible               plugin.TValue[bool]
+	EndpointAddress                  plugin.TValue[string]
+	EndpointPort                     plugin.TValue[int64]
+	EndpointVpcEndpoints             plugin.TValue[[]any]
 	Region                           plugin.TValue[string]
 	Tags                             plugin.TValue[map[string]any]
 	VpcId                            plugin.TValue[string]
@@ -87472,6 +87635,18 @@ func (c *mqlAwsRedshiftCluster) GetPreferredMaintenanceWindow() *plugin.TValue[s
 
 func (c *mqlAwsRedshiftCluster) GetPubliclyAccessible() *plugin.TValue[bool] {
 	return &c.PubliclyAccessible
+}
+
+func (c *mqlAwsRedshiftCluster) GetEndpointAddress() *plugin.TValue[string] {
+	return &c.EndpointAddress
+}
+
+func (c *mqlAwsRedshiftCluster) GetEndpointPort() *plugin.TValue[int64] {
+	return &c.EndpointPort
+}
+
+func (c *mqlAwsRedshiftCluster) GetEndpointVpcEndpoints() *plugin.TValue[[]any] {
+	return &c.EndpointVpcEndpoints
 }
 
 func (c *mqlAwsRedshiftCluster) GetRegion() *plugin.TValue[string] {
@@ -89998,6 +90173,8 @@ type mqlAwsApigatewayRestapi struct {
 	Tags                      plugin.TValue[map[string]any]
 	ApiKeySource              plugin.TValue[string]
 	DisableExecuteApiEndpoint plugin.TValue[bool]
+	EndpointTypes             plugin.TValue[[]any]
+	EndpointVpcEndpointIds    plugin.TValue[[]any]
 	MinimumCompressionSize    plugin.TValue[int64]
 	BinaryMediaTypes          plugin.TValue[[]any]
 	Version                   plugin.TValue[string]
@@ -90092,6 +90269,14 @@ func (c *mqlAwsApigatewayRestapi) GetApiKeySource() *plugin.TValue[string] {
 
 func (c *mqlAwsApigatewayRestapi) GetDisableExecuteApiEndpoint() *plugin.TValue[bool] {
 	return &c.DisableExecuteApiEndpoint
+}
+
+func (c *mqlAwsApigatewayRestapi) GetEndpointTypes() *plugin.TValue[[]any] {
+	return &c.EndpointTypes
+}
+
+func (c *mqlAwsApigatewayRestapi) GetEndpointVpcEndpointIds() *plugin.TValue[[]any] {
+	return &c.EndpointVpcEndpointIds
 }
 
 func (c *mqlAwsApigatewayRestapi) GetMinimumCompressionSize() *plugin.TValue[int64] {
@@ -97378,21 +97563,31 @@ type mqlAwsEc2Networkinterface struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsEc2NetworkinterfaceInternal
-	Id               plugin.TValue[string]
-	Description      plugin.TValue[string]
-	Subnet           plugin.TValue[*mqlAwsVpcSubnet]
-	Vpc              plugin.TValue[*mqlAwsVpc]
-	Status           plugin.TValue[string]
-	SourceDestCheck  plugin.TValue[bool]
-	RequesterManaged plugin.TValue[bool]
-	Tags             plugin.TValue[map[string]any]
-	AvailabilityZone plugin.TValue[string]
-	SecurityGroups   plugin.TValue[[]any]
-	Ipv6Native       plugin.TValue[bool]
-	MacAddress       plugin.TValue[string]
-	PrivateDnsName   plugin.TValue[string]
-	PrivateIpAddress plugin.TValue[string]
-	Region           plugin.TValue[string]
+	Id                  plugin.TValue[string]
+	Description         plugin.TValue[string]
+	Subnet              plugin.TValue[*mqlAwsVpcSubnet]
+	Vpc                 plugin.TValue[*mqlAwsVpc]
+	Status              plugin.TValue[string]
+	SourceDestCheck     plugin.TValue[bool]
+	RequesterManaged    plugin.TValue[bool]
+	Tags                plugin.TValue[map[string]any]
+	AvailabilityZone    plugin.TValue[string]
+	SecurityGroups      plugin.TValue[[]any]
+	Ipv6Native          plugin.TValue[bool]
+	MacAddress          plugin.TValue[string]
+	PrivateDnsName      plugin.TValue[string]
+	PrivateIpAddress    plugin.TValue[string]
+	Region              plugin.TValue[string]
+	InterfaceType       plugin.TValue[string]
+	PublicIp            plugin.TValue[string]
+	PublicDnsName       plugin.TValue[string]
+	ElasticIp           plugin.TValue[*mqlAwsEc2Eip]
+	Instance            plugin.TValue[*mqlAwsEc2Instance]
+	AttachmentStatus    plugin.TValue[string]
+	AttachmentTime      plugin.TValue[*time.Time]
+	NetworkCardIndex    plugin.TValue[int64]
+	DeviceIndex         plugin.TValue[int64]
+	DeleteOnTermination plugin.TValue[bool]
 }
 
 // createAwsEc2Networkinterface creates a new instance of this resource
@@ -97521,6 +97716,70 @@ func (c *mqlAwsEc2Networkinterface) GetPrivateIpAddress() *plugin.TValue[string]
 
 func (c *mqlAwsEc2Networkinterface) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+func (c *mqlAwsEc2Networkinterface) GetInterfaceType() *plugin.TValue[string] {
+	return &c.InterfaceType
+}
+
+func (c *mqlAwsEc2Networkinterface) GetPublicIp() *plugin.TValue[string] {
+	return &c.PublicIp
+}
+
+func (c *mqlAwsEc2Networkinterface) GetPublicDnsName() *plugin.TValue[string] {
+	return &c.PublicDnsName
+}
+
+func (c *mqlAwsEc2Networkinterface) GetElasticIp() *plugin.TValue[*mqlAwsEc2Eip] {
+	return plugin.GetOrCompute[*mqlAwsEc2Eip](&c.ElasticIp, func() (*mqlAwsEc2Eip, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.networkinterface", c.__id, "elasticIp")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Eip), nil
+			}
+		}
+
+		return c.elasticIp()
+	})
+}
+
+func (c *mqlAwsEc2Networkinterface) GetInstance() *plugin.TValue[*mqlAwsEc2Instance] {
+	return plugin.GetOrCompute[*mqlAwsEc2Instance](&c.Instance, func() (*mqlAwsEc2Instance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.networkinterface", c.__id, "instance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Instance), nil
+			}
+		}
+
+		return c.instance()
+	})
+}
+
+func (c *mqlAwsEc2Networkinterface) GetAttachmentStatus() *plugin.TValue[string] {
+	return &c.AttachmentStatus
+}
+
+func (c *mqlAwsEc2Networkinterface) GetAttachmentTime() *plugin.TValue[*time.Time] {
+	return &c.AttachmentTime
+}
+
+func (c *mqlAwsEc2Networkinterface) GetNetworkCardIndex() *plugin.TValue[int64] {
+	return &c.NetworkCardIndex
+}
+
+func (c *mqlAwsEc2Networkinterface) GetDeviceIndex() *plugin.TValue[int64] {
+	return &c.DeviceIndex
+}
+
+func (c *mqlAwsEc2Networkinterface) GetDeleteOnTermination() *plugin.TValue[bool] {
+	return &c.DeleteOnTermination
 }
 
 // mqlAwsEc2Keypair for the aws.ec2.keypair resource
@@ -102401,6 +102660,7 @@ type mqlAwsDocumentdbInstance struct {
 	Region                       plugin.TValue[string]
 	StorageEncrypted             plugin.TValue[bool]
 	CertificateAuthority         plugin.TValue[string]
+	PubliclyAccessible           plugin.TValue[bool]
 	Tags                         plugin.TValue[map[string]any]
 }
 
@@ -102526,6 +102786,10 @@ func (c *mqlAwsDocumentdbInstance) GetStorageEncrypted() *plugin.TValue[bool] {
 
 func (c *mqlAwsDocumentdbInstance) GetCertificateAuthority() *plugin.TValue[string] {
 	return &c.CertificateAuthority
+}
+
+func (c *mqlAwsDocumentdbInstance) GetPubliclyAccessible() *plugin.TValue[bool] {
+	return &c.PubliclyAccessible
 }
 
 func (c *mqlAwsDocumentdbInstance) GetTags() *plugin.TValue[map[string]any] {

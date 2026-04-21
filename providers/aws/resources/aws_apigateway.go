@@ -74,6 +74,17 @@ func (a *mqlAwsApigateway) getRestApis(conn *connection.AwsConnection) []*jobpoo
 						continue
 					}
 
+					endpointTypes := []any{}
+					endpointVpcEndpointIds := []any{}
+					if restApi.EndpointConfiguration != nil {
+						for _, t := range restApi.EndpointConfiguration.Types {
+							endpointTypes = append(endpointTypes, string(t))
+						}
+						for _, v := range restApi.EndpointConfiguration.VpcEndpointIds {
+							endpointVpcEndpointIds = append(endpointVpcEndpointIds, v)
+						}
+					}
+
 					mqlRestApi, err := CreateResource(a.MqlRuntime, ResourceAwsApigatewayRestapi,
 						map[string]*llx.RawData{
 							"arn":                       llx.StringData(fmt.Sprintf(apiArnPattern, region, conn.AccountId(), convert.ToValue(restApi.Id))),
@@ -90,6 +101,8 @@ func (a *mqlAwsApigateway) getRestApis(conn *connection.AwsConnection) []*jobpoo
 							"version":                   llx.StringData(convert.ToValue(restApi.Version)),
 							"securityPolicy":            llx.StringData(string(restApi.SecurityPolicy)),
 							"policy":                    llx.StringData(convert.ToValue(restApi.Policy)),
+							"endpointTypes":             llx.ArrayData(endpointTypes, types.String),
+							"endpointVpcEndpointIds":    llx.ArrayData(endpointVpcEndpointIds, types.String),
 						})
 					if err != nil {
 						return nil, err

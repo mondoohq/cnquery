@@ -175,8 +175,9 @@ func initAwsOpensearchDomain(runtime *plugin.Runtime, args map[string]*llx.RawDa
 
 type mqlAwsOpensearchDomainInternal struct {
 	securityGroupIdHandler
-	region    string
-	subnetIds []string
+	region                         string
+	subnetIds                      []string
+	cacheCustomEndpointCertificate *string
 }
 
 func newMqlAwsOpensearchDomain(runtime *plugin.Runtime, region string, accountID string, domain opensearch_types.DomainStatus) (*mqlAwsOpensearchDomain, error) {
@@ -271,9 +272,15 @@ func newMqlAwsOpensearchDomain(runtime *plugin.Runtime, region string, accountID
 	// Domain endpoint options
 	var enforceHTTPS bool
 	var tlsSecurityPolicy string
+	var customEndpointEnabled bool
+	var customEndpoint string
+	var customEndpointCertArn *string
 	if domain.DomainEndpointOptions != nil {
 		enforceHTTPS = convert.ToValue(domain.DomainEndpointOptions.EnforceHTTPS)
 		tlsSecurityPolicy = string(domain.DomainEndpointOptions.TLSSecurityPolicy)
+		customEndpointEnabled = convert.ToValue(domain.DomainEndpointOptions.CustomEndpointEnabled)
+		customEndpoint = convert.ToValue(domain.DomainEndpointOptions.CustomEndpoint)
+		customEndpointCertArn = domain.DomainEndpointOptions.CustomEndpointCertificateArn
 	}
 
 	// Advanced security options
@@ -356,6 +363,8 @@ func newMqlAwsOpensearchDomain(runtime *plugin.Runtime, region string, accountID
 			"vpcId":                       llx.StringData(vpcId),
 			"enforceHTTPS":                llx.BoolData(enforceHTTPS),
 			"tlsSecurityPolicy":           llx.StringData(tlsSecurityPolicy),
+			"customEndpointEnabled":       llx.BoolData(customEndpointEnabled),
+			"customEndpoint":              llx.StringData(customEndpoint),
 			"samlEnabled":                 llx.BoolData(samlEnabled),
 			"anonymousAuthEnabled":        llx.BoolData(anonymousAuthEnabled),
 			"internalUserDatabaseEnabled": llx.BoolData(internalUserDatabaseEnabled),
@@ -377,8 +386,24 @@ func newMqlAwsOpensearchDomain(runtime *plugin.Runtime, region string, accountID
 	mqlDomain := resource.(*mqlAwsOpensearchDomain)
 	mqlDomain.region = region
 	mqlDomain.subnetIds = subnetIds
+	mqlDomain.cacheCustomEndpointCertificate = customEndpointCertArn
 	mqlDomain.setSecurityGroupArns(sgArns)
 	return mqlDomain, nil
+}
+
+func (a *mqlAwsOpensearchDomain) customEndpointCertificate() (*mqlAwsAcmCertificate, error) {
+	if a.cacheCustomEndpointCertificate == nil || *a.cacheCustomEndpointCertificate == "" {
+		a.CustomEndpointCertificate.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlCert, err := NewResource(a.MqlRuntime, "aws.acm.certificate",
+		map[string]*llx.RawData{
+			"arn": llx.StringDataPtr(a.cacheCustomEndpointCertificate),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlCert.(*mqlAwsAcmCertificate), nil
 }
 
 func (a *mqlAwsOpensearchDomain) encryptionAtRestKmsKey() (*mqlAwsKmsKey, error) {

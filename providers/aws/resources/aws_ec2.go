@@ -1427,8 +1427,10 @@ func (i *mqlAwsEc2Instance) networkInterfaces() ([]any, error) {
 }
 
 type mqlAwsEc2NetworkinterfaceInternal struct {
-	networkInterfaceCache ec2types.NetworkInterface
-	region                string
+	networkInterfaceCache   ec2types.NetworkInterface
+	region                  string
+	cacheAttachmentInstance *string
+	cacheElasticIp          *string
 }
 
 func initAwsEc2Networkinterface(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -1485,20 +1487,57 @@ func initAwsEc2Networkinterface(runtime *plugin.Runtime, args map[string]*llx.Ra
 }
 
 func buildNetworkInterfaceResource(runtime *plugin.Runtime, region string, eni ec2types.NetworkInterface) (map[string]*llx.RawData, plugin.Resource, error) {
+	var publicIp, publicDnsName string
+	var cacheElasticIp *string
+	if eni.Association != nil {
+		publicIp = convert.ToValue(eni.Association.PublicIp)
+		publicDnsName = convert.ToValue(eni.Association.PublicDnsName)
+		// Only resolve to an aws.ec2.eip when an AllocationId is present; a raw
+		// auto-assigned public IP (no AllocationId) does not back an EIP resource.
+		if eni.Association.AllocationId != nil && *eni.Association.AllocationId != "" {
+			cacheElasticIp = eni.Association.PublicIp
+		}
+	}
+	var attachmentStatus string
+	var attachmentTime *time.Time
+	var deviceIndex, networkCardIndex int64
+	var deleteOnTermination bool
+	var attachmentInstanceID *string
+	if eni.Attachment != nil {
+		attachmentStatus = string(eni.Attachment.Status)
+		attachmentTime = eni.Attachment.AttachTime
+		if eni.Attachment.DeviceIndex != nil {
+			deviceIndex = int64(*eni.Attachment.DeviceIndex)
+		}
+		if eni.Attachment.NetworkCardIndex != nil {
+			networkCardIndex = int64(*eni.Attachment.NetworkCardIndex)
+		}
+		deleteOnTermination = convert.ToValue(eni.Attachment.DeleteOnTermination)
+		attachmentInstanceID = eni.Attachment.InstanceId
+	}
+
 	args := map[string]*llx.RawData{
-		"__id":             llx.StringDataPtr(eni.NetworkInterfaceId),
-		"availabilityZone": llx.StringDataPtr(eni.AvailabilityZone),
-		"description":      llx.StringDataPtr(eni.Description),
-		"id":               llx.StringDataPtr(eni.NetworkInterfaceId),
-		"ipv6Native":       llx.BoolDataPtr(eni.Ipv6Native),
-		"macAddress":       llx.StringDataPtr(eni.MacAddress),
-		"privateDnsName":   llx.StringDataPtr(eni.PrivateDnsName),
-		"privateIpAddress": llx.StringDataPtr(eni.PrivateIpAddress),
-		"requesterManaged": llx.BoolDataPtr(eni.RequesterManaged),
-		"sourceDestCheck":  llx.BoolDataPtr(eni.SourceDestCheck),
-		"status":           llx.StringData(string(eni.Status)),
-		"tags":             llx.MapData(toInterfaceMap(ec2TagsToMap(eni.TagSet)), types.String),
-		"region":           llx.StringData(region),
+		"__id":                llx.StringDataPtr(eni.NetworkInterfaceId),
+		"availabilityZone":    llx.StringDataPtr(eni.AvailabilityZone),
+		"description":         llx.StringDataPtr(eni.Description),
+		"id":                  llx.StringDataPtr(eni.NetworkInterfaceId),
+		"ipv6Native":          llx.BoolDataPtr(eni.Ipv6Native),
+		"macAddress":          llx.StringDataPtr(eni.MacAddress),
+		"privateDnsName":      llx.StringDataPtr(eni.PrivateDnsName),
+		"privateIpAddress":    llx.StringDataPtr(eni.PrivateIpAddress),
+		"requesterManaged":    llx.BoolDataPtr(eni.RequesterManaged),
+		"sourceDestCheck":     llx.BoolDataPtr(eni.SourceDestCheck),
+		"status":              llx.StringData(string(eni.Status)),
+		"tags":                llx.MapData(toInterfaceMap(ec2TagsToMap(eni.TagSet)), types.String),
+		"region":              llx.StringData(region),
+		"interfaceType":       llx.StringData(string(eni.InterfaceType)),
+		"publicIp":            llx.StringData(publicIp),
+		"publicDnsName":       llx.StringData(publicDnsName),
+		"attachmentStatus":    llx.StringData(attachmentStatus),
+		"attachmentTime":      llx.TimeDataPtr(attachmentTime),
+		"deviceIndex":         llx.IntData(deviceIndex),
+		"networkCardIndex":    llx.IntData(networkCardIndex),
+		"deleteOnTermination": llx.BoolData(deleteOnTermination),
 	}
 	res, err := CreateResource(runtime, ResourceAwsEc2Networkinterface, args)
 	if err != nil {
@@ -1507,7 +1546,41 @@ func buildNetworkInterfaceResource(runtime *plugin.Runtime, region string, eni e
 	mqlEni := res.(*mqlAwsEc2Networkinterface)
 	mqlEni.networkInterfaceCache = eni
 	mqlEni.region = region
+	mqlEni.cacheAttachmentInstance = attachmentInstanceID
+	mqlEni.cacheElasticIp = cacheElasticIp
 	return nil, mqlEni, nil
+}
+
+func (i *mqlAwsEc2Networkinterface) elasticIp() (*mqlAwsEc2Eip, error) {
+	if i.cacheElasticIp == nil || *i.cacheElasticIp == "" {
+		i.ElasticIp.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlEip, err := NewResource(i.MqlRuntime, "aws.ec2.eip",
+		map[string]*llx.RawData{
+			"publicIp": llx.StringDataPtr(i.cacheElasticIp),
+			"region":   llx.StringData(i.region),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlEip.(*mqlAwsEc2Eip), nil
+}
+
+func (i *mqlAwsEc2Networkinterface) instance() (*mqlAwsEc2Instance, error) {
+	if i.cacheAttachmentInstance == nil || *i.cacheAttachmentInstance == "" {
+		i.Instance.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := i.MqlRuntime.Connection.(*connection.AwsConnection)
+	mqlInst, err := NewResource(i.MqlRuntime, "aws.ec2.instance",
+		map[string]*llx.RawData{
+			"arn": llx.StringData(fmt.Sprintf(ec2InstanceArnPattern, i.region, conn.AccountId(), *i.cacheAttachmentInstance)),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlInst.(*mqlAwsEc2Instance), nil
 }
 
 func (i *mqlAwsEc2Networkinterface) securityGroups() ([]any, error) {

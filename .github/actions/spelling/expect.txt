@@ -125,6 +125,7 @@ dsse
 Duf
 eas
 Ecmp
+efa
 efi
 eip
 ekm
@@ -135,6 +136,7 @@ ENIId
 erlang
 ERPCLOUD
 eventarc
+evs
 Exadata
 exo
 faa

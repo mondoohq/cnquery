@@ -293,6 +293,7 @@ func newMqlAwsDocumentdbInstance(runtime *plugin.Runtime, region string, instanc
 			"status":                       llx.StringDataPtr(instance.DBInstanceStatus),
 			"storageEncrypted":             llx.BoolDataPtr(instance.StorageEncrypted),
 			"certificateAuthority":         llx.StringDataPtr(instance.CACertificateIdentifier),
+			"publiclyAccessible":           llx.BoolDataPtr(instance.PubliclyAccessible),
 		})
 	if err != nil {
 		return nil, err

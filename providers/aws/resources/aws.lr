@@ -3944,6 +3944,12 @@ private aws.opensearch.domain @defaults("name engineVersion") {
   enforceHTTPS bool
   // TLS security policy
   tlsSecurityPolicy string
+  // Whether a custom endpoint is enabled for the domain
+  customEndpointEnabled bool
+  // Custom endpoint fully qualified domain name (empty if not configured)
+  customEndpoint string
+  // ACM certificate used for the custom endpoint (null if not configured)
+  customEndpointCertificate() aws.acm.certificate
   // Whether SAML is enabled
   samlEnabled bool
   // Whether anonymous auth is enabled
@@ -7784,6 +7790,12 @@ private aws.redshift.cluster @defaults("dbName clusterVersion clusterStatus regi
   preferredMaintenanceWindow string
   // Whether the cluster is publicly accessible
   publiclyAccessible bool
+  // Connection endpoint address for the cluster (empty when the cluster has no endpoint)
+  endpointAddress string
+  // Connection endpoint port for the cluster (0 when the cluster has no endpoint)
+  endpointPort int
+  // VPC endpoints associated with the cluster (used when publiclyAccessible is false)
+  endpointVpcEndpoints []dict
   // Region where the cluster exists
   region string
   // Tags for the cluster
@@ -8370,6 +8382,10 @@ private aws.apigateway.restapi @defaults("name id") {
   apiKeySource string
   // Whether the default execute-api endpoint is disabled
   disableExecuteApiEndpoint bool
+  // Endpoint types for the REST API (EDGE, REGIONAL, PRIVATE)
+  endpointTypes []string
+  // VPC endpoint IDs associated with a PRIVATE REST API
+  endpointVpcEndpointIds []string
   // Minimum payload size in bytes for compression (0 to enable for all, -1 if disabled)
   minimumCompressionSize int
   // Supported binary media types
@@ -10013,6 +10029,26 @@ private aws.ec2.networkinterface @defaults("id privateIpAddress macAddress") {
   privateIpAddress string
   // Region where the network interface exists
   region string
+  // Type of network interface (interface, natGateway, efa, efa-only, trunk, load_balancer, network_load_balancer, vpc_endpoint, branch, transit_gateway, lambda, quicksight, global_accelerator_managed, api_gateway_managed, gateway_load_balancer, gateway_load_balancer_endpoint, iot_rules_managed, aws_codestar_connections_managed, evs)
+  interfaceType string
+  // Public IPv4 address associated with the network interface (empty string if none)
+  publicIp string
+  // Public DNS name associated with the network interface (empty string if none)
+  publicDnsName string
+  // Elastic IP associated with the network interface (null if not associated with an EIP)
+  elasticIp() aws.ec2.eip
+  // EC2 instance the network interface is attached to (null when not attached to an instance)
+  instance() aws.ec2.instance
+  // Attachment status (attaching, attached, detaching, detached; empty when not attached)
+  attachmentStatus string
+  // When the network interface was attached (null when not attached)
+  attachmentTime time
+  // Index of the network card
+  networkCardIndex int
+  // Position of the attachment in the device ordering
+  deviceIndex int
+  // Whether the network interface is deleted when the instance is terminated
+  deleteOnTermination bool
 }
 
 // Amazon EC2 key pair
@@ -11129,6 +11165,8 @@ private aws.documentdb.instance @defaults("arn name status") {
   storageEncrypted bool
   // ID of the Certificate Authority
   certificateAuthority string
+  // Whether the instance is publicly accessible
+  publiclyAccessible bool
   // Tags for the instance
   tags() map[string]string
 }
