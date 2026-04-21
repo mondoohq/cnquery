@@ -20,6 +20,7 @@ func DetectOS(conn shared.Connection) (*inventory.Platform, bool) {
 	}
 
 	addTechnologyUrl(res)
+	DetectDeviceType(res, conn)
 	return res, ok
 }
 
