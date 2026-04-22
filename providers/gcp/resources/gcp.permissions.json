@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
-  "version": "13.9.0",
-  "generated_at": "2026-04-20T19:01:10-07:00",
+  "version": "13.10.0",
+  "generated_at": "2026-04-21T12:25:02-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.list",
@@ -55,6 +55,7 @@
     "compute.firewallPolicies.list",
     "compute.firewalls.list",
     "compute.healthChecks.list",
+    "compute.images.getIamPolicy",
     "compute.images.list",
     "compute.instanceGroupManagers.list",
     "compute.instanceGroups.list",
@@ -76,6 +77,7 @@
     "compute.securityPolicies.get",
     "compute.securityPolicies.list",
     "compute.serviceAttachments.list",
+    "compute.snapshots.getIamPolicy",
     "compute.snapshots.list",
     "compute.sslCertificates.list",
     "compute.sslPolicies.list",
@@ -481,6 +483,12 @@
       "source_file": "compute_enrichments.go"
     },
     {
+      "permission": "compute.images.getIamPolicy",
+      "service": "compute",
+      "action": "Images.GetIamPolicy",
+      "source_file": "compute.go"
+    },
+    {
       "permission": "compute.images.list",
       "service": "compute",
       "action": "Images.List",
@@ -617,6 +625,12 @@
       "service": "compute",
       "action": "ServiceAttachments.AggregatedList",
       "source_file": "compute_networking.go"
+    },
+    {
+      "permission": "compute.snapshots.getIamPolicy",
+      "service": "compute",
+      "action": "Snapshots.GetIamPolicy",
+      "source_file": "compute.go"
     },
     {
       "permission": "compute.snapshots.list",
