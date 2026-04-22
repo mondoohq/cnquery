@@ -12,6 +12,9 @@ import (
 )
 
 func (c *mqlCloudflareZoneLogpushJob) id() (string, error) {
+	if c.Id.Error != nil {
+		return "", c.Id.Error
+	}
 	return fmt.Sprintf("logpush@%d", c.Id.Data), nil
 }
 

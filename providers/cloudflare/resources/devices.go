@@ -4,6 +4,7 @@ package resources
 
 import (
 	"context"
+	"time"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
@@ -42,10 +43,10 @@ func (c *mqlCloudflareOne) devices() ([]any, error) {
 			"osDistroRevision": llx.StringData(rec.OsDistroRevision),
 			"version":          llx.StringData(rec.Version),
 			"deleted":          llx.BoolData(rec.Deleted),
-			"created":          llx.StringData(rec.Created),
-			"updated":          llx.StringData(rec.Updated),
-			"lastSeen":         llx.StringData(rec.LastSeen),
-			"revokedAt":        llx.StringData(rec.RevokedAt),
+			"created":          llx.TimeData(parseRFC3339(rec.Created)),
+			"updated":          llx.TimeData(parseRFC3339(rec.Updated)),
+			"lastSeen":         llx.TimeData(parseRFC3339(rec.LastSeen)),
+			"revokedAt":        llx.TimeData(parseRFC3339(rec.RevokedAt)),
 		})
 		if err != nil {
 			return nil, err
@@ -127,4 +128,13 @@ func (c *mqlCloudflareOne) devicePostureIntegrations() ([]any, error) {
 	}
 
 	return result, nil
+}
+
+// parseRFC3339 parses an RFC3339 timestamp string, returning zero time for empty strings.
+func parseRFC3339(s string) time.Time {
+	if s == "" {
+		return time.Time{}
+	}
+	t, _ := time.Parse(time.RFC3339, s)
+	return t
 }

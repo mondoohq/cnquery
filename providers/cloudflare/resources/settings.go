@@ -4,6 +4,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 
 	"github.com/cloudflare/cloudflare-go"
 	"go.mondoo.com/mql/v13/llx"
@@ -61,9 +62,15 @@ func (c *mqlCloudflareZone) botManagement() (*mqlCloudflareZoneBotManagement, er
 		Identifier: c.Id.Data,
 	})
 	if err != nil {
-		// Bot management may not be available on all plans
-		c.BotManagement.State = plugin.StateIsNull | plugin.StateIsSet
-		return nil, nil
+		// Bot management may not be available on all plans (403/404)
+		var notFound *cloudflare.NotFoundError
+		var authN *cloudflare.AuthenticationError
+		var authZ *cloudflare.AuthorizationError
+		if errors.As(err, &notFound) || errors.As(err, &authN) || errors.As(err, &authZ) {
+			c.BotManagement.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
+		return nil, err
 	}
 
 	res, err := CreateResource(c.MqlRuntime, "cloudflare.zone.botManagement", map[string]*llx.RawData{

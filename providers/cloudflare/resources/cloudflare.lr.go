@@ -1144,16 +1144,16 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlCloudflareOneDevice).GetDeleted()).ToDataRes(types.Bool)
 	},
 	"cloudflare.one.device.created": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlCloudflareOneDevice).GetCreated()).ToDataRes(types.String)
+		return (r.(*mqlCloudflareOneDevice).GetCreated()).ToDataRes(types.Time)
 	},
 	"cloudflare.one.device.updated": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlCloudflareOneDevice).GetUpdated()).ToDataRes(types.String)
+		return (r.(*mqlCloudflareOneDevice).GetUpdated()).ToDataRes(types.Time)
 	},
 	"cloudflare.one.device.lastSeen": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlCloudflareOneDevice).GetLastSeen()).ToDataRes(types.String)
+		return (r.(*mqlCloudflareOneDevice).GetLastSeen()).ToDataRes(types.Time)
 	},
 	"cloudflare.one.device.revokedAt": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlCloudflareOneDevice).GetRevokedAt()).ToDataRes(types.String)
+		return (r.(*mqlCloudflareOneDevice).GetRevokedAt()).ToDataRes(types.Time)
 	},
 	"cloudflare.one.devicePostureRule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareOneDevicePostureRule).GetId()).ToDataRes(types.String)
@@ -2698,19 +2698,19 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"cloudflare.one.device.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudflareOneDevice).Created, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlCloudflareOneDevice).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"cloudflare.one.device.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudflareOneDevice).Updated, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlCloudflareOneDevice).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"cloudflare.one.device.lastSeen": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudflareOneDevice).LastSeen, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlCloudflareOneDevice).LastSeen, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"cloudflare.one.device.revokedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudflareOneDevice).RevokedAt, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlCloudflareOneDevice).RevokedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"cloudflare.one.devicePostureRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6386,10 +6386,10 @@ type mqlCloudflareOneDevice struct {
 	OsDistroRevision plugin.TValue[string]
 	Version          plugin.TValue[string]
 	Deleted          plugin.TValue[bool]
-	Created          plugin.TValue[string]
-	Updated          plugin.TValue[string]
-	LastSeen         plugin.TValue[string]
-	RevokedAt        plugin.TValue[string]
+	Created          plugin.TValue[*time.Time]
+	Updated          plugin.TValue[*time.Time]
+	LastSeen         plugin.TValue[*time.Time]
+	RevokedAt        plugin.TValue[*time.Time]
 }
 
 // createCloudflareOneDevice creates a new instance of this resource
@@ -6481,19 +6481,19 @@ func (c *mqlCloudflareOneDevice) GetDeleted() *plugin.TValue[bool] {
 	return &c.Deleted
 }
 
-func (c *mqlCloudflareOneDevice) GetCreated() *plugin.TValue[string] {
+func (c *mqlCloudflareOneDevice) GetCreated() *plugin.TValue[*time.Time] {
 	return &c.Created
 }
 
-func (c *mqlCloudflareOneDevice) GetUpdated() *plugin.TValue[string] {
+func (c *mqlCloudflareOneDevice) GetUpdated() *plugin.TValue[*time.Time] {
 	return &c.Updated
 }
 
-func (c *mqlCloudflareOneDevice) GetLastSeen() *plugin.TValue[string] {
+func (c *mqlCloudflareOneDevice) GetLastSeen() *plugin.TValue[*time.Time] {
 	return &c.LastSeen
 }
 
-func (c *mqlCloudflareOneDevice) GetRevokedAt() *plugin.TValue[string] {
+func (c *mqlCloudflareOneDevice) GetRevokedAt() *plugin.TValue[*time.Time] {
 	return &c.RevokedAt
 }
 

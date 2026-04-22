@@ -699,13 +699,13 @@ private cloudflare.one.device @defaults("name id") {
 	// Whether the device has been deleted
 	deleted bool
 	// Time the device was created
-	created string
+	created time
 	// Time the device was last updated
-	updated string
+	updated time
 	// Time the device was last seen
-	lastSeen string
+	lastSeen time
 	// Time the device was revoked
-	revokedAt string
+	revokedAt time
 }
 
 // Cloudflare One device posture rule

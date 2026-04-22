@@ -35,7 +35,9 @@ func TestDevices(t *testing.T) {
 	assert.Equal(t, "14.3.1", device.OsVersion.Data)
 	assert.Equal(t, "macOS", device.OsDistroName.Data)
 	assert.False(t, device.Deleted.Data)
-	assert.NotEmpty(t, device.LastSeen.Data)
+	assert.False(t, device.LastSeen.Data.IsZero())
+	assert.False(t, device.Created.Data.IsZero())
+	assert.False(t, device.Updated.Data.IsZero())
 }
 
 func TestDevicePostureRules(t *testing.T) {

@@ -4,6 +4,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 
 	"github.com/cloudflare/cloudflare-go"
 	"go.mondoo.com/mql/v13/llx"
@@ -278,8 +279,14 @@ func (c *mqlCloudflareOne) organization() (*mqlCloudflareOneOrganization, error)
 		Level:      cloudflare.AccountRouteLevel,
 	}, cloudflare.GetAccessOrganizationParams{})
 	if err != nil {
-		c.Organization.State = plugin.StateIsNull | plugin.StateIsSet
-		return nil, nil
+		var notFound *cloudflare.NotFoundError
+		var authN *cloudflare.AuthenticationError
+		var authZ *cloudflare.AuthorizationError
+		if errors.As(err, &notFound) || errors.As(err, &authN) || errors.As(err, &authZ) {
+			c.Organization.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
+		return nil, err
 	}
 
 	res, err := NewResource(c.MqlRuntime, "cloudflare.one.organization", map[string]*llx.RawData{
