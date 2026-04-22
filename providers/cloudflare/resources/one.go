@@ -29,7 +29,12 @@ func (c *mqlCloudflareZone) one() (*mqlCloudflareOne, error) {
 
 	one := res.(*mqlCloudflareOne)
 	one.ZoneID = c.Id.Data
-	one.AccountID = c.GetAccount().Data.GetId().Data
+
+	acc := c.GetAccount()
+	if acc.Error != nil {
+		return nil, acc.Error
+	}
+	one.AccountID = acc.Data.GetId().Data
 
 	return one, nil
 }
@@ -143,8 +148,8 @@ func (c *mqlCloudflareOne) accessPolicies() ([]any, error) {
 	var result []any
 	for {
 		records, info, err := conn.Cf.ListAccessPolicies(context.TODO(), &cloudflare.ResourceContainer{
-			Identifier: c.ZoneID,
-			Level:      cloudflare.ZoneRouteLevel,
+			Identifier: c.AccountID,
+			Level:      cloudflare.AccountRouteLevel,
 		}, cloudflare.ListAccessPoliciesParams{
 			ResultInfo: *cursor,
 		})
@@ -194,8 +199,8 @@ func (c *mqlCloudflareOne) accessGroups() ([]any, error) {
 	var result []any
 	for {
 		records, info, err := conn.Cf.ListAccessGroups(context.TODO(), &cloudflare.ResourceContainer{
-			Identifier: c.ZoneID,
-			Level:      cloudflare.ZoneRouteLevel,
+			Identifier: c.AccountID,
+			Level:      cloudflare.AccountRouteLevel,
 		}, cloudflare.ListAccessGroupsParams{
 			ResultInfo: *cursor,
 		})

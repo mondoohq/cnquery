@@ -11,11 +11,15 @@ import (
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
 )
 
+type mqlCloudflareZoneLogpushJobInternal struct {
+	zoneID string
+}
+
 func (c *mqlCloudflareZoneLogpushJob) id() (string, error) {
 	if c.Id.Error != nil {
 		return "", c.Id.Error
 	}
-	return fmt.Sprintf("logpush@%d", c.Id.Data), nil
+	return fmt.Sprintf("logpush@%s@%d", c.zoneID, c.Id.Data), nil
 }
 
 func (c *mqlCloudflareZone) logpushJobs() ([]any, error) {
@@ -34,7 +38,6 @@ func (c *mqlCloudflareZone) logpushJobs() ([]any, error) {
 		rec := records[i]
 
 		res, err := NewResource(c.MqlRuntime, "cloudflare.zone.logpushJob", map[string]*llx.RawData{
-			"__id":            llx.StringData(fmt.Sprintf("logpush@%s@%d", c.Id.Data, rec.ID)),
 			"id":              llx.IntData(int64(rec.ID)),
 			"name":            llx.StringData(rec.Name),
 			"dataset":         llx.StringData(rec.Dataset),
@@ -49,6 +52,9 @@ func (c *mqlCloudflareZone) logpushJobs() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		mqlJob := res.(*mqlCloudflareZoneLogpushJob)
+		mqlJob.zoneID = c.Id.Data
 
 		result = append(result, res)
 	}

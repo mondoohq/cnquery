@@ -21,6 +21,7 @@ func (c *mqlCloudflareOneGatewayRule) id() (string, error) {
 func (c *mqlCloudflareOne) gatewayRules() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
+	// TeamsRules does not support pagination in the SDK; it returns all rules.
 	records, err := conn.Cf.TeamsRules(context.TODO(), c.AccountID)
 	if err != nil {
 		return nil, err

@@ -16,7 +16,7 @@ func TestAccessPolicies(t *testing.T) {
 	env := setupTestEnv(t)
 	one := createTestOne(t, env)
 
-	env.Mux.HandleFunc(fmt.Sprintf("/zones/%s/access/policies", testZoneID), func(w http.ResponseWriter, r *http.Request) {
+	env.Mux.HandleFunc(fmt.Sprintf("/accounts/%s/access/policies", testAccountID), func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
 		jsonResponse(w, loadFixture("access_policies"))
 	})
@@ -36,7 +36,7 @@ func TestAccessGroups(t *testing.T) {
 	env := setupTestEnv(t)
 	one := createTestOne(t, env)
 
-	env.Mux.HandleFunc(fmt.Sprintf("/zones/%s/access/groups", testZoneID), func(w http.ResponseWriter, r *http.Request) {
+	env.Mux.HandleFunc(fmt.Sprintf("/accounts/%s/access/groups", testAccountID), func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
 		jsonResponse(w, loadFixture("access_groups"))
 	})

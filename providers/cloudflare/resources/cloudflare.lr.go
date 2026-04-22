@@ -7444,7 +7444,7 @@ func (c *mqlCloudflareZoneCustomHostname) GetCreatedAt() *plugin.TValue[*time.Ti
 type mqlCloudflareZoneLogpushJob struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlCloudflareZoneLogpushJobInternal it will be used here
+	mqlCloudflareZoneLogpushJobInternal
 	Id              plugin.TValue[int64]
 	Name            plugin.TValue[string]
 	Dataset         plugin.TValue[string]

@@ -27,7 +27,11 @@ func (c *mqlCloudflareTunnelConnection) id() (string, error) {
 
 func (c *mqlCloudflareZone) tunnels() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
-	accountID := c.GetAccount().Data.GetId().Data
+	acc := c.GetAccount()
+	if acc.Error != nil {
+		return nil, acc.Error
+	}
+	accountID := acc.Data.GetId().Data
 
 	cursor := &cloudflare.ResultInfo{}
 	var result []any
@@ -104,7 +108,11 @@ func (c *mqlCloudflareTunnelRoute) id() (string, error) {
 
 func (c *mqlCloudflareZone) tunnelRoutes() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
-	accountID := c.GetAccount().Data.GetId().Data
+	acc := c.GetAccount()
+	if acc.Error != nil {
+		return nil, acc.Error
+	}
+	accountID := acc.Data.GetId().Data
 
 	records, err := conn.Cf.ListTunnelRoutes(context.TODO(), &cloudflare.ResourceContainer{
 		Identifier: accountID,
@@ -146,7 +154,11 @@ func (c *mqlCloudflareTunnelVirtualNetwork) id() (string, error) {
 
 func (c *mqlCloudflareZone) tunnelVirtualNetworks() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
-	accountID := c.GetAccount().Data.GetId().Data
+	acc := c.GetAccount()
+	if acc.Error != nil {
+		return nil, acc.Error
+	}
+	accountID := acc.Data.GetId().Data
 
 	records, err := conn.Cf.ListTunnelVirtualNetworks(context.TODO(), &cloudflare.ResourceContainer{
 		Identifier: accountID,
