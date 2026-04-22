@@ -48,8 +48,8 @@ func (c *mqlCloudflareZone) firewallRules() ([]any, error) {
 				"paused":           llx.BoolData(rec.Paused),
 				"filterExpression": llx.StringData(rec.Filter.Expression),
 				"products":         llx.ArrayData(convert.SliceAnyToInterface(rec.Products), types.String),
-				"createdOn":        llx.TimeData(rec.CreatedOn),
-				"modifiedOn":       llx.TimeData(rec.ModifiedOn),
+				"createdAt":        llx.TimeData(rec.CreatedOn),
+				"updatedAt":        llx.TimeData(rec.ModifiedOn),
 			})
 			if err != nil {
 				return nil, err
@@ -95,7 +95,7 @@ func (c *mqlCloudflareZone) rulesets() ([]any, error) {
 			"kind":        llx.StringData(rec.Kind),
 			"phase":       llx.StringData(rec.Phase),
 			"version":     llx.StringDataPtr(rec.Version),
-			"lastUpdated": llx.TimeDataPtr(rec.LastUpdated),
+			"updatedAt":   llx.TimeDataPtr(rec.LastUpdated),
 		})
 		if err != nil {
 			return nil, err
@@ -127,11 +127,11 @@ func (c *mqlCloudflareZone) pageRules() ([]any, error) {
 		rec := records[i]
 
 		res, err := NewResource(c.MqlRuntime, "cloudflare.zone.pageRule", map[string]*llx.RawData{
-			"id":         llx.StringData(rec.ID),
-			"status":     llx.StringData(rec.Status),
-			"priority":   llx.IntData(int64(rec.Priority)),
-			"createdOn":  llx.TimeData(rec.CreatedOn),
-			"modifiedOn": llx.TimeData(rec.ModifiedOn),
+			"id":        llx.StringData(rec.ID),
+			"status":    llx.StringData(rec.Status),
+			"priority":  llx.IntData(int64(rec.Priority)),
+			"createdAt": llx.TimeData(rec.CreatedOn),
+			"updatedAt": llx.TimeData(rec.ModifiedOn),
 		})
 		if err != nil {
 			return nil, err

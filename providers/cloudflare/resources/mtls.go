@@ -49,7 +49,7 @@ func (c *mqlCloudflareZone) mtlsCertificates() ([]any, error) {
 				"ca":           llx.BoolData(rec.CA),
 				"uploadedOn":   llx.TimeData(rec.UploadedOn),
 				"updatedAt":    llx.TimeData(rec.UpdatedAt),
-				"expiresOn":    llx.TimeData(rec.ExpiresOn),
+				"expiresAt":    llx.TimeData(rec.ExpiresOn),
 			})
 			if err != nil {
 				return nil, err

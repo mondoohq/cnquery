@@ -784,8 +784,8 @@ private cloudflare.tunnel.route @defaults("network tunnelName") {
 	tunnelName string
 	// Route comment
 	comment string
-	// Virtual network identifier
-	virtualNetworkId string
+	// Virtual network
+	virtualNetwork() cloudflare.tunnel.virtualNetwork
 	// Time the route was created
 	createdAt time
 	// Time the route was deleted
@@ -825,9 +825,9 @@ private cloudflare.zone.firewallRule @defaults("id action") {
 	// Products this rule applies to
 	products []string
 	// Time the rule was created
-	createdOn time
+	createdAt time
 	// Time the rule was last modified
-	modifiedOn time
+	updatedAt time
 }
 
 // Cloudflare zone ruleset
@@ -845,7 +845,7 @@ private cloudflare.zone.ruleset @defaults("name phase") {
 	// Ruleset version
 	version string
 	// Time the ruleset was last updated
-	lastUpdated time
+	updatedAt time
 }
 
 // Cloudflare zone page rule
@@ -857,9 +857,9 @@ private cloudflare.zone.pageRule @defaults("id status") {
 	// Page rule priority
 	priority int
 	// Time the page rule was created
-	createdOn time
+	createdAt time
 	// Time the page rule was last modified
-	modifiedOn time
+	updatedAt time
 }
 
 // Cloudflare origin CA certificate
@@ -873,7 +873,7 @@ private cloudflare.zone.originCACertificate @defaults("id requestType") {
 	// Requested validity in days
 	requestValidity int
 	// Time the certificate expires
-	expiresOn time
+	expiresAt time
 	// Time the certificate was revoked
 	revokedAt time
 }
@@ -897,7 +897,7 @@ private cloudflare.mtlsCertificate @defaults("name id") {
 	// Time the certificate was last updated
 	updatedAt time
 	// Time the certificate expires
-	expiresOn time
+	expiresAt time
 }
 
 // Cloudflare custom hostname

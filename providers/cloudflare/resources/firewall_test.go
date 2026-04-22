@@ -32,6 +32,8 @@ func TestFirewallRules(t *testing.T) {
 	assert.False(t, rule.Paused.Data)
 	assert.Equal(t, "(cf.client.bot)", rule.FilterExpression.Data)
 	assert.Len(t, rule.Products.Data, 2)
+	assert.False(t, rule.CreatedAt.Data.IsZero())
+	assert.False(t, rule.UpdatedAt.Data.IsZero())
 }
 
 func TestRulesets(t *testing.T) {
@@ -76,5 +78,5 @@ func TestPageRules(t *testing.T) {
 	assert.Equal(t, "pr-001", pr.Id.Data)
 	assert.Equal(t, "active", pr.Status.Data)
 	assert.Equal(t, int64(1), pr.Priority.Data)
-	assert.False(t, pr.CreatedOn.Data.IsZero())
+	assert.False(t, pr.CreatedAt.Data.IsZero())
 }

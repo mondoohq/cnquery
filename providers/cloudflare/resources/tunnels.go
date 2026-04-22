@@ -8,6 +8,7 @@ import (
 
 	"github.com/cloudflare/cloudflare-go"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
 )
 
@@ -96,6 +97,24 @@ func (c *mqlCloudflareZone) tunnels() ([]any, error) {
 	return result, nil
 }
 
+type mqlCloudflareTunnelRouteInternal struct {
+	cacheVirtualNetworkID string
+}
+
+func (c *mqlCloudflareTunnelRoute) virtualNetwork() (*mqlCloudflareTunnelVirtualNetwork, error) {
+	if c.cacheVirtualNetworkID == "" {
+		c.VirtualNetwork.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(c.MqlRuntime, "cloudflare.tunnel.virtualNetwork", map[string]*llx.RawData{
+		"id": llx.StringData(c.cacheVirtualNetworkID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlCloudflareTunnelVirtualNetwork), nil
+}
+
 func (c *mqlCloudflareTunnelRoute) id() (string, error) {
 	if c.Network.Error != nil {
 		return "", c.Network.Error
@@ -127,14 +146,19 @@ func (c *mqlCloudflareZone) tunnelRoutes() ([]any, error) {
 		rec := records[i]
 
 		res, err := NewResource(c.MqlRuntime, "cloudflare.tunnel.route", map[string]*llx.RawData{
-			"network":          llx.StringData(rec.Network),
-			"tunnelId":         llx.StringData(rec.TunnelID),
-			"tunnelName":       llx.StringData(rec.TunnelName),
-			"comment":          llx.StringData(rec.Comment),
-			"virtualNetworkId": llx.StringData(rec.VirtualNetworkID),
-			"createdAt":        llx.TimeDataPtr(rec.CreatedAt),
-			"deletedAt":        llx.TimeDataPtr(rec.DeletedAt),
+			"network":    llx.StringData(rec.Network),
+			"tunnelId":   llx.StringData(rec.TunnelID),
+			"tunnelName": llx.StringData(rec.TunnelName),
+			"comment":    llx.StringData(rec.Comment),
+			"createdAt":  llx.TimeDataPtr(rec.CreatedAt),
+			"deletedAt":  llx.TimeDataPtr(rec.DeletedAt),
 		})
+		if err != nil {
+			return nil, err
+		}
+
+		mqlRoute := res.(*mqlCloudflareTunnelRoute)
+		mqlRoute.cacheVirtualNetworkID = rec.VirtualNetworkID
 		if err != nil {
 			return nil, err
 		}

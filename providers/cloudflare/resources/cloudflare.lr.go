@@ -1242,8 +1242,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cloudflare.tunnel.route.comment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareTunnelRoute).GetComment()).ToDataRes(types.String)
 	},
-	"cloudflare.tunnel.route.virtualNetworkId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlCloudflareTunnelRoute).GetVirtualNetworkId()).ToDataRes(types.String)
+	"cloudflare.tunnel.route.virtualNetwork": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareTunnelRoute).GetVirtualNetwork()).ToDataRes(types.Resource("cloudflare.tunnel.virtualNetwork"))
 	},
 	"cloudflare.tunnel.route.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareTunnelRoute).GetCreatedAt()).ToDataRes(types.Time)
@@ -1290,11 +1290,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cloudflare.zone.firewallRule.products": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareZoneFirewallRule).GetProducts()).ToDataRes(types.Array(types.String))
 	},
-	"cloudflare.zone.firewallRule.createdOn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlCloudflareZoneFirewallRule).GetCreatedOn()).ToDataRes(types.Time)
+	"cloudflare.zone.firewallRule.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneFirewallRule).GetCreatedAt()).ToDataRes(types.Time)
 	},
-	"cloudflare.zone.firewallRule.modifiedOn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlCloudflareZoneFirewallRule).GetModifiedOn()).ToDataRes(types.Time)
+	"cloudflare.zone.firewallRule.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneFirewallRule).GetUpdatedAt()).ToDataRes(types.Time)
 	},
 	"cloudflare.zone.ruleset.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareZoneRuleset).GetId()).ToDataRes(types.String)
@@ -1314,8 +1314,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cloudflare.zone.ruleset.version": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareZoneRuleset).GetVersion()).ToDataRes(types.String)
 	},
-	"cloudflare.zone.ruleset.lastUpdated": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlCloudflareZoneRuleset).GetLastUpdated()).ToDataRes(types.Time)
+	"cloudflare.zone.ruleset.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneRuleset).GetUpdatedAt()).ToDataRes(types.Time)
 	},
 	"cloudflare.zone.pageRule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareZonePageRule).GetId()).ToDataRes(types.String)
@@ -1326,11 +1326,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cloudflare.zone.pageRule.priority": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareZonePageRule).GetPriority()).ToDataRes(types.Int)
 	},
-	"cloudflare.zone.pageRule.createdOn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlCloudflareZonePageRule).GetCreatedOn()).ToDataRes(types.Time)
+	"cloudflare.zone.pageRule.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZonePageRule).GetCreatedAt()).ToDataRes(types.Time)
 	},
-	"cloudflare.zone.pageRule.modifiedOn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlCloudflareZonePageRule).GetModifiedOn()).ToDataRes(types.Time)
+	"cloudflare.zone.pageRule.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZonePageRule).GetUpdatedAt()).ToDataRes(types.Time)
 	},
 	"cloudflare.zone.originCACertificate.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareZoneOriginCACertificate).GetId()).ToDataRes(types.String)
@@ -1344,8 +1344,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cloudflare.zone.originCACertificate.requestValidity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareZoneOriginCACertificate).GetRequestValidity()).ToDataRes(types.Int)
 	},
-	"cloudflare.zone.originCACertificate.expiresOn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlCloudflareZoneOriginCACertificate).GetExpiresOn()).ToDataRes(types.Time)
+	"cloudflare.zone.originCACertificate.expiresAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneOriginCACertificate).GetExpiresAt()).ToDataRes(types.Time)
 	},
 	"cloudflare.zone.originCACertificate.revokedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareZoneOriginCACertificate).GetRevokedAt()).ToDataRes(types.Time)
@@ -1374,8 +1374,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cloudflare.mtlsCertificate.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareMtlsCertificate).GetUpdatedAt()).ToDataRes(types.Time)
 	},
-	"cloudflare.mtlsCertificate.expiresOn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlCloudflareMtlsCertificate).GetExpiresOn()).ToDataRes(types.Time)
+	"cloudflare.mtlsCertificate.expiresAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareMtlsCertificate).GetExpiresAt()).ToDataRes(types.Time)
 	},
 	"cloudflare.zone.customHostname.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareZoneCustomHostname).GetId()).ToDataRes(types.String)
@@ -2849,8 +2849,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlCloudflareTunnelRoute).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"cloudflare.tunnel.route.virtualNetworkId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudflareTunnelRoute).VirtualNetworkId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"cloudflare.tunnel.route.virtualNetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareTunnelRoute).VirtualNetwork, ok = plugin.RawToTValue[*mqlCloudflareTunnelVirtualNetwork](v.Value, v.Error)
 		return
 	},
 	"cloudflare.tunnel.route.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2921,12 +2921,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlCloudflareZoneFirewallRule).Products, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"cloudflare.zone.firewallRule.createdOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudflareZoneFirewallRule).CreatedOn, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"cloudflare.zone.firewallRule.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneFirewallRule).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
-	"cloudflare.zone.firewallRule.modifiedOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudflareZoneFirewallRule).ModifiedOn, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"cloudflare.zone.firewallRule.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneFirewallRule).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"cloudflare.zone.ruleset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2957,8 +2957,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlCloudflareZoneRuleset).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"cloudflare.zone.ruleset.lastUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudflareZoneRuleset).LastUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"cloudflare.zone.ruleset.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneRuleset).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"cloudflare.zone.pageRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2977,12 +2977,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlCloudflareZonePageRule).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"cloudflare.zone.pageRule.createdOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudflareZonePageRule).CreatedOn, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"cloudflare.zone.pageRule.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZonePageRule).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
-	"cloudflare.zone.pageRule.modifiedOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudflareZonePageRule).ModifiedOn, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"cloudflare.zone.pageRule.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZonePageRule).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"cloudflare.zone.originCACertificate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3005,8 +3005,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlCloudflareZoneOriginCACertificate).RequestValidity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"cloudflare.zone.originCACertificate.expiresOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudflareZoneOriginCACertificate).ExpiresOn, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"cloudflare.zone.originCACertificate.expiresAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneOriginCACertificate).ExpiresAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"cloudflare.zone.originCACertificate.revokedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3049,8 +3049,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlCloudflareMtlsCertificate).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
-	"cloudflare.mtlsCertificate.expiresOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudflareMtlsCertificate).ExpiresOn, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"cloudflare.mtlsCertificate.expiresAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareMtlsCertificate).ExpiresAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"cloudflare.zone.customHostname.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6802,14 +6802,14 @@ func (c *mqlCloudflareTunnelConnection) GetIsPendingReconnect() *plugin.TValue[b
 type mqlCloudflareTunnelRoute struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlCloudflareTunnelRouteInternal it will be used here
-	Network          plugin.TValue[string]
-	TunnelId         plugin.TValue[string]
-	TunnelName       plugin.TValue[string]
-	Comment          plugin.TValue[string]
-	VirtualNetworkId plugin.TValue[string]
-	CreatedAt        plugin.TValue[*time.Time]
-	DeletedAt        plugin.TValue[*time.Time]
+	mqlCloudflareTunnelRouteInternal
+	Network        plugin.TValue[string]
+	TunnelId       plugin.TValue[string]
+	TunnelName     plugin.TValue[string]
+	Comment        plugin.TValue[string]
+	VirtualNetwork plugin.TValue[*mqlCloudflareTunnelVirtualNetwork]
+	CreatedAt      plugin.TValue[*time.Time]
+	DeletedAt      plugin.TValue[*time.Time]
 }
 
 // createCloudflareTunnelRoute creates a new instance of this resource
@@ -6865,8 +6865,20 @@ func (c *mqlCloudflareTunnelRoute) GetComment() *plugin.TValue[string] {
 	return &c.Comment
 }
 
-func (c *mqlCloudflareTunnelRoute) GetVirtualNetworkId() *plugin.TValue[string] {
-	return &c.VirtualNetworkId
+func (c *mqlCloudflareTunnelRoute) GetVirtualNetwork() *plugin.TValue[*mqlCloudflareTunnelVirtualNetwork] {
+	return plugin.GetOrCompute[*mqlCloudflareTunnelVirtualNetwork](&c.VirtualNetwork, func() (*mqlCloudflareTunnelVirtualNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.tunnel.route", c.__id, "virtualNetwork")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlCloudflareTunnelVirtualNetwork), nil
+			}
+		}
+
+		return c.virtualNetwork()
+	})
 }
 
 func (c *mqlCloudflareTunnelRoute) GetCreatedAt() *plugin.TValue[*time.Time] {
@@ -6963,8 +6975,8 @@ type mqlCloudflareZoneFirewallRule struct {
 	Paused           plugin.TValue[bool]
 	FilterExpression plugin.TValue[string]
 	Products         plugin.TValue[[]any]
-	CreatedOn        plugin.TValue[*time.Time]
-	ModifiedOn       plugin.TValue[*time.Time]
+	CreatedAt        plugin.TValue[*time.Time]
+	UpdatedAt        plugin.TValue[*time.Time]
 }
 
 // createCloudflareZoneFirewallRule creates a new instance of this resource
@@ -7032,12 +7044,12 @@ func (c *mqlCloudflareZoneFirewallRule) GetProducts() *plugin.TValue[[]any] {
 	return &c.Products
 }
 
-func (c *mqlCloudflareZoneFirewallRule) GetCreatedOn() *plugin.TValue[*time.Time] {
-	return &c.CreatedOn
+func (c *mqlCloudflareZoneFirewallRule) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
-func (c *mqlCloudflareZoneFirewallRule) GetModifiedOn() *plugin.TValue[*time.Time] {
-	return &c.ModifiedOn
+func (c *mqlCloudflareZoneFirewallRule) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
 }
 
 // mqlCloudflareZoneRuleset for the cloudflare.zone.ruleset resource
@@ -7051,7 +7063,7 @@ type mqlCloudflareZoneRuleset struct {
 	Kind        plugin.TValue[string]
 	Phase       plugin.TValue[string]
 	Version     plugin.TValue[string]
-	LastUpdated plugin.TValue[*time.Time]
+	UpdatedAt   plugin.TValue[*time.Time]
 }
 
 // createCloudflareZoneRuleset creates a new instance of this resource
@@ -7115,8 +7127,8 @@ func (c *mqlCloudflareZoneRuleset) GetVersion() *plugin.TValue[string] {
 	return &c.Version
 }
 
-func (c *mqlCloudflareZoneRuleset) GetLastUpdated() *plugin.TValue[*time.Time] {
-	return &c.LastUpdated
+func (c *mqlCloudflareZoneRuleset) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
 }
 
 // mqlCloudflareZonePageRule for the cloudflare.zone.pageRule resource
@@ -7124,11 +7136,11 @@ type mqlCloudflareZonePageRule struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlCloudflareZonePageRuleInternal it will be used here
-	Id         plugin.TValue[string]
-	Status     plugin.TValue[string]
-	Priority   plugin.TValue[int64]
-	CreatedOn  plugin.TValue[*time.Time]
-	ModifiedOn plugin.TValue[*time.Time]
+	Id        plugin.TValue[string]
+	Status    plugin.TValue[string]
+	Priority  plugin.TValue[int64]
+	CreatedAt plugin.TValue[*time.Time]
+	UpdatedAt plugin.TValue[*time.Time]
 }
 
 // createCloudflareZonePageRule creates a new instance of this resource
@@ -7180,12 +7192,12 @@ func (c *mqlCloudflareZonePageRule) GetPriority() *plugin.TValue[int64] {
 	return &c.Priority
 }
 
-func (c *mqlCloudflareZonePageRule) GetCreatedOn() *plugin.TValue[*time.Time] {
-	return &c.CreatedOn
+func (c *mqlCloudflareZonePageRule) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
-func (c *mqlCloudflareZonePageRule) GetModifiedOn() *plugin.TValue[*time.Time] {
-	return &c.ModifiedOn
+func (c *mqlCloudflareZonePageRule) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
 }
 
 // mqlCloudflareZoneOriginCACertificate for the cloudflare.zone.originCACertificate resource
@@ -7197,7 +7209,7 @@ type mqlCloudflareZoneOriginCACertificate struct {
 	Hostnames       plugin.TValue[[]any]
 	RequestType     plugin.TValue[string]
 	RequestValidity plugin.TValue[int64]
-	ExpiresOn       plugin.TValue[*time.Time]
+	ExpiresAt       plugin.TValue[*time.Time]
 	RevokedAt       plugin.TValue[*time.Time]
 }
 
@@ -7254,8 +7266,8 @@ func (c *mqlCloudflareZoneOriginCACertificate) GetRequestValidity() *plugin.TVal
 	return &c.RequestValidity
 }
 
-func (c *mqlCloudflareZoneOriginCACertificate) GetExpiresOn() *plugin.TValue[*time.Time] {
-	return &c.ExpiresOn
+func (c *mqlCloudflareZoneOriginCACertificate) GetExpiresAt() *plugin.TValue[*time.Time] {
+	return &c.ExpiresAt
 }
 
 func (c *mqlCloudflareZoneOriginCACertificate) GetRevokedAt() *plugin.TValue[*time.Time] {
@@ -7275,7 +7287,7 @@ type mqlCloudflareMtlsCertificate struct {
 	Ca           plugin.TValue[bool]
 	UploadedOn   plugin.TValue[*time.Time]
 	UpdatedAt    plugin.TValue[*time.Time]
-	ExpiresOn    plugin.TValue[*time.Time]
+	ExpiresAt    plugin.TValue[*time.Time]
 }
 
 // createCloudflareMtlsCertificate creates a new instance of this resource
@@ -7347,8 +7359,8 @@ func (c *mqlCloudflareMtlsCertificate) GetUpdatedAt() *plugin.TValue[*time.Time]
 	return &c.UpdatedAt
 }
 
-func (c *mqlCloudflareMtlsCertificate) GetExpiresOn() *plugin.TValue[*time.Time] {
-	return &c.ExpiresOn
+func (c *mqlCloudflareMtlsCertificate) GetExpiresAt() *plugin.TValue[*time.Time] {
+	return &c.ExpiresAt
 }
 
 // mqlCloudflareZoneCustomHostname for the cloudflare.zone.customHostname resource

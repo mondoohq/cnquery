@@ -117,7 +117,7 @@ func (c *mqlCloudflareZone) originCACertificates() ([]any, error) {
 			"hostnames":       llx.ArrayData(convert.SliceAnyToInterface(cert.Hostnames), types.String),
 			"requestType":     llx.StringData(cert.RequestType),
 			"requestValidity": llx.IntData(int64(cert.RequestValidity)),
-			"expiresOn":       llx.TimeData(cert.ExpiresOn),
+			"expiresAt":       llx.TimeData(cert.ExpiresOn),
 			"revokedAt":       llx.TimeData(cert.RevokedAt),
 		})
 		if err != nil {

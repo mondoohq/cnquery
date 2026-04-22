@@ -31,7 +31,7 @@ func TestOriginCACertificates(t *testing.T) {
 	assert.Equal(t, "origin-rsa", cert.RequestType.Data)
 	assert.Equal(t, int64(5475), cert.RequestValidity.Data)
 	assert.Len(t, cert.Hostnames.Data, 2)
-	assert.False(t, cert.ExpiresOn.Data.IsZero())
+	assert.False(t, cert.ExpiresAt.Data.IsZero())
 }
 
 func TestMtlsCertificates(t *testing.T) {
@@ -54,7 +54,7 @@ func TestMtlsCertificates(t *testing.T) {
 	assert.Equal(t, "SHA256WithRSA", cert.Signature.Data)
 	assert.Equal(t, "1234567890ABCDEF", cert.SerialNumber.Data)
 	assert.True(t, cert.Ca.Data)
-	assert.False(t, cert.ExpiresOn.Data.IsZero())
+	assert.False(t, cert.ExpiresAt.Data.IsZero())
 }
 
 func TestCustomHostnames(t *testing.T) {
