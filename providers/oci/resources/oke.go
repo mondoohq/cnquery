@@ -271,6 +271,20 @@ func (o *mqlOciOkeCluster) nodePools() ([]any, error) {
 			return nil, err
 		}
 
+		subnetIds := []string{}
+		nsgIds := []string{}
+		if np.NodeConfigDetails != nil {
+			for _, placement := range np.NodeConfigDetails.PlacementConfigs {
+				if placement.SubnetId != nil {
+					subnetIds = append(subnetIds, *placement.SubnetId)
+				}
+			}
+			nsgIds = append(nsgIds, np.NodeConfigDetails.NsgIds...)
+		}
+		if len(subnetIds) == 0 {
+			subnetIds = append(subnetIds, np.SubnetIds...)
+		}
+
 		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.oke.nodePool", map[string]*llx.RawData{
 			"id":                llx.StringDataPtr(np.Id),
 			"name":              llx.StringDataPtr(np.Name),
@@ -285,12 +299,48 @@ func (o *mqlOciOkeCluster) nodePools() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlInstance)
+		mqlPool := mqlInstance.(*mqlOciOkeNodePool)
+		mqlPool.cacheSubnetIds = subnetIds
+		mqlPool.cacheNsgIds = nsgIds
+		res = append(res, mqlPool)
 	}
 
 	return res, nil
 }
 
+type mqlOciOkeNodePoolInternal struct {
+	cacheSubnetIds []string
+	cacheNsgIds    []string
+}
+
 func (o *mqlOciOkeNodePool) id() (string, error) {
 	return "oci.oke.nodePool/" + o.Id.Data, nil
+}
+
+func (o *mqlOciOkeNodePool) subnets() ([]any, error) {
+	res := make([]any, 0, len(o.cacheSubnetIds))
+	for _, id := range o.cacheSubnetIds {
+		mqlSubnet, err := NewResource(o.MqlRuntime, "oci.network.subnet", map[string]*llx.RawData{
+			"id": llx.StringData(id),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlSubnet)
+	}
+	return res, nil
+}
+
+func (o *mqlOciOkeNodePool) networkSecurityGroups() ([]any, error) {
+	res := make([]any, 0, len(o.cacheNsgIds))
+	for _, id := range o.cacheNsgIds {
+		mqlNsg, err := NewResource(o.MqlRuntime, "oci.network.networkSecurityGroup", map[string]*llx.RawData{
+			"id": llx.StringData(id),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlNsg)
+	}
+	return res, nil
 }

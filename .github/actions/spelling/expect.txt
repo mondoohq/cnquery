@@ -331,6 +331,7 @@ opensearch
 openssl
 openvpn
 openzfs
+ords
 orstatement
 OSGi
 ospf

@@ -1904,6 +1904,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.oke.nodePool.sshPublicKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciOkeNodePool).GetSshPublicKey()).ToDataRes(types.String)
 	},
+	"oci.oke.nodePool.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOkeNodePool).GetSubnets()).ToDataRes(types.Array(types.Resource("oci.network.subnet")))
+	},
+	"oci.oke.nodePool.networkSecurityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciOkeNodePool).GetNetworkSecurityGroups()).ToDataRes(types.Array(types.Resource("oci.network.networkSecurityGroup")))
+	},
 	"oci.oke.nodePool.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciOkeNodePool).GetState()).ToDataRes(types.String)
 	},
@@ -2308,6 +2314,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.database.autonomousDatabase.privateEndpointLabel": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabaseAutonomousDatabase).GetPrivateEndpointLabel()).ToDataRes(types.String)
+	},
+	"oci.database.autonomousDatabase.connectionUrls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDatabaseAutonomousDatabase).GetConnectionUrls()).ToDataRes(types.Dict)
 	},
 	"oci.database.autonomousDatabase.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabaseAutonomousDatabase).GetState()).ToDataRes(types.String)
@@ -4497,6 +4506,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciOkeNodePool).SshPublicKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"oci.oke.nodePool.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOkeNodePool).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.oke.nodePool.networkSecurityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciOkeNodePool).NetworkSecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"oci.oke.nodePool.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciOkeNodePool).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5083,6 +5100,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.database.autonomousDatabase.privateEndpointLabel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciDatabaseAutonomousDatabase).PrivateEndpointLabel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.database.autonomousDatabase.connectionUrls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDatabaseAutonomousDatabase).ConnectionUrls, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"oci.database.autonomousDatabase.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11118,16 +11139,18 @@ func (c *mqlOciOkeCluster) GetCreated() *plugin.TValue[*time.Time] {
 type mqlOciOkeNodePool struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOciOkeNodePoolInternal it will be used here
-	Id                plugin.TValue[string]
-	Name              plugin.TValue[string]
-	CompartmentID     plugin.TValue[string]
-	KubernetesVersion plugin.TValue[string]
-	NodeShape         plugin.TValue[string]
-	NodeShapeConfig   plugin.TValue[any]
-	NodeImageName     plugin.TValue[string]
-	SshPublicKey      plugin.TValue[string]
-	State             plugin.TValue[string]
+	mqlOciOkeNodePoolInternal
+	Id                    plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	CompartmentID         plugin.TValue[string]
+	KubernetesVersion     plugin.TValue[string]
+	NodeShape             plugin.TValue[string]
+	NodeShapeConfig       plugin.TValue[any]
+	NodeImageName         plugin.TValue[string]
+	SshPublicKey          plugin.TValue[string]
+	Subnets               plugin.TValue[[]any]
+	NetworkSecurityGroups plugin.TValue[[]any]
+	State                 plugin.TValue[string]
 }
 
 // createOciOkeNodePool creates a new instance of this resource
@@ -11197,6 +11220,38 @@ func (c *mqlOciOkeNodePool) GetNodeImageName() *plugin.TValue[string] {
 
 func (c *mqlOciOkeNodePool) GetSshPublicKey() *plugin.TValue[string] {
 	return &c.SshPublicKey
+}
+
+func (c *mqlOciOkeNodePool) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.oke.nodePool", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
+}
+
+func (c *mqlOciOkeNodePool) GetNetworkSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NetworkSecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.oke.nodePool", c.__id, "networkSecurityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.networkSecurityGroups()
+	})
 }
 
 func (c *mqlOciOkeNodePool) GetState() *plugin.TValue[string] {
@@ -12436,6 +12491,7 @@ type mqlOciDatabaseAutonomousDatabase struct {
 	NsgIds                   plugin.TValue[[]any]
 	PrivateEndpointIp        plugin.TValue[string]
 	PrivateEndpointLabel     plugin.TValue[string]
+	ConnectionUrls           plugin.TValue[any]
 	State                    plugin.TValue[string]
 	Created                  plugin.TValue[*time.Time]
 	FreeformTags             plugin.TValue[map[string]any]
@@ -12613,6 +12669,10 @@ func (c *mqlOciDatabaseAutonomousDatabase) GetPrivateEndpointIp() *plugin.TValue
 
 func (c *mqlOciDatabaseAutonomousDatabase) GetPrivateEndpointLabel() *plugin.TValue[string] {
 	return &c.PrivateEndpointLabel
+}
+
+func (c *mqlOciDatabaseAutonomousDatabase) GetConnectionUrls() *plugin.TValue[any] {
+	return &c.ConnectionUrls
 }
 
 func (c *mqlOciDatabaseAutonomousDatabase) GetState() *plugin.TValue[string] {

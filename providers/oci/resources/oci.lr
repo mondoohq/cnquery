@@ -1212,6 +1212,10 @@ private oci.oke.nodePool @defaults("name") {
   nodeImageName string
   // SSH public key on nodes (should be empty for security)
   sshPublicKey string
+  // Subnets the nodes are placed into (sourced from `NodeConfigDetails.PlacementConfigs[].SubnetId`; falls back to the top-level `SubnetIds` for older node pools)
+  subnets() []oci.network.subnet
+  // Network Security Groups attached to the node VNICs (empty when nodes are governed only by subnet security lists)
+  networkSecurityGroups() []oci.network.networkSecurityGroup
   // Lifecycle state (e.g., CREATING, ACTIVE, UPDATING, DELETING, DELETED, FAILED, NEEDS_ATTENTION)
   state string
 }
@@ -1530,6 +1534,8 @@ private oci.database.autonomousDatabase @defaults("name") {
   privateEndpointIp string
   // Private endpoint label
   privateEndpointLabel string
+  // Publicly reachable management and user URLs (sqlDevWebUrl, apexUrl, graphStudioUrl, ordsUrl, mongoDbUrl, machineLearningNotebookUrl, machineLearningUserManagementUrl, databaseTransformsUrl); populated when the database is publicly accessible or when a private endpoint URL is reachable through allowed networks
+  connectionUrls dict
   // Lifecycle state (e.g., PROVISIONING, AVAILABLE, STOPPING, STOPPED, STARTING, TERMINATING, TERMINATED, UNAVAILABLE, RESTORE_IN_PROGRESS, RESTORE_FAILED, BACKUP_IN_PROGRESS, SCALE_IN_PROGRESS, AVAILABLE_NEEDS_ATTENTION, UPDATING, MAINTENANCE_IN_PROGRESS, RESTARTING, RECREATING, ROLE_CHANGE_IN_PROGRESS, UPGRADING, INACCESSIBLE, STANDBY)
   state string
   // Creation time

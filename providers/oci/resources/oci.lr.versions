@@ -161,6 +161,7 @@ oci.containerInstances.instances 13.1.1
 oci.database 13.1.1
 oci.database.autonomousDatabase 13.1.1
 oci.database.autonomousDatabase.compartmentID 13.1.1
+oci.database.autonomousDatabase.connectionUrls 13.3.1
 oci.database.autonomousDatabase.cpuCoreCount 13.1.1
 oci.database.autonomousDatabase.created 13.1.1
 oci.database.autonomousDatabase.dataSafeStatus 13.1.1
@@ -608,11 +609,13 @@ oci.oke.nodePool.compartmentID 13.0.6
 oci.oke.nodePool.id 13.0.6
 oci.oke.nodePool.kubernetesVersion 13.0.6
 oci.oke.nodePool.name 13.0.6
+oci.oke.nodePool.networkSecurityGroups 13.3.1
 oci.oke.nodePool.nodeImageName 13.0.6
 oci.oke.nodePool.nodeShape 13.0.6
 oci.oke.nodePool.nodeShapeConfig 13.0.6
 oci.oke.nodePool.sshPublicKey 13.0.6
 oci.oke.nodePool.state 13.0.6
+oci.oke.nodePool.subnets 13.3.1
 oci.ons 13.0.6
 oci.ons.subscription 13.0.6
 oci.ons.subscription.created 13.0.6

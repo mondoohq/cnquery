@@ -262,6 +262,14 @@ func (o *mqlOciDatabase) getAutonomousDatabases(conn *connection.OciConnection, 
 					definedTags[k] = v
 				}
 
+				var connectionUrls map[string]any
+				if a.ConnectionUrls != nil {
+					connectionUrls, err = convert.JsonToDict(a.ConnectionUrls)
+					if err != nil {
+						return nil, err
+					}
+				}
+
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.database.autonomousDatabase", map[string]*llx.RawData{
 					"id":                       llx.StringDataPtr(a.Id),
 					"name":                     llx.StringDataPtr(a.DisplayName),
@@ -285,6 +293,7 @@ func (o *mqlOciDatabase) getAutonomousDatabases(conn *connection.OciConnection, 
 					"nsgIds":                   llx.ArrayData(convert.SliceAnyToInterface(a.NsgIds), types.String),
 					"privateEndpointIp":        llx.StringDataPtr(a.PrivateEndpointIp),
 					"privateEndpointLabel":     llx.StringDataPtr(a.PrivateEndpointLabel),
+					"connectionUrls":           llx.DictData(connectionUrls),
 					"state":                    llx.StringData(string(a.LifecycleState)),
 					"created":                  llx.TimeDataPtr(created),
 					"freeformTags":             llx.MapData(freeformTags, types.String),
