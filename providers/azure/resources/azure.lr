@@ -1812,6 +1812,10 @@ azure.subscription.webService.appsite @defaults("id name location") {
   enabled bool
   // Current state of the app
   state string
+  // Default hostname assigned to the app (e.g., "my-app.azurewebsites.net")
+  defaultHostName string
+  // All enabled hostnames for the app, including custom domains
+  enabledHostNames []string
   // Deployment slots for the web app site
   slots() []azure.subscription.webService.appslot
   // App site configuration
@@ -4711,6 +4715,8 @@ azure.subscription.serviceBusService.namespace @defaults("id name location") {
   serviceBusEndpoint string
   // Whether local (SAS key) authentication is disabled
   disableLocalAuth bool
+  // Whether the namespace is zone-redundant
+  zoneRedundant bool
   // Queues in this namespace
   queues() []azure.subscription.serviceBusService.namespace.queue
   // Topics in this namespace
@@ -4825,6 +4831,10 @@ azure.subscription.eventHubService.namespace @defaults("id name location") {
   disableLocalAuth bool
   // Minimum TLS version (e.g., "1.0", "1.1", "1.2")
   minimumTlsVersion string
+  // Whether public network access is enabled ("Enabled", "Disabled", or "SecuredByPerimeter")
+  publicNetworkAccess string
+  // Whether the namespace is zone-redundant
+  zoneRedundant bool
   // Event Hubs in this namespace
   eventHubs() []azure.subscription.eventHubService.namespace.eventHub
 }

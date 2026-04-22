@@ -3490,6 +3490,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.webService.appsite.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetState()).ToDataRes(types.String)
 	},
+	"azure.subscription.webService.appsite.defaultHostName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetDefaultHostName()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsite.enabledHostNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetEnabledHostNames()).ToDataRes(types.Array(types.String))
+	},
 	"azure.subscription.webService.appsite.slots": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetSlots()).ToDataRes(types.Array(types.Resource("azure.subscription.webService.appslot")))
 	},
@@ -7051,6 +7057,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.serviceBusService.namespace.disableLocalAuth": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespace).GetDisableLocalAuth()).ToDataRes(types.Bool)
 	},
+	"azure.subscription.serviceBusService.namespace.zoneRedundant": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespace).GetZoneRedundant()).ToDataRes(types.Bool)
+	},
 	"azure.subscription.serviceBusService.namespace.queues": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespace).GetQueues()).ToDataRes(types.Array(types.Resource("azure.subscription.serviceBusService.namespace.queue")))
 	},
@@ -7188,6 +7197,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.eventHubService.namespace.minimumTlsVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventHubServiceNamespace).GetMinimumTlsVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventHubService.namespace.publicNetworkAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventHubServiceNamespace).GetPublicNetworkAccess()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventHubService.namespace.zoneRedundant": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventHubServiceNamespace).GetZoneRedundant()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.eventHubService.namespace.eventHubs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventHubServiceNamespace).GetEventHubs()).ToDataRes(types.Array(types.Resource("azure.subscription.eventHubService.namespace.eventHub")))
@@ -10756,6 +10771,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.webService.appsite.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionWebServiceAppsite).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.defaultHostName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsite).DefaultHostName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.enabledHostNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsite).EnabledHostNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.webService.appsite.slots": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16042,6 +16065,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionServiceBusServiceNamespace).DisableLocalAuth, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.serviceBusService.namespace.zoneRedundant": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceBusServiceNamespace).ZoneRedundant, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.serviceBusService.namespace.queues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionServiceBusServiceNamespace).Queues, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -16244,6 +16271,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.eventHubService.namespace.minimumTlsVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionEventHubServiceNamespace).MinimumTlsVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventHubService.namespace.publicNetworkAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventHubServiceNamespace).PublicNetworkAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventHubService.namespace.zoneRedundant": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventHubServiceNamespace).ZoneRedundant, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.eventHubService.namespace.eventHubs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25058,6 +25093,8 @@ type mqlAzureSubscriptionWebServiceAppsite struct {
 	ClientCertMode             plugin.TValue[string]
 	Enabled                    plugin.TValue[bool]
 	State                      plugin.TValue[string]
+	DefaultHostName            plugin.TValue[string]
+	EnabledHostNames           plugin.TValue[[]any]
 	Slots                      plugin.TValue[[]any]
 	Configuration              plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteconfig]
 	AuthenticationSettings     plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteauthsettings]
@@ -25171,6 +25208,14 @@ func (c *mqlAzureSubscriptionWebServiceAppsite) GetEnabled() *plugin.TValue[bool
 
 func (c *mqlAzureSubscriptionWebServiceAppsite) GetState() *plugin.TValue[string] {
 	return &c.State
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsite) GetDefaultHostName() *plugin.TValue[string] {
+	return &c.DefaultHostName
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsite) GetEnabledHostNames() *plugin.TValue[[]any] {
+	return &c.EnabledHostNames
 }
 
 func (c *mqlAzureSubscriptionWebServiceAppsite) GetSlots() *plugin.TValue[[]any] {
@@ -38727,6 +38772,7 @@ type mqlAzureSubscriptionServiceBusServiceNamespace struct {
 	Status             plugin.TValue[string]
 	ServiceBusEndpoint plugin.TValue[string]
 	DisableLocalAuth   plugin.TValue[bool]
+	ZoneRedundant      plugin.TValue[bool]
 	Queues             plugin.TValue[[]any]
 	Topics             plugin.TValue[[]any]
 }
@@ -38798,6 +38844,10 @@ func (c *mqlAzureSubscriptionServiceBusServiceNamespace) GetServiceBusEndpoint()
 
 func (c *mqlAzureSubscriptionServiceBusServiceNamespace) GetDisableLocalAuth() *plugin.TValue[bool] {
 	return &c.DisableLocalAuth
+}
+
+func (c *mqlAzureSubscriptionServiceBusServiceNamespace) GetZoneRedundant() *plugin.TValue[bool] {
+	return &c.ZoneRedundant
 }
 
 func (c *mqlAzureSubscriptionServiceBusServiceNamespace) GetQueues() *plugin.TValue[[]any] {
@@ -39213,6 +39263,8 @@ type mqlAzureSubscriptionEventHubServiceNamespace struct {
 	KafkaEnabled           plugin.TValue[bool]
 	DisableLocalAuth       plugin.TValue[bool]
 	MinimumTlsVersion      plugin.TValue[string]
+	PublicNetworkAccess    plugin.TValue[string]
+	ZoneRedundant          plugin.TValue[bool]
 	EventHubs              plugin.TValue[[]any]
 }
 
@@ -39295,6 +39347,14 @@ func (c *mqlAzureSubscriptionEventHubServiceNamespace) GetDisableLocalAuth() *pl
 
 func (c *mqlAzureSubscriptionEventHubServiceNamespace) GetMinimumTlsVersion() *plugin.TValue[string] {
 	return &c.MinimumTlsVersion
+}
+
+func (c *mqlAzureSubscriptionEventHubServiceNamespace) GetPublicNetworkAccess() *plugin.TValue[string] {
+	return &c.PublicNetworkAccess
+}
+
+func (c *mqlAzureSubscriptionEventHubServiceNamespace) GetZoneRedundant() *plugin.TValue[bool] {
+	return &c.ZoneRedundant
 }
 
 func (c *mqlAzureSubscriptionEventHubServiceNamespace) GetEventHubs() *plugin.TValue[[]any] {

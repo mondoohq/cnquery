@@ -81,7 +81,7 @@ func (a *mqlAzureSubscriptionServiceBusService) namespaces() ([]any, error) {
 			}
 
 			var status, serviceBusEndpoint string
-			var disableLocalAuth bool
+			var disableLocalAuth, zoneRedundant bool
 			if ns.Properties != nil {
 				if ns.Properties.Status != nil {
 					status = *ns.Properties.Status
@@ -91,6 +91,9 @@ func (a *mqlAzureSubscriptionServiceBusService) namespaces() ([]any, error) {
 				}
 				if ns.Properties.DisableLocalAuth != nil {
 					disableLocalAuth = *ns.Properties.DisableLocalAuth
+				}
+				if ns.Properties.ZoneRedundant != nil {
+					zoneRedundant = *ns.Properties.ZoneRedundant
 				}
 			}
 
@@ -103,6 +106,7 @@ func (a *mqlAzureSubscriptionServiceBusService) namespaces() ([]any, error) {
 				"status":             llx.StringData(status),
 				"serviceBusEndpoint": llx.StringData(serviceBusEndpoint),
 				"disableLocalAuth":   llx.BoolData(disableLocalAuth),
+				"zoneRedundant":      llx.BoolData(zoneRedundant),
 			})
 			if err != nil {
 				return nil, err

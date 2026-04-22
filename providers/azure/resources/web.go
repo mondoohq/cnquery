@@ -108,6 +108,8 @@ func createWebAppResourceFromSite(runtime *plugin.Runtime, resourceType string, 
 		}
 		args["enabled"] = llx.BoolDataPtr(site.Properties.Enabled)
 		args["state"] = llx.StringDataPtr(site.Properties.State)
+		args["defaultHostName"] = llx.StringDataPtr(site.Properties.DefaultHostName)
+		args["enabledHostNames"] = llx.ArrayData(convert.SliceStrPtrToInterface(site.Properties.EnabledHostNames), types.String)
 		args["endToEndEncryptionEnabled"] = llx.BoolDataPtr(site.Properties.EndToEndEncryptionEnabled)
 		args["sshEnabled"] = llx.BoolDataPtr(site.Properties.SSHEnabled)
 		args["publicNetworkAccess"] = llx.StringDataPtr(site.Properties.PublicNetworkAccess)

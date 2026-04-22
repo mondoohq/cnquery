@@ -43,6 +43,7 @@ awslogs
 AWSPENDING
 AWSPREVIOUS
 awsvpc
+azurewebsites
 backupconfiguration
 backupdr
 backupsetting

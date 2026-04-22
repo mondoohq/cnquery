@@ -77,9 +77,9 @@ func (a *mqlAzureSubscriptionEventHubService) namespaces() ([]any, error) {
 			}
 
 			var status string
-			var isAutoInflateEnabled, kafkaEnabled, disableLocalAuth bool
+			var isAutoInflateEnabled, kafkaEnabled, disableLocalAuth, zoneRedundant bool
 			var maximumThroughputUnits int64
-			var minimumTlsVersion string
+			var minimumTlsVersion, publicNetworkAccess string
 			if ns.Properties != nil {
 				if ns.Properties.Status != nil {
 					status = *ns.Properties.Status
@@ -99,6 +99,12 @@ func (a *mqlAzureSubscriptionEventHubService) namespaces() ([]any, error) {
 				if ns.Properties.MinimumTLSVersion != nil {
 					minimumTlsVersion = string(*ns.Properties.MinimumTLSVersion)
 				}
+				if ns.Properties.PublicNetworkAccess != nil {
+					publicNetworkAccess = string(*ns.Properties.PublicNetworkAccess)
+				}
+				if ns.Properties.ZoneRedundant != nil {
+					zoneRedundant = *ns.Properties.ZoneRedundant
+				}
 			}
 
 			mqlNs, err := CreateResource(a.MqlRuntime, "azure.subscription.eventHubService.namespace", map[string]*llx.RawData{
@@ -113,6 +119,8 @@ func (a *mqlAzureSubscriptionEventHubService) namespaces() ([]any, error) {
 				"kafkaEnabled":           llx.BoolData(kafkaEnabled),
 				"disableLocalAuth":       llx.BoolData(disableLocalAuth),
 				"minimumTlsVersion":      llx.StringData(minimumTlsVersion),
+				"publicNetworkAccess":    llx.StringData(publicNetworkAccess),
+				"zoneRedundant":          llx.BoolData(zoneRedundant),
 			})
 			if err != nil {
 				return nil, err

@@ -766,9 +766,11 @@ azure.subscription.eventHubService.namespace.location 13.3.3
 azure.subscription.eventHubService.namespace.maximumThroughputUnits 13.3.3
 azure.subscription.eventHubService.namespace.minimumTlsVersion 13.3.3
 azure.subscription.eventHubService.namespace.name 13.3.3
+azure.subscription.eventHubService.namespace.publicNetworkAccess 13.4.3
 azure.subscription.eventHubService.namespace.sku 13.3.3
 azure.subscription.eventHubService.namespace.status 13.3.3
 azure.subscription.eventHubService.namespace.tags 13.3.3
+azure.subscription.eventHubService.namespace.zoneRedundant 13.4.3
 azure.subscription.eventHubService.namespaces 13.3.3
 azure.subscription.eventHubService.subscriptionId 13.3.3
 azure.subscription.frontDoor 13.3.3
@@ -1774,6 +1776,7 @@ azure.subscription.serviceBusService.namespace.topic.subscriptionCount 13.3.3
 azure.subscription.serviceBusService.namespace.topic.subscriptions 13.3.3
 azure.subscription.serviceBusService.namespace.topic.supportOrdering 13.3.3
 azure.subscription.serviceBusService.namespace.topics 13.3.3
+azure.subscription.serviceBusService.namespace.zoneRedundant 13.4.3
 azure.subscription.serviceBusService.namespaces 13.3.3
 azure.subscription.serviceBusService.subscriptionId 13.3.3
 azure.subscription.sql 9.0.0
@@ -2107,8 +2110,10 @@ azure.subscription.webService.appsite.clientCertEnabled 11.4.28
 azure.subscription.webService.appsite.clientCertMode 11.4.28
 azure.subscription.webService.appsite.configuration 9.0.1
 azure.subscription.webService.appsite.connectionSettings 9.0.1
+azure.subscription.webService.appsite.defaultHostName 13.4.3
 azure.subscription.webService.appsite.diagnosticSettings 11.3.0
 azure.subscription.webService.appsite.enabled 11.4.28
+azure.subscription.webService.appsite.enabledHostNames 13.4.3
 azure.subscription.webService.appsite.endToEndEncryptionEnabled 11.4.28
 azure.subscription.webService.appsite.ftp 11.3.31
 azure.subscription.webService.appsite.functions 11.3.3
