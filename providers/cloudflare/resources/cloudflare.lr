@@ -68,11 +68,11 @@ private cloudflare.zone @defaults("name account.name") {
 	// Cloudflare One (Zero Trust)
 	one() cloudflare.one
 
-	// Cloudflare tunnels
+	// Cloudflare tunnels (account-scoped, exposed on zone for consistency with workers/r2)
 	tunnels() []cloudflare.tunnel
-	// Tunnel routes
+	// Tunnel routes (account-scoped)
 	tunnelRoutes() []cloudflare.tunnel.route
-	// Tunnel virtual networks
+	// Tunnel virtual networks (account-scoped)
 	tunnelVirtualNetworks() []cloudflare.tunnel.virtualNetwork
 
 	// Firewall rules (legacy)
@@ -767,7 +767,7 @@ private cloudflare.tunnel.connection @defaults("id coloName") {
 	// Client connector version
 	clientVersion string
 	// Time the connection was opened
-	openedAt string
+	openedAt time
 	// Origin IP address
 	originIp string
 	// Whether the connection is pending reconnect

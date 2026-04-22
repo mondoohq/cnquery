@@ -61,7 +61,7 @@ func (c *mqlCloudflareZone) tunnels() ([]any, error) {
 					"coloName":           llx.StringData(tc.ColoName),
 					"clientId":           llx.StringData(tc.ClientID),
 					"clientVersion":      llx.StringData(tc.ClientVersion),
-					"openedAt":           llx.StringData(tc.OpenedAt),
+					"openedAt":           llx.TimeData(parseRFC3339(tc.OpenedAt)),
 					"originIp":           llx.StringData(tc.OriginIP),
 					"isPendingReconnect": llx.BoolData(tc.IsPendingReconnect),
 				})

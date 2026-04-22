@@ -1222,7 +1222,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlCloudflareTunnelConnection).GetClientVersion()).ToDataRes(types.String)
 	},
 	"cloudflare.tunnel.connection.openedAt": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlCloudflareTunnelConnection).GetOpenedAt()).ToDataRes(types.String)
+		return (r.(*mqlCloudflareTunnelConnection).GetOpenedAt()).ToDataRes(types.Time)
 	},
 	"cloudflare.tunnel.connection.originIp": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareTunnelConnection).GetOriginIp()).ToDataRes(types.String)
@@ -2818,7 +2818,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"cloudflare.tunnel.connection.openedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlCloudflareTunnelConnection).OpenedAt, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlCloudflareTunnelConnection).OpenedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"cloudflare.tunnel.connection.originIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6728,7 +6728,7 @@ type mqlCloudflareTunnelConnection struct {
 	ColoName           plugin.TValue[string]
 	ClientId           plugin.TValue[string]
 	ClientVersion      plugin.TValue[string]
-	OpenedAt           plugin.TValue[string]
+	OpenedAt           plugin.TValue[*time.Time]
 	OriginIp           plugin.TValue[string]
 	IsPendingReconnect plugin.TValue[bool]
 }
@@ -6786,7 +6786,7 @@ func (c *mqlCloudflareTunnelConnection) GetClientVersion() *plugin.TValue[string
 	return &c.ClientVersion
 }
 
-func (c *mqlCloudflareTunnelConnection) GetOpenedAt() *plugin.TValue[string] {
+func (c *mqlCloudflareTunnelConnection) GetOpenedAt() *plugin.TValue[*time.Time] {
 	return &c.OpenedAt
 }
 

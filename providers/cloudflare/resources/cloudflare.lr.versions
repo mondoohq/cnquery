@@ -112,7 +112,7 @@ cloudflare.one.devicePostureIntegration.id 13.0.7
 cloudflare.one.devicePostureIntegration.interval 13.0.7
 cloudflare.one.devicePostureIntegration.name 13.0.7
 cloudflare.one.devicePostureIntegration.type 13.0.7
-cloudflare.one.devicePostureIntegrations 13.0.8
+cloudflare.one.devicePostureIntegrations 13.0.7
 cloudflare.one.devicePostureRule 13.0.7
 cloudflare.one.devicePostureRule.description 13.0.7
 cloudflare.one.devicePostureRule.expiration 13.0.7

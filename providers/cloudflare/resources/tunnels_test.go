@@ -40,6 +40,7 @@ func TestTunnels(t *testing.T) {
 	assert.Equal(t, "DFW", conn.ColoName.Data)
 	assert.Equal(t, "198.51.100.1", conn.OriginIp.Data)
 	assert.False(t, conn.IsPendingReconnect.Data)
+	assert.False(t, conn.OpenedAt.Data.IsZero())
 
 	// Second tunnel has no connections
 	tunnel2 := result[1].(*mqlCloudflareTunnel)
