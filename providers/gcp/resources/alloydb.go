@@ -11,6 +11,7 @@ import (
 
 	alloydb "cloud.google.com/go/alloydb/apiv1"
 	"cloud.google.com/go/alloydb/apiv1/alloydbpb"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -82,6 +83,10 @@ func (g *mqlGcpProjectAlloydbService) clusters() ([]any, error) {
 			break
 		}
 		if err != nil {
+			if isGRPCSkippable(err) {
+				log.Warn().Err(err).Msg("could not list AlloyDB clusters")
+				return nil, nil
+			}
 			return nil, err
 		}
 
@@ -297,6 +302,10 @@ func (g *mqlGcpProjectAlloydbServiceCluster) instances() ([]any, error) {
 			break
 		}
 		if err != nil {
+			if isGRPCSkippable(err) {
+				log.Warn().Err(err).Msg("could not list AlloyDB instances")
+				return nil, nil
+			}
 			return nil, err
 		}
 
@@ -437,6 +446,10 @@ func (g *mqlGcpProjectAlloydbServiceCluster) backups() ([]any, error) {
 			break
 		}
 		if err != nil {
+			if isGRPCSkippable(err) {
+				log.Warn().Err(err).Msg("could not list AlloyDB backups")
+				return nil, nil
+			}
 			return nil, err
 		}
 
