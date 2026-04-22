@@ -65,7 +65,34 @@ private cloudflare.zone @defaults("name account.name") {
   // Workers
 	workers() cloudflare.workers
 
+	// Cloudflare One (Zero Trust)
 	one() cloudflare.one
+
+	// Cloudflare tunnels
+	tunnels() []cloudflare.tunnel
+	// Tunnel routes
+	tunnelRoutes() []cloudflare.tunnel.route
+	// Tunnel virtual networks
+	tunnelVirtualNetworks() []cloudflare.tunnel.virtualNetwork
+
+	// Firewall rules (legacy)
+	firewallRules() []cloudflare.zone.firewallRule
+	// Rulesets
+	rulesets() []cloudflare.zone.ruleset
+	// Page rules
+	pageRules() []cloudflare.zone.pageRule
+
+	// Origin CA certificates
+	originCACertificates() []cloudflare.zone.originCACertificate
+	// mTLS certificates
+	mtlsCertificates() []cloudflare.mtlsCertificate
+	// Custom hostnames
+	customHostnames() []cloudflare.zone.customHostname
+
+	// Logpush jobs
+	logpushJobs() []cloudflare.zone.logpushJob
+	// Bot management settings
+	botManagement() cloudflare.zone.botManagement
 }
 
 // Cloudflare account
@@ -238,6 +265,9 @@ private cloudflare.account @defaults("name") {
 
 	// Videos
 	videos() []cloudflare.streams.video
+
+	// Account roles
+	roles() []cloudflare.account.role
 }
 
 // Account settings
@@ -396,6 +426,28 @@ private cloudflare.one {
 	apps() []cloudflare.one.app
 	// Identity providers
 	identityProviders() []cloudflare.one.idp
+	// Access policies (reusable)
+	accessPolicies() []cloudflare.one.accessPolicy
+	// Access groups
+	accessGroups() []cloudflare.one.accessGroup
+	// Access service tokens
+	serviceTokens() []cloudflare.one.serviceToken
+	// Access organization configuration
+	organization() cloudflare.one.organization
+	// Gateway rules
+	gatewayRules() []cloudflare.one.gatewayRule
+	// Gateway lists
+	lists() []cloudflare.one.list
+	// Gateway locations
+	locations() []cloudflare.one.location
+	// DLP profiles
+	dlpProfiles() []cloudflare.one.dlpProfile
+	// Registered devices
+	devices() []cloudflare.one.device
+	// Device posture rules
+	devicePostureRules() []cloudflare.one.devicePostureRule
+	// Device posture integrations
+	devicePostureIntegrations() []cloudflare.one.devicePostureIntegration
 }
 
 // Cloudflare One application
@@ -454,4 +506,476 @@ private cloudflare.one.idp @defaults("name") {
 	id string // UUID
 	name string // The name of the identity provider, shown to users on the login page.
 	type string // The type of the identity provider.
+}
+
+// Cloudflare One access policy
+private cloudflare.one.accessPolicy @defaults("name decision") {
+	// Policy identifier
+	id string
+	// Policy name
+	name string
+	// The action Access will take if the policy matches (allow, deny, non_identity, bypass)
+	decision string
+	// The order in which the policy is executed
+	precedence int
+	// Time the policy was created
+	createdAt time
+	// Time the policy was last updated
+	updatedAt time
+}
+
+// Cloudflare One access group
+private cloudflare.one.accessGroup @defaults("name") {
+	// Group identifier
+	id string
+	// Group name
+	name string
+	// Time the group was created
+	createdAt time
+	// Time the group was last updated
+	updatedAt time
+}
+
+// Cloudflare One access service token
+private cloudflare.one.serviceToken @defaults("name id") {
+	// Token identifier
+	id string
+	// Token name
+	name string
+	// OAuth 2.0 client ID
+	clientId string
+	// Token duration before expiration
+	duration string
+	// Time the token expires
+	expiresAt time
+	// Time the token was last seen
+	lastSeenAt time
+	// Time the token was created
+	createdAt time
+	// Time the token was last updated
+	updatedAt time
+}
+
+// Cloudflare One organization configuration
+private cloudflare.one.organization @defaults("name authDomain") {
+	// Organization name
+	name string
+	// Auth domain for the organization (e.g., example.cloudflareaccess.com)
+	authDomain string
+	// Whether the UI is read-only
+	isUiReadOnly bool
+	// Inactivity time before user seat expires
+	userSeatExpirationInactiveTime string
+	// Whether users auto-redirect to identity provider
+	autoRedirectToIdentity bool
+	// Default session duration
+	sessionDuration string
+	// WARP auth session duration
+	warpAuthSessionDuration string
+	// Whether authentication via WARP is allowed
+	allowAuthenticateViaWarp bool
+	// Time the organization was created
+	createdAt time
+	// Time the organization was last updated
+	updatedAt time
+}
+
+// Cloudflare One Gateway rule
+private cloudflare.one.gatewayRule @defaults("name action") {
+	// Rule identifier
+	id string
+	// Rule name
+	name string
+	// Rule description
+	description string
+	// Rule action (allow, block, isolate, log, etc.)
+	action string
+	// Whether the rule is enabled
+	enabled bool
+	// Rule precedence (lower numbers execute first)
+	precedence int
+	// Filter expression for network traffic
+	traffic string
+	// Filter expression for user identity
+	identity string
+	// Filter expression for device posture
+	devicePosture string
+	// Which filter types apply (dns, http, l4, egress, resolve)
+	filters []string
+	// Rule version
+	version int
+	// Time the rule was created
+	createdAt time
+	// Time the rule was last updated
+	updatedAt time
+}
+
+// Cloudflare One Gateway list
+private cloudflare.one.list @defaults("name type") {
+	// List identifier
+	id string
+	// List name
+	name string
+	// List type (SERIAL, URL, DOMAIN, EMAIL, IP)
+	type string
+	// List description
+	description string
+	// Number of items in the list
+	count int
+	// Time the list was created
+	createdAt time
+	// Time the list was last updated
+	updatedAt time
+}
+
+// Cloudflare One Gateway location
+private cloudflare.one.location @defaults("name") {
+	// Location identifier
+	id string
+	// Location name
+	name string
+	// DoH subdomain for this location
+	dohSubdomain string
+	// Assigned IPv4 address
+	ip string
+	// Whether anonymized logs are enabled
+	anonymizedLogsEnabled bool
+	// Whether this is the default client location
+	clientDefault bool
+	// Whether ECS (EDNS Client Subnet) is supported
+	ecsSupport bool
+	// Time the location was created
+	createdAt time
+	// Time the location was last updated
+	updatedAt time
+}
+
+// Cloudflare One DLP profile
+private cloudflare.one.dlpProfile @defaults("name type") {
+	// Profile identifier
+	id string
+	// Profile name
+	name string
+	// Profile type (predefined, custom, integration)
+	type string
+	// Profile description
+	description string
+	// Number of matches allowed before triggering
+	allowedMatchCount int
+	// Whether OCR is enabled
+	ocrEnabled bool
+	// Time the profile was created
+	createdAt time
+	// Time the profile was last updated
+	updatedAt time
+}
+
+// Cloudflare One device
+private cloudflare.one.device @defaults("name id") {
+	// Device identifier
+	id string
+	// Device name
+	name string
+	// Device type (desktop, mobile, etc.)
+	deviceType string
+	// Device model
+	model string
+	// Device manufacturer
+	manufacturer string
+	// Device serial number
+	serialNumber string
+	// Device MAC address
+	macAddress string
+	// Device IP address
+	ip string
+	// OS version
+	osVersion string
+	// OS distribution name
+	osDistroName string
+	// OS distribution revision
+	osDistroRevision string
+	// WARP client version
+	version string
+	// Whether the device has been deleted
+	deleted bool
+	// Time the device was created
+	created string
+	// Time the device was last updated
+	updated string
+	// Time the device was last seen
+	lastSeen string
+	// Time the device was revoked
+	revokedAt string
+}
+
+// Cloudflare One device posture rule
+private cloudflare.one.devicePostureRule @defaults("name type") {
+	// Rule identifier
+	id string
+	// Rule name
+	name string
+	// Rule type (file, application, serial_number, os_version, domain_joined, etc.)
+	type string
+	// Rule description
+	description string
+	// Check schedule (cron expression)
+	schedule string
+	// Rule expiration
+	expiration string
+}
+
+// Cloudflare One device posture integration
+private cloudflare.one.devicePostureIntegration @defaults("name type") {
+	// Integration identifier
+	id string
+	// Integration name
+	name string
+	// Integration type (workspace_one, crowdstrike_s2s, uptycs, intune, kolide, tanium, sentinelone_s2s)
+	type string
+	// Check interval
+	interval string
+}
+
+// Cloudflare tunnel
+private cloudflare.tunnel @defaults("name status") {
+	// Tunnel identifier
+	id string
+	// Tunnel name
+	name string
+	// Tunnel type (cfd_tunnel, warp_connector)
+	tunnelType string
+	// Tunnel status
+	status string
+	// Whether the tunnel uses remote configuration
+	remoteConfig bool
+	// Time the tunnel was created
+	createdAt time
+	// Time the tunnel was deleted
+	deletedAt time
+	// Active connections for this tunnel
+	connections []cloudflare.tunnel.connection
+}
+
+// Cloudflare tunnel connection
+private cloudflare.tunnel.connection @defaults("id coloName") {
+	// Connection identifier
+	id string
+	// Cloudflare data center name
+	coloName string
+	// Client connector ID
+	clientId string
+	// Client connector version
+	clientVersion string
+	// Time the connection was opened
+	openedAt string
+	// Origin IP address
+	originIp string
+	// Whether the connection is pending reconnect
+	isPendingReconnect bool
+}
+
+// Cloudflare tunnel route
+private cloudflare.tunnel.route @defaults("network tunnelName") {
+	// CIDR network range
+	network string
+	// Tunnel identifier
+	tunnelId string
+	// Tunnel name
+	tunnelName string
+	// Route comment
+	comment string
+	// Virtual network identifier
+	virtualNetworkId string
+	// Time the route was created
+	createdAt time
+	// Time the route was deleted
+	deletedAt time
+}
+
+// Cloudflare tunnel virtual network
+private cloudflare.tunnel.virtualNetwork @defaults("name") {
+	// Virtual network identifier
+	id string
+	// Virtual network name
+	name string
+	// Virtual network comment
+	comment string
+	// Whether this is the default network
+	isDefaultNetwork bool
+	// Time the virtual network was created
+	createdAt time
+	// Time the virtual network was deleted
+	deletedAt time
+}
+
+// Cloudflare zone firewall rule (legacy, deprecated in favor of rulesets)
+private cloudflare.zone.firewallRule @defaults("id action") {
+	// Rule identifier
+	id string
+	// Rule description
+	description string
+	// Rule action (block, challenge, js_challenge, managed_challenge, allow, log, bypass)
+	action string
+	// Rule reference tag
+	ref string
+	// Whether the rule is paused
+	paused bool
+	// Filter expression
+	filterExpression string
+	// Products this rule applies to
+	products []string
+	// Time the rule was created
+	createdOn time
+	// Time the rule was last modified
+	modifiedOn time
+}
+
+// Cloudflare zone ruleset
+private cloudflare.zone.ruleset @defaults("name phase") {
+	// Ruleset identifier
+	id string
+	// Ruleset name
+	name string
+	// Ruleset description
+	description string
+	// Ruleset kind (managed, root, zone, custom)
+	kind string
+	// Ruleset phase (http_request_firewall_managed, etc.)
+	phase string
+	// Ruleset version
+	version string
+	// Time the ruleset was last updated
+	lastUpdated time
+}
+
+// Cloudflare zone page rule
+private cloudflare.zone.pageRule @defaults("id status") {
+	// Page rule identifier
+	id string
+	// Page rule status (active, disabled)
+	status string
+	// Page rule priority
+	priority int
+	// Time the page rule was created
+	createdOn time
+	// Time the page rule was last modified
+	modifiedOn time
+}
+
+// Cloudflare origin CA certificate
+private cloudflare.zone.originCACertificate @defaults("id requestType") {
+	// Certificate identifier
+	id string
+	// Hostnames covered by the certificate
+	hostnames []string
+	// Certificate request type (origin-rsa, origin-ecc)
+	requestType string
+	// Requested validity in days
+	requestValidity int
+	// Time the certificate expires
+	expiresOn time
+	// Time the certificate was revoked
+	revokedAt time
+}
+
+// Cloudflare mTLS certificate
+private cloudflare.mtlsCertificate @defaults("name id") {
+	// Certificate identifier
+	id string
+	// Certificate name
+	name string
+	// Certificate issuer
+	issuer string
+	// Signature type
+	signature string
+	// Serial number
+	serialNumber string
+	// Whether this is a CA certificate
+	ca bool
+	// Time the certificate was uploaded
+	uploadedOn time
+	// Time the certificate was last updated
+	updatedAt time
+	// Time the certificate expires
+	expiresOn time
+}
+
+// Cloudflare custom hostname
+private cloudflare.zone.customHostname @defaults("hostname status") {
+	// Custom hostname identifier
+	id string
+	// The custom hostname
+	hostname string
+	// Custom origin server
+	customOriginServer string
+	// Custom origin SNI
+	customOriginSni string
+	// Custom hostname status
+	status string
+	// SSL certificate status
+	sslStatus string
+	// SSL validation method
+	sslMethod string
+	// SSL certificate type
+	sslType string
+	// Time the custom hostname was created
+	createdAt time
+}
+
+// Cloudflare zone logpush job
+private cloudflare.zone.logpushJob @defaults("name dataset") {
+	// Job identifier
+	id int
+	// Job name
+	name string
+	// Dataset being pushed
+	dataset string
+	// Logpull options string
+	logpullOptions string
+	// Destination configuration URI
+	destinationConf string
+	// Push frequency (high, low)
+	frequency string
+	// Last error message
+	errorMessage string
+	// Whether the job is enabled
+	enabled bool
+	// Time of last successful push
+	lastComplete time
+	// Time of last error
+	lastError time
+}
+
+// Cloudflare zone bot management settings
+private cloudflare.zone.botManagement {
+	// Whether JavaScript detections are enabled
+	enableJs bool
+	// Whether bot fight mode is enabled
+	fightMode bool
+	// Action for definitely automated requests (block, managed_challenge, etc.)
+	sbfmDefinitelyAutomated string
+	// Action for likely automated requests
+	sbfmLikelyAutomated string
+	// Action for verified bots
+	sbfmVerifiedBots string
+	// Whether static resource protection is enabled
+	sbfmStaticResourceProtection bool
+	// Whether WordPress optimization is enabled
+	optimizeWordpress bool
+	// Whether the model auto-updates
+	autoUpdateModel bool
+	// Whether the latest model is being used
+	usingLatestModel bool
+	// AI bots protection setting (block, disabled)
+	aiBotsProtection string
+}
+
+// Cloudflare account role
+private cloudflare.account.role @defaults("name") {
+	// Role identifier
+	id string
+	// Role name
+	name string
+	// Role description
+	description string
 }

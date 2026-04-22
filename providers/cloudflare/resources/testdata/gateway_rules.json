@@ -1,0 +1,22 @@
+{
+  "success": true,
+  "errors": [],
+  "messages": [],
+  "result": [
+    {
+      "id": "gw-rule-001",
+      "name": "Block Malware Domains",
+      "description": "Block known malware domains",
+      "action": "block",
+      "enabled": true,
+      "precedence": 1,
+      "traffic": "dns.fqdn in $malware_domains",
+      "identity": "",
+      "device_posture": "",
+      "filters": ["dns"],
+      "version": 2,
+      "created_at": "2024-01-10T00:00:00Z",
+      "updated_at": "2024-03-15T00:00:00Z"
+    }
+  ]
+}

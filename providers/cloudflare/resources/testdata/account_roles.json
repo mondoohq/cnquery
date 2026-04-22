@@ -1,0 +1,19 @@
+{
+  "success": true,
+  "errors": [],
+  "messages": [],
+  "result": [
+    {
+      "id": "role-admin",
+      "name": "Administrator",
+      "description": "Full access to all account resources",
+      "permissions": {}
+    },
+    {
+      "id": "role-readonly",
+      "name": "Read Only",
+      "description": "Read-only access to account resources",
+      "permissions": {}
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "success": true,
+  "errors": [],
+  "messages": [],
+  "result": [
+    {
+      "id": "rs-managed-1",
+      "name": "Cloudflare Managed Ruleset",
+      "description": "Managed rules by Cloudflare",
+      "kind": "managed",
+      "phase": "http_request_firewall_managed",
+      "version": "3",
+      "last_updated": "2024-03-01T00:00:00Z"
+    },
+    {
+      "id": "rs-custom-1",
+      "name": "Custom WAF Rules",
+      "description": "",
+      "kind": "zone",
+      "phase": "http_request_firewall_custom",
+      "version": "1",
+      "last_updated": "2024-02-20T10:00:00Z"
+    }
+  ]
+}

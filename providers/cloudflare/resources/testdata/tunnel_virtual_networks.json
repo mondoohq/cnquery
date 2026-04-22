@@ -1,0 +1,15 @@
+{
+  "success": true,
+  "errors": [],
+  "messages": [],
+  "result": [
+    {
+      "id": "vnet-1234",
+      "name": "default-vnet",
+      "comment": "Default virtual network",
+      "is_default_network": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "deleted_at": null
+    }
+  ]
+}

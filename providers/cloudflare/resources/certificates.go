@@ -5,6 +5,7 @@ package resources
 import (
 	"context"
 
+	"github.com/cloudflare/cloudflare-go"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
@@ -79,6 +80,45 @@ func (c *mqlCloudflareZone) certificatePacks() ([]any, error) {
 			"validationMethod":     llx.StringData(pack.ValidationMethod),
 			"validityDays":         llx.IntData(pack.ValidityDays),
 			"certificateAuthority": llx.StringData(pack.CertificateAuthority),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, res)
+	}
+
+	return result, nil
+}
+
+func (c *mqlCloudflareZoneOriginCACertificate) id() (string, error) {
+	if c.Id.Error != nil {
+		return "", c.Id.Error
+	}
+	return c.Id.Data, nil
+}
+
+func (c *mqlCloudflareZone) originCACertificates() ([]any, error) {
+	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
+
+	certs, err := conn.Cf.ListOriginCACertificates(context.TODO(), cloudflare.ListOriginCertificatesParams{
+		ZoneID: c.Id.Data,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var result []any
+	for i := range certs {
+		cert := certs[i]
+
+		res, err := NewResource(c.MqlRuntime, "cloudflare.zone.originCACertificate", map[string]*llx.RawData{
+			"id":              llx.StringData(cert.ID),
+			"hostnames":       llx.ArrayData(convert.SliceAnyToInterface(cert.Hostnames), types.String),
+			"requestType":     llx.StringData(cert.RequestType),
+			"requestValidity": llx.IntData(int64(cert.RequestValidity)),
+			"expiresOn":       llx.TimeData(cert.ExpiresOn),
+			"revokedAt":       llx.TimeData(cert.RevokedAt),
 		})
 		if err != nil {
 			return nil, err

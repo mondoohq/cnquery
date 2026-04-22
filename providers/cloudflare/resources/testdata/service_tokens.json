@@ -1,0 +1,24 @@
+{
+  "success": true,
+  "errors": [],
+  "messages": [],
+  "result": [
+    {
+      "id": "svctoken-001",
+      "name": "CI/CD Token",
+      "client_id": "client-abc123",
+      "duration": "8760h",
+      "expires_at": "2025-06-01T00:00:00Z",
+      "last_seen_at": "2024-04-01T10:30:00Z",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  ],
+  "result_info": {
+    "page": 1,
+    "per_page": 25,
+    "total_pages": 1,
+    "count": 1,
+    "total_count": 1
+  }
+}

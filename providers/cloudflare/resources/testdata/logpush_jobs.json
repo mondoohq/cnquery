@@ -1,0 +1,19 @@
+{
+  "success": true,
+  "errors": [],
+  "messages": [],
+  "result": [
+    {
+      "id": 42,
+      "name": "HTTP Requests to S3",
+      "dataset": "http_requests",
+      "enabled": true,
+      "logpull_options": "fields=RayID,ClientIP&timestamps=rfc3339",
+      "destination_conf": "s3://mybucket/logs?region=us-east-1",
+      "frequency": "high",
+      "error_message": "",
+      "last_complete": "2024-04-20T10:00:00Z",
+      "last_error": null
+    }
+  ]
+}

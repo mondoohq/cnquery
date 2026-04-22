@@ -1,0 +1,29 @@
+{
+  "success": true,
+  "errors": [],
+  "messages": [],
+  "result": [
+    {
+      "id": "fw-rule-1",
+      "description": "Block bad bots",
+      "action": "block",
+      "ref": "ref-001",
+      "paused": false,
+      "filter": {
+        "id": "filter-1",
+        "expression": "(cf.client.bot)",
+        "paused": false
+      },
+      "products": ["waf", "rateLimit"],
+      "created_on": "2024-01-10T08:00:00Z",
+      "modified_on": "2024-02-15T14:30:00Z"
+    }
+  ],
+  "result_info": {
+    "page": 1,
+    "per_page": 25,
+    "total_pages": 1,
+    "count": 1,
+    "total_count": 1
+  }
+}

@@ -3,9 +3,11 @@
 package resources
 
 import (
+	"context"
 	"errors"
 	"strings"
 
+	"github.com/cloudflare/cloudflare-go"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
@@ -44,4 +46,41 @@ func initCloudflareAccount(runtime *plugin.Runtime, args map[string]*llx.RawData
 		}
 	}
 	return nil, nil, errors.New("account not found or asset not set")
+}
+
+func (c *mqlCloudflareAccountRole) id() (string, error) {
+	if c.Id.Error != nil {
+		return "", c.Id.Error
+	}
+	return c.Id.Data, nil
+}
+
+func (c *mqlCloudflareAccount) roles() ([]any, error) {
+	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
+
+	records, err := conn.Cf.ListAccountRoles(context.TODO(), &cloudflare.ResourceContainer{
+		Identifier: c.Id.Data,
+		Level:      cloudflare.AccountRouteLevel,
+	}, cloudflare.ListAccountRolesParams{})
+	if err != nil {
+		return nil, err
+	}
+
+	var result []any
+	for i := range records {
+		rec := records[i]
+
+		res, err := NewResource(c.MqlRuntime, "cloudflare.account.role", map[string]*llx.RawData{
+			"id":          llx.StringData(rec.ID),
+			"name":        llx.StringData(rec.Name),
+			"description": llx.StringData(rec.Description),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, res)
+	}
+
+	return result, nil
 }

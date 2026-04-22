@@ -1,0 +1,16 @@
+{
+  "success": true,
+  "errors": [],
+  "messages": [],
+  "result": [
+    {
+      "network": "10.0.0.0/8",
+      "tunnel_id": "f70ff985-a4ef-4643-bbbc-4a0ed4fc8415",
+      "tunnel_name": "blog-tunnel",
+      "comment": "Internal network",
+      "virtual_network_id": "vnet-1234",
+      "created_at": "2024-01-15T11:00:00Z",
+      "deleted_at": null
+    }
+  ]
+}

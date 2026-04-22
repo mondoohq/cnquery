@@ -7,6 +7,7 @@ import (
 
 	"github.com/cloudflare/cloudflare-go"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
 )
 
@@ -51,4 +52,36 @@ func (c *mqlCloudflareZone) settings() (*mqlCloudflareZoneSettings, error) {
 	}
 
 	return res.(*mqlCloudflareZoneSettings), nil
+}
+
+func (c *mqlCloudflareZone) botManagement() (*mqlCloudflareZoneBotManagement, error) {
+	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
+
+	bm, err := conn.Cf.GetBotManagement(context.TODO(), &cloudflare.ResourceContainer{
+		Identifier: c.Id.Data,
+	})
+	if err != nil {
+		// Bot management may not be available on all plans
+		c.BotManagement.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	res, err := CreateResource(c.MqlRuntime, "cloudflare.zone.botManagement", map[string]*llx.RawData{
+		"__id":                         llx.StringData("cloudflare.zone.botManagement@" + c.Id.Data),
+		"enableJs":                     llx.BoolDataPtr(bm.EnableJS),
+		"fightMode":                    llx.BoolDataPtr(bm.FightMode),
+		"sbfmDefinitelyAutomated":      llx.StringDataPtr(bm.SBFMDefinitelyAutomated),
+		"sbfmLikelyAutomated":          llx.StringDataPtr(bm.SBFMLikelyAutomated),
+		"sbfmVerifiedBots":             llx.StringDataPtr(bm.SBFMVerifiedBots),
+		"sbfmStaticResourceProtection": llx.BoolDataPtr(bm.SBFMStaticResourceProtection),
+		"optimizeWordpress":            llx.BoolDataPtr(bm.OptimizeWordpress),
+		"autoUpdateModel":              llx.BoolDataPtr(bm.AutoUpdateModel),
+		"usingLatestModel":             llx.BoolDataPtr(bm.UsingLatestModel),
+		"aiBotsProtection":             llx.StringDataPtr(bm.AIBotsProtection),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return res.(*mqlCloudflareZoneBotManagement), nil
 }

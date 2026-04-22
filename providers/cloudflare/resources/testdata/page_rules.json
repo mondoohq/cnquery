@@ -1,0 +1,16 @@
+{
+  "success": true,
+  "errors": [],
+  "messages": [],
+  "result": [
+    {
+      "id": "pr-001",
+      "status": "active",
+      "priority": 1,
+      "targets": [],
+      "actions": [],
+      "created_on": "2024-01-05T09:00:00Z",
+      "modified_on": "2024-01-06T10:00:00Z"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "success": true,
+  "errors": [],
+  "messages": [],
+  "result": [
+    {
+      "id": "device-001",
+      "name": "John's MacBook",
+      "device_type": "desktop",
+      "model": "MacBookPro18,1",
+      "manufacturer": "Apple",
+      "serial_number": "C02X12345",
+      "mac_address": "aa:bb:cc:dd:ee:ff",
+      "ip": "10.0.0.42",
+      "os_version": "14.3.1",
+      "os_distro_name": "macOS",
+      "os_distro_revision": "23D60",
+      "version": "2024.3.409",
+      "deleted": false,
+      "created": "2024-01-15T10:00:00Z",
+      "updated": "2024-04-10T08:30:00Z",
+      "last_seen": "2024-04-20T14:00:00Z",
+      "revoked_at": ""
+    }
+  ]
+}
