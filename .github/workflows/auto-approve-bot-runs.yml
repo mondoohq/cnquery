@@ -19,6 +19,9 @@ jobs:
       - name: Approve workflow run
         env:
           GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          ACTOR: ${{ github.event.workflow_run.actor.login }}
+          REPO: ${{ github.repository }}
         run: |
-          echo "Approving run ${{ github.event.workflow_run.id }} triggered by ${{ github.event.workflow_run.actor.login }}"
-          gh run approve ${{ github.event.workflow_run.id }} --repo ${{ github.repository }}
+          echo "Approving run $RUN_ID triggered by $ACTOR"
+          gh run approve "$RUN_ID" --repo "$REPO"
