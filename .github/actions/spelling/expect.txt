@@ -73,6 +73,7 @@ classpath
 claude
 clcerts
 cloudflare
+cloudflareaccess
 Clusterwide
 cmdline
 cmek
@@ -81,6 +82,7 @@ cmnd
 cname
 cocoapods
 codeql
+colo
 compressratio
 computeagent
 conda
@@ -123,7 +125,9 @@ DRdf
 dsse
 Duf
 eas
+ecc
 Ecmp
+EDNS
 efa
 efi
 eip
@@ -232,6 +236,7 @@ keymap
 keyspace
 kilocode
 kiro
+kolide
 kqueue
 krbtgt
 kts
@@ -249,6 +254,8 @@ linuxefi
 liveanalytics
 loggingservice
 logon
+logpull
+logpush
 logstream
 longtermretentionpolicy
 lsp
@@ -284,6 +291,7 @@ modelarmor
 mongodb
 Mpim
 msk
+mtls
 Mtls
 MULTIAZ
 myapp
@@ -317,6 +325,7 @@ nss
 nullgroup
 nullstring
 NUnit
+ocr
 Odr
 oid
 oidc
@@ -400,6 +409,7 @@ rulegroupreferencestatement
 saas
 Sas
 sasl
+sbfm
 sbom
 scc
 scim
@@ -411,6 +421,7 @@ secretmanager
 SECRETVALUE
 secureboot
 selfservice
+sentinelone
 serde
 serviceconnection
 serviceprincipals
@@ -446,6 +457,7 @@ swi
 switchports
 symfony
 tailscale
+tanium
 targetgroup
 tde
 temurin
@@ -473,6 +485,7 @@ uefi
 UNAVAIL
 unifi
 Uocm
+uptycs
 URkuh
 usb
 userdata
