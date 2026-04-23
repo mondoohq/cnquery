@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"cloud.google.com/go/bigtable"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -51,6 +52,52 @@ func initGcpProjectBigtableService(runtime *plugin.Runtime, args map[string]*llx
 	return args, nil, nil
 }
 
+// initGcpProjectBigtableServiceInstance lets policies query a single Bigtable
+// instance directly (e.g. when cnspec scans a gcp-bigtable-instance asset).
+func initGcpProjectBigtableServiceInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if args == nil {
+			args = make(map[string]*llx.RawData)
+		}
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["projectId"] = llx.StringData(ids.project)
+		} else {
+			return nil, nil, errors.New("no asset identifier found")
+		}
+	}
+
+	obj, err := CreateResource(runtime, "gcp.project.bigtableService", map[string]*llx.RawData{
+		"projectId": args["projectId"],
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	bigtableSvc := obj.(*mqlGcpProjectBigtableService)
+	instances := bigtableSvc.GetInstances()
+	if instances.Error != nil {
+		return nil, nil, instances.Error
+	}
+
+	nameVal := args["name"].Value.(string)
+	for _, i := range instances.Data {
+		instance := i.(*mqlGcpProjectBigtableServiceInstance)
+		// Bigtable instance name from the SDK is the short ID; it may also
+		// arrive as the full resource path projects/{project}/instances/{id}.
+		nameParts := strings.Split(instance.Name.Data, "/")
+		instanceName := nameParts[len(nameParts)-1]
+		if instanceName == nameVal {
+			return args, instance, nil
+		}
+	}
+
+	return nil, nil, fmt.Errorf("Bigtable instance %q not found", nameVal)
+}
+
 func (g *mqlGcpProjectBigtableService) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error
@@ -79,6 +126,10 @@ func (g *mqlGcpProjectBigtableService) instances() ([]any, error) {
 
 	instances, err := iac.Instances(ctx)
 	if err != nil {
+		if isGRPCSkippable(err) {
+			log.Warn().Err(err).Msg("could not list Bigtable instances")
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -159,6 +210,10 @@ func (g *mqlGcpProjectBigtableServiceInstance) clusters() ([]any, error) {
 
 	clusters, err := iac.Clusters(ctx, instanceName)
 	if err != nil {
+		if isGRPCSkippable(err) {
+			log.Warn().Err(err).Msg("could not list Bigtable clusters")
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -259,6 +314,10 @@ func (g *mqlGcpProjectBigtableServiceInstance) tables() ([]any, error) {
 
 	tableNames, err := ac.Tables(ctx)
 	if err != nil {
+		if isGRPCSkippable(err) {
+			log.Warn().Err(err).Msg("could not list Bigtable tables")
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -266,6 +325,10 @@ func (g *mqlGcpProjectBigtableServiceInstance) tables() ([]any, error) {
 	for _, tableName := range tableNames {
 		tableInfo, err := ac.TableInfo(ctx, tableName)
 		if err != nil {
+			if isGRPCSkippable(err) {
+				log.Warn().Err(err).Str("table", tableName).Msg("could not read Bigtable table info")
+				continue
+			}
 			return nil, err
 		}
 
@@ -363,6 +426,10 @@ func (g *mqlGcpProjectBigtableServiceInstance) appProfiles() ([]any, error) {
 			break
 		}
 		if err != nil {
+			if isGRPCSkippable(err) {
+				log.Warn().Err(err).Msg("could not list Bigtable app profiles")
+				return nil, nil
+			}
 			return nil, err
 		}
 
@@ -440,6 +507,10 @@ func (g *mqlGcpProjectBigtableServiceInstance) backups() ([]any, error) {
 
 	clusters, err := iac.Clusters(ctx, instanceName)
 	if err != nil {
+		if isGRPCSkippable(err) {
+			log.Warn().Err(err).Msg("could not list Bigtable clusters for backup lookup")
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -465,6 +536,10 @@ func (g *mqlGcpProjectBigtableServiceInstance) backups() ([]any, error) {
 				break
 			}
 			if err != nil {
+				if isGRPCSkippable(err) {
+					log.Warn().Err(err).Str("cluster", clusterID).Msg("could not list Bigtable backups")
+					break
+				}
 				return nil, err
 			}
 

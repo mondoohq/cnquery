@@ -59,6 +59,9 @@ const (
 	DiscoverApiKeys                 = "apikeys"
 	DiscoverIamServiceAccounts      = "iam-service-accounts"
 	DiscoverAlloyDBClusters         = "alloydb-clusters"
+	DiscoverSpannerInstances        = "spanner-instances"
+	DiscoverFirestoreDatabases      = "firestore-databases"
+	DiscoverBigtableInstances       = "bigtable-instances"
 )
 
 // All includes every discovery target: Auto covers all of them for GCP.
@@ -95,6 +98,9 @@ var Auto = []string{
 	DiscoverApiKeys,
 	DiscoverIamServiceAccounts,
 	DiscoverAlloyDBClusters,
+	DiscoverSpannerInstances,
+	DiscoverFirestoreDatabases,
+	DiscoverBigtableInstances,
 }
 
 var AllAPIResources = []string{
@@ -125,6 +131,9 @@ var AllAPIResources = []string{
 	DiscoverApiKeys,
 	DiscoverIamServiceAccounts,
 	DiscoverAlloyDBClusters,
+	DiscoverSpannerInstances,
+	DiscoverFirestoreDatabases,
+	DiscoverBigtableInstances,
 }
 
 // List of all CloudSQL types, this will be used during discovery
@@ -1108,6 +1117,114 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 					TechnologyUrlSegments: connection.ResourceTechnologyUrl("alloydb", gcpProject.Id.Data, location, "cluster", clusterName),
 				},
 				Labels:      mapStrInterfaceToMapStrStr(cluster.GetLabels().Data),
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
+			})
+		}
+	}
+
+	if stringx.ContainsAnyOf(discoveryTargets, DiscoverSpannerInstances) {
+		spannerService := gcpProject.GetSpanner()
+		if spannerService.Error != nil {
+			return nil, spannerService.Error
+		}
+		instances := spannerService.Data.GetInstances()
+		if instances.Error != nil {
+			return nil, instances.Error
+		}
+		for i := range instances.Data {
+			instance := instances.Data[i].(*mqlGcpProjectSpannerServiceInstance)
+			// Spanner instance names are global within a project (no location
+			// segment); the regional placement is expressed by the instance's
+			// config. Use "global" here to match the platform-id scheme used
+			// by other non-regional resources (e.g. API keys, IAM).
+			instanceName := parseResourceName(instance.Name.Data)
+			location := "global"
+
+			assetList = append(assetList, &inventory.Asset{
+				PlatformIds: []string{
+					connection.NewResourcePlatformID("spanner", gcpProject.Id.Data, location, "instance", instanceName),
+				},
+				Name: instanceName,
+				Platform: &inventory.Platform{
+					Name:                  "gcp-spanner-instance",
+					Title:                 connection.GetTitleForPlatformName("gcp-spanner-instance"),
+					Runtime:               "gcp",
+					Kind:                  "gcp-object",
+					Family:                []string{"google"},
+					TechnologyUrlSegments: connection.ResourceTechnologyUrl("spanner", gcpProject.Id.Data, location, "instance", instanceName),
+				},
+				Labels:      mapStrInterfaceToMapStrStr(instance.GetLabels().Data),
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
+			})
+		}
+	}
+
+	if stringx.ContainsAnyOf(discoveryTargets, DiscoverFirestoreDatabases) {
+		firestoreService := gcpProject.GetFirestore()
+		if firestoreService.Error != nil {
+			return nil, firestoreService.Error
+		}
+		databases := firestoreService.Data.GetDatabases()
+		if databases.Error != nil {
+			return nil, databases.Error
+		}
+		for i := range databases.Data {
+			database := databases.Data[i].(*mqlGcpProjectFirestoreServiceDatabase)
+			dbName := parseResourceName(database.Name.Data)
+			location := database.LocationId.Data
+			if location == "" {
+				location = "global"
+			}
+
+			assetList = append(assetList, &inventory.Asset{
+				PlatformIds: []string{
+					connection.NewResourcePlatformID("firestore", gcpProject.Id.Data, location, "database", dbName),
+				},
+				Name: dbName,
+				Platform: &inventory.Platform{
+					Name:                  "gcp-firestore-database",
+					Title:                 connection.GetTitleForPlatformName("gcp-firestore-database"),
+					Runtime:               "gcp",
+					Kind:                  "gcp-object",
+					Family:                []string{"google"},
+					TechnologyUrlSegments: connection.ResourceTechnologyUrl("firestore", gcpProject.Id.Data, location, "database", dbName),
+				},
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
+			})
+		}
+	}
+
+	if stringx.ContainsAnyOf(discoveryTargets, DiscoverBigtableInstances) {
+		bigtableService := gcpProject.GetBigtable()
+		if bigtableService.Error != nil {
+			return nil, bigtableService.Error
+		}
+		instances := bigtableService.Data.GetInstances()
+		if instances.Error != nil {
+			return nil, instances.Error
+		}
+		for i := range instances.Data {
+			instance := instances.Data[i].(*mqlGcpProjectBigtableServiceInstance)
+			// Bigtable instances are themselves location-independent; their
+			// placement is per-cluster. Use "global" here to match the
+			// project-scoped platform-id scheme used by API keys and IAM.
+			instanceName := parseResourceName(instance.Name.Data)
+			location := "global"
+
+			assetList = append(assetList, &inventory.Asset{
+				PlatformIds: []string{
+					connection.NewResourcePlatformID("bigtable", gcpProject.Id.Data, location, "instance", instanceName),
+				},
+				Name: instanceName,
+				Platform: &inventory.Platform{
+					Name:                  "gcp-bigtable-instance",
+					Title:                 connection.GetTitleForPlatformName("gcp-bigtable-instance"),
+					Runtime:               "gcp",
+					Kind:                  "gcp-object",
+					Family:                []string{"google"},
+					TechnologyUrlSegments: connection.ResourceTechnologyUrl("bigtable", gcpProject.Id.Data, location, "instance", instanceName),
+				},
+				Labels:      mapStrInterfaceToMapStrStr(instance.GetLabels().Data),
 				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
 			})
 		}

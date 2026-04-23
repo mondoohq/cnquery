@@ -69,6 +69,9 @@ Examples with the GCP project configured:
 				resources.DiscoverApiKeys,
 				resources.DiscoverIamServiceAccounts,
 				resources.DiscoverAlloyDBClusters,
+				resources.DiscoverSpannerInstances,
+				resources.DiscoverFirestoreDatabases,
+				resources.DiscoverBigtableInstances,
 			},
 			Flags: []plugin.Flag{
 				{

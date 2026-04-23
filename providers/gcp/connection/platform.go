@@ -146,6 +146,12 @@ func GetTitleForPlatformName(name string) string {
 		return "GCP Dataproc Cluster"
 	case "gcp-alloydb-cluster":
 		return "GCP AlloyDB Cluster"
+	case "gcp-spanner-instance":
+		return "GCP Spanner Instance"
+	case "gcp-firestore-database":
+		return "GCP Firestore Database"
+	case "gcp-bigtable-instance":
+		return "GCP Bigtable Instance"
 	case "gcp-logging-bucket":
 		return "GCP Logging Bucket"
 	case "gcp-apikey":
@@ -261,6 +267,27 @@ func ResourceTechnologyUrl(service, project, region, objectType, name string) []
 			return []string{"gcp", project, "alloydb", region, "cluster"}
 		default:
 			return []string{"gcp", project, "alloydb", region, "other"}
+		}
+	case "spanner":
+		switch objectType {
+		case "instance":
+			return []string{"gcp", project, "spanner", region, "instance"}
+		default:
+			return []string{"gcp", project, "spanner", region, "other"}
+		}
+	case "firestore":
+		switch objectType {
+		case "database":
+			return []string{"gcp", project, "firestore", region, "database"}
+		default:
+			return []string{"gcp", project, "firestore", region, "other"}
+		}
+	case "bigtable":
+		switch objectType {
+		case "instance":
+			return []string{"gcp", project, "bigtable", region, "instance"}
+		default:
+			return []string{"gcp", project, "bigtable", region, "other"}
 		}
 	case "logging":
 		switch objectType {
