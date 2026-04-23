@@ -62,6 +62,7 @@ ccf
 cdn
 ceph
 certificatechains
+certificatesmanagement
 chabc
 chatgpt
 chokepoint
@@ -78,6 +79,7 @@ cmek
 Cmk
 cmnd
 cname
+CNs
 cocoapods
 codeql
 colo
@@ -100,6 +102,7 @@ databricks
 datapath
 datasource
 DATAUSER
+DBRS
 ddl
 ddos
 dedup
@@ -254,6 +257,7 @@ logon
 logpull
 logpush
 logstream
+LONGTERM
 longtermretentionpolicy
 lsp
 lvm
@@ -288,7 +292,6 @@ mongodb
 Mpim
 msk
 mtls
-Mtls
 MULTIAZ
 myapp
 mychart
@@ -321,6 +324,7 @@ nss
 nullgroup
 nullstring
 NUnit
+objectstorage
 ocr
 Odr
 oid

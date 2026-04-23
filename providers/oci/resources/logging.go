@@ -275,8 +275,7 @@ func (o *mqlOciLoggingLog) logGroup() (*mqlOciLoggingLogGroup, error) {
 
 // extractLogSource pulls category, service, and resource out of a logging
 // configuration's Source union. Any missing layer (nil configuration, nil
-// source, unknown source type) yields empty strings. Exported as a
-// package-level helper so the flow-log filter predicate can be unit tested.
+// source, unknown source type) yields empty strings.
 func extractLogSource(cfg *logging.Configuration) (category, service, resource string) {
 	if cfg == nil || cfg.Source == nil {
 		return "", "", ""
@@ -286,18 +285,6 @@ func extractLogSource(cfg *logging.Configuration) (category, service, resource s
 		return "", "", ""
 	}
 	return stringValue(svc.Category), stringValue(svc.Service), stringValue(svc.Resource)
-}
-
-// isFlowLog reports whether a logging configuration describes a VCN flow
-// log for the given resource OCID (VCN, subnet, or VNIC). Centralising the
-// predicate keeps the flow-log collector and any future filters honest
-// about what "flow log" means.
-func isFlowLog(cfg *logging.Configuration, resourceID string) bool {
-	if resourceID == "" {
-		return false
-	}
-	_, service, resource := extractLogSource(cfg)
-	return service == "flowlogs" && resource == resourceID
 }
 
 func convertLogConfiguration(cfg *logging.Configuration) (map[string]interface{}, error) {
