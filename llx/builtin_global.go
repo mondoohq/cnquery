@@ -30,6 +30,7 @@ var globalFunctionsV2 map[string]handleFunctionV2
 
 func init() {
 	globalFunctionsV2 = map[string]handleFunctionV2{
+		"available":      availableCallV2,
 		"expect":         expectV2,
 		"if":             ifCallV2,
 		"switch":         switchCallV2,
@@ -102,6 +103,22 @@ func ifCallV2(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, erro
 	}
 
 	return NilData, 0, nil
+}
+
+func availableCallV2(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, error) {
+	if len(f.Args) != 1 {
+		return nil, 0, errors.New("Called `available` with " + strconv.Itoa(len(f.Args)) + " arguments, expected one")
+	}
+
+	res, dref, err := e.resolveValue(f.Args[0], ref)
+	if dref != 0 {
+		return nil, dref, nil
+	}
+	if err != nil || res == nil || res.Error != nil {
+		return BoolFalse, 0, nil
+	}
+
+	return BoolTrue, 0, nil
 }
 
 func switchCallV2(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, error) {
