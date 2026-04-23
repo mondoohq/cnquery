@@ -1,9 +1,11 @@
 name: Auto-approve bot workflow runs
 
 on:
-  # workflow_run runs in the context of the default branch,
-  # so it is not itself subject to the approval gate.
+  # Scoped to CodeQL only — the workflow that requires approval on bot PRs.
+  # workflow_run runs in the default-branch context, so it is not itself
+  # subject to the approval gate.
   workflow_run:
+    workflows: ["CodeQL Advanced"]
     types: [requested]
 
 permissions:
@@ -13,15 +15,26 @@ jobs:
   approve:
     runs-on: ubuntu-latest
     if: >-
-      github.event.workflow_run.conclusion == 'action_required' &&
-      contains(fromJSON('["github-actions[bot]","dependabot[bot]"]'), github.event.workflow_run.actor.login)
+      contains(fromJSON('["github-actions[bot]","dependabot[bot]"]'), github.event.workflow_run.actor.login) &&
+      startsWith(github.event.workflow_run.head_branch, 'version/')
     steps:
-      - name: Approve workflow run
+      - name: Approve workflow run if pending
         env:
           GH_TOKEN: ${{ github.token }}
           RUN_ID: ${{ github.event.workflow_run.id }}
           ACTOR: ${{ github.event.workflow_run.actor.login }}
           REPO: ${{ github.repository }}
         run: |
-          echo "Approving run $RUN_ID triggered by $ACTOR"
-          gh run approve "$RUN_ID" --repo "$REPO"
+          # The 'requested' event fires before the conclusion is set.
+          # Poll briefly for GitHub to settle the run into action_required.
+          for i in 1 2 3; do
+            STATUS=$(gh run view "$RUN_ID" --repo "$REPO" --json status --jq '.status')
+            if [ "$STATUS" = "action_required" ]; then
+              echo "Approving run $RUN_ID triggered by $ACTOR"
+              gh run approve "$RUN_ID" --repo "$REPO"
+              exit 0
+            fi
+            echo "Run status is '$STATUS', waiting…"
+            sleep 10
+          done
+          echo "Run $RUN_ID never entered action_required state — skipping"
