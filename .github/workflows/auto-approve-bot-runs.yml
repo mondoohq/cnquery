@@ -1,11 +1,9 @@
 name: Auto-approve bot workflow runs
 
 on:
-  # Scoped to CodeQL only — the workflow that requires approval on bot PRs.
   # workflow_run runs in the default-branch context, so it is not itself
   # subject to the approval gate.
   workflow_run:
-    workflows: ["CodeQL Advanced"]
     types: [requested]
 
 permissions:
@@ -14,23 +12,26 @@ permissions:
 jobs:
   approve:
     runs-on: ubuntu-latest
+    # GitHub's approval gate checks the *commit* author, not the workflow
+    # actor.  When a bot-authored PR is merged by a human the run's actor
+    # is the human, but head_commit.author.name is still the bot.
     if: >-
-      contains(fromJSON('["github-actions[bot]","dependabot[bot]"]'), github.event.workflow_run.actor.login) &&
-      startsWith(github.event.workflow_run.head_branch, 'version/')
+      contains(fromJSON('["github-actions[bot]","dependabot[bot]"]'),
+        github.event.workflow_run.head_commit.author.name)
     steps:
       - name: Approve workflow run if pending
         env:
           GH_TOKEN: ${{ github.token }}
           RUN_ID: ${{ github.event.workflow_run.id }}
-          ACTOR: ${{ github.event.workflow_run.actor.login }}
+          AUTHOR: ${{ github.event.workflow_run.head_commit.author.name }}
           REPO: ${{ github.repository }}
         run: |
-          # The 'requested' event fires before the conclusion is set.
-          # Poll briefly for GitHub to settle the run into action_required.
+          # The 'requested' event fires before the status settles.
+          # Poll briefly for GitHub to move the run into action_required.
           for i in 1 2 3; do
             STATUS=$(gh run view "$RUN_ID" --repo "$REPO" --json status --jq '.status')
             if [ "$STATUS" = "action_required" ]; then
-              echo "Approving run $RUN_ID triggered by $ACTOR"
+              echo "Approving run $RUN_ID (commit authored by $AUTHOR)"
               gh run approve "$RUN_ID" --repo "$REPO"
               exit 0
             fi
