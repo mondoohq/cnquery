@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.11.1",
-  "generated_at": "2026-04-23T13:44:50-07:00",
+  "generated_at": "2026-04-23T14:37:51-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.list",
@@ -159,10 +159,11 @@
     "spanner.backups.list",
     "spanner.databaseRoles.list",
     "spanner.databases.getDdl",
+    "spanner.databases.getIamPolicy",
     "spanner.databases.list",
-    "spanner.iamPolicy.get",
     "spanner.instanceConfigs.list",
     "spanner.instancePartitions.list",
+    "spanner.instances.getIamPolicy",
     "spanner.instances.list",
     "storage.buckets.getIamPolicy",
     "storage.buckets.list"
@@ -1171,15 +1172,15 @@
       "source_file": "spanner.go"
     },
     {
-      "permission": "spanner.databases.list",
+      "permission": "spanner.databases.getIamPolicy",
       "service": "spanner",
-      "action": "ListDatabases",
+      "action": "GetIamPolicy",
       "source_file": "spanner.go"
     },
     {
-      "permission": "spanner.iamPolicy.get",
+      "permission": "spanner.databases.list",
       "service": "spanner",
-      "action": "GetIamPolicy",
+      "action": "ListDatabases",
       "source_file": "spanner.go"
     },
     {
@@ -1192,6 +1193,12 @@
       "permission": "spanner.instancePartitions.list",
       "service": "spanner",
       "action": "ListInstancePartitions",
+      "source_file": "spanner.go"
+    },
+    {
+      "permission": "spanner.instances.getIamPolicy",
+      "service": "spanner",
+      "action": "GetIamPolicy",
       "source_file": "spanner.go"
     },
     {

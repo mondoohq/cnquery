@@ -719,6 +719,11 @@ func gcpServiceName(pkg string) string {
 }
 
 // extractGCPgRPCCalls finds gRPC client creation and subsequent method calls.
+type gcpClientVar struct {
+	imp        *gcpImportInfo
+	clientType string // e.g., "InstanceAdmin" (from NewInstanceAdminClient)
+}
+
 func extractGCPgRPCCalls(f *ast.File, imports map[string]*gcpImportInfo, fileName string) []PermissionDetail {
 	var details []PermissionDetail
 
@@ -731,8 +736,8 @@ func extractGCPgRPCCalls(f *ast.File, imports map[string]*gcpImportInfo, fileNam
 			return true
 		}
 
-		// Track client variables: varName -> service info
-		clientVars := map[string]*gcpImportInfo{}
+		// Track client variables: varName -> service + client type info
+		clientVars := map[string]*gcpClientVar{}
 
 		// Also track REST service variables
 		restVars := map[string]*gcpImportInfo{}
@@ -769,7 +774,8 @@ func extractGCPgRPCCalls(f *ast.File, imports map[string]*gcpImportInfo, fileNam
 				if strings.HasPrefix(methodName, "New") && strings.HasSuffix(methodName, "Client") && imp.style == "grpc" {
 					if i < len(assignStmt.Lhs) {
 						if ident, ok := assignStmt.Lhs[i].(*ast.Ident); ok {
-							clientVars[ident.Name] = imp
+							clientType := strings.TrimSuffix(strings.TrimPrefix(methodName, "New"), "Client")
+							clientVars[ident.Name] = &gcpClientVar{imp: imp, clientType: clientType}
 						}
 					}
 				}
@@ -800,13 +806,13 @@ func extractGCPgRPCCalls(f *ast.File, imports map[string]*gcpImportInfo, fileNam
 
 			// gRPC client calls
 			if ident, ok := sel.X.(*ast.Ident); ok {
-				if imp, ok := clientVars[ident.Name]; ok {
+				if cv, ok := clientVars[ident.Name]; ok {
 					if isGCPAPIMethod(methodName) {
-						perm := gcpMethodToPermission(imp.service, methodName)
+						perm := gcpMethodToPermission(cv.imp.service, cv.clientType, methodName)
 						if perm != "" {
 							details = append(details, PermissionDetail{
 								Permission: perm,
-								Service:    imp.service,
+								Service:    cv.imp.service,
 								Action:     methodName,
 								SourceFile: fileName,
 							})
@@ -969,6 +975,10 @@ var gcpPermissionOverrides = map[string]map[string]string{
 	},
 	"spanner": {
 		"GetDatabaseDdl": "spanner.databases.getDdl",
+		// GetIamPolicy is a shared method on both InstanceAdminClient and
+		// DatabaseAdminClient; map each to its resource-scoped permission.
+		"InstanceAdmin.GetIamPolicy": "spanner.instances.getIamPolicy",
+		"DatabaseAdmin.GetIamPolicy": "spanner.databases.getIamPolicy",
 	},
 	"modelarmor": {
 		"GetFloorSetting": "modelarmor.floorSettings.get",
@@ -1023,7 +1033,10 @@ var gcpSkipMethods = map[string]bool{
 }
 
 // gcpMethodToPermission maps a gRPC method to a GCP IAM permission.
-func gcpMethodToPermission(service, method string) string {
+// clientType (e.g., "InstanceAdmin" from NewInstanceAdminClient) lets services with
+// multiple admin clients disambiguate methods like GetIamPolicy that don't carry a
+// resource hint in their name.
+func gcpMethodToPermission(service, clientType, method string) string {
 	// Skip known non-API methods
 	if gcpSkipMethods[method] {
 		return ""
@@ -1032,8 +1045,14 @@ func gcpMethodToPermission(service, method string) string {
 	// Strip "Iter" suffix from iterator helper methods (e.g., ListRolesIter -> ListRoles)
 	method = strings.TrimSuffix(method, "Iter")
 
-	// Check for explicit overrides
+	// Check for explicit overrides. Prefer a clientType-scoped entry first so
+	// services with multiple admin clients can disambiguate shared method names.
 	if overrides, ok := gcpPermissionOverrides[service]; ok {
+		if clientType != "" {
+			if perm, ok := overrides[clientType+"."+method]; ok {
+				return perm
+			}
+		}
 		if perm, ok := overrides[method]; ok {
 			return perm
 		}
