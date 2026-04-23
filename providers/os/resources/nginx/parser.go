@@ -23,6 +23,11 @@ import (
 	"strings"
 )
 
+// maxConfigBytes caps the bytes read from a single config file to guard
+// against pathological inputs (e.g. a runaway symlink). 10 MiB is well
+// above any realistic nginx config.
+const maxConfigBytes = 10 << 20
+
 // Directive is a single parsed nginx directive.
 type Directive struct {
 	// Name is the directive keyword (e.g. "server_name", "server", "http").
@@ -130,7 +135,7 @@ func parseFileRecursive(path, prefix string, open OpenFunc, glob GlobFunc, cfg *
 		return nil, fmt.Errorf("open %s: %w", path, err)
 	}
 	defer r.Close()
-	raw, err := io.ReadAll(r)
+	raw, err := io.ReadAll(io.LimitReader(r, maxConfigBytes))
 	if err != nil {
 		return nil, fmt.Errorf("read %s: %w", path, err)
 	}
@@ -204,9 +209,10 @@ func expandGlob(pattern string, glob GlobFunc) ([]string, error) {
 	if glob != nil {
 		return glob(pattern)
 	}
-	// A literal path without glob meta-characters matches itself; Go's
-	// filepath.Glob returns an empty slice in that case when the file
-	// exists but callers typically want it either way.
+	// A literal path without glob meta-characters is returned verbatim so
+	// callers see a missing-file error at the open step rather than a
+	// silent skip. filepath.Glob would otherwise drop the path when the
+	// file doesn't exist.
 	if !strings.ContainsAny(pattern, "*?[") {
 		return []string{pattern}, nil
 	}
