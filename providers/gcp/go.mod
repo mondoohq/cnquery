@@ -43,19 +43,19 @@ require (
 	cloud.google.com/go/security v1.22.0
 	cloud.google.com/go/securitycenter v1.42.0
 	cloud.google.com/go/serviceusage v1.12.0
-	cloud.google.com/go/spanner v1.90.0
-	github.com/aws/smithy-go v1.25.0
+	cloud.google.com/go/spanner v1.91.0
+	github.com/aws/smithy-go v1.25.1
 	github.com/cockroachdb/errors v1.12.0
 	github.com/google/go-containerregistry v0.21.5
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/mitchellh/hashstructure/v2 v2.0.2
-	github.com/rs/zerolog v1.35.0
+	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
 	go.mondoo.com/mql/v13 v13.5.0
 	go.mondoo.com/ranger-rpc v0.8.0
 	golang.org/x/oauth2 v0.36.0
 	google.golang.org/api v0.276.0
-	google.golang.org/genproto v0.0.0-20260414002931-afd174a4e478
+	google.golang.org/genproto v0.0.0-20260420184626-e10c466a9529
 	google.golang.org/protobuf v1.36.11
 )
 

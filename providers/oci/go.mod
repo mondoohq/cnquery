@@ -5,8 +5,8 @@ go 1.26.2
 replace go.mondoo.com/mql/v13 => ../..
 
 require (
-	github.com/oracle/oci-go-sdk/v65 v65.112.0
-	github.com/rs/zerolog v1.35.0
+	github.com/oracle/oci-go-sdk/v65 v65.113.0
+	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
 	go.mondoo.com/mql/v13 v13.5.0
 )
