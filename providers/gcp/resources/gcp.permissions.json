@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
-  "version": "13.10.0",
-  "generated_at": "2026-04-21T12:25:02-07:00",
+  "version": "13.11.1",
+  "generated_at": "2026-04-23T13:44:50-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.list",
@@ -155,10 +155,14 @@
     "serviceusage.services.get",
     "serviceusage.services.list",
     "source.repos.list",
+    "spanner.backupSchedules.list",
     "spanner.backups.list",
+    "spanner.databaseRoles.list",
     "spanner.databases.getDdl",
     "spanner.databases.list",
+    "spanner.iamPolicy.get",
     "spanner.instanceConfigs.list",
+    "spanner.instancePartitions.list",
     "spanner.instances.list",
     "storage.buckets.getIamPolicy",
     "storage.buckets.list"
@@ -1072,7 +1076,7 @@
     {
       "permission": "resourcemanager.projects.list",
       "service": "resourcemanager",
-      "action": "Projects.Search",
+      "action": "Projects.List",
       "source_file": "project.go",
       "scope": "org"
     },
@@ -1143,9 +1147,21 @@
       "source_file": "sourcerepo.go"
     },
     {
+      "permission": "spanner.backupSchedules.list",
+      "service": "spanner",
+      "action": "ListBackupSchedules",
+      "source_file": "spanner.go"
+    },
+    {
       "permission": "spanner.backups.list",
       "service": "spanner",
       "action": "ListBackups",
+      "source_file": "spanner.go"
+    },
+    {
+      "permission": "spanner.databaseRoles.list",
+      "service": "spanner",
+      "action": "ListDatabaseRoles",
       "source_file": "spanner.go"
     },
     {
@@ -1161,9 +1177,21 @@
       "source_file": "spanner.go"
     },
     {
+      "permission": "spanner.iamPolicy.get",
+      "service": "spanner",
+      "action": "GetIamPolicy",
+      "source_file": "spanner.go"
+    },
+    {
       "permission": "spanner.instanceConfigs.list",
       "service": "spanner",
       "action": "ListInstanceConfigs",
+      "source_file": "spanner.go"
+    },
+    {
+      "permission": "spanner.instancePartitions.list",
+      "service": "spanner",
+      "action": "ListInstancePartitions",
       "source_file": "spanner.go"
     },
     {

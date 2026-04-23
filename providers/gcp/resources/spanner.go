@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 
 	spannerdatabase "cloud.google.com/go/spanner/admin/database/apiv1"
 	"cloud.google.com/go/spanner/admin/database/apiv1/databasepb"
@@ -19,6 +20,7 @@ import (
 	"go.mondoo.com/mql/v13/types"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
+	iampb "google.golang.org/genproto/googleapis/iam/v1"
 )
 
 func (g *mqlGcpProject) spanner() (*mqlGcpProjectSpannerService, error) {
@@ -105,6 +107,20 @@ func (g *mqlGcpProjectSpannerService) instances() ([]any, error) {
 			updatedAt = llx.NilData
 		}
 
+		freeInstanceMetadata, err := protoToDict(inst.FreeInstanceMetadata)
+		if err != nil {
+			return nil, err
+		}
+
+		replicaComputeCapacity := make([]any, 0, len(inst.ReplicaComputeCapacity))
+		for _, rcc := range inst.ReplicaComputeCapacity {
+			rccDict, err := protoToDict(rcc)
+			if err != nil {
+				return nil, err
+			}
+			replicaComputeCapacity = append(replicaComputeCapacity, rccDict)
+		}
+
 		mqlInst, err := CreateResource(g.MqlRuntime, "gcp.project.spannerService.instance", map[string]*llx.RawData{
 			"projectId":                 llx.StringData(projectId),
 			"name":                      llx.StringData(inst.Name),
@@ -120,6 +136,9 @@ func (g *mqlGcpProjectSpannerService) instances() ([]any, error) {
 			"defaultBackupScheduleType": llx.StringData(inst.DefaultBackupScheduleType.String()),
 			"createdAt":                 createdAt,
 			"updatedAt":                 updatedAt,
+			"endpointUris":              llx.ArrayData(convert.SliceAnyToInterface(inst.EndpointUris), types.String),
+			"freeInstanceMetadata":      llx.DictData(freeInstanceMetadata),
+			"replicaComputeCapacity":    llx.ArrayData(replicaComputeCapacity, types.Dict),
 		})
 		if err != nil {
 			return nil, err
@@ -205,6 +224,11 @@ func (g *mqlGcpProjectSpannerServiceInstance) databases() ([]any, error) {
 			createdAt = llx.NilData
 		}
 
+		restoreInfo, err := protoToDict(db.RestoreInfo)
+		if err != nil {
+			return nil, err
+		}
+
 		mqlDb, err := CreateResource(g.MqlRuntime, "gcp.project.spannerService.instance.database", map[string]*llx.RawData{
 			"projectId":              llx.StringData(projectId),
 			"instanceName":           llx.StringData(instanceName),
@@ -219,6 +243,7 @@ func (g *mqlGcpProjectSpannerServiceInstance) databases() ([]any, error) {
 			"enableDropProtection":   llx.BoolData(db.EnableDropProtection),
 			"reconciling":            llx.BoolData(db.Reconciling),
 			"createdAt":              createdAt,
+			"restoreInfo":            llx.DictData(restoreInfo),
 		})
 		if err != nil {
 			return nil, err
@@ -341,19 +366,33 @@ func (g *mqlGcpProjectSpannerServiceInstance) backups() ([]any, error) {
 			maxExpireTime = llx.NilData
 		}
 
+		var oldestVersionTime *llx.RawData
+		if backup.OldestVersionTime != nil {
+			oldestVersionTime = llx.TimeData(backup.OldestVersionTime.AsTime())
+		} else {
+			oldestVersionTime = llx.NilData
+		}
+
 		mqlBackup, err := CreateResource(g.MqlRuntime, "gcp.project.spannerService.instance.backup", map[string]*llx.RawData{
-			"projectId":       llx.StringData(projectId),
-			"instanceName":    llx.StringData(instanceName),
-			"name":            llx.StringData(backup.Name),
-			"database":        llx.StringData(backup.Database),
-			"state":           llx.StringData(backup.State.String()),
-			"expireTime":      expireTime,
-			"versionTime":     versionTime,
-			"createdAt":       createdAt,
-			"sizeBytes":       llx.IntData(backup.SizeBytes),
-			"encryptionInfo":  llx.DictData(encryptionInfo),
-			"databaseDialect": llx.StringData(backup.DatabaseDialect.String()),
-			"maxExpireTime":   maxExpireTime,
+			"projectId":                llx.StringData(projectId),
+			"instanceName":             llx.StringData(instanceName),
+			"name":                     llx.StringData(backup.Name),
+			"database":                 llx.StringData(backup.Database),
+			"state":                    llx.StringData(backup.State.String()),
+			"expireTime":               expireTime,
+			"versionTime":              versionTime,
+			"createdAt":                createdAt,
+			"sizeBytes":                llx.IntData(backup.SizeBytes),
+			"encryptionInfo":           llx.DictData(encryptionInfo),
+			"databaseDialect":          llx.StringData(backup.DatabaseDialect.String()),
+			"maxExpireTime":            maxExpireTime,
+			"freeableSizeBytes":        llx.IntData(backup.FreeableSizeBytes),
+			"exclusiveSizeBytes":       llx.IntData(backup.ExclusiveSizeBytes),
+			"referencingDatabases":     llx.ArrayData(convert.SliceAnyToInterface(backup.ReferencingDatabases), types.String),
+			"referencingBackups":       llx.ArrayData(convert.SliceAnyToInterface(backup.ReferencingBackups), types.String),
+			"backupSchedules":          llx.ArrayData(convert.SliceAnyToInterface(backup.BackupSchedules), types.String),
+			"incrementalBackupChainId": llx.StringData(backup.IncrementalBackupChainId),
+			"oldestVersionTime":        oldestVersionTime,
 		})
 		if err != nil {
 			return nil, err
@@ -419,16 +458,30 @@ func (g *mqlGcpProjectSpannerService) instanceConfigs() ([]any, error) {
 			replicas = append(replicas, replicaDict)
 		}
 
+		optionalReplicas := make([]any, 0, len(cfg.OptionalReplicas))
+		for _, r := range cfg.OptionalReplicas {
+			replicaDict, err := protoToDict(r)
+			if err != nil {
+				return nil, err
+			}
+			optionalReplicas = append(optionalReplicas, replicaDict)
+		}
+
 		mqlCfg, err := CreateResource(g.MqlRuntime, "gcp.project.spannerService.instanceConfig", map[string]*llx.RawData{
-			"projectId":                llx.StringData(projectId),
-			"name":                     llx.StringData(cfg.Name),
-			"displayName":              llx.StringData(cfg.DisplayName),
-			"replicas":                 llx.ArrayData(replicas, types.Dict),
-			"leaderOptions":            llx.ArrayData(convert.SliceAnyToInterface(cfg.LeaderOptions), types.String),
-			"baseConfig":               llx.StringData(cfg.BaseConfig),
-			"configType":               llx.StringData(cfg.ConfigType.String()),
-			"freeInstanceAvailability": llx.StringData(cfg.FreeInstanceAvailability.String()),
-			"labels":                   llx.MapData(convert.MapToInterfaceMap(cfg.Labels), types.String),
+			"projectId":                     llx.StringData(projectId),
+			"name":                          llx.StringData(cfg.Name),
+			"displayName":                   llx.StringData(cfg.DisplayName),
+			"replicas":                      llx.ArrayData(replicas, types.Dict),
+			"leaderOptions":                 llx.ArrayData(convert.SliceAnyToInterface(cfg.LeaderOptions), types.String),
+			"baseConfig":                    llx.StringData(cfg.BaseConfig),
+			"configType":                    llx.StringData(cfg.ConfigType.String()),
+			"freeInstanceAvailability":      llx.StringData(cfg.FreeInstanceAvailability.String()),
+			"labels":                        llx.MapData(convert.MapToInterfaceMap(cfg.Labels), types.String),
+			"optionalReplicas":              llx.ArrayData(optionalReplicas, types.Dict),
+			"storageLimitPerProcessingUnit": llx.IntData(cfg.StorageLimitPerProcessingUnit),
+			"state":                         llx.StringData(cfg.State.String()),
+			"reconciling":                   llx.BoolData(cfg.Reconciling),
+			"etag":                          llx.StringData(cfg.Etag),
 		})
 		if err != nil {
 			return nil, err
@@ -511,4 +564,326 @@ func (g *mqlGcpProjectSpannerServiceInstance) instanceConfig() (*mqlGcpProjectSp
 		return nil, err
 	}
 	return res.(*mqlGcpProjectSpannerServiceInstanceConfig), nil
+}
+
+func spannerIamPolicyBindings(runtime *plugin.Runtime, resource string, policy *iampb.Policy) ([]any, error) {
+	res := make([]any, 0, len(policy.Bindings))
+	for i, b := range policy.Bindings {
+		mqlBinding, err := CreateResource(runtime, "gcp.resourcemanager.binding", map[string]*llx.RawData{
+			"id":      llx.StringData(resource + "-" + strconv.Itoa(i)),
+			"role":    llx.StringData(b.Role),
+			"members": llx.ArrayData(convert.SliceAnyToInterface(b.Members), types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlBinding)
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectSpannerServiceInstance) iamPolicy() ([]any, error) {
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	instanceName := g.Name.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(spannerinstance.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	client, err := spannerinstance.NewInstanceAdminClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	policy, err := client.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: instanceName})
+	if err != nil {
+		return nil, err
+	}
+	return spannerIamPolicyBindings(g.MqlRuntime, instanceName, policy)
+}
+
+func (g *mqlGcpProjectSpannerServiceInstanceDatabase) iamPolicy() ([]any, error) {
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	dbName := g.Name.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(spannerdatabase.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	client, err := spannerdatabase.NewDatabaseAdminClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	policy, err := client.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: dbName})
+	if err != nil {
+		return nil, err
+	}
+	return spannerIamPolicyBindings(g.MqlRuntime, dbName, policy)
+}
+
+func (g *mqlGcpProjectSpannerServiceInstanceDatabase) databaseRoles() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	if g.InstanceName.Error != nil {
+		return nil, g.InstanceName.Error
+	}
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	projectId := g.ProjectId.Data
+	instanceName := g.InstanceName.Data
+	dbName := g.Name.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(spannerdatabase.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	client, err := spannerdatabase.NewDatabaseAdminClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	it := client.ListDatabaseRoles(ctx, &databasepb.ListDatabaseRolesRequest{
+		Parent: dbName,
+	})
+
+	var res []any
+	for {
+		role, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		mqlRole, err := CreateResource(g.MqlRuntime, "gcp.project.spannerService.instance.database.role", map[string]*llx.RawData{
+			"projectId":    llx.StringData(projectId),
+			"instanceName": llx.StringData(instanceName),
+			"databaseName": llx.StringData(dbName),
+			"name":         llx.StringData(role.Name),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlRole)
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectSpannerServiceInstanceDatabaseRole) id() (string, error) {
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
+	}
+	if g.Name.Error != nil {
+		return "", g.Name.Error
+	}
+	return fmt.Sprintf("gcp.project/%s/spannerService/databaseRole/%s", g.ProjectId.Data, g.Name.Data), nil
+}
+
+func (g *mqlGcpProjectSpannerServiceInstance) backupSchedules() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	projectId := g.ProjectId.Data
+	instanceName := g.Name.Data
+
+	databases := g.GetDatabases()
+	if databases.Error != nil {
+		return nil, databases.Error
+	}
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(spannerdatabase.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	dbClient, err := spannerdatabase.NewDatabaseAdminClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer dbClient.Close()
+
+	var res []any
+	for _, d := range databases.Data {
+		mqlDb := d.(*mqlGcpProjectSpannerServiceInstanceDatabase)
+		if mqlDb.Name.Error != nil {
+			return nil, mqlDb.Name.Error
+		}
+		dbName := mqlDb.Name.Data
+
+		schedIt := dbClient.ListBackupSchedules(ctx, &databasepb.ListBackupSchedulesRequest{Parent: dbName})
+		for {
+			sched, err := schedIt.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				return nil, err
+			}
+
+			specDict, err := protoToDict(sched.Spec)
+			if err != nil {
+				return nil, err
+			}
+			encConfigDict, err := protoToDict(sched.EncryptionConfig)
+			if err != nil {
+				return nil, err
+			}
+
+			var retention string
+			if sched.RetentionDuration != nil {
+				retention = sched.RetentionDuration.AsDuration().String()
+			}
+
+			var updatedAt *llx.RawData
+			if sched.UpdateTime != nil {
+				updatedAt = llx.TimeData(sched.UpdateTime.AsTime())
+			} else {
+				updatedAt = llx.NilData
+			}
+
+			backupType := ""
+			switch sched.BackupTypeSpec.(type) {
+			case *databasepb.BackupSchedule_FullBackupSpec:
+				backupType = "FULL"
+			case *databasepb.BackupSchedule_IncrementalBackupSpec:
+				backupType = "INCREMENTAL"
+			}
+
+			mqlSched, err := CreateResource(g.MqlRuntime, "gcp.project.spannerService.instance.backupSchedule", map[string]*llx.RawData{
+				"projectId":         llx.StringData(projectId),
+				"instanceName":      llx.StringData(instanceName),
+				"databaseName":      llx.StringData(dbName),
+				"name":              llx.StringData(sched.Name),
+				"spec":              llx.DictData(specDict),
+				"retentionDuration": llx.StringData(retention),
+				"encryptionConfig":  llx.DictData(encConfigDict),
+				"backupType":        llx.StringData(backupType),
+				"updatedAt":         updatedAt,
+			})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlSched)
+		}
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectSpannerServiceInstanceBackupSchedule) id() (string, error) {
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
+	}
+	if g.Name.Error != nil {
+		return "", g.Name.Error
+	}
+	return fmt.Sprintf("gcp.project/%s/spannerService/backupSchedule/%s", g.ProjectId.Data, g.Name.Data), nil
+}
+
+func (g *mqlGcpProjectSpannerServiceInstance) instancePartitions() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	projectId := g.ProjectId.Data
+	instanceName := g.Name.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(spannerinstance.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	client, err := spannerinstance.NewInstanceAdminClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	it := client.ListInstancePartitions(ctx, &instancepb.ListInstancePartitionsRequest{Parent: instanceName})
+	var res []any
+	for {
+		p, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		autoscalingConfig, err := protoToDict(p.AutoscalingConfig)
+		if err != nil {
+			return nil, err
+		}
+
+		var createdAt *llx.RawData
+		if p.CreateTime != nil {
+			createdAt = llx.TimeData(p.CreateTime.AsTime())
+		} else {
+			createdAt = llx.NilData
+		}
+		var updatedAt *llx.RawData
+		if p.UpdateTime != nil {
+			updatedAt = llx.TimeData(p.UpdateTime.AsTime())
+		} else {
+			updatedAt = llx.NilData
+		}
+
+		mqlPart, err := CreateResource(g.MqlRuntime, "gcp.project.spannerService.instance.instancePartition", map[string]*llx.RawData{
+			"projectId":            llx.StringData(projectId),
+			"instanceName":         llx.StringData(instanceName),
+			"name":                 llx.StringData(p.Name),
+			"config":               llx.StringData(p.Config),
+			"displayName":          llx.StringData(p.DisplayName),
+			"nodeCount":            llx.IntData(int64(p.GetNodeCount())),
+			"processingUnits":      llx.IntData(int64(p.GetProcessingUnits())),
+			"autoscalingConfig":    llx.DictData(autoscalingConfig),
+			"state":                llx.StringData(p.State.String()),
+			"referencingDatabases": llx.ArrayData(convert.SliceAnyToInterface(p.ReferencingDatabases), types.String),
+			"etag":                 llx.StringData(p.Etag),
+			"createdAt":            createdAt,
+			"updatedAt":            updatedAt,
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlPart)
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectSpannerServiceInstanceInstancePartition) id() (string, error) {
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
+	}
+	if g.Name.Error != nil {
+		return "", g.Name.Error
+	}
+	return fmt.Sprintf("gcp.project/%s/spannerService/instancePartition/%s", g.ProjectId.Data, g.Name.Data), nil
 }

@@ -4423,10 +4423,22 @@ private gcp.project.spannerService.instance @defaults("name") {
   createdAt time
   // Last update time
   updatedAt time
+  // Fully qualified endpoint URIs used to access the instance
+  endpointUris []string
+  // Free-tier instance metadata (expireTime, upgradeTime, expireBehavior)
+  freeInstanceMetadata dict
+  // Per-replica compute capacity for multi-region instances
+  replicaComputeCapacity []dict
+  // IAM policy bindings for the instance
+  iamPolicy() []gcp.resourcemanager.binding
   // List of databases in this instance
   databases() []gcp.project.spannerService.instance.database
   // List of backups in this instance
   backups() []gcp.project.spannerService.instance.backup
+  // List of backup schedules for databases in this instance
+  backupSchedules() []gcp.project.spannerService.instance.backupSchedule
+  // List of instance partitions
+  instancePartitions() []gcp.project.spannerService.instance.instancePartition
 }
 
 // Google Cloud (GCP) Spanner database
@@ -4457,8 +4469,14 @@ private gcp.project.spannerService.instance.database @defaults("name") {
   reconciling bool
   // Creation time
   createdAt time
+  // Restore source information if the database was restored from a backup
+  restoreInfo dict
   // Database DDL statements (schema definition)
   ddl() []string
+  // IAM policy bindings for the database
+  iamPolicy() []gcp.resourcemanager.binding
+  // Fine-grained database roles defined in the database
+  databaseRoles() []gcp.project.spannerService.instance.database.role
 }
 
 // Google Cloud (GCP) Spanner backup
@@ -4487,6 +4505,20 @@ private gcp.project.spannerService.instance.backup @defaults("name") {
   databaseDialect string
   // Maximum expiration time
   maxExpireTime time
+  // Bytes freed by deleting this backup (zero if part of an incremental chain with newer dependents)
+  freeableSizeBytes int
+  // Storage space attributable to this backup within its incremental chain
+  exclusiveSizeBytes int
+  // Resource names of restored databases that reference this backup
+  referencingDatabases []string
+  // Resource names of destination backups that reference this backup (copy chain)
+  referencingBackups []string
+  // Backup schedule URIs associated with creating this backup
+  backupSchedules []string
+  // Identifier linking backups in the same incremental chain
+  incrementalBackupChainId string
+  // Earliest version time retained in this backup
+  oldestVersionTime time
 }
 
 // Google Cloud (GCP) Spanner instance configuration
@@ -4509,6 +4541,80 @@ private gcp.project.spannerService.instanceConfig @defaults("name displayName") 
   freeInstanceAvailability string
   // Labels
   labels map[string]string
+  // Replicas available to be used but not currently in the base configuration
+  optionalReplicas []dict
+  // Storage limit in bytes per processing unit
+  storageLimitPerProcessingUnit int
+  // Current configuration state (CREATING, READY)
+  state string
+  // Whether the configuration is being updated
+  reconciling bool
+  // Entity tag for concurrency control
+  etag string
+}
+
+// Google Cloud (GCP) Spanner database role (fine-grained access control)
+private gcp.project.spannerService.instance.database.role @defaults("name") {
+  // Project ID
+  projectId string
+  // Instance name
+  instanceName string
+  // Database name
+  databaseName string
+  // Resource name of the database role
+  name string
+}
+
+// Google Cloud (GCP) Spanner backup schedule
+private gcp.project.spannerService.instance.backupSchedule @defaults("name") {
+  // Project ID
+  projectId string
+  // Instance name
+  instanceName string
+  // Database name the schedule belongs to
+  databaseName string
+  // Resource name of the backup schedule
+  name string
+  // Schedule specification (cron-like configuration)
+  spec dict
+  // Retention duration for backups created by the schedule
+  retentionDuration string
+  // Encryption configuration used for scheduled backups
+  encryptionConfig dict
+  // Backup type spec (FULL or INCREMENTAL)
+  backupType string
+  // Last update time
+  updatedAt time
+}
+
+// Google Cloud (GCP) Spanner instance partition
+private gcp.project.spannerService.instance.instancePartition @defaults("name") {
+  // Project ID
+  projectId string
+  // Parent instance name
+  instanceName string
+  // Resource name of the instance partition
+  name string
+  // Instance configuration reference (resource name string)
+  config string
+  // Display name of the partition
+  displayName string
+  // Number of nodes allocated to the partition
+  nodeCount int
+  // Number of processing units allocated to the partition
+  processingUnits int
+  // Autoscaling configuration
+  autoscalingConfig dict
+  // Current state of the partition
+  state string
+  // Resource names of databases referencing this partition
+  referencingDatabases []string
+  // Entity tag for concurrency control
+  etag string
+  // Creation time
+  createdAt time
+  // Last update time
+  updatedAt time
 }
 
 // Google Cloud (GCP) Bigtable resources

@@ -14,8 +14,6 @@ Akismet
 alamofire
 alloydb
 alpn
-anaconda
-antigravity
 antispam
 apparmor
 appslot
@@ -25,7 +23,6 @@ asdk
 aspnet
 atlassian
 auditlog
-augment
 Auths
 autoaccept
 autoclass
@@ -86,7 +83,6 @@ codeql
 colo
 compressratio
 computeagent
-conda
 continuedev
 cooldown
 corosync
@@ -280,7 +276,6 @@ mfs
 mgroup
 mildner
 minfree
-miniconda
 MINIMALUSER
 Mirrorings
 mkey
@@ -471,7 +466,6 @@ timestream
 tokenauth
 tokenid
 tokio
-toml
 toplevel
 toport
 tpl
